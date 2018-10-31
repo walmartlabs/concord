@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.CycleChecker;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -40,7 +41,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
-import java.util.UUID;
 
 @Named
 @Singleton
@@ -69,16 +69,16 @@ public class TemplateScriptProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         Map<String, Object> in = payload.getHeader(Payload.REQUEST_DATA_MAP);
-        Map<String, Object> out = processScript(instanceId, in, scriptPath);
+        Map<String, Object> out = processScript(processKey, in, scriptPath);
 
         Map<String, Object> merged = ConfigurationUtils.deepMerge(in, out);
 
         CycleChecker.CheckResult result = CycleChecker.check(INPUT_REQUEST_DATA_KEY, merged);
         if (result.isHasCycle()) {
-            throw new ProcessException(instanceId, "Found cycle in " + REQUEST_DATA_TEMPLATE_FILE_NAME + ": " +
+            throw new ProcessException(processKey, "Found cycle in " + REQUEST_DATA_TEMPLATE_FILE_NAME + ": " +
                     result.getNode1() + " <-> " + result.getNode2() );
         }
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, merged);
@@ -87,7 +87,7 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> processScript(UUID instanceId, Map meta, Path templateMeta) {
+    private Map<String, Object> processScript(ProcessKey processKey, Map meta, Path templateMeta) {
         Object result;
         try (Reader r = new FileReader(templateMeta.toFile())) {
             Bindings b = scriptEngine.createBindings();
@@ -95,11 +95,11 @@ public class TemplateScriptProcessor implements PayloadProcessor {
 
             result = scriptEngine.eval(r, b);
             if (!(result instanceof Map)) {
-                throw new ProcessException(instanceId, "Invalid template result. Expected a Java Map instance, got " + result);
+                throw new ProcessException(processKey, "Invalid template result. Expected a Java Map instance, got " + result);
             }
         } catch (IOException | ScriptException e) {
-            logManager.error(instanceId, "Template script execution error", e);
-            throw new ProcessException(instanceId, "Template script execution error", e);
+            logManager.error(processKey, "Template script execution error", e);
+            throw new ProcessException(processKey, "Template script execution error", e);
         }
         return (Map<String, Object>) result;
     }

@@ -27,13 +27,13 @@ import com.walmartlabs.concord.policyengine.WorkspaceRule;
 import com.walmartlabs.concord.server.metrics.InjectCounter;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.pipelines.processors.policy.PolicyApplier.appendMsg;
 
@@ -57,23 +57,23 @@ public class WorkspacePolicyApplier implements PolicyApplier {
 
     @Override
     public void apply(Payload payload, Map<String, Object> policy) throws Exception {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
         CheckResult<WorkspaceRule, Path> result = new PolicyEngine(policy).getWorkspacePolicy().check(workDir);
 
         result.getWarn().forEach(i -> {
             policyWarn.inc();
-            logManager.warn(instanceId, appendMsg("Potential workspace policy violation (policy: {})", i.getMsg()), i.getRule());
+            logManager.warn(processKey, appendMsg("Potential workspace policy violation (policy: {})", i.getMsg()), i.getRule());
         });
 
         result.getDeny().forEach(i -> {
             policyDeny.inc();
-            logManager.error(instanceId, appendMsg("Workspace policy violation", i.getMsg()), i.getRule());
+            logManager.error(processKey, appendMsg("Workspace policy violation", i.getMsg()), i.getRule());
         });
 
         if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Found workspace policy violations");
+            throw new ProcessException(processKey, "Found workspace policy violations");
         }
     }
 }

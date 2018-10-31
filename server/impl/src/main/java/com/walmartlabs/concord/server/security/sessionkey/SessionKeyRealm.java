@@ -22,9 +22,10 @@ package com.walmartlabs.concord.server.security.sessionkey;
 
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Set;
-import java.util.UUID;
 
 @Named
 public class SessionKeyRealm extends AuthorizingRealm {
@@ -75,9 +75,10 @@ public class SessionKeyRealm extends AuthorizingRealm {
     @WithTimer
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         SessionKey t = (SessionKey) token;
+        PartialProcessKey processKey = PartialProcessKey.from(t.getInstanceId());
 
         try {
-            ProcessEntry process = processQueueDao.get(t.getInstanceId());
+            ProcessEntry process = processQueueDao.get(processKey);
             if (process == null) {
                 log.warn("doGetAuthenticationInfo -> process not found: {}", t.getInstanceId());
                 return null;
@@ -93,7 +94,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
                 return null;
             }
 
-            PrincipalCollection principals = getPrincipals(t.getInstanceId());
+            PrincipalCollection principals = getPrincipals(processKey);
             return new SimpleAccount(principals, t.getInstanceId(), getName());
         } catch (Exception e) {
             log.error("doGetAuthenticationInfo ['{}'] -> error", t.getInstanceId(), e);
@@ -101,18 +102,18 @@ public class SessionKeyRealm extends AuthorizingRealm {
         }
     }
 
-    private PrincipalCollection getPrincipals(UUID instanceId) {
-        PrincipalCollection principals = processSecurityContext.getPrincipals(instanceId);
+    private PrincipalCollection getPrincipals(PartialProcessKey processKey) {
+        PrincipalCollection principals = processSecurityContext.getPrincipals(processKey);
 
         SessionKeyPrincipal p = principals.oneByType(SessionKeyPrincipal.class);
         if (p != null) {
             // should never happen, sessionkey principals shouldn't be stored in the process state
-            log.warn("getPrincipals ['{}'] -> unexpected principal: {}", instanceId, p.getProcessInstanceId());
-            throw new AuthenticationException("Unexpected session principal: " + p.getProcessInstanceId());
+            log.warn("getPrincipals ['{}'] -> unexpected principal: {}", processKey, p.getProcessKey());
+            throw new AuthenticationException("Unexpected session principal: " + p.getProcessKey());
         }
 
         SimplePrincipalCollection c = new SimplePrincipalCollection(principals);
-        c.add(new SessionKeyPrincipal(instanceId), REALM_NAME);
+        c.add(new SessionKeyPrincipal(processKey), REALM_NAME);
         return c;
     }
 

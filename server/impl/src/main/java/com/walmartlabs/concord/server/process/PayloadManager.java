@@ -70,7 +70,8 @@ public class PayloadManager {
 
     @WithTimer
     public Payload createPayload(MultipartInput input) throws IOException {
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = PartialProcessKey.create();
+
         UUID parentInstanceId = MultipartUtils.getUuid(input, Constants.Multipart.PARENT_INSTANCE_ID);
 
         UUID orgId = getOrg(input);
@@ -93,7 +94,7 @@ public class PayloadManager {
             meta = Collections.emptyMap();
         }
 
-        return PayloadBuilder.start(instanceId)
+        return PayloadBuilder.start(processKey)
                 .parentInstanceId(parentInstanceId)
                 .with(input)
                 .organization(orgId)
@@ -110,19 +111,13 @@ public class PayloadManager {
      * Creates a payload. It is implied that all necessary resources to start a process are
      * supplied in the multipart data and/or provided by a project's repository or a template.
      *
-     * @param instanceId
-     * @param parentInstanceId
-     * @param initiatorId
-     * @param initiator
-     * @param input
-     * @return
      * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
+    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, MultipartInput input, String[] out) throws IOException {
 
-        return PayloadBuilder.start(instanceId)
+        return PayloadBuilder.start(processKey)
                 .parentInstanceId(parentInstanceId)
                 .with(input)
                 .apply(p(entryPoint))
@@ -134,19 +129,13 @@ public class PayloadManager {
     /**
      * Creates a payload from the supplied map of parameters.
      *
-     * @param instanceId
-     * @param parentInstanceId
-     * @param initiatorId
-     * @param initiator
-     * @param request
-     * @return
      * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
+    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, Map<String, Object> request, String[] out) throws IOException {
 
-        return PayloadBuilder.start(instanceId)
+        return PayloadBuilder.start(processKey)
                 .parentInstanceId(parentInstanceId)
                 .initiator(initiatorId, initiator)
                 .apply(p(entryPoint))
@@ -158,19 +147,13 @@ public class PayloadManager {
     /**
      * Creates a payload from an archive, containing all necessary resources.
      *
-     * @param instanceId
-     * @param parentInstanceId
-     * @param initiatorId
-     * @param initiator
-     * @param in
-     * @return
      * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
+    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  EntryPoint entryPoint, InputStream in, String[] out) throws IOException {
 
-        return PayloadBuilder.start(instanceId)
+        return PayloadBuilder.start(processKey)
                 .parentInstanceId(parentInstanceId)
                 .initiator(initiatorId, initiator)
                 .apply(p(entryPoint))
@@ -182,19 +165,13 @@ public class PayloadManager {
     /**
      * Creates a payload from an archive, containing all necessary resources.
      *
-     * @param instanceId
-     * @param parentInstanceId
-     * @param initiatorId
-     * @param initiator
-     * @param in
-     * @return
      * @deprecated prefer {@link #createPayload(MultipartInput)}
      */
     @Deprecated
-    public Payload createPayload(UUID instanceId, UUID parentInstanceId, UUID initiatorId, String initiator,
+    public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
                                  InputStream in, String[] out) throws IOException {
 
-        return PayloadBuilder.start(instanceId)
+        return PayloadBuilder.start(processKey)
                 .parentInstanceId(parentInstanceId)
                 .initiator(initiatorId, initiator)
                 .workspace(in)
@@ -202,23 +179,24 @@ public class PayloadManager {
                 .build();
     }
 
+    public Payload createResumePayload(PartialProcessKey partialKey, String eventName, Map<String, Object> req) throws IOException {
+        Timestamp createdAt = stateManager.assertCreatedAt(partialKey);
+        ProcessKey pk = new ProcessKey(partialKey, createdAt);
+        return createResumePayload(pk, eventName, req);
+    }
+
     /**
      * Creates a payload to resume a suspended process, pulling the necessary data from the state storage.
      *
-     * @param instanceId
-     * @param eventName
-     * @param req
      * @return
      */
-    public Payload createResumePayload(UUID instanceId, String eventName, Map<String, Object> req) throws IOException {
-        Timestamp createdAt = stateManager.assertCreatedAt(instanceId);
-
+    public Payload createResumePayload(ProcessKey processKey, String eventName, Map<String, Object> req) throws IOException {
         Path tmpDir = IOUtils.createTempDir("payload");
-        if (!stateManager.export(instanceId, createdAt, copyTo(tmpDir))) {
-            throw new ProcessException(instanceId, "Can't resume '" + instanceId + "', state snapshot not found");
+        if (!stateManager.export(processKey, copyTo(tmpDir))) {
+            throw new ProcessException(processKey, "Can't resume '" + processKey + "', state snapshot not found");
         }
 
-        return PayloadBuilder.resume(instanceId, createdAt)
+        return PayloadBuilder.resume(processKey)
                 .workspace(tmpDir)
                 .configuration(req)
                 .resumeEventName(eventName)
@@ -227,26 +205,17 @@ public class PayloadManager {
 
     /**
      * Creates a payload to fork an existing process.
-     *
-     * @param instanceId
-     * @param parentInstanceId
-     * @param initiatorId
-     * @param initiator
-     * @param projectId
-     * @param req
-     * @return
      */
-    public Payload createFork(UUID instanceId, UUID parentInstanceId, ProcessKind kind,
+    public Payload createFork(PartialProcessKey processKey, ProcessKey parentProcessKey, ProcessKind kind,
                               UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
-
         Path tmpDir = IOUtils.createTempDir("payload");
-        if (!stateManager.export(parentInstanceId, copyTo(tmpDir))) {
-            throw new ProcessException(instanceId, "Can't fork '" + instanceId + "', parent state snapshot not found");
+        if (!stateManager.export(parentProcessKey, copyTo(tmpDir))) {
+            throw new ProcessException(processKey, "Can't fork '" + parentProcessKey + "', the state snapshot not found");
         }
 
-        return PayloadBuilder.start(instanceId)
-                .parentInstanceId(parentInstanceId)
+        return PayloadBuilder.start(processKey)
+                .parentInstanceId(parentProcessKey.getInstanceId())
                 .kind(kind)
                 .initiator(initiatorId, initiator)
                 .project(projectId)
@@ -264,16 +233,16 @@ public class PayloadManager {
 
         Optional<Boolean> o = projectDao.isAcceptsRawPayload(projectId);
         if (!o.isPresent()) {
-            throw new ProcessException(payload.getInstanceId(), "Project not found: " + projectId);
+            throw new ProcessException(payload.getProcessKey(), "Project not found: " + projectId);
         }
 
         if (!o.get()) {
-            throw new ProcessException(payload.getInstanceId(), "The project is not accepting raw payloads: " + projectId,
+            throw new ProcessException(payload.getProcessKey(), "The project is not accepting raw payloads: " + projectId,
                     Status.BAD_REQUEST);
         }
     }
 
-    public EntryPoint parseEntryPoint(UUID instanceId, UUID orgId, String entryPoint) {
+    public EntryPoint parseEntryPoint(PartialProcessKey processKey, UUID orgId, String entryPoint) {
         if (entryPoint == null) {
             return null;
         }
@@ -286,7 +255,7 @@ public class PayloadManager {
         String projectName = as[0].trim();
         UUID projectId = projectDao.getId(orgId, projectName);
         if (projectId == null) {
-            throw new ProcessException(instanceId, "Project not found: " + projectName);
+            throw new ProcessException(processKey, "Project not found: " + projectName);
         }
 
         String repoName = null;
@@ -300,20 +269,20 @@ public class PayloadManager {
             flow = as[2].trim();
         }
 
-        return createEntryPoint(instanceId, orgId, projectName, repoName, flow);
+        return createEntryPoint(processKey, orgId, projectName, repoName, flow);
     }
 
-    public EntryPoint createEntryPoint(UUID instanceId, UUID orgId, String projectName, String repoName, String flow) {
+    public EntryPoint createEntryPoint(PartialProcessKey processKey, UUID orgId, String projectName, String repoName, String flow) {
         UUID projectId = projectDao.getId(orgId, projectName);
         if (projectId == null) {
-            throw new ProcessException(instanceId, "Project not found: " + projectName);
+            throw new ProcessException(processKey, "Project not found: " + projectName);
         }
 
         UUID repoId = null;
         if (repoName != null) {
             repoId = repositoryDao.getId(projectId, repoName);
             if (repoId == null) {
-                throw new ProcessException(instanceId, "Repository not found: " + repoName);
+                throw new ProcessException(processKey, "Repository not found: " + repoName);
             }
         }
 

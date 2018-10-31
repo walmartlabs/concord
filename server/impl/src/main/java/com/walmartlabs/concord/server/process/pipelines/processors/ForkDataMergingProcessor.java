@@ -70,7 +70,7 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
         try (InputStream in = Files.newInputStream(src)) {
             return objectMapper.readValue(in, Map.class);
         } catch (IOException e) {
-            throw new ProcessException(payload.getInstanceId(), "Invalid request data format", e, Status.BAD_REQUEST);
+            throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
         }
     }
 

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -107,8 +108,9 @@ public abstract class AbstractEventResource {
             try {
                 UserEntry initiator = getInitiator(t, event);
                 UUID orgId = projectDao.getOrgId(t.getProjectId());
-                UUID instanceId = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), t.getActiveProfiles(), args, initiator);
-                log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, instanceId, t);
+
+                PartialProcessKey processKey = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), t.getActiveProfiles(), args, initiator);
+                log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, processKey, t);
             } catch (Exception e) {
                 log.error("process ['{}', '{}', '{}'] -> error", event, eventName, t.getId(), e);
             }
@@ -155,7 +157,7 @@ public abstract class AbstractEventResource {
         }
     }
 
-    private UUID startProcess(UUID orgId,
+    private PartialProcessKey startProcess(UUID orgId,
                               UUID projectId,
                               UUID repoId,
                               String entryPoint,
@@ -163,7 +165,7 @@ public abstract class AbstractEventResource {
                               Map<String, Object> args,
                               UserEntry initiator) throws IOException {
 
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = PartialProcessKey.create();
 
         Map<String, Object> request = new HashMap<>();
         if (activeProfiles != null) {
@@ -174,7 +176,7 @@ public abstract class AbstractEventResource {
             request.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
-        Payload payload = PayloadBuilder.start(instanceId)
+        Payload payload = PayloadBuilder.start(processKey)
                 .initiator(initiator.getId(), initiator.getName())
                 .organization(orgId)
                 .project(projectId)
@@ -184,7 +186,8 @@ public abstract class AbstractEventResource {
                 .build();
 
         processManager.start(payload, false);
-        return instanceId;
+
+        return processKey;
     }
 
     public interface TriggerDefinitionEnricher {

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -29,7 +30,6 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 @Named
 public class CleanupProcessor implements FinalizerProcessor {
@@ -43,11 +43,11 @@ public class CleanupProcessor implements FinalizerProcessor {
 
     @Override
     public void process(Payload payload) {
-        delete(payload.getInstanceId(), payload.getHeader(Payload.WORKSPACE_DIR));
-        delete(payload.getInstanceId(), payload.getHeader(Payload.BASE_DIR));
+        delete(payload.getProcessKey(), payload.getHeader(Payload.WORKSPACE_DIR));
+        delete(payload.getProcessKey(), payload.getHeader(Payload.BASE_DIR));
     }
 
-    private void delete(UUID instanceId, Path p) {
+    private void delete(ProcessKey processKey, Path p) {
         if (p == null || !Files.exists(p)) {
             return;
         }
@@ -55,7 +55,7 @@ public class CleanupProcessor implements FinalizerProcessor {
         try {
             IOUtils.deleteRecursively(p);
         } catch (IOException e) {
-            logManager.warn(instanceId, "Unable to delete the working directory: {}", p, e);
+            logManager.warn(processKey, "Unable to delete the working directory: {}", p, e);
         }
     }
 }

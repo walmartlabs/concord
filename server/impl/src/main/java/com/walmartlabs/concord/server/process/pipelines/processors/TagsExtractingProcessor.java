@@ -54,11 +54,11 @@ public class TagsExtractingProcessor implements PayloadProcessor {
                 if (o instanceof String) {
                     tags.add((String) o);
                 } else {
-                    throw new ProcessException(payload.getInstanceId(), "Process tag must be a string value: " + o);
+                    throw new ProcessException(payload.getProcessKey(), "Process tag must be a string value: " + o);
                 }
             }
         } else {
-            throw new ProcessException(payload.getInstanceId(), "Process tags must be an array of string values: " + v);
+            throw new ProcessException(payload.getProcessKey(), "Process tags must be an array of string values: " + v);
         }
 
         payload = payload.putHeader(Payload.PROCESS_TAGS, tags);

@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.process.state.archive;
  * =====
  */
 
-import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.ProcessCheckpointArchiveConfiguration;
 import com.walmartlabs.concord.server.process.state.CheckpointDao;

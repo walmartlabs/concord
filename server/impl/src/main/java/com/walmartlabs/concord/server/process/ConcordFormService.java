@@ -31,8 +31,8 @@ import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
 import io.takari.bpm.model.form.FormField;
-
 import org.apache.commons.validator.routines.EmailValidator;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -71,8 +72,13 @@ public class ConcordFormService {
         this.resumePipeline = resumePipeline;
     }
 
-    public Form get(UUID processInstanceId, String formName) {
-        return formAccessManager.assertFormAccess(processInstanceId, formName);
+    public Form get(PartialProcessKey processKey, String formName) {
+        Timestamp createdAt = stateManager.assertCreatedAt(processKey);
+        return get(new ProcessKey(processKey, createdAt), formName);
+    }
+
+    public Form get(ProcessKey processKey, String formName) {
+        return formAccessManager.assertFormAccess(processKey, formName);
     }
 
     private static Optional<Form> deserialize(InputStream data) {
@@ -83,18 +89,23 @@ public class ConcordFormService {
         }
     }
 
+    public List<FormListEntry> list(PartialProcessKey processKey) {
+        Timestamp createdAt = stateManager.assertCreatedAt(processKey);
+        return list(new ProcessKey(processKey, createdAt));
+    }
+
     @SuppressWarnings("unchecked")
-    public List<FormListEntry> list(UUID processInstanceId) {
+    public List<FormListEntry> list(ProcessKey processKey) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
                 InternalConstants.Files.JOB_FORMS_DIR_NAME);
 
-        List<Form> forms = stateManager.forEach(processInstanceId, resource, ConcordFormService::deserialize);
+        List<Form> forms = stateManager.forEach(processKey, resource, ConcordFormService::deserialize);
         return forms.stream().map(f -> {
             String name = f.getFormDefinition().getName();
 
             String s = FORMS_RESOURCES_PATH + "/" + f.getFormDefinition().getName();
-            boolean branding = stateManager.exists(processInstanceId, s);
+            boolean branding = stateManager.exists(processKey, s);
 
             Map<String, Object> opts = f.getOptions();
             boolean yield = getBoolean(opts, "yield", false);
@@ -104,7 +115,7 @@ public class ConcordFormService {
         }).collect(Collectors.toList());
     }
 
-    public String nextFormId(UUID processInstanceId) {
+    public String nextFormId(ProcessKey processKey) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
                 InternalConstants.Files.JOB_FORMS_DIR_NAME);
@@ -118,16 +129,21 @@ public class ConcordFormService {
         };
 
         // TODO this probably should be replaced with ProcessStateManager#findFirst
-        Optional<String> o = stateManager.findPath(processInstanceId, resource,
+        Optional<String> o = stateManager.findPath(processKey, resource,
                 files -> files.findFirst().flatMap(getId));
 
         return o.orElse(null);
     }
 
-    public FormSubmitResult submit(UUID processInstanceId, String formName, Map<String, Object> data) {
-        Form form = get(processInstanceId, formName);
+    public FormSubmitResult submit(PartialProcessKey processKey, String formName, Map<String, Object> data) {
+        Timestamp createdAt = stateManager.assertCreatedAt(processKey);
+        return submit(new ProcessKey(processKey, createdAt), formName, data);
+    }
+
+    public FormSubmitResult submit(ProcessKey processKey, String formName, Map<String, Object> data) {
+        Form form = get(processKey, formName);
         if (form == null) {
-            throw new ProcessException(processInstanceId, "Form not found: " + formName);
+            throw new ProcessException(processKey, "Form not found: " + formName);
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
@@ -136,7 +152,7 @@ public class ConcordFormService {
                     InternalConstants.Files.JOB_FORMS_DIR_NAME,
                     formName);
 
-            stateManager.deleteFile(processInstanceId, resource);
+            stateManager.deleteFile(processKey, resource);
 
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
@@ -151,36 +167,36 @@ public class ConcordFormService {
                 m.put(INTERNAL_RUN_AS_KEY, runAs);
             }
 
-            resume(UUID.fromString(f.getProcessBusinessKey()), f.getEventName(), m);
+            resume(processKey, f.getEventName(), m);
         };
 
         Map<String, Object> merged = merge(form, data);
         try {
-            return toResult(processInstanceId, form,
-                    DefaultFormService.submit(resumeHandler, createFormValidator(processInstanceId, formName), form, merged));
+            FormValidator validator = createFormValidator(processKey, formName);
+            return toResult(processKey, form, DefaultFormService.submit(resumeHandler, validator, form, merged));
         } catch (ExecutionException e) {
-            throw new ProcessException(processInstanceId, "Form submit error: " + e.getMessage(), e);
+            throw new ProcessException(processKey, "Form submit error: " + e.getMessage(), e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    public FormSubmitResult submitNext(UUID processInstanceId, Map<String, Object> data) {
+    public FormSubmitResult submitNext(ProcessKey processKey, Map<String, Object> data) {
         List<FormListEntry> forms;
         try {
-            forms = list(processInstanceId);
+            forms = list(processKey);
         } catch (Exception e) {
-            throw new ProcessException(processInstanceId, "Process execution error", e);
+            throw new ProcessException(processKey, "Process execution error", e);
         }
 
         if (forms == null || forms.isEmpty()) {
-            throw new ProcessException(processInstanceId, "Invalid process state: no forms found");
+            throw new ProcessException(processKey, "Invalid process state: no forms found");
         }
 
         FormSubmitResult lastResult = null;
         for (FormListEntry f : forms) {
             Map<String, Object> args = (Map<String, Object>) data.get(f.getName());
 
-            lastResult = submit(processInstanceId, f.getName(), args);
+            lastResult = submit(processKey, f.getName(), args);
             if (!lastResult.isValid()) {
                 return lastResult;
             }
@@ -188,12 +204,12 @@ public class ConcordFormService {
         return lastResult;
     }
 
-    public boolean exists(UUID instanceId, String path) {
-        return stateManager.exists(instanceId, path);
+    public boolean exists(PartialProcessKey processKey, String path) {
+        return stateManager.exists(processKey, path);
     }
 
-    private static FormSubmitResult toResult(UUID processInstanceId, Form f, io.takari.bpm.form.FormSubmitResult r) {
-        return new FormSubmitResult(processInstanceId, f.getFormDefinition().getName(), r.getErrors());
+    private static FormSubmitResult toResult(PartialProcessKey processKey, Form f, io.takari.bpm.form.FormSubmitResult r) {
+        return new FormSubmitResult(processKey.getInstanceId(), f.getFormDefinition().getName(), r.getErrors());
     }
 
     @SuppressWarnings("unchecked")
@@ -226,12 +242,12 @@ public class ConcordFormService {
         return a;
     }
 
-    private void resume(UUID instanceId, String eventName, Map<String, Object> req) throws ExecutionException {
+    private void resume(ProcessKey processKey, String eventName, Map<String, Object> req) throws ExecutionException {
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(instanceId, eventName, req);
+            payload = payloadManager.createResumePayload(processKey, eventName, req);
         } catch (IOException e) {
-            throw new ExecutionException("Error while creating a payload for: " + instanceId, e);
+            throw new ExecutionException("Error while creating a payload for: " + processKey, e);
         }
 
         resumePipeline.process(payload);
@@ -254,8 +270,8 @@ public class ConcordFormService {
         return (Boolean) v;
     }
 
-    private FormValidator createFormValidator(UUID processInstanceId, String formName) {
-        FormValidatorLocale locale = new ExternalFileFormValidatorLocale(processInstanceId, formName, stateManager);
+    private FormValidator createFormValidator(ProcessKey processKey, String formName) {
+        FormValidatorLocale locale = new ExternalFileFormValidatorLocale(processKey, formName, stateManager);
         List<DefaultFormValidator.FieldValidator> vs = new ArrayList<>();
         vs.add(new StringFieldValidator(locale));
         vs.add(new DefaultFormValidator.IntegerFieldValidator(locale));

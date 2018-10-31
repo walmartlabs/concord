@@ -28,13 +28,13 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.InjectCounter;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.text.MessageFormat;
 import java.util.Map;
-import java.util.UUID;
 
 @Named
 public class ProcessTimeoutPolicyApplier implements PolicyApplier {
@@ -55,7 +55,7 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
     @Override
     @SuppressWarnings("unchecked")
     public void apply(Payload payload, Map<String, Object> policy) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (cfg == null) {
@@ -75,11 +75,11 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
             String msg = i.getRule().getMsg() != null ? i.getRule().getMsg() : DEFAULT_PROCESS_TIMEOUT_MSG;
             Object actualTimeout = i.getEntity();
             String limit = i.getRule().getMax();
-            logManager.error(instanceId, MessageFormat.format(msg, actualTimeout, limit));
+            logManager.error(processKey, MessageFormat.format(msg, actualTimeout, limit));
         });
 
         if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "'processTimeout' value policy violation");
+            throw new ProcessException(processKey, "'processTimeout' value policy violation");
         }
     }
 }

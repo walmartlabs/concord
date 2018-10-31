@@ -29,6 +29,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.metrics.InjectCounter;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -38,7 +39,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.pipelines.processors.policy.PolicyApplier.appendMsg;
 
@@ -67,7 +67,7 @@ public class ContainerPolicyApplier implements PolicyApplier {
     @Override
     @SuppressWarnings("unchecked")
     public void apply(Payload payload, Map<String, Object> policy) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
@@ -80,24 +80,24 @@ public class ContainerPolicyApplier implements PolicyApplier {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
             containerOptions = (Map<String, Object>) m.get(InternalConstants.Request.CONTAINER);
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while reading container configuration: {}", e);
-            throw new ProcessException(instanceId, "Error while reading container configuration", e);
+            logManager.error(processKey, "Error while reading container configuration: {}", e);
+            throw new ProcessException(processKey, "Error while reading container configuration", e);
         }
 
         CheckResult<ContainerRule, Object> result = new PolicyEngine(policy).getContainerPolicy().check(containerOptions);
 
         result.getWarn().forEach(i -> {
             policyWarn.inc();
-            logManager.warn(instanceId, appendMsg("Potential container policy violation (policy: {})", i.getMsg()), i.getRule());
+            logManager.warn(processKey, appendMsg("Potential container policy violation (policy: {})", i.getMsg()), i.getRule());
         });
 
         result.getDeny().forEach(i -> {
             policyDeny.inc();
-            logManager.error(instanceId, appendMsg("Container policy violation", i.getMsg()), i.getRule());
+            logManager.error(processKey, appendMsg("Container policy violation", i.getMsg()), i.getRule());
         });
 
         if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Found container policy violations");
+            throw new ProcessException(processKey, "Found container policy violations");
         }
     }
 }

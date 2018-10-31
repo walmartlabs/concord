@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -30,7 +31,6 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 @Named
 public class ResumeStateStoringProcessor implements PayloadProcessor {
@@ -45,7 +45,7 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         String eventName = payload.getHeader(Payload.RESUME_EVENT_NAME);
         if (eventName == null) {
@@ -64,8 +64,8 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
             Path resumeMarker = stateDir.resolve(InternalConstants.Files.RESUME_MARKER_FILE_NAME);
             Files.write(resumeMarker, eventName.getBytes());
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while saving resume state", e);
-            throw new ProcessException(instanceId, "Error while saving resume state", e);
+            logManager.error(processKey, "Error while saving resume state", e);
+            throw new ProcessException(processKey, "Error while saving resume state", e);
         }
 
         return chain.process(payload);

@@ -22,11 +22,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.user.UserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,7 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
 
         payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, m);
 
-        log.info("process ['{}'] -> done", payload.getInstanceId());
+        log.info("process ['{}'] -> done", payload.getProcessKey());
         return chain.process(payload);
     }
 

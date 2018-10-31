@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.logs;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
@@ -36,9 +37,7 @@ import static com.walmartlabs.concord.server.jooq.Routines.processLogLastNBytes;
 import static com.walmartlabs.concord.server.jooq.Routines.processLogNextRange;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOGS;
 import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_LOGS_SIZE;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class ProcessLogsDao extends AbstractDao {
@@ -48,16 +47,20 @@ public class ProcessLogsDao extends AbstractDao {
         super(cfg);
     }
 
-    public void append(UUID instanceId, byte[] data) {
+    public void append(PartialProcessKey processKey, byte[] data) {
+        UUID instanceId = processKey.getInstanceId();
+
         tx(tx -> tx.insertInto(PROCESS_LOGS)
                 .columns(PROCESS_LOGS.INSTANCE_ID, PROCESS_LOGS.CHUNK_RANGE, PROCESS_LOGS.CHUNK_DATA)
                 .values(value(instanceId), processLogNextRange(instanceId, data.length), value(data))
                 .execute());
     }
 
-    public ProcessLog get(UUID instanceId, Integer start, Integer end) {
+    public ProcessLog get(PartialProcessKey processKey, Integer start, Integer end) {
+        UUID instanceId = processKey.getInstanceId();
+
         try (DSLContext tx = DSL.using(cfg)) {
-            List<ProcessLogChunk> chunks = getChunks(tx, instanceId, start, end);
+            List<ProcessLogChunk> chunks = getChunks(tx, processKey, start, end);
 
             int size = tx.select(V_PROCESS_LOGS_SIZE.SIZE)
                     .from(V_PROCESS_LOGS_SIZE)
@@ -69,7 +72,9 @@ public class ProcessLogsDao extends AbstractDao {
         }
     }
 
-    private List<ProcessLogChunk> getChunks(DSLContext tx, UUID instanceId, Integer start, Integer end) {
+    private List<ProcessLogChunk> getChunks(DSLContext tx, PartialProcessKey processKey, Integer start, Integer end) {
+        UUID instanceId = processKey.getInstanceId();
+
         String lowerBoundExpr = "lower(" + PROCESS_LOGS.CHUNK_RANGE + ")";
 
         if (start == null && end == null) {

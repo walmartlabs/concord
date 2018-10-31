@@ -24,8 +24,10 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -50,7 +52,7 @@ public class ProcessInfoProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (req == null) {
@@ -63,7 +65,7 @@ public class ProcessInfoProcessor implements PayloadProcessor {
             req.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
-        String token = createSessionKey(payload.getInstanceId());
+        String token = createSessionKey(payload.getProcessKey());
         Map<String, Object> m = new HashMap<>();
         m.put("sessionKey", token);
 
@@ -76,24 +78,26 @@ public class ProcessInfoProcessor implements PayloadProcessor {
         args.put(Constants.Request.PROCESS_INFO_KEY, m);
 
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
-        exportSessionToken(instanceId, ws, token);
+        exportSessionToken(processKey, ws, token);
 
         return chain.process(payload.putHeader(Payload.REQUEST_DATA_MAP, req));
     }
 
-    private void exportSessionToken(UUID instanceId, Path ws, String token) {
+    private void exportSessionToken(ProcessKey processKey, Path ws, String token) {
         try {
             Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
             Files.write(dst.resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME), token.getBytes());
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while storing the session token: {}", e);
-            throw new ProcessException(instanceId, "Error while string the session token", e);
+            logManager.error(processKey, "Error while storing the session token: {}", e);
+            throw new ProcessException(processKey, "Error while string the session token", e);
         }
     }
 
-    private String createSessionKey(UUID instanceId) {
+    private String createSessionKey(PartialProcessKey processKey) {
         byte[] salt = secretCfg.getSecretStoreSalt();
         byte[] pwd = secretCfg.getServerPwd();
+
+        UUID instanceId = processKey.getInstanceId();
 
         byte[] ab = SecretUtils.encrypt(instanceId.toString().getBytes(), pwd, salt);
         return Base64.getEncoder().encodeToString(ab);

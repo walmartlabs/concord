@@ -22,10 +22,7 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadBuilder;
-import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.process.ProcessSecurityContext;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,14 +102,14 @@ public class TriggerScheduler implements ScheduledTask {
     }
 
     private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) {
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = PartialProcessKey.create();
 
         Map<String, Object> request = new HashMap<>();
         request.put(Constants.Request.ARGUMENTS_KEY, args);
 
         Payload payload;
         try {
-            payload = PayloadBuilder.start(instanceId)
+            payload = PayloadBuilder.start(processKey)
                     .initiator(INITIATOR_ID, INITIATOR)
                     .organization(orgId)
                     .project(projectId)
@@ -133,7 +130,7 @@ public class TriggerScheduler implements ScheduledTask {
                     triggerId, orgId, projectId, repoId, flowName, e);
         }
 
-        log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, flowName, instanceId);
+        log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, flowName, processKey);
     }
 
     private void sleep(long t) {

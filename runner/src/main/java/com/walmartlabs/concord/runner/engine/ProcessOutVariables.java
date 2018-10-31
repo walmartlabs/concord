@@ -25,7 +25,6 @@ import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionContextFactory;
 import io.takari.bpm.api.Variables;
 import io.takari.bpm.context.ExecutionContextImpl;
-import io.takari.bpm.state.ProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

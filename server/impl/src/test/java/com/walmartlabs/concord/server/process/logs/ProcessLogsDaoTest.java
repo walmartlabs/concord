@@ -21,9 +21,11 @@ package com.walmartlabs.concord.server.process.logs;
  */
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -43,9 +45,10 @@ public class ProcessLogsDaoTest extends AbstractDaoTest {
 
         for (int i = 0; i < files; i++) {
             UUID instanceId = UUID.randomUUID();
+            Timestamp t = new Timestamp(System.currentTimeMillis());
 
             for (int j = 0; j < chunks; j++) {
-                processLogsDao.append(instanceId, data);
+                processLogsDao.append(new ProcessKey(instanceId, t), data);
             }
 
             if (i % 10 == 0) {

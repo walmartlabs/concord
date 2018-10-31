@@ -254,9 +254,9 @@ public class SecretManager {
                 throw new UnauthorizedException("Project-scoped secrets can only be accessed within a running process. Secret: " + e.getName());
             }
 
-            ProcessEntry p = processQueueDao.get(session.getProcessInstanceId());
+            ProcessEntry p = processQueueDao.get(session.getProcessKey());
             if (p == null) {
-                throw new IllegalStateException("Process not found: " + session.getProcessInstanceId());
+                throw new IllegalStateException("Process not found: " + session.getProcessKey());
             }
 
             if (!projectId.equals(p.getProjectId())) {

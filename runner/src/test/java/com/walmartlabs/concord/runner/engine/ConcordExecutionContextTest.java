@@ -28,14 +28,8 @@ import io.takari.bpm.api.Variables;
 import io.takari.bpm.el.ExpressionManager;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-
 import static com.walmartlabs.concord.runner.engine.ConcordExecutionContextFactory.ConcordExecutionContext;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

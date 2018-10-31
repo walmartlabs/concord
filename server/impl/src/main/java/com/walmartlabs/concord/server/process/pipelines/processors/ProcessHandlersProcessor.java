@@ -25,11 +25,15 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Named
 public class ProcessHandlersProcessor implements PayloadProcessor {
@@ -38,8 +42,6 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
-
         Set<String> handlers = new HashSet<>();
 
         ProjectDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
@@ -60,14 +62,14 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
     }
 
     private static void update(Payload payload, ProjectDefinition pd, Collection<String> profiles, Set<String> handlers, String flow, String disableFlag) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         if (hasFlow(pd, profiles, flow)) {
             boolean suppressed = getBoolean(payload, disableFlag);
             if (suppressed) {
-                log.info("process ['{}'] -> {} is suppressed, skipping...", instanceId, flow);
+                log.info("process ['{}'] -> {} is suppressed, skipping...", processKey, flow);
             } else {
                 handlers.add(flow);
-                log.info("process ['{}'] -> added {} handler", instanceId, flow);
+                log.info("process ['{}'] -> added {} handler", processKey, flow);
             }
         }
     }

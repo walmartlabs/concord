@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.console.UserActivityResponse.ProjectProcesses;
 import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.process.ProcessStatus.*;
 import static org.jooq.impl.DSL.*;

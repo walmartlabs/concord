@@ -21,12 +21,13 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.ProcessStatus;
-import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -56,15 +57,15 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
         String projectName = "project_" + System.currentTimeMillis();
         UUID projectId = projectDao.insert(orgId, projectName, null, null, null, null, true, new byte[0], null);
 
-        UUID instanceA = UUID.randomUUID();
-        queueDao.insertInitial(instanceA, new Timestamp(System.currentTimeMillis()), ProcessKind.DEFAULT, null, projectId, null, null);
+        ProcessKey instanceA = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
+        queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, null, null);
         queueDao.updateStatus(instanceA, ProcessStatus.ENQUEUED);
 
         // add a small delay between two jobs
         Thread.sleep(100);
 
-        UUID instanceB = UUID.randomUUID();
-        queueDao.insertInitial(instanceB, new Timestamp(System.currentTimeMillis()), ProcessKind.DEFAULT, null, projectId, null, null);
+        ProcessKey instanceB = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
+        queueDao.insertInitial(instanceB, ProcessKind.DEFAULT, null, projectId, null, null);
         queueDao.updateStatus(instanceB, ProcessStatus.ENQUEUED);
 
         // ---
@@ -74,10 +75,10 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
         ProcessEntry e3 = queueDao.poll(null);
 
         assertNotNull(e1);
-        assertEquals(instanceA, e1.getInstanceId());
+        assertEquals(instanceA.getInstanceId(), e1.getInstanceId());
 
         assertNotNull(e2);
-        assertEquals(instanceB, e2.getInstanceId());
+        assertEquals(instanceB.getInstanceId(), e2.getInstanceId());
 
         assertNull(e3);
     }

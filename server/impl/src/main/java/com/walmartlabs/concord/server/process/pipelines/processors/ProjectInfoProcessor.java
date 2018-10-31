@@ -76,7 +76,7 @@ public class ProjectInfoProcessor implements PayloadProcessor {
 
         ProjectEntry e = projectDao.get(projectId);
         if (e == null) {
-            throw new ProcessException(p.getInstanceId(), "Project not found: " + projectId);
+            throw new ProcessException(p.getProcessKey(), "Project not found: " + projectId);
         }
 
         Map<String, Object> m = new HashMap<>();

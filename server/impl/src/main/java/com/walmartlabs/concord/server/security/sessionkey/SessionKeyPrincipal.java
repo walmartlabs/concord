@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.security.sessionkey;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
-
-import java.util.UUID;
 
 public class SessionKeyPrincipal {
 
@@ -30,13 +29,13 @@ public class SessionKeyPrincipal {
         return PrincipalUtils.getCurrent(SessionKeyPrincipal.class);
     }
 
-    private final UUID processInstanceId;
+    private final PartialProcessKey processKey;
 
-    public SessionKeyPrincipal(UUID processInstanceId) {
-        this.processInstanceId = processInstanceId;
+    public SessionKeyPrincipal(PartialProcessKey processKey) {
+        this.processKey = processKey;
     }
 
-    public UUID getProcessInstanceId() {
-        return processInstanceId;
+    public PartialProcessKey getProcessKey() {
+        return processKey;
     }
 }

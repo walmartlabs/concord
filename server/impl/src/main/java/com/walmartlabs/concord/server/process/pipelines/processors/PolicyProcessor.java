@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.policy.PolicyApplier;
 
@@ -30,7 +31,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Applies policies.
@@ -49,14 +49,14 @@ public class PolicyProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         PolicyEntry policy = payload.getHeader(Payload.POLICY);
         if (policy == null || policy.isEmpty()) {
             return chain.process(payload);
         }
 
-        logManager.info(instanceId, "Applying policies...");
+        logManager.info(processKey, "Applying policies...");
         Map<String, Object> rules = policy.getRules();
 
         try {
@@ -67,8 +67,8 @@ public class PolicyProcessor implements PayloadProcessor {
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
-            logManager.error(instanceId, "Error while applying policy '{}': {}", policy.getName(), e);
-            throw new ProcessException(instanceId, "Policy '" + policy.getName() + "' error", e);
+            logManager.error(processKey, "Error while applying policy '{}': {}", policy.getName(), e);
+            throw new ProcessException(processKey, "Policy '" + policy.getName() + "' error", e);
         }
 
         return chain.process(payload);

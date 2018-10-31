@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
 import java.nio.file.Path;
-import java.sql.Timestamp;
 import java.util.*;
 
 public class Payload {
@@ -53,31 +52,24 @@ public class Payload {
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 
-    private final UUID instanceId;
-    private final Timestamp createdAt;
+    private final ProcessKey processKey;
     private final Map<String, Object> headers;
     private final Map<String, Path> attachments;
 
-    public Payload(UUID instanceId, Timestamp createdAt) {
-        this.instanceId = instanceId;
-        this.createdAt = createdAt;
+    public Payload(ProcessKey processKey) {
+        this.processKey = processKey;
         this.headers = Collections.emptyMap();
         this.attachments = Collections.emptyMap();
     }
 
     private Payload(Payload old, Map<String, Object> headers, Map<String, Path> attachments) {
-        this.instanceId = old.instanceId;
-        this.createdAt = old.createdAt;
+        this.processKey = old.processKey;
         this.headers = Objects.requireNonNull(headers, "Headers map cannot be null");
         this.attachments = Objects.requireNonNull(attachments, "Attachments map cannot be null");
     }
 
-    public UUID getInstanceId() {
-        return instanceId;
-    }
-
-    public Timestamp getCreatedAt() {
-        return createdAt;
+    public ProcessKey getProcessKey() {
+        return processKey;
     }
 
     public <T> T getHeader(HeaderKey<T> key) {
@@ -168,7 +160,7 @@ public class Payload {
     @Override
     public String toString() {
         return "Payload{" +
-                "instanceId=" + instanceId +
+                "processKey=" + processKey +
                 ", headers=" + headers +
                 ", attachments=" + attachments +
                 '}';

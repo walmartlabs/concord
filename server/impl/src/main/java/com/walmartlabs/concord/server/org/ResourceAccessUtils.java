@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 
 import java.util.UUID;

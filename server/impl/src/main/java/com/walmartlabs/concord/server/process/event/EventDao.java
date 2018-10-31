@@ -22,7 +22,10 @@ package com.walmartlabs.concord.server.process.event;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.process.ProcessEventEntry;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.Record4;
+import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;

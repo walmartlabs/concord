@@ -120,10 +120,10 @@ public class ProcessManager {
         resumePipeline.process(payload);
     }
 
-    public void kill(UUID instanceId) {
-        ProcessEntry e = queueDao.get(instanceId);
+    public void kill(PartialProcessKey processKey) {
+        ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + instanceId, Status.NOT_FOUND);
+            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
         assertKillRights(e);
@@ -133,17 +133,17 @@ public class ProcessManager {
             return;
         }
 
-        if (cancel(instanceId, s, SERVER_PROCESS_STATUSES)) {
+        if (cancel(processKey, s, SERVER_PROCESS_STATUSES)) {
             return;
         }
 
-        agentManager.killProcess(instanceId);
+        agentManager.killProcess(processKey);
     }
 
-    public void killCascade(UUID instanceId) {
-        ProcessEntry e = queueDao.get(instanceId);
+    public void killCascade(PartialProcessKey processKey) {
+        ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
-            throw new ProcessException(null, "Process not found: " + instanceId, Status.NOT_FOUND);
+            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
         assertKillRights(e);
@@ -151,44 +151,46 @@ public class ProcessManager {
         List<IdAndStatus> l = null;
         boolean updated = false;
         while (!updated) {
-            l = queueDao.getCascade(instanceId);
-            List<UUID> ids = filterProcessIds(l, SERVER_PROCESS_STATUSES);
-            updated = ids.isEmpty() || queueDao.updateStatus(ids, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
+            l = queueDao.getCascade(processKey);
+            List<PartialProcessKey> keys = filterProcessKeys(l, SERVER_PROCESS_STATUSES);
+            updated = keys.isEmpty() || queueDao.updateStatus(keys, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
         }
 
-        List<UUID> ids = filterProcessIds(l, AGENT_PROCESS_STATUSES);
-        if (!ids.isEmpty()) {
-            agentManager.killProcess(ids);
+        List<PartialProcessKey> keys = filterProcessKeys(l, AGENT_PROCESS_STATUSES);
+        if (!keys.isEmpty()) {
+            agentManager.killProcess(keys);
         }
     }
 
-    public void updateStatus(UUID instanceId, String agentId, ProcessStatus status) {
-        assertUpdateRights(instanceId);
+    public void updateStatus(ProcessKey processKey, String agentId, ProcessStatus status) {
+        assertUpdateRights(processKey);
 
-        if (status == ProcessStatus.FINISHED && isSuspended(instanceId)) {
+        if (status == ProcessStatus.FINISHED && isSuspended(processKey)) {
             status = ProcessStatus.SUSPENDED;
         }
 
-        if (status == ProcessStatus.CANCELLED && isFinished(instanceId)) {
-            log.info("updateStatus [{}, '{}', {}] -> ignored, process finished", instanceId, agentId, status);
+        if (status == ProcessStatus.CANCELLED && isFinished(processKey)) {
+            log.info("updateStatus [{}, '{}', {}] -> ignored, process finished", processKey, agentId, status);
             return;
         }
 
-        queueDao.updateAgentId(instanceId, agentId, status);
-        logManager.info(instanceId, "Process status: {}", status);
+        queueDao.updateAgentId(processKey, agentId, status);
+        logManager.info(processKey, "Process status: {}", status);
 
-        log.info("updateStatus [{}, '{}', {}] -> done", instanceId, agentId, status);
+        log.info("updateStatus [{}, '{}', {}] -> done", processKey, agentId, status);
     }
 
-    private boolean isSuspended(UUID instanceId) {
+    private boolean isSuspended(ProcessKey processKey) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
                 InternalConstants.Files.SUSPEND_MARKER_FILE_NAME);
 
-        return stateManager.exists(instanceId, resource);
+        return stateManager.exists(processKey, resource);
     }
 
-    private boolean isFinished(UUID instanceId) {
+    private boolean isFinished(PartialProcessKey processKey) {
+        UUID instanceId = processKey.getInstanceId();
+
         ProcessStatus status = queueDao.getStatus(instanceId);
         if (status == null) {
             return true;
@@ -197,35 +199,36 @@ public class ProcessManager {
     }
 
     private ProcessResult start(Chain pipeline, Payload payload, boolean sync) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         try {
             pipeline.process(payload);
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("start ['{}'] -> error starting the process", instanceId, e);
-            throw new ProcessException(instanceId, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
+            log.error("start ['{}'] -> error starting the process", processKey, e);
+            throw new ProcessException(processKey, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
         Map<String, Object> out = null;
         if (sync) {
-            Map<String, Object> args = readArgs(instanceId);
-            out = process(instanceId, args);
+            Map<String, Object> args = readArgs(processKey);
+            out = process(processKey, args);
         }
 
+        UUID instanceId = processKey.getInstanceId();
         return new ProcessResult(instanceId, out);
     }
 
-    private Map<String, Object> process(UUID instanceId, Map<String, Object> params) {
+    private Map<String, Object> process(ProcessKey processKey, Map<String, Object> params) {
         while (true) {
-            ProcessEntry entry = queueDao.get(instanceId);
+            ProcessEntry entry = queueDao.get(processKey);
             ProcessStatus status = entry.getStatus();
 
             if (status == ProcessStatus.SUSPENDED) {
-                wakeUpProcess(instanceId, params);
+                wakeUpProcess(processKey, params);
             } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
-                throw new ProcessException(instanceId, "Process error: " + status, Status.INTERNAL_SERVER_ERROR);
+                throw new ProcessException(processKey, "Process error: " + status, Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
                 return readOutValues(entry);
             }
@@ -239,18 +242,18 @@ public class ProcessManager {
     }
 
     @SuppressWarnings("unchecked")
-    private void wakeUpProcess(UUID instanceId, Map<String, Object> data) {
-        FormSubmitResult r = formService.submitNext(instanceId, data);
+    private void wakeUpProcess(ProcessKey processKey, Map<String, Object> data) {
+        FormSubmitResult r = formService.submitNext(processKey, data);
         if (r != null && !r.isValid()) {
             String error = "n/a";
             if (r.getErrors() != null) {
                 error = r.getErrors().stream().map(e -> e.getFieldName() + ": " + e.getError()).collect(Collectors.joining(","));
             }
-            throw new ProcessException(instanceId, "Form '" + r.getFormName() + "' submit error: " + error, Status.BAD_REQUEST);
+            throw new ProcessException(processKey, "Form '" + r.getFormName() + "' submit error: " + error, Status.BAD_REQUEST);
         }
     }
 
-    private boolean cancel(UUID instanceId, ProcessStatus current, List<ProcessStatus> expected) {
+    private boolean cancel(PartialProcessKey processKey, ProcessStatus current, List<ProcessStatus> expected) {
         boolean found = false;
         for (ProcessStatus s : expected) {
             if (current == s) {
@@ -259,7 +262,7 @@ public class ProcessManager {
             }
         }
 
-        return found && queueDao.updateStatus(instanceId, current, ProcessStatus.CANCELLED);
+        return found && queueDao.updateStatus(processKey, current, ProcessStatus.CANCELLED);
     }
 
     @SuppressWarnings("unchecked")
@@ -269,9 +272,9 @@ public class ProcessManager {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> readArgs(UUID instanceId) {
+    private Map<String, Object> readArgs(ProcessKey processKey) {
         String resource = InternalConstants.Files.REQUEST_DATA_FILE_NAME;
-        Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
+        Optional<Map<String, Object>> o = stateManager.get(processKey, resource, in -> {
             try {
                 ObjectMapper om = new ObjectMapper();
 
@@ -307,26 +310,25 @@ public class ProcessManager {
                 "to kill the process: " + e.getInstanceId());
     }
 
-    public void assertUpdateRights(UUID instanceId) {
+    public void assertUpdateRights(PartialProcessKey processKey) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin() || p.isGlobalWriter()) {
             return;
         }
-
         SessionKeyPrincipal s = SessionKeyPrincipal.getCurrent();
-        if (s != null && instanceId.equals(s.getProcessInstanceId())) {
+        if (s != null && processKey.partOf(s.getProcessKey())) {
             // processes can update their own statuses
             return;
         }
 
         throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
-                "to update the process status: " + instanceId);
+                "to update the process status: " + processKey);
     }
 
-    private static List<UUID> filterProcessIds(List<IdAndStatus> l, List<ProcessStatus> expected) {
+    private static List<PartialProcessKey> filterProcessKeys(List<IdAndStatus> l, List<ProcessStatus> expected) {
         return l.stream()
                 .filter(r -> expected.contains(r.getStatus()))
-                .map(IdAndStatus::getInstanceId)
+                .map(IdAndStatus::getProcessKey)
                 .collect(Collectors.toList());
     }
 

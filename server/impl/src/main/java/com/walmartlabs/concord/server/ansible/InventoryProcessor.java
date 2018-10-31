@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.ansible;
 
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
@@ -31,7 +32,6 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 /**
  * Support for external Ansible inventories.
@@ -63,7 +63,7 @@ public class InventoryProcessor implements PayloadProcessor {
             }
         }
 
-        deprecationWarning(payload.getInstanceId());
+        deprecationWarning(payload.getProcessKey());
 
         payload = payload.removeAttachment(INVENTORY_FILE)
                 .removeAttachment(DYNAMIC_INVENTORY_FILE);
@@ -72,7 +72,7 @@ public class InventoryProcessor implements PayloadProcessor {
     }
 
     private boolean copy(Payload payload, AttachmentKey src, String dstName) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
 
         Path p = payload.getAttachment(src);
@@ -84,18 +84,18 @@ public class InventoryProcessor implements PayloadProcessor {
         try {
             Files.copy(p, dst);
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while copying an inventory file: " + p, e);
-            throw new ProcessException(instanceId, "Error while copying an inventory file: " + p, e);
+            logManager.error(processKey, "Error while copying an inventory file: " + p, e);
+            throw new ProcessException(processKey, "Error while copying an inventory file: " + p, e);
         }
 
         return true;
     }
 
-    private void deprecationWarning(UUID instanceId) {
+    private void deprecationWarning(ProcessKey processKey) {
         String msg = ".. WARNING ............................................................................\n" +
                 " 'inventory' and 'dynamicInventory' request parameters are deprecated.\n" +
                 " Please use 'inventoryFile' and 'dynamicInventoryFile' parameters of the Ansible task.\n" +
                 ".......................................................................................\n";
-        logManager.log(instanceId, msg);
+        logManager.log(processKey, msg);
     }
 }

@@ -22,10 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.CommitInfo;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -57,17 +54,18 @@ public class EnqueueingProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
+
         Set<String> tags = payload.getHeader(Payload.PROCESS_TAGS);
 
-        ProcessEntry e = queueDao.get(instanceId);
+        ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
-            throw new ProcessException(instanceId, "Process not found: " + instanceId);
+            throw new ProcessException(processKey, "Process not found: " + processKey);
         }
 
         ProcessStatus s = e.getStatus();
         if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
-            throw new ProcessException(instanceId, "Invalid process status: " + s);
+            throw new ProcessException(processKey, "Invalid process status: " + s);
         }
 
         Map<String, Object> requirements = payload.getHeader(Payload.REQUIREMENTS);
@@ -100,7 +98,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
 
-        queueDao.enqueue(instanceId, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers);
+        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers);
 
         return chain.process(payload);
     }
@@ -122,17 +120,17 @@ public class EnqueueingProcessor implements PayloadProcessor {
             try {
                 c = DatatypeConverter.parseDateTime((String) v);
             } catch (DateTimeParseException e) {
-                throw new ProcessException(p.getInstanceId(), "Invalid 'startAt' format, expected an ISO-8601 value, got: " + v);
+                throw new ProcessException(p.getProcessKey(), "Invalid 'startAt' format, expected an ISO-8601 value, got: " + v);
             }
 
             if (c.before(Calendar.getInstance())) {
-                throw new ProcessException(p.getInstanceId(), "Invalid 'startAt' value, can't be in the past: " + v);
+                throw new ProcessException(p.getProcessKey(), "Invalid 'startAt' value, can't be in the past: " + v);
             }
 
             return c.toInstant();
         }
 
-        throw new ProcessException(p.getInstanceId(), "Invalid 'startAt' value, expected an ISO-8601 value, got: " + v);
+        throw new ProcessException(p.getProcessKey(), "Invalid 'startAt' value, expected an ISO-8601 value, got: " + v);
     }
 
     @SuppressWarnings("unchecked")

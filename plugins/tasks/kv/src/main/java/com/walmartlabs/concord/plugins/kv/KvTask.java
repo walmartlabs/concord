@@ -30,6 +30,7 @@ import com.walmartlabs.concord.client.ProcessKvStoreApi;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.UUID;
 
 @Named("kv")
 public class KvTask implements Task {
@@ -51,7 +52,7 @@ public class KvTask implements Task {
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
 
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.removeKey(instanceId, key);
+            api.removeKey(UUID.fromString(instanceId), key);
             return null;
         });
     }
@@ -60,7 +61,7 @@ public class KvTask implements Task {
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
 
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.putString(instanceId, key, value);
+            api.putString(UUID.fromString(instanceId), key, value);
             return null;
         });
     }
@@ -68,14 +69,14 @@ public class KvTask implements Task {
     public String getString(@InjectVariable("txId") String instanceId, String key) throws Exception {
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
 
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getString(instanceId, key));
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getString(UUID.fromString(instanceId), key));
     }
 
     public void putLong(@InjectVariable("txId") String instanceId, String key, Long value) throws Exception {
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
 
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.putLong(instanceId, key, value);
+            api.putLong(UUID.fromString(instanceId), key, value);
             return null;
         });
     }
@@ -87,12 +88,12 @@ public class KvTask implements Task {
     public long incLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
 
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.incLong(instanceId, key));
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.incLong(UUID.fromString(instanceId), key));
     }
 
     public Long getLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
 
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getLong(instanceId, key));
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getLong(UUID.fromString(instanceId), key));
     }
 }

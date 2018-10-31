@@ -43,11 +43,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectFrom;
-import static org.jooq.impl.DSL.selectOne;
-import static org.jooq.impl.DSL.exists;
-import static org.jooq.impl.DSL.or;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class SecretDao extends AbstractDao {

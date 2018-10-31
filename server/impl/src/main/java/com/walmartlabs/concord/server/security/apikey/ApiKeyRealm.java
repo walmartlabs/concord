@@ -20,12 +20,12 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;

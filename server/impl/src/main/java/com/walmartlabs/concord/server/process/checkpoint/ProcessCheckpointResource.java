@@ -92,11 +92,12 @@ public class ProcessCheckpointResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<ProcessCheckpointEntry> list(@ApiParam @PathParam("id") UUID instanceId) {
-        ProcessEntry process = assertProcess(instanceId);
+        ProcessEntry entry = assertProcess(instanceId);
+        ProcessKey processKey = ProcessKey.from(entry);
 
-        assertProcessCheckpointAccess(process);
+        assertProcessCheckpointAccess(entry);
 
-        return checkpointManager.list(instanceId);
+        return checkpointManager.list(processKey);
     }
 
     @POST
@@ -111,29 +112,30 @@ public class ProcessCheckpointResource implements Resource {
 
         UUID checkpointId = request.getId();
 
-        ProcessEntry process = assertProcess(instanceId);
+        ProcessEntry entry = assertProcess(instanceId);
+        ProcessKey processKey = ProcessKey.from(entry);
 
-        assertProcessCheckpointAccess(process);
+        assertProcessCheckpointAccess(entry);
 
-        ProcessStatus status = process.getStatus();
+        ProcessStatus status = entry.getStatus();
         if (!RESTORE_ALLOWED_STATUSES.contains(status)) {
             throw new ConcordApplicationException("Unable to restore a checkpoint, the process is " + status);
         }
 
-        String eventName = checkpointManager.restoreCheckpoint(instanceId, checkpointId);
+        String eventName = checkpointManager.restoreCheckpoint(processKey, checkpointId);
         if (eventName == null) {
             throw new ConcordApplicationException("Checkpoint " + checkpointId + " not found");
         }
 
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(instanceId, eventName, null);
+            payload = payloadManager.createResumePayload(processKey, eventName, null);
         } catch (IOException e) {
-            log.error("restore ['{}', '{}'] -> error creating a payload: {}", instanceId, eventName, e);
+            log.error("restore ['{}', '{}'] -> error creating a payload: {}", processKey, eventName, e);
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        processQueueDao.updateStatus(instanceId, ProcessStatus.SUSPENDED);
+        processQueueDao.updateStatus(processKey, ProcessStatus.SUSPENDED);
 
         processManager.resume(payload);
         return new ResumeProcessResponse();
@@ -145,7 +147,8 @@ public class ProcessCheckpointResource implements Resource {
     public void uploadCheckpoint(@PathParam("id") UUID instanceId,
                                  @ApiParam MultipartInput input) {
 
-        assertProcess(instanceId);
+        ProcessEntry entry = assertProcess(instanceId);
+        ProcessKey processKey = ProcessKey.from(entry);
 
         UUID checkpointId = MultipartUtils.getUuid(input, "id");
         String checkpointName = MultipartUtils.getString(input, "name");
@@ -153,17 +156,17 @@ public class ProcessCheckpointResource implements Resource {
              TemporaryPath tmpIn = IOUtils.tempFile("checkpoint", ".zip")) {
 
             Files.copy(data, tmpIn.path(), StandardCopyOption.REPLACE_EXISTING);
-            checkpointManager.importCheckpoint(instanceId, checkpointId, checkpointName, tmpIn.path());
+            checkpointManager.importCheckpoint(processKey, checkpointId, checkpointName, tmpIn.path());
         } catch (IOException e) {
-            log.error("uploadCheckpoint ['{}'] -> error", instanceId, e);
+            log.error("uploadCheckpoint ['{}'] -> error", processKey, e);
             throw new ConcordApplicationException("upload error: " + e.getMessage());
         }
 
-        log.info("uploadCheckpoint ['{}'] -> done", instanceId);
+        log.info("uploadCheckpoint ['{}'] -> done", processKey);
     }
 
     private ProcessEntry assertProcess(UUID instanceId) {
-        ProcessEntry p = processQueueDao.get(instanceId);
+        ProcessEntry p = processQueueDao.get(PartialProcessKey.from(instanceId));
         if (p == null) {
             throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
         }

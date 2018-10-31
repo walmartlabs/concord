@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
-import java.sql.Timestamp;
-import java.util.UUID;
 
 @Named
 public class StateImportingProcessor implements PayloadProcessor {
@@ -49,10 +48,9 @@ public class StateImportingProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
-        Timestamp instanceCreatedAt = payload.getCreatedAt();
+        ProcessKey processKey = payload.getProcessKey();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        stateManager.replacePath(instanceId, instanceCreatedAt, workspace, (this::filter));
+        stateManager.replacePath(processKey, workspace, (this::filter));
 
         return chain.process(payload);
     }

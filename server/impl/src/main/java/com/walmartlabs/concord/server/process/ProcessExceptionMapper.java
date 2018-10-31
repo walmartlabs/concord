@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.ErrorMessage;
 import org.sonatype.siesta.ExceptionMapperSupport;
 
 import javax.inject.Named;
@@ -31,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.UUID;
 
 @Named
 @Singleton
@@ -54,7 +54,10 @@ public class ProcessExceptionMapper extends ExceptionMapperSupport<ProcessExcept
             stacktrace = w.toString();
         }
 
-        ErrorMessage msg = new ErrorMessage(e.getInstanceId(), e.getMessage(), details, stacktrace);
+        PartialProcessKey processKey = e.getProcessKey();
+        UUID instanceId = processKey.getInstanceId();
+
+        ErrorMessage msg = new ErrorMessage(instanceId, e.getMessage(), details, stacktrace);
         return Response.status(e.getStatus())
                 .entity(msg)
                 .type(MediaType.APPLICATION_JSON_TYPE)

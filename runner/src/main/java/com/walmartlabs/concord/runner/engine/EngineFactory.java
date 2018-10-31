@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runner.engine;
 
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.common.ReflectionUtils;
-import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;

@@ -36,7 +36,7 @@ public class SecuritySubjectProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        securityContext.storeCurrentSubject(payload.getInstanceId());
+        securityContext.storeCurrentSubject(payload.getProcessKey());
         return chain.process(payload);
     }
 }

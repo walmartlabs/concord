@@ -25,6 +25,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -33,6 +34,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -46,7 +48,8 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
     @Test
     public void testUpdateState() throws Exception {
-        UUID instanceId = UUID.randomUUID();
+        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
+
         Path baseDir = Files.createTempDirectory("testImport");
 
         writeTempFile(baseDir.resolve("file-1"), "123".getBytes());
@@ -55,11 +58,11 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         //
         ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
-        stateManager.importPath(instanceId, null, baseDir);
+        stateManager.importPath(processKey, null, baseDir);
 
         Path tmpDir = Files.createTempDirectory("testExport");
 
-        boolean result = stateManager.export(instanceId, copyTo(tmpDir));
+        boolean result = stateManager.export(processKey, copyTo(tmpDir));
         assertTrue(result);
         assertFileContent("123", tmpDir.resolve("file-1"));
         assertFileContent("456", tmpDir.resolve("file-2"));
@@ -68,9 +71,9 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         writeTempFile(baseDir.resolve("file-1"), "123-up".getBytes());
 
-        stateManager.importPath(instanceId, null, baseDir);
+        stateManager.importPath(processKey, null, baseDir);
 
-        result = stateManager.export(instanceId, copyTo(tmpDir));
+        result = stateManager.export(processKey, copyTo(tmpDir));
         assertTrue(result);
         assertFileContent("123-up", tmpDir.resolve("file-1"));
         assertFileContent("456", tmpDir.resolve("file-2"));
@@ -79,6 +82,8 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
     @Ignore
     @Test
     public void testLargeImport() throws Exception {
+        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
+
         int files = 100;
         int chunkSize = 1024 * 1024;
         int fileSize = 10 * chunkSize;
@@ -98,7 +103,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
-        stateManager.importPath(UUID.randomUUID(), "/", baseDir);
+        stateManager.importPath(processKey, "/", baseDir);
     }
 
     private static void assertFileContent(String expected, Path f) throws IOException {

@@ -32,7 +32,10 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
@@ -48,8 +51,8 @@ public class FormAccessManager {
     }
 
     @SuppressWarnings("unchecked")
-    public Form assertFormAccess(UUID processInstanceId, String formName) {
-        Form f = getForm(processInstanceId, formName);
+    public Form assertFormAccess(ProcessKey processKey, String formName) {
+        Form f = getForm(processKey, formName);
         if (f == null) {
             return null;
         }
@@ -96,13 +99,13 @@ public class FormAccessManager {
         return f;
     }
 
-    private Form getForm(UUID processInstanceId, String formName) {
+    private Form getForm(ProcessKey processKey, String formName) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
                 InternalConstants.Files.JOB_FORMS_DIR_NAME,
                 formName);
 
-        Optional<Form> o = stateManager.get(processInstanceId, resource, FormAccessManager::deserialize);
+        Optional<Form> o = stateManager.get(processKey, resource, FormAccessManager::deserialize);
         return o.orElse(null);
     }
 

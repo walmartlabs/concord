@@ -24,8 +24,10 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.cfg.TemplateConfiguration;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.template.TemplateAliasDao;
 import org.slf4j.Logger;
@@ -40,7 +42,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Extracts template files into the workspace.
@@ -68,7 +69,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         String s = (String) req.get(InternalConstants.Request.TEMPLATE_KEY);
@@ -77,49 +78,49 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         }
 
         try {
-            URI uri = getUri(instanceId, s);
+            URI uri = getUri(processKey, s);
             Path template = dependencyManager.resolveSingle(uri).getPath();
             extract(payload, template);
 
             return chain.process(payload);
         } catch (URISyntaxException | IOException e) {
-            logManager.error(instanceId, "Template error: " + s, e);
-            throw new ProcessException(instanceId, "Error while processing a template: " + s, e);
+            logManager.error(processKey, "Template error: " + s, e);
+            throw new ProcessException(processKey, "Error while processing a template: " + s, e);
         }
     }
 
-    private URI getUri(UUID instanceId, String template) throws URISyntaxException {
+    private URI getUri(PartialProcessKey processKey, String template) throws URISyntaxException {
         try {
             URI u = new URI(template);
 
             String scheme = u.getScheme();
             // doesn't look like a URI, let's try find an alias
             if (scheme == null || scheme.trim().isEmpty()) {
-                return getByAlias(instanceId, template);
+                return getByAlias(processKey, template);
             }
 
             return u;
         } catch (URISyntaxException e) {
-            return getByAlias(instanceId, template);
+            return getByAlias(processKey, template);
         }
     }
 
-    private URI getByAlias(UUID instanceId, String s) throws URISyntaxException {
+    private URI getByAlias(PartialProcessKey processKey, String s) throws URISyntaxException {
         Optional<String> o = aliasDao.get(s);
         if (!o.isPresent()) {
-            throw new ProcessException(instanceId, "Invalid template URL or alias: " + s);
+            throw new ProcessException(processKey, "Invalid template URL or alias: " + s);
         }
 
         return new URI(o.get());
     }
 
     private void extract(Payload payload, Path template) throws IOException {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload, skipping the existing files
         IOUtils.unzip(template, workspacePath, true);
 
-        log.debug("process ['{}', '{}'] -> done", instanceId, template);
+        log.debug("process ['{}', '{}'] -> done", processKey, template);
     }
 }

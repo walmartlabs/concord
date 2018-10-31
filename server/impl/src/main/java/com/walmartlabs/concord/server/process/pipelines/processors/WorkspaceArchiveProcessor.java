@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadManager;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -33,7 +34,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.UUID;
 
 /**
  * Unpacks payload's workspace file, parses request data.
@@ -52,7 +52,7 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         Path archive = payload.getAttachment(Payload.WORKSPACE_ARCHIVE);
         if (archive == null) {
@@ -62,16 +62,16 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
         payloadManager.assertAcceptsRawPayload(payload);
 
         if (!Files.exists(archive)) {
-            logManager.error(instanceId, "No input archive found: " + archive);
-            throw new ProcessException(instanceId, "No input archive found: " + archive, Status.BAD_REQUEST);
+            logManager.error(processKey, "No input archive found: " + archive);
+            throw new ProcessException(processKey, "No input archive found: " + archive, Status.BAD_REQUEST);
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         try {
             IOUtils.unzip(archive, workspace, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while unpacking an archive: " + archive, e);
-            throw new ProcessException(instanceId, "Error while unpacking an archive: " + archive, e);
+            logManager.error(processKey, "Error while unpacking an archive: " + archive, e);
+            throw new ProcessException(processKey, "Error while unpacking an archive: " + archive, e);
         }
 
         payload = payload.removeAttachment(Payload.WORKSPACE_ARCHIVE);

@@ -61,7 +61,7 @@ public class ProcessKvResource implements Resource {
     @DELETE
     @ApiOperation("Delete KV")
     @Path("{id}/kv/{key}")
-    public void removeKey(@PathParam("id") String instanceId,
+    public void removeKey(@PathParam("id") UUID instanceId,
                           @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
@@ -72,7 +72,7 @@ public class ProcessKvResource implements Resource {
     @ApiOperation("Put string KV")
     @Path("{id}/kv/{key}/string")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void putString(@PathParam("id") String instanceId,
+    public void putString(@PathParam("id") UUID instanceId,
                           @PathParam("key") String key,
                           @ApiParam(required = true) String value) {
 
@@ -84,7 +84,7 @@ public class ProcessKvResource implements Resource {
     @ApiOperation("Get string KV")
     @Path("{id}/kv/{key}/string")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getString(@PathParam("id") String instanceId,
+    public String getString(@PathParam("id") UUID instanceId,
                             @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
@@ -95,7 +95,7 @@ public class ProcessKvResource implements Resource {
     @ApiOperation("Put long KV")
     @Path("{id}/kv/{key}/long")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void putLong(@PathParam("id") String instanceId,
+    public void putLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key,
                         @ApiParam(required = true) long value) {
 
@@ -107,7 +107,7 @@ public class ProcessKvResource implements Resource {
     @ApiOperation("Get long KV")
     @Path("{id}/kv/{key}/long")
     @Produces(MediaType.APPLICATION_JSON)
-    public Long getLong(@PathParam("id") String instanceId,
+    public Long getLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
@@ -118,22 +118,25 @@ public class ProcessKvResource implements Resource {
     @ApiOperation("Inc long KV")
     @Path("{id}/kv/{key}/inc")
     @Produces(MediaType.APPLICATION_JSON)
-    public long incLong(@PathParam("id") String instanceId,
+    public long incLong(@PathParam("id") UUID instanceId,
                         @PathParam("key") String key) {
 
         UUID projectId = assertProjectId(instanceId);
         return kvDao.inc(projectId, key);
     }
 
-    private UUID assertProjectId(String instanceId) {
-        ProcessEntry entry = queueDao.get(UUID.fromString(instanceId));
+    private UUID assertProjectId(UUID instanceId) {
+        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+
+        // TODO replace with getProjectId
+        ProcessEntry entry = queueDao.get(processKey);
         if (entry == null) {
             throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
         }
 
         UUID projectId = entry.getProjectId();
         if (projectId == null) {
-            log.warn("assertProjectId ['{}'] -> no project found, using the default value", instanceId);
+            log.warn("assertProjectId ['{}'] -> no project found, using the default value", processKey);
             projectId = DEFAULT_PROJECT_ID;
         }
 

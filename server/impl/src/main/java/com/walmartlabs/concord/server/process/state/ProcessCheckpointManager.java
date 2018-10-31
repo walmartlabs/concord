@@ -23,6 +23,8 @@ package com.walmartlabs.concord.server.process.state;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessOutVariables;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -60,6 +62,10 @@ public class ProcessCheckpointManager {
         this.stateManager = stateManager;
     }
 
+    public void importCheckpoint(PartialProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
+        importCheckpoint(processKey.getInstanceId(), checkpointId, checkpointName, data);
+    }
+
     /**
      * Import checkpoints data from the specified directory or a file.
      *
@@ -74,12 +80,8 @@ public class ProcessCheckpointManager {
 
     /**
      * Restore process to a saved checkpoint.
-     *
-     * @param instanceId
-     * @param checkpointId
-     * @return
      */
-    public String restoreCheckpoint(UUID instanceId, UUID checkpointId) {
+    public String restoreCheckpoint(ProcessKey processKey, UUID checkpointId) {
         try (TemporaryPath checkpointArchive = IOUtils.tempFile("checkpoint", ".zip")) {
 
             boolean hasCheckpoint = export(checkpointId, checkpointArchive.path());
@@ -92,15 +94,15 @@ public class ProcessCheckpointManager {
 
                 String checkpointName = readCheckpointName(extractedDir.path());
 
-                stateManager.deleteDirectory(instanceId, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME);
-                stateManager.deleteDirectory(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
-                stateManager.importPath(instanceId, null, extractedDir.path());
+                stateManager.deleteDirectory(processKey, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME);
+                stateManager.deleteDirectory(processKey, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
+                stateManager.importPath(processKey, null, extractedDir.path());
 
                 Map<String, Object> out = ProcessOutVariables.read(extractedDir.path().resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME));
                 if (out.isEmpty()) {
-                    queueDao.removeMeta(instanceId, "out");
+                    queueDao.removeMeta(processKey, "out");
                 } else {
-                    queueDao.updateMeta(instanceId, Collections.singletonMap("out", out));
+                    queueDao.updateMeta(processKey, Collections.singletonMap("out", out));
                 }
 
                 return checkpointName;
@@ -112,12 +114,9 @@ public class ProcessCheckpointManager {
 
     /**
      * List checkpoints of a given instanceId
-     *
-     * @param instanceId process instance ID
-     * @return {@link ProcessCheckpointEntry}
      */
-    public List<ProcessCheckpointEntry> list(UUID instanceId) {
-        return checkpointDao.list(instanceId);
+    public List<ProcessCheckpointEntry> list(PartialProcessKey processKey) {
+        return checkpointDao.list(processKey);
     }
 
     private String readCheckpointName(Path checkpointDir) throws IOException {

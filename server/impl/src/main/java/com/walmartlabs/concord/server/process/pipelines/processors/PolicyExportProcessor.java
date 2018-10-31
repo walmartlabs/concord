@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -54,7 +55,7 @@ public class PolicyExportProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         UUID orgId = payload.getHeader(Payload.ORGANIZATION_ID);
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
@@ -65,7 +66,7 @@ public class PolicyExportProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(instanceId, "Storing policy '{}' data", policy.getName());
+        logManager.info(processKey, "Storing policy '{}' data", policy.getName());
 
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
 
@@ -74,8 +75,8 @@ public class PolicyExportProcessor implements PayloadProcessor {
             objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
 
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while storing process policy: {}", e);
-            throw new ProcessException(instanceId, "Storing process policy error", e);
+            logManager.error(processKey, "Error while storing process policy: {}", e);
+            throw new ProcessException(processKey, "Storing process policy error", e);
         }
 
         payload = payload.putHeader(Payload.POLICY, policy);

@@ -46,7 +46,7 @@ public class ForkCleanupProcessor implements PayloadProcessor {
                 Files.deleteIfExists(suspendMarker);
             }
         } catch (IOException e) {
-            throw new ProcessException(payload.getInstanceId(), "Error while preparing a fork's data", e);
+            throw new ProcessException(payload.getProcessKey(), "Error while preparing a fork's data", e);
         }
 
         return chain.process(payload);

@@ -20,14 +20,14 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.UUID;
 
 @Named
 public class FailProcessor implements ExceptionProcessor {
@@ -43,15 +43,15 @@ public class FailProcessor implements ExceptionProcessor {
 
     @Override
     public void process(Payload payload, Exception e) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
-        boolean hasQueueRecord = queueDao.exists(instanceId);
+        boolean hasQueueRecord = queueDao.exists(processKey);
         if (!hasQueueRecord) {
             // the process failed before we had a chance to create the initial queue record
             return;
         }
 
-        logManager.error(instanceId, "Process failed: {}", e.getMessage());
-        queueDao.updateStatus(instanceId, ProcessStatus.FAILED);
+        logManager.error(processKey, "Process failed: {}", e.getMessage());
+        queueDao.updateStatus(processKey, ProcessStatus.FAILED);
     }
 }

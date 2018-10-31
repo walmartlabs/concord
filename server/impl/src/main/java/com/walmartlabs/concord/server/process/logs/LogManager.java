@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.logs;
  */
 
 import com.walmartlabs.concord.common.LogUtils;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 
@@ -45,31 +45,31 @@ public class LogManager {
         this.logsDao = logsDao;
     }
 
-    public void debug(UUID instanceId, String log, Object... args) {
-        log_(instanceId, LogLevel.DEBUG, log, args);
+    public void debug(ProcessKey processKey, String log, Object... args) {
+        log_(processKey, LogLevel.DEBUG, log, args);
     }
 
-    public void info(UUID instanceId, String log, Object... args) {
-        log_(instanceId, LogLevel.INFO, log, args);
+    public void info(ProcessKey processKey, String log, Object... args) {
+        log_(processKey, LogLevel.INFO, log, args);
     }
 
-    public void warn(UUID instanceId, String log, Object... args) {
-        log_(instanceId, LogLevel.WARN, log, args);
+    public void warn(ProcessKey processKey, String log, Object... args) {
+        log_(processKey, LogLevel.WARN, log, args);
     }
 
-    public void error(UUID instanceId, String log, Object... args) {
-        log_(instanceId, LogLevel.ERROR, log, args);
+    public void error(ProcessKey processKey, String log, Object... args) {
+        log_(processKey, LogLevel.ERROR, log, args);
     }
 
-    public void log(UUID instanceId, String msg) {
-        log(instanceId, msg.getBytes());
+    public void log(ProcessKey processKey, String msg) {
+        log(processKey, msg.getBytes());
     }
 
-    public void log(UUID instanceId, byte[] msg) {
-        logsDao.append(instanceId, msg);
+    public void log(ProcessKey processKey, byte[] msg) {
+        logsDao.append(processKey, msg);
     }
 
-    private void log_(UUID instanceId, LogLevel level, String msg, Object... args) {
-        log(instanceId, LogUtils.formatMessage(level, msg, args));
+    private void log_(ProcessKey processKey, LogLevel level, String msg, Object... args) {
+        log(processKey, LogUtils.formatMessage(level, msg, args));
     }
 }

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
@@ -139,12 +138,13 @@ public class ProcessResource implements Resource {
 
         assertInstanceId(parentInstanceId);
 
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
+
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), in, out);
+            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), in, out);
         } catch (IOException e) {
             log.error("start -> error creating a payload: {}", e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -201,15 +201,15 @@ public class ProcessResource implements Resource {
 
         assertInstanceId(parentInstanceId);
 
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
+        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, req, out);
+            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, req, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -279,15 +279,15 @@ public class ProcessResource implements Resource {
 
         assertInstanceId(parentInstanceId);
 
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
+        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, input, out);
+            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, input, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -326,15 +326,15 @@ public class ProcessResource implements Resource {
 
         assertInstanceId(parentInstanceId);
 
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
-        EntryPoint ep = payloadManager.parseEntryPoint(instanceId, orgId, entryPoint);
+        EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(instanceId, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, in, out);
+            payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), ep, in, out);
         } catch (IOException e) {
             log.error("start ['{}'] -> error creating a payload: {}", entryPoint, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -361,9 +361,11 @@ public class ProcessResource implements Resource {
                                         @ApiParam @PathParam("eventName") @NotNull String eventName,
                                         @ApiParam Map<String, Object> req) {
 
+        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(instanceId, eventName, req);
+            payload = payloadManager.createResumePayload(processKey, eventName, req);
         } catch (IOException e) {
             log.error("resume ['{}', '{}'] -> error creating a payload: {}", instanceId, eventName, e);
             throw new ConcordApplicationException("Error creating a payload", e);
@@ -392,21 +394,23 @@ public class ProcessResource implements Resource {
                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
                                      @ApiParam @QueryParam("out") String[] out) {
 
-        ProcessEntry parent = queueDao.get(parentInstanceId);
+        ProcessEntry parent = queueDao.get(new PartialProcessKey(parentInstanceId));
         if (parent == null) {
             throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
         }
 
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
+        ProcessKey parentProcessKey = ProcessKey.from(parent);
+
         UUID projectId = parent.getProjectId();
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
         try {
-            payload = payloadManager.createFork(instanceId, parentInstanceId, ProcessKind.DEFAULT,
+            payload = payloadManager.createFork(processKey, parentProcessKey, ProcessKind.DEFAULT,
                     userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out);
         } catch (IOException e) {
-            log.error("fork ['{}', '{}'] -> error creating a payload: {}", instanceId, parentInstanceId, e);
+            log.error("fork ['{}', '{}'] -> error creating a payload: {}", processKey, parentProcessKey, e);
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
@@ -466,7 +470,8 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}")
     @WithTimer
     public void kill(@ApiParam @PathParam("id") UUID instanceId) {
-        processManager.kill(instanceId);
+        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        processManager.kill(processKey);
     }
 
     /**
@@ -479,7 +484,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/bulk")
     @WithTimer
     public void batchKill(@ApiParam List<UUID> instanceIdList) {
-        instanceIdList.stream().forEach(this::kill);
+        instanceIdList.forEach(this::kill);
     }
 
     /**
@@ -492,7 +497,8 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/cascade")
     @WithTimer
     public void killCascade(@ApiParam @PathParam("id") UUID instanceId) {
-        processManager.killCascade(instanceId);
+        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        processManager.killCascade(processKey);
     }
 
     /**
@@ -508,7 +514,8 @@ public class ProcessResource implements Resource {
     @WithTimer
     @SuppressWarnings("unchecked")
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
-        ProcessEntry e = queueDao.get(instanceId);
+        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
@@ -552,7 +559,7 @@ public class ProcessResource implements Resource {
     public Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
                                        @PathParam("name") @NotNull @Size(min = 1) String attachmentName) {
 
-        assertInstanceId(instanceId);
+        PartialProcessKey processKey = assertInstanceId(instanceId);
 
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
@@ -560,7 +567,7 @@ public class ProcessResource implements Resource {
         }
 
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
-        Optional<Path> o = stateManager.get(instanceId, resource, src -> {
+        Optional<Path> o = stateManager.get(processKey, resource, src -> {
             try {
                 Path tmp = IOUtils.createTempFile("attachment", ".bin");
                 try (OutputStream dst = Files.newOutputStream(tmp)) {
@@ -599,10 +606,10 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId) {
-        assertInstanceId(instanceId);
+        PartialProcessKey processKey = assertInstanceId(instanceId);
 
         String resource = InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
-        List<String> l = stateManager.list(instanceId, resource);
+        List<String> l = stateManager.list(processKey, resource);
         return l.stream()
                 .map(s -> s.substring(resource.length()))
                 .collect(Collectors.toList());
@@ -689,7 +696,12 @@ public class ProcessResource implements Resource {
                              @ApiParam(required = true) @QueryParam("agentId") String agentId,
                              @ApiParam(required = true) ProcessStatus status) {
 
-        processManager.updateStatus(instanceId, agentId, status);
+        ProcessKey processKey = queueDao.getKey(instanceId);
+        if (processKey == null) {
+            throw new ConcordApplicationException("Process not found: " + instanceId, Status.NOT_FOUND);
+        }
+
+        processManager.updateStatus(processKey, agentId, status);
     }
 
     /**
@@ -707,7 +719,7 @@ public class ProcessResource implements Resource {
     public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                            @HeaderParam("range") String range) {
 
-        assertInstanceId(instanceId);
+        PartialProcessKey processKey = assertInstanceId(instanceId);
 
         Integer start = null;
         Integer end = null;
@@ -733,7 +745,7 @@ public class ProcessResource implements Resource {
             }
         }
 
-        ProcessLog l = logsDao.get(instanceId, start, end);
+        ProcessLog l = logsDao.get(processKey, start, end);
         List<ProcessLogChunk> data = l.getChunks();
         // TODO check if the instance actually exists
 
@@ -773,10 +785,10 @@ public class ProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public void appendLog(@PathParam("id") UUID instanceId, InputStream data) {
-        assertProcess(instanceId);
+        ProcessKey processKey = ProcessKey.from(assertProcess(new PartialProcessKey(instanceId)));
 
         try {
-            logsDao.append(instanceId, ByteStreams.toByteArray(data));
+            logsDao.append(processKey, ByteStreams.toByteArray(data));
         } catch (IOException e) {
             log.error("appendLog ['{}'] -> error", instanceId, e);
             throw new ConcordApplicationException("append log error: " + e.getMessage());
@@ -791,11 +803,12 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/state/snapshot")
     @Produces("application/zip")
     public Response downloadState(@ApiParam @PathParam("id") UUID instanceId) {
-        ProcessEntry p = assertProcess(instanceId);
+        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+        ProcessKey processKey = ProcessKey.from(entry);
 
-        assertProcessStateAccess(p);
+        assertProcessStateAccess(entry);
 
-        StreamingOutput out = output -> stateArchiver.export(instanceId, output);
+        StreamingOutput out = output -> stateArchiver.export(processKey, output);
         return Response.ok(out, "application/zip")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
                 .build();
@@ -812,12 +825,13 @@ public class ProcessResource implements Resource {
     public Response downloadStateFile(@ApiParam @PathParam("id") UUID instanceId,
                                       @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName) {
 
-        ProcessEntry p = assertProcess(instanceId);
+        ProcessEntry p = assertProcess(new PartialProcessKey(instanceId));
+        ProcessKey processKey = ProcessKey.from(p);
 
         assertProcessStateAccess(p);
 
         StreamingOutput out = output -> {
-            Path tmp = stateManager.get(instanceId, fileName, ProcessResource::copyToTmp)
+            Path tmp = stateManager.get(processKey, fileName, ProcessResource::copyToTmp)
                     .orElseThrow(() -> new ConcordApplicationException("State file not found: " + fileName, Status.NOT_FOUND));
 
             try (InputStream in = Files.newInputStream(tmp)) {
@@ -841,7 +855,8 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("{id}/attachment")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data) {
-        assertProcess(instanceId);
+        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+        ProcessKey processKey = ProcessKey.from(entry);
 
         Path tmpIn = null;
         Path tmpDir = null;
@@ -852,17 +867,17 @@ public class ProcessResource implements Resource {
             tmpDir = IOUtils.createTempDir("attachments");
             IOUtils.unzip(tmpIn, tmpDir);
 
-            stateManager.deleteDirectory(instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
-            stateManager.importPath(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
+            stateManager.deleteDirectory(processKey, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
+            stateManager.importPath(processKey, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
 
             Map<String, Object> out = ProcessOutVariables.read(tmpDir);
             if (out.isEmpty()) {
-                queueDao.removeMeta(instanceId, "out");
+                queueDao.removeMeta(processKey, "out");
             } else {
-                queueDao.updateMeta(instanceId, Collections.singletonMap("out", out));
+                queueDao.updateMeta(processKey, Collections.singletonMap("out", out));
             }
         } catch (IOException e) {
-            log.error("uploadAttachments ['{}'] -> error", instanceId, e);
+            log.error("uploadAttachments ['{}'] -> error", processKey, e);
             throw new ConcordApplicationException("upload error: " + e.getMessage());
         } finally {
             if (tmpDir != null) {
@@ -881,7 +896,7 @@ public class ProcessResource implements Resource {
             }
         }
 
-        log.info("uploadAttachments ['{}'] -> done", instanceId);
+        log.info("uploadAttachments ['{}'] -> done", processKey);
     }
 
     /**
@@ -897,7 +912,8 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public Response decrypt(@PathParam("id") UUID instanceId, InputStream data) {
-        ProcessEntry p = assertProcess(instanceId);
+        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+        ProcessKey processKey = ProcessKey.from(entry);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         try {
@@ -917,12 +933,12 @@ public class ProcessResource implements Resource {
 
         byte[] result;
         try {
-            result = encryptedValueManager.decrypt(p.getProjectId(), baos.toByteArray());
+            result = encryptedValueManager.decrypt(entry.getProjectId(), baos.toByteArray());
         } catch (SecurityException e) {
-            log.error("decrypt ['{}'] -> error", instanceId, e);
+            log.error("decrypt ['{}'] -> error", processKey, e);
             throw new SecretException("Decrypt error: " + e.getMessage());
         } catch (Exception e) {
-            log.error("decrypt ['{}'] -> error", instanceId, e);
+            log.error("decrypt ['{}'] -> error", processKey, e);
             throw new ConcordApplicationException("Decrypt error: " + e.getMessage());
         }
 
@@ -944,9 +960,12 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response updateMetadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
-        if (!queueDao.updateMeta(instanceId, meta)) {
+        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+
+        if (!queueDao.updateMeta(processKey, meta)) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
+
         return Response.ok().build();
     }
 
@@ -967,8 +986,8 @@ public class ProcessResource implements Resource {
                 "the necessary permissions to the download the process state: " + p.getInstanceId());
     }
 
-    private ProcessEntry assertProcess(UUID instanceId) {
-        ProcessEntry p = queueDao.get(instanceId);
+    private ProcessEntry assertProcess(PartialProcessKey processKey) {
+        ProcessEntry p = queueDao.get(processKey);
         if (p == null) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
@@ -979,14 +998,16 @@ public class ProcessResource implements Resource {
         return new StartProcessResponse(r.getInstanceId(), r.getOut());
     }
 
-    private void assertInstanceId(UUID id) {
+    private PartialProcessKey assertInstanceId(UUID id) {
         if (id == null) {
-            return;
+            return null;
         }
 
-        if (!queueDao.exists(id)) {
-            throw new ValidationErrorsException("Unknown parent instance ID: " + id);
+        if (!queueDao.exists(new PartialProcessKey(id))) {
+            throw new ValidationErrorsException("Unknown instance ID: " + id);
         }
+
+        return new PartialProcessKey(id);
     }
 
     private Set<UUID> getCurrentUserOrgIds() {

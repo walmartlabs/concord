@@ -135,7 +135,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         }
 
         if (!(v instanceof Map)) {
-            throw new ProcessException(payload.getInstanceId(), "Invalid policy value. Expected a JSON object '" + InternalConstants.Policy.PROCESS_CFG + "', got: " + v);
+            throw new ProcessException(payload.getProcessKey(), "Invalid policy value. Expected a JSON object '" + InternalConstants.Policy.PROCESS_CFG + "', got: " + v);
         }
 
         return (Map<String, Object>) v;
@@ -153,7 +153,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
             ObjectMapper om = new ObjectMapper();
             return om.readValue(in, Map.class);
         } catch (IOException e) {
-            throw new ProcessException(payload.getInstanceId(), "Invalid request data format", e, Status.BAD_REQUEST);
+            throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
         }
     }
 
@@ -182,7 +182,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
             ObjectMapper om = new ObjectMapper();
             return om.readValue(in, Map.class);
         } catch (IOException e) {
-            throw new ProcessException(payload.getInstanceId(), "Invalid request data format", e, Status.BAD_REQUEST);
+            throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
         }
     }
 

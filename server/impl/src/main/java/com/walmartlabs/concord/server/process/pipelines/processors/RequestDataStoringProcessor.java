@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Stores payload's request data as a JSON file.
@@ -53,7 +53,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (cfg == null) {
@@ -67,11 +67,11 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
             ObjectMapper om = new ObjectMapper();
             om.writeValue(out, cfg);
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while saving a metadata file: " + dst, e);
-            throw new ProcessException(instanceId, "Error while saving a metadata file: " + dst, e);
+            logManager.error(processKey, "Error while saving a metadata file: " + dst, e);
+            throw new ProcessException(processKey, "Error while saving a metadata file: " + dst, e);
         }
 
-        log.info("process ['{}'] -> done", instanceId);
+        log.info("process ['{}'] -> done", processKey);
         return chain.process(payload);
     }
 }

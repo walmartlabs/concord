@@ -68,10 +68,12 @@ public class FormResource implements Resource {
     @Path("/{processInstanceId}/form")
     @Produces(MediaType.APPLICATION_JSON)
     public List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId) {
+        PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
+
         try {
-            return formService.list(processInstanceId);
+            return formService.list(processKey);
         } catch (Exception e) {
-            throw new ConcordApplicationException("Error while retrieving a list of forms: " + processInstanceId, e);
+            throw new ConcordApplicationException("Error while retrieving a list of forms: " + processKey, e);
         }
     }
 
@@ -89,9 +91,11 @@ public class FormResource implements Resource {
     public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                                  @ApiParam @PathParam("formName") String formName) {
 
-        Form form = formService.get(processInstanceId, formName);
+        PartialProcessKey processKey = new PartialProcessKey(processInstanceId);
+
+        Form form = formService.get(processKey, formName);
         if (form == null) {
-            throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
+            throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processKey, Status.NOT_FOUND);
         }
 
         FormDefinition fd = form.getFormDefinition();
@@ -136,7 +140,7 @@ public class FormResource implements Resource {
         String pbk = form.getProcessBusinessKey();
         String name = fd.getName();
         String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
-        boolean isCustomForm = formService.exists(processInstanceId, resourcePath);
+        boolean isCustomForm = formService.exists(processKey, resourcePath);
 
         return new FormInstanceEntry(pbk, name, fields, isCustomForm, yield);
     }
@@ -157,7 +161,9 @@ public class FormResource implements Resource {
                                      @ApiParam @PathParam("formName") String formName,
                                      @ApiParam Map<String, Object> data) {
 
-        Form form = formService.get(processInstanceId, formName);
+        PartialProcessKey processKey = new PartialProcessKey(processInstanceId);
+
+        Form form = formService.get(processKey, formName);
         if (form == null) {
             throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
         }
@@ -169,7 +175,7 @@ public class FormResource implements Resource {
             return new FormSubmitResponse(processInstanceId, errors);
         }
 
-        FormSubmitResult result = formService.submit(processInstanceId, formName, data);
+        FormSubmitResult result = formService.submit(processKey, formName, data);
 
         Map<String, String> errors = mergeErrors(result.getErrors());
         return new FormSubmitResponse(result.getProcessInstanceId(), errors);

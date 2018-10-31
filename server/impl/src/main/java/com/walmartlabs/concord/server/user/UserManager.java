@@ -20,11 +20,9 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.team.TeamRole;
-import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
+import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 
 import javax.inject.Inject;

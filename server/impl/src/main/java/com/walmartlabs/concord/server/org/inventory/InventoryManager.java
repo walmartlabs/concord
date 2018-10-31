@@ -20,14 +20,11 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.inventory.InventoryEntry;
-import com.walmartlabs.concord.server.org.inventory.InventoryOwner;
-import com.walmartlabs.concord.server.org.inventory.InventoryVisibility;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;

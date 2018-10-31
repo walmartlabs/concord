@@ -24,7 +24,10 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.org.inventory.SqlParserTest.parseQueries;
 import static junit.framework.TestCase.assertNotNull;

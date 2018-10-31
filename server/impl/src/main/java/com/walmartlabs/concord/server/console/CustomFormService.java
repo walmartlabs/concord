@@ -109,11 +109,17 @@ public class CustomFormService implements Resource {
     public FormSessionResponse startSession(@PathParam("processInstanceId") UUID processInstanceId,
                                             @PathParam("formName") String formName) {
 
+        ProcessKey processKey = assertKey(processInstanceId);
+        return startSession(processKey, formName);
+    }
+
+    private FormSessionResponse startSession(ProcessKey processKey, String formName) {
+
         // TODO locking
-        Form form = assertForm(processInstanceId, formName);
+        Form form = assertForm(processKey, formName);
 
         Path dst = cfg.getBaseDir()
-                .resolve(processInstanceId.toString())
+                .resolve(processKey.toString())
                 .resolve(formName);
 
         try {
@@ -124,10 +130,10 @@ public class CustomFormService implements Resource {
 
             String resource = ConcordFormService.FORMS_RESOURCES_PATH + "/" + form.getFormDefinition().getName();
             // copy original branding files into the target directory
-            boolean branded = stateManager.exportDirectory(processInstanceId, resource, copyTo(formDir));
+            boolean branded = stateManager.exportDirectory(processKey, resource, copyTo(formDir));
             if (!branded) {
                 // not branded, redirect to the default wizard
-                String uri = String.format(NON_BRANDED_FORM_URL_TEMPLATE, processInstanceId, formName);
+                String uri = String.format(NON_BRANDED_FORM_URL_TEMPLATE, processKey, formName);
                 return new FormSessionResponse(uri);
             }
 
@@ -135,14 +141,13 @@ public class CustomFormService implements Resource {
             writeData(formDir, initialData(form));
 
             // copy shared resources (if present)
-            copySharedResources(processInstanceId, dst);
+            copySharedResources(processKey, dst);
         } catch (IOException e) {
-            log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}",
-                    processInstanceId, formName, e);
+            log.warn("startSession ['{}', '{}'] -> error while preparing a custom form: {}", processKey, formName, e);
             throw new ConcordApplicationException("Error while preparing a custom form", e);
         }
 
-        return new FormSessionResponse(formPath(processInstanceId, formName));
+        return new FormSessionResponse(formPath(processKey, formName));
     }
 
     @POST
@@ -156,7 +161,8 @@ public class CustomFormService implements Resource {
                                     @PathParam("formName") String formName,
                                     MultivaluedMap<String, String> data) {
 
-        return continueSession(uriInfo, headers, processInstanceId, formName, FormUtils.convert(data));
+        ProcessKey processKey = assertKey(processInstanceId);
+        return continueSession(uriInfo, headers, processKey, formName, FormUtils.convert(data));
     }
 
     @POST
@@ -169,21 +175,21 @@ public class CustomFormService implements Resource {
                                     @PathParam("formName") String formName,
                                     MultipartInput data) {
 
-        return continueSession(uriInfo, headers, processInstanceId, formName, MultipartUtils.toMap(data));
+        ProcessKey processKey = assertKey(processInstanceId);
+        return continueSession(uriInfo, headers, processKey, formName, MultipartUtils.toMap(data));
     }
 
-    private Response continueSession(UriInfo uriInfo, HttpHeaders headers,
-                                     UUID processInstanceId, String formName,
-                                     Map<String, Object> data) {
+    private Response continueSession(UriInfo uriInfo, HttpHeaders headers, ProcessKey processKey,
+                                     String formName, Map<String, Object> data) {
         // TODO locking
-        Form form = assertForm(processInstanceId, formName);
+        Form form = assertForm(processKey, formName);
 
         // TODO constants
         Map<String, Object> opts = form.getOptions();
         boolean yield = opts != null && (boolean) opts.getOrDefault("yield", false);
 
         Path dst = cfg.getBaseDir()
-                .resolve(processInstanceId.toString())
+                .resolve(processKey.toString())
                 .resolve(formName);
 
         Path formDir = dst.resolve(FORM_DIR_NAME);
@@ -191,9 +197,9 @@ public class CustomFormService implements Resource {
         try {
             Map<String, Object> m = new HashMap<>();
             try {
-                m = FormUtils.convert(new ExternalFileFormValidatorLocale(processInstanceId, formName, stateManager), form, data);
+                m = FormUtils.convert(new ExternalFileFormValidatorLocale(processKey, formName, stateManager), form, data);
 
-                FormSubmitResult r = formService.submit(processInstanceId, formName, m);
+                FormSubmitResult r = formService.submit(processKey, formName, m);
                 if (r.isValid()) {
                     if (yield) {
                         // this was the last "interactive" form. The process will continue in "background"
@@ -201,16 +207,16 @@ public class CustomFormService implements Resource {
                         writeData(formDir, success(form, m));
                     } else {
                         while (true) {
-                            ProcessEntry entry = queueDao.get(processInstanceId);
+                            ProcessEntry entry = queueDao.get(processKey);
                             ProcessStatus s = entry.getStatus();
 
                             if (s == ProcessStatus.SUSPENDED) {
-                                String nextFormId = formService.nextFormId(processInstanceId);
+                                String nextFormId = formService.nextFormId(processKey);
                                 if (nextFormId == null) {
                                     writeData(formDir, success(form, m));
                                     break;
                                 } else {
-                                    FormSessionResponse nextSession = startSession(processInstanceId, nextFormId);
+                                    FormSessionResponse nextSession = startSession(processKey, nextFormId);
                                     return redirectTo(nextSession.getUri());
                                 }
                             } else if (s == ProcessStatus.FAILED || s == ProcessStatus.CANCELLED || s == ProcessStatus.TIMED_OUT) {
@@ -241,13 +247,13 @@ public class CustomFormService implements Resource {
             throw new ConcordApplicationException("Error while submitting a form", e);
         }
 
-        return redirectToForm(uriInfo, headers, processInstanceId, formName);
+        return redirectToForm(uriInfo, headers, processKey, formName);
     }
 
-    private Form assertForm(UUID processInstanceId, String formName) {
-        Form form = formService.get(processInstanceId, formName);
+    private Form assertForm(ProcessKey processKey, String formName) {
+        Form form = formService.get(processKey, formName);
         if (form == null) {
-            log.warn("assertForm ['{}', '{}'] -> not found", processInstanceId, formName);
+            log.warn("assertForm ['{}', '{}'] -> not found", processKey, formName);
             throw new ConcordApplicationException("Form not found", Status.NOT_FOUND);
         }
         return form;
@@ -347,18 +353,28 @@ public class CustomFormService implements Resource {
         Files.write(dst, s.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    private void copySharedResources(UUID processInstanceId, Path dst) throws IOException {
+    private void copySharedResources(ProcessKey processKey, Path dst) throws IOException {
         Path sharedDir = dst.resolve(SHARED_DIR_NAME);
         if (!Files.exists(sharedDir)) {
             Files.createDirectories(sharedDir);
         }
 
         String resource = ConcordFormService.FORMS_RESOURCES_PATH + "/" + SHARED_DIR_NAME;
-        stateManager.exportDirectory(processInstanceId, resource, copyTo(sharedDir));
+        stateManager.exportDirectory(processKey, resource, copyTo(sharedDir));
+    }
+
+    private ProcessKey assertKey(UUID processInstanceId) {
+        ProcessKey pk = queueDao.getKey(processInstanceId);
+
+        if (pk == null) {
+            throw new ConcordApplicationException("Process not found: " + processInstanceId, Status.NOT_FOUND);
+        }
+
+        return pk;
     }
 
     private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
-                                           UUID processInstanceId, String formName) {
+                                           PartialProcessKey processKey, String formName) {
 
         String scheme = uriInfo.getBaseUri().getScheme();
 
@@ -374,7 +390,7 @@ public class CustomFormService implements Resource {
 
         UriBuilder b = UriBuilder.fromUri(uriInfo.getBaseUri())
                 .scheme(scheme)
-                .path(formPath(processInstanceId, formName));
+                .path(formPath(processKey, formName));
 
         return redirectTo(b.build().toString());
     }
@@ -385,8 +401,8 @@ public class CustomFormService implements Resource {
                 .build();
     }
 
-    private static String formPath(UUID processInstanceId, String formName) {
-        return String.format(FORMS_PATH_TEMPLATE, processInstanceId, formName);
+    private static String formPath(PartialProcessKey processKey, String formName) {
+        return String.format(FORMS_PATH_TEMPLATE, processKey, formName);
     }
 
     @JsonInclude(Include.NON_EMPTY)

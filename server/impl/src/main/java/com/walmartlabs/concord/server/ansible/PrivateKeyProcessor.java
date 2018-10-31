@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
@@ -66,7 +67,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
         Map<String, Object> ansibleCfg = (Map<String, Object>) cfg.get(AnsibleConfigurationConstants.GROUP_KEY);
@@ -79,24 +80,24 @@ public class PrivateKeyProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        deprecationWarning(instanceId);
+        deprecationWarning(processKey);
 
         String secret = findMatchingSecret(payload, keys);
         if (secret == null) {
-            logManager.error(instanceId, "No matching secrets found");
-            throw new ProcessException(instanceId, "No matching secrets found");
+            logManager.error(processKey, "No matching secrets found");
+            throw new ProcessException(processKey, "No matching secrets found");
         }
 
         UUID orgId = getOrgId(payload);
         KeyPair keyPair = secretManager.getKeyPair(orgId, secret, null);
         if (keyPair == null) {
-            logManager.error(instanceId, "Secret not found: " + secret);
-            throw new ProcessException(instanceId, "Secret not found: " + secret);
+            logManager.error(processKey, "Secret not found: " + secret);
+            throw new ProcessException(processKey, "Secret not found: " + secret);
         }
 
         if (keyPair.getPrivateKey() == null) {
-            logManager.error(instanceId, "Private key not found: " + secret);
-            throw new ProcessException(instanceId, "Private key not found: " + secret);
+            logManager.error(processKey, "Private key not found: " + secret);
+            throw new ProcessException(processKey, "Private key not found: " + secret);
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
@@ -105,11 +106,11 @@ public class PrivateKeyProcessor implements PayloadProcessor {
         try {
             Files.write(dst, keyPair.getPrivateKey(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while copying a private key: " + dst, e);
-            throw new ProcessException(instanceId, "Error while copying a private key: " + dst, e);
+            logManager.error(processKey, "Error while copying a private key: " + dst, e);
+            throw new ProcessException(processKey, "Error while copying a private key: " + dst, e);
         }
 
-        log.info("process ['{}'] -> done", instanceId);
+        log.info("process ['{}'] -> done", processKey);
         return chain.process(payload);
     }
 
@@ -128,12 +129,12 @@ public class PrivateKeyProcessor implements PayloadProcessor {
         return orgId;
     }
 
-    private void deprecationWarning(UUID instanceId) {
+    private void deprecationWarning(ProcessKey processKey) {
         String msg = ".. WARNING ............................................................................\n" +
                 " 'configuration.ansible.privateKeys' is deprecated.\n" +
                 " Please use 'privateKey' parameter of the Ansible task.\n" +
                 ".......................................................................................\n";
-        logManager.log(instanceId, msg);
+        logManager.log(processKey, msg);
     }
 
     private static String findMatchingSecret(Payload payload, Collection<Map<String, Object>> items) {

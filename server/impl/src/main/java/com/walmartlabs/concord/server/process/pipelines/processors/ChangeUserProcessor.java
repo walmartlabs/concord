@@ -57,7 +57,7 @@ public class ChangeUserProcessor implements PayloadProcessor {
 
         Boolean keep = (Boolean) runAsParams.get(InternalConstants.Forms.RUN_AS_KEEP_KEY);
         if (keep != null && keep) {
-            securityContext.storeCurrentSubject(payload.getInstanceId());
+            securityContext.storeCurrentSubject(payload.getProcessKey());
             return currentUserInfoProcessor.process(chain, payload);
         }
 

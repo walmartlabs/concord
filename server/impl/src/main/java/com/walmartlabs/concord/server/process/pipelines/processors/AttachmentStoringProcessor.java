@@ -62,7 +62,7 @@ public class AttachmentStoringProcessor implements PayloadProcessor {
                 Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING);
                 payload = payload.removeAttachment(name);
             } catch (IOException e) {
-                throw new ProcessException(payload.getInstanceId(), "Error while copying an attachment: " + src, e);
+                throw new ProcessException(payload.getProcessKey(), "Error while copying an attachment: " + src, e);
             }
         }
 

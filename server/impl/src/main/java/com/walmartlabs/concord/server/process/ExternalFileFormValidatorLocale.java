@@ -38,8 +38,8 @@ public class ExternalFileFormValidatorLocale implements FormValidatorLocale {
 
     private final Map<String, String> messages;
 
-    public ExternalFileFormValidatorLocale(UUID processInstanceId, String formName, ProcessStateManager stateManager) {
-        this.messages = loadMessages(processInstanceId, formName, stateManager);
+    public ExternalFileFormValidatorLocale(ProcessKey processKey, String formName, ProcessStateManager stateManager) {
+        this.messages = loadMessages(processKey, formName, stateManager);
     }
 
     @Override
@@ -118,7 +118,7 @@ public class ExternalFileFormValidatorLocale implements FormValidatorLocale {
         return Optional.ofNullable(result);
     }
 
-    private static Map<String, String> loadMessages(UUID processInstanceId, String formName, ProcessStateManager stateManager) {
+    private static Map<String, String> loadMessages(ProcessKey processKey, String formName, ProcessStateManager stateManager) {
         Function<InputStream, Optional<Map<String, String>>> converter = inputStream -> {
             try {
                 Map<String, String> result = new HashMap<>();
@@ -137,7 +137,7 @@ public class ExternalFileFormValidatorLocale implements FormValidatorLocale {
         String formSpecificPath = "forms/" + formName + "/" + InternalConstants.Files.ERROR_MESSAGES_FILE_NAME;
 
         return Stream.of(formSpecificPath, globalPath)
-                .map(p -> stateManager.get(processInstanceId, p, converter).orElse(null))
+                .map(p -> stateManager.get(processKey, p, converter).orElse(null))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(Collections.emptyMap());

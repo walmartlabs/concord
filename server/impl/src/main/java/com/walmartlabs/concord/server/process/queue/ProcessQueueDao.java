@@ -31,10 +31,7 @@ import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
-import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessKind;
-import com.walmartlabs.concord.server.process.ProcessStatus;
-import com.walmartlabs.concord.server.process.ProcessStatusHistoryEntry;
+import com.walmartlabs.concord.server.process.*;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -78,13 +75,22 @@ public class ProcessQueueDao extends AbstractDao {
         this.policyDao = policyDao;
     }
 
-    public void insertInitial(UUID instanceId, Timestamp createdAt, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, UUID initiatorId, Map<String, Object> meta) {
-
-        tx(tx -> insertInitial(tx, instanceId, createdAt, kind, parentInstanceId, projectId, initiatorId, meta));
+    public ProcessKey getKey(UUID instanceId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.CREATED_AT)
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .fetchOne(r -> new ProcessKey(instanceId, r.value1()));
+        }
     }
 
-    public void insertInitial(DSLContext tx, UUID instanceId, Timestamp createdAt, ProcessKind kind, UUID parentInstanceId,
+    public void insertInitial(ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
+                              UUID projectId, UUID initiatorId, Map<String, Object> meta) {
+
+        tx(tx -> insertInitial(tx, processKey, kind, parentInstanceId, projectId, initiatorId, meta));
+    }
+
+    public void insertInitial(DSLContext tx, ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
                               UUID projectId, UUID initiatorId, Map<String, Object> meta) {
 
         tx.insertInto(PROCESS_QUEUE)
@@ -97,25 +103,27 @@ public class ProcessQueueDao extends AbstractDao {
                         PROCESS_QUEUE.CURRENT_STATUS,
                         PROCESS_QUEUE.LAST_UPDATED_AT,
                         PROCESS_QUEUE.META)
-                .values(value(instanceId),
+                .values(value(processKey.getInstanceId()),
                         value(kind.toString()),
                         value(parentInstanceId),
                         value(projectId),
-                        value(createdAt),
+                        value(processKey.getCreatedAt()),
                         value(initiatorId),
                         value(ProcessStatus.PREPARING.toString()),
                         currentTimestamp(),
                         field("?::jsonb", serialize(meta)))
                 .execute();
 
-        insertHistoryStatus(tx, instanceId, ProcessStatus.PREPARING);
+        insertHistoryStatus(tx, processKey, ProcessStatus.PREPARING);
     }
 
-    public void updateAgentId(UUID instanceId, String agentId, ProcessStatus status) {
-        tx(tx -> updateAgentId(tx, instanceId, agentId, status));
+    public void updateAgentId(PartialProcessKey processKey, String agentId, ProcessStatus status) {
+        tx(tx -> updateAgentId(tx, processKey, agentId, status));
     }
 
-    public void updateAgentId(DSLContext tx, UUID instanceId, String agentId, ProcessStatus status) {
+    public void updateAgentId(DSLContext tx, PartialProcessKey processKey, String agentId, ProcessStatus status) {
+        UUID instanceId = processKey.getInstanceId();
+
         int i = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_AGENT_ID, agentId)
@@ -127,10 +135,10 @@ public class ProcessQueueDao extends AbstractDao {
             throw new DataAccessException("Invalid number of rows updated: " + i);
         }
 
-        insertHistoryStatus(tx, instanceId, status);
+        insertHistoryStatus(tx, processKey, status);
     }
 
-    public void enqueue(UUID instanceId, Set<String> tags, Instant startAt,
+    public void enqueue(PartialProcessKey processKey, Set<String> tags, Instant startAt,
                         Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
                         String commitId, String commitMsg, Long processTimeout,
                         Set<String> handlers) {
@@ -181,32 +189,36 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             int i = q
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
                     .execute();
 
             if (i != 1) {
                 throw new DataAccessException("Invalid number of rows updated: " + i);
             }
 
-            insertHistoryStatus(tx, instanceId, ProcessStatus.ENQUEUED);
+            insertHistoryStatus(tx, processKey, ProcessStatus.ENQUEUED);
         });
     }
 
-    public void updateStatus(UUID instanceId, ProcessStatus status) {
-        tx(tx -> updateStatus(tx, instanceId, status));
+    public void updateStatus(PartialProcessKey processKey, ProcessStatus status) {
+        tx(tx -> updateStatus(tx, processKey, status));
     }
 
-    public void updateStatus(DSLContext tx, UUID instanceId, ProcessStatus status) {
+    public void updateStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status) {
+        UUID instanceId = processKey.getInstanceId();
+
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .execute();
 
-        insertHistoryStatus(tx, instanceId, status);
+        insertHistoryStatus(tx, processKey, status);
     }
 
-    public boolean updateStatus(UUID instanceId, ProcessStatus expected, ProcessStatus status) {
+    public boolean updateStatus(PartialProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
+        UUID instanceId = processKey.getInstanceId();
+
         return txResult(tx -> {
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
@@ -215,13 +227,15 @@ public class ProcessQueueDao extends AbstractDao {
                             .and(PROCESS_QUEUE.CURRENT_STATUS.eq(expected.toString())))
                     .execute();
 
-            insertHistoryStatus(tx, instanceId, status);
+            insertHistoryStatus(tx, processKey, status);
 
             return i == 1;
         });
     }
 
-    public boolean updateMeta(UUID instanceId, Map<String, Object> meta) {
+    public boolean updateMeta(PartialProcessKey processKey, Map<String, Object> meta) {
+        UUID instanceId = processKey.getInstanceId();
+
         return txResult(tx -> {
             Field<String> f = field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta));
             int i = tx.update(PROCESS_QUEUE)
@@ -233,7 +247,9 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean removeMeta(UUID instanceId, String key) {
+    public boolean removeMeta(PartialProcessKey processKey, String key) {
+        UUID instanceId = processKey.getInstanceId();
+
         return txResult(tx -> {
             Field<String> v = field("{0}", String.class, PROCESS_QUEUE.META).minus(value(key));
             int i = tx.update(PROCESS_QUEUE)
@@ -245,8 +261,12 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean updateStatus(List<UUID> instanceIds, ProcessStatus status, List<ProcessStatus> expected) {
+    public boolean updateStatus(List<PartialProcessKey> processKeys, ProcessStatus status, List<ProcessStatus> expected) {
         return txResult(tx -> {
+            List<UUID> instanceIds = processKeys.stream()
+                    .map(PartialProcessKey::getInstanceId)
+                    .collect(Collectors.toList());
+
             UpdateConditionStep q = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                     .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
@@ -262,30 +282,30 @@ public class ProcessQueueDao extends AbstractDao {
 
             int i = q.execute();
 
-            insertHistoryStatus(tx, instanceIds, status);
+            insertHistoryStatus(tx, processKeys, status);
 
-            return i == instanceIds.size();
+            return i == processKeys.size();
         });
     }
 
-    private void insertHistoryStatus(DSLContext tx, UUID instanceId, ProcessStatus status) {
+    private void insertHistoryStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status) {
         tx.insertInto(PROCESS_STATUS_HISTORY)
                 .columns(PROCESS_STATUS_HISTORY.INSTANCE_ID,
                         PROCESS_STATUS_HISTORY.STATUS,
                         PROCESS_STATUS_HISTORY.CHANGE_DATE)
-                .values(value(instanceId), value(status.toString()), currentTimestamp())
+                .values(value(processKey.getInstanceId()), value(status.toString()), currentTimestamp())
                 .execute();
     }
 
-    private void insertHistoryStatus(DSLContext tx, List<UUID> instanceIds, ProcessStatus status) {
+    private void insertHistoryStatus(DSLContext tx, List<PartialProcessKey> processKeys, ProcessStatus status) {
         BatchBindStep q = tx.batch(tx.insertInto(PROCESS_STATUS_HISTORY,
                 PROCESS_STATUS_HISTORY.INSTANCE_ID,
                 PROCESS_STATUS_HISTORY.STATUS,
                 PROCESS_STATUS_HISTORY.CHANGE_DATE)
                 .values((UUID) null, null, null));
 
-        for (UUID id : instanceIds) {
-            q.bind(value(id), value(status.toString()), currentTimestamp());
+        for (PartialProcessKey key : processKeys) {
+            q.bind(value(key.getInstanceId()), value(status.toString()), currentTimestamp());
         }
 
         q.execute();
@@ -302,10 +322,10 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public ProcessEntry get(UUID instanceId) {
+    public ProcessEntry get(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.selectFrom(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
                     .orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
                     .fetchOne(this::toEntry);
         }
@@ -334,10 +354,14 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public List<ProcessEntry> get(List<UUID> instanceId) {
+    public List<ProcessEntry> get(List<PartialProcessKey> processKeys) {
         try (DSLContext tx = DSL.using(cfg)) {
+            List<UUID> instanceIds = processKeys.stream()
+                    .map(PartialProcessKey::getInstanceId)
+                    .collect(Collectors.toList());
+
             List<VProcessQueueRecord> r = tx.selectFrom(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.INSTANCE_ID.in(instanceId))
+                    .where(V_PROCESS_QUEUE.INSTANCE_ID.in(instanceIds))
                     .fetch();
 
             if (r == null) {
@@ -348,7 +372,9 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public List<IdAndStatus> getCascade(UUID parentInstanceId) {
+    public List<IdAndStatus> getCascade(PartialProcessKey parentKey) {
+        UUID parentInstanceId = parentKey.getInstanceId();
+
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.withRecursive("children").as(
                     select(V_PROCESS_QUEUE.INSTANCE_ID, V_PROCESS_QUEUE.CURRENT_STATUS).from(V_PROCESS_QUEUE)
@@ -360,7 +386,8 @@ public class ProcessQueueDao extends AbstractDao {
                                                     field(name("children", "INSTANCE_ID"), UUID.class)))))
                     .select()
                     .from(name("children"))
-                    .fetch(r -> new IdAndStatus(r.get(0, UUID.class), ProcessStatus.valueOf(r.get(1, String.class))));
+                    .fetch(r -> new IdAndStatus(PartialProcessKey.from(r.get(0, UUID.class)),
+                            ProcessStatus.valueOf(r.get(1, String.class))));
         }
     }
 
@@ -474,7 +501,8 @@ public class ProcessQueueDao extends AbstractDao {
         return q.and(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
     }
 
-    public boolean exists(UUID instanceId) {
+    public boolean exists(PartialProcessKey processKey) {
+        UUID instanceId = processKey.getInstanceId();
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.fetchExists(tx.selectFrom(PROCESS_QUEUE)
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)));
@@ -509,7 +537,8 @@ public class ProcessQueueDao extends AbstractDao {
                 }
             }
 
-            updateStatus(tx, id, ProcessStatus.STARTING);
+            PartialProcessKey processKey = PartialProcessKey.from(id);
+            updateStatus(tx, processKey, ProcessStatus.STARTING);
 
             return FindResult.done(tx.selectFrom(V_PROCESS_QUEUE)
                     .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(id))
@@ -688,16 +717,16 @@ public class ProcessQueueDao extends AbstractDao {
 
     public static class IdAndStatus {
 
-        private final UUID instanceId;
+        private final PartialProcessKey processKey;
         private final ProcessStatus status;
 
-        public IdAndStatus(UUID instanceId, ProcessStatus status) {
-            this.instanceId = instanceId;
+        public IdAndStatus(PartialProcessKey processKey, ProcessStatus status) {
+            this.processKey = processKey;
             this.status = status;
         }
 
-        public UUID getInstanceId() {
-            return instanceId;
+        public PartialProcessKey getProcessKey() {
+            return processKey;
         }
 
         public ProcessStatus getStatus() {

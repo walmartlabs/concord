@@ -175,7 +175,7 @@ public class ProjectProcessResource implements Resource {
             req.put(InternalConstants.Request.ARGUMENTS_KEY, args);
         }
 
-        UUID instanceId = UUID.randomUUID();
+        PartialProcessKey processKey = PartialProcessKey.create();
 
         try {
             UUID orgId = getOrgId(orgName);
@@ -183,7 +183,7 @@ public class ProjectProcessResource implements Resource {
             UUID repoId = getRepoId(projectId, repoName);
             UserPrincipal initiator = UserPrincipal.assertCurrent();
 
-            Payload payload = PayloadBuilder.start(instanceId)
+            Payload payload = PayloadBuilder.start(processKey)
                     .organization(orgId)
                     .project(projectId)
                     .repository(repoId)
@@ -195,12 +195,12 @@ public class ProjectProcessResource implements Resource {
             Thread processStartThread = new Thread(() -> processManager.start(payload, false));
             processStartThread.start();
 
-            waitTillProcessIsInitialized(instanceId);
+            waitTillProcessIsInitialized(processKey);
         } catch (Exception e) {
-            return processError(instanceId, e.getMessage());
+            return processError(processKey, e.getMessage());
         }
 
-        return proceed(instanceId);
+        return proceed(processKey);
     }
 
     @POST
@@ -209,18 +209,27 @@ public class ProjectProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response proceed(@PathParam("processInstanceId") UUID processInstanceId) {
+        PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
+        return proceed(processKey);
+    }
 
-        ProcessEntry entry = queueDao.get(processInstanceId);
+    private Response proceed(PartialProcessKey processKey) {
+        ProcessEntry entry = queueDao.get(processKey);
+        if (entry == null) {
+            throw new ConcordApplicationException("Process not found: " + processKey, Status.NOT_FOUND);
+        }
+
+        ProcessKey pk = ProcessKey.from(entry);
 
         ProcessStatus processStatus = entry.getStatus();
         if (processStatus == ProcessStatus.FAILED || processStatus == ProcessStatus.CANCELLED || processStatus == ProcessStatus.TIMED_OUT) {
-            return processError(processInstanceId, "Process failed");
+            return processError(processKey, "Process failed");
         } else if (processStatus == ProcessStatus.FINISHED) {
-            return processFinished(processInstanceId);
+            return processFinished(processKey);
         } else if (processStatus == ProcessStatus.SUSPENDED) {
-            String nextFormId = formService.nextFormId(processInstanceId);
+            String nextFormId = formService.nextFormId(pk);
             if (nextFormId == null) {
-                return processError(processInstanceId, "Invalid process state: no forms found");
+                return processError(processKey, "Invalid process state: no forms found");
             }
 
             String url = "/#/process/" + entry.getInstanceId() + "/wizard";
@@ -233,11 +242,13 @@ public class ProjectProcessResource implements Resource {
         }
     }
 
-    private void waitTillProcessIsInitialized(UUID instanceId) throws InterruptedException {
-        ProcessEntry entry = queueDao.get(instanceId);
-        while (entry == null) {
+    private void waitTillProcessIsInitialized(PartialProcessKey processKey) throws InterruptedException {
+        while (true) {
+            if (queueDao.exists(processKey)) {
+                return;
+            }
+
             TimeUnit.MILLISECONDS.sleep(100);
-            entry = queueDao.get(instanceId);
         }
     }
 
@@ -316,13 +327,15 @@ public class ProjectProcessResource implements Resource {
         return id;
     }
 
-    private Response processFinished(UUID instanceId) {
+    private Response processFinished(PartialProcessKey processKey) {
         return responseTemplates.processFinished(Response.ok(),
-                Collections.singletonMap("instanceId", instanceId))
+                Collections.singletonMap("instanceId", processKey.getInstanceId()))
                 .build();
     }
 
-    private Response processError(UUID instanceId, String message) {
+    private Response processError(PartialProcessKey processKey, String message) {
+        UUID instanceId = processKey.getInstanceId();
+
         Map<String, Object> args = new HashMap<>();
         if (instanceId != null) {
             args.put("instanceId", instanceId);

@@ -43,7 +43,6 @@ import javax.inject.Named;
 import java.io.*;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +54,7 @@ public class ProcessSecurityContext {
 
     private final ProcessStateManager stateManager;
     private final Injector injector;
-    private final Cache<UUID, PrincipalCollection> principalCache;
+    private final Cache<PartialProcessKey, PrincipalCollection> principalCache;
     private final UserManager userManager;
 
     @Inject
@@ -68,7 +67,7 @@ public class ProcessSecurityContext {
                 .build();
     }
 
-    public void storeCurrentSubject(UUID instanceId) {
+    public void storeCurrentSubject(ProcessKey processKey) {
         Subject s = SecurityUtils.getSubject();
 
         PrincipalCollection src = s.getPrincipals();
@@ -86,25 +85,25 @@ public class ProcessSecurityContext {
             }
         }
 
-        stateManager.replace(instanceId, PRINCIPAL_FILE_PATH, serialize(dst));
+        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serialize(dst));
     }
 
-    public PrincipalCollection getPrincipals(UUID instanceId) {
+    public PrincipalCollection getPrincipals(PartialProcessKey processKey) {
         try {
-            return principalCache.get(instanceId, () -> doGetPrincipals(instanceId));
+            return principalCache.get(processKey, () -> doGetPrincipals(processKey));
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private PrincipalCollection doGetPrincipals(UUID instanceId) {
-        return stateManager.get(instanceId, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize)
+    private PrincipalCollection doGetPrincipals(PartialProcessKey processKey) {
+        return stateManager.get(processKey, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize)
                 .orElse(null);
     }
 
     // TODO won't be needed after switching from gRPC to REST
-    public <T> T runAs(UUID instanceId, Callable<T> c) throws Exception {
-        PrincipalCollection principals = getPrincipals(instanceId);
+    public <T> T runAs(PartialProcessKey processKey, Callable<T> c) throws Exception {
+        PrincipalCollection principals = getPrincipals(processKey);
         if (principals == null) {
             throw new UnauthorizedException("Process' principal not found");
         }

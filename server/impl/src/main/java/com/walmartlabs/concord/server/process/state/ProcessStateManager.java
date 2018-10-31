@@ -27,6 +27,8 @@ import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jooq.Configuration;
@@ -73,22 +75,21 @@ public class ProcessStateManager extends AbstractDao {
         this.secureFiles.addAll(stateCfg.getSecureFiles());
     }
 
-    public <T> Optional<T> get(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, instanceId, assertCreatedAt(tx, instanceId), path, converter);
-        }
+    public <T> Optional<T> get(PartialProcessKey partialProcessKey, String path, Function<InputStream, Optional<T>> converter) {
+        ProcessKey processKey = assertKey(partialProcessKey);
+        return get(processKey, path, converter);
     }
 
     /**
      * Fetches a single value specified by its path and applies a converter function.
      */
-    public <T> Optional<T> get(UUID instanceId, Timestamp instanceCreatedAt, String path, Function<InputStream, Optional<T>> converter) {
+    public <T> Optional<T> get(ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return get(tx, instanceId, instanceCreatedAt, path, converter);
+            return get(tx, processKey, path, converter);
         }
     }
 
-    private <T> Optional<T> get(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path, Function<InputStream, Optional<T>> converter) {
+    private <T> Optional<T> get(DSLContext tx, ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
         String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                 .from(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
@@ -98,8 +99,8 @@ public class ProcessStateManager extends AbstractDao {
 
         return tx.connectionResult(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setObject(1, instanceId);
-                ps.setTimestamp(2, instanceCreatedAt);
+                ps.setObject(1, processKey.getInstanceId());
+                ps.setTimestamp(2, processKey.getCreatedAt());
                 ps.setString(3, path);
 
                 try (ResultSet rs = ps.executeQuery()) {
@@ -116,16 +117,11 @@ public class ProcessStateManager extends AbstractDao {
         });
     }
 
-    public <T> List<T> forEach(UUID instanceId, String path, Function<InputStream, Optional<T>> converter) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        return forEach(instanceId, instanceCreatedAt, path, converter);
-    }
-
     /**
      * Fetches multiple values whose path begins with the specified value and applies a converter function
      * to each value.
      */
-    public <T> List<T> forEach(UUID instanceId, Timestamp instanceCreatedAt, String path, Function<InputStream, Optional<T>> converter) {
+    public <T> List<T> forEach(ProcessKey processKey, String path, Function<InputStream, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
@@ -136,8 +132,8 @@ public class ProcessStateManager extends AbstractDao {
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, instanceId);
-                    ps.setTimestamp(2, instanceCreatedAt);
+                    ps.setObject(1, processKey.getInstanceId());
+                    ps.setTimestamp(2, processKey.getCreatedAt());
                     ps.setString(3, path);
 
                     List<T> result = new ArrayList<>();
@@ -159,39 +155,31 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-    public List<String> list(UUID instanceId, String path) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        return list(instanceId, instanceCreatedAt, path);
-    }
-
     /**
      * Retrieves a list of resources whose path begins with the specified value.
      */
-    public List<String> list(UUID instanceId, Timestamp instanceCreatedAt, String path) {
+    public List<String> list(PartialProcessKey processKey, String path) {
+        Timestamp createdAt = assertCreatedAt(processKey);
+
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_STATE.ITEM_PATH)
                     .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt))
+                    .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(createdAt))
                             .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
                     .fetch(PROCESS_STATE.ITEM_PATH);
         }
     }
 
-    public <T> Optional<T> findPath(UUID instanceId, String path, Function<Stream<String>, Optional<T>> converter) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        return findPath(instanceId, instanceCreatedAt, path, converter);
-    }
-
     /**
      * Finds all item paths that starts with the specified value.
      */
-    public <T> Optional<T> findPath(UUID instanceId, Timestamp instanceCreatedAt, String path, Function<Stream<String>, Optional<T>> converter) {
+    public <T> Optional<T> findPath(ProcessKey processKey, String path, Function<Stream<String>, Optional<T>> converter) {
         try (DSLContext tx = DSL.using(cfg)) {
             Stream<String> s = tx.select(PROCESS_STATE.ITEM_PATH)
                     .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt))
+                    .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                             .and(PROCESS_STATE.ITEM_PATH.startsWith(path)))
                     .fetch(PROCESS_STATE.ITEM_PATH)
                     .stream();
@@ -200,19 +188,19 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-    public boolean exists(UUID instanceId, String path) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        return exists(instanceId, instanceCreatedAt, path);
+    public boolean exists(PartialProcessKey processKey, String path) {
+        Timestamp instanceCreatedAt = assertCreatedAt(processKey);
+        return exists(new ProcessKey(processKey, instanceCreatedAt), path);
     }
 
     /**
      * Checks if a value exists.
      */
-    public boolean exists(UUID instanceId, Timestamp instanceCreatedAt, String path) {
+    public boolean exists(ProcessKey processKey, String path) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.fetchExists(tx.selectFrom(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt))
+                    .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                             .and(PROCESS_STATE.ITEM_PATH.startsWith(path))));
         }
     }
@@ -224,52 +212,27 @@ public class ProcessStateManager extends AbstractDao {
                 .execute();
     }
 
-    public void deleteFile(UUID instanceId, String path) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        deleteFile(instanceId, instanceCreatedAt, path);
-    }
-
     /**
-     * Removes single value.
+     * Removes a single value.
      */
-    public void deleteFile(UUID instanceId, Timestamp instanceCreatedAt, String path) {
-        tx(tx -> deleteFile(tx, instanceId, instanceCreatedAt, path));
-    }
-
-    public void deleteDirectory(UUID instanceId, String path) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        deleteDirectory(instanceId, instanceCreatedAt, path);
+    public void deleteFile(ProcessKey processKey, String path) {
+        tx(tx -> tx.deleteFrom(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(PROCESS_STATE.ITEM_PATH.eq(path)))
+                .execute());
     }
 
     /**
      * Remove a directory and all content from it.
      */
     @WithTimer
-    public void deleteDirectory(UUID instanceId, Timestamp instanceCreatedAt, String path) {
-        tx(tx -> deleteDirectory(tx, instanceId, instanceCreatedAt, path));
+    public void deleteDirectory(ProcessKey processKey, String path) {
+        tx(tx -> deleteDirectory(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path));
     }
 
-    public void delete(UUID instanceId) {
-        tx(tx -> {
-            Timestamp instanceCreatedAt = assertCreatedAt(tx, instanceId);
-            delete(tx, instanceId, instanceCreatedAt);
-        });
-    }
-
-    /**
-     * Removes all process data.
-     */
-    @WithTimer
-    public void delete(UUID instanceId, Timestamp instanceCreatedAt) {
-        tx(tx -> delete(tx, instanceId, instanceCreatedAt));
-    }
-
-    private void deleteFile(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path) {
-        tx.deleteFrom(PROCESS_STATE)
-                .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt))
-                        .and(PROCESS_STATE.ITEM_PATH.eq(path)))
-                .execute();
+    public void delete(ProcessKey processKey) {
+        tx(tx -> delete(tx, processKey.getInstanceId(), processKey.getCreatedAt()));
     }
 
     private void deleteDirectory(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path) {
@@ -281,15 +244,13 @@ public class ProcessStateManager extends AbstractDao {
                 .execute();
     }
 
-    public void replace(UUID instanceId, String path, byte[] data) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        replace(instanceId, instanceCreatedAt, path, data);
-    }
-
     /**
      * Replaces a single value.
      */
-    public void replace(UUID instanceId, Timestamp instanceCreatedAt, String path, byte[] data) {
+    public void replace(ProcessKey processKey, String path, byte[] data) {
+        UUID instanceId = processKey.getInstanceId();
+        Timestamp instanceCreatedAt = processKey.getCreatedAt();
+
         tx(tx -> {
             deleteDirectory(tx, instanceId, instanceCreatedAt, path);
             insert(tx, instanceId, instanceCreatedAt, path, data);
@@ -315,40 +276,26 @@ public class ProcessStateManager extends AbstractDao {
                 .execute();
     }
 
-    public void importPath(UUID instanceId, String path, Path src) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        importPath(instanceId, instanceCreatedAt, path, src);
-    }
-
     /**
      * Imports data from the specified directory or a file.
-     *
-     * @param instanceId process instance ID
-     * @param path       target path prefix
-     * @param src        source directory or a file
      */
     @WithTimer
-    public void importPath(UUID instanceId, Timestamp instanceCreatedAt, String path, Path src) {
-        tx(tx -> importPath(tx, instanceId, instanceCreatedAt, path, src, f -> true));
+    public void importPath(ProcessKey processKey, String path, Path src) {
+        tx(tx -> importPath(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path, src, f -> true));
     }
 
     /**
      * Imports data from the specified directory or a file replacing the existing data.
      * If the filter function returns {@code false}, the matching file will be skipped.
-     *
-     * @param instanceId process instance ID
-     * @param src        source directory or a file
-     * @param filter     filter function
      */
-    public void replacePath(UUID instanceId, Timestamp instanceCreatedAt, Path src, Function<Path, Boolean> filter) {
+    public void replacePath(ProcessKey processKey, Path src, Function<Path, Boolean> filter) {
+        UUID instanceId = processKey.getInstanceId();
+        Timestamp instanceCreatedAt = processKey.getCreatedAt();
+
         tx(tx -> {
             delete(tx, instanceId, instanceCreatedAt);
-            importPath(tx, instanceId, instanceCreatedAt, src, filter);
+            importPath(tx, instanceId, instanceCreatedAt, null, src, filter);
         });
-    }
-
-    private void importPath(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, Path src, Function<Path, Boolean> filter) {
-        importPath(tx, instanceId, instanceCreatedAt, null, src, filter);
     }
 
     private void importPath(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path, Path src, Function<Path, Boolean> filter) {
@@ -424,20 +371,10 @@ public class ProcessStateManager extends AbstractDao {
         });
     }
 
-    public boolean export(UUID instanceId, ItemConsumer consumer) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        return export(instanceId, instanceCreatedAt, consumer);
-    }
-
     /**
      * Exports all data of a process instance.
-     *
-     * @param instanceId        process instance ID
-     * @param instanceCreatedAt process instance creation date
-     * @param consumer          a function that receives the name of a file and a data stream
-     * @return {@code true} if at least a single element was exported.
      */
-    public boolean export(UUID instanceId, Timestamp instanceCreatedAt, ItemConsumer consumer) {
+    public boolean export(ProcessKey processKey, ItemConsumer consumer) {
         try (DSLContext tx = DSL.using(cfg)) {
             String sql = tx
                     .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
@@ -447,8 +384,8 @@ public class ProcessStateManager extends AbstractDao {
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, instanceId);
-                    ps.setTimestamp(2, instanceCreatedAt);
+                    ps.setObject(1, processKey.getInstanceId());
+                    ps.setTimestamp(2, processKey.getCreatedAt());
 
                     boolean found = false;
                     try (ResultSet rs = ps.executeQuery()) {
@@ -471,20 +408,10 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-    public boolean exportDirectory(UUID instanceId, String path, ItemConsumer consumer) {
-        Timestamp instanceCreatedAt = assertCreatedAt(instanceId);
-        return exportDirectory(instanceId, instanceCreatedAt, path, consumer);
-    }
-
     /**
      * Exports elements whose path begins with the specified value.
-     *
-     * @param instanceId process instance ID
-     * @param path       path prefix
-     * @param consumer   a function that receives the name of a file and a data stream
-     * @return {@code true} if at least a single element was exported.
      */
-    public boolean exportDirectory(UUID instanceId, Timestamp instanceCreatedAt, String path, ItemConsumer consumer) {
+    public boolean exportDirectory(ProcessKey processKey, String path, ItemConsumer consumer) {
         String dir = fixPath(path);
 
         try (DSLContext tx = DSL.using(cfg)) {
@@ -498,8 +425,8 @@ public class ProcessStateManager extends AbstractDao {
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, instanceId);
-                    ps.setTimestamp(2, instanceCreatedAt);
+                    ps.setObject(1, processKey.getInstanceId());
+                    ps.setTimestamp(2, processKey.getCreatedAt());
                     ps.setString(3, dir);
 
                     boolean found = false;
@@ -595,6 +522,17 @@ public class ProcessStateManager extends AbstractDao {
     public interface ItemConsumer {
 
         void accept(String name, int unixMode, InputStream src);
+    }
+
+    public ProcessKey assertKey(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            Timestamp createdAt = assertCreatedAt(tx, processKey.getInstanceId());
+            return new ProcessKey(processKey, createdAt);
+        }
+    }
+
+    public Timestamp assertCreatedAt(PartialProcessKey processKey) {
+        return assertCreatedAt(processKey.getInstanceId());
     }
 
     public Timestamp assertCreatedAt(UUID instanceId) {

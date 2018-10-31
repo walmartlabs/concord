@@ -27,13 +27,13 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.metrics.InjectCounter;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.UUID;
 
 @Named
 public class FilePolicyApplier implements PolicyApplier {
@@ -55,25 +55,25 @@ public class FilePolicyApplier implements PolicyApplier {
 
     @Override
     public void apply(Payload payload, Map<String, Object> policy) throws Exception {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
         CheckResult<FileRule, Path> result = new PolicyEngine(policy).getFilePolicy().check(workDir);
 
         result.getWarn().forEach(i -> {
             policyWarn.inc();
-            logManager.warn(instanceId, "Potentially restricted file '{}' (file policy: {})",
+            logManager.warn(processKey, "Potentially restricted file '{}' (file policy: {})",
                     workDir.relativize(i.getEntity()), i.getRule());
         });
 
         result.getDeny().forEach(i -> {
             policyDeny.inc();
-            logManager.error(instanceId, "File '{}' is forbidden by the file policy {}",
+            logManager.error(processKey, "File '{}' is forbidden by the file policy {}",
                     workDir.relativize(i.getEntity()), i.getRule());
         });
 
         if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Found forbidden files");
+            throw new ProcessException(processKey, "Found forbidden files");
         }
     }
 }

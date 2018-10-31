@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 
 import javax.inject.Inject;
@@ -32,7 +33,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES;
 
@@ -50,7 +50,7 @@ public class FormFilesStoringProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         Map<String, Object> data = payload.getHeader(Payload.REQUEST_DATA_MAP);
         if (data == null) {
@@ -77,8 +77,8 @@ public class FormFilesStoringProcessor implements PayloadProcessor {
                 Files.move(tmpFile, formFile, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException e) {
-            logManager.error(instanceId, "Error while saving form files", e);
-            throw new ProcessException(instanceId, "Error while saving form files", e);
+            logManager.error(processKey, "Error while saving form files", e);
+            throw new ProcessException(processKey, "Error while saving form files", e);
         }
 
         return chain.process(payload);

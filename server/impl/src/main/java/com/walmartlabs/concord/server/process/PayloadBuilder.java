@@ -41,12 +41,13 @@ import java.util.function.Function;
 
 public final class PayloadBuilder {
 
-    public static PayloadBuilder start(UUID instanceId) {
-        return new PayloadBuilder(instanceId, new Timestamp(System.currentTimeMillis()));
+    public static PayloadBuilder start(PartialProcessKey processKey) {
+        ProcessKey pk = new ProcessKey(processKey.getInstanceId(), new Timestamp(System.currentTimeMillis()));
+        return new PayloadBuilder(pk);
     }
 
-    public static PayloadBuilder resume(UUID instanceId, Timestamp createdAt) {
-        return new PayloadBuilder(instanceId, createdAt);
+    public static PayloadBuilder resume(ProcessKey processKey) {
+        return new PayloadBuilder(processKey);
     }
 
     public static PayloadBuilder basedOn(Payload payload) {
@@ -61,8 +62,8 @@ public final class PayloadBuilder {
         this.payload = payload;
     }
 
-    private PayloadBuilder(UUID instanceId, Timestamp createdAt) {
-        this.payload = new Payload(instanceId, createdAt);
+    private PayloadBuilder(ProcessKey processKey) {
+        this.payload = new Payload(processKey);
     }
 
     public PayloadBuilder parentInstanceId(UUID parentInstanceId) {
@@ -91,13 +92,13 @@ public final class PayloadBuilder {
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
         cfg = new HashMap<>(cfg != null ? cfg : Collections.emptyMap());
 
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey pk = payload.getProcessKey();
         Path baseDir = ensureBaseDir();
 
         for (InputPart p : input.getParts()) {
             String name = MultipartUtils.extractName(p);
             if (name == null || name.startsWith("/") || name.contains("..")) {
-                throw new ProcessException(instanceId, "Invalid attachment name: " + name, Response.Status.BAD_REQUEST);
+                throw new ProcessException(pk, "Invalid attachment name: " + name, Response.Status.BAD_REQUEST);
             }
 
             if (p.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE)) {

@@ -24,6 +24,7 @@ import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.UUID;
 
 @Named
 @Singleton
@@ -52,7 +52,7 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         if (workspace == null) {
@@ -64,9 +64,9 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
             return chain.process(payload);
         } catch (IOException e) {
-            log.warn("process ['{}'] -> project loading error: {}", instanceId, workspace, e);
-            logManager.error(instanceId,"Error while loading a project file: " + workspace, e);
-            throw new ProcessException(instanceId, "Error while loading a project file: " + workspace, e);
+            log.warn("process ['{}'] -> project loading error: {}", processKey, workspace, e);
+            logManager.error(processKey,"Error while loading a project file: " + workspace, e);
+            throw new ProcessException(processKey, "Error while loading a project file: " + workspace, e);
         }
     }
 }

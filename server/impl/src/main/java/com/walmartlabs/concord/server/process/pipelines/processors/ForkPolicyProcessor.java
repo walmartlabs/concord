@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import org.jooq.Configuration;
 import org.jooq.Record1;
@@ -61,7 +62,7 @@ public class ForkPolicyProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
         UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
 
         PolicyEntry policy = payload.getHeader(Payload.POLICY);
@@ -69,7 +70,7 @@ public class ForkPolicyProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(instanceId, "Applying fork policies...");
+        logManager.info(processKey, "Applying fork policies...");
 
         CheckResult<ForkDepthRule, Integer> result;
         try {
@@ -77,13 +78,13 @@ public class ForkPolicyProcessor implements PayloadProcessor {
                     .getForkDepthPolicy()
                     .check(() -> forkDepthDao.getDepth(parentInstanceId));
         } catch (Exception e) {
-            log.error("process ['{}'] -> error", instanceId, e);
-            throw new ProcessException(instanceId, "Found fork policy check error", e);
+            log.error("process ['{}'] -> error", processKey, e);
+            throw new ProcessException(processKey, "Found fork policy check error", e);
         }
 
         if (!result.getDeny().isEmpty()) {
-            logManager.error(instanceId, buildErrorMessage(result.getDeny()));
-            throw new ProcessException(instanceId, "Found fork policy violations");
+            logManager.error(processKey, buildErrorMessage(result.getDeny()));
+            throw new ProcessException(processKey, "Found fork policy violations");
         }
         return chain.process(payload);
     }

@@ -24,12 +24,12 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,8 +49,7 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
     @WithTimer
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
-        Timestamp createdAt = payload.getCreatedAt();
+        ProcessKey processKey = payload.getProcessKey();
         ProcessKind kind = payload.getHeader(Payload.PROCESS_KIND, ProcessKind.DEFAULT);
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
@@ -59,7 +58,7 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
         Map<String, Object> meta = getMeta(cfg);
 
-        queueDao.insertInitial(instanceId, createdAt, kind, parentInstanceId, projectId, initiatorId, meta);
+        queueDao.insertInitial(processKey, kind, parentInstanceId, projectId, initiatorId, meta);
 
         return chain.process(payload);
     }

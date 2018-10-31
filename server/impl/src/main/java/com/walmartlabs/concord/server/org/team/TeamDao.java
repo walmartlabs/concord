@@ -22,9 +22,9 @@ package com.walmartlabs.concord.server.org.team;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
-import com.walmartlabs.concord.server.user.UserType;
 import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.UserTeamsRecord;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 

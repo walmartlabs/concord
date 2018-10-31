@@ -153,19 +153,18 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     List<ProcessEntry> parents = watchdogDao.poll(tx, e, maxAge, 1);
 
                     for (ProcessEntry parent : parents) {
-                        UUID childId = UUID.randomUUID();
-
                         Map<String, Object> req = new HashMap<>();
                         req.put(InternalConstants.Request.ENTRY_POINT_KEY, e.flow);
                         req.put(InternalConstants.Request.TAGS_KEY, null); // clear tags
 
-                        Payload payload = payloadManager.createFork(childId, parent.instanceId, e.handlerKind,
+                        PartialProcessKey childKey = PartialProcessKey.create();
+                        Payload payload = payloadManager.createFork(childKey, parent.processKey, e.handlerKind,
                                 parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null);
 
                         processManager.startFork(payload, false);
 
                         log.info("processHandlers -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
-                                childId, parent.instanceId, e.flow);
+                                childKey, parent.processKey, e.flow);
                     }
                 }
             });
@@ -178,11 +177,11 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             watchdogDao.transaction(tx -> {
                 Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStalledAge()));
 
-                List<UUID> ids = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
-                for (UUID id : ids) {
-                    queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
-                    logManager.warn(id, "Process stalled, no heartbeat for more than a minute");
-                    log.info("processStalled -> marked as failed: {}", id);
+                List<ProcessKey> pks = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
+                for (ProcessKey pk : pks) {
+                    queueDao.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    logManager.warn(pk, "Process stalled, no heartbeat for more than a minute");
+                    log.info("processStalled -> marked as failed: {}", pk);
                 }
             });
         }
@@ -194,11 +193,11 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             watchdogDao.transaction(tx -> {
                 Field<Timestamp> cutOff = currentTimestamp().minus(interval(cfg.getMaxStartFailureAge()));
 
-                List<UUID> ids = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
-                for (UUID id : ids) {
-                    queueDao.updateAgentId(tx, id, null, ProcessStatus.FAILED);
-                    logManager.warn(id, "Process failed to start");
-                    log.info("processStartFailures -> marked as failed: {}", id);
+                List<ProcessKey> pks = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
+                for (ProcessKey pk : pks) {
+                    queueDao.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    logManager.warn(pk, "Process failed to start");
+                    log.info("processStartFailures -> marked as failed: {}", pk);
                 }
             });
         }
@@ -210,13 +209,14 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             watchdogDao.transaction(tx -> {
                 List<TimedOutEntry> items = watchdogDao.pollExpired(tx, 1);
                 for (TimedOutEntry i : items) {
-                    queueDao.updateAgentId(tx, i.instanceId, null, ProcessStatus.TIMED_OUT);
+                    queueDao.updateAgentId(tx, i.processKey, null, ProcessStatus.TIMED_OUT);
 
                     // TODO should AgentManager be used instead?
-                    agentCommandsDao.insert(UUID.randomUUID(), i.agentId, Commands.cancel(i.instanceId.toString()));
+                    // TODO toString()? It should be typed
+                    agentCommandsDao.insert(UUID.randomUUID(), i.agentId, Commands.cancel(i.processKey.toString()));
 
-                    logManager.warn(i.instanceId, "Process timed out ({}s limit)", i.timeout);
-                    log.info("processTimedOut -> marked as timed out: {}", i.instanceId);
+                    logManager.warn(i.processKey, "Process timed out ({}s limit)", i.timeout);
+                    log.info("processTimedOut -> marked as timed out: {}", i.processKey);
                 }
             });
         }
@@ -252,7 +252,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         public List<ProcessEntry> poll(DSLContext tx, PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
-            return tx.select(q.INSTANCE_ID, q.PROJECT_ID, q.INITIATOR_ID)
+            return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, q.INITIATOR_ID)
                     .from(q)
                     .where(q.PROCESS_KIND.in(Utils.toString(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
@@ -267,9 +267,9 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     .fetch(WatchdogDao::toEntry);
         }
 
-        public List<UUID> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
+        public List<ProcessKey> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
-            return tx.select(q.INSTANCE_ID)
+            return tx.select(q.INSTANCE_ID, q.CREATED_AT)
                     .from(q)
                     .where(q.CURRENT_STATUS.in(Utils.toString(statuses))
                             .and(q.LAST_UPDATED_AT.lessThan(cutOff)))
@@ -277,7 +277,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     .limit(maxEntries)
                     .forUpdate()
                     .skipLocked()
-                    .fetch(q.INSTANCE_ID);
+                    .fetch(r -> new ProcessKey(r.value1(), r.value2()));
         }
 
         public List<TimedOutEntry> pollExpired(DSLContext tx, int maxEntries) {
@@ -293,7 +293,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             @SuppressWarnings("unchecked")
             Field<? extends Number> i = (Field<? extends Number>) interval("1 second");
 
-            return tx.select(q.INSTANCE_ID, q.LAST_AGENT_ID, q.TIMEOUT)
+            return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
                             .and(runningAt.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentTimestamp())))
@@ -326,25 +326,27 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                             .and(PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
-        private static ProcessEntry toEntry(Record3<UUID, UUID, UUID> r) {
-            return new ProcessEntry(r.get(PROCESS_QUEUE.INSTANCE_ID),
+        private static ProcessEntry toEntry(Record4<UUID, Timestamp, UUID, UUID> r) {
+            ProcessKey processKey = new ProcessKey(r.get(PROCESS_QUEUE.INSTANCE_ID), r.get(PROCESS_QUEUE.CREATED_AT));
+            return new ProcessEntry(processKey,
                     r.get(PROCESS_QUEUE.PROJECT_ID),
                     r.get(PROCESS_QUEUE.INITIATOR_ID));
         }
 
-        private static TimedOutEntry toExpiredEntry(Record3<UUID, String, Long> r) {
-            return new TimedOutEntry(r.value1(), r.value2(), r.value3());
+        private static TimedOutEntry toExpiredEntry(Record4<UUID, Timestamp, String, Long> r) {
+            ProcessKey processKey = new ProcessKey(r.value1(), r.value2());
+            return new TimedOutEntry(processKey, r.value3(), r.value4());
         }
     }
 
     private static final class ProcessEntry implements Serializable {
 
-        private final UUID instanceId;
+        private final ProcessKey processKey;
         private final UUID projectId;
         private final UUID initiatorId;
 
-        private ProcessEntry(UUID instanceId, UUID projectId, UUID initiatorId) {
-            this.instanceId = instanceId;
+        private ProcessEntry(ProcessKey processKey, UUID projectId, UUID initiatorId) {
+            this.processKey = processKey;
             this.projectId = projectId;
             this.initiatorId = initiatorId;
         }
@@ -352,12 +354,12 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
     private static class TimedOutEntry {
 
-        private final UUID instanceId;
+        private final ProcessKey processKey;
         private final String agentId;
         private final Long timeout;
 
-        private TimedOutEntry(UUID instanceId, String agentId, Long timeout) {
-            this.instanceId = instanceId;
+        private TimedOutEntry(ProcessKey processKey, String agentId, Long timeout) {
+            this.processKey = processKey;
             this.agentId = agentId;
             this.timeout = timeout;
         }

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
@@ -90,7 +91,7 @@ public class RequestDataMergingProcessorTest {
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
         when(projectDao.getConfiguration(eq(prjId))).thenReturn(prjCfg);
 
-        Payload payload = new Payload(instanceId, new Timestamp(System.currentTimeMillis()));
+        Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
         payload = payload
                 .putHeader(Payload.REQUEST_DATA_MAP, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)
@@ -137,7 +138,7 @@ public class RequestDataMergingProcessorTest {
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
         when(projectDao.getConfiguration(eq(prjId))).thenReturn(prjCfg);
 
-        Payload payload = new Payload(instanceId, new Timestamp(System.currentTimeMillis()));
+        Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
         payload = payload
                 .putHeader(Payload.REQUEST_DATA_MAP, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)

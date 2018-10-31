@@ -56,7 +56,7 @@ public class ProcessRateLimiter {
 
         int timeout = cfg.getMaxRateTimeout();
         if (!limiter.tryAcquire(timeout)) {
-            throw new ProcessException(payload.getInstanceId(), "Request timeout while being rate limited", ExtraStatus.TOO_MANY_REQUESTS);
+            throw new ProcessException(payload.getProcessKey(), "Request timeout while being rate limited", ExtraStatus.TOO_MANY_REQUESTS);
         }
     }
 }

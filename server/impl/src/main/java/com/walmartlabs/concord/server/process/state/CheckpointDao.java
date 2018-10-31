@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.state;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointEntry;
 import org.jooq.Configuration;
 import org.jooq.Record;
@@ -48,7 +49,8 @@ public class CheckpointDao extends AbstractDao {
         super(cfg);
     }
 
-    public List<ProcessCheckpointEntry> list(UUID instanceId) {
+    public List<ProcessCheckpointEntry> list(PartialProcessKey processKey) {
+        UUID instanceId = processKey.getInstanceId();
         return txResult(tx -> tx.select()
                 .from(PROCESS_CHECKPOINTS)
                 .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(instanceId))

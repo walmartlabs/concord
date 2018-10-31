@@ -21,12 +21,12 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.squareup.okhttp.OkHttpClient;
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client.ConcordApiClient;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ConcordApiClient;
 
 import javax.inject.Inject;
 import javax.inject.Named;

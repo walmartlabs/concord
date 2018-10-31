@@ -21,11 +21,10 @@ package com.walmartlabs.concord.server.org.landing;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.org.landing.LandingEntry;
-import com.walmartlabs.concord.server.org.project.ProjectVisibility;
 import com.walmartlabs.concord.server.jooq.tables.LandingPage;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Repositories;
+import com.walmartlabs.concord.server.org.project.ProjectVisibility;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.postgresql.util.Base64;

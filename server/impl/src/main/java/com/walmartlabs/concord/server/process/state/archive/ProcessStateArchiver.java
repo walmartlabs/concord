@@ -24,6 +24,8 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.cfg.ProcessStateArchiveConfiguration;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.task.ScheduledTask;
@@ -47,7 +49,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
@@ -89,16 +90,16 @@ public class ProcessStateArchiver implements ScheduledTask {
         return cfg.isEnabled() ? cfg.getPeriod() : 0;
     }
 
-    public void export(UUID instanceId, OutputStream out) throws IOException {
-        String name = name(instanceId);
+    public void export(ProcessKey processKey, OutputStream out) throws IOException {
+        String name = name(processKey);
 
-        if (cfg.isEnabled() && dao.isArchived(instanceId)) {
+        if (cfg.isEnabled() && dao.isArchived(processKey)) {
             try (InputStream in = store.get(name)) {
                 IOUtils.copy(in, out);
             }
         } else {
             try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(out)) {
-                stateManager.export(instanceId, zipTo(dst));
+                stateManager.export(processKey, zipTo(dst));
             }
         }
     }
@@ -107,44 +108,44 @@ public class ProcessStateArchiver implements ScheduledTask {
     public void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
             Timestamp ageCutoff = new Timestamp(System.currentTimeMillis() - cfg.getProcessAge());
-            List<UUID> ids = dao.grabNext(ALLOWED_STATUSES, ageCutoff, 10);
+            List<ProcessKey> keys = dao.grabNext(ALLOWED_STATUSES, ageCutoff, 10);
 
-            if (ids.isEmpty()) {
+            if (keys.isEmpty()) {
                 log.info("performTask -> nothing to do");
                 break;
             }
 
-            log.info("performTask -> processing {} entries...", ids.size());
-            ForkJoinTask<?> t = forkJoinPool.submit(() -> ids.parallelStream()
+            log.info("performTask -> processing {} entries...", keys.size());
+            ForkJoinTask<?> t = forkJoinPool.submit(() -> keys.parallelStream()
                     .forEach(this::upload));
 
             t.get();
         }
     }
 
-    private void upload(UUID id) {
+    private void upload(ProcessKey processKey) {
         Path tmp = null;
         try {
             tmp = IOUtils.createTempFile("archive", ".zip");
             try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-                log.info("performTask -> exporting {}...", id);
-                stateManager.export(id, ProcessStateManager.zipTo(zip));
+                log.info("performTask -> exporting {}...", processKey);
+                stateManager.export(processKey, ProcessStateManager.zipTo(zip));
             }
 
             long size = Files.size(tmp);
-            log.info("performTask -> uploading {} ({} bytes)...", id, size);
+            log.info("performTask -> uploading {} ({} bytes)...", processKey, size);
 
             long t1 = System.currentTimeMillis();
-            store.put(tmp, name(id), ARCHIVE_CONTENT_TYPE, size, getExpirationDate());
+            store.put(tmp, name(processKey), ARCHIVE_CONTENT_TYPE, size, getExpirationDate());
 
-            dao.markAsDone(id);
-            stateManager.delete(id);
+            dao.markAsDone(processKey);
+            stateManager.delete(processKey);
 
             long t2 = System.currentTimeMillis();
-            log.info("performTask -> {} done ({} ms)", id, (t2 - t1));
+            log.info("performTask -> {} done ({} ms)", processKey, (t2 - t1));
         } catch (Exception e) {
             // the entry will be retried, see StalledUploadHandler
-            log.warn("performTask -> {} failed with: {}", id, e.getMessage(), e);
+            log.warn("performTask -> {} failed with: {}", processKey, e.getMessage(), e);
         } finally {
             if (tmp != null) {
                 try {
@@ -166,8 +167,8 @@ public class ProcessStateArchiver implements ScheduledTask {
         return Date.from(i.plus(age, ChronoUnit.MILLIS));
     }
 
-    private static String name(UUID instanceId) {
-        return instanceId + ".zip";
+    private static String name(PartialProcessKey processKey) {
+        return processKey + ".zip";
     }
 
     @Named
@@ -178,17 +179,17 @@ public class ProcessStateArchiver implements ScheduledTask {
             super(cfg);
         }
 
-        public boolean isArchived(UUID instanceId) {
+        public boolean isArchived(PartialProcessKey processKey) {
             try (DSLContext tx = DSL.using(cfg)) {
                 return tx.fetchExists(selectFrom(PROCESS_STATE_ARCHIVE)
-                        .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(instanceId)
+                        .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(processKey.getInstanceId())
                                 .and(PROCESS_STATE_ARCHIVE.STATUS.eq(ArchivalStatus.DONE.toString()))));
             }
         }
 
-        public List<UUID> grabNext(ProcessStatus[] statuses, Timestamp ageCutoff, int limit) {
+        public List<ProcessKey> grabNext(ProcessStatus[] statuses, Timestamp ageCutoff, int limit) {
             return txResult(tx -> {
-                List<UUID> ids = tx.select(PROCESS_QUEUE.INSTANCE_ID)
+                List<ProcessKey> keys = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
                         .from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.CURRENT_STATUS.in(Utils.toString(statuses))
                                 .and(PROCESS_QUEUE.LAST_UPDATED_AT.lessOrEqual(ageCutoff))
@@ -197,33 +198,33 @@ public class ProcessStateArchiver implements ScheduledTask {
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()
-                        .fetch(PROCESS_QUEUE.INSTANCE_ID);
+                        .fetch(r -> new ProcessKey(r.get(PROCESS_QUEUE.INSTANCE_ID), r.get(PROCESS_QUEUE.CREATED_AT)));
 
-                if (ids.isEmpty()) {
-                    return ids;
+                if (keys.isEmpty()) {
+                    return keys;
                 }
 
-                for (UUID id : ids) {
+                for (ProcessKey k : keys) {
                     tx.insertInto(PROCESS_STATE_ARCHIVE)
                             .columns(PROCESS_STATE_ARCHIVE.INSTANCE_ID, PROCESS_STATE_ARCHIVE.LAST_UPDATED_AT, PROCESS_STATE_ARCHIVE.STATUS)
-                            .values(value(id), currentTimestamp(), value(ArchivalStatus.IN_PROGRESS.toString()))
+                            .values(value(k.getInstanceId()), currentTimestamp(), value(ArchivalStatus.IN_PROGRESS.toString()))
                             .execute();
                 }
 
-                return ids;
+                return keys;
             });
         }
 
-        public void markAsDone(UUID instanceId) {
+        public void markAsDone(PartialProcessKey processKey) {
             tx(tx -> {
                 int i = tx.update(PROCESS_STATE_ARCHIVE)
                         .set(PROCESS_STATE_ARCHIVE.STATUS, ArchivalStatus.DONE.toString())
                         .set(PROCESS_STATE_ARCHIVE.LAST_UPDATED_AT, currentTimestamp())
-                        .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(instanceId))
+                        .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(processKey.getInstanceId()))
                         .execute();
 
                 if (i != 1) {
-                    throw new IllegalStateException("Invalid number of rows updated: " + i + " (instanceId: " + instanceId + ")");
+                    throw new IllegalStateException("Invalid number of rows updated: " + i + " (process key: " + processKey + ")");
                 }
             });
         }

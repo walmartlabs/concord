@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.agent;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -47,24 +48,24 @@ public class AgentManager {
         this.commandQueue = commandQueue;
     }
 
-    public void killProcess(UUID instanceId) {
-        ProcessEntry e = queueDao.get(instanceId);
+    public void killProcess(PartialProcessKey processKey) {
+        ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
-            throw new IllegalArgumentException("Process not found: " + instanceId);
+            throw new IllegalArgumentException("Process not found: " + processKey);
         }
 
         String agentId = e.getLastAgentId();
         if (agentId == null) {
-            log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", instanceId);
-            queueDao.updateStatus(instanceId, ProcessStatus.CANCELLED);
+            log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", processKey);
+            queueDao.updateStatus(processKey, ProcessStatus.CANCELLED);
             return;
         }
 
-        commandQueue.insert(UUID.randomUUID(), agentId, Commands.cancel(instanceId.toString()));
+        commandQueue.insert(UUID.randomUUID(), agentId, Commands.cancel(processKey.toString()));
     }
 
-    public void killProcess(List<UUID> instanceIdList) {
-        List<ProcessEntry> l = queueDao.get(instanceIdList);
+    public void killProcess(List<PartialProcessKey> processKeys) {
+        List<ProcessEntry> l = queueDao.get(processKeys);
 
         List<UUID> withoutAgent = l.stream()
                 .filter(p -> p.getLastAgentId() == null)
@@ -73,7 +74,7 @@ public class AgentManager {
 
         if (!withoutAgent.isEmpty()) {
             withoutAgent.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
-            queueDao.updateStatus(withoutAgent, ProcessStatus.CANCELLED, null);
+            queueDao.updateStatus(processKeys, ProcessStatus.CANCELLED, null);
         }
 
         List<AgentCommand> commands = l.stream()

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -79,7 +80,7 @@ public class ProcessQueueResource implements Resource {
         if (userAgent == null) {
             userAgent = "unknown";
         }
-        logManager.info(p.getInstanceId(), "Acquired by: " + userAgent);
+        logManager.info(ProcessKey.from(p), "Acquired by: " + userAgent);
 
         return p;
     }

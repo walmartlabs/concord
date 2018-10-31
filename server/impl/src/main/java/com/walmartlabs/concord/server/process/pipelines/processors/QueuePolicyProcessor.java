@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.Record4;
 import org.jooq.SelectConditionStep;
@@ -61,7 +62,7 @@ public class QueuePolicyProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         PolicyEntry policy = payload.getHeader(Payload.POLICY);
         if (policy == null || policy.isEmpty()) {
@@ -77,12 +78,12 @@ public class QueuePolicyProcessor implements PayloadProcessor {
                     .getQueueProcessPolicy()
                     .check(statuses -> dao.metrics(orgId, prjId, statuses));
         } catch (Exception e) {
-            log.error("process ['{}'] -> error", instanceId, e);
-            throw new ProcessException(instanceId, "Error while processing queue policies", e);
+            log.error("process ['{}'] -> error", processKey, e);
+            throw new ProcessException(processKey, "Error while processing queue policies", e);
         }
 
         if (!result.getDeny().isEmpty()) {
-            throw new ProcessException(instanceId, "Process queue policy violations: " + buildErrorMessage(result.getDeny()), ExtraStatus.TOO_MANY_REQUESTS);
+            throw new ProcessException(processKey, "Process queue policy violations: " + buildErrorMessage(result.getDeny()), ExtraStatus.TOO_MANY_REQUESTS);
         }
 
         return chain.process(payload);

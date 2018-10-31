@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.audit;
 
 import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.slf4j.Logger;
@@ -105,7 +106,9 @@ public class AuditLog {
             if (sessionKey != null) {
                 // if the request was made from within a process
                 actionSource.put("type", ActionSource.PROCESS);
-                actionSource.put("instanceId", sessionKey.getProcessInstanceId());
+
+                PartialProcessKey processKey = sessionKey.getProcessKey();
+                actionSource.put("instanceId", processKey.getInstanceId());
             } else {
                 // if the request was made using the API
                 actionSource.put("type", ActionSource.API_REQUEST);

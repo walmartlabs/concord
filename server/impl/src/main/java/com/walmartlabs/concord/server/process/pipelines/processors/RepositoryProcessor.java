@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
@@ -72,7 +73,7 @@ public class RepositoryProcessor implements PayloadProcessor {
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
-        UUID instanceId = payload.getInstanceId();
+        ProcessKey processKey = payload.getProcessKey();
 
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
@@ -85,10 +86,10 @@ public class RepositoryProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(instanceId, "Copying the repository's data: {}", repo);
+        logManager.info(processKey, "Copying the repository's data: {}", repo);
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
-        RepositoryManager.RepositoryInfo r = copyRepositoryData(instanceId, projectId, repo, dst);
+        RepositoryManager.RepositoryInfo r = copyRepositoryData(processKey, projectId, repo, dst);
         String branch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
 
         CommitInfo ci = null;
@@ -102,19 +103,19 @@ public class RepositoryProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private RepositoryManager.RepositoryInfo copyRepositoryData(UUID instanceId, UUID projectId, RepositoryEntry repo, Path dst) {
+    private RepositoryManager.RepositoryInfo copyRepositoryData(ProcessKey processKey, UUID projectId, RepositoryEntry repo, Path dst) {
         return repositoryManager.withLock(projectId, repo.getName(), () -> {
             try {
                 Path src = repositoryManager.fetch(projectId, repo);
 
                 IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-                log.info("process ['{}'] -> copy from {} to {}", instanceId, src, dst);
+                log.info("process ['{}'] -> copy from {} to {}", processKey, src, dst);
 
                 return repositoryManager.getInfo(repo, src);
             } catch (Exception e) {
-                log.error("process ['{}'] -> repository error", instanceId, e);
-                logManager.error(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
-                throw new ProcessException(instanceId, "Error while copying a repository: " + repo.getUrl(), e);
+                log.error("process ['{}'] -> repository error", processKey, e);
+                logManager.error(processKey, "Error while copying a repository: " + repo.getUrl(), e);
+                throw new ProcessException(processKey, "Error while copying a repository: " + repo.getUrl(), e);
             }
         });
     }
