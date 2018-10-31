@@ -22,6 +22,7 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.yaml.converter.StepConverter;
 import com.walmartlabs.concord.project.yaml.converter.YamlTaskStepConverter;
+import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
@@ -2160,6 +2161,70 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verify(task, times(1)).log(eq("It's okay to have a null item -> hello"));
         verify(task, times(1)).log(eq("It's okay to have a null item -> "));
         verify(task, times(1)).log(eq("It's okay to have a null item -> world"));
+
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test111() throws Exception {
+        deploy("111.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default", Collections.emptyMap());
+
+        // ---
+
+        verify(task, times(6)).execute(any(ExecutionContext.class));
+
+        verify(task, times(1)).log(eq("A 0"));
+        verify(task, times(1)).log(eq("A 1"));
+
+        verify(task, times(1)).log(eq("B 0"));
+        verify(task, times(1)).log(eq("B 1"));
+
+        verify(task, times(1)).log(eq("C 0"));
+        verify(task, times(1)).log(eq("C 1"));
+
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test112() throws Exception {
+        deploy("112.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default", Collections.singletonMap("nestedWithItems", Arrays.asList("0", null, "2", "3")));
+
+        // ---
+
+        verify(task, times(12)).execute(any(ExecutionContext.class));
+
+        verify(task, times(1)).log(eq("A 0"));
+        verify(task, times(1)).log(eq("A "));
+        verify(task, times(1)).log(eq("A 2"));
+        verify(task, times(1)).log(eq("A 3"));
+
+        verify(task, times(1)).log(eq("B 0"));
+        verify(task, times(1)).log(eq("B "));
+        verify(task, times(1)).log(eq("B 2"));
+        verify(task, times(1)).log(eq("B 3"));
+
+        verify(task, times(1)).log(eq("C 0"));
+        verify(task, times(1)).log(eq("C "));
+        verify(task, times(1)).log(eq("C 2"));
+        verify(task, times(1)).log(eq("C 3"));
 
         verifyNoMoreInteractions(task);
     }

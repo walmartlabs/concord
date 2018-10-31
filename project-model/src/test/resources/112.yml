@@ -1,0 +1,13 @@
+nested:
+  - ${execution.setVariable("outer", item)}
+  - task: myLogger
+    in:
+      message: "${outer} ${item}"
+    withItems: ${nestedWithItems}
+
+default:
+  - call: nested
+    withItems:
+    - "A"
+    - "B"
+    - "C"

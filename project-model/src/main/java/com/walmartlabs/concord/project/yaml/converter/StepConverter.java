@@ -77,21 +77,24 @@ public interface StepConverter<T extends YamlStep> {
         VariableMapping taskVars = new VariableMapping(null, null, withItems, "items", true);
 
         String startId        = ctx.nextId();
+        String initId         = ctx.nextId();
         String nextItemTaskId = ctx.nextId();
         String hasNextGwId    = ctx.nextId();
         String cleanupTaskId  = ctx.nextId();
 
+        result.addElement(new ServiceTask(initId, ExpressionType.SIMPLE, "${__withItemsUtils.init(execution)}", Collections.singleton(taskVars), null, true));
         result.addElement(new ServiceTask(nextItemTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.nextItem(execution)}", Collections.singleton(taskVars), null, true));
         result.addElement(new ExclusiveGateway(hasNextGwId));
         result.addElement(new ServiceTask(cleanupTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.cleanup(execution)}", null, null, true));
 
-        /*  ::bpm flow::      --------theTask ----Y
-                              v                   |
-         startId -----> hasNextTaskId -----> hasNextGwId --N--> cleanupTaskId
+        /*  ::bpm flow::            --------theTask ----Y
+                                    v                   |
+         startId -----> init -> hasNextTaskId -----> hasNextGwId --N--> cleanupTaskId
          */
-        result.addElement(new SequenceFlow(ctx.nextId(), startId, nextItemTaskId));
+        result.addElement(new SequenceFlow(ctx.nextId(), startId, initId));
+        result.addElement(new SequenceFlow(ctx.nextId(), initId, nextItemTaskId));
         result.addElement(new SequenceFlow(ctx.nextId(), nextItemTaskId, hasNextGwId));
-        result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, c.firstElement().getId(), "${__withItemsHasNext}"));
+        result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, c.firstElement().getId(), "${__withItemsUtils.hasNext(execution)}"));
         result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, cleanupTaskId));
         c.getOutputs().forEach(o -> {
             result.addElement(new SequenceFlow(ctx.nextId(), o, nextItemTaskId));
@@ -270,6 +273,19 @@ public interface StepConverter<T extends YamlStep> {
 
     @Named("__withItemsUtils")
     class WithItemsUtilsTask implements Task {
+        private static final String CURRENT_INDEX = "__currentWithItemIndex";
+        private static final String HAS_NEXT = "__withItemsHasNext";
+        private static final String ITEM = "item";
+
+        public void init(ExecutionContext ctx) {
+            List<Integer> currentIndex = getList(ctx, CURRENT_INDEX);
+            currentIndex.add(0);
+            ctx.setVariable(CURRENT_INDEX, currentIndex);
+
+            List<Boolean> hasNext = getList(ctx, HAS_NEXT);
+            hasNext.add(false);
+            ctx.setVariable(HAS_NEXT, hasNext);
+        }
 
         /**
          * Checks for an item to process next. Will set variables within the execution context with the results.
@@ -281,27 +297,27 @@ public interface StepConverter<T extends YamlStep> {
          */
         @SuppressWarnings("unchecked")
         public void nextItem(ExecutionContext ctx) {
-            int currentItemIndex = 0;
-            Object itemIndex = ctx.getVariable("__currentWithItemIndex");
-            if (itemIndex != null) {
-                currentItemIndex = (int) itemIndex;
-            }
+            int currentItemIndex = getLastVariable(ctx, CURRENT_INDEX);
 
             List<Object> items = assertItems(ctx);
 
             if (currentItemIndex < items.size()) {
-                ctx.setVariable("item", items.get(currentItemIndex));
+                ctx.setVariable(ITEM, items.get(currentItemIndex));
             }
 
-            ctx.setVariable("__withItemsHasNext", currentItemIndex < items.size());
+            setLastVariable(ctx, HAS_NEXT, currentItemIndex < items.size());
             currentItemIndex++;
-            ctx.setVariable("__currentWithItemIndex", currentItemIndex);
+            setLastVariable(ctx, CURRENT_INDEX, currentItemIndex);
+        }
+
+        public boolean hasNext(ExecutionContext ctx) {
+            return getLastVariable(ctx, HAS_NEXT);
         }
 
         public void cleanup(ExecutionContext ctx) {
-            ctx.removeVariable("__currentWithItemIndex");
-            ctx.removeVariable("item");
-            ctx.removeVariable("__withItemsHasNext");
+            clearLastVariable(ctx, CURRENT_INDEX);
+            ctx.removeVariable(ITEM);
+            clearLastVariable(ctx, HAS_NEXT);
         }
 
         @SuppressWarnings("unchecked")
@@ -316,6 +332,41 @@ public interface StepConverter<T extends YamlStep> {
             }
 
             throw new IllegalArgumentException("'withItems' values should be a list, got: " + result.getClass());
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <E> List<E> getList(ExecutionContext ctx, String name) {
+            Object v = ctx.getVariable(name);
+            if (v == null) {
+                return new ArrayList<>();
+            }
+
+            if (v instanceof List) {
+                return (List<E>) v;
+            }
+
+            throw new IllegalArgumentException("expected list with name '" + name + "', but got: " + v);
+        }
+
+        private static <E> E getLastVariable(ExecutionContext ctx, String name) {
+            List<E> v = getList(ctx, name);
+            return v.get(v.size() - 1);
+        }
+
+        private static void setLastVariable(ExecutionContext ctx, String name, Object value) {
+            List<Object> v = getList(ctx, name);
+            v.set(v.size() - 1, value);
+            ctx.setVariable(name, v);
+        }
+
+        private static void clearLastVariable(ExecutionContext ctx, String name) {
+            List<Object> v = getList(ctx, name);
+            v.remove(v.size() - 1);
+            if (v.isEmpty()) {
+                ctx.removeVariable(name);
+            } else {
+                ctx.setVariable(name, v);
+            }
         }
     }
 }
