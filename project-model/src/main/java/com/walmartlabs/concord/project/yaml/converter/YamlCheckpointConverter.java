@@ -37,7 +37,7 @@ public class YamlCheckpointConverter implements StepConverter<YamlCheckpoint> {
         Chunk c = new Chunk();
         String id = ctx.nextId();
 
-        String checkpoint = assertCheckpoint(s);
+        String checkpoint = s.getKey();
 
         Set<VariableMapping> inVars = new HashSet<>();
         inVars.add(new VariableMapping(null, null, checkpoint, "checkpointName", true));
@@ -52,12 +52,5 @@ public class YamlCheckpointConverter implements StepConverter<YamlCheckpoint> {
         c.addOutput(id);
 
         return c;
-    }
-
-    private static String assertCheckpoint(YamlCheckpoint s) {
-        if (!s.getKey().matches(ConcordKey.PATTERN)) {
-            throw new IllegalArgumentException("Invalid checkpoint name: " + s.getKey() + ". " + ConcordKey.MESSAGE + " Error @:" + s.getLocation());
-        }
-        return s.getKey();
     }
 }

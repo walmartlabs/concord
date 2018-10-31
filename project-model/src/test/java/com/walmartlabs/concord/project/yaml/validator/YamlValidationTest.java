@@ -37,4 +37,15 @@ public class YamlValidationTest extends AbstractYamlParserTest {
             assertTrue(e.getMessage().contains("Invalid checkpoint name"));
         }
     }
+
+    @Test
+    public void test002() {
+        try {
+            deploy("validator/002.yml");
+            fail("exception expected");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("checkpoint 'one'"));
+            assertTrue(e.getMessage().contains("already defined at"));
+        }
+    }
 }

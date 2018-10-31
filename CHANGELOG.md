@@ -11,6 +11,8 @@ endpoint.
 
 ### Changed
 
+- project-model: checkpoint names must be unique across all loaded
+flow definitions;
 - project-model: fixed a bug preventing nested `withItems` from
 working correctly;
 - bpm: updated to 0.49.0. Now all context types implement `eval` and

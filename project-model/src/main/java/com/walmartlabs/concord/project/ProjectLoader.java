@@ -26,6 +26,8 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.project.yaml.*;
 import com.walmartlabs.concord.project.yaml.model.*;
+import com.walmartlabs.concord.project.yaml.validator.Validator;
+import com.walmartlabs.concord.project.yaml.validator.ValidatorContext;
 import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
@@ -83,6 +85,8 @@ public class ProjectLoader {
     }
 
     private static class ProjectDefinitionBuilder {
+        private ValidatorContext validatorContext = new ValidatorContext();
+
         private final YamlParser parser;
 
         private Map<String, ProcessDefinition> flows;
@@ -99,6 +103,8 @@ public class ProjectLoader {
             if (yml == null) {
                 throw new IOException("Empty project definition: " + file);
             }
+
+            Validator.validate(validatorContext, yml);
 
             ProjectDefinition pd = YamlProjectConverter.convert(yml);
 
@@ -183,6 +189,9 @@ public class ProjectLoader {
                         if (flows == null) {
                             flows = new HashMap<>();
                         }
+
+                        Validator.validate(validatorContext, (YamlProcessDefinition) v);
+
                         flows.put(k, YamlProcessConverter.convert((YamlProcessDefinition) v));
                     } else if (v instanceof YamlFormDefinition) {
                         if (forms == null) {

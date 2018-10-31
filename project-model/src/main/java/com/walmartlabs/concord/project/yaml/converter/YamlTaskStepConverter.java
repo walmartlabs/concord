@@ -57,7 +57,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
 
         Map<String, Object> opts = s.getOptions();
         if (opts != null && opts.get("error") != null && opts.get("retry") != null) {
-            throw new YamlConverterException("Use error or retry");
+            throw new YamlConverterException("'error' and 'retry' options are mutually exclusive");
         }
 
         applyErrorBlock(ctx, c, id, s.getOptions());
