@@ -1,0 +1,15 @@
+flows:
+  default:
+  - log: "Start"
+  - checkpoint: "ONE"
+  - form: myForm
+  - if: ${myForm.shouldFail}
+    then:
+    - throw: "As you wish"
+  - log: "Middle"
+  - checkpoint: "TWO"
+  - log: "End"
+
+forms:
+  myForm:
+  - shouldFail: {type: "boolean"}

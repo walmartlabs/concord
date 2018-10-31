@@ -1,0 +1,9 @@
+flows:
+  default:
+  - task: concord
+    in:
+      action: start
+      project: ${projectInfo.projectName}
+      archive: test.zip
+      sync: true
+  - log: "Done!"

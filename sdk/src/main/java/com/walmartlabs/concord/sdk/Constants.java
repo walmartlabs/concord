@@ -50,6 +50,11 @@ public class Constants {
          * List of OUT variables of a process.
          */
         public static final String OUT_EXPRESSIONS_KEY = "_out";
+
+        /**
+         * Stores the last caught exception.
+         */
+        public static final String LAST_ERROR_KEY = "lastError";
     }
 
     /**

@@ -56,7 +56,7 @@ public class ProcessMetadataProcessor {
 
         ProcessApi client = new ProcessApi(apiClientFactory.create(ContextUtils.getSessionToken(variables)));
         try {
-            client.metadata(instanceId, meta);
+            client.updateMetadata(instanceId, meta);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }

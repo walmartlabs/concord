@@ -67,8 +67,6 @@ public class ProcessManager {
     private final Chain resumePipeline;
     private final Chain forkPipeline;
 
-    private final ObjectMapper objectMapper;
-
     private static final List<ProcessStatus> SERVER_PROCESS_STATUSES = Arrays.asList(
             ProcessStatus.ENQUEUED,
             ProcessStatus.PREPARING,
@@ -104,8 +102,6 @@ public class ProcessManager {
         this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
         this.forkPipeline = forkPipeline;
-
-        this.objectMapper = new ObjectMapper();
     }
 
     public ProcessEntry nextPayload(Map<String, Object> capabilities) {
@@ -223,15 +219,15 @@ public class ProcessManager {
 
     private Map<String, Object> process(UUID instanceId, Map<String, Object> params) {
         while (true) {
-            ProcessEntry psr = queueDao.get(instanceId);
-            ProcessStatus status = psr.getStatus();
+            ProcessEntry entry = queueDao.get(instanceId);
+            ProcessStatus status = entry.getStatus();
 
             if (status == ProcessStatus.SUSPENDED) {
                 wakeUpProcess(instanceId, params);
             } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
                 throw new ProcessException(instanceId, "Process error: " + status, Status.INTERNAL_SERVER_ERROR);
             } else if (status == ProcessStatus.FINISHED) {
-                return readOutValues(instanceId);
+                return readOutValues(entry);
             }
 
             try {
@@ -267,18 +263,9 @@ public class ProcessManager {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> readOutValues(UUID instanceId) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.OUT_VALUES_FILE_NAME);
-
-        Optional<Map<String, Object>> o = stateManager.get(instanceId, resource, in -> {
-            try {
-                return Optional.of(objectMapper.readValue(in, Map.class));
-            } catch (IOException e) {
-                throw new ProcessException(instanceId, "Error while reading OUT variables data", e);
-            }
-        });
-
-        return o.orElse(null);
+    private Map<String, Object> readOutValues(ProcessEntry entry) {
+        Map<String, Object> meta = entry.getMeta();
+        return meta != null ? (Map<String, Object>) meta.get("out") : null;
     }
 
     @SuppressWarnings("unchecked")

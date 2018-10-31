@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-runner: store `lastError` in `out`
+variables in the process' metadata.
 - concord-server: `afterCreatedAt` parameter to the process list API
 endpoint.
 
@@ -11,6 +13,10 @@ endpoint.
 
 - bpm: updated to 0.49.0. Now all context types implement `eval` and
 `interpolate` methods.
+
+### Breaking
+
+- concord-client: `ProcessApi#metadata` renamed to `#updateMetadata`.
 
 
 

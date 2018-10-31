@@ -24,6 +24,7 @@ import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -551,5 +552,83 @@ public class ProcessIT extends AbstractServerIT {
         byte[] ab = getLog(pe.getLogFileName());
         assertLog(".*Hello from A\\+B.*", ab);
         assertLog(".*We got \\[profileA, profileB].*", ab);
+    }
+
+    @Test(timeout = 60000)
+    public void testGetProcessErrorMessageFromRuntime() throws Exception {
+        // prepare the payload
+
+        byte[] payload = archive(ProcessIT.class.getResource("throwRuntime").toURI());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        assertEquals(StatusEnum.FAILED, pir.getStatus());
+        assertProcessErrorMessage(pir, "java.lang.RuntimeException: BOOOM");
+    }
+
+    @Test(timeout = 60000)
+    public void testGetProcessErrorMessageFromBpmnError() throws Exception {
+        // prepare the payload
+
+        byte[] payload = archive(ProcessIT.class.getResource("throwBpmnError").toURI());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        assertEquals(StatusEnum.FAILED, pir.getStatus());
+        assertProcessErrorMessage(pir, "myBnpmError");
+    }
+
+    @Test(timeout = 60000)
+    public void testInvalidEntryPointError() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("multipart").toURI());
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("entryPoint", "not-found");
+
+        StartProcessResponse spr = start(input);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(StatusEnum.FAILED, pir.getStatus());
+
+        assertProcessErrorMessage(pir, "Process 'not-found' not found");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
+        assertNotNull(p);
+
+        Map<String, Object> meta = p.getMeta();
+        assertNotNull(meta);
+
+        Map<String, Object> out = (Map<String, Object>) meta.get("out");
+        assertNotNull(out);
+
+        Map<String, Object> error = (Map<String, Object>) out.get(Constants.Context.LAST_ERROR_KEY);
+        assertNotNull(error);
+
+        assertEquals(expected, error.get("message"));
     }
 }

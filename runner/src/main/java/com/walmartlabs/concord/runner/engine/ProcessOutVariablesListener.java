@@ -20,25 +20,17 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.runner.OutVariablesParser;
 import io.takari.bpm.EngineListener;
-import io.takari.bpm.api.Variables;
 import io.takari.bpm.state.ProcessInstance;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.Collection;
 import java.util.Map;
 
 public class ProcessOutVariablesListener implements EngineListener {
 
     private final Path storeDir;
     private final ProcessOutVariables outVariables;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ProcessOutVariablesListener(Path storeDir, ProcessOutVariables outVariables) {
         this.storeDir = storeDir;
@@ -48,22 +40,12 @@ public class ProcessOutVariablesListener implements EngineListener {
     @Override
     public ProcessInstance onFinalize(ProcessInstance state) {
         Map<String, Object> vars = outVariables.eval(state.getVariables());
+
         if (vars.isEmpty()) {
             return state;
         }
 
-        try {
-            if (!Files.exists(storeDir)) {
-                Files.createDirectories(storeDir);
-            }
-
-            Path p = storeDir.resolve(InternalConstants.Files.OUT_VALUES_FILE_NAME);
-            try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                objectMapper.writeValue(out, vars);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error while saving OUT variables", e);
-        }
+        OutVariablesParser.write(storeDir, vars);
 
         return state;
     }

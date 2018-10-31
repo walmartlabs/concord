@@ -223,8 +223,21 @@ public class ProcessQueueDao extends AbstractDao {
 
     public boolean updateMeta(UUID instanceId, Map<String, Object> meta) {
         return txResult(tx -> {
+            Field<String> f = field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta));
             int i = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta)))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .execute();
+
+            return i == 1;
+        });
+    }
+
+    public boolean removeMeta(UUID instanceId, String key) {
+        return txResult(tx -> {
+            Field<String> v = field("{0}", String.class, PROCESS_QUEUE.META).minus(value(key));
+            int i = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.META, v)
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .execute();
 

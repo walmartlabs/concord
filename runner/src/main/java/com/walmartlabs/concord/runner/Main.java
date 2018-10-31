@@ -33,6 +33,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
+import com.walmartlabs.concord.runner.engine.ProcessErrorProcessor;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
@@ -106,7 +107,23 @@ public class Main {
 
         CheckpointManager checkpointManager = new CheckpointManager(instanceId, processApiClient);
 
-        executeProcess(instanceId.toString(), checkpointManager, baseDir);
+        try {
+            executeProcess(instanceId.toString(), checkpointManager, baseDir);
+        } catch (Throwable e) {
+            writeError(e, baseDir);
+            throw e;
+        }
+    }
+
+    private void writeError(Throwable e, Path baseDir) {
+        Map<String, Object> error = ProcessErrorProcessor.process(e);
+
+        Path storeDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
+        Map<String, Object> outVars = OutVariablesParser.read(storeDir);
+
+        Map<String, Object> result = new HashMap<>(outVars);
+        result.putAll(error);
+        OutVariablesParser.write(storeDir, result);
     }
 
     private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir) throws ExecutionException {

@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlTaskStep;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
@@ -195,7 +196,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         }
 
         public void throwLastError(ExecutionContext ctx) throws Throwable {
-            Object lastError = ctx.getVariable("lastError");
+            Object lastError = ctx.getVariable(Constants.Context.LAST_ERROR_KEY);
             if (lastError instanceof BpmnError) {
                 BpmnError e = (BpmnError) lastError;
                 throw e.getCause();

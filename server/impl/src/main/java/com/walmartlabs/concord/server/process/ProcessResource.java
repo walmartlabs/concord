@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
@@ -505,6 +506,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @SuppressWarnings("unchecked")
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
         ProcessEntry e = queueDao.get(instanceId);
         if (e == null) {
@@ -850,9 +852,15 @@ public class ProcessResource implements Resource {
             tmpDir = IOUtils.createTempDir("attachments");
             IOUtils.unzip(tmpIn, tmpDir);
 
-            Path finalTmpDir = tmpDir;
             stateManager.deleteDirectory(instanceId, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
-            stateManager.importPath(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir);
+            stateManager.importPath(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
+
+            Map<String, Object> out = ProcessOutVariables.read(tmpDir);
+            if (out.isEmpty()) {
+                queueDao.removeMeta(instanceId, "out");
+            } else {
+                queueDao.updateMeta(instanceId, Collections.singletonMap("out", out));
+            }
         } catch (IOException e) {
             log.error("uploadAttachments ['{}'] -> error", instanceId, e);
             throw new ConcordApplicationException("upload error: " + e.getMessage());
@@ -935,7 +943,7 @@ public class ProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public Response metadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
+    public Response updateMetadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
         if (!queueDao.updateMeta(instanceId, meta)) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }

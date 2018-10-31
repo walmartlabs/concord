@@ -21,20 +21,19 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.googlecode.junittoolbox.ParallelRunner;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static org.junit.Assert.*;
 
 @RunWith(ParallelRunner.class)
 public class CheckpointsIT extends AbstractServerIT {
@@ -47,7 +46,6 @@ public class CheckpointsIT extends AbstractServerIT {
 
         // start the process
 
-        CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
@@ -64,15 +62,8 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*Middle.*", ab);
         assertLog(".*End.*", ab);
 
-        ProcessEventsApi processEventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> processEvents = processEventsApi.list(pir.getInstanceId(), null, null);
-        assertNotNull(processEvents);
-
         // restore from TWO checkpoint
-        String checkpointId = assertCheckpoint("TWO", processEvents);
-
-        ResumeProcessResponse resp = checkpointApi.restore(pir.getInstanceId(), new RestoreCheckpointRequest().setId(UUID.fromString(checkpointId)));
-        assertNotNull(resp);
+        restoreFromCheckpoint(pir.getInstanceId(), "TWO");
 
         waitForCompletion(processApi, spr.getInstanceId());
 
@@ -82,17 +73,82 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*End.*", 2, ab);
 
         // restore from ONE checkpoint
-        checkpointId = assertCheckpoint("ONE", processEvents);
-
-        resp = checkpointApi.restore(pir.getInstanceId(), new RestoreCheckpointRequest().setId(UUID.fromString(checkpointId)));
-        assertNotNull(resp);
+        restoreFromCheckpoint(pir.getInstanceId(), "ONE");
 
         waitForCompletion(processApi, spr.getInstanceId());
         ab = getLog(pir.getLogFileName());
         assertLog(".*Start.*", ab);
         assertLog(".*Middle.*", 2, ab);
         assertLog(".*End.*", 3, ab);
+    }
 
+    @Test(timeout = 60000)
+    public void testCheckpointWithError() throws Exception {
+        // prepare the payload
+
+        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointsWithError").toURI());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // ---
+        Map<String, Object> data = Collections.singletonMap("shouldFail", true);
+        submitForm(spr.getInstanceId(), data);
+
+        // ---
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+
+        // check error message
+        assertProcessErrorMessage(pir,"java.lang.RuntimeException: As you wish");
+
+        // ---
+        restoreFromCheckpoint(pir.getInstanceId(), "ONE");
+
+        pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // no error message after process restored
+        assertNoProcessErrorMessage(pir);
+
+        // ---
+        data = Collections.singletonMap("shouldFail", false);
+        submitForm(spr.getInstanceId(), data);
+
+        waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Start.*", ab);
+        assertLog(".*Middle.*", ab);
+        assertLog(".*End.*", ab);
+    }
+
+    private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
+        CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
+        ProcessEventsApi processEventsApi = new ProcessEventsApi(getApiClient());
+        List<ProcessEventEntry> processEvents = processEventsApi.list(instanceId, null, null);
+        assertNotNull(processEvents);
+
+        // restore from ONE checkpoint
+        String checkpointId = assertCheckpoint(name, processEvents);
+
+        ResumeProcessResponse resp = checkpointApi.restore(instanceId,
+                new RestoreCheckpointRequest().setId(UUID.fromString(checkpointId)));
+        assertNotNull(resp);
+    }
+
+    private void submitForm(UUID instanceId, Map<String, Object> data) throws ApiException {
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        List<FormListEntry> forms = formsApi.list(instanceId);
+        assertEquals(1, forms.size());
+
+        FormListEntry f = forms.get(0);
+        FormSubmitResponse fsr = formsApi.submit(instanceId, f.getName(), data);
+        assertTrue(fsr.isOk());
     }
 
     @SuppressWarnings("unchecked")
@@ -125,5 +181,39 @@ public class CheckpointsIT extends AbstractServerIT {
         assertEquals(paramName, params.get("target"));
         assertNotNull(params.get("resolved"));
         return (String)params.get("resolved");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertNoProcessErrorMessage(ProcessEntry p) {
+        assertNotNull(p);
+
+        Map<String, Object> meta = p.getMeta();
+        if (meta == null || meta.isEmpty()) {
+            return;
+        }
+
+        Map<String, Object> out = (Map<String, Object>) meta.get("out");
+        if (out == null || out.isEmpty()) {
+            return;
+        }
+
+        Map<String, Object> error = (Map<String, Object>) out.get(Constants.Context.LAST_ERROR_KEY);
+        assertNull(error);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
+        assertNotNull(p);
+
+        Map<String, Object> meta = p.getMeta();
+        assertNotNull(meta);
+
+        Map<String, Object> out = (Map<String, Object>) meta.get("out");
+        assertNotNull(out);
+
+        Map<String, Object> error = (Map<String, Object>) out.get(Constants.Context.LAST_ERROR_KEY);
+        assertNotNull(error);
+
+        assertEquals(expected, error.get("message"));
     }
 }

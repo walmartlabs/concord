@@ -23,7 +23,9 @@ package com.walmartlabs.concord.server.process.state;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.process.ProcessOutVariables;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointEntry;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.archive.ProcessCheckpointArchiver;
 
 import javax.inject.Inject;
@@ -31,7 +33,9 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.sdk.Constants.Files.CHECKPOINT_META_FILE_NAME;
@@ -41,15 +45,18 @@ public class ProcessCheckpointManager {
 
     private final ProcessCheckpointArchiver archiver;
     private final CheckpointDao checkpointDao;
+    private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
 
     @Inject
     protected ProcessCheckpointManager(ProcessCheckpointArchiver archiver,
                                        CheckpointDao checkpointDao,
+                                       ProcessQueueDao queueDao,
                                        ProcessStateManager stateManager) {
 
         this.archiver = archiver;
         this.checkpointDao = checkpointDao;
+        this.queueDao = queueDao;
         this.stateManager = stateManager;
     }
 
@@ -88,6 +95,13 @@ public class ProcessCheckpointManager {
                 stateManager.deleteDirectory(instanceId, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME);
                 stateManager.deleteDirectory(instanceId, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
                 stateManager.importPath(instanceId, null, extractedDir.path());
+
+                Map<String, Object> out = ProcessOutVariables.read(extractedDir.path().resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME));
+                if (out.isEmpty()) {
+                    queueDao.removeMeta(instanceId, "out");
+                } else {
+                    queueDao.updateMeta(instanceId, Collections.singletonMap("out", out));
+                }
 
                 return checkpointName;
             }

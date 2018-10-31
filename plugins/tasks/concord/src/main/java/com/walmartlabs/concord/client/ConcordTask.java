@@ -87,6 +87,7 @@ public class ConcordTask extends AbstractConcordTask {
         FAILED_STATUSES = new HashSet<>();
         FAILED_STATUSES.add(ProcessEntry.StatusEnum.FAILED.toString());
         FAILED_STATUSES.add(ProcessEntry.StatusEnum.CANCELLED.toString());
+        FAILED_STATUSES.add(ProcessEntry.StatusEnum.TIMED_OUT.toString());
     }
 
     @InjectVariable("concord")
@@ -144,12 +145,12 @@ public class ConcordTask extends AbstractConcordTask {
         });
     }
 
-    public Map<String, String> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
+    public Map<String, ProcessEntry> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
         return waitForCompletion(ctx, ids, -1);
     }
 
-    public Map<String, String> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) throws Exception {
-        Map<String, String> result = new HashMap<>();
+    public Map<String, ProcessEntry> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) throws Exception {
+        Map<String, ProcessEntry> result = new HashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
             log.info("Waiting for {}...", id);
@@ -165,7 +166,7 @@ public class ConcordTask extends AbstractConcordTask {
                     ProcessEntry.StatusEnum s = e.getStatus();
 
                     if (s == ProcessEntry.StatusEnum.FAILED || s == ProcessEntry.StatusEnum.FINISHED || s == ProcessEntry.StatusEnum.CANCELLED) {
-                        result.put(id.toString(), s.name());
+                        result.put(id.toString(), e);
                         break;
                     } else {
                         long t2 = System.currentTimeMillis();
@@ -280,7 +281,7 @@ public class ConcordTask extends AbstractConcordTask {
         ctx.setVariable(JOBS_KEY, jobs);
 
         if (sync) {
-            Map<String, String> result = waitForCompletion(ctx, jobs);
+            Map<String, ProcessEntry> result = waitForCompletion(ctx, jobs);
             handleResults(cfg, result);
 
             Object out = null;
@@ -291,20 +292,49 @@ public class ConcordTask extends AbstractConcordTask {
         }
     }
 
-    private void handleResults(Map<String, Object> cfg, Map<String, String> m) {
+    private void handleResults(Map<String, Object> cfg, Map<String, ProcessEntry> m) {
+        StringBuilder errors = new StringBuilder();
+        boolean hasErrors = false;
         boolean ignoreFailures = (boolean) cfg.getOrDefault(IGNORE_FAILURES_KEY, false);
-        for (Map.Entry<String, String> e : m.entrySet()) {
+        for (Map.Entry<String, ProcessEntry> e : m.entrySet()) {
             String id = e.getKey();
-            String status = e.getValue();
+            String status = e.getValue().getStatus().getValue();
             if (FAILED_STATUSES.contains(status)) {
+                Map<String, Object> error = getError(e.getValue());
+                String errorMessage = "";
+                if (!error.isEmpty()) {
+                    errorMessage = "(error: " + error + ")";
+                }
+
                 if (ignoreFailures) {
-                    log.warn("Child process {} {}, ignoring...", id, status);
+                    log.warn("Child process {} {} {}, ignoring...", id, status, errorMessage);
                     continue;
                 }
 
-                throw new IllegalStateException("Child process " + id + " " + status);
+                errors.append("Child process ").append(id).append(" " ).append(status).append(" ").append(errorMessage);
+                errors.append("\n");
+                hasErrors = true;
             }
         }
+
+        if (hasErrors) {
+            throw new IllegalStateException(errors.toString());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getError(ProcessEntry p) {
+        Map<String, Object> meta = p.getMeta();
+        if (meta == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Object> out = (Map<String, Object>) meta.get("out");
+        if (out == null) {
+            return Collections.emptyMap();
+        }
+
+        return (Map<String, Object>) out.getOrDefault(Constants.Context.LAST_ERROR_KEY, Collections.emptyMap());
     }
 
     private Object getOutVars(Context ctx, String childId) throws Exception {
