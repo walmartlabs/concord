@@ -130,7 +130,7 @@
                                         </env>
                                         <wait>
                                             <log>.*org.eclipse.jetty.server.Server: Started.*</log>
-                                            <time>30000</time>
+                                            <time>60000</time>
                                         </wait>
                                         <cmd>server</cmd>
                                         <volumes>
@@ -152,6 +152,7 @@
                                         </env>
                                         <wait>
                                             <log>(?s).*ready for start up.*ready to accept connections.*</log>
+                                            <time>60000</time>
                                         </wait>
                                     </run>
                                 </image>
@@ -179,7 +180,7 @@
                                             <http>
                                                 <url>http://localhost:${it.server.port}/api/v1/server/ping</url>
                                             </http>
-                                            <time>30000</time>
+                                            <time>60000</time>
                                         </wait>
                                     </run>
                                 </image>

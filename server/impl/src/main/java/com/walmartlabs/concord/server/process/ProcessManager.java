@@ -104,7 +104,7 @@ public class ProcessManager {
         this.forkPipeline = forkPipeline;
     }
 
-    public ProcessEntry nextPayload(Map<String, Object> capabilities) {
+    public ProcessKey nextPayload(Map<String, Object> capabilities) {
         return queueDao.poll(capabilities);
     }
 

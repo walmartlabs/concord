@@ -41,6 +41,7 @@ public class Configuration {
 
     public static final String AGENT_ID_KEY = "AGENT_ID";
     public static final String SERVER_API_BASE_URL_KEY = "SERVER_API_BASE_URL";
+    public static final String SERVER_WEBSOCKET_URL_KEY = "SERVER_WEBSOCKET_URL";
     public static final String LOG_DIR_KEY = "AGENT_LOG_DIR";
     public static final String LOG_MAX_DELAY_KEY = "LOG_MAX_DELAY";
     public static final String PAYLOAD_DIR_KEY = "AGENT_PAYLOAD_DIR";
@@ -50,6 +51,7 @@ public class Configuration {
     public static final String WORKERS_COUNT_KEY = "WORKERS_COUNT";
     public static final String MAX_PREFORK_AGE_KEY = "MAX_PREFORK_AGE";
     public static final String MAX_PREFORK_COUNT_KEY = "MAX_PREFORK_COUNT";
+    public static final String MAX_WEBSOCKET_INACTIVITY_KEY ="MAX_WEBSOCKET_INACTIVITY";
 
     public static final String DOCKER_ORPHAN_SWEEPER_ENABLED_KEY = "DOCKER_ORPHAN_SWEEPER_ENABLED";
     public static final String DOCKER_ORPHAN_SWEEPER_PERIOD_KEY = "DOCKER_ORPHAN_SWEEPER_PERIOD";
@@ -104,6 +106,8 @@ public class Configuration {
     private final Path dependencyListsDir;
 
     private final Path javaPath;
+    private final String serverWebsocketUrl;
+    private final long maxWebSocketInactivity;
 
     @SuppressWarnings("unchecked")
     public Configuration() {
@@ -111,7 +115,8 @@ public class Configuration {
             this.agentId = getEnv(AGENT_ID_KEY, UUID.randomUUID().toString());
 
             this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://localhost:8001");
-            log.info("Using the API address: {}", serverApiBaseUrl);
+            this.serverWebsocketUrl = getEnv(SERVER_WEBSOCKET_URL_KEY, serverApiBaseUrl.replace("http", "ws").replace("https", "ws") + "/websocket");
+            log.info("Using the API address: {}, {}", serverApiBaseUrl, serverWebsocketUrl);
 
             this.logDir = getDir(LOG_DIR_KEY, "logDir");
             this.logMaxDelay = Long.parseLong(getEnv(LOG_MAX_DELAY_KEY, "250")); // 250ms
@@ -163,6 +168,8 @@ public class Configuration {
             } else {
                 this.javaPath = null;
             }
+
+            this.maxWebSocketInactivity = Long.parseLong(getEnv(MAX_WEBSOCKET_INACTIVITY_KEY, "120000"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -174,6 +181,10 @@ public class Configuration {
 
     public String getServerApiBaseUrl() {
         return serverApiBaseUrl;
+    }
+
+    public String getServerWebsocketUrl() {
+        return serverWebsocketUrl;
     }
 
     public Path getLogDir() {
@@ -266,6 +277,10 @@ public class Configuration {
 
     public Path getJavaPath() {
         return javaPath;
+    }
+
+    public long getMaxWebSocketInactivity() {
+        return maxWebSocketInactivity;
     }
 
     private static String getEnv(String key, String defaultValue) {

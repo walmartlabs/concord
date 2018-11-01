@@ -406,7 +406,7 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     @WithTimer
-    public ProcessEntry poll(Map<String, Object> capabilities) {
+    public ProcessKey poll(Map<String, Object> capabilities) {
         Set<UUID> excludeProjects = new HashSet<>();
         while (true) {
             FindResult result = findEntry(capabilities, excludeProjects);
@@ -511,48 +511,47 @@ public class ProcessQueueDao extends AbstractDao {
 
     private FindResult findEntry(Map<String, Object> capabilities, Set<UUID> excludeProjects) {
         return txResult(tx -> {
-            Record5<UUID, UUID, UUID, UUID, UUID> r = nextItem(tx, capabilities, excludeProjects);
+            Record6<UUID, Timestamp, UUID, UUID, UUID, UUID> r = nextItem(tx, capabilities, excludeProjects);
             if (r == null) {
                 return FindResult.notFound();
             }
 
-            UUID id = r.value1();
-            UUID prjId = r.value2();
-            UUID orgId = r.value3();
-            UUID userId = r.value4();
-            UUID parentInstanceId = r.value5();
+            UUID instanceId = r.value1();
+            Timestamp createdAt = r.value2();
+            UUID projectId = r.value3();
+            UUID orgId = r.value4();
+            UUID userId = r.value5();
+            UUID parentInstanceId = r.value6();
 
-            PolicyEngine pe = getPolicyEngine(tx, orgId, prjId, userId, parentInstanceId);
+            PolicyEngine pe = getPolicyEngine(tx, orgId, projectId, userId, parentInstanceId);
             if (pe != null) {
-                boolean locked = tryLock(tx, prjId);
+                boolean locked = tryLock(tx, projectId);
                 if (locked) {
-                    int count = countRunning(tx, prjId);
+                    int count = countRunning(tx, projectId);
                     if (!pe.getConcurrentProcessPolicy().check(count).getDeny().isEmpty()) {
-                        log.debug("findEntry ['{}'] -> {} running", prjId, count);
-                        return FindResult.findNext(prjId);
+                        log.debug("findEntry ['{}'] -> {} running", projectId, count);
+                        return FindResult.findNext(projectId);
                     }
                 } else {
-                    log.debug("findEntry ['{}'] -> already locked", prjId);
-                    return FindResult.findNext(prjId);
+                    log.debug("findEntry ['{}'] -> already locked", projectId);
+                    return FindResult.findNext(projectId);
                 }
             }
 
-            PartialProcessKey processKey = PartialProcessKey.from(id);
+            PartialProcessKey processKey = PartialProcessKey.from(instanceId);
             updateStatus(tx, processKey, ProcessStatus.STARTING);
 
-            return FindResult.done(tx.selectFrom(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(id))
-                    .fetchOne(this::toEntry));
+            return FindResult.done(new ProcessKey(instanceId, createdAt));
         });
     }
 
-    private boolean tryLock(DSLContext tx, UUID prjId) throws SQLException {
+    private boolean tryLock(DSLContext tx, UUID projectId) throws SQLException {
         String sql = "{ ? = call pg_try_advisory_xact_lock(?) }";
 
         return tx.connectionResult(conn -> {
             try (CallableStatement cs = conn.prepareCall(sql)) {
                 cs.registerOutParameter(1, Types.BOOLEAN);
-                cs.setLong(2, prjId.getLeastSignificantBits() ^ prjId.getMostSignificantBits());
+                cs.setLong(2, projectId.getLeastSignificantBits() ^ projectId.getMostSignificantBits());
                 cs.execute();
                 return cs.getBoolean(1);
             }
@@ -577,12 +576,12 @@ public class ProcessQueueDao extends AbstractDao {
         return pe.getConcurrentProcessPolicy().hasRule() ? pe : null;
     }
 
-    private Record5<UUID, UUID, UUID, UUID, UUID> nextItem(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjectIds) {
+    private Record6<UUID, Timestamp, UUID, UUID, UUID, UUID> nextItem(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjectIds) {
         ProcessQueue q = PROCESS_QUEUE.as("q");
 
         Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-        SelectJoinStep<Record5<UUID, UUID, UUID, UUID, UUID>> s = tx.select(q.INSTANCE_ID, q.PROJECT_ID, orgIdField, q.INITIATOR_ID, q.PARENT_INSTANCE_ID)
+        SelectJoinStep<Record6<UUID, Timestamp, UUID, UUID, UUID, UUID>> s = tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, orgIdField, q.INITIATOR_ID, q.PARENT_INSTANCE_ID)
                 .from(q);
 
         s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -742,10 +741,10 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         private final Status status;
-        private final ProcessEntry item;
+        private final ProcessKey item;
         private final UUID excludeProject;
 
-        private FindResult(Status status, ProcessEntry item, UUID excludeProject) {
+        private FindResult(Status status, ProcessKey item, UUID excludeProject) {
             this.status = status;
             this.item = item;
             this.excludeProject = excludeProject;
@@ -755,8 +754,8 @@ public class ProcessQueueDao extends AbstractDao {
             return status == Status.DONE;
         }
 
-        public static FindResult done(ProcessEntry entry) {
-            return new FindResult(Status.DONE, entry, null);
+        public static FindResult done(ProcessKey item) {
+            return new FindResult(Status.DONE, item, null);
         }
 
         static FindResult notFound() {

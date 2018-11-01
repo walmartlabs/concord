@@ -22,9 +22,9 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
-import com.walmartlabs.concord.client.CommandQueueApi;
 import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessQueueApi;
+import com.walmartlabs.concord.server.queueclient.QueueClient;
+import com.walmartlabs.concord.server.queueclient.QueueClientConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +46,9 @@ public class ServerConnector implements MaintenanceModeListener {
     private Thread orphanSweeper;
     private MaintenanceModeNotifier maintenanceModeNotifier;
     private CountDownLatch doneSignal;
+    private QueueClient queueClient;
 
-    public void start(Configuration cfg) throws IOException {
-        int workersCount = cfg.getWorkersCount();
-
+    public void start(Configuration cfg) throws Exception {
         ApiClient apiClient = ApiClientFactory.create(cfg);
         ProcessApi processApi = new ProcessApi(apiClient);
 
@@ -66,20 +65,30 @@ public class ServerConnector implements MaintenanceModeListener {
                 "execution-status-cleanup");
         executionCleanup.start();
 
-        commandHandler = new CommandHandler(cfg.getAgentId(), new CommandQueueApi(apiClient), executionManager, Executors.newCachedThreadPool(), cfg.getPollInterval());
+        queueClient = new QueueClient(new QueueClientConfiguration.Builder(cfg.getServerWebsocketUrl())
+                .apiToken(cfg.getApiKey())
+                .userAgent(cfg.getUserAgent())
+                .connectTimeout(cfg.getConnectTimeout())
+                .maxInactivityPeriod(cfg.getMaxWebSocketInactivity())
+                .build());
+        queueClient.start();
+
+        commandHandler = new CommandHandler(cfg.getAgentId(), queueClient, executionManager, Executors.newCachedThreadPool(), cfg.getPollInterval());
         commandHandlerThread = new Thread(commandHandler, "command-handler");
         commandHandlerThread.start();
+
+        int workersCount = cfg.getWorkersCount();
+        log.info("start -> using {} worker(s)", workersCount);
 
         doneSignal = new CountDownLatch(workersCount);
 
         workers = new Worker[workersCount];
         workerThreads = new Thread[workersCount];
 
-        ProcessQueueApi queueApi = new ProcessQueueApi(apiClient);
         ProcessApiClient processApiClient = new ProcessApiClient(cfg, processApi);
 
         for (int i = 0; i < workersCount; i++) {
-            workers[i] = new Worker(queueApi, processApiClient, executionManager,
+            workers[i] = new Worker(queueClient, processApiClient, executionManager,
                     cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities(), doneSignal);
 
             workerThreads[i] = new Thread(workers[i], "worker-" + i);
@@ -132,6 +141,11 @@ public class ServerConnector implements MaintenanceModeListener {
             maintenanceModeNotifier.stop();
             maintenanceModeNotifier = null;
         }
+
+        if (queueClient != null) {
+            queueClient.stop();
+            queueClient = null;
+        }
     }
 
     @Override
@@ -139,6 +153,8 @@ public class ServerConnector implements MaintenanceModeListener {
         if (workers != null) {
             Stream.of(workers).forEach(Worker::setMaintenanceMode);
         }
+
+        queueClient.maintenanceMode();
 
         try {
             doneSignal.await(15, TimeUnit.SECONDS);

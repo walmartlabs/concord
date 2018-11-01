@@ -70,9 +70,9 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
         // ---
 
-        ProcessEntry e1 = queueDao.poll(null);
-        ProcessEntry e2 = queueDao.poll(null);
-        ProcessEntry e3 = queueDao.poll(null);
+        ProcessKey e1 = queueDao.poll(null);
+        ProcessKey e2 = queueDao.poll(null);
+        ProcessKey e3 = queueDao.poll(null);
 
         assertNotNull(e1);
         assertEquals(instanceA.getInstanceId(), e1.getInstanceId());

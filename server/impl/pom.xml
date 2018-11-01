@@ -296,6 +296,25 @@
             <artifactId>jackson-core</artifactId>
         </dependency>
 
+        <!-- websockets -->
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server</groupId>
+            <artifactId>concord-queue-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- JDK9+ compatibility -->
         <dependency>
             <groupId>javax.xml.bind</groupId>

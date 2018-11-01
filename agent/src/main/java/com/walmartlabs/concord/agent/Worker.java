@@ -22,8 +22,10 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.ProcessQueueApi;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.queueclient.QueueClient;
+import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
+import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +38,9 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -52,7 +54,7 @@ public class Worker implements Runnable {
     private static final int PAYLOAD_DOWNLOAD_MAX_RETRIES = 3;
     private static final int PAYLOAD_DOWNLOAD_RETRY_DELAY = 3000;
 
-    private final ProcessQueueApi queueClient;
+    private final QueueClient client;
     private final ProcessApiClient processApiClient;
     private final ExecutionManager executionManager;
     private final long logSteamMaxDelay;
@@ -62,7 +64,7 @@ public class Worker implements Runnable {
     private volatile boolean maintenanceMode = false;
     private final CountDownLatch doneSignal;
 
-    public Worker(ProcessQueueApi queueClient,
+    public Worker(QueueClient client,
                   ProcessApiClient processApiClient,
                   ExecutionManager executionManager,
                   long logSteamMaxDelay,
@@ -70,7 +72,7 @@ public class Worker implements Runnable {
                   Map<String, Object> capabilities,
                   CountDownLatch doneSignal) {
 
-        this.queueClient = queueClient;
+        this.client = client;
         this.processApiClient = processApiClient;
 
         this.executionManager = executionManager;
@@ -111,16 +113,19 @@ public class Worker implements Runnable {
         maintenanceMode = true;
     }
 
-    private JobEntry take() throws ApiException {
-        ProcessEntry p = queueClient.take(capabilities);
-        if (p == null) {
+    private JobEntry take() throws Exception {
+        Future<ProcessResponse> p = client.request(new ProcessRequest(capabilities));
+
+        ProcessResponse response = p.get();
+        if (response == null) {
             return null;
         }
 
+        UUID instanceId = response.getProcessId();
         File payload = withRetry(PAYLOAD_DOWNLOAD_MAX_RETRIES, PAYLOAD_DOWNLOAD_RETRY_DELAY,
-                () -> processApiClient.downloadState(p.getInstanceId()));
+                () -> processApiClient.downloadState(instanceId));
 
-        return new JobEntry(p.getInstanceId(), payload.toPath());
+        return new JobEntry(instanceId, payload.toPath());
     }
 
     private void cleanup(JobEntry job) {

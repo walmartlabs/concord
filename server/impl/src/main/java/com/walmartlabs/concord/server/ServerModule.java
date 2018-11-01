@@ -21,8 +21,13 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.db.DatabaseModule;
+import com.walmartlabs.concord.server.agent.AgentCommandWatchdog;
+import com.walmartlabs.concord.server.agent.AgentCommandWebSocketHandler;
 import com.walmartlabs.concord.server.metrics.MetricModule;
+import com.walmartlabs.concord.server.process.ProcessWebSocketHandler;
+import com.walmartlabs.concord.server.task.TaskScheduler;
 
 public class ServerModule extends AbstractModule {
 
@@ -30,5 +35,10 @@ public class ServerModule extends AbstractModule {
     protected void configure() {
         install(new MetricModule());
         install(new DatabaseModule());
+
+        Multibinder<BackgroundTask> tasks = Multibinder.newSetBinder(binder(), BackgroundTask.class);
+        tasks.addBinding().to(AgentCommandWebSocketHandler.class);
+        tasks.addBinding().to(ProcessWebSocketHandler.class);
+        tasks.addBinding().to(TaskScheduler.class);
     }
 }

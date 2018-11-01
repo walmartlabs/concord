@@ -86,10 +86,12 @@ public class ExecutionManager {
     public void cancel(UUID id) {
         JobInstance i = instances.getIfPresent(id);
         if (i == null) {
+            log.info("cancel ['{}'] -> not found", id);
             return;
         }
 
         i.cancel();
+        log.info("cancel ['{}'] -> done", id);
     }
 
     public boolean isRunning(UUID id) {

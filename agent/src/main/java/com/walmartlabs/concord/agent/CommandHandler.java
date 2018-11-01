@@ -20,9 +20,9 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.CommandEntry;
-import com.walmartlabs.concord.client.CommandQueueApi;
+import com.walmartlabs.concord.server.queueclient.QueueClient;
+import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
+import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,17 +34,17 @@ public class CommandHandler implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
     private static final long ERROR_DELAY = 5000;
 
-    private final String agentId;
-    private final CommandQueueApi queueClient;
+    private final UUID agentId;
+    private final QueueClient queueClient;
     private final ExecutionManager executionManager;
     private final ExecutorService executor;
 
     private final long pollInterval;
 
-    public CommandHandler(String agentId, CommandQueueApi queueClient,
+    public CommandHandler(String agentId, QueueClient queueClient,
                           ExecutionManager executionManager, ExecutorService executor,
                           long pollInterval) {
-        this.agentId = agentId;
+        this.agentId = UUID.fromString(agentId);
         this.queueClient = queueClient;
         this.executionManager = executionManager;
         this.executor = executor;
@@ -55,7 +55,7 @@ public class CommandHandler implements Runnable {
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                CommandEntry cmd = take();
+                CommandResponse cmd = take();
                 if (cmd != null) {
                     executor.submit(() -> execute(cmd));
                 } else {
@@ -68,15 +68,14 @@ public class CommandHandler implements Runnable {
         }
     }
 
-    private CommandEntry take() throws ApiException {
-        return queueClient.take(agentId);
+    private CommandResponse take() throws Exception {
+        return queueClient.<CommandResponse>request(new CommandRequest(agentId)).get();
     }
 
-    private void execute(CommandEntry cmd) {
+    private void execute(CommandResponse cmd) {
         log.info("execute -> got a command: {}", cmd);
 
-        // TODO fix the auto-generated enum names
-        if (cmd.getType() == CommandEntry.TypeEnum.JOB) {
+        if (cmd.getType() == CommandResponse.CommandType.CANCEL_JOB) {
             executionManager.cancel(UUID.fromString((String)cmd.getPayload().get("instanceId")));
         } else {
             log.warn("execute -> unsupported command type: " + cmd.getClass());

@@ -151,6 +151,8 @@ public final class InternalConstants extends Constants {
     public static final class Headers {
 
         public static final String SECRET_TYPE = "X-Concord-SecretType";
+
+        public static final String AGENT = "X-Concord-Agent";
     }
 
     public static final class Policy {

@@ -21,11 +21,9 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;

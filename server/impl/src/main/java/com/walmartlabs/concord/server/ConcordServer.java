@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.ldap.LdapRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
+import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.ollie.OllieServer;
 import com.walmartlabs.ollie.OllieServerBuilder;
@@ -45,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ConcordServer {
 
@@ -67,6 +69,7 @@ public class ConcordServer {
                 .serve("/logs/*").with(LogServlet.class) // backward compatibility
                 .serve("/metrics").with(MetricsServlet.class) // prometheus integration
                 .serve("/concord/*").with(new ServiceInitServlet()) // only to start the background services
+                .serve("/websocket").with(new ConcordWebSocketServlet())
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
@@ -111,7 +114,7 @@ public class ConcordServer {
     public static class ServiceInitServlet extends HttpServlet {
 
         @Inject
-        TaskScheduler scheduler;
+        Set<BackgroundTask> tasks;
 
         @Override
         public void init() throws ServletException {
@@ -122,13 +125,15 @@ public class ConcordServer {
 
             injector.injectMembers(this);
 
-            scheduler.start();
+            if (tasks != null) {
+                tasks.forEach(BackgroundTask::start);
+            }
         }
 
         @Override
         public void destroy() {
-            if (scheduler != null) {
-                scheduler.stop();
+            if (tasks != null) {
+                tasks.forEach(BackgroundTask::stop);
             }
 
             super.destroy();
