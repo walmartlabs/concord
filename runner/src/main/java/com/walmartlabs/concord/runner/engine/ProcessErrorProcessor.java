@@ -29,6 +29,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionException;
 
+import javax.el.ELException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,9 +55,15 @@ public class ProcessErrorProcessor {
             }
 
             Throwable cause = error.getCause();
-            if (cause != null) {
-                return cause;
+            if (cause == null) {
+                return error;
             }
+
+            if (cause instanceof ELException) {
+                return cause.getCause();
+            }
+
+            return cause;
         }
 
         return t;
@@ -73,9 +80,9 @@ public class ProcessErrorProcessor {
 
     private static ObjectMapper createMapper() {
         ObjectMapper om = new ObjectMapper();
-        om.enable(SerializationFeature.INDENT_OUTPUT);
+        om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         om.addMixIn(Throwable.class, ExceptionMixIn.class);
-        om.addMixIn(BpmnError.class, BpmnErrorMinIn.class);
+        om.addMixIn(BpmnError.class, BpmnErrorMixIn.class);
         return om;
     }
 
@@ -89,9 +96,12 @@ public class ProcessErrorProcessor {
 
         @JsonIgnore
         abstract Throwable[] getSuppressed();
+
+        @JsonIgnore
+        abstract Throwable getCause();
     }
 
-    abstract class BpmnErrorMinIn {
+    abstract class BpmnErrorMixIn {
         @JsonIgnore
         abstract String getDefinitionId();
 

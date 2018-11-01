@@ -571,7 +571,7 @@ public class ProcessIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         assertEquals(StatusEnum.FAILED, pir.getStatus());
-        assertProcessErrorMessage(pir, "java.lang.RuntimeException: BOOOM");
+        assertProcessErrorMessage(pir, "BOOOM");
     }
 
     @Test(timeout = 60000)
