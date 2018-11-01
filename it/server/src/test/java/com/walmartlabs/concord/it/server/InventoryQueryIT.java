@@ -20,7 +20,6 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.CreateInventoryQueryResponse;
 import com.walmartlabs.concord.client.InventoriesApi;
 import com.walmartlabs.concord.client.InventoryEntry;

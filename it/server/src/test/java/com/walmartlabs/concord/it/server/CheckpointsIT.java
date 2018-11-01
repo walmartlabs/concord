@@ -27,12 +27,13 @@ import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.*;
 
 @RunWith(ParallelRunner.class)
@@ -104,7 +105,7 @@ public class CheckpointsIT extends AbstractServerIT {
         ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         // check error message
-        assertProcessErrorMessage(pir,"java.lang.RuntimeException: As you wish");
+        assertProcessErrorMessage(pir, "As you wish");
 
         // ---
         restoreFromCheckpoint(pir.getInstanceId(), "ONE");

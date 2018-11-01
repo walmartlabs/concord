@@ -27,9 +27,7 @@ import org.junit.Test;
 import javax.xml.bind.DatatypeConverter;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
