@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="95000" author="ibodrov@gmail.com">
+        <addColumn tableName="PROCESS_LOGS">
+            <column name="INSTANCE_CREATED_AT" type="timestamp" remarks="Same as PROCESS_QUEUE.CREATED_AT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql>
+            lock table PROCESS_LOGS;
+            update PROCESS_LOGS s set INSTANCE_CREATED_AT = (select CREATED_AT from PROCESS_QUEUE q where q.INSTANCE_ID = s.INSTANCE_ID);
+        </sql>
+
+        <addNotNullConstraint tableName="PROCESS_LOGS" columnName="INSTANCE_CREATED_AT"/>
+
+        <dropIndex tableName="PROCESS_LOGS" indexName="idx_p_logs_ids"/>
+
+        <createIndex tableName="PROCESS_LOGS" indexName="IDX_P_LOGS_IDS">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="95100" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_LOGS_UPPER_BOUNDS" replaceIfExists="true">
+            select
+                INSTANCE_ID,
+                INSTANCE_CREATED_AT,
+                coalesce(max(upper(CHUNK_RANGE)), 0) as UPPER_BOUND
+            from PROCESS_LOGS
+            group by INSTANCE_ID, INSTANCE_CREATED_AT
+        </createView>
+    </changeSet>
+
+    <changeSet id="95110" author="ibodrov@gmail.com">
+        <createView viewName="V_PROCESS_LOGS_SIZE" replaceIfExists="true">
+            select
+                INSTANCE_ID,
+                INSTANCE_CREATED_AT,
+                max(upper(CHUNK_RANGE)) as SIZE
+            from PROCESS_LOGS
+            group by INSTANCE_ID, INSTANCE_CREATED_AT
+        </createView>
+    </changeSet>
+
+    <changeSet id="95200" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_NEXT_RANGE(P_INSTANCE_ID uuid, P_CREATED_AT timestamp, P_DATA_LEN int)
+                returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(UPPER_BOUND, 0) into R_START
+                from V_PROCESS_LOGS_UPPER_BOUNDS where
+                    INSTANCE_ID = P_INSTANCE_ID and INSTANCE_CREATED_AT = P_CREATED_AT;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START, R_START + P_DATA_LEN);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+
+    <changeSet id="95210" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_LAST_N_BYTES(P_INSTANCE_ID uuid, P_CREATED_AT timestamp, P_DATA_LEN int)
+                returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(UPPER_BOUND, 0) into R_START
+                from V_PROCESS_LOGS_UPPER_BOUNDS where
+                    INSTANCE_ID = P_INSTANCE_ID and INSTANCE_CREATED_AT = P_CREATED_AT;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START - P_DATA_LEN, R_START);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+</databaseChangeLog>

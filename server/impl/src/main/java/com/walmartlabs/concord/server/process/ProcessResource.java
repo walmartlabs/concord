@@ -136,7 +136,7 @@ public class ProcessResource implements Resource {
                                       @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
 
-        assertInstanceId(parentInstanceId);
+        assertPartialKey(parentInstanceId);
 
         PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
 
@@ -199,7 +199,7 @@ public class ProcessResource implements Resource {
                                       @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
 
-        assertInstanceId(parentInstanceId);
+        assertPartialKey(parentInstanceId);
 
         PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
 
@@ -277,7 +277,7 @@ public class ProcessResource implements Resource {
                                       @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
 
-        assertInstanceId(parentInstanceId);
+        assertPartialKey(parentInstanceId);
 
         PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
 
@@ -324,7 +324,7 @@ public class ProcessResource implements Resource {
             return start(entryPoint, parentInstanceId, sync, out);
         }
 
-        assertInstanceId(parentInstanceId);
+        assertPartialKey(parentInstanceId);
 
         PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
 
@@ -559,7 +559,7 @@ public class ProcessResource implements Resource {
     public Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
                                        @PathParam("name") @NotNull @Size(min = 1) String attachmentName) {
 
-        PartialProcessKey processKey = assertInstanceId(instanceId);
+        PartialProcessKey processKey = assertPartialKey(instanceId);
 
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
@@ -606,7 +606,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId) {
-        PartialProcessKey processKey = assertInstanceId(instanceId);
+        PartialProcessKey processKey = assertPartialKey(instanceId);
 
         String resource = InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
         List<String> l = stateManager.list(processKey, resource);
@@ -677,7 +677,7 @@ public class ProcessResource implements Resource {
     public List<ProcessEntry> listSubprocesses(@ApiParam @PathParam("id") UUID parentInstanceId,
                                                @ApiParam @QueryParam("tags") Set<String> tags) {
 
-        assertInstanceId(parentInstanceId);
+        assertPartialKey(parentInstanceId);
         return queueDao.list(parentInstanceId, tags);
     }
 
@@ -719,7 +719,7 @@ public class ProcessResource implements Resource {
     public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                            @HeaderParam("range") String range) {
 
-        PartialProcessKey processKey = assertInstanceId(instanceId);
+        ProcessKey processKey = assertKey(instanceId);
 
         Integer start = null;
         Integer end = null;
@@ -785,7 +785,7 @@ public class ProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public void appendLog(@PathParam("id") UUID instanceId, InputStream data) {
-        ProcessKey processKey = ProcessKey.from(assertProcess(new PartialProcessKey(instanceId)));
+        ProcessKey processKey = assertKey(instanceId);
 
         try {
             logsDao.append(processKey, ByteStreams.toByteArray(data));
@@ -998,7 +998,7 @@ public class ProcessResource implements Resource {
         return new StartProcessResponse(r.getInstanceId(), r.getOut());
     }
 
-    private PartialProcessKey assertInstanceId(UUID id) {
+    private PartialProcessKey assertPartialKey(UUID id) {
         if (id == null) {
             return null;
         }
@@ -1008,6 +1008,14 @@ public class ProcessResource implements Resource {
         }
 
         return new PartialProcessKey(id);
+    }
+
+    private ProcessKey assertKey(UUID id) {
+        ProcessKey key = queueDao.getKey(id);
+        if (key == null) {
+            throw new ValidationErrorsException("Unknown instance ID: " + id);
+        }
+        return key;
     }
 
     private Set<UUID> getCurrentUserOrgIds() {

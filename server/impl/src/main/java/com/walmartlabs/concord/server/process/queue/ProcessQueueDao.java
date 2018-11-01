@@ -76,6 +76,7 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public ProcessKey getKey(UUID instanceId) {
+        // TODO this is a good candidate for caching, since both instanceId and createdAt are immutable
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_QUEUE.CREATED_AT)
                     .from(PROCESS_QUEUE)
