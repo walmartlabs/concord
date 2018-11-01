@@ -303,7 +303,7 @@ public class ProcessQueueDao extends AbstractDao {
                 PROCESS_STATUS_HISTORY.INSTANCE_ID,
                 PROCESS_STATUS_HISTORY.STATUS,
                 PROCESS_STATUS_HISTORY.CHANGE_DATE)
-                .values((UUID) null, null, null));
+                .values(value((UUID) null), null, currentTimestamp()));
 
         for (PartialProcessKey key : processKeys) {
             q.bind(value(key.getInstanceId()), value(status.toString()), currentTimestamp());

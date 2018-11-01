@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ProcessEntry.KindEnum;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Ignore;
@@ -519,11 +520,11 @@ public class ProcessIT extends AbstractServerIT {
         StartProcessResponse spr = start(input);
         ProcessApi processApi = new ProcessApi(getApiClient());
 
-        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, StatusEnum.RUNNING);
+        waitForChild(processApi, spr.getInstanceId(), KindEnum.DEFAULT, StatusEnum.ENQUEUED, StatusEnum.PREPARING, StatusEnum.STARTING, StatusEnum.RUNNING);
 
         processApi.killCascade(spr.getInstanceId());
 
-        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, StatusEnum.CANCELLED, StatusEnum.FINISHED, StatusEnum.FAILED);
+        waitForChild(processApi, spr.getInstanceId(), KindEnum.DEFAULT, StatusEnum.CANCELLED, StatusEnum.FINISHED, StatusEnum.FAILED);
 
         List<ProcessEntry> processEntryList = processApi.listSubprocesses(spr.getInstanceId(), null);
         for (ProcessEntry pe : processEntryList) {

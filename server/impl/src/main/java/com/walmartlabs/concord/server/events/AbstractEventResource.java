@@ -95,7 +95,7 @@ public abstract class AbstractEventResource {
 
         for (TriggerEntry t : triggers) {
             if (isDisabled(eventName)) {
-                log.warn("process ['{}'] - disabled, skipping (triggered by {})", event, t);
+                log.warn("process ['{}'] - disabled, skipping (triggered by {})", eventId, t);
                 continue;
             }
 
@@ -112,7 +112,7 @@ public abstract class AbstractEventResource {
                 PartialProcessKey processKey = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), t.getActiveProfiles(), args, initiator);
                 log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, processKey, t);
             } catch (Exception e) {
-                log.error("process ['{}', '{}', '{}'] -> error", event, eventName, t.getId(), e);
+                log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
             }
         }
 

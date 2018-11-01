@@ -7,7 +7,7 @@ variables:
   arguments:
     name: "stranger"
     nested:
-      val: 12345
+      val: "xyz12345abc"
 
 profiles:
   test:
@@ -15,4 +15,4 @@ profiles:
       arguments:
         name: "world"
         nested:
-          val: 54321
+          val: "xyz54321abc"

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -48,7 +49,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -61,7 +62,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), forms.get(0).getName(), data);
         assertTrue(fsr.isOk());
 
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
 
         // check the logs for the error message
 
@@ -70,7 +71,7 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FINISHED);
 
         // check the logs for the successful message
 
@@ -85,11 +86,11 @@ public class FailureHandlingIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
 
         StartProcessResponse spr = start(payload);
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, ProcessEntry.StatusEnum.FAILED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FAILED);
     }
 
     @Test(timeout = 60000)
@@ -98,16 +99,16 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.RUNNING);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.RUNNING);
 
         // cancel the running process
 
         processApi.kill(spr.getInstanceId());
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.CANCELLED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED);
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.CANCEL_HANDLER, ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.CANCEL_HANDLER, StatusEnum.FINISHED);
 
         // check the logs for the successful message
 
@@ -121,16 +122,16 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // cancel the running process
 
         processApi.kill(spr.getInstanceId());
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.CANCELLED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED);
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.CANCEL_HANDLER, ProcessEntry.StatusEnum.FINISHED);
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.CANCEL_HANDLER, StatusEnum.FINISHED);
 
         // check the logs for the successful message
 

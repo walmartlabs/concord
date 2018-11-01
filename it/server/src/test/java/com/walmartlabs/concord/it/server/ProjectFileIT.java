@@ -47,7 +47,7 @@ public class ProjectFileIT extends AbstractServerIT {
 
     @Test(timeout = 60000)
     public void testSingleProfile() throws Exception {
-        simpleTest("projectfile/singleprofile", ".*Hello, world.*", ".*54321.*");
+        simpleTest("projectfile/singleprofile", ".*Hello, world.*", ".*xyz54321abc.*");
     }
 
     @Test(timeout = 60000)
