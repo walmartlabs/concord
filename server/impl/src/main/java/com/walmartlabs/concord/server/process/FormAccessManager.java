@@ -57,6 +57,11 @@ public class FormAccessManager {
             return null;
         }
 
+        UserPrincipal p = UserPrincipal.assertCurrent();
+        if (p.isAdmin()) {
+            return f;
+        }
+
         Map<String, Object> opts = f.getOptions();
         if (opts == null || opts.get(InternalConstants.Forms.RUN_AS_KEY) == null) {
             return f;
@@ -64,7 +69,6 @@ public class FormAccessManager {
 
         Map<String, Object> runAsParams = (Map<String, Object>) opts.get(InternalConstants.Forms.RUN_AS_KEY);
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
         String expectedUser = (String) runAsParams.get(InternalConstants.Forms.RUN_AS_USERNAME_KEY);
         if (expectedUser != null && !expectedUser.equals(p.getUsername())) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +

@@ -11,6 +11,7 @@ endpoint.
 
 ### Changed
 
+- concord-server: allow admins to access any form;
 - project-model: checkpoint names must be unique across all loaded
 flow definitions;
 - project-model: fixed a bug preventing nested `withItems` from
