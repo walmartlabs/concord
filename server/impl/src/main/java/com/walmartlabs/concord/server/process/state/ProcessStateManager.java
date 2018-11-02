@@ -60,7 +60,6 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 public class ProcessStateManager extends AbstractDao {
 
     private static final String PATH_SEPARATOR = "/";
-    private static final long MAX_IMPORT_BATCH_SIZE_BYTES = 64 * 1024 * 1024;
 
     private final SecretStoreConfiguration secretCfg;
     private final Set<String> secureFiles = new HashSet<>();
@@ -304,71 +303,68 @@ public class ProcessStateManager extends AbstractDao {
         String sql = tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
                 .values((UUID) null, null, null, null, null, null)
-                .onConflict(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH)
-                .doUpdate().set(PROCESS_STATE.UNIX_MODE, (Short) null).set(PROCESS_STATE.ITEM_DATA, (byte[]) null)
                 .getSQL();
 
-        tx.connection(conn -> {
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
-                    private long bytesInBatch = 0;
+        try {
+            Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Path p = src.relativize(file);
 
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        Path p = src.relativize(file);
+                    if (!filter.apply(p)) {
+                        return FileVisitResult.CONTINUE;
+                    }
 
-                        if (!filter.apply(p)) {
-                            return FileVisitResult.CONTINUE;
-                        }
+                    String n = p.toString();
+                    if (prefix != null) {
+                        n = prefix + n;
+                    }
 
-                        String n = p.toString();
-                        if (prefix != null) {
-                            n = prefix + n;
-                        }
+                    Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
+                    int unixMode = Posix.unixMode(permissions);
+                    boolean needsEncryption = secureFiles.contains(n);
 
-                        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
-                        int unixMode = Posix.unixMode(permissions);
-                        boolean needEncrypt = secureFiles.contains(n);
+                    tx.deleteFrom(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt))
+                            .and(PROCESS_STATE.ITEM_PATH.eq(n)))
+                            .execute();
 
-                        try {
+                    String itemPath = n;
+                    tx.connection(conn -> {
+                        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                            // INSTANCE_ID
                             ps.setObject(1, instanceId);
+
+                            // INSTANCE_CREATED_AT
                             ps.setTimestamp(2, instanceCreatedAt);
-                            ps.setString(3, n);
+
+                            // ITEM_PATH
+                            ps.setString(3, itemPath);
+
+                            // UNIX_MODE
                             ps.setInt(4, unixMode);
+
+                            // ITEM_DATA
                             try (InputStream in = Files.newInputStream(file);
-                                 InputStream processed = needEncrypt ? encrypt(in) : in) {
+                                 InputStream processed = needsEncryption ? encrypt(in) : in) {
                                 ps.setBinaryStream(5, processed);
                             }
-                            ps.setBoolean(6, needEncrypt);
-                            ps.setInt(7, unixMode);
-                            try (InputStream in = Files.newInputStream(file);
-                                 InputStream processed = needEncrypt ? encrypt(in) : in) {
-                                ps.setBinaryStream(8, processed);
-                            }
-                            ps.addBatch();
 
-                            bytesInBatch += Files.size(file);
+                            // IS_ENCRYPTED
+                            ps.setBoolean(6, needsEncryption);
+
+                            ps.execute();
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
+                    });
 
-                        // limit the size of the batch
-                        if (bytesInBatch >= MAX_IMPORT_BATCH_SIZE_BYTES) {
-                            try {
-                                ps.executeBatch();
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                            bytesInBatch = 0;
-                        }
-
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-
-                ps.executeBatch();
-            }
-        });
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
