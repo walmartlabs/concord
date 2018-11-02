@@ -166,7 +166,9 @@ class ProcessLogViewer extends React.Component<Props, State> {
                             config={[
                                 { string: 'INFO ', style: 'color: #00B5F0' },
                                 { string: 'WARN ', style: 'color: #ffae42' },
-                                { string: 'ERROR', style: 'color: #ff0000' }
+                                { string: 'ERROR', style: 'color: #ff0000' },
+                                { string: 'ANSIBLE:', style: 'color: #808080' },
+                                { string: 'DOCKER:', style: 'color: #808080' }
                             ]}
                         />
                     </pre>
