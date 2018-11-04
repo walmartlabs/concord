@@ -26,7 +26,8 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="95100" author="ibodrov@gmail.com">
+    <changeSet id="95105" author="ibodrov@gmail.com">
+        <dropView viewName="V_PROCESS_LOGS_UPPER_BOUNDS"/>
         <createView viewName="V_PROCESS_LOGS_UPPER_BOUNDS" replaceIfExists="true">
             select
                 INSTANCE_ID,
@@ -37,7 +38,8 @@
         </createView>
     </changeSet>
 
-    <changeSet id="95110" author="ibodrov@gmail.com">
+    <changeSet id="95115" author="ibodrov@gmail.com">
+        <dropView viewName="V_PROCESS_LOGS_SIZE"/>
         <createView viewName="V_PROCESS_LOGS_SIZE" replaceIfExists="true">
             select
                 INSTANCE_ID,

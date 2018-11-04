@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.logs;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,13 +66,15 @@ public class ProcessLogsDao extends AbstractDao {
 
     public ProcessLog get(ProcessKey processKey, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
+        Timestamp createdAt = processKey.getCreatedAt();
 
         try (DSLContext tx = DSL.using(cfg)) {
             List<ProcessLogChunk> chunks = getChunks(tx, processKey, start, end);
 
             int size = tx.select(V_PROCESS_LOGS_SIZE.SIZE)
                     .from(V_PROCESS_LOGS_SIZE)
-                    .where(V_PROCESS_LOGS_SIZE.INSTANCE_ID.eq(instanceId))
+                    .where(V_PROCESS_LOGS_SIZE.INSTANCE_ID.eq(instanceId)
+                            .and(V_PROCESS_LOGS_SIZE.INSTANCE_CREATED_AT.eq(createdAt)))
                     .fetchOptional(V_PROCESS_LOGS_SIZE.SIZE)
                     .orElse(0);
 
