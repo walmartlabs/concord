@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- docker: updated Ansible to 2.6.7.
+
+
+
 ## [0.95.0] - 2018-11-03
 
 ### Added
