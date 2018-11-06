@@ -111,10 +111,34 @@ public class EventMatcherTest {
 
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("a", 100);
-        event.put("obj", Collections.singletonMap("o1", "o1v1"));
+        conditions.put("obj", Collections.singletonMap("o1", "o1v1"));
 
         boolean result = EventMatcher.matches(event, conditions);
         assertTrue(result);
+    }
+
+    @Test
+    public void testPartialMatch() {
+        Map<String, Object> event = new HashMap<>();
+        event.put("unknownRepo", true);
+
+        Map<String, Object> conditions = new HashMap<>();
+        conditions.put("unknownRepo", Arrays.asList(true, false));
+
+        boolean result = EventMatcher.matches(event, conditions);
+        assertTrue(result);
+    }
+
+    @Test
+    public void testPartialNotMatch() {
+        Map<String, Object> event = new HashMap<>();
+        event.put("unknownRepo", true);
+
+        Map<String, Object> conditions = new HashMap<>();
+        conditions.put("unknownRepo", Collections.singletonList(false));
+
+        boolean result = EventMatcher.matches(event, conditions);
+        assertFalse(result);
     }
 
 }

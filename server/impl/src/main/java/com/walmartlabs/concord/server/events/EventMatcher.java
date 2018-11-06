@@ -41,19 +41,14 @@ public final class EventMatcher {
             return false;
         }
 
-        Class<?> dataType = data.getClass();
-        Class<?> conditionsType = conditions.getClass();
-
-        if (!dataType.isAssignableFrom(conditionsType)) {
-            return false;
-        }
-
-        if (conditions instanceof Map) {
+        if (conditions instanceof Map && data instanceof Map) {
             return compareObjectNodes((Map<String, Object>)data, (Map<String, Object>)conditions);
-        } else if (conditions instanceof String) {
+        } else if (conditions instanceof String && data instanceof String) {
             return compareStringValues((String)data, (String)conditions);
+        } else if (conditions instanceof Collection && data instanceof Collection) {
+            return compareArrayNodes((Collection) data, (Collection) conditions);
         } else if (conditions instanceof Collection) {
-            return compareArrayNodes((Collection)data, (Collection)conditions);
+            return matchAny(data, (Collection)conditions);
         } else {
             return compareValues(data, conditions);
         }

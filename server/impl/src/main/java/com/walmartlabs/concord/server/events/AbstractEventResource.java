@@ -132,7 +132,6 @@ public abstract class AbstractEventResource {
 
         String author = event.getOrDefault("author", "").toString();
         return getOrCreateUser(author);
-
     }
 
     private UserEntry getOrCreateUser(String author) {

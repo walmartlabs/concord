@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- server: GitHub webhook support for unknown (not registered in
+Concord) repositories.
+
 ### Changed
 
 - docker: updated Ansible to 2.6.7.

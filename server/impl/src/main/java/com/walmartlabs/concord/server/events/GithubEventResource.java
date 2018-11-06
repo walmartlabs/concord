@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
 import static com.walmartlabs.concord.server.repository.RepositoryManager.DEFAULT_BRANCH;
@@ -60,6 +61,8 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResource.class);
 
+    private static final RepositoryItem UNKNOWN_REPO = new RepositoryItem(null, null);
+
     private static final String EVENT_SOURCE = "github";
 
     private static final String AUTHOR_KEY = "author";
@@ -70,6 +73,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private static final String REPO_BRANCH_KEY = "branch";
     private static final String REPO_ID_KEY = "repositoryId";
     private static final String REPO_NAME_KEY = "repository";
+    private static final String UNKNOWN_REPO_KEY = "unknownRepo";
     private static final String STATUS_KEY = "status";
     private static final String TYPE_KEY = "type";
 
@@ -126,8 +130,31 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             return "ok";
         }
 
-        List<RepositoryEntry> repos = repositoryDao.find(repoName);
-        if (repos.isEmpty()) {
+        String eventBranch = getBranch(payload, eventName);
+
+        List<RepositoryItem> repos = findRepos(repoName, eventBranch);
+        boolean unknownRepo = repos == null;
+        if (unknownRepo) {
+            repos = Collections.singletonList(UNKNOWN_REPO);
+        }
+
+        for (RepositoryItem r : repos) {
+            if (PUSH_EVENT.equalsIgnoreCase(eventName) && r.id != null) {
+                repositoryCacheDao.updateLastPushDate(r.id, new Date());
+            }
+
+            Map<String, Object> conditions = buildConditions(payload, repoName, eventBranch, r.project, eventName);
+            conditions = enrich(conditions, uriInfo);
+
+            Map<String, Object> event = buildTriggerEvent(payload, r.id, r.project, conditions);
+
+            String eventId = UUID.randomUUID().toString();
+            int count = process(eventId, EVENT_SOURCE, conditions, event);
+
+            log.info("payload ['{}', '{}', '{}'] -> {} processes started", eventId, conditions, event, count);
+        }
+
+        if (unknownRepo) {
             if (cfg.isAutoRemoveUnknownWebhooks()) {
                 log.info("'onEvent ['{}'] -> repository '{}' not found, delete webhook", eventName, repoName);
                 webhookManager.unregister(repoName);
@@ -137,36 +164,35 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             return "ok";
         }
 
-        String eventBranch = getBranch(payload, eventName);
+        return "ok";
+    }
 
-        for (RepositoryEntry r : repos) {
-            String rBranch = Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH);
-            if (!rBranch.equals(eventBranch)) {
-                continue;
-            }
-
-            ProjectEntry project = projectDao.get(r.getProjectId());
-            if (project == null) {
-                log.warn("'{}' payload ['{}'] -> project '{}' not found", eventName, repoName, r.getProjectId());
-                continue;
-            }
-
-            if (PUSH_EVENT.equalsIgnoreCase(eventName)) {
-                repositoryCacheDao.updateLastPushDate(r.getId(), new Date());
-            }
-
-            Map<String, Object> conditions = buildConditions(r, payload, project, eventName);
-            conditions = enrich(conditions, uriInfo);
-
-            Map<String, Object> event = buildTriggerEvent(payload, r, project, conditions);
-
-            String eventId = r.getId().toString();
-            int count = process(eventId, EVENT_SOURCE, conditions, event);
-
-            log.info("payload ['{}', '{}', '{}'] -> {} processes started", eventId, conditions, event, count);
+    private List<RepositoryItem> findRepos(String repoName, String branch) {
+        List<RepositoryEntry> repos = repositoryDao.find(repoName);
+        if (repos.isEmpty()) {
+            return null;
         }
 
-        return "ok";
+        return repos.stream()
+                .filter(r -> branch.equals(Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH)))
+                .map(r -> {
+                    ProjectEntry project = projectDao.get(r.getProjectId());
+                    return new RepositoryItem(r.getId(), project);
+                })
+                .filter(r -> r.project != null)
+                .collect(Collectors.toList());
+    }
+
+    private static class RepositoryItem {
+
+        private final UUID id;
+
+        private final ProjectEntry project;
+
+        public RepositoryItem(UUID id, ProjectEntry project) {
+            this.id = id;
+            this.project = project;
+        }
     }
 
     private static Map<String, Object> enrich(Map<String, Object> event, UriInfo uriInfo) {
@@ -185,16 +211,23 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     }
 
     private static Map<String, Object> buildTriggerEvent(Map<String, Object> payload,
-                                                         RepositoryEntry repo,
+                                                         UUID repoId,
                                                          ProjectEntry project,
                                                          Map<String, Object> conditions) {
 
         Map<String, Object> m = new HashMap<>();
         m.put(COMMIT_ID_KEY, payload.get("after"));
-        m.put(REPO_ID_KEY, repo.getId());
-        m.put(PROJECT_NAME_KEY, project.getName());
-        m.put(ORG_NAME_KEY, project.getOrgName());
+        if (repoId != null) {
+            m.put(REPO_ID_KEY, repoId);
+        }
         m.putAll(conditions);
+        if (project != null) {
+            m.put(PROJECT_NAME_KEY, project.getName());
+            m.put(ORG_NAME_KEY, project.getOrgName());
+        } else {
+            m.remove(PROJECT_NAME_KEY);
+            m.remove(ORG_NAME_KEY);
+        }
 
         m.put(PAYLOAD_KEY, payload);
 
@@ -233,12 +266,21 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         return (String) base.get("ref");
     }
 
-    private static Map<String, Object> buildConditions(RepositoryEntry repo, Map<String, Object> event, ProjectEntry project, String eventName) {
+    private static Map<String, Object> buildConditions(Map<String, Object> event,
+                                                       String repoName, String branch,
+                                                       ProjectEntry project, String eventName) {
         Map<String, Object> result = new HashMap<>();
-        result.put(ORG_NAME_KEY, project.getOrgName());
-        result.put(PROJECT_NAME_KEY, project.getName());
-        result.put(REPO_NAME_KEY, repo.getName());
-        result.put(REPO_BRANCH_KEY, Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH));
+        if (project != null) {
+            result.put(ORG_NAME_KEY, project.getOrgName());
+            result.put(PROJECT_NAME_KEY, project.getName());
+            result.put(UNKNOWN_REPO_KEY, false);
+        } else {
+            result.put(ORG_NAME_KEY, "n/a");
+            result.put(PROJECT_NAME_KEY, "n/a");
+            result.put(UNKNOWN_REPO_KEY, true);
+        }
+        result.put(REPO_NAME_KEY, repoName);
+        result.put(REPO_BRANCH_KEY, branch);
         result.put(AUTHOR_KEY, getSender(event));
         result.put(TYPE_KEY, eventName);
         result.put(STATUS_KEY, event.get("action"));
