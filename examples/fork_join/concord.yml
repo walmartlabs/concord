@@ -8,7 +8,7 @@ flows:
       # disable the `onCancel` handler, because it's going to handle
       # the parent's cancellation only
       disableOnCancel: true
-      jobs:
+      forks:
       # spawn multiple jobs with different parameters
       - entryPoint: aJob
         arguments:

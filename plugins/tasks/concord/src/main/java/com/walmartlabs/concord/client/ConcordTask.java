@@ -25,6 +25,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
@@ -68,6 +69,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
     private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
     private static final String ENTRY_POINT_KEY = "entryPoint";
+    private static final String FORKS_KEY = "forks";
     private static final String INSTANCE_ID_KEY = "instanceId";
     private static final String INSTANCES_KEY = "instances";
     private static final String JOB_OUT_KEY = "jobOut";
@@ -360,19 +362,14 @@ public class ConcordTask extends AbstractConcordTask {
         });
     }
 
-    @SuppressWarnings("unchecked")
     private void fork(Context ctx) throws Exception {
-        List<Map<String, Object>> jobs;
-
-        Object v = ctx.getVariable(JOBS_KEY);
-        if (v != null) {
-            if (v instanceof List) {
-                jobs = (List<Map<String, Object>>) v;
-            } else {
-                throw new IllegalArgumentException("'" + JOBS_KEY + "' must be a list");
-            }
-        } else {
+        List<Map<String, Object>> jobs = ContextUtils.getList(ctx, FORKS_KEY, null);
+        if (jobs == null) {
             jobs = Collections.singletonList(createJobCfg(ctx, null));
+        }
+
+        if (jobs.isEmpty()) {
+            throw new IllegalArgumentException("'" + FORKS_KEY + "' can't be an empty list");
         }
 
         List<String> jobIds = forkMany(ctx, jobs);
@@ -380,10 +377,6 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private List<String> forkMany(Context ctx, List<Map<String, Object>> jobs) throws Exception {
-        if (jobs.isEmpty()) {
-            throw new IllegalArgumentException("'" + JOBS_KEY + "' can't be an empty list");
-        }
-
         List<String> ids = new ArrayList<>();
 
         for (Map<String, Object> job : jobs) {

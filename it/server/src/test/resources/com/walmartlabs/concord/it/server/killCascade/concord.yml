@@ -5,7 +5,7 @@ flows:
     in:
       action: fork
       disableOnCancel: true
-      jobs:
+      forks:
       - entryPoint: aJob
         arguments:
           color: "red"

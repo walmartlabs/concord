@@ -1,0 +1,23 @@
+configuration:
+  arguments:
+    forkItems:
+    - entryPoint: sayHello
+      arguments:
+        color: "RED"
+    - entryPoint: sayHello
+      arguments:
+        color: "WHITE"
+
+flows:
+  default:
+  - task: concord
+    in:
+      action: fork
+      entryPoint: ${item.entryPoint}
+      arguments: ${item.arguments}
+    withItems: ${forkItems}
+
+  - log: "Done! ${jobs} is completed"
+
+  sayHello:
+  - log: "FORK: Hello, ${color}"

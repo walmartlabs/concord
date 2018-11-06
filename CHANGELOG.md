@@ -13,6 +13,11 @@ Concord) repositories.
 
 - docker: updated Ansible to 2.6.7.
 
+### Breaking
+
+- concord-tasks: IN parameter `jobs` renamed to `forks` to avoid
+confusion with OUT parameter `jobs`.
+
 
 
 ## [0.95.0] - 2018-11-03
