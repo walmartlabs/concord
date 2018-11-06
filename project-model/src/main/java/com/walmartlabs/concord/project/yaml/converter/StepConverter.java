@@ -33,6 +33,7 @@ import io.takari.parc.Seq;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public interface StepConverter<T extends YamlStep> {
 
@@ -75,29 +76,34 @@ public interface StepConverter<T extends YamlStep> {
         Chunk result = new Chunk();
 
         VariableMapping taskVars = new VariableMapping(null, null, withItems, "items", true);
+        Set<String> outVars = Optional.ofNullable(getVarMap(opts, "out")).map(vars -> vars.stream().map(VariableMapping::getTarget).collect(Collectors.toSet())).orElse(Collections.emptySet());
+        VariableMapping outVarsMapping = new VariableMapping(null, null, outVars, "__0", true);
 
         String startId        = ctx.nextId();
         String initId         = ctx.nextId();
         String nextItemTaskId = ctx.nextId();
+        String processOutVarsTask = ctx.nextId();
         String hasNextGwId    = ctx.nextId();
         String cleanupTaskId  = ctx.nextId();
 
         result.addElement(new ServiceTask(initId, ExpressionType.SIMPLE, "${__withItemsUtils.init(execution)}", Collections.singleton(taskVars), null, true));
         result.addElement(new ServiceTask(nextItemTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.nextItem(execution)}", Collections.singleton(taskVars), null, true));
+        result.addElement(new ServiceTask(processOutVarsTask, ExpressionType.SIMPLE, "${__withItemsUtils.processOutVars(execution, __0)}", Collections.singleton(outVarsMapping), null, true));
         result.addElement(new ExclusiveGateway(hasNextGwId));
-        result.addElement(new ServiceTask(cleanupTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.cleanup(execution)}", null, null, true));
+        result.addElement(new ServiceTask(cleanupTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.cleanup(execution, __0)}", Collections.singleton(outVarsMapping), null, true));
 
-        /*  ::bpm flow::            --------theTask ----Y
-                                    v                   |
-         startId -----> init -> hasNextTaskId -----> hasNextGwId --N--> cleanupTaskId
+        /*  ::bpm flow::            ---processOutVarsTask <---- theTask ----Y
+                                    v                                       |
+         startId -----> init -> nextItemTaskId --------------------> hasNextGwId --N--> cleanupTaskId
          */
         result.addElement(new SequenceFlow(ctx.nextId(), startId, initId));
         result.addElement(new SequenceFlow(ctx.nextId(), initId, nextItemTaskId));
         result.addElement(new SequenceFlow(ctx.nextId(), nextItemTaskId, hasNextGwId));
+        result.addElement(new SequenceFlow(ctx.nextId(), processOutVarsTask, nextItemTaskId));
         result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, c.firstElement().getId(), "${__withItemsUtils.hasNext(execution)}"));
         result.addElement(new SequenceFlow(ctx.nextId(), hasNextGwId, cleanupTaskId));
         c.getOutputs().forEach(o -> {
-            result.addElement(new SequenceFlow(ctx.nextId(), o, nextItemTaskId));
+            result.addElement(new SequenceFlow(ctx.nextId(), o, processOutVarsTask));
         });
 
         result.addOutput(cleanupTaskId);
@@ -285,6 +291,8 @@ public interface StepConverter<T extends YamlStep> {
             List<Boolean> hasNext = getList(ctx, HAS_NEXT);
             hasNext.add(false);
             ctx.setVariable(HAS_NEXT, hasNext);
+
+            ctx.setVariable("__withItems_keysBeforeTask", new HashSet<>(ctx.toMap().keySet()));
         }
 
         /**
@@ -314,10 +322,46 @@ public interface StepConverter<T extends YamlStep> {
             return getLastVariable(ctx, HAS_NEXT);
         }
 
-        public void cleanup(ExecutionContext ctx) {
+        public void processOutVars(ExecutionContext ctx, Set<String> taskOutVars) {
+            Set<String> taskVariables = taskOutVars;
+            if (taskVariables.isEmpty()) {
+                taskVariables = collectOutVars(ctx);
+            }
+
+            taskVariables.forEach(v -> {
+                String tmpVarName = "__withItems_" + v;
+                List<Object> results = getList(ctx, tmpVarName);
+                results.add(ctx.getVariable(v));
+                ctx.setVariable(tmpVarName, results);
+            });
+        }
+
+        public void cleanup(ExecutionContext ctx, Set<String> taskOutVars) {
             clearLastVariable(ctx, CURRENT_INDEX);
             ctx.removeVariable(ITEM);
             clearLastVariable(ctx, HAS_NEXT);
+
+            Set<String> taskVariables = taskOutVars;
+            if (taskVariables.isEmpty()) {
+                taskVariables = collectOutVars(ctx);
+            }
+            ctx.removeVariable("__withItems_keysBeforeTask");
+
+            taskVariables.forEach(v -> {
+                String tmpVarName = "__withItems_" + v;
+                Object var = ctx.getVariable(tmpVarName);
+                ctx.removeVariable(tmpVarName);
+                ctx.setVariable(v, var);
+            });
+        }
+
+        @SuppressWarnings("unchecked")
+        private static Set<String> collectOutVars(ExecutionContext ctx) {
+            Set<String> before = (Set<String>)ctx.getVariable("__withItems_keysBeforeTask");
+            return ctx.toMap().keySet().stream()
+                    .filter(v -> !v.startsWith("__"))
+                    .filter(v -> !before.contains(v))
+                    .collect(Collectors.toSet());
         }
 
         @SuppressWarnings("unchecked")

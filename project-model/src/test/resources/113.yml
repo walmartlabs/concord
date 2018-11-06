@@ -1,0 +1,21 @@
+nested:
+  - ${execution.setVariable("outer", item)}
+  - task: myTask
+    in:
+      message: "${outer} ${item}"
+    out:
+      myVar: ${var}
+    withItems: ${nestedWithItems}
+
+default:
+  - call: nested
+    out:
+      myVarOut: ${myVar}
+    withItems:
+    - "A"
+    - "B"
+    - "C"
+
+  - task: myLogger
+    in:
+      message: "${myVarOut}"

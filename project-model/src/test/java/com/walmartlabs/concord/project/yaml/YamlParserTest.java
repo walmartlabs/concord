@@ -2230,6 +2230,34 @@ public class YamlParserTest extends AbstractYamlParserTest {
     }
 
     @Test
+    public void test113() throws Exception {
+        deploy("113.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+        register("myTask", new JavaDelegate() {
+            @Override
+            public void execute(ExecutionContext ctx) throws Exception {
+                ctx.setVariable("var", ctx.getVariable("message"));
+            }
+        });
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default", Collections.singletonMap("nestedWithItems", Arrays.asList("0", "1", "2")));
+
+        // ---
+
+        verify(task, times(1)).log(eq(
+                Arrays.asList(
+                    Arrays.asList("A 0", "A 1", "A 2"),
+                    Arrays.asList("B 0", "B 1", "B 2"),
+                    Arrays.asList("C 0", "C 1", "C 2"))));
+    }
+
+    @Test
     public void testJunk() throws Exception {
         deploy("junk.yml");
     }

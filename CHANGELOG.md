@@ -4,6 +4,8 @@
 
 ### Added
 
+- project-model: `withItems` now correctly handles `out` variables of
+tasks;
 - server: GitHub webhook support for unknown (not registered in
 Concord) repositories.
 
