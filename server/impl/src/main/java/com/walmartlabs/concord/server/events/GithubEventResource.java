@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -61,7 +60,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResource.class);
 
-    private static final RepositoryItem UNKNOWN_REPO = new RepositoryItem(null, null);
+    private static final RepositoryItem UNKNOWN_REPO = new RepositoryItem(null, null, null);
 
     private static final String EVENT_SOURCE = "github";
 
@@ -120,6 +119,10 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                           @HeaderParam("X-GitHub-Event") String eventName,
                           @Context UriInfo uriInfo) {
 
+        if ("ping".equalsIgnoreCase(eventName)) {
+            return "ok";
+        }
+
         if (payload == null) {
             return "ok";
         }
@@ -133,7 +136,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         String eventBranch = getBranch(payload, eventName);
 
         List<RepositoryItem> repos = findRepos(repoName, eventBranch);
-        boolean unknownRepo = repos == null;
+        boolean unknownRepo = repos.isEmpty();
         if (unknownRepo) {
             repos = Collections.singletonList(UNKNOWN_REPO);
         }
@@ -143,7 +146,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                 repositoryCacheDao.updateLastPushDate(r.id, new Date());
             }
 
-            Map<String, Object> conditions = buildConditions(payload, repoName, eventBranch, r.project, eventName);
+            Map<String, Object> conditions = buildConditions(payload, r.repositoryName, eventBranch, r.project, eventName);
             conditions = enrich(conditions, uriInfo);
 
             Map<String, Object> event = buildTriggerEvent(payload, r.id, r.project, conditions);
@@ -168,16 +171,11 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     }
 
     private List<RepositoryItem> findRepos(String repoName, String branch) {
-        List<RepositoryEntry> repos = repositoryDao.find(repoName);
-        if (repos.isEmpty()) {
-            return null;
-        }
-
-        return repos.stream()
-                .filter(r -> branch.equals(Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH)))
+        return repositoryDao.find(repoName).stream()
+                .filter(r -> Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH).equals(branch))
                 .map(r -> {
                     ProjectEntry project = projectDao.get(r.getProjectId());
-                    return new RepositoryItem(r.getId(), project);
+                    return new RepositoryItem(r.getId(), project, r.getName());
                 })
                 .filter(r -> r.project != null)
                 .collect(Collectors.toList());
@@ -187,10 +185,13 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
         private final UUID id;
 
+        private final String repositoryName;
+
         private final ProjectEntry project;
 
-        public RepositoryItem(UUID id, ProjectEntry project) {
+        public RepositoryItem(UUID id, ProjectEntry project, String repositoryName) {
             this.id = id;
+            this.repositoryName = repositoryName;
             this.project = project;
         }
     }
@@ -273,13 +274,14 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         if (project != null) {
             result.put(ORG_NAME_KEY, project.getOrgName());
             result.put(PROJECT_NAME_KEY, project.getName());
+            result.put(REPO_NAME_KEY, repoName);
             result.put(UNKNOWN_REPO_KEY, false);
         } else {
             result.put(ORG_NAME_KEY, "n/a");
             result.put(PROJECT_NAME_KEY, "n/a");
+            result.put(REPO_NAME_KEY, "n/a");
             result.put(UNKNOWN_REPO_KEY, true);
         }
-        result.put(REPO_NAME_KEY, repoName);
         result.put(REPO_BRANCH_KEY, branch);
         result.put(AUTHOR_KEY, getSender(event));
         result.put(TYPE_KEY, eventName);

@@ -8,6 +8,8 @@
 `placeholder` and `search` form field attributes;
 - project-model: `withItems` now correctly handles `out` variables of
 tasks;
+- concord-server: support for GitHub events other than `push` or
+PR-related events; 
 - concord-server: GitHub webhook support for unknown (not registered
 in Concord) repositories.
 
