@@ -353,10 +353,10 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        l = processApi.list(null, null, null, Collections.singletonList("xyz"), null, null, 1);
+        l = processApi.list(null, null, null, Collections.singletonList("xyz"), null, null, null, 1);
         assertTrue(l.isEmpty());
 
-        l = processApi.list(null, null, null, Collections.singletonList("IT"), null, null, 1);
+        l = processApi.list(null, null, null, Collections.singletonList("IT"), null, null, null, 1);
         assertEquals(1, l.size());
 
         e = l.get(0);
@@ -392,13 +392,13 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        List<ProcessEntry> l = processApi.list(UUID.randomUUID(), null, null, null, null, null, 30);
+        List<ProcessEntry> l = processApi.list(UUID.randomUUID(), null, null, null, null, null, null, 30);
         assertTrue(l.isEmpty());
 
-        l = processApi.list(cpr.getId(), null, null, null, null, null, 30);
+        l = processApi.list(cpr.getId(), null, null, null, null, null, null, 30);
         assertEquals(1, l.size());
 
-        l = processApi.list(null, null, null, null, null, null, 30);
+        l = processApi.list(null, null, null, null, null, null, null, 30);
         ProcessEntry p = null;
         for (ProcessEntry e : l) {
             if (e.getInstanceId().equals(sprB.getInstanceId())) {
@@ -501,7 +501,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        List<ProcessEntry> processEntry = processApi.list(por.getId(), null, null, null, null, null, 10);
+        List<ProcessEntry> processEntry = processApi.list(por.getId(), null, null, null, null, null, null, 10);
         for (ProcessEntry pe : processEntry) {
             if (pe.getInstanceId().equals(singleNodeProcess.getInstanceId())) {
                 assertTrue(pe.getChildrenIds().isEmpty());

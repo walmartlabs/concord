@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: new tab on the process status page - "Child
+Processes";
 - project-model, concord-server: support for `readonly`,
 `placeholder` and `search` form field attributes;
 - project-model: `withItems` now correctly handles `out` variables of

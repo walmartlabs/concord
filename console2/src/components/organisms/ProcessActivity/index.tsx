@@ -28,9 +28,14 @@ import { ProcessEntry } from '../../../api/process';
 import { actions, State } from '../../../state/data/processes';
 import { BreadcrumbSegment, RequestErrorMessage } from '../../molecules';
 import { NotFoundPage } from '../../pages';
-import { ProcessLogActivity, ProcessStatusActivity, ProcessHistoryActivity } from '../index';
+import {
+    ProcessLogActivity,
+    ProcessStatusActivity,
+    ProcessHistoryActivity,
+    ProcessChildrenActivity
+} from '../index';
 
-export type TabLink = 'status' | 'log' | 'events' | 'history' | null;
+export type TabLink = 'status' | 'log' | 'events' | 'history' | 'children' | null;
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -133,6 +138,10 @@ class ProcessActivity extends React.PureComponent<Props> {
                         <Icon name="history" />
                         <Link to={`${baseUrl}/history`}>History</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'children'}>
+                        <Icon name="chain" />
+                        <Link to={`${baseUrl}/children`}>Child Processes</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -147,6 +156,9 @@ class ProcessActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/history`} exact={true}>
                         <ProcessHistoryActivity instanceId={instanceId} />
+                    </Route>
+                    <Route path={`${baseUrl}/children`} exact={true}>
+                        <ProcessChildrenActivity instanceId={instanceId} />
                     </Route>
 
                     <Route component={NotFoundPage} />

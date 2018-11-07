@@ -38,18 +38,21 @@ public class ProcessFilter {
 
     private final Set<UUID> orgIds;
 
+    private final UUID parentId;
+
     private final UUID projectId;
 
     private final ProcessStatus processStatus;
 
     private final Set<String> tags;
 
-    protected ProcessFilter(Timestamp afterCreatedAt, Timestamp beforeCreatedAt, boolean includeWoProjects, String initiator, Set<UUID> orgIds, UUID projectId, ProcessStatus processStatus, Set<String> tags) {
+    protected ProcessFilter(Timestamp afterCreatedAt, Timestamp beforeCreatedAt, boolean includeWoProjects, String initiator, Set<UUID> orgIds, UUID parentId, UUID projectId, ProcessStatus processStatus, Set<String> tags) {
         this.afterCreatedAt = afterCreatedAt;
         this.beforeCreatedAt = beforeCreatedAt;
         this.includeWoProjects = includeWoProjects;
         this.initiator = initiator;
         this.orgIds = orgIds;
+        this.parentId = parentId;
         this.projectId = projectId;
         this.processStatus = processStatus;
         this.tags = tags;
@@ -75,6 +78,10 @@ public class ProcessFilter {
         return orgIds;
     }
 
+    public UUID getParentId() {
+        return parentId;
+    }
+
     public UUID getProjectId() {
         return projectId;
     }
@@ -98,6 +105,7 @@ public class ProcessFilter {
         private boolean includeWoProjects;
         private String initiator;
         private Set<UUID> orgIds;
+        private UUID parentId;
         private UUID projectId;
         private ProcessStatus processStatus;
         private Set<String> tags;
@@ -142,8 +150,13 @@ public class ProcessFilter {
             return this;
         }
 
+        public Builder parentId(UUID parentId) {
+            this.parentId = parentId;
+            return this;
+        }
+
         public ProcessFilter build() {
-            return new ProcessFilter(afterCreatedAt, beforeCreatedAt, includeWoProjects, initiator, orgIds, projectId, processStatus, tags);
+            return new ProcessFilter(afterCreatedAt, beforeCreatedAt, includeWoProjects, initiator, orgIds, parentId, projectId, processStatus, tags);
         }
     }
 }

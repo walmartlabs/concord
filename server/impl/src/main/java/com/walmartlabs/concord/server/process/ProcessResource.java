@@ -636,6 +636,7 @@ public class ProcessResource implements Resource {
                                    @ApiParam @QueryParam("tags") Set<String> tags,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
                                    @ApiParam @QueryParam("initiator") String initiator,
+                                   @ApiParam @QueryParam("parentInstanceId") UUID parentId,
                                    @ApiParam @QueryParam("limit") @DefaultValue("30") int limit) {
 
         if (limit <= 0) {
@@ -649,6 +650,7 @@ public class ProcessResource implements Resource {
         }
 
         ProcessFilter filter = ProcessFilter.builder()
+                .parentId(parentId)
                 .projectId(projectId)
                 .includeWithoutProjects(true)
                 .ordIds(orgIds)

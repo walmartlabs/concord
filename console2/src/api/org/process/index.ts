@@ -22,6 +22,7 @@ import { ConcordId, ConcordKey, fetchJson, queryParams } from '../../common';
 import { ProcessEntry, ProcessStatus } from '../../process';
 
 export interface SearchFilter {
+    parentInstanceId?: ConcordId;
     projectId?: ConcordId;
     beforeCreatedAt?: string;
     tags?: string[];

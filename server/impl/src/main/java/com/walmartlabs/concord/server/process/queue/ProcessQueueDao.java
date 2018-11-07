@@ -456,6 +456,10 @@ public class ProcessQueueDao extends AbstractDao {
                 s.where(V_PROCESS_QUEUE.CURRENT_STATUS.eq(filter.getProcessStatus().name()));
             }
 
+            if (filter.getParentId() != null) {
+                s.where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.getParentId()));
+            }
+
             filterByTags(s, filter.getTags());
 
             return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())

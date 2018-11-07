@@ -34,6 +34,7 @@ import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';
 import { reducers as historyReducers, sagas as historySagas } from './history';
+import { reducers as childrenReducers, sagas as childrenSagas } from './children';
 import {
     CancelBulkProcessRequest,
     CancelBullkProcessState,
@@ -235,7 +236,8 @@ export const reducers = combineReducers<State>({
 
     log: logReducers,
     poll: pollReducers,
-    history: historyReducers
+    history: historyReducers,
+    children: childrenReducers
 });
 
 function* onGetProcess({ instanceId }: GetProcessRequest) {
@@ -320,6 +322,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),
         fork(logSagas),
         fork(pollSagas),
-        fork(historySagas)
+        fork(historySagas),
+        fork(childrenSagas)
     ]);
 };
