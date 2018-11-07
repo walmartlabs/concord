@@ -143,6 +143,7 @@ class ProcessForm extends React.Component<Props, State> {
 
     renderInput(name: string, type: FormFieldType, value: any, inputType?: string, opts?: {}) {
         const { submitting, completed } = this.props;
+
         return (
             <Input
                 name={name}
@@ -159,7 +160,8 @@ class ProcessForm extends React.Component<Props, State> {
         name: string,
         cardinality: Cardinality,
         value: DropdownValue,
-        allowedValue: DropdownAllowedValue
+        allowedValue: DropdownAllowedValue,
+        opts?: {}
     ) {
         const { submitting, completed } = this.props;
 
@@ -184,6 +186,7 @@ class ProcessForm extends React.Component<Props, State> {
                 value={value}
                 options={options}
                 onChange={this.handleDropdown(name)}
+                {...opts}
             />
         );
     }
@@ -211,8 +214,8 @@ class ProcessForm extends React.Component<Props, State> {
                 <label>{label}</label>
 
                 {dropdown
-                    ? this.renderDropdown(name, cardinality, value, allowedValue)
-                    : this.renderInput(name, type, value, inputType)}
+                    ? this.renderDropdown(name, cardinality, value, allowedValue, options)
+                    : this.renderInput(name, type, value, inputType, options)}
 
                 {error && (
                     <Label basic={true} color="red" pointing={true}>
@@ -223,7 +226,7 @@ class ProcessForm extends React.Component<Props, State> {
         );
     }
 
-    renderNumberField({ name, label, type }: FormField, value?: number) {
+    renderNumberField({ name, label, type, options }: FormField, value?: number) {
         const { errors } = this.props;
         const error = errors ? errors[name] : undefined;
 
@@ -236,7 +239,8 @@ class ProcessForm extends React.Component<Props, State> {
                 <label>{label}</label>
 
                 {this.renderInput(name, type, value, 'number', {
-                    step: type === 'decimal' ? 'any' : '1'
+                    step: type === 'decimal' ? 'any' : '1',
+                    ...options
                 })}
 
                 {error && (
@@ -248,7 +252,7 @@ class ProcessForm extends React.Component<Props, State> {
         );
     }
 
-    renderBooleanField({ name, label, type }: FormField, value: boolean) {
+    renderBooleanField({ name, label, type, options }: FormField, value: boolean) {
         const { errors, submitting, completed } = this.props;
         const error = errors ? errors[name] : undefined;
 
@@ -261,6 +265,7 @@ class ProcessForm extends React.Component<Props, State> {
                     disabled={submitting || completed}
                     defaultChecked={value}
                     onChange={this.handleCheckboxInput(name)}
+                    {...options}
                 />
 
                 {error && (

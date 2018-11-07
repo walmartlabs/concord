@@ -21,6 +21,9 @@ package com.walmartlabs.concord.project;
  */
 
 
+import io.takari.bpm.model.form.FormField;
+import static io.takari.bpm.model.form.FormField.Option;
+
 public final class ConcordFormFields {
 
     public static final class FileField {
@@ -28,6 +31,17 @@ public final class ConcordFormFields {
         public static final String TYPE = "file";
 
         private FileField() {
+        }
+    }
+
+    public static final class FieldOptions {
+
+        public static final Option<String> INPUT_TYPE = new Option<>("inputType", String.class);
+        public static final Option<String> PLACEHOLDER = new Option<>("placeholder", String.class);
+        public static final Option<Boolean> READ_ONLY = new Option<>("readOnly", Boolean.class);
+        public static final Option<Boolean> SEARCH = new Option<>("search", Boolean.class);
+
+        private FieldOptions() {
         }
     }
 

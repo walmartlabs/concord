@@ -37,9 +37,13 @@ import io.takari.parc.Seq;
 import java.io.Serializable;
 import java.util.*;
 
+import static com.walmartlabs.concord.project.ConcordFormFields.FieldOptions.*;
+
 public final class YamlFormConverter {
 
     private static final String OPTIONS_FIELD_NAME = "_options";
+
+    private static final Map<String, Option<?>> PASSTHROUGH_OPTIONS = createPassthroughOptions();
 
     public static FormDefinition convert(String name, List<YamlFormField> fields) throws YamlConverterException {
         Map<String, Object> options = null;
@@ -79,7 +83,7 @@ public final class YamlFormConverter {
         switch (tInfo.type) {
             case StringField.TYPE: {
                 options.put(StringField.PATTERN, opts.remove("pattern"));
-                options.put(new Option<>("inputType", String.class), opts.remove("inputType"));
+                options.put(INPUT_TYPE, opts.remove("inputType"));
                 break;
             }
             case IntegerField.TYPE: {
@@ -101,6 +105,13 @@ public final class YamlFormConverter {
             default:
                 throw new YamlConverterException("Unknown field type: " + tInfo.type + " @ " + f.getLocation());
         }
+
+        PASSTHROUGH_OPTIONS.forEach((k, option) -> {
+            Object v = opts.remove(k);
+            if (v != null) {
+                options.put(option, v);
+            }
+        });
 
         if (!opts.isEmpty()) {
             throw new YamlConverterException("Unknown field options: " + opts.keySet() + " @ " + f.getLocation());
@@ -169,6 +180,13 @@ public final class YamlFormConverter {
         throw new IllegalArgumentException("Can't coerce '" + v + "' to double");
     }
 
+    private static Map<String, Option<?>> createPassthroughOptions() {
+        Map<String, Option<?>> result = new HashMap<>();
+        result.put("placeholder", PLACEHOLDER);
+        result.put("readonly", READ_ONLY);
+        result.put("search", SEARCH);
+        return result;
+    }
 
     private static class TypeInfo implements Serializable {
 

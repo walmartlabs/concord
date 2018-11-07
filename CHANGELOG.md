@@ -4,10 +4,12 @@
 
 ### Added
 
+- project-model, concord-server: support for `readonly`,
+`placeholder` and `search` form field attributes;
 - project-model: `withItems` now correctly handles `out` variables of
 tasks;
-- server: GitHub webhook support for unknown (not registered in
-Concord) repositories.
+- concord-server: GitHub webhook support for unknown (not registered
+in Concord) repositories.
 
 ### Changed
 
