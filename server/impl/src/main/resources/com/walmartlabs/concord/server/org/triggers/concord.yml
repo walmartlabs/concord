@@ -24,4 +24,5 @@ triggers:
       project: ".*"
       repository: ".*"
       type: "push"
+      unknownRepo: false
       entryPoint: "onChange"

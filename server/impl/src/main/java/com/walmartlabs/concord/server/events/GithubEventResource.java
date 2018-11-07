@@ -151,7 +151,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             String eventId = UUID.randomUUID().toString();
             int count = process(eventId, EVENT_SOURCE, conditions, event);
 
-            log.info("payload ['{}', '{}', '{}'] -> {} processes started", eventId, conditions, event, count);
+            log.info("payload ['{}', '{}'] -> {} processes started", eventId, conditions, count);
         }
 
         if (unknownRepo) {
