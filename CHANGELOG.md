@@ -15,6 +15,8 @@ in Concord) repositories.
 
 ### Changed
 
+- concord-server: fixed a bug preventing process checkpoints from
+being correctly archived;
 - docker: updated Ansible to 2.6.7.
 
 ### Breaking

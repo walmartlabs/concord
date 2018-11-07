@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -50,7 +51,6 @@ import java.util.concurrent.ForkJoinTask;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_CHECKPOINT_ARCHIVE;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessStateArchive.PROCESS_STATE_ARCHIVE;
 import static org.jooq.impl.DSL.*;
 
 @Named("process-checkpoint-archiver")
@@ -101,7 +101,8 @@ public class ProcessCheckpointArchiver implements ScheduledTask {
     @Override
     public void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
-            List<UUID> ids = dao.grabNextCheckpointId(10);
+            Timestamp ageCutoff = new Timestamp(System.currentTimeMillis() - cfg.getCheckpointAge());
+            List<UUID> ids = dao.grabNextCheckpointId(ageCutoff,10);
 
             if (ids.isEmpty()) {
                 log.info("performTask -> nothing to do");
@@ -159,21 +160,22 @@ public class ProcessCheckpointArchiver implements ScheduledTask {
             super(cfg);
         }
 
-        public boolean isArchived(UUID instanceId) {
+        public boolean isArchived(UUID checkpointId) {
             try (DSLContext tx = DSL.using(cfg)) {
-                return tx.fetchExists(selectFrom(PROCESS_STATE_ARCHIVE)
-                        .where(PROCESS_STATE_ARCHIVE.INSTANCE_ID.eq(instanceId)
-                                .and(PROCESS_STATE_ARCHIVE.STATUS.eq(ArchivalStatus.DONE.toString()))));
+                return tx.fetchExists(selectFrom(PROCESS_CHECKPOINT_ARCHIVE)
+                        .where(PROCESS_CHECKPOINT_ARCHIVE.CHECKPOINT_ID.eq(checkpointId)
+                                .and(PROCESS_CHECKPOINT_ARCHIVE.STATUS.eq(ArchivalStatus.DONE.toString()))));
             }
         }
 
-        public List<UUID> grabNextCheckpointId(int limit) {
+        public List<UUID> grabNextCheckpointId(Timestamp ageCutoff, int limit) {
             return txResult(tx -> {
                 List<UUID> ids = tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_ID)
                         .from(PROCESS_CHECKPOINTS)
-                        .where(notExists(
+                        .where(PROCESS_CHECKPOINTS.CHECKPOINT_DATE.lessOrEqual(ageCutoff).and(
+                                notExists(
                                 selectFrom(PROCESS_CHECKPOINT_ARCHIVE)
-                                        .where(PROCESS_CHECKPOINT_ARCHIVE.CHECKPOINT_ID.eq(PROCESS_CHECKPOINTS.CHECKPOINT_ID))))
+                                        .where(PROCESS_CHECKPOINT_ARCHIVE.CHECKPOINT_ID.eq(PROCESS_CHECKPOINTS.CHECKPOINT_ID)))))
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()

@@ -44,6 +44,10 @@ public class ProcessCheckpointArchiveConfiguration implements Serializable {
     private long stalledAge;
 
     @Inject
+    @Config("process.checkpoints.archive.checkpointAge")
+    private long checkpointAge;
+
+    @Inject
     @Config("process.checkpoints.archive.uploadThreads")
     private int uploadThreads;
 
@@ -65,6 +69,10 @@ public class ProcessCheckpointArchiveConfiguration implements Serializable {
 
     public long getStalledAge() {
         return stalledAge;
+    }
+
+    public long getCheckpointAge() {
+        return checkpointAge;
     }
 
     public int getUploadThreads() {
