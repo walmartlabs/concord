@@ -21,7 +21,41 @@ package com.walmartlabs.concord.server.events;
  */
 
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public final class GithubUtils {
+
+    /**
+     *
+     * Same rules as used by git in shorten_unambiguous_ref
+     * see: https://github.com/git/git/blob/v2.19.1/refs.c#L483
+     */
+    private static final Pattern[] REF_PARSE_RULES = {
+            Pattern.compile("^(.*)$"),
+            Pattern.compile("^refs/(.*)$"),
+            Pattern.compile("^refs/tags/(.*)$"),
+            Pattern.compile("^refs/heads/(.*)$"),
+            Pattern.compile("^refs/remotes/(.*)$"),
+            Pattern.compile("^refs/remotes/(.*)/HEAD$")
+    };
+
+    public static String getRefShortName(String ref) {
+        String str = ref.trim();
+        String result = str;
+        for (Pattern p : REF_PARSE_RULES) {
+            Matcher m = p.matcher(str);
+            if (m.matches()) {
+                result = m.group(1);
+            }
+        }
+        return result;
+    }
+
+    public static boolean isRepositoryUrl(String repo, String url, String githubDomain) {
+        String pattern = ".*" + Pattern.quote(githubDomain) + "[:/]" + Pattern.quote(repo) + "(?:.git|.git/|/)?";
+        return Pattern.compile(pattern).matcher(url).matches();
+    }
 
     public static String getRepositoryName(String repoUrl) {
         String repoPath = getRepoPath(repoUrl);

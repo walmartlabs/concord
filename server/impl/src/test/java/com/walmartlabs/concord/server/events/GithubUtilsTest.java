@@ -23,11 +23,37 @@ package com.walmartlabs.concord.server.events;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class GithubUtilsTest {
 
     @Test
-    public void testParse() throws Exception {
+    public void testGetRefShortName() {
+        assertRefShortName("master", "master");
+        assertRefShortName("refs/heads/master", "master");
+        assertRefShortName("refs/tags/master", "master");
+        assertRefShortName("refs/heads/feature/boo", "feature/boo");
+        assertRefShortName("refs/remotes/boo/HEAD", "boo");
+    }
+
+    @Test
+    public void testRepoUrlMatcher() {
+        assertRepoUrl("devtools/concord", "https://localhost/devtools/concord");
+        assertRepoUrl("devtools/concord", "https://localhost/devtools/concord.git");
+        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord.git");
+        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord");
+        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord/");
+        assertRepoUrl("devtools/concord", "git@localhost:devtools/concord.git/");
+        assertRepoUrl("devtools/concord", "git@mydomain:devtools/concord.git/", "mydomain");
+
+        assertNotRepoUrl("devtools/concord_new", "git@localhost:devtools/concord.git");
+        assertNotRepoUrl("devtools/new_concord", "git@localhost:devtools/concord.git");
+        assertNotRepoUrl("devtools/con", "git@localhost:devtools/concord.git");
+    }
+
+    @Test
+    public void testParse() {
         assertRepositoryName("git@gecgithub01.walmart.com:h1sammo/Anisble-GLS-AppInstall.git", "h1sammo/Anisble-GLS-AppInstall");
         assertRepositoryName("git+https://github.com/owner/name.git", "owner/name");
         assertRepositoryName("git://gh.pages.com/owner/name.git", "owner/name");
@@ -49,8 +75,29 @@ public class GithubUtilsTest {
 //        assertRepositoryName("git@github.com:owner/name.git#1.2.3", "owner/name");
     }
 
-    private static void assertRepositoryName(String url, String expected) throws Exception {
+    private static void assertRepositoryName(String url, String expected) {
         String actual = GithubUtils.getRepositoryName(url);
         assertEquals(expected, actual);
+    }
+
+    private static void assertRefShortName(String ref, String expected) {
+        String shortName = GithubUtils.getRefShortName(ref);
+        assertEquals(expected, shortName);
+    }
+
+    private static void assertRepoUrl(String repoName, String url) {
+        assertRepoUrl(repoName, url, "localhost");
+    }
+
+    private static void assertRepoUrl(String repoName, String url, String domain) {
+        assertTrue(GithubUtils.isRepositoryUrl(repoName, url, domain));
+    }
+
+    private static void assertNotRepoUrl(String repoName, String url) {
+        assertNotRepoUrl(repoName, url, "localhost");
+    }
+
+    private static void assertNotRepoUrl(String repoName, String url, String domain) {
+        assertFalse(GithubUtils.isRepositoryUrl(repoName, url, domain));
     }
 }

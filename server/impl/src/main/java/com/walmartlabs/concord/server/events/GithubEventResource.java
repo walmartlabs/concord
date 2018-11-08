@@ -172,6 +172,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
     private List<RepositoryItem> findRepos(String repoName, String branch) {
         return repositoryDao.find(repoName).stream()
+                .filter(r -> GithubUtils.isRepositoryUrl(repoName, r.getUrl(), cfg.getGithubDomain()))
                 .filter(r -> Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH).equals(branch))
                 .map(r -> {
                     ProjectEntry project = projectDao.get(r.getProjectId());
@@ -251,9 +252,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             return null;
         }
 
-        String[] refPath = ref.split("/");
-
-        return refPath[refPath.length - 1];
+        return GithubUtils.getRefShortName(ref);
     }
 
     @SuppressWarnings("unchecked")
