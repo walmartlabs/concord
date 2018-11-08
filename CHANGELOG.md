@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [0.96.0] - 2018-11-07
 
 ### Added
 
@@ -24,7 +24,7 @@ being correctly archived;
 ### Breaking
 
 - concord-tasks: IN parameter `jobs` renamed to `forks` to avoid
-confusion with OUT parameter `jobs`.
+collision with OUT parameter `jobs`.
 
 
 
