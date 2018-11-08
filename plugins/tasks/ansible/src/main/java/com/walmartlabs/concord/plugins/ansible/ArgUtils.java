@@ -119,6 +119,10 @@ public final class ArgUtils {
     }
 
     public static String getString(Map<String, Object> args, String key) {
+        if (args == null) {
+            return null;
+        }
+
         Object v = args.get(key);
 
         if (v == null) {

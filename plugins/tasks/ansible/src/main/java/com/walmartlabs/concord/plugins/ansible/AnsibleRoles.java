@@ -39,6 +39,11 @@ import static com.walmartlabs.concord.plugins.ansible.ArgUtils.*;
 
 public class AnsibleRoles {
 
+    public static void process(Path workDir, Path tmpDir, Map<String, Object> defaults,
+                               Map<String,Object> args, AnsibleConfig cfg, boolean debug) throws Exception {
+        new AnsibleRoles(workDir, tmpDir, defaults, debug).parse(args).enrich(cfg).downloadRoles();
+    }
+
     private static final Logger log = LoggerFactory.getLogger(AnsibleRoles.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
@@ -48,22 +53,20 @@ public class AnsibleRoles {
     private final Path tmpDir;
     private final Map<String, Object> defaults;
     private final boolean debug;
+    private final List<String> sensitiveData;
 
     private List<Map<String, String>> roles = Collections.emptyList();
 
-    public AnsibleRoles(Path workDir, Path tmpDir, Map<String, Object> defaults, boolean debug) {
+    private AnsibleRoles(Path workDir, Path tmpDir, Map<String, Object> defaults, boolean debug) {
         this.workDir = workDir;
         this.tmpDir = tmpDir;
         this.defaults = defaults;
         this.debug = debug;
+
+        this.sensitiveData = Collections.singletonList(getDefaultSrc());
     }
 
-    public static void process(Path workDir, Path tmpDir, Map<String, Object> defaults,
-                               Map<String,Object> args, AnsibleConfig cfg, boolean debug) throws Exception {
-        new AnsibleRoles(workDir, tmpDir, defaults, debug).parse(args).enrich(cfg).downloadRoles();
-    }
-
-    public AnsibleRoles parse(Map<String, Object> args) {
+    private AnsibleRoles parse(Map<String, Object> args) {
         List<Map<String, Object>> in = getList(args, TaskParams.ROLES_KEY);
         if (in == null || in.isEmpty()) {
             return this;
@@ -76,7 +79,7 @@ public class AnsibleRoles {
         return this;
     }
 
-    public void downloadRoles() throws Exception {
+    private void downloadRoles() throws Exception {
         Path roleDir = workDir.relativize(tmpDir.resolve(ROLE_DIR));
         for(Map<String, String> e : roles) {
             Path dest = roleDir.resolve(e.get("name"));
@@ -106,7 +109,7 @@ public class AnsibleRoles {
         try (BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                log.info("GIT: {}", line);
+                log.info("GIT: {}", hideSensitiveData(line));
             }
         }
 
@@ -117,7 +120,7 @@ public class AnsibleRoles {
         }
     }
 
-    public AnsibleRoles enrich(AnsibleConfig config) {
+    private AnsibleRoles enrich(AnsibleConfig config) {
         if (roles.isEmpty()) {
             return this;
         }
@@ -138,11 +141,13 @@ public class AnsibleRoles {
 
     private Map<String, String> assertRole(Map<String,Object> r) {
         String name = assertString("Role 'name' is required", r, "name");
+
         String src = getString(r, "src");
         if (src == null || src.isEmpty()) {
             src = getDefaultSrc() + name;
             name = normalizeName(name);
         }
+
         String version = getString(r, "version");
 
         Map<String, String> result = new HashMap<>();
@@ -151,7 +156,19 @@ public class AnsibleRoles {
         if (version != null && !version.isEmpty()) {
             result.put("version", version);
         }
+
         return result;
+    }
+
+    private String hideSensitiveData(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        for (String p : sensitiveData) {
+            s = s.replaceAll(p, "***");
+        }
+        return s;
     }
 
     private static String normalizeName(String name) {
