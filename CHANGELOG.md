@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-agent: an endpoint to get the current status of the
+maintenance mode.
+
 ### Changed
 
 - concord-server: fixed a bug causing incorrect matching of

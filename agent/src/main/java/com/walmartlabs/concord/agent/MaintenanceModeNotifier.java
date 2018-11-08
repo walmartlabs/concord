@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+
+import static com.walmartlabs.concord.agent.MaintenanceModeListener.Status;
 
 public class MaintenanceModeNotifier {
 
@@ -53,9 +56,9 @@ public class MaintenanceModeNotifier {
 
     private class MaintenanceModeHandler implements HttpHandler {
 
-        private static final String SUCCESS_RESPONSE = "{\"status\": \"ok\"}";
-        private static final String BUSY_RESPONSE = "{\"status\": \"busy\", \"busyWorkers\": %d}";
+        private static final String NOT_FOUND_RESPONSE = "404 (Not Found)\n";
 
+        private final ObjectMapper objectMapper = new ObjectMapper();
         private final MaintenanceModeListener listener;
 
         private MaintenanceModeHandler(MaintenanceModeListener listener) {
@@ -64,30 +67,43 @@ public class MaintenanceModeNotifier {
 
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
-            if (!"POST".equals(httpExchange.getRequestMethod())) {
-                String response = "404 (Not Found)\n";
-                httpExchange.sendResponseHeaders(404, response.length());
-                try(OutputStream os = httpExchange.getResponseBody()) {
-                    os.write(response.getBytes());
-                }
+            Status status = null;
+            if ("GET".equals(httpExchange.getRequestMethod())) {
+                status = onMaintenanceModeStatus();
+            } else if ("POST".equals(httpExchange.getRequestMethod())) {
+                status = onMaintenanceMode();
+            }
+
+            if (status != null) {
+                httpExchange.getResponseHeaders().set("Content-Type", "application/json");
+                response(httpExchange, 200, objectMapper.writeValueAsBytes(status));
                 return;
             }
 
-            byte[] response;
-            long busyWorkers = listener.onMaintenanceMode();
-            if (busyWorkers == 0) {
-                response = SUCCESS_RESPONSE.getBytes();
-                log.info("handle -> maintenance mode on");
-            } else {
-                response = String.format(BUSY_RESPONSE, busyWorkers).getBytes();
-                log.info("handle -> {} workers active", busyWorkers);
-            }
+            response(httpExchange, 404, NOT_FOUND_RESPONSE.getBytes());
+        }
 
-            httpExchange.getResponseHeaders().set("Content-Type", "application/json");
-            httpExchange.sendResponseHeaders(200, response.length);
-            try(OutputStream os = httpExchange.getResponseBody()) {
+        private void response(HttpExchange httpExchange, int code, byte[] response) throws IOException {
+            httpExchange.sendResponseHeaders(code, response.length);
+            try (OutputStream os = httpExchange.getResponseBody()) {
                 os.write(response);
             }
+        }
+
+        private Status onMaintenanceMode() {
+            Status status = listener.onMaintenanceMode();
+
+            log.info("onMaintenanceMode -> {}", status);
+
+            return status;
+        }
+
+        private Status onMaintenanceModeStatus() {
+            Status status = listener.getMaintenanceModeStatus();
+
+            log.info("onMaintenanceModeStatus -> {}", status);
+
+            return status;
         }
     }
 }

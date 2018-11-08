@@ -47,6 +47,7 @@ public class ServerConnector implements MaintenanceModeListener {
     private MaintenanceModeNotifier maintenanceModeNotifier;
     private CountDownLatch doneSignal;
     private QueueClient queueClient;
+    private volatile boolean isMaintenanceMode;
 
     public void start(Configuration cfg) throws Exception {
         ApiClient apiClient = ApiClientFactory.create(cfg);
@@ -149,7 +150,9 @@ public class ServerConnector implements MaintenanceModeListener {
     }
 
     @Override
-    public long onMaintenanceMode() {
+    public Status onMaintenanceMode() {
+        isMaintenanceMode = true;
+
         if (workers != null) {
             Stream.of(workers).forEach(Worker::setMaintenanceMode);
         }
@@ -162,6 +165,11 @@ public class ServerConnector implements MaintenanceModeListener {
             Thread.currentThread().interrupt();
         }
 
-        return doneSignal.getCount();
+        return new Status(true, doneSignal.getCount());
+    }
+
+    @Override
+    public Status getMaintenanceModeStatus() {
+        return new Status(isMaintenanceMode, doneSignal.getCount());
     }
 }

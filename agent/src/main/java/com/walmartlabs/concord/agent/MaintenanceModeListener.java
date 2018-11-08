@@ -23,5 +23,26 @@ package com.walmartlabs.concord.agent;
 
 public interface MaintenanceModeListener {
 
-    long onMaintenanceMode();
+    Status onMaintenanceMode();
+
+    Status getMaintenanceModeStatus();
+
+    class Status {
+
+        private final boolean maintenanceMode;
+        private final long busyWorkers;
+
+        public Status(boolean maintenanceMode, long busyWorkers) {
+            this.maintenanceMode = maintenanceMode;
+            this.busyWorkers = busyWorkers;
+        }
+
+        public boolean isMaintenanceMode() {
+            return maintenanceMode;
+        }
+
+        public long getBusyWorkers() {
+            return busyWorkers;
+        }
+    }
 }
