@@ -11,11 +11,11 @@ flows:
       # will produce a JSON structure like this:
       # {
       #   "myHostsGroup": {
-      #     "hosts":["55.193.40.129"]
+      #     "hosts":["xx.xxx.xx.xxx"]
       #   },
       #   "_meta": {
       #     "hostvars":{
-      #       "55.193.40.129":{
+      #       "xx.xxx.xx.xxx":{
       #         "ansible_connection":"local"
       #       }
       #     }
