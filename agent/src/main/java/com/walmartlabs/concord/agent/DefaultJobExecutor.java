@@ -187,6 +187,7 @@ public class DefaultJobExecutor {
                 .dependencyDir(dependencyManager.getLocalCacheDir())
                 .runnerPath(cfg.getRunnerPath())
                 .args(runner.build())
+                .extraEnv(IOUtils.TMP_DIR_KEY, "/tmp")
                 .build();
     }
 

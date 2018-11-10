@@ -83,6 +83,7 @@
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
                         <IT_GIT_WEBHOOK_MOCK_PORT>${github.mock.port}</IT_GIT_WEBHOOK_MOCK_PORT>
                         <IT_WEBHOOK_TRIGGER_ENABLED>${it.webhook.trigger.enabled}</IT_WEBHOOK_TRIGGER_ENABLED>
+                        <CONCORD_TMP_DIR>/tmp</CONCORD_TMP_DIR>
                     </environmentVariables>
                 </configuration>
             </plugin>

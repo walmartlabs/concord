@@ -171,6 +171,7 @@
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                         <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
+                        <CONCORD_TMP_DIR>/tmp</CONCORD_TMP_DIR>
                     </environmentVariables>
                 </configuration>
             </plugin>

@@ -109,6 +109,7 @@
                         <IT_WEBDRIVER_TYPE>${it.webdriver.type}</IT_WEBDRIVER_TYPE>
                         <IT_SCREENSHOTS_DIR>${project.build.directory}/screenshots</IT_SCREENSHOTS_DIR>
                         <IT_CONSOLE_BASE_URL>${it.console.base.url}</IT_CONSOLE_BASE_URL>
+                        <CONCORD_TMP_DIR>/tmp</CONCORD_TMP_DIR>
                     </environmentVariables>
                 </configuration>
             </plugin>

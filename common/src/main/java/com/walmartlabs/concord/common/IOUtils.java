@@ -40,16 +40,24 @@ public final class IOUtils {
     private static final Logger log = LoggerFactory.getLogger(IOUtils.class);
 
     public static final String TMP_DIR_KEY = "CONCORD_TMP_DIR";
-    public static final Path TMP_DIR = Paths.get(getEnv(TMP_DIR_KEY, System.getProperty("java.io.tmpdir")));
+    public static final Path TMP_DIR;
 
     private static final int MAX_COPY_DEPTH = 100;
 
     static {
+        String s = getEnv(TMP_DIR_KEY, null);
+        if (s == null) {
+            // enforce alternative temp dir location for "security" reasons
+            throw new IllegalArgumentException("Environment variable '" + TMP_DIR_KEY + "' must be set");
+        }
+
+        TMP_DIR = Paths.get(s);
+
         try {
             if (!Files.exists(TMP_DIR)) {
                 Files.createDirectories(TMP_DIR);
             }
-            log.info("Using {} as TMP", TMP_DIR);
+            log.info("Using {} as CONCORD_TMP_DIR", TMP_DIR);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

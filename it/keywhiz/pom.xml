@@ -80,6 +80,7 @@
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
+                        <CONCORD_TMP_DIR>/tmp</CONCORD_TMP_DIR>
                     </environmentVariables>
                 </configuration>
             </plugin>

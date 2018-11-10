@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ public class DockerCommandBuilder {
     private List<String> args = Collections.emptyList();
 
     private final Cfg cfg;
+    private final Map<String, Object> env = new HashMap<>();
 
     public DockerCommandBuilder(LogManager logManager, Map<String, Object> cfg) {
         this.logManager = logManager;
@@ -108,6 +109,11 @@ public class DockerCommandBuilder {
         return this;
     }
 
+    public DockerCommandBuilder extraEnv(String k, Object v) {
+        this.env.put(k, v);
+        return this;
+    }
+
     public String[] build() throws IOException {
         boolean debug = cfg.getBoolean("debug", false);
 
@@ -120,9 +126,9 @@ public class DockerCommandBuilder {
                 .volume(javaPath.toString(), VOLUME_JAVA_DEST, true)
                 .volume(runnerPath.getParent().toString(), VOLUME_RUNNER_DEST, true)
                 .volume(dependencyListsDir.toString(), VOLUME_DEPS_DEST, true)
-                .volume(dependencyCacheDir.toString(),dependencyCacheDir.toString(), true)
-                .volume(dependencyDir.toString(),dependencyDir.toString(), true)
-                .env(stringify(cfg.getMap("env")))
+                .volume(dependencyCacheDir.toString(), dependencyCacheDir.toString(), true)
+                .volume(dependencyDir.toString(), dependencyDir.toString(), true)
+                .env(stringify(combine(env, cfg.getMap("env"))))
                 .forcePull(true)
                 .options(cfg.getList("options"))
                 .debug(cfg.getBoolean("debug", false))
@@ -130,10 +136,16 @@ public class DockerCommandBuilder {
                 .buildCmd();
 
         if (debug) {
-            logManager.info(instanceId, "CMD: {}", (Object)cmd);
+            logManager.info(instanceId, "CMD: {}", (Object) cmd);
         }
 
         return cmd;
+    }
+
+    private static Map<String, Object> combine(Map<String, Object> a, Map<String, Object> b) {
+        Map<String, Object> m = new HashMap<>(a);
+        m.putAll(b);
+        return m;
     }
 
     private static Map<String, String> stringify(Map<String, Object> m) {
@@ -207,7 +219,7 @@ public class DockerCommandBuilder {
             }
 
             if (v instanceof Boolean) {
-                return (Boolean)v;
+                return (Boolean) v;
             }
             throw new IllegalArgumentException("Expected a boolean value '" + name + "', got: " + v);
         }

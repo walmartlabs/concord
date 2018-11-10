@@ -11,6 +11,8 @@ maintenance mode.
 
 ### Changed
 
+- concord-common: ensure that `CONCORD_TMP_DIR` environment variable
+is defined;
 - concord-server: fixed a bug causing incorrect matching of
 Concord repositories with incoming GitHub events.
 
