@@ -166,12 +166,12 @@
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
-                        <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
+                        <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
                         <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
-                        <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
-                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                         <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
-                        <CONCORD_TMP_DIR>/tmp</CONCORD_TMP_DIR>
+                        <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
+                        <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
+                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -302,6 +302,7 @@
                         </executions>
                         <configuration>
                             <skipRun>${skip.it.tests}</skipRun>
+                            <showLogs>false</showLogs>
                             <images>
                                 <image>
                                     <name>${db.image}</name>
@@ -328,16 +329,17 @@
                                         </network>
                                         <volumes>
                                             <bind>
-                                                <!-- to access test files -->
-                                                <volume>/tmp:/tmp</volume>
+                                                <!-- to share files between tests and the server -->
+                                                <volume>${java.io.tmpdir}:${java.io.tmpdir}</volume>
                                                 <!-- allows the server to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
+                                                <!-- provide the server's cfg -->
                                                 <volume>${basedir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
                                             <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
+                                            <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
                                             <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
@@ -363,18 +365,21 @@
                                         </network>
                                         <volumes>
                                             <bind>
-                                                <volume>/tmp:/tmp</volume>
+                                                <!-- to share files between process containers -->
+                                                <volume>${java.io.tmpdir}:${java.io.tmpdir}</volume>
                                                 <!-- allows the agent to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
+                                                <!-- share host artifacts -->
+                                                <volume>${settings.localRepository}:/host/.m2/repository:ro</volume>
+                                                <volume>${basedir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
                                             <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
+                                            <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
+                                            <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
                                             <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
-                                            <QUEUE_POLL_INTERVAL>500</QUEUE_POLL_INTERVAL>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
-                                            <WORKERS_COUNT>3</WORKERS_COUNT>
                                         </env>
                                     </run>
                                 </image>

@@ -1,0 +1,8 @@
+{
+  "repositories": [
+    {
+      "id": "host",
+      "url": "file:///host/.m2/repository"
+    }
+  ]
+}

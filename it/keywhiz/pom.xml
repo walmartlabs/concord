@@ -79,8 +79,8 @@
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
+                        <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
-                        <CONCORD_TMP_DIR>/tmp</CONCORD_TMP_DIR>
                     </environmentVariables>
                 </configuration>
             </plugin>

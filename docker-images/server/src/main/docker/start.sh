@@ -21,8 +21,8 @@ if [[ -z "${CONCORD_JAVA_OPTS}" ]]; then
 fi
 echo "CONCORD_JAVA_OPTS: ${CONCORD_JAVA_OPTS}"
 
-if [[ ! -z "${CONCORD_TMP_DIR}" ]]; then
-    CONCORD_TMP_DIR="/tmp"
+if [[ -z "${CONCORD_TMP_DIR}" ]]; then
+    export CONCORD_TMP_DIR="/tmp"
 fi
 
 exec java \

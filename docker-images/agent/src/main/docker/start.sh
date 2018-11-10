@@ -3,6 +3,10 @@ APP_DIR="/opt/concord/agent"
 
 export RUNNER_PATH="$APP_DIR/runner/runner.jar"
 
+if [[ -z "${CONCORD_TMP_DIR}" ]]; then
+    export CONCORD_TMP_DIR="/tmp"
+fi
+
 exec java \
 -Xmx256m \
 -server \

@@ -79,11 +79,11 @@
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
-                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
+                        <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
                         <IT_GIT_WEBHOOK_MOCK_PORT>${github.mock.port}</IT_GIT_WEBHOOK_MOCK_PORT>
+                        <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                         <IT_WEBHOOK_TRIGGER_ENABLED>${it.webhook.trigger.enabled}</IT_WEBHOOK_TRIGGER_ENABLED>
-                        <CONCORD_TMP_DIR>/tmp</CONCORD_TMP_DIR>
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -168,7 +168,7 @@
                                         <volumes>
                                             <bind>
                                                 <!-- to access test files -->
-                                                <volume>/tmp:/tmp</volume>
+                                                <volume>${java.io.tmpdir}:${java.io.tmpdir}</volume>
                                                 <!-- allows the server to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
                                                 <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
@@ -177,11 +177,12 @@
                                         </volumes>
                                         <env>
                                             <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
+                                            <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
+                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
+                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
+                                            <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
-                                            <DB_PASSWORD>it</DB_PASSWORD>
-                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
-                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
                                             <GITHUB_API_URL>http://localhost:${github.mock.port}</GITHUB_API_URL>
                                             <GITHUB_DOMAIN>localhost</GITHUB_DOMAIN>
                                             <GITHUB_WEBHOOK_REGISTRATION_ENABLED>true</GITHUB_WEBHOOK_REGISTRATION_ENABLED>

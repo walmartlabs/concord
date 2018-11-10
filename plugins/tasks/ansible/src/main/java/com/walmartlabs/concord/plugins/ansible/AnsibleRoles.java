@@ -53,7 +53,6 @@ public class AnsibleRoles {
     private final Path tmpDir;
     private final Map<String, Object> defaults;
     private final boolean debug;
-    private final List<String> sensitiveData;
 
     private List<Map<String, String>> roles = Collections.emptyList();
 
@@ -62,8 +61,6 @@ public class AnsibleRoles {
         this.tmpDir = tmpDir;
         this.defaults = defaults;
         this.debug = debug;
-
-        this.sensitiveData = Collections.singletonList(getDefaultSrc());
     }
 
     private AnsibleRoles parse(Map<String, Object> args) {
@@ -132,6 +129,10 @@ public class AnsibleRoles {
     }
 
     private String getDefaultSrc() {
+        return getString(defaults, "roleSrc");
+    }
+
+    private String assertDefaultSrc() {
         String src =  assertString("'roleSrc' is required in default 'ansibleParams'", defaults, "roleSrc");
         if (!src.endsWith("/")) {
             src += "/";
@@ -144,7 +145,7 @@ public class AnsibleRoles {
 
         String src = getString(r, "src");
         if (src == null || src.isEmpty()) {
-            src = getDefaultSrc() + name;
+            src = assertDefaultSrc() + name;
             name = normalizeName(name);
         }
 
@@ -165,9 +166,11 @@ public class AnsibleRoles {
             return null;
         }
 
-        for (String p : sensitiveData) {
-            s = s.replaceAll(p, "***");
+        String src = getDefaultSrc();
+        if (src != null) {
+            s = s.replaceAll(src, "***");
         }
+
         return s;
     }
 
