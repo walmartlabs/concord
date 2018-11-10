@@ -43,6 +43,9 @@ export const teamAlreadyExistsError = (n: string) => `Team already exists: ${n}`
 
 export const apiTokenAlreadyExistsError = (n: string) => `API Token already exists: ${n}`;
 
+export const passwordTooWeakError = () =>
+    `Password is too weak. It must contain at least 7 characters, a digit and an uppercase character.`;
+
 const concordKeyValidator = (v?: string) => {
     if (!v) {
         return requiredError();

@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: a warning if a password stored as a secret is too
+weak;
 - concord-agent: an endpoint to get the current status of the
 maintenance mode.
 

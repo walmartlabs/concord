@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.console;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.secret.PasswordChecker;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.repository.InvalidRepositoryPathException;
@@ -267,5 +268,19 @@ public class ConsoleService implements Resource {
         } catch (NamingException e) {
             throw new ConcordApplicationException("LDAP search error: " + e.getMessage(), e);
         }
+    }
+
+    @POST
+    @Path("/validate-password")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean validatePassword(String pwd) {
+        try {
+            PasswordChecker.check(pwd);
+        } catch (PasswordChecker.CheckerException e) {
+            return false;
+        }
+
+        return true;
     }
 }

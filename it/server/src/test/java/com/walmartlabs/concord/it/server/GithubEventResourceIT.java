@@ -50,7 +50,7 @@ import static org.junit.Assert.assertTrue;
 
 public class GithubEventResourceIT extends AbstractServerIT {
 
-    // form github.secret cfg
+    // from github.secret configuration parameter
     private static final String GITHUB_WEBHOOK_SECRET = "12345";
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 

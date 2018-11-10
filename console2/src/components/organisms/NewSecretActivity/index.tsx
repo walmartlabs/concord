@@ -22,7 +22,7 @@ import * as copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { push as pushHistory } from 'react-router-redux';
-import { Button, Message, TextArea } from 'semantic-ui-react';
+import { Button, Message, Modal, TextArea } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
@@ -31,11 +31,18 @@ import {
     SecretTypeExt,
     SecretVisibility
 } from '../../../api/org/secret';
+import { validatePassword } from '../../../api/service/console';
 import { actions, State } from '../../../state/data/secrets';
 import { CreateSecretResponse } from '../../../state/data/secrets/types';
+import { passwordTooWeakError } from '../../../validation';
 import { NewSecretForm, NewSecretFormValues, RequestErrorMessage } from '../../molecules';
 
 import './styles.css';
+
+interface OwnState {
+    showPasswordConfirm: boolean;
+    currentEntry?: NewSecretEntry;
+}
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -55,9 +62,28 @@ interface DispatchProps {
 
 type Props = ExternalProps & StateProps & DispatchProps;
 
-class NewSecretActivity extends React.PureComponent<Props> {
+class NewSecretActivity extends React.Component<Props, OwnState> {
+    constructor(props: Props) {
+        super(props);
+        this.state = { showPasswordConfirm: false };
+    }
+
     componentDidMount() {
         this.props.reset();
+    }
+
+    async handleSubmit(entry: NewSecretEntry, confirm?: boolean) {
+        if (confirm) {
+            this.setState({ showPasswordConfirm: false });
+        } else if (entry.type === SecretTypeExt.USERNAME_PASSWORD && entry.password) {
+            const valid = await validatePassword(entry.password);
+            if (!valid) {
+                this.setState({ showPasswordConfirm: true, currentEntry: entry });
+                return;
+            }
+        }
+
+        this.props.submit(entry);
     }
 
     renderResponse() {
@@ -110,8 +136,28 @@ class NewSecretActivity extends React.PureComponent<Props> {
         );
     }
 
+    renderPasswordWarning() {
+        return (
+            <Modal open={this.state.showPasswordConfirm} dimmer="inverted">
+                <Modal.Content>{passwordTooWeakError()}</Modal.Content>
+                <Modal.Actions>
+                    <Button
+                        color="grey"
+                        onClick={() => this.setState({ showPasswordConfirm: false })}
+                        content="Cancel"
+                    />
+                    <Button
+                        color="yellow"
+                        onClick={() => this.handleSubmit(this.state.currentEntry!, true)}
+                        content="Ignore"
+                    />
+                </Modal.Actions>
+            </Modal>
+        );
+    }
+
     render() {
-        const { error, submitting, submit, orgName, response } = this.props;
+        const { error, submitting, orgName, response } = this.props;
 
         if (!error && response) {
             return this.renderResponse();
@@ -121,10 +167,12 @@ class NewSecretActivity extends React.PureComponent<Props> {
             <>
                 {error && <RequestErrorMessage error={error} />}
 
+                {this.renderPasswordWarning()}
+
                 <NewSecretForm
                     orgName={orgName}
                     submitting={submitting}
-                    onSubmit={submit}
+                    onSubmit={(entry) => this.handleSubmit(entry)}
                     initial={{
                         name: '',
                         visibility: SecretVisibility.PUBLIC,

@@ -38,11 +38,6 @@ body {
   min-height: 100% !important;
 }
 
-/* TODO should be fixed in semantic-ui-react or semantic-ui-css */
-.ui.basic.red.label {
-  color: #ffffff !important;
-}
-
 .ellipsis {
   white-space: nowrap;
   overflow: hidden;

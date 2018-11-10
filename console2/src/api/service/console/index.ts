@@ -125,3 +125,17 @@ export interface UserSearchResult {
 
 export const findUsers = (filter: string): Promise<UserSearchResult[]> =>
     fetchJson(`/api/service/console/search/users?${queryParams({ filter })}`);
+
+export const validatePassword = throttle(
+    async (pwd: string): Promise<boolean> => {
+        const opts: RequestInit = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain'
+            },
+            body: pwd
+        };
+        const json = await fetchJson('/api/service/console/validate-password', opts);
+        return json as boolean;
+    }
+);
