@@ -617,6 +617,30 @@ public class ProcessIT extends AbstractServerIT {
         assertProcessErrorMessage(pir, "Process 'not-found' not found");
     }
 
+    @Test
+    public void testFileUploadWithNonRootPath() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("fileupload").toURI());
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("target/file1", "test from file".getBytes());
+
+        StartProcessResponse spr = start(input);
+        
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, pe.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*test from file.*", ab);
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);

@@ -107,6 +107,7 @@ public final class PayloadBuilder {
                 cfg = ConfigurationUtils.deepMerge(cfg, m);
             } else {
                 Path dst = baseDir.resolve(name);
+                Files.createDirectories(dst.getParent());
                 try (InputStream in = p.getBody(InputStream.class, null);
                      OutputStream out = Files.newOutputStream(dst)) {
                     IOUtils.copy(in, out);

@@ -59,6 +59,7 @@ public class AttachmentStoringProcessor implements PayloadProcessor {
             Path dst = workspace.resolve(name);
 
             try {
+                Files.createDirectories(dst.getParent());
                 Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING);
                 payload = payload.removeAttachment(name);
             } catch (IOException e) {
