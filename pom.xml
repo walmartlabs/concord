@@ -114,7 +114,7 @@
         <node.version>10.11.0</node.version>
         <okhttp.version>2.7.5</okhttp.version>
         <okio.version>1.15.0</okio.version>
-        <ollie.version>0.0.25</ollie.version>
+        <ollie.version>0.0.28</ollie.version>
         <parc.version>0.1.2</parc.version>
         <postgres.version>42.2.4</postgres.version>
         <prometheus.simpleclient.version>0.4.0</prometheus.simpleclient.version>

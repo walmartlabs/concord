@@ -11,6 +11,8 @@ maintenance mode.
 
 ### Changed
 
+- concord-server: the session cookie (`JSESSIONID`) is now marked as
+`HttpOnly`;
 - concord-common: ensure that `CONCORD_TMP_DIR` environment variable
 is defined;
 - concord-server: fixed a bug causing incorrect matching of

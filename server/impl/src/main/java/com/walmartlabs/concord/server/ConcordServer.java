@@ -31,9 +31,9 @@ import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.ldap.LdapRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
-import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.ollie.OllieServer;
 import com.walmartlabs.ollie.OllieServerBuilder;
+import com.walmartlabs.ollie.SessionCookieOptions;
 import io.prometheus.client.exporter.MetricsServlet;
 import org.eclipse.jetty.servlet.DefaultServlet;
 
@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -73,7 +74,7 @@ public class ConcordServer {
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
-                .secureCookiesEnabled(ServerConfiguration.secureCookies)
+                .sessionCookieOptions(getSessionCookieOptions())
                 .sessionsEnabled(true)
                 .jmxEnabled(true);
 
@@ -91,6 +92,15 @@ public class ConcordServer {
         m.put("redirectWelcome", "false");
 
         return m;
+    }
+
+    private static Set<SessionCookieOptions> getSessionCookieOptions() {
+        Set<SessionCookieOptions> s = new HashSet<>();
+        s.add(SessionCookieOptions.HTTP_ONLY);
+        if (ServerConfiguration.secureCookies) {
+            s.add(SessionCookieOptions.SECURE);
+        }
+        return s;
     }
 
     public static class LogServlet extends HttpServlet {
