@@ -178,16 +178,16 @@ public class DefaultJobExecutor {
             return runner.build();
         }
 
-        return new DockerCommandBuilder(logManager, containerCfg)
+        return new DockerCommandBuilder(logManager, cfg.getJavaPath(), containerCfg)
                 .procDir(procDir)
                 .instanceId(instanceId)
-                .javaPath(cfg.getJavaPath())
                 .dependencyListsDir(cfg.getDependencyListsDir())
                 .dependencyCacheDir(cfg.getDependencyCacheDir())
                 .dependencyDir(dependencyManager.getLocalCacheDir())
                 .runnerPath(cfg.getRunnerPath())
                 .args(runner.build())
                 .extraEnv(IOUtils.TMP_DIR_KEY, "/tmp")
+                .extraEnv("DOCKER_HOST", cfg.getDockerHost())
                 .build();
     }
 

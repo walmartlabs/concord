@@ -35,10 +35,10 @@ public class DockerCommandBuilder {
     private static final String VOLUME_DEPS_DEST = "/opt/concord/deps";
 
     private final LogManager logManager;
+    private final Path javaPath;
 
     private Path procDir;
     private UUID instanceId;
-    private Path javaPath;
     private Path dependencyListsDir;
     private Path dependencyCacheDir;
     private Path dependencyDir;
@@ -48,8 +48,9 @@ public class DockerCommandBuilder {
     private final Cfg cfg;
     private final Map<String, Object> env = new HashMap<>();
 
-    public DockerCommandBuilder(LogManager logManager, Map<String, Object> cfg) {
+    public DockerCommandBuilder(LogManager logManager, Path javaPath, Map<String, Object> cfg) {
         this.logManager = logManager;
+        this.javaPath = javaPath;
         this.cfg = new Cfg(cfg);
     }
 
@@ -76,11 +77,6 @@ public class DockerCommandBuilder {
 
     public DockerCommandBuilder instanceId(UUID instanceId) {
         this.instanceId = instanceId;
-        return this;
-    }
-
-    public DockerCommandBuilder javaPath(Path javaPath) {
-        this.javaPath = javaPath;
         return this;
     }
 
@@ -120,6 +116,7 @@ public class DockerCommandBuilder {
         String[] cmd = new DockerProcessBuilder(cfg.getString("image"))
                 .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, instanceId.toString())
                 .cleanup(true)
+                .useHostNetwork(true)
                 .cpu(cfg.getString("cpu"))
                 .memory(cfg.getString("ram"))
                 .volume(procDir.toString(), VOLUME_WORKSPACE_DEST)
@@ -131,7 +128,7 @@ public class DockerCommandBuilder {
                 .env(stringify(combine(env, cfg.getMap("env"))))
                 .forcePull(true)
                 .options(cfg.getList("options"))
-                .debug(cfg.getBoolean("debug", false))
+                .debug(debug)
                 .args(args)
                 .buildCmd();
 

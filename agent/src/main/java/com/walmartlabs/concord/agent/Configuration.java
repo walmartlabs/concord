@@ -53,6 +53,7 @@ public class Configuration {
     public static final String MAX_PREFORK_COUNT_KEY = "MAX_PREFORK_COUNT";
     public static final String MAX_WEBSOCKET_INACTIVITY_KEY ="MAX_WEBSOCKET_INACTIVITY";
 
+    public static final String DOCKER_HOST_KEY = "DOCKER_HOST";
     public static final String DOCKER_ORPHAN_SWEEPER_ENABLED_KEY = "DOCKER_ORPHAN_SWEEPER_ENABLED";
     public static final String DOCKER_ORPHAN_SWEEPER_PERIOD_KEY = "DOCKER_ORPHAN_SWEEPER_PERIOD";
 
@@ -88,8 +89,11 @@ public class Configuration {
     private final int workersCount;
     private final long maxPreforkAge;
     private final int maxPreforkCount;
+
+    private final String dockerHost;
     private final boolean dockerOrphanSweeperEnabled;
     private final long dockerOrphanSweeperPeriod;
+
     private final boolean runnerSecurityManagerEnabled;
 
     private final String apiKey;
@@ -139,6 +143,9 @@ public class Configuration {
             this.maxPreforkAge = Long.parseLong(getEnv(MAX_PREFORK_AGE_KEY, "30000"));
             this.maxPreforkCount = Integer.parseInt(getEnv(MAX_PREFORK_COUNT_KEY, "3"));
 
+            this.dockerHost = getEnv(DOCKER_HOST_KEY, "tcp://127.0.0.1:2375");
+            log.info("Using {}: {}", DOCKER_HOST_KEY, this.dockerHost);
+
             this.dockerOrphanSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_ORPHAN_SWEEPER_ENABLED_KEY, "false"));
             this.dockerOrphanSweeperPeriod = Long.parseLong(getEnv(DOCKER_ORPHAN_SWEEPER_PERIOD_KEY, "900000")); // 15 min
 
@@ -162,10 +169,13 @@ public class Configuration {
             this.userAgent = getEnv(USER_AGENT_KEY, "Concord-Agent: id=" + agentId);
 
             this.dependencyListsDir = getDir(STORE_DEPS_DIR_KEY, "dependencyListsDir");
-            String java = getEnv(JAVA_PATH_KEY, null);
+
+            String java = getEnv(JAVA_PATH_KEY, System.getProperty("java.home"));
             if (java != null) {
+                log.info("Using JAVA_PATH: {}", java);
                 this.javaPath = Paths.get(java);
             } else {
+                log.warn("Can't determine 'javaPath', running processes in containers may not work");
                 this.javaPath = null;
             }
 
@@ -221,6 +231,10 @@ public class Configuration {
 
     public int getMaxPreforkCount() {
         return maxPreforkCount;
+    }
+
+    public String getDockerHost() {
+        return dockerHost;
     }
 
     public boolean isDockerOrphanSweeperEnabled() {
