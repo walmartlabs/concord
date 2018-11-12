@@ -117,9 +117,20 @@ interface StateType {
     };
 }
 
+const makeProcessHistoryList = (data: ProcessHistoryEntry[]): ProcessHistoryEntry[] => {
+    if (data === undefined) {
+        return [];
+    }
+
+    return Object.keys(data)
+        .map((k) => data[k])
+        .sort((a, b) => (a.changeDate < b.changeDate ? 1 : a.changeDate > b.changeDate ? -1 : 0));
+};
+
+
 export const mapStateToProps = ({ processes: { history } }: StateType): StateProps => ({
     loading: history.getHistory.running,
-    data: selectors.processHistory(history)
+    data: makeProcessHistoryList(selectors.processHistory(history))
 });
 
 export const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({

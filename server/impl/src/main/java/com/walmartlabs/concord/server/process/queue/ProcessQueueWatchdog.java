@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.agent.AgentCommandsDao;
 import com.walmartlabs.concord.server.agent.Commands;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.task.ScheduledTask;
@@ -50,7 +49,6 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessStatusHistory.PROCESS_STATUS_HISTORY;
 import static org.jooq.impl.DSL.*;
 
 @Named("process-queue-watchdog")
@@ -282,13 +280,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
         public List<TimedOutEntry> pollExpired(DSLContext tx, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
-            ProcessStatusHistory s = PROCESS_STATUS_HISTORY.as("psh");
-
-            Field<Object> runningAt = tx.select(max(s.CHANGE_DATE))
-                    .from(s)
-                    .where(s.INSTANCE_ID.eq(q.INSTANCE_ID)
-                            .and(s.STATUS.eq(ProcessStatus.RUNNING.toString())))
-                    .asField();
 
             @SuppressWarnings("unchecked")
             Field<? extends Number> i = (Field<? extends Number>) interval("1 second");
@@ -296,7 +287,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
-                            .and(runningAt.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentTimestamp())))
+                            .and(q.LAST_RUN_AT.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentTimestamp())))
                     .orderBy(q.CREATED_AT)
                     .limit(maxEntries)
                     .forUpdate()

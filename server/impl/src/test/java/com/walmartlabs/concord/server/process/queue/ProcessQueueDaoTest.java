@@ -24,10 +24,10 @@ import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKind;
 import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.event.EventDao;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -43,10 +43,12 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     private ProcessQueueDao queueDao;
     private ProjectDao projectDao;
+    private EventDao eventDao;
 
     @Before
     public void setUp() throws Exception {
-        queueDao = new ProcessQueueDao(getConfiguration(), mock(PolicyDao.class));
+        eventDao = new EventDao(getConfiguration());
+        queueDao = new ProcessQueueDao(getConfiguration(), mock(PolicyDao.class), eventDao);
         projectDao = new ProjectDao(getConfiguration());
     }
 

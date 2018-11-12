@@ -100,6 +100,6 @@ public class ProcessEventResource implements Resource {
         if (geTimestamp != null) {
             ts = Timestamp.from(geTimestamp.getValue().toInstant());
         }
-        return eventDao.list(processInstanceId, ts, limit);
+        return eventDao.list(processInstanceId, ts, null, limit);
     }
 }

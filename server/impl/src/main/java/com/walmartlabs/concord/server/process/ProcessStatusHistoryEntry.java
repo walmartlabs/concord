@@ -27,26 +27,30 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(Include.NON_EMPTY)
 public class ProcessStatusHistoryEntry implements Serializable {
 
     private final UUID id;
     private final ProcessStatus status;
+    private final Map<String, Object> payload;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private final Timestamp changeDate;
+    private final Date changeDate;
 
     @JsonCreator
     public ProcessStatusHistoryEntry(@JsonProperty("id") UUID id,
                                      @JsonProperty("status") ProcessStatus status,
-                                     @JsonProperty("changeDate") Timestamp changeDate) {
+                                     @JsonProperty("changeDate") Date changeDate,
+                                     @JsonProperty("payload") Map<String, Object> payload) {
 
         this.id = id;
         this.status = status;
         this.changeDate = changeDate;
+        this.payload = payload;
     }
 
     public UUID getId() {
@@ -57,8 +61,12 @@ public class ProcessStatusHistoryEntry implements Serializable {
         return status;
     }
 
-    public Timestamp getChangeDate() {
+    public Date getChangeDate() {
         return changeDate;
+    }
+
+    public Map<String, Object> getPayload() {
+        return payload;
     }
 
     @Override
@@ -67,6 +75,7 @@ public class ProcessStatusHistoryEntry implements Serializable {
                 "id=" + id +
                 ", status='" + status + '\'' +
                 ", changeDate=" + changeDate +
+                ", payload='" + payload + '\'' +
                 '}';
     }
 }

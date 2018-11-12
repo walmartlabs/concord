@@ -22,10 +22,7 @@ package com.walmartlabs.concord.server.process.event;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.process.ProcessEventEntry;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record4;
-import org.jooq.SelectConditionStep;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -45,7 +42,7 @@ public class EventDao extends AbstractDao {
         super(cfg);
     }
 
-    public List<ProcessEventEntry> list(UUID instanceId, Timestamp geTimestamp, int limit) {
+    public List<ProcessEventEntry> list(UUID instanceId, Timestamp geTimestamp, String eventType, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
 
             SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
@@ -58,6 +55,10 @@ public class EventDao extends AbstractDao {
 
             if (geTimestamp != null) {
                 q.and(PROCESS_EVENTS.EVENT_DATE.ge(geTimestamp));
+            }
+
+            if (eventType != null) {
+                q.and(PROCESS_EVENTS.EVENT_TYPE.eq(eventType));
             }
 
             if (limit > 0) {
@@ -84,6 +85,21 @@ public class EventDao extends AbstractDao {
                         currentTimestamp(),
                         field("?::jsonb", eventData))
                 .execute();
+    }
+
+    public void insert(DSLContext tx, List<UUID> instanceIds, String eventType, String eventData) {
+        BatchBindStep q = tx.batch(tx.insertInto(PROCESS_EVENTS,
+                PROCESS_EVENTS.INSTANCE_ID,
+                PROCESS_EVENTS.EVENT_TYPE,
+                PROCESS_EVENTS.EVENT_DATE,
+                PROCESS_EVENTS.EVENT_DATA)
+                .values(value((UUID) null), null, currentTimestamp(), null));
+
+        for (UUID id : instanceIds) {
+            q.bind(value(id), value(eventType), currentTimestamp(), field("?::jsonb", eventData));
+        }
+
+        q.execute();
     }
 
     private static ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {

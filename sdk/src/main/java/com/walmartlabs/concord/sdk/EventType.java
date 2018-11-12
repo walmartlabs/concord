@@ -22,6 +22,7 @@ package com.walmartlabs.concord.sdk;
 
 
 public enum EventType {
+    ANSIBLE,
     PROCESS_ELEMENT,
-    ANSIBLE
+    PROCESS_STATUS
 }

@@ -12,6 +12,7 @@
         </addColumn>
     </changeSet>
 
+    <!-- removed in 0.97.0+
     <changeSet id="89100" author="ybrigo@gmail.com">
         <createTable tableName="PROCESS_STATUS_HISTORY">
             <column name="INSTANCE_ID" type="uuid">
@@ -37,6 +38,7 @@
             <column name="STATUS"/>
         </createIndex>
     </changeSet>
+    -->
 
     <changeSet id="89200" author="ybrigo@gmail.com">
         <addColumn tableName="ORGANIZATIONS">
