@@ -31,6 +31,7 @@ import java.io.Serializable;
 @Singleton
 public class AuditConfiguration implements Serializable {
 
+    @Inject
     @Config("audit.enabled")
     private boolean enabled;
 
