@@ -75,7 +75,6 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private static final String UNKNOWN_REPO_KEY = "unknownRepo";
     private static final String STATUS_KEY = "status";
     private static final String TYPE_KEY = "type";
-
     private static final String PULL_REQUEST_EVENT = "pull_request";
     private static final String PUSH_EVENT = "push";
 
@@ -285,6 +284,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         result.put(AUTHOR_KEY, getSender(event));
         result.put(TYPE_KEY, eventName);
         result.put(STATUS_KEY, event.get("action"));
+        result.put(PAYLOAD_KEY, event);
         return result;
     }
 

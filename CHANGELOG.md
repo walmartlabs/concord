@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: GitHub triggers can now use `payload` field with
+the original event's data;
 - concord-server: new API endpoint to retrieve a list of processes
 including their status history and checkpoints;
 - concord-console: a warning if a password stored as a secret is too

@@ -54,7 +54,7 @@ public class GithubEventResourceIT extends AbstractServerIT {
     private static final String GITHUB_WEBHOOK_SECRET = "12345";
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
-    @Test(timeout = 260000)
+    @Test(timeout = 60000)
     public void pushUnknownRepo() throws Exception {
         String processTag = "tag_" + randomString();
         Path tmpDir = createTempDir();
@@ -96,6 +96,44 @@ public class GithubEventResourceIT extends AbstractServerIT {
         projectsApi.delete(orgName, projectName);
     }
 
+    @Test(timeout = 60000)
+    public void pushWithPayload() throws Exception {
+        String orgName = "Default";
+        String projectName = "test_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        String processTag = "tag_" + randomString();
+        Path tmpDir = createTempDir();
+
+        File src = new File(GithubEventResourceIT.class.getResource("githubEventWithPayload").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+        Path concordFile = tmpDir.resolve("concord.yml");
+        updateTag(concordFile, processTag);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+
+        UUID projectId = createProjectAndRepo(orgName, projectName, repoName, gitUrl);
+
+        // ---
+
+        githubEvent("githubEventWithPayload/push_request.json", tmpDir.getFileName().toString());
+
+        List<ProcessEntry> processes = waitProcesses(projectId, processTag, 1);
+        removeProcessWithLog(processes, ".*githubEventWithPayload onPush.*", 1);
+        assertTrue(processes.toString(), processes.isEmpty());
+
+        // ---
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.delete(orgName, projectName);
+    }
+
     private void removeProcessWithLog(List<ProcessEntry> processes, String log, int expectedCount) throws Exception {
         Iterator<ProcessEntry> it = processes.iterator();
         while(it.hasNext()) {
@@ -124,9 +162,13 @@ public class GithubEventResourceIT extends AbstractServerIT {
     }
 
     private void updateTag(Path concord, String processTag) throws IOException {
+        replace(concord, "{{tag}}", processTag);
+    }
+
+    private void replace(Path concord, String what, String newValue) throws IOException {
         List<String> fileContent = Files.readAllLines(concord, StandardCharsets.UTF_8).stream()
-            .map(l -> l.replaceAll(Pattern.quote("{{tag}}"), processTag))
-            .collect(Collectors.toList());
+                .map(l -> l.replaceAll(Pattern.quote(what), newValue))
+                .collect(Collectors.toList());
 
         Files.write(concord, fileContent, StandardCharsets.UTF_8);
     }

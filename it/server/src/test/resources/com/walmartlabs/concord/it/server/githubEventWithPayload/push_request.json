@@ -1,0 +1,12 @@
+{
+  "ref": "refs/heads/master",
+  "after": "ead4f46dd6487606b01867395fec9ae59d43e702",
+  "repository": {
+    "id": 96193,
+    "name": "org-repo",
+    "full_name": "org-repo"
+  },
+  "sender": {
+    "login": "vn0tj0b"
+  }
+}
