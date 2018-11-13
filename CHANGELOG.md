@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: new API endpoint to retrieve a list of processes
+including their status history and checkpoints;
 - concord-console: a warning if a password stored as a secret is too
 weak;
 - concord-agent: an endpoint to get the current status of the

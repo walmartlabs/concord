@@ -22,11 +22,15 @@ package com.walmartlabs.concord.server.process.event;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.process.ProcessEventEntry;
-import org.jooq.*;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.Record4;
+import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
@@ -88,18 +92,25 @@ public class EventDao extends AbstractDao {
     }
 
     public void insert(DSLContext tx, List<UUID> instanceIds, String eventType, String eventData) {
-        BatchBindStep q = tx.batch(tx.insertInto(PROCESS_EVENTS,
+        String sql = tx.insertInto(PROCESS_EVENTS,
                 PROCESS_EVENTS.INSTANCE_ID,
                 PROCESS_EVENTS.EVENT_TYPE,
                 PROCESS_EVENTS.EVENT_DATE,
                 PROCESS_EVENTS.EVENT_DATA)
-                .values(value((UUID) null), null, currentTimestamp(), null));
+                .values(value((UUID) null), null, currentTimestamp(), field("?::jsonb"))
+                .getSQL();
 
-        for (UUID id : instanceIds) {
-            q.bind(value(id), value(eventType), currentTimestamp(), field("?::jsonb", eventData));
-        }
-
-        q.execute();
+        tx.connection(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (UUID id : instanceIds) {
+                    ps.setObject(1, id);
+                    ps.setString(2, eventType);
+                    ps.setString(3, eventData);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        });
     }
 
     private static ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
