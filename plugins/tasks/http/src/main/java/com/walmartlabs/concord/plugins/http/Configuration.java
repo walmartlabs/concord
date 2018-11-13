@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.http;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,6 +45,8 @@ public class Configuration {
     private final RequestMethodType methodType;
     private final Map<String, String> requestHeaders;
     private final Object body;
+    private final int connectTimeout;
+    private final int socketTimeout;
 
     private Configuration(RequestMethodType methodType,
                           String url,
@@ -53,7 +55,9 @@ public class Configuration {
                           ResponseType responseType,
                           String workDir,
                           Map<String, String> requestHeaders,
-                          Object body) {
+                          Object body,
+                          int connectTimeout,
+                          int socketTimeout) {
 
         this.methodType = methodType;
         this.url = url;
@@ -63,6 +67,8 @@ public class Configuration {
         this.workDir = workDir;
         this.requestHeaders = requestHeaders;
         this.body = body;
+        this.connectTimeout = connectTimeout;
+        this.socketTimeout = socketTimeout;
     }
 
     /**
@@ -71,7 +77,7 @@ public class Configuration {
      * @return new instance of builder
      */
     public static Builder custom() {
-        return new BuilderImpl();
+        return new Builder();
     }
 
     /**
@@ -142,84 +148,16 @@ public class Configuration {
         return requestHeaders;
     }
 
-    /**
-     * Builder for {@code {@link Configuration}}
-     */
-    public interface Builder {
-        /**
-         * Used to specify the url which will later use to create {@link org.apache.http.client.methods.HttpUriRequest}
-         *
-         * @param url url
-         * @return instance of this {@link Builder}
-         */
-        Builder withUrl(String url);
-
-        /**
-         * Used to specify the method type
-         *
-         * @param methodType Http request methods
-         * @return insance of this {@link Builder}
-         */
-        Builder withMethodType(RequestMethodType methodType);
-
-        /**
-         * Used to specify the encoded authentication token which later use in the Authorization
-         * Header
-         *
-         * @param encodedAuthToken Base64 encoded string
-         * @return instance of this {@link Builder}
-         */
-        Builder withEncodedAuthToken(String encodedAuthToken);
-
-        /**
-         * Used to specify the request type which later maps to Content-Type header of the request.
-         *
-         * @param requestType {@link RequestType} type of request (file, json, string)
-         * @return instance of this {@link Builder}
-         */
-        Builder withRequestType(RequestType requestType);
-
-        /**
-         * Used to specify the response type, which later use to parse the response from endpoint.
-         *
-         * @param responseType {@link ResponseType} type of the response (file, json, string)
-         * @return instance of this {@link Builder}
-         */
-        Builder withResponseType(ResponseType responseType);
-
-        /**
-         * Used to specify the working directory. This will be used to store the http response in temporary file
-         *
-         * @param workDir current working directory
-         * @return instance of this {@link Builder}
-         */
-        Builder withWorkingDirectory(String workDir);
-
-        /**
-         * Used to specify the body
-         *
-         * @param body complex(map), raw body or relative path
-         * @return instance of this {@link Builder}
-         */
-        Builder withBody(Object body);
-
-        /**
-         * Invoking this method will result in a new configuration
-         *
-         * @return new instance of this {@link Configuration}
-         */
-        Configuration build();
-
-        /**
-         * Invoking this method will result in a new configuration
-         *
-         * @param ctx context use to build the configuration
-         * @return new instance of this {@link Configuration}
-         */
-        Configuration build(Context ctx);
+    public int getConnectTimeout() {
+        return connectTimeout;
     }
 
-    private static class BuilderImpl implements Builder {
+    public int getSocketTimeout() {
+        return socketTimeout;
+    }
+
+    public static class Builder {
+
         private String url;
         private String encodedAuthToken;
         private RequestType requestType;
@@ -228,50 +166,122 @@ public class Configuration {
         private RequestMethodType methodType;
         private Map<String, String> requestHeaders;
         private Object body;
+        private Integer connectTimeout = 30000;
+        private Integer socketTimeout = -1;
 
-        @Override
+        /**
+         * Used to specify the url which will later use to create {@link org.apache.http.client.methods.HttpUriRequest}
+         *
+         * @param url url
+         * @return instance of this {@link Builder}
+         */
         public Builder withUrl(String url) {
             this.url = url;
             return this;
         }
 
-        @Override
+        /**
+         * Used to specify the method type
+         *
+         * @param methodType Http request methods
+         * @return insance of this {@link Builder}
+         */
         public Builder withMethodType(RequestMethodType methodType) {
             this.methodType = methodType;
             return this;
         }
 
-        @Override
+        /**
+         * Used to specify the encoded authentication token which later use in the Authorization
+         * Header
+         *
+         * @param encodedAuthToken Base64 encoded string
+         * @return instance of this {@link Builder}
+         */
         public Builder withEncodedAuthToken(String encodedAuthToken) {
             this.encodedAuthToken = encodedAuthToken;
             return this;
         }
 
-        @Override
+        /**
+         * Used to specify the request type which later maps to Content-Type header of the request.
+         *
+         * @param requestType {@link RequestType} type of request (file, json, string)
+         * @return instance of this {@link Builder}
+         */
         public Builder withRequestType(RequestType requestType) {
             this.requestType = requestType;
             return this;
         }
 
-        @Override
+        /**
+         * Used to specify the response type, which later use to parse the response from endpoint.
+         *
+         * @param responseType {@link ResponseType} type of the response (file, json, string)
+         * @return instance of this {@link Builder}
+         */
         public Builder withResponseType(ResponseType responseType) {
             this.responseType = responseType;
             return this;
         }
 
-        @Override
+        /**
+         * Used to specify the working directory. This will be used to store the http response in temporary file
+         *
+         * @param workDir current working directory
+         * @return instance of this {@link Builder}
+         */
         public Builder withWorkingDirectory(String workDir) {
             this.workDir = workDir;
             return this;
         }
 
-        @Override
+        /**
+         * Used to specify the body
+         *
+         * @param body complex(map), raw body or relative path
+         * @return instance of this {@link Builder}
+         */
         public Builder withBody(Object body) {
             this.body = body;
             return this;
         }
 
-        @Override
+        /**
+         * Used to specify the connection timeout (in ms).
+         * A timeout value of zero is interpreted as an infinite timeout.
+         * A negative value is interpreted as undefined (system default).
+         * <p>
+         * Default value is {@code 30000}
+         *
+         * @param connectTimeout
+         * @return instance of this {@link Builder}
+         */
+        public Builder withConnectTimeout(int connectTimeout) {
+            this.connectTimeout = connectTimeout;
+            return this;
+        }
+
+        /**
+         * Used to specify the socket timeout (in ms).
+         * A timeout value of zero is interpreted as an infinite timeout.
+         * A negative value is interpreted as undefined (system default).
+         * <p>
+         * Default value is {@code -1}
+         *
+         * @param socketTimeout
+         * @return instance of this {@link Builder}
+         */
+        public Builder withSocketTimeout(int socketTimeout) {
+            this.socketTimeout = socketTimeout;
+            return this;
+        }
+
+        /**
+         * Invoking this method will result in a new configuration
+         *
+         * @return new instance of this {@link Configuration}
+         */
         public Configuration build() {
             if (this.url == null || this.url.isEmpty()) {
                 throw new IllegalArgumentException("URL is missing");
@@ -285,10 +295,15 @@ public class Configuration {
                 throw new IllegalArgumentException("Body is missing for Put method");
             }
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body);
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout);
         }
 
-        @Override
+        /**
+         * Invoking this method will result in a new configuration
+         *
+         * @param ctx context use to build the configuration
+         * @return new instance of this {@link Configuration}
+         */
         @SuppressWarnings("unchecked")
         public Configuration build(Context ctx) {
             validateMandatory(ctx);
@@ -333,7 +348,15 @@ public class Configuration {
 
             this.body = ctx.getVariable(BODY_KEY);
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body);
+            if (ctx.getVariable(CONNECT_TIMEOUT_KEY) != null) {
+                this.connectTimeout = (Integer) ctx.getVariable(CONNECT_TIMEOUT_KEY);
+            }
+
+            if (ctx.getVariable(SOCKET_TIMEOUT_KEY) != null) {
+                this.socketTimeout = (Integer) ctx.getVariable(SOCKET_TIMEOUT_KEY);
+            }
+
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout);
         }
 
         /**

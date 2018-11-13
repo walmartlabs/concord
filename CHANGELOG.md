@@ -4,6 +4,7 @@
 
 ### Added
 
+- http-task: `connectTimeout` and `socketTimeout` parameters;
 - concord-server: GitHub triggers can now use `payload` field with
 the original event's data;
 - concord-server: new API endpoint to retrieve a list of processes

@@ -28,6 +28,7 @@ import com.walmartlabs.concord.plugins.http.request.HttpTaskRequest;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.config.Registry;
@@ -73,7 +74,7 @@ public class SimpleHttpClient {
 
     private SimpleHttpClient(Configuration config) throws Exception {
         this.config = config;
-        this.client = createClient();
+        this.client = createClient(config);
         this.request = buildHttpUriRequest(config);
     }
 
@@ -217,10 +218,14 @@ public class SimpleHttpClient {
      * @return CloseableHttpClient client
      * @throws Exception exception
      */
-    private static CloseableHttpClient createClient() throws Exception {
-        HttpClientBuilder builder = HttpClientBuilder.create()
-                .setConnectionManager(buildConnectionManager());
-        return builder.build();
+    private static CloseableHttpClient createClient(Configuration cfg) throws Exception {
+        return HttpClientBuilder.create()
+                .setConnectionManager(buildConnectionManager())
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setConnectTimeout(cfg.getConnectTimeout())
+                        .setSocketTimeout(cfg.getSocketTimeout())
+                        .build())
+                .build();
     }
 
     /**

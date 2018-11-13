@@ -165,6 +165,8 @@ public class HttpTask implements Task {
         static final String SUCCESS_KEY = "success";
         static final String CONTENT_KEY = "content";
         static final String HEADERS_KEY = "headers";
+        static final String CONNECT_TIMEOUT_KEY = "connectTimeout";
+        static final String SOCKET_TIMEOUT_KEY = "socketTimeout";
 
         private HttpTaskConstant() {
         }
