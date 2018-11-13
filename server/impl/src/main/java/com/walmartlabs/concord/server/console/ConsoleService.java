@@ -72,9 +72,7 @@ import java.util.*;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.VProcessQueue.V_PROCESS_QUEUE;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.function;
-import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.*;
 
 @Named
 @Singleton
@@ -307,14 +305,17 @@ public class ConsoleService implements Resource {
         return true;
     }
 
+    /**
+     * Exists only to support checkpoints UI. Will be merged with the main "process list" endpoint in API v2.
+     */
     @GET
     @Path("/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEntry> listProcesses(
-            @QueryParam("orgId") UUID orgId,
-            @QueryParam("projectId") UUID projectId,
-            @QueryParam("limit") @DefaultValue("30") int limit) {
+    public List<ProcessEntry> listProcesses(@QueryParam("orgId") UUID orgId,
+                                            @QueryParam("projectId") UUID projectId,
+                                            @QueryParam("limit") @DefaultValue("30") int limit) {
+
         if (limit <= 0) {
             throw new ConcordApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
         }
@@ -338,12 +339,12 @@ public class ConsoleService implements Resource {
             try (DSLContext tx = DSL.using(cfg)) {
                 Field<Object> checkpoints = tx.select(
                         function("array_to_json", Object.class,
-                            function("array_agg", Object.class,
-                                function("json_strip_nulls", Object.class,
-                                        function("json_build_object", Object.class,
-                                                inline("id"), pc.CHECKPOINT_ID,
-                                                inline("name"), pc.CHECKPOINT_NAME,
-                                                inline("createdAt"), pc.CHECKPOINT_DATE)))))
+                                function("array_agg", Object.class,
+                                        function("json_strip_nulls", Object.class,
+                                                function("json_build_object", Object.class,
+                                                        inline("id"), pc.CHECKPOINT_ID,
+                                                        inline("name"), pc.CHECKPOINT_NAME,
+                                                        inline("createdAt"), pc.CHECKPOINT_DATE)))))
                         .from(pc)
                         .where(pc.INSTANCE_ID.eq(pq.INSTANCE_ID)).asField();
 
@@ -359,10 +360,11 @@ public class ConsoleService implements Resource {
                         .where(pq.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()).and(pe.EVENT_DATE.greaterOrEqual(pq.CREATED_AT))))
                         .asField();
 
-                SelectJoinStep<Record11<UUID, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object>> s = tx
+                SelectJoinStep<Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object>> s = tx
                         .select(pq.INSTANCE_ID,
                                 pq.ORG_ID, pq.ORG_NAME,
                                 pq.PROJECT_ID, pq.PROJECT_NAME,
+                                pq.REPO_ID, pq.REPO_NAME,
                                 pq.INITIATOR,
                                 pq.CURRENT_STATUS,
                                 pq.CREATED_AT,
@@ -385,16 +387,17 @@ public class ConsoleService implements Resource {
             }
         }
 
-        private ProcessEntry toEntry(Record11<UUID, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object> r) {
+        private ProcessEntry toEntry(Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object> r) {
             return new ProcessEntry(r.value1(),
                     r.value2(), r.value3(),
                     r.value4(), r.value5(),
-                    r.value6(),
-                    ProcessStatus.valueOf(r.value7()),
+                    r.value6(), r.value7(),
                     r.value8(),
-                    r.value9(),
+                    ProcessStatus.valueOf(r.value9()),
                     r.value10(),
-                    r.value11());
+                    r.value11(),
+                    r.value12(),
+                    r.value13());
         }
     }
 
@@ -405,6 +408,8 @@ public class ConsoleService implements Resource {
         private final String orgName;
         private final UUID projectId;
         private final String projectName;
+        private final UUID repoId;
+        private final String repoName;
         private final String initiator;
         private final ProcessStatus status;
 
@@ -421,17 +426,22 @@ public class ConsoleService implements Resource {
                             @JsonProperty("orgName") String orgName,
                             @JsonProperty("projectId") UUID projectId,
                             @JsonProperty("projectName") String projectName,
+                            @JsonProperty("repoId") UUID repoId,
+                            @JsonProperty("repoName") String repoName,
                             @JsonProperty("initiator") String initiator,
                             @JsonProperty("status") ProcessStatus status,
                             @JsonProperty("createdAt") Date createdAt,
                             @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
                             @JsonProperty("checkpoints") Object checkpoints,
                             @JsonProperty("history") Object statusHistory) {
+
             this.instanceId = instanceId;
             this.orgId = orgId;
             this.orgName = orgName;
             this.projectId = projectId;
             this.projectName = projectName;
+            this.repoId = repoId;
+            this.repoName = repoName;
             this.initiator = initiator;
             this.status = status;
             this.createdAt = createdAt;
@@ -458,6 +468,14 @@ public class ConsoleService implements Resource {
 
         public String getProjectName() {
             return projectName;
+        }
+
+        public UUID getRepoId() {
+            return repoId;
+        }
+
+        public String getRepoName() {
+            return repoName;
         }
 
         public String getInitiator() {
