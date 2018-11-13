@@ -34,96 +34,24 @@ import java.util.Map;
 public class GithubConfiguration {
 
     @Inject
-    @Config("github.webhookRegistrationEnabled")
-    private boolean webhookRegistrationEnabled;
-
-    @Inject
-    @Config("github.apiUrl")
-    private String apiUrl;
-
-    @Inject
     @Config("github.secret")
     @Nullable
     private String secret;
-
-    @Inject
-    @Config("github.oauthAccessToken")
-    @Nullable
-    private String oauthAccessToken;
-
-    @Inject
-    @Config("github.webhookUrl")
-    private String webhookUrl;
 
     @Inject
     @Config("github.githubDomain")
     private String githubDomain;
 
     @Inject
-    @Config("github.refreshInterval")
-    private long refreshInterval;
-
-    @Inject
-    @Config("github.cacheEnabled")
-    private boolean cacheEnabled;
-
-    @Inject
-    @Config("github.autoRemoveUnknownWebhooks")
-    private boolean autoRemoveUnknownWebhooks;
-
-    @Inject
     @Config("github.defaultFilter")
     private Map<String, Object> defaultFilter;
-
-    @Inject
-    public GithubConfiguration() {
-        if (!webhookRegistrationEnabled) {
-            return;
-        }
-
-        if (Strings.isNullOrEmpty(secret)) {
-            throw new IllegalArgumentException("github.secret is required");
-        }
-
-        if (Strings.isNullOrEmpty(oauthAccessToken)) {
-            throw new IllegalArgumentException("github.oauthAccessToken is required");
-        }
-    }
-
-    public boolean isWebhookRegistrationEnabled() {
-        return webhookRegistrationEnabled;
-    }
 
     public String getSecret() {
         return secret;
     }
 
-    public String getApiUrl() {
-        return apiUrl;
-    }
-
-    public String getOauthAccessToken() {
-        return oauthAccessToken;
-    }
-
-    public String getWebhookUrl() {
-        return webhookUrl;
-    }
-
     public String getGithubDomain() {
         return githubDomain;
-    }
-
-    public long getRefreshInterval() {
-        return refreshInterval;
-    }
-
-    public boolean isCacheEnabled() {
-        return cacheEnabled;
-    }
-
-    public boolean isAutoRemoveUnknownWebhooks() {
-        return autoRemoveUnknownWebhooks;
     }
 
     public Map<String, Object> getDefaultFilter() {

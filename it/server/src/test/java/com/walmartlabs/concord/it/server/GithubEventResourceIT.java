@@ -25,7 +25,6 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.crypto.Mac;

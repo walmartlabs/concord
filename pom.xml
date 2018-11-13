@@ -73,7 +73,6 @@
         <config.version>1.3.3</config.version>
         <cronutils.version>7.0.2</cronutils.version>
         <docker.plugin.version>0.23.0</docker.plugin.version>
-        <github.api.version>1.93</github.api.version>
         <glassfish.el.version>3.0.1-b10</glassfish.el.version>
         <greenmail.version>1.5.7</greenmail.version>
         <groovy.version>2.4.11</groovy.version>
@@ -508,11 +507,6 @@
                 <groupId>org.glassfish</groupId>
                 <artifactId>javax.el</artifactId>
                 <version>${glassfish.el.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.kohsuke</groupId>
-                <artifactId>github-api</artifactId>
-                <version>${github.api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

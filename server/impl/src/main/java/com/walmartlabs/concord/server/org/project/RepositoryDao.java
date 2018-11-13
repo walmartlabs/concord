@@ -76,16 +76,16 @@ public class RepositoryDao extends AbstractDao {
                 .fetchOne(RepositoryDao::toEntry);
     }
 
-    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean hasWebHook) {
-        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId, hasWebHook));
+    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
+        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId));
     }
 
-    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean hasWebHook) {
+    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
         return tx.insertInto(REPOSITORIES)
                 .columns(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
-                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID, REPOSITORIES.HAS_WEBHOOK)
-                .values(projectId, repositoryName, url, branch, commitId, path, secretId, hasWebHook)
+                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID)
+                .values(projectId, repositoryName, url, branch, commitId, path, secretId)
                 .returning(REPOSITORIES.REPO_ID)
                 .fetchOne()
                 .getRepoId();
@@ -145,7 +145,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
-        SelectConditionStep<Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String, String>> query = selectRepositoryEntry(tx)
+        SelectConditionStep<Record10<UUID, UUID, String, String, String, String, String, UUID, String, String>> query = selectRepositoryEntry(tx)
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
         if (sortField != null) {
@@ -163,7 +163,7 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    private static SelectJoinStep<Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String, String>> selectRepositoryEntry(DSLContext tx) {
+    private static SelectJoinStep<Record10<UUID, UUID, String, String, String, String, String, UUID, String, String>> selectRepositoryEntry(DSLContext tx) {
         return tx.select(REPOSITORIES.REPO_ID,
                 REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
@@ -171,7 +171,6 @@ public class RepositoryDao extends AbstractDao {
                 REPOSITORIES.REPO_BRANCH,
                 REPOSITORIES.REPO_COMMIT_ID,
                 REPOSITORIES.REPO_PATH,
-                REPOSITORIES.HAS_WEBHOOK,
                 SECRETS.SECRET_ID,
                 SECRETS.SECRET_NAME,
                 SECRETS.STORE_TYPE)
@@ -179,7 +178,7 @@ public class RepositoryDao extends AbstractDao {
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private static RepositoryEntry toEntry(Record11<UUID, UUID, String, String, String, String, String, Boolean, UUID, String, String> r) {
+    private static RepositoryEntry toEntry(Record10<UUID, UUID, String, String, String, String, String, UUID, String, String> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
                 r.get(REPOSITORIES.PROJECT_ID),
                 r.get(REPOSITORIES.REPO_NAME),
@@ -189,7 +188,6 @@ public class RepositoryDao extends AbstractDao {
                 r.get(REPOSITORIES.REPO_PATH),
                 r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
-                r.get(REPOSITORIES.HAS_WEBHOOK),
                 r.get(SECRETS.STORE_TYPE));
     }
 }

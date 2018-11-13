@@ -49,7 +49,6 @@ import javax.ws.rs.core.UriInfo;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
 import static com.walmartlabs.concord.server.repository.RepositoryManager.DEFAULT_BRANCH;
 
 @Named
@@ -82,17 +81,13 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final RepositoryCacheDao repositoryCacheDao;
-    private final GithubWebhookManager webhookManager;
     private final GithubConfiguration cfg;
 
     @Inject
     public GithubEventResource(ProjectDao projectDao,
                                TriggersDao triggersDao,
                                RepositoryDao repositoryDao,
-                               RepositoryCacheDao repositoryCacheDao,
                                ProcessManager processManager,
-                               GithubWebhookManager webhookManager,
                                TriggersConfiguration triggersConfiguration,
                                UserManager userManager,
                                LdapManager ldapManager,
@@ -102,8 +97,6 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.repositoryCacheDao = repositoryCacheDao;
-        this.webhookManager = webhookManager;
         this.cfg = cfg;
     }
 
@@ -141,10 +134,6 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         }
 
         for (RepositoryItem r : repos) {
-            if (PUSH_EVENT.equalsIgnoreCase(eventName) && r.id != null) {
-                repositoryCacheDao.updateLastPushDate(r.id, new Date());
-            }
-
             Map<String, Object> conditions = buildConditions(payload, r.repositoryName, eventBranch, r.project, eventName);
             conditions = enrich(conditions, uriInfo);
 
@@ -157,12 +146,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         }
 
         if (unknownRepo) {
-            if (cfg.isAutoRemoveUnknownWebhooks()) {
-                log.info("'onEvent ['{}'] -> repository '{}' not found, delete webhook", eventName, repoName);
-                webhookManager.unregister(repoName);
-            } else {
-                log.warn("'onEvent ['{}'] -> repository '{}' not found", eventName, repoName);
-            }
+            log.warn("'onEvent ['{}'] -> repository '{}' not found", eventName, repoName);
             return "ok";
         }
 

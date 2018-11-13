@@ -58,7 +58,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public RepositoryManager.RepositoryInfo getInfo(Path path) {
+    public RepositoryInfo getInfo(Path path) {
         return null;
     }
 

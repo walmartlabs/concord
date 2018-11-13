@@ -20,60 +20,206 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
+import com.google.common.util.concurrent.Striped;
+import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.project.ProjectLoader;
+import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
+import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
-public interface RepositoryManager {
+@Singleton
+@Named
+public class RepositoryManager {
 
-    String DEFAULT_BRANCH = "master";
+    public static final String DEFAULT_BRANCH = "master";
 
-    void testConnection(UUID orgId, String uri, String branch, String commitId, String path, String secretName);
+    private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
 
-    Path fetch(UUID projectId, RepositoryEntry repository) throws RepositoryException;
+    private final Striped<Lock> locks = Striped.lock(32);
 
-    RepositoryInfo getInfo(RepositoryEntry repository, Path path);
+    private final RepositoryConfiguration cfg;
+    private final RepositoryProvider githubRepositoryProvider;
+    private final RepositoryProvider classpathRepositoryProvider;
+    private final ProjectDao projectDao;
 
-    <T> T withLock(UUID projectId, String repoName, Callable<T> f);
+    @Inject
+    public RepositoryManager(RepositoryConfiguration cfg,
+                                 RepositoryProvider githubRepositoryProvider,
+                                 ProjectDao projectDao) {
 
-    Path getRepoPath(UUID projectId, RepositoryEntry repository);
+        this.cfg = cfg;
+        this.githubRepositoryProvider = githubRepositoryProvider;
+        this.classpathRepositoryProvider = new ClasspathRepositoryProvider();
+        this.projectDao = projectDao;
+    }
 
-    class RepositoryInfo {
+    public void testConnection(UUID orgId, String uri, String branch, String commitId, String path, String secretName) {
+        Path tmpDir = null;
+        try {
+            tmpDir = IOUtils.createTempDir("repository");
 
-        private final String commitId;
+            RepositoryEntry repo = new RepositoryEntry(null, null, null, uri, branch, commitId, path, null, secretName, null);
+            getProvider(uri).fetch(orgId, repo, tmpDir);
+            Path repoPath = repoPath(tmpDir, path);
 
-        private final String message;
+            if (cfg.isConcordFileValidationEnabled()) {
+                if (!isConcordFileExists(repoPath)) {
+                    throw new InvalidRepositoryPathException("Invalid repository path: `concord.yml` or `.concord.yml` is missing!");
+                }
+            }
+        } catch (IOException e) {
+            log.error("testConnection ['{}', '{}', '{}', '{}', '{}'] -> error", uri, branch, commitId, path, secretName, e);
+            throw new RepositoryException("Test connection error", e);
+        } finally {
+            if (tmpDir != null) {
+                try {
+                    IOUtils.deleteRecursively(tmpDir);
+                } catch (IOException e) {
+                    log.warn("testConnection -> cleanup error: {}", e.getMessage());
+                }
+            }
+        }
+    }
 
-        private final String author;
+    public Path fetch(UUID projectId, RepositoryEntry repository) {
+        UUID orgId = getOrgId(projectId);
 
-        public RepositoryInfo(String commitId, String message, String author) {
-            this.commitId = commitId;
-            this.message = message;
-            this.author = author;
+        Path localPath = localPath(projectId, repository);
+        RepositoryProvider provider = getProvider(repository.getUrl());
+
+        return withLock(projectId, repository.getName(), () -> {
+            try {
+                provider.fetch(orgId, repository, localPath);
+            } catch (RepositoryException e) {
+                log.warn("fetch ['{}', '{}'] -> error: {}, retrying...", projectId, repository, e.getMessage());
+
+                try {
+                    IOUtils.deleteRecursively(localPath);
+                } catch (IOException ee) {
+                    log.warn("fetch ['{}', '{}'] -> cleanup error: {}", projectId, repository, ee.getMessage());
+                }
+
+                // retry
+                provider.fetch(orgId, repository, localPath);
+            }
+            return repoPath(localPath, repository.getPath());
+        });
+    }
+
+    public <T> T withLock(UUID projectId, String repoName, Callable<T> f) {
+        Lock l = locks.get(projectId + "/" + repoName);
+        try {
+            if (!l.tryLock(cfg.getLockTimeout(), TimeUnit.MILLISECONDS)) {
+                throw new IllegalStateException("Timeout waiting for the repository lock. Project ID: " + projectId + ", repository name: " + repoName);
+            }
+            return f.call();
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            l.unlock();
+        }
+    }
+
+    public RepositoryInfo getInfo(RepositoryEntry repository, Path path) {
+        RepositoryProvider provider = getProvider(repository.getUrl());
+        return withLock(repository.getProjectId(), repository.getName(), () -> provider.getInfo(path));
+    }
+
+    private boolean isConcordFileExists(Path repoPath) {
+        for (String projectFileName : ProjectLoader.PROJECT_FILE_NAMES) {
+            Path projectFile = repoPath.resolve(projectFileName);
+            if (Files.exists(projectFile)) {
+                return true;
+            }
         }
 
-        public String getCommitId() {
-            return commitId;
+        return false;
+    }
+
+    private UUID getOrgId(UUID projectId) {
+        UUID orgId = projectDao.getOrgId(projectId);
+
+        if (orgId == null) {
+            log.warn("getOrgId ['{}'] -> can't determine the project's organization ID", projectId);
+            return OrganizationManager.DEFAULT_ORG_ID;
         }
 
-        public String getMessage() {
-            return message;
+        return orgId;
+    }
+
+    private RepositoryProvider getProvider(String url) {
+        if (url.startsWith(ClasspathRepositoryProvider.URL_PREFIX)) {
+            return classpathRepositoryProvider;
+        } else {
+            return githubRepositoryProvider;
+        }
+    }
+
+    private Path localPath(UUID projectId, RepositoryEntry repository) {
+        String branch;
+        if (repository.getCommitId() != null) {
+            branch = repository.getCommitId();
+        } else {
+            branch = Optional.ofNullable(repository.getBranch()).orElse(DEFAULT_BRANCH);
         }
 
-        public String getAuthor() {
-            return author;
+        return cfg.getCacheDir()
+                .resolve(String.valueOf(projectId))
+                .resolve(repository.getName())
+                .resolve(branch);
+    }
+
+    private static String normalizePath(String s) {
+        if (s == null) {
+            return null;
         }
 
-        @Override
-        public String toString() {
-            return "RepositoryInfo{" +
-                    "commitId='" + commitId + '\'' +
-                    ", message='" + message + '\'' +
-                    ", author='" + author + '\'' +
-                    '}';
+        while (s.startsWith("/")) {
+            s = s.substring(1);
         }
+
+        while (s.endsWith("/")) {
+            s = s.substring(0, s.length() - 1);
+        }
+
+        if (s.trim().isEmpty()) {
+            return null;
+        }
+
+        return s;
+    }
+
+    private static Path repoPath(Path baseDir, String p) {
+        String normalized = normalizePath(p);
+        if (normalized == null) {
+            return baseDir;
+        }
+
+        Path repoDir = baseDir.resolve(normalized);
+        if (!Files.exists(repoDir)) {
+            throw new RepositoryException("Invalid repository path: '" + p + "' doesn't exist");
+        } else if (!repoDir.toFile().isDirectory()) {
+            throw new RepositoryException("Invalid repository path: '" + p + "' must be a valid directory");
+        }
+
+        return repoDir;
     }
 }

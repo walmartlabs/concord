@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
-import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -52,7 +51,6 @@ public class ProjectRepositoryManager {
     private final SecretDao secretDao;
     private final RepositoryDao repositoryDao;
     private final ExternalEventResource externalEventResource;
-    private final GithubWebhookService githubWebhookService;
     private final AuditLog auditLog;
 
     private final ProjectLoader loader = new ProjectLoader();
@@ -64,7 +62,6 @@ public class ProjectRepositoryManager {
                                     SecretDao secretDao,
                                     RepositoryDao repositoryDao,
                                     ExternalEventResource externalEventResource,
-                                    GithubWebhookService githubWebhookService,
                                     AuditLog auditLog) {
 
         this.projectAccessManager = projectAccessManager;
@@ -73,7 +70,6 @@ public class ProjectRepositoryManager {
         this.secretDao = secretDao;
         this.repositoryDao = repositoryDao;
         this.externalEventResource = externalEventResource;
-        this.githubWebhookService = githubWebhookService;
         this.auditLog = auditLog;
     }
 
@@ -128,9 +124,7 @@ public class ProjectRepositoryManager {
         UUID repoId = repositoryDao.insert(tx, projectId,
                 entry.getName(), entry.getUrl(),
                 trim(entry.getBranch()), trim(entry.getCommitId()),
-                trim(entry.getPath()), secretId, false);
-
-        githubWebhookService.register(projectId, entry.getName(), entry.getUrl());
+                trim(entry.getPath()), secretId);
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
@@ -160,8 +154,6 @@ public class ProjectRepositoryManager {
                 entry.getName(), entry.getUrl(),
                 trim(entry.getBranch()), trim(entry.getCommitId()),
                 trim(entry.getPath()), secretId);
-
-        githubWebhookService.register(projectId, entry.getName(), entry.getUrl());
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);

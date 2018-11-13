@@ -15,6 +15,8 @@ maintenance mode.
 
 ### Changed
 
+- concord-server: removed GitHub webhook registration and repository
+cache;
 - concord-server: fixed a bug preventing relative file upload paths
 from working with `/api/v1/process` endpoint;
 - concord-server: the session cookie (`JSESSIONID`) is now marked as

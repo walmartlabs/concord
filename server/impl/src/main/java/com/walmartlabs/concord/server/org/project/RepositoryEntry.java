@@ -58,16 +58,14 @@ public class RepositoryEntry implements Serializable {
     @JsonAlias("secret")
     private final String secretName;
 
-    private final boolean hasWebHook;
-
     private final String secretStoreType;
 
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, null, null, false, null);
+        this(null, null, name, url, null, null, null, null, null, null);
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {
-        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.getSecretId(), e.secretName, e.hasWebHook, e.secretStoreType);
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.getSecretId(), e.secretName, e.secretStoreType);
     }
 
     @JsonCreator
@@ -80,7 +78,6 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("path") String path,
                            @JsonProperty("secretId") UUID secretId,
                            @JsonProperty("secretName") String secretName,
-                           @JsonProperty("hasWebHook") boolean hasWebHook,
                            @JsonProperty("secretStoreType") String secretStoreType) {
 
         this.id = id;
@@ -92,7 +89,6 @@ public class RepositoryEntry implements Serializable {
         this.path = path;
         this.secretId = secretId;
         this.secretName = secretName;
-        this.hasWebHook = hasWebHook;
         this.secretStoreType = secretStoreType;
     }
 
@@ -132,10 +128,6 @@ public class RepositoryEntry implements Serializable {
         return secretName;
     }
 
-    public boolean isHasWebHook() {
-        return hasWebHook;
-    }
-
     public String getSecretStoreType() {
         return secretStoreType;
     }
@@ -152,7 +144,6 @@ public class RepositoryEntry implements Serializable {
                 ", path='" + path + '\'' +
                 ", secretId=" + secretId +
                 ", secretName='" + secretName + '\'' +
-                ", hasWebHook=" + hasWebHook +
                 ", secretStoreType=" + secretStoreType +
                 '}';
     }

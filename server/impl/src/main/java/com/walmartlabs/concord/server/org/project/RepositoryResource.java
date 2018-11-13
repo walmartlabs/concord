@@ -25,11 +25,9 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
-import com.walmartlabs.concord.server.events.GithubWebhookService;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.repository.CachedRepositoryManager.RepositoryCacheDao;
 import com.walmartlabs.concord.server.repository.RepositoryValidationResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -45,7 +43,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -58,31 +55,25 @@ public class RepositoryResource implements Resource {
 
     private final OrganizationManager orgManager;
     private final ProjectAccessManager accessManager;
-    private final RepositoryCacheDao repositoryCacheDao;
     private final ExternalEventResource externalEventResource;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final ProjectRepositoryManager projectRepositoryManager;
-    private final GithubWebhookService githubWebhookService;
 
     @Inject
     public RepositoryResource(OrganizationManager orgManager,
                               ProjectAccessManager accessManager,
-                              RepositoryCacheDao repositoryCacheDao,
                               ExternalEventResource externalEventResource,
                               ProjectDao projectDao,
                               RepositoryDao repositoryDao,
-                              ProjectRepositoryManager projectRepositoryManager,
-                              GithubWebhookService githubWebhookService) {
+                              ProjectRepositoryManager projectRepositoryManager) {
 
         this.orgManager = orgManager;
         this.accessManager = accessManager;
-        this.repositoryCacheDao = repositoryCacheDao;
         this.externalEventResource = externalEventResource;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.projectRepositoryManager = projectRepositoryManager;
-        this.githubWebhookService = githubWebhookService;
     }
 
     @POST
@@ -152,14 +143,6 @@ public class RepositoryResource implements Resource {
         Map<String, RepositoryEntry> repos = prj.getRepositories();
         if (repos == null || !repos.containsKey(repositoryName)) {
             throw new ConcordApplicationException("Repository not found: " + projectName, Status.NOT_FOUND);
-        }
-
-        RepositoryEntry repo = repos.get(repositoryName);
-        repositoryCacheDao.updateLastPushDate(repo.getId(), new Date());
-        try {
-            githubWebhookService.refreshWebhook(projectId, repo.getId(), repo.getName(), repo.getUrl());
-        } catch (Exception e) {
-            throw new ConcordApplicationException("Refresh repository web hook error: " + e.getMessage(), e);
         }
 
         Map<String, Object> event = new HashMap<>();

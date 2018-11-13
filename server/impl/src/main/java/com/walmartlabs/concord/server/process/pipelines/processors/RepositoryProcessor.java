@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.repository.RepositoryInfo;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +90,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         logManager.info(processKey, "Copying the repository's data: {}", repo);
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
-        RepositoryManager.RepositoryInfo r = copyRepositoryData(processKey, projectId, repo, dst);
+        com.walmartlabs.concord.server.repository.RepositoryInfo r = copyRepositoryData(processKey, projectId, repo, dst);
         String branch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
 
         CommitInfo ci = null;
@@ -103,7 +104,7 @@ public class RepositoryProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private RepositoryManager.RepositoryInfo copyRepositoryData(ProcessKey processKey, UUID projectId, RepositoryEntry repo, Path dst) {
+    private com.walmartlabs.concord.server.repository.RepositoryInfo copyRepositoryData(ProcessKey processKey, UUID projectId, RepositoryEntry repo, Path dst) {
         return repositoryManager.withLock(projectId, repo.getName(), () -> {
             try {
                 Path src = repositoryManager.fetch(projectId, repo);

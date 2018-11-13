@@ -86,7 +86,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public RepositoryManager.RepositoryInfo getInfo(Path path) {
+    public RepositoryInfo getInfo(Path path) {
         try {
             String result = launchCommand(path, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
             String[] info = result.split("\n");
@@ -99,7 +99,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             for (int i = 2; i < info.length; i++) {
                 message.append(info[i]).append("\n");
             }
-            return new RepositoryManager.RepositoryInfo(id, message.toString(), author);
+            return new RepositoryInfo(id, message.toString(), author);
         } catch (RepositoryException e) {
             // ignore
             return null;
