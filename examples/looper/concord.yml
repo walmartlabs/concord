@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:looper-task:0.54.0"
+  - "mvn://com.walmartlabs.concord.plugins:looper-task:0.66.0"
 
 flows:
   default:
