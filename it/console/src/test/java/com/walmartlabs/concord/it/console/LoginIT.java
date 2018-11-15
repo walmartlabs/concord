@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.console;
 import org.junit.Rule;
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 
 public class LoginIT {
 
@@ -32,6 +33,17 @@ public class LoginIT {
     @Test(timeout = 60000)
     public void test() throws Exception {
         consoleRule.login(Concord.ADMIN_API_KEY);
+        consoleRule.waitFor(By.id("concordLogo"));
+    }
+
+    @Test(timeout = 60000)
+    public void refresh() throws Exception {
+        consoleRule.login(Concord.ADMIN_API_KEY);
+        consoleRule.waitFor(By.id("concordLogo"));
+
+        WebDriver driver = consoleRule.getDriver();
+        driver.navigate().refresh();
+
         consoleRule.waitFor(By.id("concordLogo"));
     }
 }

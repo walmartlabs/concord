@@ -18,7 +18,6 @@
  * =====
  */
 
-import * as Cookies from 'js-cookie';
 import { push as pushHistory } from 'react-router-redux';
 import { combineReducers, Reducer } from 'redux';
 import { all, call, put, select, takeLatest } from 'redux-saga/effects';
@@ -70,8 +69,6 @@ export const selectors = {
     isLoggedIn: (state: State) => !!state.user.username
 };
 
-const SESSION_COOKIE_NAME = 'JSESSIONID';
-
 function* onCheckAuth() {
     const isLoggedIn = yield select(({ session }) => selectors.isLoggedIn(session));
 
@@ -79,22 +76,13 @@ function* onCheckAuth() {
         return;
     }
 
-    const hasSessionCookie = Cookies.get(SESSION_COOKIE_NAME);
-    if (hasSessionCookie) {
-        yield put(login.doRefresh());
-    } else {
-        // will be automatically redirected to the login page by ProtectedRoute
-    }
+    yield put(login.doRefresh());
 }
 
 function* onLogout() {
     try {
         yield call(apiLogout);
-
         yield put(actions.setCurrent({}));
-
-        Cookies.remove(SESSION_COOKIE_NAME);
-
         yield put(pushHistory('/login'));
     } catch (error) {
         throw Error(`Logout error: ${error}`);
