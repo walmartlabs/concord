@@ -811,6 +811,22 @@ public class ProcessResource implements Resource {
     }
 
     /**
+     * Check process state archive status
+     */
+    @GET
+    @ApiOperation(value = "Check process state archive status", response = Boolean.class)
+    @javax.ws.rs.Path("/{id}/state/archived/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Boolean isStateArchived(@ApiParam @PathParam("id") UUID instanceId) {
+        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+
+        assertProcessStateAccess(entry);
+        ProcessKey processKey = ProcessKey.from(entry);
+
+        return stateArchiver.isArchived(processKey);
+    }
+
+    /**
      * Downloads the current state snapshot of a process.
      */
     @GET

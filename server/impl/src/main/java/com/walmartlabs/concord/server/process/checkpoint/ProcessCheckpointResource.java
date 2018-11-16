@@ -87,7 +87,7 @@ public class ProcessCheckpointResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List the process checkpoints")
+    @ApiOperation(value = "List the process checkpoints", responseContainer = "list", response = ProcessCheckpointEntry.class)
     @javax.ws.rs.Path("{id}/checkpoint")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -187,7 +187,7 @@ public class ProcessCheckpointResource implements Resource {
         }
 
         if (p.getProjectId() != null) {
-            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.WRITER, true);
+            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.WRITER, false);
             return;
         }
 

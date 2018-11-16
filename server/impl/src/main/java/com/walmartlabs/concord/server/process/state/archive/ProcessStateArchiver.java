@@ -104,6 +104,14 @@ public class ProcessStateArchiver implements ScheduledTask {
         }
     }
 
+    public boolean isArchived(ProcessKey processKey) {
+        if (!cfg.isEnabled()) {
+            return false;
+        }
+
+        return dao.isArchived(processKey);
+    }
+
     @Override
     public void performTask() throws Exception {
         while (!Thread.currentThread().isInterrupted()) {
