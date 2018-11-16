@@ -169,12 +169,12 @@ class ProcessActivity extends React.PureComponent<Props> {
 }
 
 const mapStateToProps = (
-    { state }: { state: State },
+    { processes }: { processes: State },
     { instanceId }: ExternalProps
 ): StateProps => ({
-    data: state.processesById[instanceId],
-    loading: state.loading,
-    error: state.error
+    data: processes.processesById[instanceId],
+    loading: processes.loading,
+    error: processes.error
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
