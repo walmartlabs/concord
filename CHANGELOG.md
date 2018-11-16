@@ -6,6 +6,11 @@
 
 - concord-console: pagination support for the process list.
 
+### Changed
+
+- concord-console: fixed a session handling bug. Now the session is
+correctly restored on reloading the UI. 
+
 
 
 ## [0.97.0] - 2018-11-13
