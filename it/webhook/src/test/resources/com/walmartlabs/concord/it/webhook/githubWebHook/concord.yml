@@ -1,3 +1,0 @@
-flows:
-  default:
-  - expr: ${log.info("test", "test")}

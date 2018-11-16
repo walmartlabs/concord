@@ -21,7 +21,6 @@
         <module>server</module>
         <module>console</module>
         <module>keywhiz</module>
-        <module>webhook</module>
         <module>s3</module>
     </modules>
 
