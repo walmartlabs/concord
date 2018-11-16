@@ -66,7 +66,14 @@ class ProjectActivity extends React.PureComponent<Props> {
         if (p.meta && p.meta.ui && p.meta.ui.processList) {
             columns = p.meta.ui.processList;
         }
-        return <ProcessListActivity orgName={p.orgName} projectName={p.name} columns={columns} />;
+        return (
+            <ProcessListActivity
+                orgName={p.orgName}
+                projectName={p.name}
+                columns={columns}
+                usePagination={true}
+            />
+        );
     }
 
     static renderRepositories(p: ProjectEntry) {

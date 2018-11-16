@@ -29,13 +29,25 @@ export interface SearchFilter {
     status?: ProcessStatus;
     initiator?: string;
     limit?: number;
+    offset?: number;
+}
+
+export interface PaginatedProcessEntries {
+    items: ProcessEntry[];
+    next?: number;
+    prev?: number;
 }
 
 export const list = (
     orgName?: ConcordKey,
     projectName?: ConcordKey,
     filters?: SearchFilter
-): Promise<ProcessEntry[]> => {
+): Promise<PaginatedProcessEntries> => {
+    const limit = filters && filters.limit ? filters.limit : 50;
+    if (filters && filters.limit) {
+        filters.limit = parseInt(filters.limit.toString(), 10) + 1;
+    }
+
     let baseUri = '/api/v1';
 
     if (orgName) {
@@ -47,7 +59,27 @@ export const list = (
 
     const qp = filters ? '?' + queryParams(filters) : '';
 
-    return fetchJson(`${baseUri}/process${qp}`);
+    return fetchJson(`${baseUri}/process${qp}`).then((processEntries: ProcessEntry[]) => {
+        const hasMoreElements = limit && processEntries.length > limit;
+        const offset: number = filters && filters.offset ? filters.offset : 0;
+
+        if (hasMoreElements) {
+            processEntries.pop();
+        }
+
+        const nextOffset = offset + parseInt(limit.toString(), 10);
+        const prevOffset = offset - limit;
+        const onFirstPage = offset === 0;
+
+        const nextPage = !!hasMoreElements ? nextOffset : undefined;
+        const prevPage = !onFirstPage ? prevOffset : undefined;
+
+        return {
+            items: processEntries,
+            next: nextPage,
+            prev: prevPage
+        };
+    });
 };
 
 export interface StartProcessResponse {

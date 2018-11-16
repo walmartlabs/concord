@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: pagination support for the process list.
+
+
+
 ## [0.97.0] - 2018-11-13
 
 ### Added

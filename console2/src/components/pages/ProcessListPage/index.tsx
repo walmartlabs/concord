@@ -32,7 +32,7 @@ export default class extends React.PureComponent {
                     <Breadcrumb.Section active={true}>Processes</Breadcrumb.Section>
                 </BreadcrumbSegment>
 
-                <ProcessListActivity showInitiatorFilter={true} />
+                <ProcessListActivity showInitiatorFilter={true} usePagination={true} />
             </>
         );
     }

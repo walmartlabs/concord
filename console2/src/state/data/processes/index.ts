@@ -42,6 +42,8 @@ import {
     CancelProcessState,
     GetProcessRequest,
     ListProjectProcessesRequest,
+    PaginatedProcessDataResponse,
+    PaginatedProcesses,
     ProcessDataResponse,
     Processes,
     RestoreProcessRequest,
@@ -51,7 +53,7 @@ import {
     State
 } from './types';
 
-export { Processes, State };
+export { PaginatedProcesses, State };
 
 const NAMESPACE = 'processes';
 
@@ -59,6 +61,7 @@ const actionTypes = {
     GET_PROCESS_REQUEST: `${NAMESPACE}/get/request`,
     LIST_PROJECT_PROCESSES_REQUEST: `${NAMESPACE}/project/list/request`,
     PROCESS_DATA_RESPONSE: `${NAMESPACE}/data/response`,
+    PROCESSES_DATA_RESPONSE: `${NAMESPACE}/processes/data/response`,
 
     START_PROCESS_REQUEST: `${NAMESPACE}/start/request`,
     START_PROCESS_RESPONSE: `${NAMESPACE}/start/response`,
@@ -127,7 +130,7 @@ export const actions = {
     })
 };
 
-const processById: Reducer<Processes> = (
+const processesById: Reducer<Processes> = (
     state = {},
     { type, error, items }: ProcessDataResponse
 ) => {
@@ -147,14 +150,36 @@ const processById: Reducer<Processes> = (
     }
 };
 
+const paginatedProcessesById: Reducer<PaginatedProcesses> = (
+    state = { processes: {} },
+    { type, error, items, next, prev }: PaginatedProcessDataResponse
+) => {
+    switch (type) {
+        case actionTypes.PROCESSES_DATA_RESPONSE:
+            if (error || !items) {
+                return state;
+            }
+
+            const result = {};
+
+            items.forEach((o) => {
+                result[o.instanceId] = o;
+            });
+
+            return { processes: result, next, prev };
+        default:
+            return state;
+    }
+};
+
 const loading = makeLoadingReducer(
     [actionTypes.GET_PROCESS_REQUEST, actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
-    [actionTypes.PROCESS_DATA_RESPONSE, actionTypes]
+    [actionTypes.PROCESS_DATA_RESPONSE, actionTypes, actionTypes.PROCESSES_DATA_RESPONSE]
 );
 
 const errorMsg = makeErrorReducer(
     [actionTypes.GET_PROCESS_REQUEST, actionTypes.LIST_PROJECT_PROCESSES_REQUEST],
-    [actionTypes.PROCESS_DATA_RESPONSE]
+    [actionTypes.PROCESS_DATA_RESPONSE, actionTypes.PROCESSES_DATA_RESPONSE]
 );
 
 const startProcessReducers = combineReducers<StartProcessState>({
@@ -225,7 +250,9 @@ const cancelBulkProcessReducers = combineReducers<CancelBullkProcessState>({
 
 export const reducers = combineReducers<State>({
     // TODO use RequestState<?>
-    processById, // TODO makeEntityByIdReducer
+    processesById, // TODO makeEntityByIdReducer
+    paginatedProcessesById,
+
     loading,
     error: errorMsg,
 
@@ -256,11 +283,13 @@ function* onProjectList({ orgName, projectName, filters }: ListProjectProcessesR
     try {
         const response = yield call(apiOrgList, orgName, projectName, filters);
         yield put({
-            type: actionTypes.PROCESS_DATA_RESPONSE,
-            items: response
+            type: actionTypes.PROCESSES_DATA_RESPONSE,
+            items: response.items,
+            next: response.next,
+            prev: response.prev
         });
     } catch (e) {
-        yield handleErrors(actionTypes.PROCESS_DATA_RESPONSE, e);
+        yield handleErrors(actionTypes.PROCESSES_DATA_RESPONSE, e);
     }
 }
 

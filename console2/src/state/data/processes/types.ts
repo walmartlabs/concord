@@ -26,7 +26,7 @@ import {
     SearchFilter,
     StartProcessResponse
 } from '../../../api/org/process';
-import { ProcessEntry } from '../../../api/process';
+import { /*PaginatedProcesses,*/ ProcessEntry } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as LogState } from './logs/types';
 import { State as PollState } from './poll/types';
@@ -41,6 +41,13 @@ export interface ListProjectProcessesRequest extends Action {
     orgName?: ConcordKey;
     projectName?: ConcordKey;
     filters?: SearchFilter;
+}
+
+export interface PaginatedProcessDataResponse extends Action {
+    error: RequestError;
+    items?: ProcessEntry[];
+    prev?: number;
+    next?: number;
 }
 
 export interface ProcessDataResponse extends Action {
@@ -67,6 +74,12 @@ export interface CancelBulkProcessRequest extends Action {
     instanceIds: ConcordId[];
 }
 
+export interface PaginatedProcesses {
+    processes: Processes;
+    next?: number;
+    prev?: number;
+}
+
 export interface Processes {
     [id: string]: ProcessEntry;
 }
@@ -77,7 +90,8 @@ export type RestoreProcessState = RequestState<RestoreProcessResponse>;
 export type CancelBullkProcessState = RequestState<boolean>;
 
 export interface State {
-    processById: Processes;
+    processesById: Processes;
+    paginatedProcessesById: PaginatedProcesses;
 
     // TODO use RequestState
     loading: boolean;

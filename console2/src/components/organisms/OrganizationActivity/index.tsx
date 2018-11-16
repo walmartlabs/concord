@@ -63,9 +63,15 @@ class OrganizationActivity extends React.PureComponent<Props> {
             e.meta.ui !== undefined &&
             e.meta.ui.processList !== undefined
         ) {
-            return <ProcessListActivity orgName={e.name} columns={e.meta.ui.processList} />;
+            return (
+                <ProcessListActivity
+                    orgName={e.name}
+                    columns={e.meta.ui.processList}
+                    usePagination={true}
+                />
+            );
         } else {
-            return <ProcessListActivity orgName={e.name} />;
+            return <ProcessListActivity orgName={e.name} usePagination={true} />;
         }
     }
 

@@ -28,7 +28,8 @@ import {
     ProcessList,
     ProcessStatusDropdown,
     RequestErrorMessage,
-    BulkProcessActionDropdown
+    BulkProcessActionDropdown,
+    Pagination
 } from '../../molecules';
 import { ColumnDefinition } from '../../../api/org';
 
@@ -67,6 +68,12 @@ interface Props {
 
     loading: boolean;
     loadError: RequestError;
+
+    next?: number;
+    prev?: number;
+
+    usePagination?: boolean;
+
     refresh: (filters?: SearchFilter) => void;
 }
 
@@ -85,6 +92,8 @@ class ProcessListWithSearch extends React.Component<Props, State> {
         this.state = toState([], this.props.filterProps);
         this.onSelectProcess = this.onSelectProcess.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
+        this.handlePrev = this.handlePrev.bind(this);
+        this.handleNext = this.handleNext.bind(this);
     }
 
     handleStatusChange(s?: string) {
@@ -92,8 +101,10 @@ class ProcessListWithSearch extends React.Component<Props, State> {
         const { refresh } = this.props;
         const status: ProcessStatus = s && s.length > 0 ? ProcessStatus[s] : undefined;
         if (filterState.status !== status) {
-            this.setState({ filterState: { initiator: filterState.initiator, status } });
-            refresh({ initiator: filterState.initiator, status });
+            this.setState({
+                filterState: { initiator: filterState.initiator, status, limit: filterState.limit }
+            });
+            refresh({ initiator: filterState.initiator, status, limit: filterState.limit });
         }
     }
 
@@ -102,8 +113,41 @@ class ProcessListWithSearch extends React.Component<Props, State> {
         const initiator = s && s.length > 0 ? s : undefined;
 
         if (filterState.initiator !== s) {
-            this.setState({ filterState: { status: filterState.status, initiator } });
+            this.setState({
+                filterState: { status: filterState.status, initiator, limit: filterState.limit }
+            });
         }
+    }
+
+    handleLimitChange(limit: any) {
+        const { filterState } = this.state;
+        const { refresh } = this.props;
+        if (filterState.limit !== limit) {
+            this.setState({
+                filterState: { limit, initiator: filterState.initiator, status: filterState.status }
+            });
+            refresh({ initiator: filterState.initiator, status: filterState.status, limit });
+        }
+    }
+
+    handleNext() {
+        this.handleNavigation(this.props.next);
+    }
+
+    handlePrev() {
+        this.handleNavigation(this.props.prev);
+    }
+
+    handleNavigation(offset?: number) {
+        const { filterState } = this.state;
+        const { refresh } = this.props;
+
+        refresh({
+            offset,
+            status: filterState.status,
+            limit: filterState.limit,
+            initiator: filterState.initiator
+        });
     }
 
     handleInitiatorOnBlur() {
@@ -111,7 +155,11 @@ class ProcessListWithSearch extends React.Component<Props, State> {
         const { filterState } = this.state;
         const prevInitiator = filterProps ? filterProps.initiator : '';
         if (prevInitiator !== filterState.initiator) {
-            refresh({ initiator: filterState.initiator, status: filterState.status });
+            refresh({
+                initiator: filterState.initiator,
+                status: filterState.status,
+                limit: filterState.limit
+            });
         }
     }
 
@@ -121,17 +169,25 @@ class ProcessListWithSearch extends React.Component<Props, State> {
 
     onRefresh() {
         const { refresh } = this.props;
-        refresh(this.state.filterState);
+        const { filterState } = this.state;
+        refresh({
+            limit: filterState.limit,
+            status: filterState.status,
+            initiator: filterState.initiator
+        });
     }
 
     render() {
         const {
             processes,
             showInitiatorFilter = false,
+            usePagination = false,
             columns,
             projectName,
             loadError,
-            loading
+            loading,
+            prev,
+            next
         } = this.props;
 
         const { filterState } = this.state;
@@ -177,12 +233,24 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                         </Menu.Item>
                     )}
 
-                    <Menu.Item position="right">
+                    <Menu.Item>
                         <BulkProcessActionDropdown
                             data={this.state.selectedProcessIds}
                             refresh={this.onRefresh}
                         />
                     </Menu.Item>
+                    {usePagination && (
+                        <Menu.Item position="right">
+                            <Pagination
+                                filterProps={filterState}
+                                handleLimitChange={(limit) => this.handleLimitChange(limit)}
+                                handleNext={this.handleNext}
+                                handlePrev={this.handlePrev}
+                                disablePrevious={prev === undefined}
+                                disableNext={next === undefined}
+                            />
+                        </Menu.Item>
+                    )}
                 </Menu>
 
                 <ProcessList

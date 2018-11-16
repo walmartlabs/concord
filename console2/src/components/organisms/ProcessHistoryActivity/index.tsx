@@ -127,7 +127,6 @@ const makeProcessHistoryList = (data: ProcessHistoryEntry[]): ProcessHistoryEntr
         .sort((a, b) => (a.changeDate < b.changeDate ? 1 : a.changeDate > b.changeDate ? -1 : 0));
 };
 
-
 export const mapStateToProps = ({ processes: { history } }: StateType): StateProps => ({
     loading: history.getHistory.running,
     data: makeProcessHistoryList(selectors.processHistory(history))

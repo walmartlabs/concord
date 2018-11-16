@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -48,6 +49,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -61,8 +63,7 @@ public class ProjectProcessResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectProcessResource.class);
 
-    // TODO replace with pagination
-    private static final int DEFAULT_LIST_LIMIT = 100;
+    private static final String DEFAULT_LIST_LIMIT = "100";
 
     private final ProcessManager processManager;
     private final OrganizationManager orgManager;
@@ -99,13 +100,19 @@ public class ProjectProcessResource implements Resource {
     @WithTimer
     // TODO replace with /api/v1/process?orgName=...&status=...
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus) {
+                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
+                                   @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
+                                   @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                                   @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
+                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         ProcessFilter filter = ProcessFilter.builder()
                 .ordIds(Collections.singleton(org.getId()))
                 .status(processStatus)
+                .afterCreatedAt(toTimestamp(afterCreatedAt))
+                .beforeCreatedAt(toTimestamp(beforeCreatedAt))
                 .build();
-        return queueDao.list(filter, DEFAULT_LIST_LIMIT);
+        return queueDao.list(filter, limit, offset);
     }
 
     @GET
@@ -115,7 +122,11 @@ public class ProjectProcessResource implements Resource {
     @WithTimer
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                   @ApiParam @QueryParam("status") ProcessStatus processStatus) {
+                                   @ApiParam @QueryParam("status") ProcessStatus processStatus,
+                                   @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
+                                   @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                                   @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
+                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
 
@@ -127,8 +138,10 @@ public class ProjectProcessResource implements Resource {
         ProcessFilter filter = ProcessFilter.builder()
                 .projectId(projectId)
                 .status(processStatus)
+                .afterCreatedAt(toTimestamp(afterCreatedAt))
+                .beforeCreatedAt(toTimestamp(beforeCreatedAt))
                 .build();
-        return queueDao.list(filter, DEFAULT_LIST_LIMIT);
+        return queueDao.list(filter, limit, offset);
     }
 
     /**
@@ -250,6 +263,15 @@ public class ProjectProcessResource implements Resource {
 
             TimeUnit.MILLISECONDS.sleep(100);
         }
+    }
+
+    private static Timestamp toTimestamp(IsoDateParam p) {
+        if (p == null) {
+            return null;
+        }
+
+        Calendar c = p.getValue();
+        return new Timestamp(c.getTimeInMillis());
     }
 
     private static Map<String, Object> prepareArgumentsForInProgressTemplate(ProcessEntry entry) {

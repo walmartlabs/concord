@@ -89,7 +89,7 @@ public class UserActivityResource implements Resource {
                 .initiator(user.getUsername())
                 .ordIds(orgIds)
                 .build();
-        List<ProcessEntry> lastProcesses = processDao.list(filter, maxOwnProcesses);
+        List<ProcessEntry> lastProcesses = processDao.list(filter, maxOwnProcesses, 0);
 
         return new UserActivityResponse(stats, orgProcesses, lastProcesses);
     }

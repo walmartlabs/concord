@@ -650,7 +650,8 @@ public class ProcessResource implements Resource {
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
                                    @ApiParam @QueryParam("initiator") String initiator,
                                    @ApiParam @QueryParam("parentInstanceId") UUID parentId,
-                                   @ApiParam @QueryParam("limit") @DefaultValue("30") int limit) {
+                                   @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
+                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
 
         if (limit <= 0) {
             throw new ConcordApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
@@ -674,7 +675,7 @@ public class ProcessResource implements Resource {
                 .initiator(initiator)
                 .build();
 
-        return queueDao.list(filter, limit);
+        return queueDao.list(filter, limit, offset);
     }
 
     /**

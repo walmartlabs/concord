@@ -83,7 +83,7 @@ function* onList({ parentId, filters }: ListProcessChildrenRequest) {
         const response = yield call(apiProcessList, orgName, projectName, filters);
         yield put({
             type: actionTypes.LIST_PROCESS_CHILDREN_RESPONSE,
-            items: response
+            items: response.processes
         });
     } catch (e) {
         yield handleErrors(actionTypes.LIST_PROCESS_CHILDREN_RESPONSE, e);

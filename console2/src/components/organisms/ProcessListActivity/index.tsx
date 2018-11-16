@@ -27,7 +27,7 @@ import { replace as pushHistory } from 'react-router-redux';
 import { queryParams, RequestError } from '../../../api/common';
 import { SearchFilter } from '../../../api/org/process';
 import { ProcessEntry, ProcessStatus } from '../../../api/process';
-import { actions, Processes, State } from '../../../state/data/processes';
+import { actions, PaginatedProcesses, State } from '../../../state/data/processes';
 import { RequestErrorMessage } from '../../molecules';
 import {
     CREATED_AT_COLUMN,
@@ -66,6 +66,8 @@ interface StateProps {
     processes: ProcessEntry[];
     loading: boolean;
     loadError: RequestError;
+    next?: number;
+    prev?: number;
 }
 
 interface DispatchProps {
@@ -78,6 +80,7 @@ interface ExternalProps {
 
     // TODO remove when we migrate to the common process search endpoint
     showInitiatorFilter?: boolean;
+    usePagination?: boolean;
 
     columns?: ColumnDefinition[];
 }
@@ -87,7 +90,10 @@ const parseSearchFilter = (s: string): SearchFilter => {
     const v: any = parseQueryString(s);
     return {
         status: v.status ? ProcessStatus[v.status as string] : undefined,
-        initiator: v.initiator ? v.initiator : ''
+        initiator: v.initiator ? v.initiator : '',
+        beforeCreatedAt: v.beforeCreatedAt ? v.beforeCreatedAt : undefined,
+        limit: v.limit ? v.limit : 50,
+        offset: v.offset ? v.offset : 0
     };
 };
 
@@ -106,13 +112,16 @@ class ProcessListActivity extends React.Component<Props> {
         const {
             processes,
             showInitiatorFilter = false,
+            usePagination = false,
             columns,
             orgName,
             projectName,
             loadError,
             loading,
             load,
-            history
+            history,
+            next,
+            prev
         } = this.props;
 
         if (loadError) {
@@ -133,11 +142,14 @@ class ProcessListActivity extends React.Component<Props> {
                 <ProcessListWithSearch
                     filterProps={filter}
                     processes={processes}
+                    next={next}
+                    prev={prev}
                     columns={cols}
                     loading={loading}
                     loadError={loadError}
                     refresh={(filters) => load(orgName, projectName, filters)}
                     showInitiatorFilter={showInitiatorFilter}
+                    usePagination={usePagination}
                 />
             </>
         );
@@ -145,16 +157,20 @@ class ProcessListActivity extends React.Component<Props> {
 }
 
 // TODO move to selectors
-const makeProcessList = (data: Processes): ProcessEntry[] => {
-    return Object.keys(data)
-        .map((k) => data[k])
+const makeProcessList = (data: PaginatedProcesses): ProcessEntry[] => {
+    const processEntryList = Object.keys(data.processes)
+        .map((k) => data.processes[k])
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+
+    return processEntryList;
 };
 
 const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
     loading: processes.loading,
     loadError: processes.error,
-    processes: makeProcessList(processes.processById)
+    processes: makeProcessList(processes.paginatedProcessesById),
+    next: processes.paginatedProcessesById.next,
+    prev: processes.paginatedProcessesById.prev
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({

@@ -431,7 +431,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public List<ProcessEntry> list(ProcessFilter filter, int limit) {
+    public List<ProcessEntry> list(ProcessFilter filter, int limit, int offset) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
 
@@ -474,9 +474,20 @@ public class ProcessQueueDao extends AbstractDao {
 
             filterByTags(s, filter.getTags());
 
-            return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
-                    .limit(limit)
-                    .fetch(this::toEntry);
+            boolean findAdjacentToDateRows = filter.getBeforeCreatedAt() == null && filter.getAfterCreatedAt() != null;
+            if (findAdjacentToDateRows) {
+                s.orderBy(V_PROCESS_QUEUE.CREATED_AT.asc());
+            } else {
+                s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc());
+            }
+
+            List<ProcessEntry> processEntries = s.limit(limit).offset(offset).fetch(this::toEntry);
+
+            if (findAdjacentToDateRows) {
+                Collections.reverse(processEntries);
+            }
+
+            return processEntries;
         }
     }
 
@@ -575,7 +586,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    private PolicyEngine getPolicyEngine(DSLContext tx, UUID orgId, UUID prjId, UUID userId,  UUID parentInstanceId) {
+    private PolicyEngine getPolicyEngine(DSLContext tx, UUID orgId, UUID prjId, UUID userId, UUID parentInstanceId) {
         if (prjId == null) {
             return null;
         }
