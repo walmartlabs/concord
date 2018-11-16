@@ -9,7 +9,7 @@
 ### Changed
 
 - concord-console: fixed a session handling bug. Now the session is
-correctly restored on reloading the UI. 
+correctly restored on UI reload. 
 
 
 
