@@ -29,7 +29,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
-public final class ProcessOutVariables {
+public final class OutVariablesUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -43,6 +43,6 @@ public final class ProcessOutVariables {
         return objectMapper.readValue(processOut.toFile(), Map.class);
     }
 
-    private ProcessOutVariables() {
+    private OutVariablesUtils() {
     }
 }

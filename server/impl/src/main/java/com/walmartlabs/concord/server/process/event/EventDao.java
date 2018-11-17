@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process.event;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.server.process.ProcessEventEntry;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record4;

@@ -34,14 +34,14 @@ public class PartialProcessKey implements Serializable {
      * Creates a partial process key from a known instance ID.
      */
     public static PartialProcessKey from(UUID instanceId) {
-        return new PartialProcessKey(instanceId);
+        return PartialProcessKey.from(instanceId);
     }
 
     /**
      * Creates a new unique partial process key.
      */
     public static PartialProcessKey create() {
-        return new PartialProcessKey(UUID.randomUUID());
+        return PartialProcessKey.from(UUID.randomUUID());
     }
 
     private final UUID instanceId;

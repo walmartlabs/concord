@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process;
+package com.walmartlabs.concord.server.process.form;
 
 /*-
  * *****
@@ -27,42 +27,50 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
-public class FormSubmitResponse implements Serializable {
+public class FormListEntry implements Serializable {
 
-    private final boolean ok;
-    private final UUID processInstanceId;
-    private final Map<String, String> errors;
+     private final String name;
+    private final boolean custom;
+    private final boolean yield;
+    private final Map<String, Object> runAs;
 
     @JsonCreator
-    public FormSubmitResponse(@JsonProperty("processInstanceId") UUID processInstanceId,
-                              @JsonProperty("errors") Map<String, String> errors) {
+    public FormListEntry(@JsonProperty("name") String name,
+                         @JsonProperty("custom") boolean custom,
+                         @JsonProperty("yield") boolean yield,
+                         @JsonProperty("runAs") Map<String, Object> runAs) {
 
-        this.ok = errors == null || errors.isEmpty();
-        this.processInstanceId = processInstanceId;
-        this.errors = errors;
+        this.name = name;
+        this.custom = custom;
+        this.yield = yield;
+        this.runAs = runAs;
     }
 
-    public UUID getProcessInstanceId() {
-        return processInstanceId;
+    public String getName() {
+        return name;
     }
 
-    public Map<String, String> getErrors() {
-        return errors;
+    public boolean isCustom() {
+        return custom;
     }
 
-    public boolean isOk() {
-        return ok;
+    public boolean isYield() {
+        return yield;
+    }
+
+    public Map<String, Object> getRunAs() {
+        return runAs;
     }
 
     @Override
     public String toString() {
-        return "FormSubmitResponse{" +
-                "ok=" + ok +
-                ", processInstanceId=" + processInstanceId +
-                ", errors=" + errors +
+        return "FormListEntry{" +
+                "name='" + name + '\'' +
+                ", custom=" + custom +
+                ", yield=" + yield +
+                ", runAs=" + runAs +
                 '}';
     }
 }

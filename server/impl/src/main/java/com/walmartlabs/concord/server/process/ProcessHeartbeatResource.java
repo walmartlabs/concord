@@ -39,12 +39,12 @@ import java.util.UUID;
 @Singleton
 @Api(value = "ProcessHeartbeat", authorizations = {@Authorization("api_key"), @Authorization("session_key")})
 @Path("/api/v1/process")
-public class ProcessHeartbeat implements Resource {
+public class ProcessHeartbeatResource implements Resource {
 
     private final ProcessQueueDao queueDao;
 
     @Inject
-    public ProcessHeartbeat(ProcessQueueDao queueDao) {
+    public ProcessHeartbeatResource(ProcessQueueDao queueDao) {
         this.queueDao = queueDao;
     }
 

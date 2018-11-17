@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.google.common.base.Strings;
 import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 

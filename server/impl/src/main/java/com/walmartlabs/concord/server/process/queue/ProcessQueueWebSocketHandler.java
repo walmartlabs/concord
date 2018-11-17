@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process;
+package com.walmartlabs.concord.server.process.queue;
 
 /*-
  * *****
@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
@@ -35,7 +37,7 @@ import java.util.Map;
 
 @Named
 @Singleton
-public class ProcessWebSocketHandler extends PeriodicTask {
+public class ProcessQueueWebSocketHandler extends PeriodicTask {
 
     private static final long POLL_DELAY = 1000; // 1 sec
     private static final long ERROR_DELAY = 1 * 60 * 1000; // 1 min
@@ -45,7 +47,7 @@ public class ProcessWebSocketHandler extends PeriodicTask {
     private final LogManager logManager;
 
     @Inject
-    public ProcessWebSocketHandler(WebSocketChannelManager channelManager, ProcessManager processManager, LogManager logManager) {
+    public ProcessQueueWebSocketHandler(WebSocketChannelManager channelManager, ProcessManager processManager, LogManager logManager) {
         super(POLL_DELAY, ERROR_DELAY);
         this.channelManager = channelManager;
         this.processManager = processManager;

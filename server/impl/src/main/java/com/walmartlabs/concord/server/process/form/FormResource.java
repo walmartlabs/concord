@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process;
+package com.walmartlabs.concord.server.process.form;
 
 /*-
  * *****
@@ -23,8 +23,9 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
-import com.walmartlabs.concord.server.process.ConcordFormService.FormSubmitResult;
-import com.walmartlabs.concord.server.process.FormUtils.ValidationException;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.process.form.ConcordFormService.FormSubmitResult;
+import com.walmartlabs.concord.server.process.form.FormUtils.ValidationException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -91,7 +92,7 @@ public class FormResource implements Resource {
     public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                                  @ApiParam @PathParam("formName") String formName) {
 
-        PartialProcessKey processKey = new PartialProcessKey(processInstanceId);
+        PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
 
         Form form = formService.get(processKey, formName);
         if (form == null) {
@@ -161,7 +162,7 @@ public class FormResource implements Resource {
                                      @ApiParam @PathParam("formName") String formName,
                                      @ApiParam Map<String, Object> data) {
 
-        PartialProcessKey processKey = new PartialProcessKey(processInstanceId);
+        PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
 
         Form form = formService.get(processKey, formName);
         if (form == null) {

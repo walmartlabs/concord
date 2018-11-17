@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.event.EventDao;
+import com.walmartlabs.concord.server.process.event.ProcessEventEntry;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
@@ -146,7 +147,7 @@ public class ProcessResource implements Resource {
 
         assertPartialKey(parentInstanceId);
 
-        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
+        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
 
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
@@ -209,7 +210,7 @@ public class ProcessResource implements Resource {
 
         assertPartialKey(parentInstanceId);
 
-        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
+        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
         EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
@@ -287,7 +288,7 @@ public class ProcessResource implements Resource {
 
         assertPartialKey(parentInstanceId);
 
-        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
+        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
         EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
@@ -334,7 +335,7 @@ public class ProcessResource implements Resource {
 
         assertPartialKey(parentInstanceId);
 
-        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
+        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
 
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
         EntryPoint ep = payloadManager.parseEntryPoint(processKey, orgId, entryPoint);
@@ -369,7 +370,7 @@ public class ProcessResource implements Resource {
                                         @ApiParam @PathParam("eventName") @NotNull String eventName,
                                         @ApiParam Map<String, Object> req) {
 
-        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
         Payload payload;
         try {
@@ -402,12 +403,12 @@ public class ProcessResource implements Resource {
                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
                                      @ApiParam @QueryParam("out") String[] out) {
 
-        ProcessEntry parent = queueDao.get(new PartialProcessKey(parentInstanceId));
+        ProcessEntry parent = queueDao.get(PartialProcessKey.from(parentInstanceId));
         if (parent == null) {
             throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
         }
 
-        PartialProcessKey processKey = new PartialProcessKey(UUID.randomUUID());
+        PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
         ProcessKey parentProcessKey = ProcessKey.from(parent);
 
         UUID projectId = parent.getProjectId();
@@ -478,7 +479,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}")
     @WithTimer
     public void kill(@ApiParam @PathParam("id") UUID instanceId) {
-        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
         processManager.kill(processKey);
     }
 
@@ -505,7 +506,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/cascade")
     @WithTimer
     public void killCascade(@ApiParam @PathParam("id") UUID instanceId) {
-        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
         processManager.killCascade(processKey);
     }
 
@@ -522,7 +523,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     @SuppressWarnings("unchecked")
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
-        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
@@ -819,7 +820,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/state/archived/status")
     @Produces(MediaType.APPLICATION_JSON)
     public Boolean isStateArchived(@ApiParam @PathParam("id") UUID instanceId) {
-        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+        ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
 
         assertProcessStateAccess(entry);
         ProcessKey processKey = ProcessKey.from(entry);
@@ -835,7 +836,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}/state/snapshot")
     @Produces("application/zip")
     public Response downloadState(@ApiParam @PathParam("id") UUID instanceId) {
-        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+        ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = ProcessKey.from(entry);
 
         assertProcessStateAccess(entry);
@@ -857,7 +858,7 @@ public class ProcessResource implements Resource {
     public Response downloadStateFile(@ApiParam @PathParam("id") UUID instanceId,
                                       @ApiParam @PathParam("name") @NotNull @Size(min = 1) String fileName) {
 
-        ProcessEntry p = assertProcess(new PartialProcessKey(instanceId));
+        ProcessEntry p = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = ProcessKey.from(p);
 
         assertProcessStateAccess(p);
@@ -887,7 +888,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("{id}/attachment")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public void uploadAttachments(@PathParam("id") UUID instanceId, InputStream data) {
-        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+        ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = ProcessKey.from(entry);
 
         Path tmpIn = null;
@@ -902,7 +903,7 @@ public class ProcessResource implements Resource {
             stateManager.deleteDirectory(processKey, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
             stateManager.importPath(processKey, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
 
-            Map<String, Object> out = ProcessOutVariables.read(tmpDir);
+            Map<String, Object> out = OutVariablesUtils.read(tmpDir);
             if (out.isEmpty()) {
                 queueDao.removeMeta(processKey, "out");
             } else {
@@ -944,7 +945,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public Response decrypt(@PathParam("id") UUID instanceId, InputStream data) {
-        ProcessEntry entry = assertProcess(new PartialProcessKey(instanceId));
+        ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = ProcessKey.from(entry);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
@@ -992,7 +993,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response updateMetadata(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> meta) {
-        PartialProcessKey processKey = new PartialProcessKey(instanceId);
+        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
         if (!queueDao.updateMeta(processKey, meta)) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
@@ -1035,11 +1036,12 @@ public class ProcessResource implements Resource {
             return null;
         }
 
-        if (!queueDao.exists(new PartialProcessKey(id))) {
+        PartialProcessKey k = PartialProcessKey.from(id);
+        if (!queueDao.exists(k)) {
             throw new ValidationErrorsException("Unknown instance ID: " + id);
         }
 
-        return new PartialProcessKey(id);
+        return k;
     }
 
     private ProcessKey assertKey(UUID id) {
