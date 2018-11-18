@@ -186,6 +186,9 @@
                             <packageName>com.walmartlabs.concord.server.jooq</packageName>
                             <directory>target/generated-sources/jooq</directory>
                         </target>
+                        <generate>
+                            <deprecationOnUnknownTypes>false</deprecationOnUnknownTypes>
+                        </generate>
                     </generator>
                 </configuration>
             </plugin>
