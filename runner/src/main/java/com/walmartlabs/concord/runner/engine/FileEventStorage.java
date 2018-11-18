@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner.engine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -109,9 +110,8 @@ public class FileEventStorage implements EventStorage {
 
     @Override
     public Collection<Event> find(String processBusinessKey, String eventName) {
-        try {
-            return Files.list(dir)
-                    .map(this::get)
+        try (Stream<Path> s = Files.list(dir)) {
+            return s.map(this::get)
                     .filter(ev -> processBusinessKey.equals(ev.getProcessBusinessKey()) &&
                             (eventName == null || eventName.equals(ev.getName())))
                     .collect(Collectors.toList());

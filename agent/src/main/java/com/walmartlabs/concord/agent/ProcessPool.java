@@ -106,6 +106,9 @@ public class ProcessPool {
                     }
                 }
 
+                // it's never null
+                assert oldest != null;
+
                 oldest.remove = true;
             }
 

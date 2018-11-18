@@ -108,7 +108,7 @@ public class ProcessLogsDao extends AbstractDao {
                     .orderBy(PROCESS_LOGS.CHUNK_RANGE)
                     .fetch(ProcessLogsDao::toChunk);
 
-        } else if (end != null) {
+        } else {
             // ranges && [upper_bound - end, upper_bound)
             String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && (select range from x)";
             return tx.with("x").as(select(processLogLastNBytes2(instanceId, createdAt, end).as("range")))
@@ -119,8 +119,6 @@ public class ProcessLogsDao extends AbstractDao {
                             .and(rangeExpr, instanceId, end))
                     .orderBy(PROCESS_LOGS.CHUNK_RANGE)
                     .fetch(ProcessLogsDao::toChunk);
-        } else {
-            throw new IllegalArgumentException("Invalid range options: start=" + start + ", end=" + end);
         }
     }
 

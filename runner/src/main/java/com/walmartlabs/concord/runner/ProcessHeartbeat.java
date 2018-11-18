@@ -64,7 +64,7 @@ public class ProcessHeartbeat {
                 }
 
                 try {
-                    Thread.sleep(HEARTBEAT_INTERVAL);
+                    Thread.sleep(HEARTBEAT_INTERVAL); // NOSONAR
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

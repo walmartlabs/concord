@@ -449,9 +449,11 @@ public class ProcessResource implements Resource {
             r = get(instanceId);
 
             ProcessStatus s = r.status();
-            if (s == ProcessStatus.FINISHED || s == ProcessStatus.FAILED
-                    || s == ProcessStatus.CANCELLED || s == ProcessStatus.TIMED_OUT) {
-                break;
+            if (s == ProcessStatus.FINISHED ||
+                    s == ProcessStatus.FAILED ||
+                    s == ProcessStatus.CANCELLED ||
+                    s == ProcessStatus.TIMED_OUT) {
+                return r;
             }
 
             if (timeout > 0) {
@@ -465,10 +467,11 @@ public class ProcessResource implements Resource {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                break;
+                throw new ConcordApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
+                        .entity("Request was interrputed")
+                        .build());
             }
         }
-        return r;
     }
 
     /**

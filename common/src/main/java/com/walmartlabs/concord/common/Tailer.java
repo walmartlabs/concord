@@ -68,7 +68,7 @@ public abstract class Tailer {
                     // wait for more data
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().isInterrupted();
+                    Thread.currentThread().interrupt();
                 }
             } else {
                 // we got new data

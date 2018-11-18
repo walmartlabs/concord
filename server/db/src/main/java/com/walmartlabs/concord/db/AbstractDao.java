@@ -71,7 +71,7 @@ public abstract class AbstractDao {
             h.apply(ps);
 
             InputStream in = ResultSetInputStream.open(conn, ps, columnIndex);
-            if (in == null) {
+            if (in == null) { // NOSONAR
                 JDBCUtils.safeClose(ps);
                 JDBCUtils.safeClose(conn);
                 return null;

@@ -189,7 +189,7 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         int maxSecretDataSize = secretStoreProvider.getMaxSecretDataSize();
-        InputStream limitedDataInputStream = ByteStreams.limit(data, maxSecretDataSize + 1);
+        InputStream limitedDataInputStream = ByteStreams.limit(data, maxSecretDataSize + 1L);
         BinaryDataSecret d = new BinaryDataSecret(ByteStreams.toByteArray(limitedDataInputStream));
         if (d.getData().length > maxSecretDataSize) {
             throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");

@@ -40,7 +40,7 @@ import java.util.Map;
 public class ProcessQueueWebSocketHandler extends PeriodicTask {
 
     private static final long POLL_DELAY = 1000; // 1 sec
-    private static final long ERROR_DELAY = 1 * 60 * 1000; // 1 min
+    private static final long ERROR_DELAY = 1 * 60 * 1000L; // 1 min
 
     private final WebSocketChannelManager channelManager;
     private final ProcessManager processManager;

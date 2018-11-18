@@ -147,11 +147,13 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         // example: /testing/twst/localtest/bom/sts/1
         //          / org   /asm /env      /.../platform/...
         String[] nsPath = getNsPath(event);
-        addKey(ORG_KEY, nsPath, 0, result);
-        addKey(ASM_KEY, nsPath, 1, result);
-        addKey(ENV_KEY, nsPath, 2, result);
-        // ignore bom
-        addKey(PLATFORM_KEY, nsPath, 4, result);
+        if (nsPath != null) {
+            addKey(ORG_KEY, nsPath, 0, result);
+            addKey(ASM_KEY, nsPath, 1, result);
+            addKey(ENV_KEY, nsPath, 2, result);
+            // ignore bom
+            addKey(PLATFORM_KEY, nsPath, 4, result);
+        }
 
         return result;
     }

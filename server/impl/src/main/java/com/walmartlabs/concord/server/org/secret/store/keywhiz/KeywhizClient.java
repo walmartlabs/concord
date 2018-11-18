@@ -113,7 +113,7 @@ public class KeywhizClient {
     }
 
     private static HttpClientConnectionManager createConnectionManager(KeywhizSecretStoreConfiguration cfg) throws Exception {
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(createConnectionRegistry(cfg));
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(createConnectionRegistry(cfg)); // NOSONAR
         cm.setDefaultSocketConfig(createSocketConfig(cfg));
         return cm;
     }
@@ -246,7 +246,7 @@ public class KeywhizClient {
         }
     }
 
-    private class CreateOrUpdateSecretRequestV2 implements Serializable {
+    private static class CreateOrUpdateSecretRequestV2 implements Serializable {
 
         @JsonProperty("name")
         public String name;

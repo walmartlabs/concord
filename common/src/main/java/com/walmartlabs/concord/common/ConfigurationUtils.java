@@ -66,14 +66,20 @@ public final class ConfigurationUtils {
         }
 
         Map<String, Object> m = (Map<String, Object>) holder;
+
+        // TODO automatically create the value holder?
+        assert m != null;
         m.put(path[path.length - 1], b);
     }
 
     @SuppressWarnings("unchecked")
     public static void delete(Map<String, Object> a, String... path) {
         Object holder = get(a, path.length - 1, path);
+        if (holder == null) {
+            return;
+        }
 
-        if (holder != null && !(holder instanceof Map)) {
+        if (!(holder instanceof Map)) {
             throw new IllegalArgumentException("Value should be contained in a JSON object: " + String.join("/", path));
         }
 
@@ -90,6 +96,9 @@ public final class ConfigurationUtils {
         }
 
         Map<String, Object> m = (Map<String, Object>) holder;
+
+        // TODO automatically create the value holder?
+        assert m != null;
         m.putAll(b);
     }
 

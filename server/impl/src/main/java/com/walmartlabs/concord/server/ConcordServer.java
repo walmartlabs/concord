@@ -124,7 +124,7 @@ public class ConcordServer {
     public static class ServiceInitServlet extends HttpServlet {
 
         @Inject
-        Set<BackgroundTask> tasks;
+        Set<BackgroundTask> tasks; // NOSONAR
 
         @Override
         public void init() throws ServletException {

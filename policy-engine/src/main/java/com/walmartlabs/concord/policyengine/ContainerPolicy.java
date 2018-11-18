@@ -88,13 +88,13 @@ public class ContainerPolicy {
             return null;
         }
 
-        long c = 1;
+        long c = 1L;
         if (str.endsWith("k")) {
-            c = 1024;
+            c = 1024L;
         } else if (str.endsWith("m")) {
-            c = 1024 * 1024;
+            c = 1024 * 1024L;
         } else if (str.endsWith("g")) {
-            c = 1024 * 1024 * 1024;
+            c = 1024 * 1024 * 1024L;
         }
 
         return Long.valueOf(str.substring(0, str.length() - 1).trim()) * c;

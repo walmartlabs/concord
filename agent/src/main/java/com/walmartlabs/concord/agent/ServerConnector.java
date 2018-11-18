@@ -102,7 +102,7 @@ public class ServerConnector implements MaintenanceModeListener {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                // ignore
+                Thread.currentThread().interrupt();
             }
         }
 

@@ -117,7 +117,7 @@ public class DiffUtils {
             GlobalId id = newObject.getAffectedGlobalId();
 
             Map<String, Object> newObject2 = (new ObjectMapper()).convertValue(
-                    newObject.getAffectedObject().get(),
+                    newObject.getAffectedObject().orElse(null),
                     new TypeReference<Map<String, Object>>() {
                     });
 
@@ -143,7 +143,7 @@ public class DiffUtils {
             GlobalId id = objectRemoved.getAffectedGlobalId();
 
             Map<String, Object> newObject2 = (new ObjectMapper()).convertValue(
-                    objectRemoved.getAffectedObject().get(),
+                    objectRemoved.getAffectedObject().orElse(null),
                     new TypeReference<Map<String, Object>>() {
                     });
 

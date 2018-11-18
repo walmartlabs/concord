@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 public class ExecutionManager {
 
     private static final Logger log = LoggerFactory.getLogger(ExecutionManager.class);
-    private static final long JOB_ENTRY_TTL = 8 * 60 * 60 * 1000; // 8 hours
+    private static final long JOB_ENTRY_TTL = 8 * 60 * 60 * 1000L; // 8 hours
 
     private final DefaultJobExecutor jobExecutor;
     private final LogManager logManager;

@@ -56,6 +56,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Named
 @Singleton
@@ -361,7 +362,7 @@ public class Main {
                 deps = parseDeps(Paths.get(args[0]));
             }
 
-            URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[0]), Main.class.getClassLoader());
+            URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[0]), Main.class.getClassLoader()); // NOSONAR
             Thread.currentThread().setContextClassLoader(depsClassLoader);
 
             Injector injector = createInjector(depsClassLoader);
@@ -429,15 +430,17 @@ public class Main {
         Path baseDir = Paths.get(System.getProperty("user.dir"));
         Path lib = baseDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME);
         if (Files.exists(lib)) {
-            Files.list(lib).forEach(f -> {
-                if (f.toString().endsWith(".jar")) {
-                    try {
-                        result.add(f.toUri().toURL());
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
+            try (Stream<Path> s = Files.list(lib)) {
+                s.forEach(f -> {
+                    if (f.toString().endsWith(".jar")) {
+                        try {
+                            result.add(f.toUri().toURL());
+                        } catch (MalformedURLException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         return result;

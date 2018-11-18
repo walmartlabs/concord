@@ -57,7 +57,7 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
 
     private static final String EMAIL_SUBJECT = "Your Concord API Token Is Expiring";
     private static final long POLL_INTERVAL = TimeUnit.DAYS.toSeconds(1);
-    private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> new SimpleDateFormat("YYYY-MM-dd"));
+    private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
 
     private final ApiKeyConfiguration cfg;
     private final ExpiredKeysDao dao;

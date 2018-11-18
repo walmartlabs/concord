@@ -230,7 +230,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             if (line == null) {
                 return null;
             }
-            if (reader.readLine() != null) {
+            if (reader.readLine() != null) { // NOSONAR
                 throw new RepositoryException("Unexpected multiple lines: " + result);
             }
         } catch (IOException e) {
@@ -513,7 +513,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             }
 
             return out.get().toString();
-        } catch (ExecutionException | IOException | InterruptedException e) {
+        } catch (ExecutionException | IOException | InterruptedException e) { // NOSONAR
             log.error("launchCommand ['{}'] -> error", cmd, e);
             throw new RepositoryException("git operation error: " + e.getMessage());
         }

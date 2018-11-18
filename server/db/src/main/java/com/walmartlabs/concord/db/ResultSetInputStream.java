@@ -37,7 +37,7 @@ public class ResultSetInputStream extends InputStream {
     public static InputStream open(Connection conn, PreparedStatement ps, int columnIndex) throws SQLException {
         ResultSet rs = null; // NOSONAR
         try {
-            rs = ps.executeQuery();
+            rs = ps.executeQuery(); // NOSONAR
             if (!rs.next()) {
                 closeSilently(rs);
                 return null;

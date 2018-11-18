@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.slack;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -34,6 +33,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -70,17 +70,22 @@ public class SlackClient implements AutoCloseable {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String authToken;
     private final int retryCount;
+
+    private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient client;
 
     public SlackClient(SlackConfiguration cfg) throws Exception {
         this.authToken = cfg.getAuthToken();
         this.retryCount = cfg.getRetryCount();
-        this.client = createClient(cfg);
+
+        this.connManager = createConnManager();
+        this.client = createClient(cfg, connManager);
     }
 
     @Override
     public void close() throws IOException {
         client.close();
+        connManager.close();
     }
 
     public Response message(String channelId, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
@@ -116,7 +121,7 @@ public class SlackClient implements AutoCloseable {
                 if (response.getStatusLine().getStatusCode() == TOO_MANY_REQUESTS_ERROR) {
                     int retryAfter = getRetryAfter(response);
                     log.warn("message ['{}', '{}'] -> too many requests, retry after {} sec", channelId, params, retryAfter);
-                    sleep(retryAfter * 1000);
+                    sleep(retryAfter * 1000L);
                 } else {
                     if (response.getEntity() == null) {
                         log.error("message ['{}', '{}'] -> empty response", channelId, params);
@@ -155,7 +160,7 @@ public class SlackClient implements AutoCloseable {
         }
     }
 
-    private CloseableHttpClient createClient(SlackConfiguration cfg) throws Exception {
+    private static PoolingHttpClientConnectionManager createConnManager() throws Exception {
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
 
@@ -164,11 +169,13 @@ public class SlackClient implements AutoCloseable {
                 .register("https", new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE))
                 .build();
 
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry);
+        return new PoolingHttpClientConnectionManager(registry);
+    }
 
+    private static CloseableHttpClient createClient(SlackConfiguration cfg, HttpClientConnectionManager connManager) throws Exception {
         return HttpClientBuilder.create()
                 .setDefaultRequestConfig(createConfig(cfg))
-                .setConnectionManager(cm)
+                .setConnectionManager(connManager)
                 .build();
     }
 

@@ -357,11 +357,13 @@ public class ProjectProcessResource implements Resource {
     }
 
     private Response processError(PartialProcessKey processKey, String message) {
-        UUID instanceId = processKey.getInstanceId();
-
         Map<String, Object> args = new HashMap<>();
-        if (instanceId != null) {
-            args.put("instanceId", instanceId);
+
+        if (processKey != null) {
+            UUID instanceId = processKey.getInstanceId();
+            if (instanceId != null) {
+                args.put("instanceId", instanceId);
+            }
         }
         args.put("message", message);
 
