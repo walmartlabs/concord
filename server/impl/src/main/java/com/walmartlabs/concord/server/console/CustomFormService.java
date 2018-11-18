@@ -214,7 +214,7 @@ public class CustomFormService implements Resource {
                     } else {
                         while (true) {
                             ProcessEntry entry = queueDao.get(processKey);
-                            ProcessStatus s = entry.getStatus();
+                            ProcessStatus s = entry.status();
 
                             if (s == ProcessStatus.SUSPENDED) {
                                 String nextFormId = formService.nextFormId(processKey);

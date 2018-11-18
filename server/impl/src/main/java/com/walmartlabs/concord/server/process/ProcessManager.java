@@ -129,7 +129,7 @@ public class ProcessManager {
 
         assertKillRights(e);
 
-        ProcessStatus s = e.getStatus();
+        ProcessStatus s = e.status();
         if (TERMINATED_PROCESS_STATUSES.contains(s)) {
             return;
         }
@@ -224,7 +224,7 @@ public class ProcessManager {
     private Map<String, Object> process(ProcessKey processKey, Map<String, Object> params) {
         while (true) {
             ProcessEntry entry = queueDao.get(processKey);
-            ProcessStatus status = entry.getStatus();
+            ProcessStatus status = entry.status();
 
             if (status == ProcessStatus.SUSPENDED) {
                 wakeUpProcess(processKey, params);
@@ -268,7 +268,7 @@ public class ProcessManager {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readOutValues(ProcessEntry entry) {
-        Map<String, Object> meta = entry.getMeta();
+        Map<String, Object> meta = entry.meta();
         return meta != null ? (Map<String, Object>) meta.get("out") : null;
     }
 
@@ -296,19 +296,20 @@ public class ProcessManager {
             return;
         }
 
-        if (p.getId().equals(e.getInitiatorId())) {
+        if (p.getId().equals(e.initiatorId())) {
             // process owners can kill their own processes
             return;
         }
 
-        if (e.getProjectId() != null) {
+        UUID projectId = e.projectId();
+        if (projectId != null) {
             // only org members with WRITER rights can kill the process
-            projectAccessManager.assertProjectAccess(e.getProjectId(), ResourceAccessLevel.WRITER, true);
+            projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
             return;
         }
 
         throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
-                "to kill the process: " + e.getInstanceId());
+                "to kill the process: " + e.instanceId());
     }
 
     public void assertUpdateRights(PartialProcessKey processKey) {

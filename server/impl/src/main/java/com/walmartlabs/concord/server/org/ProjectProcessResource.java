@@ -235,18 +235,18 @@ public class ProjectProcessResource implements Resource {
 
         ProcessKey pk = ProcessKey.from(entry);
 
-        ProcessStatus processStatus = entry.getStatus();
-        if (processStatus == ProcessStatus.FAILED || processStatus == ProcessStatus.CANCELLED || processStatus == ProcessStatus.TIMED_OUT) {
+        ProcessStatus s = entry.status();
+        if (s == ProcessStatus.FAILED || s == ProcessStatus.CANCELLED || s == ProcessStatus.TIMED_OUT) {
             return processError(processKey, "Process failed");
-        } else if (processStatus == ProcessStatus.FINISHED) {
+        } else if (s == ProcessStatus.FINISHED) {
             return processFinished(processKey);
-        } else if (processStatus == ProcessStatus.SUSPENDED) {
+        } else if (s == ProcessStatus.SUSPENDED) {
             String nextFormId = formService.nextFormId(pk);
             if (nextFormId == null) {
                 return processError(processKey, "Invalid process state: no forms found");
             }
 
-            String url = "/#/process/" + entry.getInstanceId() + "/wizard";
+            String url = "/#/process/" + entry.instanceId() + "/wizard";
             return Response.status(Status.MOVED_PERMANENTLY)
                     .header(HttpHeaders.LOCATION, url)
                     .build();
@@ -277,14 +277,14 @@ public class ProjectProcessResource implements Resource {
 
     private static Map<String, Object> prepareArgumentsForInProgressTemplate(ProcessEntry entry) {
         Map<String, Object> args = new HashMap<>();
-        args.put("orgName", entry.getOrgName());
-        args.put("projectName", entry.getProjectName());
-        args.put("instanceId", entry.getInstanceId().toString());
-        args.put("parentInstanceId", entry.getParentInstanceId());
-        args.put("initiator", entry.getInitiator());
-        args.put("createdAt", entry.getCreatedAt());
-        args.put("lastUpdatedAt", entry.getLastUpdatedAt());
-        args.put("status", entry.getStatus().toString());
+        args.put("orgName", entry.orgName());
+        args.put("projectName", entry.projectName());
+        args.put("instanceId", entry.instanceId().toString());
+        args.put("parentInstanceId", entry.parentInstanceId());
+        args.put("initiator", entry.initiator());
+        args.put("createdAt", entry.createdAt());
+        args.put("lastUpdatedAt", entry.lastUpdatedAt());
+        args.put("status", entry.status().toString());
         return args;
     }
 

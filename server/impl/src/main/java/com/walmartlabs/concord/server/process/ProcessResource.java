@@ -411,7 +411,7 @@ public class ProcessResource implements Resource {
         PartialProcessKey processKey = PartialProcessKey.from(UUID.randomUUID());
         ProcessKey parentProcessKey = ProcessKey.from(parent);
 
-        UUID projectId = parent.getProjectId();
+        UUID projectId = parent.projectId();
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
 
         Payload payload;
@@ -447,15 +447,17 @@ public class ProcessResource implements Resource {
         ProcessEntry r;
         while (true) {
             r = get(instanceId);
-            if (r.getStatus() == ProcessStatus.FINISHED || r.getStatus() == ProcessStatus.FAILED
-                    || r.getStatus() == ProcessStatus.CANCELLED || r.getStatus() == ProcessStatus.TIMED_OUT) {
+
+            ProcessStatus s = r.status();
+            if (s == ProcessStatus.FINISHED || s == ProcessStatus.FAILED
+                    || s == ProcessStatus.CANCELLED || s == ProcessStatus.TIMED_OUT) {
                 break;
             }
 
             if (timeout > 0) {
                 long t2 = System.currentTimeMillis();
                 if (t2 - t1 >= timeout) {
-                    log.warn("waitForCompletion ['{}', {}] -> timeout, last status: {}", instanceId, timeout, r.getStatus());
+                    log.warn("waitForCompletion ['{}', {}] -> timeout, last status: {}", instanceId, timeout, s);
                     throw new ConcordApplicationException(Response.status(Status.REQUEST_TIMEOUT).entity(r).build());
                 }
             }
@@ -551,8 +553,8 @@ public class ProcessResource implements Resource {
         List<ProcessEventEntry> events = eventDao.list(pk.getInstanceId(), pk.getCreatedAt(), EventType.PROCESS_STATUS.name(), -1);
         List<ProcessStatusHistoryEntry> result = new ArrayList<>(events.size());
         for (ProcessEventEntry e : events) {
-            Map<String, Object> payload = new HashMap<>(objectMapper.readValue((String)e.getData(), Map.class));
-            ProcessStatus status = ProcessStatus.valueOf((String)payload.remove("status"));
+            Map<String, Object> payload = new HashMap<>(objectMapper.readValue((String) e.getData(), Map.class));
+            ProcessStatus status = ProcessStatus.valueOf((String) payload.remove("status"));
             result.add(new ProcessStatusHistoryEntry(e.getId(), status, e.getEventDate(), payload));
         }
 
@@ -966,7 +968,8 @@ public class ProcessResource implements Resource {
 
         byte[] result;
         try {
-            result = encryptedValueManager.decrypt(entry.getProjectId(), baos.toByteArray());
+            UUID projectId = entry.projectId();
+            result = encryptedValueManager.decrypt(projectId, baos.toByteArray());
         } catch (SecurityException e) {
             log.error("decrypt ['{}'] -> error", processKey, e);
             throw new SecretException("Decrypt error: " + e.getMessage());
@@ -1005,7 +1008,7 @@ public class ProcessResource implements Resource {
     private void assertProcessStateAccess(ProcessEntry p) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
 
-        UUID initiatorId = p.getInitiatorId();
+        UUID initiatorId = p.initiatorId();
         if (principal.getId().equals(initiatorId)) {
             // process owners should be able to download the process' state
             return;
@@ -1016,7 +1019,7 @@ public class ProcessResource implements Resource {
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to the download the process state: " + p.getInstanceId());
+                "the necessary permissions to the download the process state: " + p.instanceId());
     }
 
     private ProcessEntry assertProcess(PartialProcessKey processKey) {

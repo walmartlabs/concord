@@ -504,7 +504,7 @@ public class ProcessIT extends AbstractServerIT {
         List<ProcessEntry> processEntry = processApi.list(por.getId(), null, null, null, null, null, null, 10, 0);
         for (ProcessEntry pe : processEntry) {
             if (pe.getInstanceId().equals(singleNodeProcess.getInstanceId())) {
-                assertTrue(pe.getChildrenIds().isEmpty());
+                assertTrue(pe.getChildrenIds() == null || pe.getChildrenIds().isEmpty());
             } else if (pe.getInstanceId().equals(parentSpr.getInstanceId())) {
                 assertEquals(3, pe.getChildrenIds().size());
             }

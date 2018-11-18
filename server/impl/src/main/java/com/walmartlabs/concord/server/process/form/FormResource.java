@@ -149,12 +149,13 @@ public class FormResource implements Resource {
     /**
      * Submit form instance's data, potentially resuming a suspended process.
      *
+     * @param processInstanceId
      * @param formName
      * @param data
      * @return
      */
     @POST
-    @ApiOperation("Submit JSON form data")
+    @ApiOperation(value = "Submit JSON form data")
     @Path("/{processInstanceId}/form/{formName}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -184,21 +185,25 @@ public class FormResource implements Resource {
 
     /**
      * Submit form instance's data, potentially resuming a suspended process.
-     * It's not annotated with Swagger's {@link ApiOperation} to avoid conflicts.
+     * The method must have a different {@code @Path} than {@link #submit(UUID, String, Map)} to avoid
+     * conflicts in the Swagger spec/clients.
      *
+     * @param processInstanceId
      * @param formName
      * @param data
      * @return
      */
     @POST
-    @Path("/{processInstanceId}/form/{formName}")
+    @ApiOperation(value = "Submit multipart form data")
+    @Path("/{processInstanceId}/form/{formName}/multipart")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public FormSubmitResponse submit(@PathParam("processInstanceId") UUID processInstanceId,
                                      @PathParam("formName") String formName,
                                      MultipartInput data) {
 
-        return submit(processInstanceId, formName, MultipartUtils.toMap(data));
+        Map<String, Object> m = MultipartUtils.toMap(data);
+        return submit(processInstanceId, formName, m);
     }
 
     private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {

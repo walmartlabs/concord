@@ -20,225 +20,92 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@JsonInclude(Include.NON_NULL)
-public class ProcessEntry implements Serializable {
+@Value.Immutable
+@JsonInclude(Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableProcessEntry.class)
+@JsonDeserialize(as = ImmutableProcessEntry.class)
+public interface ProcessEntry {
 
-    private final UUID instanceId;
-    private final ProcessKind kind;
-    private final UUID parentInstanceId;
-    private final UUID orgId;
-    private final String orgName;
-    private final UUID projectId;
-    private final String projectName;
-    private final UUID repoId;
-    private final String repoName;
-    private final String repoUrl;
-    private final String repoPath;
-    private final String commitId;
-    private final String commitMsg;
-    private final String initiator;
-    private final UUID initiatorId;
-    private final ProcessStatus status;
-    private final String lastAgentId;
-    private final String logFileName;
-    private final Set<String> tags;
-    private final Set<UUID> childrenIds;
-    private final Map<String, Object> meta;
-    private final Set<String> handlers;
+    UUID instanceId();
+
+    ProcessKind kind();
+
+    @Nullable
+    UUID parentInstanceId();
+
+    @Nullable
+    UUID orgId();
+
+    @Nullable
+    String orgName();
+
+    @Nullable
+    UUID projectId();
+
+    @Nullable
+    String projectName();
+
+    @Nullable
+    UUID repoId();
+
+    @Nullable
+    String repoName();
+
+    @Nullable
+    String repoUrl();
+
+    @Nullable
+    String repoPath();
+
+    @Nullable
+    String commitId();
+
+    @Nullable
+    String commitMsg();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private final Date createdAt;
+    Date createdAt();
+
+    @Nullable
+    String initiator();
+
+    @Nullable
+    UUID initiatorId();
+
+    ProcessStatus status();
+
+    @Nullable
+    String lastAgentId();
+
+    @Nullable
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private final Date lastUpdatedAt;
+    Date lastUpdatedAt();
 
-    @JsonCreator
-    public ProcessEntry(@JsonProperty("instanceId") UUID instanceId,
-                        @JsonProperty("kind") ProcessKind kind,
-                        @JsonProperty("parentInstanceId") UUID parentInstanceId,
-                        @JsonProperty("orgId") UUID orgId,
-                        @JsonProperty("orgName") String orgName,
-                        @JsonProperty("projectId") UUID projectId,
-                        @JsonProperty("projectName") String projectName,
-                        @JsonProperty("repoId") UUID repoId,
-                        @JsonProperty("repoName") String repoName,
-                        @JsonProperty("repoUrl") String repoUrl,
-                        @JsonProperty("repoPath") String repoPath,
-                        @JsonProperty("commitId") String commitId,
-                        @JsonProperty("commitMsg") String commitMsg,
-                        @JsonProperty("createdAt") Date createdAt,
-                        @JsonProperty("initiator") String initiator,
-                        @JsonProperty("initiatorId") UUID initiatorId,
-                        @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
-                        @JsonProperty("status") ProcessStatus status,
-                        @JsonProperty("lastAgentId") String lastAgentId,
-                        @JsonProperty("tags") Set<String> tags,
-                        @JsonProperty("childrenIds") Set<UUID> childrenIds,
-                        @JsonProperty("meta") Map<String, Object> meta,
-                        @JsonProperty("handlers") Set<String> handlers) {
+    @Nullable
+    String logFileName();
 
-        this.instanceId = instanceId;
-        this.kind = kind;
-        this.parentInstanceId = parentInstanceId;
-        this.orgId = orgId;
-        this.orgName = orgName;
-        this.projectId = projectId;
-        this.projectName = projectName;
-        this.repoId = repoId;
-        this.repoName = repoName;
-        this.repoUrl = repoUrl;
-        this.repoPath = repoPath;
-        this.commitId = commitId;
-        this.commitMsg = commitMsg;
-        this.createdAt = createdAt;
-        this.initiator = initiator;
-        this.initiatorId = initiatorId;
-        this.lastUpdatedAt = lastUpdatedAt;
-        this.status = status;
-        this.lastAgentId = lastAgentId;
-        this.tags = tags;
-        this.childrenIds = childrenIds;
-        this.meta = meta;
-        this.handlers = handlers;
+    @Nullable
+    Set<String> tags();
 
-        // TODO left for backwards compatibility
-        this.logFileName = instanceId + ".log";
-    }
+    @Nullable
+    Set<UUID> childrenIds();
 
-    public UUID getInstanceId() {
-        return instanceId;
-    }
+    @Nullable
+    Map<String, Object> meta();
 
-    public ProcessKind getKind() {
-        return kind;
-    }
-
-    public UUID getParentInstanceId() {
-        return parentInstanceId;
-    }
-
-    public UUID getOrgId() {
-        return orgId;
-    }
-
-    public String getOrgName() {
-        return orgName;
-    }
-
-    public UUID getProjectId() {
-        return projectId;
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public UUID getRepoId() {
-        return repoId;
-    }
-
-    public String getRepoName() {
-        return repoName;
-    }
-
-    public String getRepoUrl() {
-        return repoUrl;
-    }
-
-    public String getRepoPath() {
-        return repoPath;
-    }
-
-    public String getCommitId() {
-        return commitId;
-    }
-
-    public String getCommitMsg() {
-        return commitMsg;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public String getInitiator() {
-        return initiator;
-    }
-
-    public UUID getInitiatorId() {
-        return initiatorId;
-    }
-
-    public ProcessStatus getStatus() {
-        return status;
-    }
-
-    public String getLastAgentId() {
-        return lastAgentId;
-    }
-
-    public Date getLastUpdatedAt() {
-        return lastUpdatedAt;
-    }
-
-    public String getLogFileName() {
-        return logFileName;
-    }
-
-    public Set<String> getTags() {
-        return tags;
-    }
-
-    public Set<UUID> getChildrenIds() {
-        return childrenIds;
-    }
-
-    public Map<String, Object> getMeta() {
-        return meta;
-    }
-
-    public Set<String> getHandlers() {
-        return handlers;
-    }
-
-    @Override
-    public String toString() {
-        return "ProcessEntry{" +
-                "instanceId=" + instanceId +
-                ", kind=" + kind +
-                ", parentInstanceId=" + parentInstanceId +
-                ", orgId=" + orgId +
-                ", orgName='" + orgName + '\'' +
-                ", projectId=" + projectId +
-                ", projectName='" + projectName + '\'' +
-                ", repoId=" + repoId +
-                ", repoName='" + repoName + '\'' +
-                ", repoUrl='" + repoUrl + '\'' +
-                ", repoPath='" + repoPath + '\'' +
-                ", commitId='" + commitId + '\'' +
-                ", commitMsg='" + commitMsg + '\'' +
-                ", initiator='" + initiator + '\'' +
-                ", initiatorId=" + initiatorId +
-                ", status=" + status +
-                ", lastAgentId='" + lastAgentId + '\'' +
-                ", logFileName='" + logFileName + '\'' +
-                ", tags=" + tags +
-                ", childrenIds=" + childrenIds +
-                ", meta=" + meta +
-                ", handlers=" + handlers +
-                ", createdAt=" + createdAt +
-                ", lastUpdatedAt=" + lastUpdatedAt +
-                '}';
-    }
+    @Nullable
+    Set<String> handlers();
 }

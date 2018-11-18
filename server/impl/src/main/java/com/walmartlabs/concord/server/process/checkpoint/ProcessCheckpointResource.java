@@ -117,9 +117,9 @@ public class ProcessCheckpointResource implements Resource {
 
         assertProcessCheckpointAccess(entry);
 
-        ProcessStatus status = entry.getStatus();
-        if (!RESTORE_ALLOWED_STATUSES.contains(status)) {
-            throw new ConcordApplicationException("Unable to restore a checkpoint, the process is " + status);
+        ProcessStatus s = entry.status();
+        if (!RESTORE_ALLOWED_STATUSES.contains(s)) {
+            throw new ConcordApplicationException("Unable to restore a checkpoint, the process is " + s);
         }
 
         String eventName = checkpointManager.restoreCheckpoint(processKey, checkpointId);
@@ -176,7 +176,7 @@ public class ProcessCheckpointResource implements Resource {
     private void assertProcessCheckpointAccess(ProcessEntry p) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
 
-        UUID initiatorId = p.getInitiatorId();
+        UUID initiatorId = p.initiatorId();
         if (principal.getId().equals(initiatorId)) {
             // process owners should be able to restore the process from a checkpoint
             return;
@@ -186,12 +186,13 @@ public class ProcessCheckpointResource implements Resource {
             return;
         }
 
-        if (p.getProjectId() != null) {
-            projectAccessManager.assertProjectAccess(p.getProjectId(), ResourceAccessLevel.WRITER, false);
+        UUID projectId = p.projectId();
+        if (projectId != null) {
+            projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
             return;
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to restore the process using a checkpoint: " + p.getInstanceId());
+                "the necessary permissions to restore the process using a checkpoint: " + p.instanceId());
     }
 }

@@ -30,7 +30,7 @@ import java.util.UUID;
 public class ProcessKey extends PartialProcessKey {
 
     public static ProcessKey from(ProcessEntry e) {
-        return new ProcessKey(e.getInstanceId(), new Timestamp(e.getCreatedAt().getTime()));
+        return new ProcessKey(e.instanceId(), new Timestamp(e.createdAt().getTime()));
     }
 
     private final Timestamp createdAt;

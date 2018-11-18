@@ -54,7 +54,7 @@ public class AgentManager {
             throw new IllegalArgumentException("Process not found: " + processKey);
         }
 
-        String agentId = e.getLastAgentId();
+        String agentId = e.lastAgentId();
         if (agentId == null) {
             log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", processKey);
             queueDao.updateStatus(processKey, ProcessStatus.CANCELLED);
@@ -68,8 +68,8 @@ public class AgentManager {
         List<ProcessEntry> l = queueDao.get(processKeys);
 
         List<UUID> withoutAgent = l.stream()
-                .filter(p -> p.getLastAgentId() == null)
-                .map(ProcessEntry::getInstanceId)
+                .filter(p -> p.lastAgentId() == null)
+                .map(ProcessEntry::instanceId)
                 .collect(Collectors.toList());
 
         if (!withoutAgent.isEmpty()) {
@@ -78,9 +78,9 @@ public class AgentManager {
         }
 
         List<AgentCommand> commands = l.stream()
-                .filter(p -> p.getLastAgentId() != null)
-                .map(p -> new AgentCommand(UUID.randomUUID(), p.getLastAgentId(), AgentCommand.Status.CREATED,
-                        new Date(), Commands.cancel(p.getInstanceId().toString())))
+                .filter(p -> p.lastAgentId() != null)
+                .map(p -> new AgentCommand(UUID.randomUUID(), p.lastAgentId(), AgentCommand.Status.CREATED,
+                        new Date(), Commands.cancel(p.instanceId().toString())))
                 .collect(Collectors.toList());
 
         commandQueue.insertBatch(commands);

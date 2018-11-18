@@ -22,8 +22,9 @@ package com.walmartlabs.concord.server.console;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.sdk.EventType;
@@ -49,11 +50,13 @@ import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.immutables.value.Value;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -311,9 +314,9 @@ public class ConsoleService implements Resource {
     @Path("/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEntry> listProcesses(@QueryParam("orgId") UUID orgId,
-                                            @QueryParam("projectId") UUID projectId,
-                                            @QueryParam("limit") @DefaultValue("30") int limit) {
+    public List<ProcessEntryEx> listProcesses(@QueryParam("orgId") UUID orgId,
+                                              @QueryParam("projectId") UUID projectId,
+                                              @QueryParam("limit") @DefaultValue("30") int limit) {
 
         if (limit <= 0) {
             throw new ConcordApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
@@ -330,7 +333,7 @@ public class ConsoleService implements Resource {
             super(cfg);
         }
 
-        public List<ProcessEntry> list(UUID orgId, UUID projectId, int limit) {
+        public List<ProcessEntryEx> list(UUID orgId, UUID projectId, int limit) {
             VProcessQueue pq = V_PROCESS_QUEUE.as("pq");
             ProcessCheckpoints pc = PROCESS_CHECKPOINTS.as("pc");
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
@@ -387,130 +390,74 @@ public class ConsoleService implements Resource {
             }
         }
 
-        private ProcessEntry toEntry(Record14<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object, Object> r) {
-            return new ProcessEntry(r.value1(),
-                    r.value2(), r.value3(),
-                    r.value4(), r.value5(),
-                    r.value6(), r.value7(),
-                    r.value8(),
-                    ProcessStatus.valueOf(r.value9()),
-                    r.value10(),
-                    r.value11(),
-                    r.value12(),
-                    r.value13(),
-                    r.value14());
+        @SuppressWarnings("unchecked")
+        private ProcessEntryEx toEntry(Record14<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object, Object> r) {
+            return ImmutableProcessEntryEx.builder()
+                    .instanceId(r.value1())
+                    .orgId(r.value2())
+                    .orgName(r.value3())
+                    .projectId(r.value4())
+                    .projectName(r.value5())
+                    .repoId(r.value6())
+                    .repoName(r.value7())
+                    .initiator(r.value8())
+                    .status(ProcessStatus.valueOf(r.value9()))
+                    .createdAt(r.value10())
+                    .lastUpdatedAt(r.value11())
+                    .meta(r.value12())
+                    .checkpoints(r.value13())
+                    .statusHistory(r.value14())
+                    .build();
         }
     }
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private static class ProcessEntry {
-        private final UUID instanceId;
-        private final UUID orgId;
-        private final String orgName;
-        private final UUID projectId;
-        private final String projectName;
-        private final UUID repoId;
-        private final String repoName;
-        private final String initiator;
-        private final ProcessStatus status;
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableProcessEntryEx.class)
+    @JsonDeserialize(as = ImmutableProcessEntryEx.class)
+    public interface ProcessEntryEx {
+
+        UUID instanceId();
+
+        @Nullable
+        UUID orgId();
+
+        @Nullable
+        String orgName();
+
+        @Nullable
+        UUID projectId();
+
+        @Nullable
+        String projectName();
+
+        @Nullable
+        UUID repoId();
+
+        @Nullable
+        String repoName();
+
+        @Nullable
+        String initiator();
+
+        ProcessStatus status();
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-        private final Date createdAt;
+        Date createdAt();
+
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-        private final Date lastUpdatedAt;
+        Date lastUpdatedAt();
 
-        private final Object meta;
-        private final Object checkpoints;
-        private final Object statusHistory;
-
-        public ProcessEntry(@JsonProperty("instanceId") UUID instanceId,
-                            @JsonProperty("orgId") UUID orgId,
-                            @JsonProperty("orgName") String orgName,
-                            @JsonProperty("projectId") UUID projectId,
-                            @JsonProperty("projectName") String projectName,
-                            @JsonProperty("repoId") UUID repoId,
-                            @JsonProperty("repoName") String repoName,
-                            @JsonProperty("initiator") String initiator,
-                            @JsonProperty("status") ProcessStatus status,
-                            @JsonProperty("createdAt") Date createdAt,
-                            @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
-                            @JsonProperty("meta") Object meta,
-                            @JsonProperty("checkpoints") Object checkpoints,
-                            @JsonProperty("history") Object statusHistory) {
-
-            this.instanceId = instanceId;
-            this.orgId = orgId;
-            this.orgName = orgName;
-            this.projectId = projectId;
-            this.projectName = projectName;
-            this.repoId = repoId;
-            this.repoName = repoName;
-            this.initiator = initiator;
-            this.status = status;
-            this.createdAt = createdAt;
-            this.lastUpdatedAt = lastUpdatedAt;
-            this.meta = meta;
-            this.checkpoints = checkpoints;
-            this.statusHistory = statusHistory;
-        }
-
-        public UUID getInstanceId() {
-            return instanceId;
-        }
-
-        public UUID getOrgId() {
-            return orgId;
-        }
-
-        public String getOrgName() {
-            return orgName;
-        }
-
-        public UUID getProjectId() {
-            return projectId;
-        }
-
-        public String getProjectName() {
-            return projectName;
-        }
-
-        public UUID getRepoId() {
-            return repoId;
-        }
-
-        public String getRepoName() {
-            return repoName;
-        }
-
-        public String getInitiator() {
-            return initiator;
-        }
-
-        public ProcessStatus getStatus() {
-            return status;
-        }
-
-        public Date getCreatedAt() {
-            return createdAt;
-        }
-
-        public Date getLastUpdatedAt() {
-            return lastUpdatedAt;
-        }
-
+        @Nullable
         @JsonRawValue
-        public Object getMeta() {
-            return meta;
-        }
+        Object meta();
 
+        @Nullable
         @JsonRawValue
-        public Object getCheckpoints() {
-            return checkpoints;
-        }
+        Object checkpoints();
 
+        @Nullable
         @JsonRawValue
-        public Object getStatusHistory() {
-            return statusHistory;
-        }
+        Object statusHistory();
     }
 }

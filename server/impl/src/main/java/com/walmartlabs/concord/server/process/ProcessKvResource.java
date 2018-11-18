@@ -134,7 +134,7 @@ public class ProcessKvResource implements Resource {
             throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
         }
 
-        UUID projectId = entry.getProjectId();
+        UUID projectId = entry.projectId();
         if (projectId == null) {
             log.warn("assertProjectId ['{}'] -> no project found, using the default value", processKey);
             projectId = DEFAULT_PROJECT_ID;

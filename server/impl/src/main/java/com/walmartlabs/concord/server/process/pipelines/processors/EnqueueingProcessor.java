@@ -63,7 +63,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Process not found: " + processKey);
         }
 
-        ProcessStatus s = e.getStatus();
+        ProcessStatus s = e.status();
         if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }

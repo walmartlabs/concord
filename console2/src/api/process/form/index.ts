@@ -113,5 +113,5 @@ export const submit = (
         body
     };
 
-    return fetchJson(`/api/v1/process/${processInstanceId}/form/${formName}`, opts);
+    return fetchJson(`/api/v1/process/${processInstanceId}/form/${formName}/multipart`, opts);
 };

@@ -128,7 +128,7 @@ public class FormIT extends AbstractServerIT {
         String formName = f0.getName();
 
         Map<String, Object> data = Collections.singletonMap("firstName", firstName);
-        FormSubmitResponse fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formName, data, FormSubmitResponse.class);
+        FormSubmitResponse fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formName + "/multipart", data, FormSubmitResponse.class);
         assertTrue(fsr.isOk());
 
         ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
@@ -150,7 +150,7 @@ public class FormIT extends AbstractServerIT {
         data.put("rememberMe", true);
         data.put("file", "file-content".getBytes());
 
-        fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formName, data, FormSubmitResponse.class);
+        fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formName + "/multipart", data, FormSubmitResponse.class);
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 

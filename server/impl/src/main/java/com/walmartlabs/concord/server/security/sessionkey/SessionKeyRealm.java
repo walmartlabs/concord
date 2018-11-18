@@ -78,18 +78,18 @@ public class SessionKeyRealm extends AuthorizingRealm {
         PartialProcessKey processKey = PartialProcessKey.from(t.getInstanceId());
 
         try {
-            ProcessEntry process = processQueueDao.get(processKey);
-            if (process == null) {
+            ProcessEntry p = processQueueDao.get(processKey);
+            if (p == null) {
                 log.warn("doGetAuthenticationInfo -> process not found: {}", t.getInstanceId());
                 return null;
             }
 
-            if (process.getInitiatorId() == null) {
+            if (p.initiatorId() == null) {
                 log.warn("doGetAuthenticationInfo -> initiator not found: {}", t.getInstanceId());
                 return null;
             }
 
-            if (isFinished(process)) {
+            if (isFinished(p)) {
                 log.warn("doGetAuthenticationInfo -> process is finished: {}", t.getInstanceId());
                 return null;
             }
@@ -127,6 +127,6 @@ public class SessionKeyRealm extends AuthorizingRealm {
     }
 
     private boolean isFinished(ProcessEntry process) {
-        return FINISHED_STATUSES.contains(process.getStatus());
+        return FINISHED_STATUSES.contains(process.status());
     }
 }

@@ -313,7 +313,7 @@ public class ProcessQueueDao extends AbstractDao {
         insertHistoryStatus(tx, processKey, status, Collections.emptyMap());
     }
 
-    private void insertHistoryStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload)  {
+    private void insertHistoryStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("status", status.name());
         payload.putAll(statusPayload);
@@ -679,36 +679,39 @@ public class ProcessQueueDao extends AbstractDao {
             kind = ProcessKind.DEFAULT;
         }
 
-        Set<String> tags = null;
+        Set<String> tags = Collections.emptySet();
         String[] as = r.getProcessTags();
         if (as != null && as.length > 0) {
             tags = new HashSet<>(as.length);
             Collections.addAll(tags, as);
         }
 
-        return new ProcessEntry(r.getInstanceId(),
-                kind,
-                r.getParentInstanceId(),
-                r.getOrgId(),
-                r.getOrgName(),
-                r.getProjectId(),
-                r.getProjectName(),
-                r.getRepoId(),
-                r.getRepoName(),
-                r.getRepoUrl(),
-                r.getRepoPath(),
-                r.getCommitId(),
-                r.getCommitMsg(),
-                r.getCreatedAt(),
-                r.getInitiator(),
-                r.getInitiatorId(),
-                r.getLastUpdatedAt(),
-                ProcessStatus.valueOf(r.getCurrentStatus()),
-                r.getLastAgentId(),
-                tags,
-                toSet(r.getChildrenIds()),
-                deserialize(r.getMeta()),
-                toSet(r.getHandlers()));
+        return ImmutableProcessEntry.builder()
+                .instanceId(r.getInstanceId())
+                .kind(kind)
+                .parentInstanceId(r.getParentInstanceId())
+                .orgId(r.getOrgId())
+                .orgName(r.getOrgName())
+                .projectId(r.getProjectId())
+                .projectName(r.getProjectName())
+                .repoId(r.getRepoId())
+                .repoName(r.getRepoName())
+                .repoUrl(r.getRepoUrl())
+                .repoPath(r.getRepoPath())
+                .commitId(r.getCommitId())
+                .commitMsg(r.getCommitMsg())
+                .initiator(r.getInitiator())
+                .initiatorId(r.getInitiatorId())
+                .lastUpdatedAt(r.getLastUpdatedAt())
+                .createdAt(r.getCreatedAt())
+                .status(ProcessStatus.valueOf(r.getCurrentStatus()))
+                .lastAgentId(r.getLastAgentId())
+                .tags(tags)
+                .childrenIds(toSet(r.getChildrenIds()))
+                .meta(deserialize(r.getMeta()))
+                .handlers(toSet(r.getHandlers()))
+                .logFileName(r.getInstanceId() + ".log")
+                .build();
     }
 
     private static Set<UUID> toSet(UUID[] arr) {
