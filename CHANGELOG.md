@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: add `meta` to the process checkpoint list endpoint.
 - concord-console: pagination support for the process list.
 
 ### Changed

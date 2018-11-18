@@ -34,7 +34,7 @@ public class PartialProcessKey implements Serializable {
      * Creates a partial process key from a known instance ID.
      */
     public static PartialProcessKey from(UUID instanceId) {
-        return PartialProcessKey.from(instanceId);
+        return new PartialProcessKey(instanceId);
     }
 
     /**

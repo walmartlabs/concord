@@ -339,8 +339,8 @@ public class ConsoleService implements Resource {
                 Field<Object> checkpoints = tx.select(
                         function("array_to_json", Object.class,
                                 function("array_agg", Object.class,
-                                        function("json_strip_nulls", Object.class,
-                                                function("json_build_object", Object.class,
+                                        function("jsonb_strip_nulls", Object.class,
+                                                function("jsonb_build_object", Object.class,
                                                         inline("id"), pc.CHECKPOINT_ID,
                                                         inline("name"), pc.CHECKPOINT_NAME,
                                                         inline("createdAt"), pc.CHECKPOINT_DATE)))))
@@ -350,8 +350,8 @@ public class ConsoleService implements Resource {
                 Field<Object> status = tx.select(
                         function("array_to_json", Object.class,
                                 function("array_agg", Object.class,
-                                        function("json_strip_nulls", Object.class,
-                                                function("json_build_object", Object.class,
+                                        function("jsonb_strip_nulls", Object.class,
+                                                function("jsonb_build_object", Object.class,
                                                         inline("changeDate"), pe.EVENT_DATE,
                                                         inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
                                                         inline("checkpointId"), field("{0}->'checkpointId'", Object.class, pe.EVENT_DATA))))))
@@ -359,7 +359,7 @@ public class ConsoleService implements Resource {
                         .where(pq.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()).and(pe.EVENT_DATE.greaterOrEqual(pq.CREATED_AT))))
                         .asField();
 
-                SelectJoinStep<Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object>> s = tx
+                SelectJoinStep<Record14<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object, Object>> s = tx
                         .select(pq.INSTANCE_ID,
                                 pq.ORG_ID, pq.ORG_NAME,
                                 pq.PROJECT_ID, pq.PROJECT_NAME,
@@ -368,6 +368,7 @@ public class ConsoleService implements Resource {
                                 pq.CURRENT_STATUS,
                                 pq.CREATED_AT,
                                 pq.LAST_UPDATED_AT,
+                                field("META as jsonb"),
                                 checkpoints,
                                 status)
                         .from(pq);
@@ -386,7 +387,7 @@ public class ConsoleService implements Resource {
             }
         }
 
-        private ProcessEntry toEntry(Record13<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object> r) {
+        private ProcessEntry toEntry(Record14<UUID, UUID, String, UUID, String, UUID, String, String, String, Timestamp, Timestamp, Object, Object, Object> r) {
             return new ProcessEntry(r.value1(),
                     r.value2(), r.value3(),
                     r.value4(), r.value5(),
@@ -396,7 +397,8 @@ public class ConsoleService implements Resource {
                     r.value10(),
                     r.value11(),
                     r.value12(),
-                    r.value13());
+                    r.value13(),
+                    r.value14());
         }
     }
 
@@ -417,6 +419,7 @@ public class ConsoleService implements Resource {
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
         private final Date lastUpdatedAt;
 
+        private final Object meta;
         private final Object checkpoints;
         private final Object statusHistory;
 
@@ -431,6 +434,7 @@ public class ConsoleService implements Resource {
                             @JsonProperty("status") ProcessStatus status,
                             @JsonProperty("createdAt") Date createdAt,
                             @JsonProperty("lastUpdatedAt") Date lastUpdatedAt,
+                            @JsonProperty("meta") Object meta,
                             @JsonProperty("checkpoints") Object checkpoints,
                             @JsonProperty("history") Object statusHistory) {
 
@@ -445,6 +449,7 @@ public class ConsoleService implements Resource {
             this.status = status;
             this.createdAt = createdAt;
             this.lastUpdatedAt = lastUpdatedAt;
+            this.meta = meta;
             this.checkpoints = checkpoints;
             this.statusHistory = statusHistory;
         }
@@ -491,6 +496,11 @@ public class ConsoleService implements Resource {
 
         public Date getLastUpdatedAt() {
             return lastUpdatedAt;
+        }
+
+        @JsonRawValue
+        public Object getMeta() {
+            return meta;
         }
 
         @JsonRawValue
