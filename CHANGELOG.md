@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: evaluate parsed expression value in custom form field's
+`allow` attribute
 - concord-server: change the (potential) partitioning key in
 `PROCESS_EVENTS` from `EVENT_DATE` to `INSTANCE_CREATED_AT`.
 

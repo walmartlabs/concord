@@ -323,8 +323,15 @@ public class CustomFormService implements Resource {
             _values.putAll(extra);
         }
 
+        Map<String, Object> allowedValues = form.getAllowedValues();
+        if (allowedValues == null) {
+            allowedValues = Collections.emptyMap();
+        }
+
         for (FormField f : fd.getFields()) {
-            _definitions.put(f.getName(), new FormDataDefinition(f.getLabel(), f.getType(), f.getCardinality(), f.getAllowedValue()));
+            Object allowedValue = allowedValues.get(f.getName());
+
+            _definitions.put(f.getName(), new FormDataDefinition(f.getLabel(), f.getType(), f.getCardinality(), allowedValue));
 
             Object v = overrides != null ? overrides.get(f.getName()) : null;
             if (v == null && skipMissingOverrides) {

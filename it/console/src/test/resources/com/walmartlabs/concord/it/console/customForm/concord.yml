@@ -1,9 +1,15 @@
 flows:
   default:
+  - set:
+      yamlObj:
+        values:
+        - "value_1"
+        - "value_2"
+
   - form: testForm
     values:
       testValue: "${requestInfo.query.testValue}"
 
 forms:
   testForm:
-  - x: { type: "string?" }
+  - x: { type: "string?", allow: "${yamlObj.values}" }

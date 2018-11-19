@@ -29,6 +29,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -43,6 +45,7 @@ public class CustomFormsIT {
     @Rule
     public ConcordConsoleRule consoleRule = new ConcordConsoleRule();
 
+    @SuppressWarnings("unchecked")
     @Test(timeout = 60000)
     public void test() throws Exception {
         ApiClient client = serverRule.getClient();
@@ -81,5 +84,10 @@ public class CustomFormsIT {
         By selector = By.id("testValue");
         WebElement element = consoleRule.waitFor(selector);
         assertEquals(testValue, element.getText());
+
+        Map<String,Object> formFields = (Map<String,Object>) consoleRule.executeJavaScript("return data.definitions");
+        Map<String,Object> fieldX = (Map<String,Object>) formFields.get("x");
+        List<Object> allowedValues = (List<Object>)fieldX.get("allow");
+        assertEquals("Expression object should have added two allowed values",2, allowedValues.size());
     }
 }

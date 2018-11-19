@@ -21,6 +21,7 @@ package com.walmartlabs.concord.it.console;
  */
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -60,6 +61,12 @@ public class ConcordConsoleRule extends WebDriverRule {
 
         WebElement loginButton = driver.findElement(By.id("loginButton"));
         loginButton.click();
+    }
+
+    public Object executeJavaScript(String js) {
+        WebDriver driver = getDriver();
+        JavascriptExecutor exec = (JavascriptExecutor) driver;
+        return exec.executeScript(js);
     }
 
     public WebElement waitFor(By by) {
