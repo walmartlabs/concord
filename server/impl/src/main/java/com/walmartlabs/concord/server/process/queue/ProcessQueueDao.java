@@ -79,7 +79,6 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public ProcessKey getKey(UUID instanceId) {
-        // TODO this is a good candidate for caching, since both instanceId and createdAt are immutable
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_QUEUE.CREATED_AT)
                     .from(PROCESS_QUEUE)
@@ -121,11 +120,11 @@ public class ProcessQueueDao extends AbstractDao {
         insertHistoryStatus(tx, processKey, ProcessStatus.PREPARING);
     }
 
-    public void updateAgentId(PartialProcessKey processKey, String agentId, ProcessStatus status) {
+    public void updateAgentId(ProcessKey processKey, String agentId, ProcessStatus status) {
         tx(tx -> updateAgentId(tx, processKey, agentId, status));
     }
 
-    public void updateAgentId(DSLContext tx, PartialProcessKey processKey, String agentId, ProcessStatus status) {
+    public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
         UUID instanceId = processKey.getInstanceId();
 
         int i = tx.update(PROCESS_QUEUE)
@@ -149,7 +148,7 @@ public class ProcessQueueDao extends AbstractDao {
                         .otherwise(PROCESS_QUEUE.LAST_RUN_AT));
     }
 
-    public void enqueue(PartialProcessKey processKey, Set<String> tags, Instant startAt,
+    public void enqueue(ProcessKey processKey, Set<String> tags, Instant startAt,
                         Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
                         String commitId, String commitMsg, Long processTimeout,
                         Set<String> handlers) {
@@ -211,19 +210,19 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public void updateStatus(PartialProcessKey processKey, ProcessStatus status) {
+    public void updateStatus(ProcessKey processKey, ProcessStatus status) {
         updateStatus(processKey, status, Collections.emptyMap());
     }
 
-    public void updateStatus(PartialProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
+    public void updateStatus(ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
         tx(tx -> updateStatus(tx, processKey, status, statusPayload));
     }
 
-    public void updateStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status) {
+    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         updateStatus(tx, processKey, status, Collections.emptyMap());
     }
 
-    public void updateStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
+    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
         UUID instanceId = processKey.getInstanceId();
 
         tx.update(PROCESS_QUEUE)
@@ -236,7 +235,7 @@ public class ProcessQueueDao extends AbstractDao {
         insertHistoryStatus(tx, processKey, status, statusPayload);
     }
 
-    public boolean updateStatus(PartialProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
+    public boolean updateStatus(ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
         UUID instanceId = processKey.getInstanceId();
 
         return txResult(tx -> {
@@ -281,7 +280,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public boolean updateStatus(List<PartialProcessKey> processKeys, ProcessStatus status, List<ProcessStatus> expected) {
+    public boolean updateStatus(List<ProcessKey> processKeys, ProcessStatus status, List<ProcessStatus> expected) {
         return txResult(tx -> {
             List<UUID> instanceIds = processKeys.stream()
                     .map(PartialProcessKey::getInstanceId)
@@ -309,29 +308,28 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    private void insertHistoryStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status) {
+    private void insertHistoryStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         insertHistoryStatus(tx, processKey, status, Collections.emptyMap());
     }
 
-    private void insertHistoryStatus(DSLContext tx, PartialProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
+    private void insertHistoryStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("status", status.name());
         payload.putAll(statusPayload);
 
         try {
-            eventDao.insert(tx, processKey.getInstanceId(), EventType.PROCESS_STATUS.name(), objectMapper.writeValueAsString(payload));
+            eventDao.insert(tx, processKey, EventType.PROCESS_STATUS.name(), objectMapper.writeValueAsString(payload));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void insertHistoryStatus(DSLContext tx, List<PartialProcessKey> processKeys, ProcessStatus status) {
+    private void insertHistoryStatus(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("status", status.name());
 
         try {
-            eventDao.insert(tx, processKeys.stream().map(PartialProcessKey::getInstanceId).collect(Collectors.toList()),
-                    EventType.PROCESS_STATUS.name(), objectMapper.writeValueAsString(payload));
+            eventDao.insert(tx, processKeys, EventType.PROCESS_STATUS.name(), objectMapper.writeValueAsString(payload));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -393,17 +391,16 @@ public class ProcessQueueDao extends AbstractDao {
 
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.withRecursive("children").as(
-                    select(V_PROCESS_QUEUE.INSTANCE_ID, V_PROCESS_QUEUE.CURRENT_STATUS).from(V_PROCESS_QUEUE)
-                            .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
                             .unionAll(
-                                    select(V_PROCESS_QUEUE.INSTANCE_ID, V_PROCESS_QUEUE.CURRENT_STATUS).from(V_PROCESS_QUEUE)
+                                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS).from(PROCESS_QUEUE)
                                             .join(name("children"))
-                                            .on(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
+                                            .on(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(
                                                     field(name("children", "INSTANCE_ID"), UUID.class)))))
                     .select()
                     .from(name("children"))
-                    .fetch(r -> new IdAndStatus(PartialProcessKey.from(r.get(0, UUID.class)),
-                            ProcessStatus.valueOf(r.get(1, String.class))));
+                    .fetch(r -> new IdAndStatus(new ProcessKey(r.get(0, UUID.class), r.get(1, Timestamp.class)), ProcessStatus.valueOf(r.get(2, String.class))));
         }
     }
 
@@ -569,10 +566,9 @@ public class ProcessQueueDao extends AbstractDao {
                 }
             }
 
-            PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+            ProcessKey processKey = new ProcessKey(instanceId, createdAt);
             updateStatus(tx, processKey, ProcessStatus.STARTING);
-
-            return FindResult.done(new ProcessKey(instanceId, createdAt));
+            return FindResult.done(processKey);
         });
     }
 
@@ -744,15 +740,15 @@ public class ProcessQueueDao extends AbstractDao {
 
     public static class IdAndStatus {
 
-        private final PartialProcessKey processKey;
+        private final ProcessKey processKey;
         private final ProcessStatus status;
 
-        public IdAndStatus(PartialProcessKey processKey, ProcessStatus status) {
+        public IdAndStatus(ProcessKey processKey, ProcessStatus status) {
             this.processKey = processKey;
             this.status = status;
         }
 
-        public PartialProcessKey getProcessKey() {
+        public ProcessKey getProcessKey() {
             return processKey;
         }
 

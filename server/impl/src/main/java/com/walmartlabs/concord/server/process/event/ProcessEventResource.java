@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -47,11 +49,13 @@ import java.util.UUID;
 public class ProcessEventResource implements Resource {
 
     private final EventDao eventDao;
+    private final ProcessKeyCache processKeyCache;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public ProcessEventResource(EventDao eventDao) {
+    public ProcessEventResource(EventDao eventDao, ProcessKeyCache processKeyCache) {
         this.eventDao = eventDao;
+        this.processKeyCache = processKeyCache;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -77,7 +81,8 @@ public class ProcessEventResource implements Resource {
             throw new ConcordApplicationException("Error while serializing the event's data: " + e.getMessage(), e);
         }
 
-        eventDao.insert(processInstanceId, req.getEventType(), data);
+        ProcessKey processKey = processKeyCache.get(processInstanceId);
+        eventDao.insert(processKey, req.getEventType(), data);
     }
 
     /**
@@ -99,6 +104,8 @@ public class ProcessEventResource implements Resource {
         if (geTimestamp != null) {
             ts = Timestamp.from(geTimestamp.getValue().toInstant());
         }
-        return eventDao.list(processInstanceId, ts, null, limit);
+
+        ProcessKey processKey = processKeyCache.get(processInstanceId);
+        return eventDao.list(processKey, ts, null, limit);
     }
 }

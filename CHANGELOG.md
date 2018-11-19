@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: change the (potential) partitioning key in
+`PROCESS_EVENTS` from `EVENT_DATE` to `INSTANCE_CREATED_AT`.
+
+
+
 ## [0.98.0] - 2018-11-18
 
 ### Added

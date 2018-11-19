@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="99000" author="ibodrov@gmail.com">
+        <sql>
+            lock table PROCESS_EVENTS;
+
+            alter table PROCESS_EVENTS add column INSTANCE_CREATED_AT timestamp;
+            update PROCESS_EVENTS as pe set INSTANCE_CREATED_AT = (select CREATED_AT from PROCESS_QUEUE as pq where pq.INSTANCE_ID = pe.INSTANCE_ID);
+            delete from PROCESS_EVENTS where INSTANCE_CREATED_AT is null;
+        </sql>
+
+        <addNotNullConstraint tableName="PROCESS_EVENTS" columnName="INSTANCE_CREATED_AT"/>
+
+        <dropIndex tableName="PROCESS_EVENTS" indexName="IDX_PROC_EV_I_ID_DT_TYPE"/>
+
+        <createIndex tableName="PROCESS_EVENTS" indexName="IDX_PROC_EVENTS">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+            <column name="EVENT_DATE"/>
+            <column name="EVENT_TYPE"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

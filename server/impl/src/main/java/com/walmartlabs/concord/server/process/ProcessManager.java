@@ -121,7 +121,7 @@ public class ProcessManager {
         resumePipeline.process(payload);
     }
 
-    public void kill(PartialProcessKey processKey) {
+    public void kill(ProcessKey processKey) {
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
             throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
@@ -153,11 +153,11 @@ public class ProcessManager {
         boolean updated = false;
         while (!updated) {
             l = queueDao.getCascade(processKey);
-            List<PartialProcessKey> keys = filterProcessKeys(l, SERVER_PROCESS_STATUSES);
+            List<ProcessKey> keys = filterProcessKeys(l, SERVER_PROCESS_STATUSES);
             updated = keys.isEmpty() || queueDao.updateStatus(keys, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
         }
 
-        List<PartialProcessKey> keys = filterProcessKeys(l, AGENT_PROCESS_STATUSES);
+        List<ProcessKey> keys = filterProcessKeys(l, AGENT_PROCESS_STATUSES);
         if (!keys.isEmpty()) {
             agentManager.killProcess(keys);
         }
@@ -254,7 +254,7 @@ public class ProcessManager {
         }
     }
 
-    private boolean cancel(PartialProcessKey processKey, ProcessStatus current, List<ProcessStatus> expected) {
+    private boolean cancel(ProcessKey processKey, ProcessStatus current, List<ProcessStatus> expected) {
         boolean found = false;
         for (ProcessStatus s : expected) {
             if (current == s) {
@@ -327,7 +327,7 @@ public class ProcessManager {
                 "to update the process status: " + processKey);
     }
 
-    private static List<PartialProcessKey> filterProcessKeys(List<IdAndStatus> l, List<ProcessStatus> expected) {
+    private static List<ProcessKey> filterProcessKeys(List<IdAndStatus> l, List<ProcessStatus> expected) {
         return l.stream()
                 .filter(r -> expected.contains(r.getStatus()))
                 .map(IdAndStatus::getProcessKey)

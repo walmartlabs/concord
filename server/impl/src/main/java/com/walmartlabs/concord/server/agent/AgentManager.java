@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.agent;
 
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class AgentManager {
         this.commandQueue = commandQueue;
     }
 
-    public void killProcess(PartialProcessKey processKey) {
+    public void killProcess(ProcessKey processKey) {
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
             throw new IllegalArgumentException("Process not found: " + processKey);
@@ -64,8 +65,10 @@ public class AgentManager {
         commandQueue.insert(UUID.randomUUID(), agentId, Commands.cancel(processKey.toString()));
     }
 
-    public void killProcess(List<PartialProcessKey> processKeys) {
-        List<ProcessEntry> l = queueDao.get(processKeys);
+    public void killProcess(List<ProcessKey> processKeys) {
+        List<ProcessEntry> l = queueDao.get(processKeys.stream()
+                .map(k -> PartialProcessKey.from(k.getInstanceId()))
+                .collect(Collectors.toList()));
 
         List<UUID> withoutAgent = l.stream()
                 .filter(p -> p.lastAgentId() == null)

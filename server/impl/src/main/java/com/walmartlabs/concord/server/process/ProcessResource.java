@@ -42,6 +42,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
@@ -99,6 +100,7 @@ public class ProcessResource implements Resource {
     private final ProcessStateArchiver stateArchiver;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final EventDao eventDao;
+    private final ProcessKeyCache processKeyCache;
 
     @Inject
     public ProcessResource(ProcessManager processManager,
@@ -110,7 +112,8 @@ public class ProcessResource implements Resource {
                            SecretStoreConfiguration secretStoreCfg,
                            ProcessStateArchiver stateArchiver,
                            EncryptedProjectValueManager encryptedValueManager,
-                           EventDao eventDao) {
+                           EventDao eventDao,
+                           ProcessKeyCache processKeyCache) {
 
         this.objectMapper = new ObjectMapper();
         this.processManager = processManager;
@@ -123,6 +126,7 @@ public class ProcessResource implements Resource {
         this.stateArchiver = stateArchiver;
         this.encryptedValueManager = encryptedValueManager;
         this.eventDao = eventDao;
+        this.processKeyCache = processKeyCache;
     }
 
     /**
@@ -484,7 +488,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}")
     @WithTimer
     public void kill(@ApiParam @PathParam("id") UUID instanceId) {
-        PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+        ProcessKey processKey = processKeyCache.get(instanceId);
         processManager.kill(processKey);
     }
 
@@ -553,7 +557,7 @@ public class ProcessResource implements Resource {
     public List<ProcessStatusHistoryEntry> getStatusHistory(@ApiParam @PathParam("instanceId") UUID instanceId) throws IOException {
         ProcessKey pk = assertKey(instanceId);
 
-        List<ProcessEventEntry> events = eventDao.list(pk.getInstanceId(), pk.getCreatedAt(), EventType.PROCESS_STATUS.name(), -1);
+        List<ProcessEventEntry> events = eventDao.list(pk, null, EventType.PROCESS_STATUS.name(), -1);
         List<ProcessStatusHistoryEntry> result = new ArrayList<>(events.size());
         for (ProcessEventEntry e : events) {
             Map<String, Object> payload = new HashMap<>(objectMapper.readValue((String) e.getData(), Map.class));
@@ -718,11 +722,7 @@ public class ProcessResource implements Resource {
                              @ApiParam(required = true) @QueryParam("agentId") String agentId,
                              @ApiParam(required = true) ProcessStatus status) {
 
-        ProcessKey processKey = queueDao.getKey(instanceId);
-        if (processKey == null) {
-            throw new ConcordApplicationException("Process not found: " + instanceId, Status.NOT_FOUND);
-        }
-
+        ProcessKey processKey = processKeyCache.get(instanceId);
         processManager.updateStatus(processKey, agentId, status);
     }
 
@@ -807,7 +807,7 @@ public class ProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public void appendLog(@PathParam("id") UUID instanceId, InputStream data) {
-        ProcessKey processKey = assertKey(instanceId);
+        ProcessKey processKey = processKeyCache.get(instanceId);
 
         try {
             logsDao.append(processKey, ByteStreams.toByteArray(data));
@@ -1051,11 +1051,8 @@ public class ProcessResource implements Resource {
     }
 
     private ProcessKey assertKey(UUID id) {
-        ProcessKey key = queueDao.getKey(id);
-        if (key == null) {
-            throw new ValidationErrorsException("Unknown instance ID: " + id);
-        }
-        return key;
+        Optional<ProcessKey> key = processKeyCache.getUncached(id);
+        return key.orElseThrow(() -> new ValidationErrorsException("Unknown instance ID: " + id));
     }
 
     private Set<UUID> getCurrentUserOrgIds() {

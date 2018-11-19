@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.process.form.ConcordFormService.FormSubmit
 import com.walmartlabs.concord.server.process.form.ExternalFileFormValidatorLocale;
 import com.walmartlabs.concord.server.process.form.FormUtils;
 import com.walmartlabs.concord.server.process.form.FormUtils.ValidationException;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.takari.bpm.form.Form;
@@ -91,18 +92,21 @@ public class CustomFormService implements Resource {
     private final ConcordFormService formService;
     private final ProcessStateManager stateManager;
     private final ProcessQueueDao queueDao;
+    private final ProcessKeyCache processKeyCache;
     private final ObjectMapper objectMapper;
 
     @Inject
     public CustomFormService(CustomFormConfiguration cfg,
                              ConcordFormService formService,
                              ProcessStateManager stateManager,
-                             ProcessQueueDao queueDao) {
+                             ProcessQueueDao queueDao,
+                             ProcessKeyCache processKeyCache) {
 
         this.cfg = cfg;
         this.formService = formService;
         this.stateManager = stateManager;
         this.queueDao = queueDao;
+        this.processKeyCache = processKeyCache;
 
         this.objectMapper = new ObjectMapper()
                 .enable(SerializationFeature.INDENT_OUTPUT);
@@ -370,13 +374,8 @@ public class CustomFormService implements Resource {
     }
 
     private ProcessKey assertKey(UUID processInstanceId) {
-        ProcessKey pk = queueDao.getKey(processInstanceId);
-
-        if (pk == null) {
-            throw new ConcordApplicationException("Process not found: " + processInstanceId, Status.NOT_FOUND);
-        }
-
-        return pk;
+        Optional<ProcessKey> pk = processKeyCache.getUncached(processInstanceId);
+        return pk.orElseThrow(() -> new ConcordApplicationException("Process not found: " + processInstanceId, Status.NOT_FOUND));
     }
 
     private static Response redirectToForm(UriInfo uriInfo, HttpHeaders headers,
