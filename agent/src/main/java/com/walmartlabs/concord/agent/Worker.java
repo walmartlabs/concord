@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,8 +39,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -54,7 +54,7 @@ public class Worker implements Runnable {
     private static final int PAYLOAD_DOWNLOAD_MAX_RETRIES = 3;
     private static final int PAYLOAD_DOWNLOAD_RETRY_DELAY = 3000;
 
-    private final QueueClient client;
+    private final QueueClient queueClient;
     private final ProcessApiClient processApiClient;
     private final ExecutionManager executionManager;
     private final long logSteamMaxDelay;
@@ -62,24 +62,21 @@ public class Worker implements Runnable {
     private final Map<String, Object> capabilities;
 
     private volatile boolean maintenanceMode = false;
-    private final CountDownLatch doneSignal;
 
-    public Worker(QueueClient client,
+    public Worker(QueueClient queueClient,
                   ProcessApiClient processApiClient,
                   ExecutionManager executionManager,
                   long logSteamMaxDelay,
                   long pollInterval,
-                  Map<String, Object> capabilities,
-                  CountDownLatch doneSignal) {
+                  Map<String, Object> capabilities) {
 
-        this.client = client;
+        this.queueClient = queueClient;
         this.processApiClient = processApiClient;
 
         this.executionManager = executionManager;
         this.logSteamMaxDelay = logSteamMaxDelay;
         this.pollInterval = pollInterval;
         this.capabilities = capabilities;
-        this.doneSignal = doneSignal;
     }
 
     @Override
@@ -87,12 +84,11 @@ public class Worker implements Runnable {
         while (!Thread.currentThread().isInterrupted() && !maintenanceMode) {
             JobEntry job = null;
             try {
+
                 job = take();
 
                 if (job != null) {
                     execute(job.getInstanceId(), job.getPayload());
-                } else {
-                    sleep(pollInterval);
                 }
             } catch (Exception e) {
                 log.error("run -> job process error: {}", e.getMessage(), e);
@@ -102,11 +98,13 @@ public class Worker implements Runnable {
                     cleanup(job);
                 }
             }
+
+            if (job == null) {
+                sleep(pollInterval);
+            }
         }
 
         log.info("run -> done, maintenance mode: {}", maintenanceMode);
-
-        doneSignal.countDown();
     }
 
     public void setMaintenanceMode() {
@@ -114,7 +112,8 @@ public class Worker implements Runnable {
     }
 
     private JobEntry take() throws Exception {
-        Future<ProcessResponse> p = client.request(new ProcessRequest(capabilities));
+        // TODO must be moved into the dispatcher thread
+        Future<ProcessResponse> p = queueClient.request(new ProcessRequest(capabilities));
 
         ProcessResponse response = p.get();
         if (response == null) {

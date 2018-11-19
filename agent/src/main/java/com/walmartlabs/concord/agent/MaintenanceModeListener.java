@@ -30,19 +30,27 @@ public interface MaintenanceModeListener {
     class Status {
 
         private final boolean maintenanceMode;
-        private final long busyWorkers;
+        private final long workersAlive;
 
-        public Status(boolean maintenanceMode, long busyWorkers) {
+        public Status(boolean maintenanceMode, long workersAlive) {
             this.maintenanceMode = maintenanceMode;
-            this.busyWorkers = busyWorkers;
+            this.workersAlive = workersAlive;
         }
 
         public boolean isMaintenanceMode() {
             return maintenanceMode;
         }
 
-        public long getBusyWorkers() {
-            return busyWorkers;
+        public long getWorkersAlive() {
+            return workersAlive;
+        }
+
+        @Override
+        public String toString() {
+            return "Status{" +
+                    "maintenanceMode=" + maintenanceMode +
+                    ", workersAlive=" + workersAlive +
+                    '}';
         }
     }
 }

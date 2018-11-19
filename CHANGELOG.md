@@ -9,6 +9,7 @@
 
 ### Changed
 
+- concord-agent: fix the reported busy worker count;
 - concord-console: fixed a session handling bug. Now the session is
 correctly restored on UI reload. 
 

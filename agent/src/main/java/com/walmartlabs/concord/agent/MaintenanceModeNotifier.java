@@ -36,17 +36,18 @@ import static com.walmartlabs.concord.agent.MaintenanceModeListener.Status;
 public class MaintenanceModeNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(MaintenanceModeNotifier.class);
+    private static final int DEFAULT_PORT = 8010;
 
     private final HttpServer server;
 
     public MaintenanceModeNotifier(MaintenanceModeListener listener) throws IOException {
-        this.server = HttpServer.create(new InetSocketAddress("localhost", 8010), 0);
+        this.server = HttpServer.create(new InetSocketAddress("localhost", DEFAULT_PORT), 0);
         this.server.createContext("/maintenance-mode", new MaintenanceModeHandler(listener));
     }
 
     public void start() {
         server.start();
-        log.info("start -> done");
+        log.info("start -> done, listening on {}", server.getAddress());
     }
 
     public void stop() {

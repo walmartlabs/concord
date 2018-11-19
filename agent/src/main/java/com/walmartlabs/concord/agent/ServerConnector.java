@@ -29,9 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 public class ServerConnector implements MaintenanceModeListener {
@@ -45,7 +43,6 @@ public class ServerConnector implements MaintenanceModeListener {
     private Thread commandHandlerThread;
     private Thread orphanSweeper;
     private MaintenanceModeNotifier maintenanceModeNotifier;
-    private CountDownLatch doneSignal;
     private QueueClient queueClient;
     private volatile boolean isMaintenanceMode;
 
@@ -81,8 +78,6 @@ public class ServerConnector implements MaintenanceModeListener {
         int workersCount = cfg.getWorkersCount();
         log.info("start -> using {} worker(s)", workersCount);
 
-        doneSignal = new CountDownLatch(workersCount);
-
         workers = new Worker[workersCount];
         workerThreads = new Thread[workersCount];
 
@@ -90,7 +85,7 @@ public class ServerConnector implements MaintenanceModeListener {
 
         for (int i = 0; i < workersCount; i++) {
             workers[i] = new Worker(queueClient, processApiClient, executionManager,
-                    cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities(), doneSignal);
+                    cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities());
 
             workerThreads[i] = new Thread(workers[i], "worker-" + i);
         }
@@ -159,17 +154,19 @@ public class ServerConnector implements MaintenanceModeListener {
 
         queueClient.maintenanceMode();
 
-        try {
-            doneSignal.await(15, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        return new Status(true, doneSignal.getCount());
+        return new Status(true, workersAlive());
     }
 
     @Override
     public Status getMaintenanceModeStatus() {
-        return new Status(isMaintenanceMode, doneSignal.getCount());
+        return new Status(isMaintenanceMode, workersAlive());
+    }
+
+    private int workersAlive() {
+        int cnt = 0;
+        for (Thread t : workerThreads) {
+            cnt += t.isAlive() ? 1 : 0;
+        }
+        return cnt;
     }
 }
