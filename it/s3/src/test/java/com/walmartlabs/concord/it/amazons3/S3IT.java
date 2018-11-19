@@ -21,18 +21,22 @@ package com.walmartlabs.concord.it.amazons3;
  */
 
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.ServerClient;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.walmartlabs.concord.it.common.ITUtils.randomString;
-import com.walmartlabs.concord.client.*;
-
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.*;
+import static com.walmartlabs.concord.it.common.ITUtils.randomString;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class S3IT {
     private ServerClient serverClient;
 
@@ -92,7 +96,7 @@ public class S3IT {
                 .setTeamName(teamName)
                 .setLevel(ResourceAccessEntry.LevelEnum.READER));
 
-        //Start a process with zero child
+        // start a process with zero child
 
         byte[] payload = archive(S3IT.class.getResource("stateArchive").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -107,8 +111,7 @@ public class S3IT {
         assertEquals("FINISHED", pir.getStatus().toString());
 
         boolean isArchivedDone = false;
-        while(!isArchivedDone)
-        {
+        while (!isArchivedDone) {
             isArchivedDone = processApi.isStateArchived(pir.getInstanceId());
             Thread.sleep(500);
         }
@@ -167,7 +170,7 @@ public class S3IT {
                 .setTeamName(teamName)
                 .setLevel(ResourceAccessEntry.LevelEnum.READER));
 
-        //Start a process with zero child
+        // start a process with zero child
 
         byte[] payload = archive(S3IT.class.getResource("checkpointArchive").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -185,14 +188,11 @@ public class S3IT {
         List<ProcessCheckpointEntry> list = checkpointApi.list(pir.getInstanceId());
 
         assertEquals(2, list.size());
-        while(list.size() > 0)
-        {
+        while (list.size() > 0) {
             list = checkpointApi.list(pir.getInstanceId());
             Thread.sleep(500);
         }
 
         assertEquals(0, list.size());
-
     }
-
 }
