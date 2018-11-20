@@ -67,23 +67,32 @@ public class AnsibleEventProcessor implements ScheduledTask {
     }
 
     public void performTask() {
-        dao.tx(tx -> {
+        int processedEvents = 0;
+        do {
+            processedEvents = processEvents(cfg.getFetchLimit());
+        } while (processedEvents >= cfg.getFetchLimit());
+    }
+
+    private int processEvents(int fetchLimit) {
+        return dao.txResult(tx -> {
             EventMarker marker = dao.getMarker(PROCESSOR_NAME);
 
-            List<EventItem> events = dao.list(tx, marker.instanceCreatedAt(), marker.eventSeq(), cfg.getFetchLimit());
+            List<EventItem> events = dao.list(tx, marker.instanceCreatedAt(), marker.eventSeq(), fetchLimit);
             if (events.isEmpty()) {
-                return;
+                return 0;
             }
 
-            List<HostItem> result = processEvents(events);
+            List<HostItem> result = combineEvents(events);
             dao.insert(tx, result);
 
             EventItem lastEvent = events.get(events.size() - 1);
             dao.updateMarker(tx, PROCESSOR_NAME, ImmutableEventMarker.of(lastEvent.instanceCreatedAt(), lastEvent.eventSeq()));
+
+            return events.size();
         });
     }
 
-    private List<HostItem> processEvents(List<EventItem> events) {
+    private List<HostItem> combineEvents(List<EventItem> events) {
         Map<Key, HostItem> result = new HashMap<>();
         for (EventItem e : events) {
             result.compute(ImmutableKey.of(e.instanceId(), e.instanceCreatedAt(), e.host(), e.hostGroup()), (k, v) -> (v == null) ? HostItem.from(e) : combine(v, e));
@@ -121,8 +130,8 @@ public class AnsibleEventProcessor implements ScheduledTask {
         }
 
         @Override
-        public void tx(Tx t) {
-            super.tx(t);
+        public <T> T txResult(TxResult<T> t) {
+            return super.txResult(t);
         }
 
         @SuppressWarnings("deprecation")
