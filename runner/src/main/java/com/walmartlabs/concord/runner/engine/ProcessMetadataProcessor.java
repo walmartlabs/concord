@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runner.engine;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runner.ContextUtils;
 import io.takari.bpm.api.Variables;
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ public class ProcessMetadataProcessor {
 
         Map<String, Object> result = new HashMap<>();
         for (String v : processMetaVariables) {
-            Object value = vars.get(v);
+            Object value = ConfigurationUtils.get(vars, v.split("\\."));
             if (value == null) {
                 continue;
             }

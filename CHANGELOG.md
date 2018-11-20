@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: support for exposing form and nested values as
+process metadata;
+- concord-server: support for default metadata values.
+
 ### Changed
 
 - concord-server: evaluate parsed expression value in custom form field's

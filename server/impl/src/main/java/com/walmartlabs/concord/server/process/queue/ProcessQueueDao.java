@@ -151,7 +151,7 @@ public class ProcessQueueDao extends AbstractDao {
     public void enqueue(ProcessKey processKey, Set<String> tags, Instant startAt,
                         Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
                         String commitId, String commitMsg, Long processTimeout,
-                        Set<String> handlers) {
+                        Set<String> handlers, Map<String, Object> meta) {
 
         tx(tx -> {
             UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
@@ -196,6 +196,10 @@ public class ProcessQueueDao extends AbstractDao {
 
             if (handlers != null) {
                 q.set(PROCESS_QUEUE.HANDLERS, toArray(handlers));
+            }
+
+            if (meta != null) {
+                q.set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta)));
             }
 
             int i = q

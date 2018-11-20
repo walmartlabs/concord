@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,10 +34,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 public class EnqueueingProcessor implements PayloadProcessor {
@@ -97,8 +94,8 @@ public class EnqueueingProcessor implements PayloadProcessor {
         Long processTimeout = getProcessTimeout(payload);
 
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
-
-        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers);
+        Map<String, Object> meta = getMeta(payload);
+        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers, meta);
 
         return chain.process(payload);
     }
@@ -155,5 +152,11 @@ public class EnqueueingProcessor implements PayloadProcessor {
         }
 
         throw new IllegalArgumentException("Invalid process timeout value type: expected an ISO-8601 value, got: " + processTimeout);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getMeta(Payload p) {
+        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
+        return (Map<String, Object>) cfg.get(Constants.Request.META);
     }
 }
