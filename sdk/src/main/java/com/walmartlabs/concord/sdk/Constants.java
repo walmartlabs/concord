@@ -230,7 +230,7 @@ public class Constants {
         /**
          * Directories which contain process definitions of a payload.
          */
-        public static final String[] DEFINITIONS_DIR_NAMES = {"flows", "processes"};
+        public static final String[] DEFINITIONS_DIR_NAMES = {"flows", "processes"}; // NOSONAR
 
         /**
          * Directory with Concord project definitions.
@@ -329,13 +329,13 @@ public class Constants {
 
         public static final String USERNAME = "username";
 
-        public static final String PASSWORD = "password";
+        public static final String PASSWORD = "password"; // NOSONAR
 
         public static final String TYPE = "type";
 
-        public static final String GENERATE_PASSWORD = "generatePassword";
+        public static final String GENERATE_PASSWORD = "generatePassword"; // NOSONAR
 
-        public static final String STORE_PASSWORD = "storePassword";
+        public static final String STORE_PASSWORD = "storePassword"; // NOSONAR
 
         public static final String VISIBILITY = "visibility";
 

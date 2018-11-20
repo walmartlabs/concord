@@ -149,7 +149,7 @@ public class DockerProcessBuilder {
             c.add(entryPoint);
         }
         if (generateUsers) {
-            Path tmp = IOUtils.createTempFile("passwd", ".docker");
+            Path tmp = IOUtils.createTempFile("passwd", ".docker"); // NOSONAR
             try (InputStream src = DockerProcessBuilder.class.getResourceAsStream("dockerPasswd");
                  OutputStream dst = Files.newOutputStream(tmp)) {
                 IOUtils.copy(src, dst);

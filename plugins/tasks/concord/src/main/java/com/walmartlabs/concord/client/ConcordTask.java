@@ -355,9 +355,7 @@ public class ConcordTask extends AbstractConcordTask {
                 log.error("Error while reading the out variables", e);
                 throw e;
             } finally {
-                if (f != null && f.exists()) {
-                    f.delete();
-                }
+                IOUtils.delete(f);
             }
         });
     }

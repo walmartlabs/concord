@@ -71,10 +71,10 @@ public class TrustingSslSocketFactory extends SocketFactory {
     }
 
     private static class DummyTrustmanager implements X509TrustManager {
-        public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+        public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {  // NOSONAR
         }
 
-        public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+        public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException { // NOSONAR
         }
 
         public X509Certificate[] getAcceptedIssuers() {

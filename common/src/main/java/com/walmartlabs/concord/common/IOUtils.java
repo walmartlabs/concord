@@ -263,14 +263,6 @@ public final class IOUtils {
         return result;
     }
 
-    public static void closeQuietly(Closeable c) {
-        try {
-            c.close();
-        } catch (IOException e) {
-            // ignore
-        }
-    }
-
     public static boolean deleteRecursively(Path p) throws IOException {
         if (!Files.exists(p)) {
             return false;
@@ -302,6 +294,16 @@ public final class IOUtils {
         ByteArrayOutputStream dst = new ByteArrayOutputStream();
         copy(src, dst);
         return dst.toByteArray();
+    }
+
+    public static void delete(File f) {
+        if (f == null || !f.exists()) {
+            return;
+        }
+
+        if (!f.delete()) {
+            log.warn("delete ['{}'] -> failed", f.getAbsolutePath());
+        }
     }
 
     private static String getEnv(String key, String defaultValue) {

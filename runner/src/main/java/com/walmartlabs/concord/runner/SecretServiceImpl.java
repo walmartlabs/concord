@@ -151,7 +151,7 @@ public class SecretServiceImpl implements SecretService {
         Map<String, Object> params = new HashMap<>();
         String pwd = password;
         if (password == null) {
-            pwd = "";
+            pwd = ""; // NOSONAR
         }
         params.put("storePassword", pwd);
 

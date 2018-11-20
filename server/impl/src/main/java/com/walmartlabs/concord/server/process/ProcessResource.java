@@ -470,7 +470,7 @@ public class ProcessResource implements Resource {
 
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException e) { // NOSONAR
                 throw new ConcordApplicationException(Response.status(Status.INTERNAL_SERVER_ERROR)
                         .entity("Request was interrputed")
                         .build());

@@ -160,7 +160,7 @@ public class HttpTask implements Task {
         static final String OUT_KEY = "out";
         static final String TOKEN_KEY = "token";
         static final String USERNAME_KEY = "username";
-        static final String PASSWORD_KEY = "password";
+        static final String PASSWORD_KEY = "password"; // NOSONAR
         static final String BASIC_KEY = "basic";
         static final String SUCCESS_KEY = "success";
         static final String CONTENT_KEY = "content";

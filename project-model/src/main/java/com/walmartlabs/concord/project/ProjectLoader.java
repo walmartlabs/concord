@@ -43,7 +43,7 @@ import java.util.*;
 
 public class ProjectLoader {
 
-    public static final String[] PROJECT_FILE_NAMES = {".concord.yml", "concord.yml"};
+    public static final String[] PROJECT_FILE_NAMES = {".concord.yml", "concord.yml"}; // NOSONAR
 
     private final YamlParser parser = new YamlParser();
 

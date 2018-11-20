@@ -139,7 +139,7 @@ public class KeywhizClient {
                 sslcontext,
                 new String[]{"TLSv1.2"},
                 null,
-                (s, sslSession) -> true);
+                (s, sslSession) -> true); // NOSONAR
     }
 
     private static ObjectMapper createObjectMapper() {
