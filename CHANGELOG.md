@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: `offset` and `limit` to the process checkpoint list
+endpoint;
 - concord-server: support for exposing form and nested values as
 process metadata;
 - concord-server: support for default metadata values.

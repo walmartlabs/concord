@@ -316,13 +316,14 @@ public class ConsoleService implements Resource {
     @WithTimer
     public List<ProcessEntryEx> listProcesses(@QueryParam("orgId") UUID orgId,
                                               @QueryParam("projectId") UUID projectId,
-                                              @QueryParam("limit") @DefaultValue("30") int limit) {
+                                              @QueryParam("limit") @DefaultValue("30") int limit,
+                                              @QueryParam("offset") @DefaultValue("0") int offset) {
 
         if (limit <= 0) {
             throw new ConcordApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
         }
 
-        return processDao.list(orgId, projectId, limit);
+        return processDao.list(orgId, projectId, limit, offset);
     }
 
     @Named
@@ -333,7 +334,7 @@ public class ConsoleService implements Resource {
             super(cfg);
         }
 
-        public List<ProcessEntryEx> list(UUID orgId, UUID projectId, int limit) {
+        public List<ProcessEntryEx> list(UUID orgId, UUID projectId, int limit, int offset) {
             VProcessQueue pq = V_PROCESS_QUEUE.as("pq");
             ProcessCheckpoints pc = PROCESS_CHECKPOINTS.as("pc");
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
@@ -386,6 +387,7 @@ public class ConsoleService implements Resource {
 
                 return s.orderBy(pq.CREATED_AT.desc())
                         .limit(limit)
+                        .offset(offset)
                         .fetch(this::toEntry);
             }
         }
