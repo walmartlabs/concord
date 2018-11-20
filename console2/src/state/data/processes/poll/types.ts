@@ -21,7 +21,7 @@
 import { Action } from 'redux';
 import { ConcordId, RequestError } from '../../../../api/common';
 import { ProcessEntry } from '../../../../api/process';
-import { ProcessEventEntry } from '../../../../api/process/event';
+import { AnsibleHost, ProcessEventEntry } from '../../../../api/process/event';
 import { FormListEntry } from '../../../../api/process/form';
 import { RequestState } from '../../common';
 
@@ -39,6 +39,7 @@ export interface ProcessPollResponse extends Action {
     error?: RequestError;
     process?: ProcessEntry;
     forms?: FormListEntry[];
+    ansibleHosts?: AnsibleHost[];
     events?: ProcessEventChunk;
     tooMuchData?: boolean;
 }
@@ -52,5 +53,6 @@ export interface ProcessEvents {
 export interface State {
     currentRequest: ProcessPollState;
     forms: FormListEntry[];
+    ansibleHosts: AnsibleHost[];
     eventById: ProcessEvents;
 }

@@ -10,6 +10,9 @@ process metadata;
 
 ### Changed
 
+- concord-server, concord-console: Ansible events are now
+pre-processed and stored on the backend, making the Process Status
+page more responsive when working with large Ansible plays.
 - concord-server: evaluate parsed expression value in custom form field's
 `allow` attribute
 - concord-server: change the (potential) partitioning key in
@@ -26,10 +29,8 @@ process metadata;
 
 ### Changed
 
-- concord-agent: fix the reported busy worker count;
 - concord-console: fixed a session handling bug. Now the session is
 correctly restored on UI reload. 
-
 
 
 ## [0.97.0] - 2018-11-13

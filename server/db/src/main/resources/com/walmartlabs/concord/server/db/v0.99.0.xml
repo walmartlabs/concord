@@ -24,4 +24,55 @@
             <column name="EVENT_TYPE"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="99100" author="ybrigo@gmail.com">
+        <createTable tableName="ANSIBLE_HOSTS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="HOST" type="varchar(1024)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="HOST_GROUP" type="varchar(1024)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="EVENT_SEQ" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STATUS" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DURATION" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="99200" author="ybrigo@gmail.com">
+        <createTable tableName="EVENT_PROCESSOR_MARKERS">
+            <column name="PROCESSOR_NAME" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="EVENT_SEQ" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <insert tableName="EVENT_PROCESSOR_MARKERS">
+            <column name="PROCESSOR_NAME" value="ansible-event-processor"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="99300" author="ibodrov@gmail.com">
+        <createIndex tableName="PROCESS_EVENTS" indexName="IDX_PROC_EVENTS_FOLDING">
+            <column name="EVENT_SEQ"/>
+            <column name="EVENT_TYPE"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

@@ -35,6 +35,7 @@ import { reducers as logReducers, sagas as logSagas } from './logs';
 import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';
 import { reducers as historyReducers, sagas as historySagas } from './history';
 import { reducers as childrenReducers, sagas as childrenSagas } from './children';
+import { reducers as eventsReducers, sagas as eventsSagas } from './events';
 import {
     CancelBulkProcessRequest,
     CancelBullkProcessState,
@@ -264,7 +265,8 @@ export const reducers = combineReducers<State>({
     log: logReducers,
     poll: pollReducers,
     history: historyReducers,
-    children: childrenReducers
+    children: childrenReducers,
+    events: eventsReducers
 });
 
 function* onGetProcess({ instanceId }: GetProcessRequest) {
@@ -352,6 +354,7 @@ export const sagas = function*() {
         fork(logSagas),
         fork(pollSagas),
         fork(historySagas),
-        fork(childrenSagas)
+        fork(childrenSagas),
+        fork(eventsSagas)
     ]);
 };

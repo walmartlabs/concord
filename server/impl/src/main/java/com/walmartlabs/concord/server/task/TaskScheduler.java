@@ -104,7 +104,7 @@ public class TaskScheduler extends PeriodicTask {
 
                 dao.success(id);
 
-                log.info("startTask ['{}'] -> done", id);
+                log.debug("startTask ['{}'] -> done", id);
             } catch (Exception e) {
                 log.error("startTask ['{}'] -> error", id, e);
 

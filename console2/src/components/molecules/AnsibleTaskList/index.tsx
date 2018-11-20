@@ -28,31 +28,16 @@ import { HumanizedDuration, LocalTimestamp } from '../../molecules';
 interface Props {
     title?: string;
     showHosts?: boolean;
-    events: Array<ProcessEventEntry<AnsibleEvent>>;
-    filter: (
-        events: Array<ProcessEventEntry<AnsibleEvent>>
-    ) => Array<ProcessEventEntry<AnsibleEvent>>;
+    tasks: Array<ProcessEventEntry<AnsibleEvent>>;
 }
 
 class AnsibleTaskList extends React.Component<Props> {
-    private tasks: Array<ProcessEventEntry<AnsibleEvent>>;
-
     constructor(props: Props) {
         super(props);
-        this.update();
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        this.update();
-    }
-
-    update() {
-        const { events, filter } = this.props;
-        this.tasks = filter(events);
     }
 
     render() {
-        const { title, showHosts } = this.props;
+        const { title, tasks, showHosts } = this.props;
 
         return (
             <>
@@ -78,8 +63,8 @@ class AnsibleTaskList extends React.Component<Props> {
                     </Table.Header>
 
                     <Table.Body>
-                        {this.tasks &&
-                            this.tasks.map((value, index) => {
+                        {tasks &&
+                            tasks.map((value, index) => {
                                 const { status, ignore_errors } = value.data;
 
                                 const error = status === AnsibleStatus.FAILED && !ignore_errors;

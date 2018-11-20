@@ -28,9 +28,10 @@ import {
     isFinal,
     list as apiListForms,
     listEvents as apiListEvents,
+    listAnsibleHosts as apiListAnsibleHosts,
     ProcessEntry
 } from '../../../../api/process';
-import { ProcessEventEntry } from '../../../../api/process/event';
+import { AnsibleHost, ProcessEventEntry } from '../../../../api/process/event';
 import { FormListEntry } from '../../../../api/process/form';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
 import {
@@ -75,12 +76,14 @@ export const actions = {
         process: ProcessEntry,
         forms?: FormListEntry[],
         events?: ProcessEventChunk,
+        ansibleHosts?: AnsibleHost[],
         tooMuchData?: boolean
     ): ProcessPollResponse => ({
         type: actionTypes.PROCESS_POLL_RESPONSE,
         process,
         forms,
         events,
+        ansibleHosts,
         tooMuchData
     }),
 
@@ -154,30 +157,57 @@ const eventByIdReducer: Reducer<ProcessEvents> = (
     }
 };
 
+const ansibleHostsReducer: Reducer<AnsibleHost[]> = (
+    state = [],
+    { type, error, ansibleHosts }: ProcessPollResponse
+) => {
+    switch (type) {
+        case actionTypes.RESET_PROCESS_POLL:
+            return [];
+        case actionTypes.PROCESS_POLL_RESPONSE:
+            if (error) {
+                return state;
+            }
+
+            if (!ansibleHosts) {
+                return [];
+            }
+
+            return ansibleHosts;
+        default:
+            return state;
+    }
+};
+
 export const reducers = combineReducers<State>({
     currentRequest: currentRequestReducers,
     forms: formsReducer,
+    ansibleHosts: ansibleHostsReducer,
     eventById: eventByIdReducer
 });
 
 // enforce types
-type BatchData = [FormListEntry[], Array<ProcessEventEntry<{}>>];
+type BatchData = [FormListEntry[], Array<ProcessEventEntry<{}>>, AnsibleHost[]];
 
 function* loadAll(process: ProcessEntry, forceLoadAll?: boolean) {
     const { instanceId } = process;
 
-    const [forms, events]: BatchData = yield all([
+    const [forms, events, hosts]: BatchData = yield all([
         call(apiListForms, instanceId),
         call(
             apiListEvents,
             instanceId,
+            'ELEMENT',
             process.createdAt,
             forceLoadAll ? null : MAX_EVENT_COUNT + 1
-        )
+        ),
+        call(apiListAnsibleHosts, instanceId)
     ]);
 
     const tooMuchData = !forceLoadAll && events && events.length > MAX_EVENT_COUNT;
-    yield put(actions.pollResponse(process, forms, { replace: true, data: events }, tooMuchData));
+    yield put(
+        actions.pollResponse(process, forms, { replace: true, data: events }, hosts, tooMuchData)
+    );
 }
 
 function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
@@ -198,9 +228,10 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
             }
 
             // the process is still running, load the next chunk of data
-            const [forms, events]: BatchData = yield all([
+            const [forms, events, hosts]: BatchData = yield all([
                 call(apiListForms, instanceId),
-                call(apiListEvents, instanceId, lastEventTimestamp, 100) // TODO constants
+                call(apiListEvents, instanceId, 'ELEMENT', lastEventTimestamp, 100), // TODO constants
+                call(apiListAnsibleHosts, instanceId)
             ]);
 
             // get the last timestamp of the received events, it will be used to fetch the next data
@@ -209,7 +240,9 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
             }
 
             // process the received data, append the events
-            yield put(actions.pollResponse(process, forms, { replace: false, data: events }));
+            yield put(
+                actions.pollResponse(process, forms, { replace: false, data: events }, hosts)
+            );
 
             yield race({
                 delay: call(delay, 5000), // TODO constants

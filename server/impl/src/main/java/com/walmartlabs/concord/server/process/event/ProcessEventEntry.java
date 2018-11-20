@@ -20,51 +20,34 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.UUID;
 
+@Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProcessEventEntry implements Serializable {
+@JsonSerialize(as = ImmutableProcessEventEntry.class)
+@JsonDeserialize(as = ImmutableProcessEventEntry.class)
+public interface ProcessEventEntry {
 
-    private final UUID id;
-    private final String eventType;
-    private final Object data;
+    UUID id();
+
+    String eventType();
+
+    @Nullable
+    @JsonRawValue
+    Object data();
 
     /**
      * should match the format in {@link com.walmartlabs.concord.server.IsoDateParam}
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private final Date eventDate;
-
-    @JsonCreator
-    public ProcessEventEntry(@JsonProperty("id") UUID id,
-                             @JsonProperty("eventType") String eventType,
-                             @JsonProperty("eventDate") Date eventDate,
-                             @JsonProperty("data") Object data) {
-
-        this.id = id;
-        this.eventType = eventType;
-        this.eventDate = eventDate;
-        this.data = data;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getEventType() {
-        return eventType;
-    }
-
-    public Date getEventDate() {
-        return eventDate;
-    }
-
-    @JsonRawValue
-    public Object getData() {
-        return data;
-    }
+    Date eventDate();
 }

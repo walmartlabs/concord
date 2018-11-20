@@ -24,7 +24,7 @@ import { StartProcessResponse } from '../org/process';
 
 export { getLog, LogChunk, LogRange } from './log';
 export { list, FormListEntry, FormRunAs } from './form';
-export { listEvents, ProcessEventType, ProcessEventEntry } from './event';
+export { listEvents, listAnsibleHosts, ProcessEventType, ProcessEventEntry } from './event';
 
 export enum ProcessStatus {
     PREPARING = 'PREPARING',

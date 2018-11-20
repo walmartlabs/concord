@@ -130,7 +130,10 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                     </Table>
                 </Grid.Column>
                 <Grid.Column>
-                    <Table definition={true} color={getStatusSemanticColor(data.status)}>
+                    <Table
+                        definition={true}
+                        color={getStatusSemanticColor(data.status)}
+                        style={{ height: '100%' }}>
                         <Table.Body>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
@@ -181,7 +184,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                     )}
                                 </Table.Cell>
                             </Table.Row>
-                            <Table.Row>
+                            <Table.Row style={{ height: '100%' }}>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Commit ID
                                 </Table.Cell>

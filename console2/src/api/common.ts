@@ -106,11 +106,12 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
     try {
         response = await fetch(input, init);
     } catch (err) {
-        console.debug(
+        console.warn(
             "managedFetch ['%o', '%o'] -> error while performing a request: %o",
             input,
             init,
-            response
+            response,
+            err
         );
         throw { message: 'Error while performing a request', cause: err };
     }

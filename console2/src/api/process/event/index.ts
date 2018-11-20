@@ -82,6 +82,13 @@ export const getStatusColor = (status: AnsibleStatus) => {
     }
 };
 
+export interface AnsibleHost {
+    host: string;
+    hostGroup: string;
+    status: AnsibleStatus;
+    duration: number;
+}
+
 export interface AnsibleEvent {
     host: string;
     hostGroup: string;
@@ -107,12 +114,31 @@ export interface ProcessEventEntry<T extends ProcessEventData> {
 
 export const listEvents = (
     instanceId: ConcordId,
+    type?: string,
     after?: string,
     limit?: number
 ): Promise<ProcessEventEntry<{}>> =>
     fetchJson(
         `/api/v1/process/${instanceId}/event?${queryParams({
+            type,
             after,
             limit
+        })}`
+    );
+
+export const listAnsibleHosts = (instanceId: ConcordId): Promise<AnsibleHost> =>
+    fetchJson(`/api/v1/process/${instanceId}/ansibleHosts`);
+
+export const listAnsibleEvents = (
+    instanceId: ConcordId,
+    host?: string,
+    hostGroup?: string,
+    status?: string
+): Promise<ProcessEventEntry<AnsibleEvent>> =>
+    fetchJson(
+        `/api/v1/process/${instanceId}/ansibleEvents?${queryParams({
+            host,
+            hostGroup,
+            status
         })}`
     );

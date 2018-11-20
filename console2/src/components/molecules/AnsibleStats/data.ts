@@ -18,81 +18,59 @@
  * =====
  */
 
-import { AnsibleEvent, AnsibleStatus, ProcessEventEntry } from '../../../api/process/event';
-import { AnsibleHostListEntry } from '../AnsibleHostList';
+import {
+    AnsibleEvent,
+    AnsibleHost,
+    AnsibleStatus,
+    ProcessEventEntry
+} from '../../../api/process/event';
 import { AnsibleStatChartEntry } from '../AnsibleStatChart';
 
-const addUniqueItem = (items: string[], item: string): string[] => {
-    if (items.indexOf(item) === -1) {
-        items.push(item);
+export const makeHostGroups = (hosts: AnsibleHost[]): string[] => {
+    const groups = new Set();
+
+    for (const h of hosts) {
+        groups.add(h.hostGroup);
     }
-    return items;
+
+    return Array.from(groups);
 };
 
-export const makeHostList = (
-    events: Array<ProcessEventEntry<AnsibleEvent>>
-): AnsibleHostListEntry[] => {
-    const result: { [id: string]: AnsibleHostListEntry } = {};
-    events.forEach((e) => {
-        const data = e.data;
-        const resultItem = result[data.host];
-        const hostDuration = ((resultItem && resultItem.duration) || 0) + (e.duration || 0);
-        const hostGroups = addUniqueItem(resultItem ? resultItem.hostGroups : [], e.data.hostGroup);
-        result[data.host] = {
-            host: data.host,
-            hostGroups,
-            status: data.status!,
-            duration: hostDuration
-        };
-    });
-
-    return Object.keys(result).map((k) => result[k]);
-};
-
-export const makeHostGroups = (events: Array<ProcessEventEntry<AnsibleEvent>>): string[] => {
-    const groups = events.filter(({ data }) => !!data.hostGroup).map(({ data }) => data.hostGroup);
-
-    return Array.from(new Set(groups));
-};
+interface HostGroup {
+    host: string;
+    group: string;
+}
 
 const hostsByStatus = (
-    evs: Array<ProcessEventEntry<AnsibleEvent>>,
+    hosts: AnsibleHost[],
     status: AnsibleStatus,
-    additionalFilter?: (data: AnsibleEvent) => boolean
-): string[] =>
-    evs
-        .filter(
-            ({ data }) =>
-                data.status === status && (additionalFilter ? additionalFilter(data) : true)
-        )
-        .map(({ data }) => data.host!);
+    additionalFilter?: (data: AnsibleHost) => boolean
+): HostGroup[] =>
+    hosts
+        .filter((h) => h.status === status && (additionalFilter ? additionalFilter(h) : true))
+        .map((h) => ({ host: h.host, group: h.hostGroup }));
 
-export const makeStats = (
-    events: Array<ProcessEventEntry<AnsibleEvent>>
-): AnsibleStatChartEntry[] => {
-    const evs = events.filter(({ data }) => !!data.host && !!data.status);
-
-    // skip events with ignore_errors=true, they should be marked as "OK" (if there was no other failures)
-    const failed = new Set(hostsByStatus(evs, AnsibleStatus.FAILED, (data) => !data.ignore_errors));
+export const makeStats = (hosts: AnsibleHost[]): AnsibleStatChartEntry[] => {
+    const failed = new Set(hostsByStatus(hosts, AnsibleStatus.FAILED));
 
     const unreachable = new Set(
-        hostsByStatus(evs, AnsibleStatus.UNREACHABLE).filter((h) => !failed.has(h))
+        hostsByStatus(hosts, AnsibleStatus.UNREACHABLE).filter((h) => !failed.has(h))
     );
 
     const changed = new Set(
-        hostsByStatus(evs, AnsibleStatus.CHANGED).filter(
+        hostsByStatus(hosts, AnsibleStatus.CHANGED).filter(
             (h) => !failed.has(h) && !unreachable.has(h)
         )
     );
 
     const ok = new Set(
-        hostsByStatus(evs, AnsibleStatus.OK).filter(
+        hostsByStatus(hosts, AnsibleStatus.OK).filter(
             (h) => !failed.has(h) && !unreachable.has(h) && !changed.has(h)
         )
     );
 
     const skipped = new Set(
-        hostsByStatus(evs, AnsibleStatus.SKIPPED).filter(
+        hostsByStatus(hosts, AnsibleStatus.SKIPPED).filter(
             (h) => !failed.has(h) && !unreachable.has(h) && !changed.has(h) && !ok.has(h)
         )
     );
@@ -120,5 +98,5 @@ export const getFailures = (
         .filter(({ data }) => data.status === AnsibleStatus.FAILED && !data.ignore_errors)
         .sort(compareByHost);
 
-export const countUniqueHosts = (hosts: AnsibleHostListEntry[]): number =>
-    new Set(hosts.map((h) => h.host)).size;
+export const countUniqueHosts = (hosts: AnsibleHost[]): number =>
+    new Set(hosts.map((h) => ({ host: h.host, group: h.hostGroup }))).size;

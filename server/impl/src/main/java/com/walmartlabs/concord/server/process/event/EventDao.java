@@ -33,6 +33,7 @@ import javax.inject.Named;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
@@ -47,6 +48,10 @@ public class EventDao extends AbstractDao {
     }
 
     public List<ProcessEventEntry> list(ProcessKey processKey, Timestamp geTimestamp, String eventType, int limit) {
+        return list(processKey, geTimestamp, eventType, null, limit);
+    }
+
+    public List<ProcessEventEntry> list(ProcessKey processKey, Timestamp geTimestamp, String eventType, Map<String, Object> dataFilter, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
 
             SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
@@ -64,6 +69,12 @@ public class EventDao extends AbstractDao {
 
             if (eventType != null) {
                 q.and(PROCESS_EVENTS.EVENT_TYPE.eq(eventType));
+            }
+
+            if (dataFilter != null) {
+                dataFilter.forEach((k, v) -> {
+                    q.and(field("{0}->>{1}", Object.class, PROCESS_EVENTS.EVENT_DATA, inline(k)).eq(v));
+                });
             }
 
             if (limit > 0) {
@@ -119,6 +130,11 @@ public class EventDao extends AbstractDao {
     }
 
     private static ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
-        return new ProcessEventEntry(r.value1(), r.value2(), r.value3(), r.value4());
+        return ImmutableProcessEventEntry.builder()
+                .id(r.value1())
+                .eventType(r.value2())
+                .eventDate(r.value3())
+                .data(r.value4())
+                .build();
     }
 }

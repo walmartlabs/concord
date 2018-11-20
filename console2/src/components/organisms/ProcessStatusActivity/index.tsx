@@ -27,6 +27,7 @@ import { ConcordId } from '../../../api/common';
 import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
 import {
     AnsibleEvent,
+    AnsibleHost,
     AnsibleStatus,
     ProcessElementEvent,
     ProcessEventEntry,
@@ -56,8 +57,8 @@ interface StateProps {
     loading: boolean;
     process?: ProcessEntry;
     forms: FormListEntry[];
+    ansibleHosts: AnsibleHost[];
     elementEvents: Array<ProcessEventEntry<ProcessElementEvent>>;
-    ansibleEvents: Array<ProcessEventEntry<AnsibleEvent>>;
     tooMuchData?: boolean;
 }
 
@@ -129,7 +130,7 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
             process,
             forms,
             elementEvents,
-            ansibleEvents,
+            ansibleHosts,
             tooMuchData
         } = this.props;
 
@@ -189,10 +190,10 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
                         </>
                     )}
 
-                {ansibleEvents.length > 0 && (
+                {ansibleHosts.length > 0 && (
                     <>
                         <Divider content="Ansible Stats" horizontal={true} />
-                        <AnsibleStats events={ansibleEvents} />
+                        <AnsibleStats instanceId={instanceId} hosts={ansibleHosts} />
                     </>
                 )}
             </>
@@ -218,13 +219,7 @@ const makeElementEvents = (
         .map((e) => e as ProcessEventEntry<ProcessElementEvent>)
         .sort((a, b) => (a.eventDate > b.eventDate ? 1 : a.eventDate < b.eventDate ? -1 : 0));
 
-const filterAnsibleEvents = (eventById: ProcessEvents): Array<ProcessEventEntry<AnsibleEvent>> =>
-    Object.keys(eventById)
-        .map((k) => eventById[k])
-        .filter((e) => e.eventType === ProcessEventType.ANSIBLE)
-        .map((e) => e as ProcessEventEntry<AnsibleEvent>);
-
-const combinePrePostEvents = (
+export const combinePrePostEvents = (
     events: Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>>
 ): Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>> => {
     function findEvent(
@@ -282,11 +277,9 @@ export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps 
     loading: poll.currentRequest.running,
     process: poll.currentRequest.response ? poll.currentRequest.response.process : undefined,
     forms: poll.forms,
+    ansibleHosts: poll.ansibleHosts,
     elementEvents: combinePrePostEvents(makeElementEvents(poll.eventById)) as Array<
         ProcessEventEntry<ProcessElementEvent>
-    >,
-    ansibleEvents: combinePrePostEvents(filterAnsibleEvents(poll.eventById)) as Array<
-        ProcessEventEntry<AnsibleEvent>
     >,
     tooMuchData: poll.currentRequest.response ? poll.currentRequest.response.tooMuchData : false
 });

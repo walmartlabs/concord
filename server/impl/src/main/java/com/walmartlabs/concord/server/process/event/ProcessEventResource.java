@@ -97,6 +97,7 @@ public class ProcessEventResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
+                                        @ApiParam @QueryParam("type") String eventType,
                                         @ApiParam @QueryParam("after") IsoDateParam geTimestamp,
                                         @ApiParam @QueryParam("limit") @DefaultValue("-1") int limit) {
 
@@ -104,8 +105,7 @@ public class ProcessEventResource implements Resource {
         if (geTimestamp != null) {
             ts = Timestamp.from(geTimestamp.getValue().toInstant());
         }
-
         ProcessKey processKey = processKeyCache.get(processInstanceId);
-        return eventDao.list(processKey, ts, null, limit);
+        return eventDao.list(processKey, ts, eventType, limit);
     }
 }

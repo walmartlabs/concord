@@ -55,7 +55,7 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, -1);
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null,-1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
@@ -100,7 +100,7 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, -1);
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, -1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {

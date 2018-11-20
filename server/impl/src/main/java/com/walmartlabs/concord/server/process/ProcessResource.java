@@ -560,9 +560,9 @@ public class ProcessResource implements Resource {
         List<ProcessEventEntry> events = eventDao.list(pk, null, EventType.PROCESS_STATUS.name(), -1);
         List<ProcessStatusHistoryEntry> result = new ArrayList<>(events.size());
         for (ProcessEventEntry e : events) {
-            Map<String, Object> payload = new HashMap<>(objectMapper.readValue((String) e.getData(), Map.class));
+            Map<String, Object> payload = new HashMap<>(objectMapper.readValue((String) e.data(), Map.class));
             ProcessStatus status = ProcessStatus.valueOf((String) payload.remove("status"));
-            result.add(new ProcessStatusHistoryEntry(e.getId(), status, e.getEventDate(), payload));
+            result.add(new ProcessStatusHistoryEntry(e.id(), status, e.eventDate(), payload));
         }
 
         return result;
