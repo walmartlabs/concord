@@ -13,6 +13,8 @@ process metadata;
 
 ### Changed
 
+- concord-queue-client: fixed potential OOM when handling connection
+errors;
 - concord-server, concord-console: Ansible events are now
 pre-processed and stored on the backend, making the Process Status
 page more responsive when working with large Ansible plays.
