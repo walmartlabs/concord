@@ -25,7 +25,7 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.ExtraStatus;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -64,8 +64,8 @@ public class QueuePolicyProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        PolicyEntry policy = payload.getHeader(Payload.POLICY);
-        if (policy == null || policy.isEmpty()) {
+        PolicyRules policy = payload.getHeader(Payload.POLICY);
+        if (policy == null) {
             return chain.process(payload);
         }
 
@@ -74,7 +74,7 @@ public class QueuePolicyProcessor implements PayloadProcessor {
 
         CheckResult<ProcessRule, Integer> result;
         try {
-            result = new PolicyEngine(policy.getRules())
+            result = new PolicyEngine(policy.rules())
                     .getQueueProcessPolicy()
                     .check(statuses -> dao.metrics(orgId, prjId, statuses));
         } catch (Exception e) {

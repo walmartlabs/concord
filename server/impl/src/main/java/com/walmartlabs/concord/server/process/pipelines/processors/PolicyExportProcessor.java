@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -61,18 +61,18 @@ public class PolicyExportProcessor implements PayloadProcessor {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID userId = payload.getHeader(Payload.INITIATOR_ID);
 
-        PolicyEntry policy = policyDao.getLinked(orgId, projectId, userId);
+        PolicyRules policy = policyDao.getRules(orgId, projectId, userId);
         if (policy == null) {
             return chain.process(payload);
         }
 
-        logManager.info(processKey, "Storing policy '{}' data", policy.getName());
+        logManager.info(processKey, "Storing policy '{}' data", policy.policyNames());
 
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
             Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
+            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.rules());
 
         } catch (IOException e) {
             logManager.error(processKey, "Error while storing process policy: {}", e);

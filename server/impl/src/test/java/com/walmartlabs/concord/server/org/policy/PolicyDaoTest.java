@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.policy;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,29 +20,30 @@ package com.walmartlabs.concord.server.org.policy;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.immutables.value.Value;
+import com.walmartlabs.concord.server.AbstractDaoTest;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import javax.annotation.Nullable;
-import java.util.Map;
 import java.util.UUID;
 
-@Value.Immutable
-@JsonSerialize(as = ImmutablePolicyEntry.class)
-@JsonDeserialize(as = ImmutablePolicyEntry.class)
-@JsonInclude(Include.NON_NULL)
-public interface PolicyEntry {
+@Ignore("requires a local DB instance")
+public class PolicyDaoTest extends AbstractDaoTest {
 
-    @Nullable
-    UUID id();
+    private PolicyDao policyDao;
 
-    @Nullable
-    UUID parentId();
+    @Before
+    public void setUp() {
+        policyDao = new PolicyDao(getConfiguration());
+    }
 
-    String name();
+    @Test
+    public void test() {
+        UUID orgId = null;
+        UUID projectId = null;
+        UUID userId = null;
 
-    Map<String, Object> rules();
+        PolicyRules result = policyDao.getRules(orgId, projectId, userId);
+        System.out.println(">>>" + result);
+    }
 }

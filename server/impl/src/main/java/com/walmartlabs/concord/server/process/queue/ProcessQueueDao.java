@@ -31,7 +31,7 @@ import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.event.EventDao;
 import org.jooq.*;
@@ -598,12 +598,12 @@ public class ProcessQueueDao extends AbstractDao {
             return null;
         }
 
-        PolicyEntry policy = policyDao.getLinked(tx, orgId, prjId, userId);
+        PolicyRules policy = policyDao.getRules(tx, orgId, prjId, userId);
         if (policy == null) {
             return null;
         }
 
-        PolicyEngine pe = new PolicyEngine(policy.getRules());
+        PolicyEngine pe = new PolicyEngine(policy.rules());
         return pe.getConcurrentProcessPolicy().hasRule() ? pe : null;
     }
 

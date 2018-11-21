@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.org.policy.ImmutablePolicyRules;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -97,7 +97,10 @@ public class RequestDataMergingProcessorTest {
                 .putHeader(Payload.ORGANIZATION_ID, orgId)
                 .putHeader(Payload.PROJECT_ID, prjId)
                 .putHeader(Payload.WORKSPACE_DIR, workDir)
-                .putHeader(Payload.POLICY, new PolicyEntry("test", policy));
+                .putHeader(Payload.POLICY, ImmutablePolicyRules.builder()
+                        .addPolicyNames("test")
+                        .rules(policy)
+                        .build());
 
         // ---
         Map<String, Object> expected = new HashMap<>();

@@ -20,29 +20,15 @@ package com.walmartlabs.concord.server.org.policy;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Value.Immutable
-@JsonSerialize(as = ImmutablePolicyEntry.class)
-@JsonDeserialize(as = ImmutablePolicyEntry.class)
-@JsonInclude(Include.NON_NULL)
-public interface PolicyEntry {
+public interface PolicyRules {
 
-    @Nullable
-    UUID id();
-
-    @Nullable
-    UUID parentId();
-
-    String name();
+    List<String> policyNames();
 
     Map<String, Object> rules();
 }

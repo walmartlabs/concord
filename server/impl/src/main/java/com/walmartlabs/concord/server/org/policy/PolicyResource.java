@@ -103,26 +103,28 @@ public class PolicyResource implements Resource {
     public PolicyOperationResponse createOrUpdate(@ApiParam @Valid PolicyEntry entry) {
         assertAdmin();
 
-        UUID id = entry.getId();
-        if (id == null && entry.getName() != null) {
-            id = policyDao.getId(entry.getName());
+        UUID id = entry.id();
+        if (id == null && entry.name() != null) {
+            id = policyDao.getId(entry.name());
         }
 
         if (id == null) {
-            id = policyDao.insert(entry.getName(), entry.getRules());
+            id = policyDao.insert(entry.name(), entry.parentId(), entry.rules());
 
             auditLog.add(AuditObject.POLICY, AuditAction.CREATE)
                     .field("id", id)
-                    .field("name", entry.getName())
+                    .field("parentId", entry.parentId())
+                    .field("name", entry.name())
                     .log();
 
             return new PolicyOperationResponse(id, OperationResult.CREATED);
         } else {
-            policyDao.update(id, entry.getName(), entry.getRules());
+            policyDao.update(id, entry.name(), entry.parentId(), entry.rules());
 
             auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
                     .field("id", id)
-                    .field("name", entry.getName())
+                    .field("parentId", entry.parentId())
+                    .field("name", entry.name())
                     .log();
 
             return new PolicyOperationResponse(id, OperationResult.UPDATED);

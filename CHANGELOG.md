@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: support for policy inheritance;
 - concord-server: `offset` and `limit` to the process checkpoint list
 endpoint;
 - concord-server: support for exposing form and nested values as

@@ -75,4 +75,17 @@
             <column name="EVENT_TYPE"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="99400" author="ybrigo@gmail.com">
+        <addColumn tableName="POLICIES">
+            <column name="PARENT_POLICY_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint constraintName="FK_POLICIES_PARENT"
+                                 baseTableName="POLICIES" baseColumnNames="PARENT_POLICY_ID"
+                                 referencedTableName="POLICIES" referencedColumnNames="POLICY_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
 </databaseChangeLog>

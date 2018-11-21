@@ -28,7 +28,7 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -122,13 +122,13 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> getPolicyCfg(Payload payload) {
-        PolicyEntry policy = payload.getHeader(Payload.POLICY);
+        PolicyRules policy = payload.getHeader(Payload.POLICY);
 
-        if (policy == null || policy.isEmpty()) {
+        if (policy == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> rules = policy.getRules();
+        Map<String, Object> rules = policy.rules();
         Object v = rules.get(InternalConstants.Policy.PROCESS_CFG);
         if (v == null) {
             return Collections.emptyMap();

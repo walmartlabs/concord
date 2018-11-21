@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.policy.PolicyEntry;
+import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -51,13 +51,13 @@ public class PolicyProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        PolicyEntry policy = payload.getHeader(Payload.POLICY);
-        if (policy == null || policy.isEmpty()) {
+        PolicyRules policy = payload.getHeader(Payload.POLICY);
+        if (policy == null || policy.rules() == null || policy.rules().isEmpty()) {
             return chain.process(payload);
         }
 
         logManager.info(processKey, "Applying policies...");
-        Map<String, Object> rules = policy.getRules();
+        Map<String, Object> rules = policy.rules();
 
         try {
             // TODO merge check results
@@ -67,8 +67,8 @@ public class PolicyProcessor implements PayloadProcessor {
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
-            logManager.error(processKey, "Error while applying policy '{}': {}", policy.getName(), e);
-            throw new ProcessException(processKey, "Policy '" + policy.getName() + "' error", e);
+            logManager.error(processKey, "Error while applying policy '{}': {}", policy.policyNames(), e);
+            throw new ProcessException(processKey, "Policy '" + policy.policyNames() + "' error", e);
         }
 
         return chain.process(payload);

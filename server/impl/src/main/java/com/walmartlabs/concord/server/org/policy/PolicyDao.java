@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.policy;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
@@ -29,14 +30,14 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.POLICIES;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class PolicyDao extends AbstractDao {
@@ -62,12 +63,49 @@ public class PolicyDao extends AbstractDao {
     public PolicyEntry get(UUID policyId) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(POLICIES.POLICY_ID,
+                    POLICIES.PARENT_POLICY_ID,
                     POLICIES.POLICY_NAME,
                     POLICIES.RULES.cast(String.class))
                     .from(POLICIES)
                     .where(POLICIES.POLICY_ID.eq(policyId))
                     .fetchOne(this::toEntry);
         }
+    }
+
+    public PolicyRules getRules(UUID orgId, UUID projectId, UUID userId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return getRules(tx, orgId, projectId, userId);
+        }
+    }
+
+    public PolicyRules getRules(DSLContext tx, UUID orgId, UUID projectId, UUID userId) {
+        PolicyEntry entry = getLinked(tx, orgId, projectId, userId);
+        if (entry == null || entry.rules().isEmpty()) {
+            return null;
+        }
+
+        Result<Record3<String, String, Integer>> rules = tx.withRecursive("children").as(
+                select(POLICIES.POLICY_ID, POLICIES.PARENT_POLICY_ID, POLICIES.POLICY_NAME, POLICIES.RULES, field("1", Integer.class).as("level")).from(POLICIES)
+                        .where(POLICIES.POLICY_ID.eq(entry.id()))
+                        .unionAll(
+                                select(POLICIES.POLICY_ID, POLICIES.PARENT_POLICY_ID, POLICIES.POLICY_NAME, POLICIES.RULES, field("children.level + 1", Integer.class).as("level")).from(POLICIES)
+                                        .join(name("children"))
+                                        .on(POLICIES.POLICY_ID.eq(
+                                                field(name("children", "PARENT_POLICY_ID"), UUID.class)))))
+                .select(POLICIES.as("children").POLICY_NAME, POLICIES.as("children").RULES.cast(String.class), field("level", Integer.class))
+                .from(name("children"))
+                .orderBy(field("level").desc())
+                .fetch();
+
+        ImmutablePolicyRules.Builder result = ImmutablePolicyRules.builder();
+        Map<String, Object> mergedRules = new HashMap<>();
+        for(Record3<String, String, Integer> r : rules) {
+            result.addPolicyNames(r.value1());
+            mergedRules = ConfigurationUtils.deepMerge(mergedRules, deserialize(r.value2()));
+        }
+        return result
+                .rules(mergedRules)
+                .build();
     }
 
     public PolicyEntry getLinked(UUID orgId, UUID projectId, UUID userId) {
@@ -77,8 +115,9 @@ public class PolicyDao extends AbstractDao {
     }
 
     public PolicyEntry getLinked(DSLContext tx, UUID orgId, UUID projectId, UUID userId) {
-        SelectOnConditionStep<Record6<UUID, String, String, UUID, UUID, UUID>> q =
+        SelectOnConditionStep<Record7<UUID, UUID, String, String, UUID, UUID, UUID>> q =
                 tx.select(POLICIES.POLICY_ID,
+                        POLICIES.PARENT_POLICY_ID,
                         POLICIES.POLICY_NAME,
                         POLICIES.RULES.cast(String.class),
                         POLICY_LINKS.ORG_ID,
@@ -115,19 +154,20 @@ public class PolicyDao extends AbstractDao {
         return findPolicyEntry(q.fetch(this::toRule));
     }
 
-    public UUID insert(String name, Map<String, Object> rules) {
+    public UUID insert(String name, UUID parentId, Map<String, Object> rules) {
         return txResult(tx -> tx.insertInto(POLICIES)
-                .columns(POLICIES.POLICY_NAME, POLICIES.RULES)
-                .values(value(name), field("?::jsonb", serialize(rules)))
+                .columns(POLICIES.POLICY_NAME, POLICIES.PARENT_POLICY_ID, POLICIES.RULES)
+                .values(value(name), value(parentId), field("?::jsonb", serialize(rules)))
                 .returning(POLICIES.POLICY_ID)
                 .fetchOne()
                 .getPolicyId());
     }
 
-    public void update(UUID policyId, String name, Map<String, Object> rules) {
+    public void update(UUID policyId, String name, UUID parentId, Map<String, Object> rules) {
         tx(tx -> tx.update(POLICIES)
                 .set(POLICIES.POLICY_NAME, name)
                 .set(POLICIES.RULES, field("?::jsonb", String.class, serialize(rules)))
+                .set(POLICIES.PARENT_POLICY_ID, parentId)
                 .where(POLICIES.POLICY_ID.eq(policyId))
                 .execute());
     }
@@ -167,6 +207,7 @@ public class PolicyDao extends AbstractDao {
     public List<PolicyEntry> list() {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(POLICIES.POLICY_ID,
+                    POLICIES.PARENT_POLICY_ID,
                     POLICIES.POLICY_NAME,
                     POLICIES.RULES.cast(String.class))
                     .from(POLICIES)
@@ -218,23 +259,32 @@ public class PolicyDao extends AbstractDao {
     }
 
     private static PolicyEntry toEntry(PolicyRule r) {
-        return new PolicyEntry(r.policyId, r.policyName, r.rules);
+        return ImmutablePolicyEntry.builder()
+                .id(r.policyId)
+                .parentId(r.parentPolicyId)
+                .name(r.policyName)
+                .rules(r.rules)
+                .build();
     }
 
-    private PolicyEntry toEntry(Record3<UUID, String, String> r) {
-        return new PolicyEntry(r.get(POLICIES.POLICY_ID),
-                r.get(POLICIES.POLICY_NAME),
-                deserialize(r.value3()));
+    private PolicyEntry toEntry(Record4<UUID, UUID, String, String> r) {
+        return ImmutablePolicyEntry.builder()
+                .id(r.get(POLICIES.POLICY_ID))
+                .parentId(r.get(POLICIES.PARENT_POLICY_ID))
+                .name(r.get(POLICIES.POLICY_NAME))
+                .rules(deserialize(r.value4()))
+                .build();
     }
 
-    private PolicyRule toRule(Record6<UUID, String, String, UUID, UUID, UUID> r) {
+    private PolicyRule toRule(Record7<UUID, UUID, String, String, UUID, UUID, UUID> r) {
         return new PolicyRule(
                 r.get(POLICY_LINKS.ORG_ID),
                 r.get(POLICY_LINKS.PROJECT_ID),
                 r.get(POLICY_LINKS.USER_ID),
                 r.get(POLICIES.POLICY_ID),
+                r.get(POLICIES.PARENT_POLICY_ID),
                 r.get(POLICIES.POLICY_NAME),
-                deserialize(r.value3()));
+                deserialize(r.value4()));
     }
 
     private String serialize(Map<String, Object> m) {
@@ -268,14 +318,16 @@ public class PolicyDao extends AbstractDao {
         private final UUID prjId;
         private final UUID userId;
         private final UUID policyId;
+        private final UUID parentPolicyId;
         private final String policyName;
         private final Map<String, Object> rules;
 
-        private PolicyRule(UUID orgId, UUID prjId, UUID userId, UUID policyId, String policyName, Map<String, Object> rules) {
+        private PolicyRule(UUID orgId, UUID prjId, UUID userId, UUID policyId, UUID parentPolicyId, String policyName, Map<String, Object> rules) {
             this.orgId = orgId;
             this.prjId = prjId;
             this.userId = userId;
             this.policyId = policyId;
+            this.parentPolicyId = parentPolicyId;
             this.policyName = policyName;
             this.rules = rules;
         }
