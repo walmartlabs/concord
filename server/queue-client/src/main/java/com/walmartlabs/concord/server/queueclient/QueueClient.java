@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.queueclient;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -107,17 +107,17 @@ public class QueueClient {
         }
 
         private static final long PROCESS_REQUEST_DELAY = 1000;
-        private static final long RECONNECT_DELAY = 5000;
+        private static final long RECONNECT_DELAY = 1000;
 
         private final AtomicLong requestIdGenerator = new AtomicLong();
 
         private final String userAgent;
         private final String apiToken;
-        private final WebSocketClient client;
         private final URI destUri;
         private final Map<Long, RequestEntry> awaitResponses;
         private final List<RequestEntry> requests;
 
+        private WebSocketClient client;
         private long lastActivity;
         private final long maxInactivity;
         private final long connectTimeout;
@@ -127,8 +127,6 @@ public class QueueClient {
         public Worker(QueueClientConfiguration cfg, List<RequestEntry> requests) throws URISyntaxException {
             this.userAgent = cfg.getUserAgent();
             this.apiToken = cfg.getApiToken();
-
-            this.client = createWebSocketClient(cfg.getConnectTimeout());
 
             this.requests = requests;
             this.destUri = new URI(cfg.getAddress());
@@ -221,6 +219,7 @@ public class QueueClient {
         }
 
         private Session connect() throws Exception {
+            this.client = createWebSocketClient(connectTimeout);
             this.client.start();
 
             ClientUpgradeRequest request = new ClientUpgradeRequest();
@@ -284,6 +283,7 @@ public class QueueClient {
 
             try {
                 this.client.stop();
+                this.client.destroy();
             } catch (Exception e) {
                 log.error("stop -> error", e);
             }
@@ -301,12 +301,12 @@ public class QueueClient {
         private RequestEntry nextRequest() {
             synchronized (requests) {
                 Iterator<RequestEntry> it = requests.iterator();
-                while(it.hasNext()) {
-                   RequestEntry request = it.next();
-                   if (!alreadySent(request.request.getMessageType())) {
-                       it.remove();
-                       return request;
-                   }
+                while (it.hasNext()) {
+                    RequestEntry request = it.next();
+                    if (!alreadySent(request.request.getMessageType())) {
+                        it.remove();
+                        return request;
+                    }
                 }
             }
 
@@ -356,8 +356,8 @@ public class QueueClient {
         scf.setTrustAll(true);
 
         WebSocketClient c = new WebSocketClient(scf);
+        c.setStopAtShutdown(false);
         c.setConnectTimeout(connectTimeout);
-
         return c;
     }
 }

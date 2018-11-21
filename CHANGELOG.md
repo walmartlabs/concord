@@ -4,6 +4,11 @@
 
 ### Changed
 
+- concord-queue-client: fixed potential OOM when handling connection
+errors.
+
+
+
 ## [0.98.0] - 2018-11-18
 
 ### Added
