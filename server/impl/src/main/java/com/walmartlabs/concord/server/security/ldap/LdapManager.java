@@ -24,6 +24,8 @@ import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.console.UserSearchResult;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,6 +42,8 @@ import java.util.*;
 @Named
 @Singleton
 public class LdapManager {
+
+    private static final Logger log = LoggerFactory.getLogger(LdapManager.class);
 
     private static final String MEMBER_OF_ATTR = "memberOf"; // TODO move to cfg
     private static final String DISPLAY_NAME_ATTR = "displayName"; // TODO move to cfg
@@ -103,6 +107,9 @@ public class LdapManager {
         try {
             ctx = ctxFactory.getSystemLdapContext();
             return getPrincipal(ctx, username);
+        } catch (Exception e) {
+            log.warn("getPrincipal ['{}'] -> error while retrieving LDAP data: {}", username, e.getMessage(), e);
+            throw e;
         } finally {
             LdapUtils.closeContext(ctx);
         }

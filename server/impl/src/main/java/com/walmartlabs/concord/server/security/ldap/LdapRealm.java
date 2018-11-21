@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.ldap;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,12 +44,13 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
+import java.util.UUID;
 
 @Named
 public class LdapRealm extends AbstractLdapRealm {
 
     private static final String REALM_NAME = "ldap";
-    
+
     private static final Logger log = LoggerFactory.getLogger(LdapRealm.class);
 
     private final UserManager userManager;
@@ -124,7 +125,6 @@ public class LdapRealm extends AbstractLdapRealm {
         LdapContext ctx = null;
         try {
             ctx = ldapContextFactory.getLdapContext(principalName, new String(password));
-            log.info("queryForAuthenticationInfo -> '{}', success", principalName);
         } catch (Exception e) {
             log.warn("queryForAuthenticationInfo -> '{}', failed: {}", principalName, e.getMessage());
             throw e;
@@ -133,17 +133,18 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         UserEntry user = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
+        UUID userId = user.getId();
 
         // update user's email if needed
         if (user.getEmail() == null && ldapPrincipal.getEmail() != null) {
-            user = userManager.update(user.getId(), ldapPrincipal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("User record not found"));
+            user = userManager.update(userId, ldapPrincipal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
         }
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, user);
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
-                .userId(user.getId())
+                .userId(userId)
                 .field("username", user.getName())
                 .field("realm", REALM_NAME)
                 .log();
