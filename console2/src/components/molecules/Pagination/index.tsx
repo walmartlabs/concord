@@ -33,8 +33,10 @@ interface Props {
     handleLimitChange: (limit: any) => void;
     handleNext: () => void;
     handlePrev: () => void;
+    handleFirst: () => void;
     disablePrevious?: boolean;
     disableNext?: boolean;
+    disableFirst?: boolean;
 }
 
 interface State {
@@ -64,6 +66,12 @@ class Pagination extends React.Component<Props, State> {
                     onChange={(v, data) => this.props.handleLimitChange(data.value)}
                 />
                 <Button.Group>
+                    <Button
+                        basic={true}
+                        icon="angle double left"
+                        disabled={this.props.disableFirst}
+                        onClick={() => this.props.handleFirst()}
+                    />
                     <Button
                         basic={true}
                         icon="angle left"

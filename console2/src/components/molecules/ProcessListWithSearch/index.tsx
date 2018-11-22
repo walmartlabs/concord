@@ -39,7 +39,7 @@ import {
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     UPDATED_AT_COLUMN
-} from '../../molecules/ProcessList';
+} from '../ProcessList';
 
 const defaultColumns = [
     INSTANCE_ID_COLUMN,
@@ -94,6 +94,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
         this.onRefresh = this.onRefresh.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
         this.handleNext = this.handleNext.bind(this);
+        this.handleFirst = this.handleFirst.bind(this);
     }
 
     handleStatusChange(s?: string) {
@@ -136,6 +137,10 @@ class ProcessListWithSearch extends React.Component<Props, State> {
 
     handlePrev() {
         this.handleNavigation(this.props.prev);
+    }
+
+    handleFirst() {
+        this.handleNavigation(0);
     }
 
     handleNavigation(offset?: number) {
@@ -246,8 +251,10 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                                 handleLimitChange={(limit) => this.handleLimitChange(limit)}
                                 handleNext={this.handleNext}
                                 handlePrev={this.handlePrev}
+                                handleFirst={this.handleFirst}
                                 disablePrevious={prev === undefined}
                                 disableNext={next === undefined}
+                                disableFirst={prev === undefined}
                             />
                         </Menu.Item>
                     )}
