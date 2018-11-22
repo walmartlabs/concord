@@ -71,7 +71,7 @@
     become: true
     docker_container:
       name: db
-      image: library/postgres:9.6
+      image: library/postgres:10
       restart_policy: always
       state: started
       ports:
