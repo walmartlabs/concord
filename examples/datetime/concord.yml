@@ -1,0 +1,6 @@
+flows:
+  default:
+  - log: "${datetime.current()}"
+  - log: "${datetime.current('dd.MM.yyy')}"
+  - log: "${datetime.format(datetime.current(), 'dd.MM.yyyy')}"
+  - log: "${datetime.parse('01.01.2018', 'dd.MM.yyyy')}"

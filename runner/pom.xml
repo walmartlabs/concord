@@ -107,7 +107,7 @@
             <artifactId>commons-compress</artifactId>
         </dependency>
 
-        <!-- tasks -->
+        <!-- built-in tasks -->
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>log-tasks</artifactId>
