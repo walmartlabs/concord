@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { ConcordId, queryParams, RequestError } from '../../../api/common';
-import { actions, selectors } from '../../../state/data/processes/children';
+import { actions } from '../../../state/data/processes/children';
 import { State } from '../../../state/data/processes/children/types';
 import { RequestErrorMessage } from '../../molecules';
 import { ProcessEntry, ProcessStatus } from '../../../api/process';
@@ -37,6 +37,7 @@ import { replace as pushHistory } from 'react-router-redux';
 import { SearchFilter } from '../../../api/org/process';
 import { parse as parseQueryString } from 'query-string';
 import { RouteComponentProps, withRouter } from 'react-router';
+import { PaginatedProcesses } from '../../../state/data/processes';
 
 const COLUMNS = [
     INSTANCE_ID_COLUMN,
@@ -58,6 +59,8 @@ interface StateProps {
     loading: boolean;
     processes: ProcessEntry[];
     loadError: RequestError;
+    next?: number;
+    prev?: number;
 }
 
 interface DispatchProps {
@@ -69,7 +72,9 @@ type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<Ro
 const parseSearchFilter = (s: string): SearchFilter => {
     const v: any = parseQueryString(s);
     return {
-        status: v.status ? ProcessStatus[v.status as string] : undefined
+        status: v.status ? ProcessStatus[v.status as string] : undefined,
+        limit: v.limit ? v.limit : 50,
+        offset: v.offset ? v.offset : 0
     };
 };
 
@@ -85,7 +90,7 @@ class ProcessChildrenActivity extends React.Component<Props> {
     }
 
     render() {
-        const { processes, instanceId, loadError, loading, history, load } = this.props;
+        const { processes, instanceId, loadError, loading, history, load, next, prev } = this.props;
 
         if (loadError) {
             return <RequestErrorMessage error={loadError} />;
@@ -108,15 +113,18 @@ class ProcessChildrenActivity extends React.Component<Props> {
                     loadError={loadError}
                     refresh={(filters) => load(instanceId, filters)}
                     showInitiatorFilter={false}
+                    next={next}
+                    prev={prev}
+                    usePagination={true}
                 />
             </>
         );
     }
 }
 
-const makeProcessList = (data: ProcessEntry[]): ProcessEntry[] => {
-    return Object.keys(data)
-        .map((k) => data[k])
+const makeProcessList = (data: PaginatedProcesses): ProcessEntry[] => {
+    return Object.keys(data.processes)
+        .map((k) => data.processes[k])
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
 };
 
@@ -127,9 +135,11 @@ interface StateType {
 }
 
 export const mapStateToProps = ({ processes: { children } }: StateType): StateProps => ({
-    loading: children.listChildren.running,
-    loadError: children.listChildren.error,
-    processes: makeProcessList(selectors.processChildren(children))
+    loading: children.loading,
+    loadError: children.error,
+    processes: makeProcessList(children.listChildren),
+    next: children.listChildren.next,
+    prev: children.listChildren.prev
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({

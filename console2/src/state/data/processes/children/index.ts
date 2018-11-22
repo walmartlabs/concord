@@ -18,23 +18,18 @@
  * =====
  */
 import { ConcordId } from '../../../../api/common';
-import { ListProcessChildrenState, ListProcessChildrenRequest, State } from './types';
-import { combineReducers } from 'redux';
+import { ListProcessChildrenRequest, State } from './types';
+import { combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 import { list as apiProcessList, SearchFilter } from '../../../../api/org/process';
-import {
-    handleErrors,
-    makeErrorReducer,
-    makeLoadingReducer,
-    makeResponseReducer
-} from '../../common';
+import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
+import { PaginatedProcessDataResponse, PaginatedProcesses } from '../types';
 
 const NAMESPACE = 'processes/children';
 
 const actionTypes = {
     LIST_PROCESS_CHILDREN_REQUEST: `${NAMESPACE}/children/list/request`,
-    LIST_PROCESS_CHILDREN_RESPONSE: `${NAMESPACE}/children/list/response`,
-    RESET_PROCESS_LIST: `${NAMESPACE}/reset`
+    LIST_PROCESS_CHILDREN_RESPONSE: `${NAMESPACE}/children/list/response`
 };
 
 export const actions = {
@@ -42,34 +37,46 @@ export const actions = {
         type: actionTypes.LIST_PROCESS_CHILDREN_REQUEST,
         parentId,
         filters
-    }),
-
-    reset: () => ({
-        type: actionTypes.RESET_PROCESS_LIST
     })
 };
 
-const listReducers = combineReducers<ListProcessChildrenState>({
-    running: makeLoadingReducer(
-        [actionTypes.LIST_PROCESS_CHILDREN_REQUEST],
-        [actionTypes.LIST_PROCESS_CHILDREN_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.RESET_PROCESS_LIST, actionTypes.LIST_PROCESS_CHILDREN_REQUEST],
-        [actionTypes.LIST_PROCESS_CHILDREN_RESPONSE]
-    ),
-    response: makeResponseReducer(actionTypes.LIST_PROCESS_CHILDREN_RESPONSE)
-});
+const loading = makeLoadingReducer(
+    [actionTypes.LIST_PROCESS_CHILDREN_REQUEST],
+    [actionTypes.LIST_PROCESS_CHILDREN_RESPONSE]
+);
 
-export const reducers = combineReducers<State>({
-    listChildren: listReducers
-});
+const errorMsg = makeErrorReducer(
+    [actionTypes.LIST_PROCESS_CHILDREN_REQUEST],
+    [actionTypes.LIST_PROCESS_CHILDREN_RESPONSE]
+);
 
-export const selectors = {
-    processChildren: (state: State) => {
-        return state.listChildren.response ? state.listChildren.response.items : [];
+const listChildren: Reducer<PaginatedProcesses> = (
+    state = { processes: {} },
+    { type, error, items, next, prev }: PaginatedProcessDataResponse
+) => {
+    switch (type) {
+        case actionTypes.LIST_PROCESS_CHILDREN_RESPONSE:
+            if (error || !items) {
+                return state;
+            }
+
+            const result = {};
+
+            items.forEach((o) => {
+                result[o.instanceId] = o;
+            });
+
+            return { processes: result, next, prev };
+        default:
+            return state;
     }
 };
+
+export const reducers = combineReducers<State>({
+    listChildren,
+    loading,
+    error: errorMsg
+});
 
 function* onList({ parentId, filters }: ListProcessChildrenRequest) {
     try {
@@ -83,7 +90,9 @@ function* onList({ parentId, filters }: ListProcessChildrenRequest) {
         const response = yield call(apiProcessList, orgName, projectName, filters);
         yield put({
             type: actionTypes.LIST_PROCESS_CHILDREN_RESPONSE,
-            items: response.processes
+            items: response.items,
+            next: response.next,
+            prev: response.prev
         });
     } catch (e) {
         yield handleErrors(actionTypes.LIST_PROCESS_CHILDREN_RESPONSE, e);
