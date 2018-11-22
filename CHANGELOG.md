@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: pagination support for the child process list page;
 - concord-server: support for policy inheritance;
 - concord-server: `offset` and `limit` to the process checkpoint list
 endpoint;
@@ -13,6 +14,8 @@ process metadata;
 
 ### Changed
 
+- concord-console: fixed a bug preventing the child process list from
+working correctly;
 - concord-queue-client: fixed potential OOM when handling connection
 errors;
 - concord-server, concord-console: Ansible events are now

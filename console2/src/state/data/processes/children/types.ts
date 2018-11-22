@@ -19,22 +19,17 @@
  */
 
 import { Action } from 'redux';
-import { RequestState } from '../../common';
-import { ConcordId } from '../../../../api/common';
+import { ConcordId, RequestError } from '../../../../api/common';
 import { SearchFilter } from '../../../../api/org/process';
-import { ProcessEntry } from '../../../../api/process';
+import { PaginatedProcesses } from '../types';
 
 export interface ListProcessChildrenRequest extends Action {
     parentId: ConcordId;
     filters?: SearchFilter;
 }
 
-export interface ListProcessChildrenResponse extends Action {
-    items: ProcessEntry[];
-}
-
-export type ListProcessChildrenState = RequestState<ListProcessChildrenResponse>;
-
 export interface State {
-    listChildren: ListProcessChildrenState;
+    loading: boolean;
+    error: RequestError;
+    listChildren: PaginatedProcesses;
 }
