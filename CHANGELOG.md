@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+## [0.98.0] - 2018-11-18
+
 ### Added
 
 - concord-server: add `meta` to the process checkpoint list endpoint.
