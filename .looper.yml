@@ -11,7 +11,7 @@ envs:
 
 triggers:
   - manual:
-      name: "Build master"
+      name: "Run Build"
       call: default
   - manual:
       name: "Perform a release"
@@ -19,6 +19,10 @@ triggers:
   - manual:
       name: "Deploy Maven site"
       call: siteDeploy
+
+branches:
+- spec: "master"
+- spec: "bugfix/*"
 
 tools:
   maven: 3.5.2
