@@ -17,8 +17,6 @@ process metadata;
 
 - concord-console: fixed a bug preventing the child process list from
 working correctly;
-- concord-queue-client: fixed potential OOM when handling connection
-errors;
 - concord-server, concord-console: Ansible events are now
 pre-processed and stored on the backend, making the Process Status
 page more responsive when working with large Ansible plays.
@@ -26,6 +24,15 @@ page more responsive when working with large Ansible plays.
 `allow` attribute
 - concord-server: change the (potential) partitioning key in
 `PROCESS_EVENTS` from `EVENT_DATE` to `INSTANCE_CREATED_AT`.
+
+
+
+## [0.98.1] - 2018-11-23
+
+### Changed
+
+- concord-queue-client: fixed potential OOM when handling connection
+errors.
 
 
 
