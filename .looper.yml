@@ -23,6 +23,7 @@ triggers:
 branches:
 - spec: "master"
 - spec: "bugfix/*"
+  call: bugfix
 
 tools:
   maven: 3.5.2
@@ -119,6 +120,9 @@ flows:
 
   default:
   - call: build(concord_version = latest-master-looper)
+
+  bugfix:
+  - call: build(concord_version = latest-bugfix-looper)
 
   pr:
   - call: build(concord_version = latest-pr-looper)
