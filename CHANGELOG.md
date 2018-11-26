@@ -15,6 +15,8 @@ process metadata;
 
 ### Changed
 
+- concord-console: dropdown menus with optional values now correctly
+render the empty "value";
 - concord-console: fixed a bug preventing the child process list from
 working correctly;
 - concord-server, concord-console: Ansible events are now

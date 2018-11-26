@@ -168,6 +168,9 @@ class ProcessForm extends React.Component<Props, State> {
         const options = allowedValue ? allowedValue.map((v) => ({ text: v, value: v })) : [];
         const multiple =
             cardinality === Cardinality.AT_LEAST_ONE || cardinality === Cardinality.ANY;
+        const required =
+            cardinality === Cardinality.AT_LEAST_ONE ||
+            cardinality === Cardinality.ONE_AND_ONLY_ONE;
 
         if (value === null) {
             value = undefined;
@@ -179,6 +182,7 @@ class ProcessForm extends React.Component<Props, State> {
 
         return (
             <Dropdown
+                clearable={!required}
                 selection={true}
                 multiple={multiple}
                 name={name}

@@ -52,7 +52,7 @@ class ProjectDropdown extends React.PureComponent<ExternalProps & StateProps & D
     render() {
         const { orgName, load, ...rest } = this.props;
 
-        return <FormikDropdown selection={true} search={true} {...rest} />;
+        return <FormikDropdown selection={true} search={true} clearable={true} {...rest} />;
     }
 }
 
@@ -61,8 +61,7 @@ const makeOptions = (data: ConcordKey[]): DropdownItemProps[] => {
         return [];
     }
 
-    const opts = data.map((s) => ({ key: s, value: s, text: s }));
-    return [{ key: '', text: 'any' }].concat(opts);
+    return data.map((s) => ({ key: s, value: s, text: s }));
 };
 
 const mapStateToProps = (
