@@ -5,9 +5,9 @@ envs:
       DEPLOYMENT_USERNAME: "%{credentials.username('walmart-deployment')}"
       DEPLOYMENT_PASSWORD: "%{credentials.password('walmart-deployment')}"
 
-      SERVER_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-server"
-      CONSOLE_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-console"
-      AGENT_IMAGE_TAG: "docker.prod.walmart.com/walmartlabs/concord-agent"
+      SERVER_IMAGE_TAG: "${dockerTagPrefix}walmartlabs/concord-server"
+      CONSOLE_IMAGE_TAG: "${dockerTagPrefix}walmartlabs/concord-console"
+      AGENT_IMAGE_TAG: "${dockerTagPrefix}walmartlabs/concord-agent"
 
 triggers:
   - manual:
@@ -30,8 +30,8 @@ tools:
   sonarscanner: 3.0.3.778
 
 docker:
-- name: 'looper-agent'
-  image: 'docker.prod.walmart.com/devtools/looper-agent-docker:0.1.0-centos'
+- name: "looper-agent"
+  image: "docker.prod.walmart.com/devtools/looper-agent-docker:0.1.0-centos"
 
 flows:
   buildImages:
@@ -94,7 +94,7 @@ flows:
     - dockguardAgent(looper-agent):
       - docker network create testnet$DOCKGUARD_STEP_UID
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
-      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db hub.docker.prod.walmart.com/library/postgres:10.4-alpine
+      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db ${dbDockerImage}
       - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
       - call: runsonar
       - hygieia.publishBuild()
@@ -109,7 +109,7 @@ flows:
     - dockguardAgent(looper-agent):
       - docker network create testnet$DOCKGUARD_STEP_UID
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
-      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db hub.docker.prod.walmart.com/library/postgres:10.4-alpine
+      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db ${dbDockerImage}
       - (name build) mvn -U -B -s $MVN_SETTINGS release:prepare release:perform -DskipTests
       - hygieia.publishBuild()
       - ws_snapshot: binaries

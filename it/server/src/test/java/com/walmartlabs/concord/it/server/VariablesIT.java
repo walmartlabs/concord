@@ -107,23 +107,6 @@ public class VariablesIT extends AbstractServerIT {
     }
 
     @Test(timeout = 60000)
-    public void testNexus() throws Exception {
-        byte[] payload = archive(VariablesIT.class.getResource("nexus").toURI());
-
-        Map<String, Object> req = new HashMap<>();
-        req.put("archive", payload);
-        req.put("arguments.nexusperf_configuration", "mvn_flood");
-
-        StartProcessResponse spr = start(req);
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-
-        byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*test.duration=60.*", ab);
-    }
-
-    @Test(timeout = 60000)
     public void testArrayInterpolation() throws Exception {
         String varA = "varA_" + System.currentTimeMillis();
         String varB = "varB_" + System.currentTimeMillis();
