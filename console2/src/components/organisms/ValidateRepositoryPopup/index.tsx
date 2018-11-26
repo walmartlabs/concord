@@ -19,7 +19,6 @@
  */
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
-import { TextArea } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
@@ -74,9 +73,6 @@ class ValidateRepositoryPopup extends React.Component<Props> {
                 success={success}
                 successMsg={<p> Repository validated successfully.</p>}
                 error={error}
-                errorRenderer={(e) => (
-                    <TextArea className="resultBox" value={e.details} rows={5} readOnly={true} />
-                )}
                 reset={reset}
                 onConfirm={onConfirm}
             />

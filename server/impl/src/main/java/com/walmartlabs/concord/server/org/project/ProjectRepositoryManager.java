@@ -171,10 +171,14 @@ public class ProjectRepositoryManager {
         }
     }
 
-    public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) throws IOException {
-        Path srcPath = repositoryManager.fetch(projectId, repositoryEntry);
-        ProjectDefinition pd = loader.loadProject(srcPath);
-        ProjectValidator.validate(pd);
+    public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) {
+        try {
+            Path src = repositoryManager.fetch(projectId, repositoryEntry);
+            ProjectDefinition pd = loader.loadProject(src);
+            ProjectValidator.validate(pd);
+        } catch (IOException e) {
+            throw new RepositoryValidationException("Validation failed: " + repositoryEntry.getName(), e);
+        }
     }
 
     private static String trim(String s) {
@@ -193,12 +197,12 @@ public class ProjectRepositoryManager {
 
     private void addAuditLog(UUID orgId, String orgName, UUID projectId, String projectName, RepositoryEntry prevRepoEntry, RepositoryEntry newRepoEntry) {
         ProjectEntry prevEntry = new ProjectEntry(null, new HashMap<>());
-        if(prevRepoEntry != null) {
+        if (prevRepoEntry != null) {
             prevEntry.getRepositories().put(prevRepoEntry.getName(), prevRepoEntry);
         }
 
         ProjectEntry newEntry = new ProjectEntry(null, new HashMap<>());
-        if(newRepoEntry != null) {
+        if (newRepoEntry != null) {
             newEntry.getRepositories().put(newRepoEntry.getName(), newRepoEntry);
         }
 

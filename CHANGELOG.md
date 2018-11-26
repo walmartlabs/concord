@@ -15,6 +15,7 @@ process metadata;
 
 ### Changed
 
+- concord-console: improved repository validation error messages;
 - concord-console: dropdown menus with optional values now correctly
 render the empty "value";
 - concord-console: fixed a bug preventing the child process list from

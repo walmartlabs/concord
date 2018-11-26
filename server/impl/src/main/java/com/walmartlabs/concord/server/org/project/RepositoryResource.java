@@ -42,7 +42,6 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -185,11 +184,7 @@ public class RepositoryResource implements Resource {
             throw new ConcordApplicationException("Repository not found: " + repositoryName, Status.NOT_FOUND);
         }
 
-        try {
-            projectRepositoryManager.validateRepository(projectId, repositoryDao.get(projectId, repoId));
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Validation failed: " + repositoryName, e);
-        }
+        projectRepositoryManager.validateRepository(projectId, repositoryDao.get(projectId, repoId));
 
         return new RepositoryValidationResponse(OperationResult.VALIDATED);
     }
