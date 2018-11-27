@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: a metric gauge for the number of currently
+connected websocket clients;
 - misc-tasks: new `datetime` task;
 - concord-server: pagination support for the child process list page;
 - concord-server: support for policy inheritance;

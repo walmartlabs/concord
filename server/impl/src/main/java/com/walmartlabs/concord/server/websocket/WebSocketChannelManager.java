@@ -48,6 +48,7 @@ public class WebSocketChannelManager {
         }
 
         channel.close();
+
         log.info("close ['{}'] -> done", channelId);
     }
 
@@ -89,5 +90,9 @@ public class WebSocketChannelManager {
 
     public void add(UUID channelId, WebSocketChannel channel) {
         channels.put(channelId, channel);
+    }
+
+    public int connectedClientsCount() {
+        return channels.size();
     }
 }
