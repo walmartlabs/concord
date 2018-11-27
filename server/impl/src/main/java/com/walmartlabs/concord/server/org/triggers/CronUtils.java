@@ -32,6 +32,13 @@ import java.time.chrono.ChronoZonedDateTime;
 
 public final class CronUtils {
 
+    public static Instant nextExecution(Instant now, String expression, ZoneId zone) {
+        if (zone == null) {
+            zone = ZoneId.systemDefault();
+        }
+        return nextExecution(ZonedDateTime.ofInstant(now, zone), expression);
+    }
+
     public static Instant nextExecution(String expression, ZoneId zone) {
         if (zone == null) {
             zone = ZoneId.systemDefault();

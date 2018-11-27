@@ -71,7 +71,7 @@ public class CronTriggerProcessor implements TriggerProcessor {
             zoneId = TimeZone.getTimeZone(timezone).toZoneId();
         }
 
-        Instant fireAt = CronUtils.nextExecution(spec, zoneId);
+        Instant fireAt = CronUtils.nextExecution(schedulerDao.now(), spec, zoneId);
         if (fireAt == null) {
             log.warn("process ['{}'] -> cron spec empty", triggerId);
             return;

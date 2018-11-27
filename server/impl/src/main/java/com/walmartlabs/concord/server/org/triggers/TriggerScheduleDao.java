@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.Record9;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -76,7 +77,7 @@ public class TriggerScheduleDao extends AbstractDao {
             Field<String> specField = field("{0}->>'spec'", String.class, t.CONDITIONS);
             Field<String> timezoneField = field("{0}->>'timezone'", String.class, t.CONDITIONS);
 
-            TriggerSchedulerEntry result = tx.select(
+            Record9<UUID, UUID, UUID, UUID, String, String, String, String, Timestamp> r = tx.select(
                     t.TRIGGER_ID,
                     orgIdField,
                     t.PROJECT_ID,
@@ -84,32 +85,42 @@ public class TriggerScheduleDao extends AbstractDao {
                     specField,
                     timezoneField,
                     t.ARGUMENTS.cast(String.class),
-                    t.TRIGGER_CFG.cast(String.class))
+                    t.TRIGGER_CFG.cast(String.class),
+                    currentTimestamp())
                     .from(t)
                     .where(t.TRIGGER_ID.eq(id))
-                    .fetchOne(r -> new TriggerSchedulerEntry(
-                            fireAt,
-                            r.value1(),
-                            r.value2(),
-                            r.value3(),
-                            r.value4(),
-                            r.value5(),
-                            r.value6(),
-                            deserialize(r.value7()),
-                            deserialize(r.value8())));
+                    .fetchOne();
 
-            if (result == null) {
+            if (r == null) {
                 return null;
             }
+
+            TriggerSchedulerEntry result = new TriggerSchedulerEntry(
+                    fireAt,
+                    r.value1(),
+                    r.value2(),
+                    r.value3(),
+                    r.value4(),
+                    r.value5(),
+                    r.value6(),
+                    deserialize(r.value7()),
+                    deserialize(r.value8()));
 
             ZoneId zoneId = null;
             if (result.getTimezone() != null) {
                 zoneId = TimeZone.getTimeZone(result.getTimezone()).toZoneId();
             }
-            updateFireAt(tx, id, CronUtils.nextExecution(result.getCronSpec(), zoneId));
+            Instant now = r.value9().toInstant();
+            updateFireAt(tx, id, CronUtils.nextExecution(now, result.getCronSpec(), zoneId));
 
             return result;
         });
+    }
+
+    public Instant now() {
+        return txResult(tx -> tx.select(currentTimestamp().as("now"))
+                .fetchOne(field("now", Timestamp.class))
+                .toInstant());
     }
 
     public void insert(DSLContext tx, UUID triggerId, Instant fireAt) {

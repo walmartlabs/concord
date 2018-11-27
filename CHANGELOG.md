@@ -17,6 +17,8 @@ process metadata;
 
 ### Changed
 
+- concord-server: `cron` triggers are now using the DB's time to
+calculate the schedule;
 - concord-console: improved repository validation error messages;
 - concord-console: dropdown menus with optional values now correctly
 render the empty "value";
