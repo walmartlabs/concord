@@ -1,0 +1,6 @@
+---
+- hosts: myHostGroup
+  tasks:
+  - debug:
+      msg: "{{ greetings }}"
+      verbosity: 0

@@ -1,0 +1,21 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:0.96.0"
+
+flows:
+  default:
+  - form: myForm
+    yield: true
+
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        myHostGroup:
+          hosts: ${myForm.ips.split(",")}
+      extraVars:
+        greetings: "Hi there!"
+
+forms:
+  myForm:
+  - ips: { type: "string", label: "IP addresses" }
