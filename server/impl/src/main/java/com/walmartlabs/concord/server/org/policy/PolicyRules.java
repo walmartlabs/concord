@@ -22,11 +22,12 @@ package com.walmartlabs.concord.server.org.policy;
 
 import org.immutables.value.Value;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
-public interface PolicyRules {
+public interface PolicyRules extends Serializable {
 
     List<String> policyNames();
 

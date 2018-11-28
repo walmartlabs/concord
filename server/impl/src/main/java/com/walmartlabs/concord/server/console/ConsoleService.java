@@ -70,6 +70,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -417,7 +418,7 @@ public class ConsoleService implements Resource {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableProcessEntryEx.class)
     @JsonDeserialize(as = ImmutableProcessEntryEx.class)
-    public interface ProcessEntryEx {
+    public interface ProcessEntryEx extends Serializable {
 
         UUID instanceId();
 

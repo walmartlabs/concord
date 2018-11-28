@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,7 +35,7 @@ import java.util.UUID;
 @JsonSerialize(as = ImmutablePolicyEntry.class)
 @JsonDeserialize(as = ImmutablePolicyEntry.class)
 @JsonInclude(Include.NON_NULL)
-public interface PolicyEntry {
+public interface PolicyEntry extends Serializable {
 
     @Nullable
     UUID id();

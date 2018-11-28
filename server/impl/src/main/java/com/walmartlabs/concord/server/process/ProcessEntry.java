@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -37,7 +38,7 @@ import java.util.UUID;
 @JsonInclude(Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableProcessEntry.class)
 @JsonDeserialize(as = ImmutableProcessEntry.class)
-public interface ProcessEntry {
+public interface ProcessEntry extends Serializable {
 
     UUID instanceId();
 
