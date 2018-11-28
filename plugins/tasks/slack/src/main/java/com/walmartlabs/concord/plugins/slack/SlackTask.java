@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.slack;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,6 @@ package com.walmartlabs.concord.plugins.slack;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;
-import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,10 @@ import javax.inject.Named;
 import java.util.Collection;
 import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.*;
+import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.DEFAULT_CONNECT_TIMEOUT;
+import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.DEFAULT_SO_TIMEOUT;
+import static com.walmartlabs.concord.plugins.slack.Utils.getInteger;
+import static com.walmartlabs.concord.plugins.slack.Utils.getString;
 
 @Named("slack")
 public class SlackTask implements Task {
@@ -58,7 +60,7 @@ public class SlackTask implements Task {
                      String channelId, String text,
                      String iconEmoji, String username, Collection<Object> attachments) {
 
-        try(SlackClient client = new SlackClient(buildCfg(ctx))) {
+        try (SlackClient client = new SlackClient(buildCfg(ctx))) {
             SlackClient.Response r = client.message(channelId, text, iconEmoji, username, attachments);
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());
@@ -84,19 +86,4 @@ public class SlackTask implements Task {
         return cfg;
     }
 
-    private static Integer getInteger(Map<String, Object> params, String name) {
-        return (Integer)params.get(name);
-    }
-
-    private static int getInteger(Map<String, Object> params, String name, int defaultValue) {
-        Integer result = getInteger(params, name);
-        if (result != null) {
-            return result;
-        }
-        return defaultValue;
-    }
-
-    private static String getString(Map<String, Object> params, String name) {
-        return (String)params.get(name);
-    }
 }

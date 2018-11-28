@@ -42,6 +42,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,10 @@ public class SlackClient implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(SlackClient.class);
     private static final String SLACK_API_ROOT = "https://slack.com/api/";
     private static final String CHAT_POST_MESSAGE_CMD = "chat.postMessage";
+    private static final String CREATE_CHANNEL_CMD = "channels.create";
+    private static final String CREATE_PRIV_CHANNEL_CMD = "groups.create";
+    private static final String ARCHIVE_CHANNEL_CMD = "channels.archive";
+    private static final String ARCHIVE_PRIV_CHANNEL_CMD = "groups.archive";
 
     private static final int TOO_MANY_REQUESTS_ERROR = 429;
     private static final int DEFAULT_RETRY_AFTER = 1;
@@ -70,6 +75,7 @@ public class SlackClient implements AutoCloseable {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String authToken;
     private final int retryCount;
+    public static String resEntity;
 
     private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient client;
@@ -136,6 +142,53 @@ public class SlackClient implements AutoCloseable {
         }
 
         return new Response(false, "too many requests");
+    }
+
+    public Response createChannel(String channelId) throws IOException {
+        HttpPost request = new HttpPost(SLACK_API_ROOT + CREATE_CHANNEL_CMD);
+        String argumentkey = "name";
+
+        return slackChannelTaskResponse(request, channelId, argumentkey);
+    }
+
+    public Response createPrivChannel(String channelId) throws IOException {
+        HttpPost request = new HttpPost(SLACK_API_ROOT + CREATE_PRIV_CHANNEL_CMD);
+        String argumentkey = "name";
+
+        return slackChannelTaskResponse(request, channelId, argumentkey);
+    }
+
+    public Response archiveChannel(String channelId) throws IOException {
+        HttpPost request = new HttpPost(SLACK_API_ROOT + ARCHIVE_CHANNEL_CMD);
+        String argumentkey = "channel";
+
+        return slackChannelTaskResponse(request, channelId, argumentkey);
+    }
+
+    public Response archivePrivChannel(String channelId) throws IOException {
+        HttpPost request = new HttpPost(SLACK_API_ROOT + ARCHIVE_PRIV_CHANNEL_CMD);
+        String argumentkey = "channel";
+
+        return slackChannelTaskResponse(request, channelId, argumentkey);
+    }
+
+    public Response slackChannelTaskResponse(HttpPost request, String channelId, String argumentkey) throws IOException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(argumentkey, channelId);
+        request.setEntity(new StringEntity(objectMapper.writeValueAsString(params)));
+
+        request.setHeader("Content-type", "application/json");
+        request.setHeader("Authorization", "Bearer " + authToken);
+        try (CloseableHttpResponse response = client.execute(request)) {
+            if (response.getEntity() == null) {
+                log.error("slackChannel task details ['{}'] -> empty response", params);
+                return new Response(false, "internal error");
+            }
+            resEntity = EntityUtils.toString(response.getEntity());
+            Response r = objectMapper.readValue(resEntity, Response.class);
+            log.info("slackChannel task details ['{}', '{}']", params, r);
+            return r;
+        }
     }
 
     private static int getRetryAfter(HttpResponse response) {
