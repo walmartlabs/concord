@@ -20,57 +20,49 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+import java.util.Arrays;
 import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.slack.SlackClient.Response;
-import static com.walmartlabs.concord.plugins.slack.SlackClient.resEntity;
-import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.DEFAULT_CONNECT_TIMEOUT;
-import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.DEFAULT_SO_TIMEOUT;
-import static com.walmartlabs.concord.plugins.slack.Utils.*;
-
+import static com.walmartlabs.concord.plugins.slack.Utils.assertString;
 
 @Named("slackChannel")
-
 public class SlackChannelTask implements Task {
 
     private static final Logger log = LoggerFactory.getLogger(SlackChannelTask.class);
 
-    private static final String CHANNEL_ID = "channelId";
-    private static final String CHANNEL_NAME = "channelName";
-    private static final String ACTION_KEY = "action";
-    private static final String API_TOKEN = "apiToken";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    public static final String CHANNEL_ID_KEY = "channelId";
+    public static final String CHANNEL_NAME_KEY = "channelName";
+    public static final String ACTION_KEY = "action";
+    public static final String API_TOKEN_KEY = "apiToken";
+    public static final String RESULT_KEY = "slackChannelId";
 
     @Override
     public void execute(Context ctx) throws Exception {
         Action action = getAction(ctx);
+        log.info("Starting '{}' action...", action);
 
         switch (action) {
             case CREATE: {
-                log.info("Starting 'CREATE' action");
                 createChannel(ctx);
                 break;
             }
-            case CREATEPRIV: {
-                log.info("Starting 'CREATEPRIV' action");
-                createPrivChannel(ctx);
+            case CREATEGROUP: {
+                createGroup(ctx);
                 break;
             }
             case ARCHIVE: {
-                log.info("Starting 'ARCHIVE' action");
-                archiveChannel(ctx, action);
+                archiveChannel(ctx);
                 break;
             }
-            case ARCHIVEPRIV: {
-                log.info("Starting 'ARCHIVEPRIV' action");
-                archiveChannel(ctx, action);
+            case ARCHIVEGROUP: {
+                archiveGroup(ctx);
                 break;
             }
             default:
@@ -79,81 +71,94 @@ public class SlackChannelTask implements Task {
     }
 
     private static void createChannel(Context ctx) throws Exception {
-        String channelId = assertString(ctx, CHANNEL_NAME);
-        String apiToken = assertString(ctx, API_TOKEN);
-        String responseKey = "channel";
+        String channelName = assertString(ctx, CHANNEL_NAME_KEY);
+        String apiToken = assertString(ctx, API_TOKEN_KEY);
 
-        try (SlackClient client = new SlackClient(buildCfg(ctx, apiToken))) {
-            SlackClient.Response r = client.createChannel(channelId);
-            responseHandleCreate(ctx, r, channelId, responseKey);
-        } catch (Exception e) {
-            throw new RuntimeException("slackChannel task error: " + e);
+        SlackConfiguration cfg = SlackConfiguration.from(ctx, apiToken);
+        try (SlackClient client = new SlackClient(cfg)) {
+            Response r = client.createChannel(channelName);
+            handleError(ctx, r, channelName);
+
+            String channelId = extractString(r, "channel", "id");
+            ctx.setVariable(RESULT_KEY, channelId);
+            log.info("Slack channel created: {} -> {} (stored as '{}' variable)", channelName, channelId, RESULT_KEY);
         }
-
     }
 
-    private static void createPrivChannel(Context ctx) throws Exception {
-        String channelId = assertString(ctx, CHANNEL_NAME);
-        String apiToken = assertString(ctx, API_TOKEN);
-        String responseKey = "group";
+    private static void createGroup(Context ctx) throws Exception {
+        String channelName = assertString(ctx, CHANNEL_NAME_KEY);
+        String apiToken = assertString(ctx, API_TOKEN_KEY);
 
-        try (SlackClient client = new SlackClient(buildCfg(ctx, apiToken))) {
-            SlackClient.Response r = client.createPrivChannel(channelId);
-            responseHandleCreate(ctx, r, channelId, responseKey);
-        } catch (Exception e) {
-            throw new RuntimeException("slackChannel task error: " + e);
+        SlackConfiguration cfg = SlackConfiguration.from(ctx, apiToken);
+        try (SlackClient client = new SlackClient(cfg)) {
+            Response r = client.createGroupChannel(channelName);
+            handleError(ctx, r, channelName);
+
+            String channelId = extractString(r, "group", "id");
+            ctx.setVariable(RESULT_KEY, channelId);
+            log.info("Slack group created: {} -> {} (stored as '{}' variable)", channelName, channelId, RESULT_KEY);
         }
-
     }
 
-    private static void archiveChannel(Context ctx, Action action) throws Exception {
-        String channelId = assertString(ctx, CHANNEL_ID);
-        String apiToken = assertString(ctx, API_TOKEN);
-        SlackClient.Response r;
+    private static void archiveChannel(Context ctx) throws Exception {
+        String channelId = assertString(ctx, CHANNEL_ID_KEY);
+        String apiToken = assertString(ctx, API_TOKEN_KEY);
 
-        try (SlackClient client = new SlackClient(buildCfg(ctx, apiToken))) {
-            if (action.name().equals("ARCHIVE")) {
-                r = client.archiveChannel(channelId);
-            } else {
-                r = client.archivePrivChannel(channelId);
-            }
-            responseHandleArchive(ctx, r, channelId);
-        } catch (Exception e) {
-            throw new RuntimeException("slackChannel task error: " + e);
+        SlackConfiguration cfg = SlackConfiguration.from(ctx, apiToken);
+        try (SlackClient client = new SlackClient(cfg)) {
+            Response r = client.archiveChannel(channelId);
+            handleError(ctx, r, channelId);
         }
-
     }
 
+    private static void archiveGroup(Context ctx) throws Exception {
+        String channelId = assertString(ctx, CHANNEL_ID_KEY);
+        String apiToken = assertString(ctx, API_TOKEN_KEY);
+
+        SlackConfiguration cfg = SlackConfiguration.from(ctx, apiToken);
+        try (SlackClient client = new SlackClient(cfg)) {
+            Response r = client.archiveGroup(channelId);
+            handleError(ctx, r, channelId);
+        }
+    }
+
+    private static void handleError(Context ctx, Response r, String channelId) {
+        Action action = getAction(ctx);
+        if (!r.isOk()) {
+            throw new RuntimeException(action + " error (channel: '" + channelId + "): " + r.getError());
+        }
+    }
 
     @SuppressWarnings("unchecked")
-    public static SlackConfiguration buildCfg(Context ctx, String apiToken) {
-        Map<String, Object> slackParams = (Map<String, Object>) ctx.getVariable("slackCfg");
-        SlackConfiguration cfg = new SlackConfiguration(getToken(slackParams, "authToken", apiToken));
-        cfg.setProxy(getString(slackParams, "proxyAddress"), getInteger(slackParams, "proxyPort"));
-        cfg.setConnectTimeout(getInteger(slackParams, "connectTimeout", DEFAULT_CONNECT_TIMEOUT));
-        cfg.setSoTimeout(getInteger(slackParams, "soTimeout", DEFAULT_SO_TIMEOUT));
-
-        return cfg;
-    }
-
-    public static void responseHandleCreate(Context ctx, Response r, String channelId, String responseKey) throws Exception {
-        Action action = getAction(ctx);
-        if (!r.isOk()) {
-            throw new RuntimeException("Error in action " + "'" + action + "' on channel: " + "'" + channelId + "'. " + "Error= " + "'" + r.getError() + "'");
-        } else {
-            String chId = objectMapper.readTree(resEntity).get(responseKey).get("id").asText();
-            ctx.setVariable("slackChannelId", chId);
-            log.info("Action '{}' completed on channel '{}'", action, channelId);
+    private static String extractString(Response r, String... path) {
+        Map<String, Object> m = r.getParams();
+        if (m == null) {
+            return null;
         }
-    }
 
+        int idx = 0;
+        while (true) {
+            String s = path[idx];
 
-    private static void responseHandleArchive(Context ctx, Response r, String channelId) {
-        Action action = getAction(ctx);
-        if (!r.isOk()) {
-            throw new RuntimeException("Error in action " + "'" + action + "' on channel: " + "'" + channelId + "'. " + "Error= " + "'" + r.getError() + "'");
-        } else {
-            log.info("Action '{}' completed on channel '{}'", action, channelId);
+            Object v = m.get(s);
+            if (v == null) {
+                return null;
+            }
+
+            if (idx + 1 >= path.length) {
+                if (v instanceof String) {
+                    return (String) v;
+                } else {
+                    throw new IllegalStateException("Expected a string value @ " + Arrays.toString(path) + ", got: " + v);
+                }
+            }
+
+            if (!(v instanceof Map)) {
+                throw new IllegalStateException("Expected a JSON object, got: " + v);
+            }
+            m = (Map<String, Object>) v;
+
+            idx += 1;
         }
     }
 
@@ -166,10 +171,10 @@ public class SlackChannelTask implements Task {
         throw new IllegalArgumentException("'" + ACTION_KEY + "' must be a string");
     }
 
-    private enum Action {
+    public enum Action {
         CREATE,
-        CREATEPRIV,
+        CREATEGROUP,
         ARCHIVE,
-        ARCHIVEPRIV
+        ARCHIVEGROUP
     }
 }

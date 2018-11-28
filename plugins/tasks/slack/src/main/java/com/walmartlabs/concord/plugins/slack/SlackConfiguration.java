@@ -21,11 +21,37 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 
+import com.walmartlabs.concord.sdk.Context;
+
+import java.util.Map;
+
+import static com.walmartlabs.concord.plugins.slack.Utils.getInteger;
+import static com.walmartlabs.concord.plugins.slack.Utils.getString;
+
 public class SlackConfiguration {
 
-    public static final int DEFAULT_CONNECT_TIMEOUT = 30_000;
-    public static final int DEFAULT_SO_TIMEOUT = 30_000;
-    public static final int DEFAULT_RETRY_COUNT = 5;
+    @SuppressWarnings("unchecked")
+    public static SlackConfiguration from(Context ctx) {
+        Map<String, Object> slackParams = (Map<String, Object>) ctx.getVariable("slackCfg");
+        return from(ctx, getString(slackParams, "authToken"));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static SlackConfiguration from(Context ctx, String authToken) {
+        Map<String, Object> slackParams = (Map<String, Object>) ctx.getVariable("slackCfg");
+
+        SlackConfiguration cfg = new SlackConfiguration(authToken);
+        cfg.setProxy(getString(slackParams, "proxyAddress"), getInteger(slackParams, "proxyPort"));
+        cfg.setConnectTimeout(getInteger(slackParams, "connectTimeout", DEFAULT_CONNECT_TIMEOUT));
+        cfg.setSoTimeout(getInteger(slackParams, "soTimeout", DEFAULT_SO_TIMEOUT));
+        cfg.setRetryCount(getInteger(slackParams, "retryCount", DEFAULT_RETRY_COUNT));
+
+        return cfg;
+    }
+
+    private static final int DEFAULT_CONNECT_TIMEOUT = 30_000;
+    private static final int DEFAULT_SO_TIMEOUT = 30_000;
+    private static final int DEFAULT_RETRY_COUNT = 5;
 
     private final String authToken;
     private String proxyAddress;
@@ -38,20 +64,20 @@ public class SlackConfiguration {
         this.authToken = authToken;
     }
 
-    public void setProxy(String proxyAddress, Integer proxyPort) {
+    private void setProxy(String proxyAddress, Integer proxyPort) {
         this.proxyAddress = proxyAddress;
         this.proxyPort = proxyPort;
     }
 
-    public void setConnectTimeout(int connectTimeout) {
+    private void setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
     }
 
-    public void setSoTimeout(int soTimeout) {
+    private void setSoTimeout(int soTimeout) {
         this.soTimeout = soTimeout;
     }
 
-    public void setRetryCount(int retryCount) {
+    private void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
     }
 

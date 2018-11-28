@@ -4,6 +4,8 @@
 
 ### Added
 
+- slack: new `slackChannel` task for creating and archiving channels
+and groups;
 - concord-server: a metric gauge for the number of currently
 connected websocket clients;
 - misc-tasks: new `datetime` task;

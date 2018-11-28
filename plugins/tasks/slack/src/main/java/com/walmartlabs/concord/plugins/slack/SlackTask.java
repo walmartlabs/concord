@@ -28,12 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.Collection;
-import java.util.Map;
-
-import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.DEFAULT_CONNECT_TIMEOUT;
-import static com.walmartlabs.concord.plugins.slack.SlackConfiguration.DEFAULT_SO_TIMEOUT;
-import static com.walmartlabs.concord.plugins.slack.Utils.getInteger;
-import static com.walmartlabs.concord.plugins.slack.Utils.getString;
 
 @Named("slack")
 public class SlackTask implements Task {
@@ -60,7 +54,8 @@ public class SlackTask implements Task {
                      String channelId, String text,
                      String iconEmoji, String username, Collection<Object> attachments) {
 
-        try (SlackClient client = new SlackClient(buildCfg(ctx))) {
+        SlackConfiguration cfg = SlackConfiguration.from(ctx);
+        try (SlackClient client = new SlackClient(cfg)) {
             SlackClient.Response r = client.message(channelId, text, iconEmoji, username, attachments);
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());
@@ -73,17 +68,4 @@ public class SlackTask implements Task {
             throw new RuntimeException("slack task error: ", e);
         }
     }
-
-    @SuppressWarnings("unchecked")
-    private static SlackConfiguration buildCfg(Context ctx) {
-        Map<String, Object> slackParams = (Map<String, Object>) ctx.getVariable("slackCfg");
-
-        SlackConfiguration cfg = new SlackConfiguration(getString(slackParams, "authToken"));
-        cfg.setProxy(getString(slackParams, "proxyAddress"), getInteger(slackParams, "proxyPort"));
-        cfg.setConnectTimeout(getInteger(slackParams, "connectTimeout", DEFAULT_CONNECT_TIMEOUT));
-        cfg.setSoTimeout(getInteger(slackParams, "soTimeout", DEFAULT_SO_TIMEOUT));
-
-        return cfg;
-    }
-
 }

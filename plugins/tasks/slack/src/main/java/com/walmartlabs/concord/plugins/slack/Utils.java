@@ -27,6 +27,9 @@ import java.util.Map;
 public final class Utils {
 
     public static Integer getInteger(Map<String, Object> params, String name) {
+        if (params == null) {
+            return null;
+        }
         return (Integer) params.get(name);
     }
 
@@ -39,11 +42,9 @@ public final class Utils {
     }
 
     public static String getString(Map<String, Object> params, String name) {
-        return (String) params.get(name);
-    }
-
-    public static String getToken(Map<String, Object> params, String name, String token) {
-        params.put(name, token);
+        if (params == null) {
+            return null;
+        }
         return (String) params.get(name);
     }
 
