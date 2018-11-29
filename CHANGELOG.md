@@ -19,6 +19,8 @@ process metadata;
 
 ### Changed
 
+- concord-server: fixed an issue, causing `onFailure` to fire up
+multiple times in clustered environments.
 - concord-server: `cron` triggers are now using the DB's time to
 calculate the schedule;
 - concord-console: improved repository validation error messages;

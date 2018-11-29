@@ -82,10 +82,11 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     };
 
     private static final ProcessStatus[] ACTIVE_PROCESS_STATUSES = {
-            ProcessStatus.SUSPENDED,
-            ProcessStatus.ENQUEUED,
-            ProcessStatus.RUNNING,
             ProcessStatus.PREPARING,
+            ProcessStatus.ENQUEUED,
+            ProcessStatus.STARTING,
+            ProcessStatus.RUNNING,
+            ProcessStatus.SUSPENDED,
             ProcessStatus.RESUMING
     };
 
@@ -144,28 +145,34 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
         @Override
         public void run() {
-            watchdogDao.transaction(tx -> {
-                Field<Timestamp> maxAge = currentTimestamp().minus(interval(cfg.getMaxFailureHandlingAge()));
+            Field<Timestamp> maxAge = currentTimestamp().minus(interval(cfg.getMaxFailureHandlingAge()));
 
-                for (PollEntry e : POLL_ENTRIES) {
-                    List<ProcessEntry> parents = watchdogDao.poll(tx, e, maxAge, 1);
+            for (PollEntry e : POLL_ENTRIES) {
+                List<ProcessEntry> parents = watchdogDao.poll(e, maxAge, 1);
 
-                    for (ProcessEntry parent : parents) {
-                        Map<String, Object> req = new HashMap<>();
-                        req.put(InternalConstants.Request.ENTRY_POINT_KEY, e.flow);
-                        req.put(InternalConstants.Request.TAGS_KEY, null); // clear tags
-
-                        PartialProcessKey childKey = PartialProcessKey.create();
-                        Payload payload = payloadManager.createFork(childKey, parent.processKey, e.handlerKind,
-                                parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null);
-
-                        processManager.startFork(payload, false);
-
-                        log.info("processHandlers -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
-                                childKey, parent.processKey, e.flow);
-                    }
+                for (ProcessEntry parent : parents) {
+                    process(e, parent);
                 }
-            });
+            }
+        }
+
+        private void process(PollEntry entry, ProcessEntry parent) {
+            Map<String, Object> req = new HashMap<>();
+            req.put(InternalConstants.Request.ENTRY_POINT_KEY, entry.flow);
+            req.put(InternalConstants.Request.TAGS_KEY, null); // clear tags
+
+            PartialProcessKey childKey = PartialProcessKey.create();
+            try {
+                Payload payload = payloadManager.createFork(childKey, parent.processKey, entry.handlerKind,
+                        parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null);
+
+                processManager.startFork(payload, false);
+
+                log.info("process -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
+                        childKey, parent.processKey, entry.flow);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -247,10 +254,10 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             tx(t);
         }
 
-        public List<ProcessEntry> poll(DSLContext tx, PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
+        public List<ProcessEntry> poll(PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
-            return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, q.INITIATOR_ID)
+            return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, q.INITIATOR_ID)
                     .from(q)
                     .where(q.PROCESS_KIND.in(Utils.toString(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
@@ -260,9 +267,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                             .and(count(tx, q.INSTANCE_ID, entry.handlerKind).lessThan(entry.maxTries))
                             .and(noRunningHandlers(q.INSTANCE_ID)))
                     .limit(maxEntries)
-                    .forUpdate()
-                    .skipLocked()
-                    .fetch(WatchdogDao::toEntry);
+                    .fetch(WatchdogDao::toEntry));
         }
 
         public List<ProcessKey> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
