@@ -1,0 +1,37 @@
+flows:
+  default:
+
+  # create a new slack channel
+  - task: slackChannel
+    in:
+      action: create
+      channelName: myChannelName
+      apiToken: mySlackApiToken
+
+  # the channel ID is stored as `slackChannelId`
+  - log: "Channel ID: ${slackChannelId}"
+
+  # archive a slack channel
+  - task: slackChannel
+    in:
+      action: archive
+      channelId: ${slackChannelId}
+      apiToken: mySlackApiToken
+
+  # create a new slack group
+  - task: slackChannel
+    in:
+      action: createGroup
+      channelName: myGroupName
+      apiToken: mySlackApiToken
+
+  # the channel ID is stored as `slackChannelId`
+  - log: "Channel ID: ${slackChannelId}"
+
+
+  # archive a slack group
+  - task: slackChannel
+    in:
+      action: archiveGroup
+      channelId: ${slackChannelId}
+      apiToken: mySlackApiToken    
