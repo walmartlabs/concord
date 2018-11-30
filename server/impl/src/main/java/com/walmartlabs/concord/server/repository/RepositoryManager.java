@@ -35,9 +35,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -100,10 +101,12 @@ public class RepositoryManager {
     public Path fetch(UUID projectId, RepositoryEntry repository) {
         UUID orgId = getOrgId(projectId);
 
-        Path localPath = localPath(projectId, repository);
+        String encodedUrl = encodeUrl(repository.getUrl());
+        Path localPath = cfg.getCacheDir().resolve(encodedUrl);
+
         RepositoryProvider provider = getProvider(repository.getUrl());
 
-        return withLock(projectId, repository.getName(), () -> {
+        return withLock(repository.getUrl(), () -> {
             try {
                 provider.fetch(orgId, repository, localPath);
             } catch (RepositoryException e) {
@@ -122,11 +125,11 @@ public class RepositoryManager {
         });
     }
 
-    public <T> T withLock(UUID projectId, String repoName, Callable<T> f) {
-        Lock l = locks.get(projectId + "/" + repoName);
+    public <T> T withLock(String repoUrl, Callable<T> f) {
+        Lock l = locks.get(repoUrl);
         try {
             if (!l.tryLock(cfg.getLockTimeout(), TimeUnit.MILLISECONDS)) {
-                throw new IllegalStateException("Timeout waiting for the repository lock. Project ID: " + projectId + ", repository name: " + repoName);
+                throw new IllegalStateException("Timeout waiting for the repository lock. Repository url: " + repoUrl);
             }
             return f.call();
         } catch (IllegalArgumentException e) {
@@ -140,7 +143,18 @@ public class RepositoryManager {
 
     public RepositoryInfo getInfo(RepositoryEntry repository, Path path) {
         RepositoryProvider provider = getProvider(repository.getUrl());
-        return withLock(repository.getProjectId(), repository.getName(), () -> provider.getInfo(path));
+        return withLock(repository.getUrl(), () -> provider.getInfo(path));
+    }
+
+    private String encodeUrl(String url) {
+        String encodedUrl;
+        try {
+            encodedUrl = URLEncoder.encode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException("Url encoding error", e);
+        }
+
+        return encodedUrl;
     }
 
     private boolean isConcordFileExists(Path repoPath) {
@@ -171,20 +185,6 @@ public class RepositoryManager {
         } else {
             return githubRepositoryProvider;
         }
-    }
-
-    private Path localPath(UUID projectId, RepositoryEntry repository) {
-        String branch;
-        if (repository.getCommitId() != null) {
-            branch = repository.getCommitId();
-        } else {
-            branch = Optional.ofNullable(repository.getBranch()).orElse(DEFAULT_BRANCH);
-        }
-
-        return cfg.getCacheDir()
-                .resolve(String.valueOf(projectId))
-                .resolve(repository.getName())
-                .resolve(branch);
     }
 
     private static String normalizePath(String s) {

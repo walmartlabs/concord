@@ -104,11 +104,13 @@ public class RepositoryProcessor implements PayloadProcessor {
     }
 
     private com.walmartlabs.concord.server.repository.RepositoryInfo copyRepositoryData(ProcessKey processKey, UUID projectId, RepositoryEntry repo, Path dst) {
-        return repositoryManager.withLock(projectId, repo.getName(), () -> {
+        final String TO_SKIP_GIT_FILES = "^(\\.git|\\.gitmodules|\\.gitignore)$";
+
+        return repositoryManager.withLock(repo.getUrl(), () -> {
             try {
                 Path src = repositoryManager.fetch(projectId, repo);
 
-                IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+                IOUtils.copy(src, dst, TO_SKIP_GIT_FILES, StandardCopyOption.REPLACE_EXISTING);
                 log.info("process ['{}'] -> copy from {} to {}", processKey, src, dst);
 
                 return repositoryManager.getInfo(repo, src);

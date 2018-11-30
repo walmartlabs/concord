@@ -9,9 +9,9 @@ package com.walmartlabs.concord.common;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -198,21 +198,34 @@ public final class IOUtils {
     }
 
     public static void copy(Path src, Path dst) throws IOException {
-        copy(src, dst, new CopyOption[0]);
+        copy(src, dst, null, new CopyOption[0]);
     }
 
-    public static void copy(Path src, Path dst, CopyOption... options) throws IOException {
-        _copy(1, src, src, dst, options);
+    public static void copy(Path src, Path dst, String skipContents, CopyOption... options) throws IOException {
+        _copy(1, src, src, dst, skipContents, options);
     }
 
-    private static void _copy(int depth, Path root, Path src, Path dst, CopyOption... options) throws IOException {
+    private static void _copy(int depth, Path root, Path src, Path dst, String skipContents, CopyOption... options) throws IOException {
         if (depth >= MAX_COPY_DEPTH) {
             throw new IOException("Too deep: " + src);
         }
 
         Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
             @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                if (skipContents != null && dir.getFileName().toString().matches(skipContents)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (skipContents != null && file.getFileName().toString().matches(skipContents)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
                 Path a = file;
                 Path b = dst.resolve(src.relativize(file));
 
@@ -230,7 +243,7 @@ public final class IOUtils {
                     }
 
                     if (Files.isDirectory(a)) {
-                        _copy(depth + 1, root, a, b);
+                        _copy(depth + 1, root, a, b, skipContents);
                         return FileVisitResult.CONTINUE;
                     }
                 }

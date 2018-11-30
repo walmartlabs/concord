@@ -19,6 +19,7 @@ process metadata;
 
 ### Changed
 
+- concord-server: use a single local clone per GIT URL;
 - concord-server: fixed an issue, causing `onFailure` to fire up
 multiple times in clustered environments.
 - concord-server: `cron` triggers are now using the DB's time to
