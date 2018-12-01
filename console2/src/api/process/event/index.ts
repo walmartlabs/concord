@@ -17,9 +17,9 @@
  * limitations under the License.
  * =====
  */
-import { SemanticCOLORS } from 'semantic-ui-react';
 
 import { ConcordId, fetchJson, queryParams } from '../../common';
+import { AnsibleEvent } from '../ansible';
 
 export enum ProcessEventType {
     ELEMENT = 'ELEMENT',
@@ -37,69 +37,6 @@ export interface ProcessElementEvent {
     phase?: 'pre' | 'post';
     out?: {};
     correlationId?: string;
-}
-
-export enum AnsibleStatus {
-    RUNNING = 'RUNNING',
-    CHANGED = 'CHANGED',
-    FAILED = 'FAILED',
-    OK = 'OK',
-    SKIPPED = 'SKIPPED',
-    UNREACHABLE = 'UNREACHABLE'
-}
-
-export const getStatusSemanticColor = (status: AnsibleStatus): SemanticCOLORS => {
-    switch (status) {
-        case AnsibleStatus.OK:
-            return 'green';
-        case AnsibleStatus.CHANGED:
-            return 'blue';
-        case AnsibleStatus.FAILED:
-            return 'red';
-        case AnsibleStatus.UNREACHABLE:
-            return 'grey';
-        case AnsibleStatus.SKIPPED:
-            return 'yellow';
-        default:
-            return 'grey';
-    }
-};
-
-export const getStatusColor = (status: AnsibleStatus) => {
-    switch (status) {
-        case AnsibleStatus.OK:
-            return '#5DB571';
-        case AnsibleStatus.CHANGED:
-            return '#00A4D3';
-        case AnsibleStatus.FAILED:
-            return '#EC6357';
-        case AnsibleStatus.UNREACHABLE:
-            return '#BDB9B9';
-        case AnsibleStatus.SKIPPED:
-            return '#F6BC32';
-        default:
-            return '#3F3F3D';
-    }
-};
-
-export interface AnsibleHost {
-    host: string;
-    hostGroup: string;
-    status: AnsibleStatus;
-    duration: number;
-}
-
-export interface AnsibleEvent {
-    host: string;
-    hostGroup: string;
-    playbook: string;
-    status: AnsibleStatus;
-    task: string;
-    action?: string;
-    result?: object;
-    ignore_errors?: boolean;
-    phase: 'pre' | 'post';
-    correlationId: string;
 }
 
 export type ProcessEventData = ProcessElementEvent | AnsibleEvent | {};
@@ -123,22 +60,5 @@ export const listEvents = (
             type,
             after,
             limit
-        })}`
-    );
-
-export const listAnsibleHosts = (instanceId: ConcordId): Promise<AnsibleHost> =>
-    fetchJson(`/api/v1/process/${instanceId}/ansibleHosts`);
-
-export const listAnsibleEvents = (
-    instanceId: ConcordId,
-    host?: string,
-    hostGroup?: string,
-    status?: string
-): Promise<ProcessEventEntry<AnsibleEvent>> =>
-    fetchJson(
-        `/api/v1/process/${instanceId}/ansibleEvents?${queryParams({
-            host,
-            hostGroup,
-            status
         })}`
     );

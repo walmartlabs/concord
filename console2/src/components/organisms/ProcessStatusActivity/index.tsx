@@ -26,28 +26,18 @@ import { Button, Divider, Header, Icon, Message } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
 import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
 import {
-    AnsibleEvent,
-    AnsibleHost,
-    AnsibleStatus,
     ProcessElementEvent,
     ProcessEventEntry,
     ProcessEventType
 } from '../../../api/process/event';
+import { AnsibleEvent } from '../../../api/process/ansible';
 import { FormListEntry } from '../../../api/process/form';
 import { actions, MAX_EVENT_COUNT } from '../../../state/data/processes/poll';
 import { ProcessEvents, State } from '../../../state/data/processes/poll/types';
 import { timestampDiffMs } from '../../../utils';
-import {
-    AnsibleStats,
-    ProcessActionList,
-    ProcessElementList,
-    ProcessStatusTable
-} from '../../molecules';
+import { ProcessActionList, ProcessElementList, ProcessStatusTable } from '../../molecules';
 import { CancelProcessPopup } from '../../organisms';
-
-interface OwnState {
-    selectedStatus?: AnsibleStatus;
-}
+import AnsibleStatsActivity from '../AnsibleStatsActivity';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -57,7 +47,6 @@ interface StateProps {
     loading: boolean;
     process?: ProcessEntry;
     forms: FormListEntry[];
-    ansibleHosts: AnsibleHost[];
     elementEvents: Array<ProcessEventEntry<ProcessElementEvent>>;
     tooMuchData?: boolean;
 }
@@ -72,7 +61,7 @@ interface DispatchProps {
 type Props = ExternalProps & StateProps & DispatchProps;
 
 // TODO extract the AnsibleEventBrowser component
-class ProcessStatusActivity extends React.Component<Props, OwnState> {
+class ProcessStatusActivity extends React.Component<Props> {
     constructor(props: Props) {
         super(props);
         this.state = {};
@@ -130,7 +119,6 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
             process,
             forms,
             elementEvents,
-            ansibleHosts,
             tooMuchData
         } = this.props;
 
@@ -190,12 +178,7 @@ class ProcessStatusActivity extends React.Component<Props, OwnState> {
                         </>
                     )}
 
-                {ansibleHosts.length > 0 && (
-                    <>
-                        <Divider content="Ansible Stats" horizontal={true} />
-                        <AnsibleStats instanceId={instanceId} hosts={ansibleHosts} />
-                    </>
-                )}
+                <AnsibleStatsActivity instanceId={instanceId} />
             </>
         );
     }
@@ -277,7 +260,6 @@ export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps 
     loading: poll.currentRequest.running,
     process: poll.currentRequest.response ? poll.currentRequest.response.process : undefined,
     forms: poll.forms,
-    ansibleHosts: poll.ansibleHosts,
     elementEvents: combinePrePostEvents(makeElementEvents(poll.eventById)) as Array<
         ProcessEventEntry<ProcessElementEvent>
     >,

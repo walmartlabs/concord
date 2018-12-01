@@ -20,13 +20,13 @@
 
 import { combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
+
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
 import { AnsibleEvents, GetAnsibleEventsRequest, GetAnsibleEventsResponse, State } from './types';
 import {
     AnsibleStatus,
     listAnsibleEvents as apiListAnsibleEvents
-} from '../../../../api/process/event';
-
+} from '../../../../api/process/ansible';
 import { ConcordId } from '../../../../api/common';
 
 export { State };

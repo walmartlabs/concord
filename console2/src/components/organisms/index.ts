@@ -18,6 +18,7 @@
  * =====
  */
 export { default as AnsibleTaskListActivity } from './AnsibleTaskActivity';
+export { default as AnsibleStatsActivity } from './AnsibleStatsActivity';
 export { default as APITokenDeleteActivity } from './APITokenDeleteActivity';
 export { default as APITokenList } from './APITokenList';
 export { default as BulkCancelProcessPopup } from './BulkCancelProcessPopup';

@@ -20,45 +20,54 @@
 
 import * as React from 'react';
 import { Grid, Tab } from 'semantic-ui-react';
-import { AnsibleHost, AnsibleStatus } from '../../../api/process/event';
+import {
+    AnsibleHost,
+    AnsibleStatsEntry,
+    AnsibleStatus,
+    SearchFilter
+} from '../../../api/process/ansible';
 
 import { AnsibleHostList, AnsibleStatChart } from '../../molecules';
-import { AnsibleStatChartEntry } from '../AnsibleStatChart';
-import { countUniqueHosts, makeHostGroups, makeStats } from './data';
+import { makeStats } from './data';
 import { ConcordId } from '../../../api/common';
 import { AnsibleTaskListActivity } from '../../organisms';
 
 interface State {
-    selectedStatus?: AnsibleStatus;
+    filter: SearchFilter;
 }
 
 interface Props {
+    stats: AnsibleStatsEntry;
     hosts: AnsibleHost[];
     instanceId: ConcordId;
+    next?: number;
+    prev?: number;
+    refresh: (filter: SearchFilter) => void;
 }
 
 class AnsibleStats extends React.Component<Props, State> {
-    private hostGroups: string[];
-    private stats: AnsibleStatChartEntry[];
-
     constructor(props: Props) {
         super(props);
-        this.state = {};
-        this.update();
+        this.state = { filter: {} };
     }
 
-    componentDidUpdate(prevProps: Props) {
-        this.update();
+    handleStatusChange(status?: AnsibleStatus) {
+        const { refresh } = this.props;
+        const { filter } = this.state;
+        const newFilter = { ...filter, status, offset: undefined };
+        this.setState({ filter: newFilter });
+        refresh(newFilter);
     }
 
-    update() {
-        const { hosts } = this.props;
-        this.hostGroups = makeHostGroups(hosts);
-        this.stats = makeStats(hosts);
+    handleRefresh(filter: SearchFilter) {
+        const { refresh } = this.props;
+        const newFilter = { ...filter, status: this.state.filter.status };
+        this.setState({ filter: newFilter });
+        refresh(newFilter);
     }
 
     render() {
-        const { instanceId, hosts } = this.props;
+        const { instanceId, hosts, stats, prev, next } = this.props;
 
         return (
             <Tab
@@ -72,17 +81,19 @@ class AnsibleStats extends React.Component<Props, State> {
                                         <AnsibleStatChart
                                             width={500}
                                             height={300}
-                                            data={this.stats}
-                                            uniqueHosts={countUniqueHosts(hosts)}
-                                            onClick={(s) => this.setState({ selectedStatus: s })}
+                                            data={makeStats(stats)}
+                                            uniqueHosts={stats.uniqueHosts}
+                                            onClick={(status) => this.handleStatusChange(status)}
                                         />
                                     </Grid.Column>
                                     <Grid.Column>
                                         <AnsibleHostList
                                             instanceId={instanceId}
                                             hosts={hosts}
-                                            hostGroups={this.hostGroups}
-                                            selectedStatus={this.state.selectedStatus}
+                                            hostGroups={stats.hostGroups}
+                                            prev={prev}
+                                            next={next}
+                                            refresh={(filter) => this.handleRefresh(filter)}
                                         />
                                     </Grid.Column>
                                 </Grid>

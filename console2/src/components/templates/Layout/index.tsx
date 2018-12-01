@@ -38,13 +38,13 @@ class Layout extends React.PureComponent<Props> {
                 {!fullScreen && (
                     <Grid.Column width={16} className="topBar">
                         <Grid centered={true}>
-                            <Grid.Column width={11} className="topBarColumn">
+                            <Grid.Column width={14} className="topBarColumn">
                                 <TopBar />
                             </Grid.Column>
                         </Grid>
                     </Grid.Column>
                 )}
-                <Grid.Column width={11} className="contentColumn">
+                <Grid.Column width={14} className="contentColumn">
                     {this.props.children}
                 </Grid.Column>
             </Grid>

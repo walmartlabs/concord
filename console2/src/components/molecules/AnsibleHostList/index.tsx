@@ -21,13 +21,14 @@
 import * as React from 'react';
 import { Dropdown, DropdownItemProps, Grid, Input, Modal, Table } from 'semantic-ui-react';
 
-import { AnsibleHost, AnsibleStatus } from '../../../api/process/event';
-import { HumanizedDuration } from '../index';
+import { AnsibleHost, SearchFilter } from '../../../api/process/ansible';
+import { HumanizedDuration, Pagination } from '../index';
 import { ConcordId } from '../../../api/common';
 import { AnsibleTaskListActivity } from '../../organisms';
 
 interface State {
     hostFilter?: string;
+    prevHostFilter?: string;
     hostGroupFilter?: string;
 }
 
@@ -35,43 +36,18 @@ interface Props {
     instanceId: ConcordId;
     hosts: AnsibleHost[];
     hostGroups: string[];
-    selectedStatus?: AnsibleStatus;
+
+    next?: number;
+    prev?: number;
+    refresh: (filter: SearchFilter) => void;
 }
-
-const compareByHost = (a: AnsibleHost, b: AnsibleHost) =>
-    a.host > b.host ? 1 : a.host < b.host ? -1 : 0;
-
-const applyFilter = (
-    hosts: AnsibleHost[],
-    selectedStatus?: AnsibleStatus,
-    hostFilter?: string,
-    hostGroupFilter?: string
-): AnsibleHost[] => {
-    let result = [...hosts];
-
-    if (selectedStatus) {
-        result = result.filter(({ status }) => status === selectedStatus);
-    }
-
-    if (hostFilter) {
-        const f = hostFilter.toLowerCase();
-        result = result.filter(({ host }) => host.toLowerCase().indexOf(f) >= 0);
-    }
-
-    if (hostGroupFilter) {
-        result = result.filter(({ hostGroup }) => hostGroup === hostGroupFilter);
-    }
-
-    return result.sort(compareByHost);
-};
 
 const makeHostGroupOptions = (data: string[]): DropdownItemProps[] => {
     if (!data) {
         return [];
     }
 
-    const opts = data.map((value) => ({ value, text: value }));
-    return [{ value: '', text: 'all' }].concat(opts);
+    return data.map((value) => ({ value, text: value }));
 };
 
 class AnsibleHostList extends React.Component<Props, State> {
@@ -113,32 +89,94 @@ class AnsibleHostList extends React.Component<Props, State> {
         this.state = {};
     }
 
-    render() {
-        const { instanceId, hosts, hostGroups, selectedStatus } = this.props;
+    handleNext() {
+        this.handleNavigation(this.props.next);
+    }
+
+    handlePrev() {
+        this.handleNavigation(this.props.prev);
+    }
+
+    handleFirst() {
+        this.handleNavigation(0);
+    }
+
+    handleNavigation(offset?: number) {
         const { hostFilter, hostGroupFilter } = this.state;
+        const { refresh } = this.props;
+
+        refresh({
+            offset,
+            host: hostFilter,
+            hostGroup: hostGroupFilter
+        });
+    }
+
+    handleHostOnBlur() {
+        const { hostFilter, prevHostFilter, hostGroupFilter } = this.state;
+        if (hostFilter !== prevHostFilter) {
+            this.setState({ prevHostFilter: hostFilter });
+            this.props.refresh({ host: hostFilter, hostGroup: hostGroupFilter });
+        }
+    }
+
+    handleHostChange(s?: string) {
+        const { hostFilter } = this.state;
+        const host = s && s.length > 0 ? s : undefined;
+
+        if (hostFilter !== host) {
+            this.setState({ hostFilter: host });
+        }
+    }
+
+    handleHostGroupChange(s?: string) {
+        const { hostFilter, hostGroupFilter } = this.state;
+        const hostGroup = s && s.length > 0 ? s : undefined;
+
+        if (hostGroupFilter !== hostGroup) {
+            this.setState({ hostGroupFilter: hostGroup });
+            this.props.refresh({ host: hostFilter, hostGroup });
+        }
+    }
+
+    render() {
+        const { instanceId, hosts, hostGroups, prev, next } = this.props;
 
         return (
             <>
-                <Grid columns={2} style={{ marginBottom: '5px' }}>
+                <Grid columns={3} style={{ marginBottom: '5px' }}>
                     <Grid.Column>
                         <Input
                             fluid={true}
                             type="text"
                             icon="filter"
                             placeholder="Host"
-                            onChange={(e, { value }) => this.setState({ hostFilter: value })}
+                            onBlur={() => this.handleHostOnBlur()}
+                            onChange={(ev, data) => this.handleHostChange(data.value)}
                         />
                     </Grid.Column>
                     <Grid.Column>
                         <Dropdown
+                            clearable={true}
                             fluid={true}
                             placeholder="Host group"
                             search={true}
                             selection={true}
                             options={makeHostGroupOptions(hostGroups)}
-                            onChange={(e, { value }) =>
-                                this.setState({ hostGroupFilter: value as string })
+                            onChange={(ev, data) =>
+                                this.handleHostGroupChange(data.value as string)
                             }
+                        />
+                    </Grid.Column>
+                    <Grid.Column textAlign={'right'}>
+                        <Pagination
+                            filterProps={{}}
+                            handleNext={() => this.handleNext()}
+                            handlePrev={() => this.handlePrev()}
+                            handleFirst={() => this.handleFirst()}
+                            disablePrevious={prev === undefined}
+                            disableNext={next === undefined}
+                            disableFirst={prev === undefined}
                         />
                     </Grid.Column>
                 </Grid>
@@ -146,24 +184,21 @@ class AnsibleHostList extends React.Component<Props, State> {
                 <Table celled={true} attached="bottom" selectable={true}>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell singleLine={true}>
-                                Hosts by Status {selectedStatus}
-                            </Table.HeaderCell>
+                            <Table.HeaderCell singleLine={true}>Host</Table.HeaderCell>
                             <Table.HeaderCell singleLine={true}>Host Group</Table.HeaderCell>
                             <Table.HeaderCell singleLine={true}>Duration</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
 
                     <Table.Body>
-                        {applyFilter(hosts, selectedStatus, hostFilter, hostGroupFilter).map(
-                            (host, idx) =>
-                                AnsibleHostList.renderHostItem(
-                                    instanceId,
-                                    host.host,
-                                    host.hostGroup,
-                                    host.duration,
-                                    idx
-                                )
+                        {hosts.map((host, idx) =>
+                            AnsibleHostList.renderHostItem(
+                                instanceId,
+                                host.host,
+                                host.hostGroup,
+                                host.duration,
+                                idx
+                            )
                         )}
                     </Table.Body>
                 </Table>

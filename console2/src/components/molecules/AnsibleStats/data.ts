@@ -18,72 +18,15 @@
  * =====
  */
 
-import {
-    AnsibleEvent,
-    AnsibleHost,
-    AnsibleStatus,
-    ProcessEventEntry
-} from '../../../api/process/event';
+import { AnsibleEvent, AnsibleStatsEntry, AnsibleStatus } from '../../../api/process/ansible';
 import { AnsibleStatChartEntry } from '../AnsibleStatChart';
+import { ProcessEventEntry } from '../../../api/process/event';
 
-export const makeHostGroups = (hosts: AnsibleHost[]): string[] => {
-    const groups = new Set();
-
-    for (const h of hosts) {
-        groups.add(h.hostGroup);
-    }
-
-    return Array.from(groups);
-};
-
-interface HostGroup {
-    host: string;
-    group: string;
-}
-
-const hostsByStatus = (
-    hosts: AnsibleHost[],
-    status: AnsibleStatus,
-    additionalFilter?: (data: AnsibleHost) => boolean
-): HostGroup[] =>
-    hosts
-        .filter((h) => h.status === status && (additionalFilter ? additionalFilter(h) : true))
-        .map((h) => ({ host: h.host, group: h.hostGroup }));
-
-export const makeStats = (hosts: AnsibleHost[]): AnsibleStatChartEntry[] => {
-    const failed = new Set(hostsByStatus(hosts, AnsibleStatus.FAILED));
-
-    const unreachable = new Set(
-        hostsByStatus(hosts, AnsibleStatus.UNREACHABLE).filter((h) => !failed.has(h))
-    );
-
-    const changed = new Set(
-        hostsByStatus(hosts, AnsibleStatus.CHANGED).filter(
-            (h) => !failed.has(h) && !unreachable.has(h)
-        )
-    );
-
-    const ok = new Set(
-        hostsByStatus(hosts, AnsibleStatus.OK).filter(
-            (h) => !failed.has(h) && !unreachable.has(h) && !changed.has(h)
-        )
-    );
-
-    const skipped = new Set(
-        hostsByStatus(hosts, AnsibleStatus.SKIPPED).filter(
-            (h) => !failed.has(h) && !unreachable.has(h) && !changed.has(h) && !ok.has(h)
-        )
-    );
-
-    const result = [
-        { status: AnsibleStatus.OK, value: ok.size },
-        { status: AnsibleStatus.CHANGED, value: changed.size },
-        { status: AnsibleStatus.SKIPPED, value: skipped.size },
-        { status: AnsibleStatus.UNREACHABLE, value: unreachable.size },
-        { status: AnsibleStatus.FAILED, value: failed.size }
-    ];
-
-    return result.filter((r) => r.value > 0);
+export const makeStats = (stats: AnsibleStatsEntry): AnsibleStatChartEntry[] => {
+    return Object.keys(AnsibleStatus)
+        .map((s) => s as AnsibleStatus)
+        .map((s) => ({ status: s, value: stats.stats[s] }))
+        .filter((v) => v.value > 0);
 };
 
 const compareByHost = (
@@ -97,6 +40,3 @@ export const getFailures = (
     events
         .filter(({ data }) => data.status === AnsibleStatus.FAILED && !data.ignore_errors)
         .sort(compareByHost);
-
-export const countUniqueHosts = (hosts: AnsibleHost[]): number =>
-    new Set(hosts.map((h) => ({ host: h.host, group: h.hostGroup }))).size;

@@ -26,13 +26,14 @@ import {
     SearchFilter,
     StartProcessResponse
 } from '../../../api/org/process';
-import { /*PaginatedProcesses,*/ ProcessEntry } from '../../../api/process';
+import { ProcessEntry } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as LogState } from './logs/types';
 import { State as PollState } from './poll/types';
 import { State as historyState } from './history/types';
 import { State as ChildrenState } from './children/types';
 import { State as EventsState } from './events/types';
+import { State as AnsibleState } from './ansible/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
@@ -103,6 +104,7 @@ export interface State {
     cancelBulkProcess: CancelBullkProcessState;
     restoreProcess: RestoreProcessState;
 
+    ansible: AnsibleState;
     log: LogState;
     poll: PollState;
     history: historyState;

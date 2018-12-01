@@ -36,6 +36,8 @@ import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } 
 import { reducers as historyReducers, sagas as historySagas } from './history';
 import { reducers as childrenReducers, sagas as childrenSagas } from './children';
 import { reducers as eventsReducers, sagas as eventsSagas } from './events';
+import { reducers as ansibleReducers, sagas as ansibleSagas } from './ansible';
+
 import {
     CancelBulkProcessRequest,
     CancelBullkProcessState,
@@ -262,6 +264,7 @@ export const reducers = combineReducers<State>({
     restoreProcess: restoreProcessReducers,
     cancelBulkProcess: cancelBulkProcessReducers,
 
+    ansible: ansibleReducers,
     log: logReducers,
     poll: pollReducers,
     history: historyReducers,
@@ -355,6 +358,7 @@ export const sagas = function*() {
         fork(pollSagas),
         fork(historySagas),
         fork(childrenSagas),
-        fork(eventsSagas)
+        fork(eventsSagas),
+        fork(ansibleSagas)
     ]);
 };

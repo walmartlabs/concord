@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: pagination for the Ansible host list on the
+process status page;
 - http: new parameter `ignoreErrors` - instead of throwing exceptions
 on unauthorized requests, the task returns the result object with the
 error;

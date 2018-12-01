@@ -28,9 +28,14 @@ const options: DropdownItemProps[] = [
     { text: '500', value: '500' }
 ];
 
+export interface PaginationFilter {
+    limit?: number;
+    offset?: number;
+}
+
 interface Props {
-    filterProps?: SearchFilter;
-    handleLimitChange: (limit: any) => void;
+    filterProps?: PaginationFilter;
+    handleLimitChange?: (limit: any) => void;
     handleNext: () => void;
     handlePrev: () => void;
     handleFirst: () => void;
@@ -54,17 +59,21 @@ class Pagination extends React.Component<Props, State> {
     }
 
     render() {
+        const { handleLimitChange } = this.props;
+
         return (
             <>
-                <Dropdown
-                    compact={true}
-                    options={options}
-                    defaultValue="50"
-                    selection={true}
-                    basic={true}
-                    fluid={false}
-                    onChange={(v, data) => this.props.handleLimitChange(data.value)}
-                />
+                {handleLimitChange !== undefined && (
+                    <Dropdown
+                        compact={true}
+                        options={options}
+                        defaultValue="50"
+                        selection={true}
+                        basic={true}
+                        fluid={false}
+                        onChange={(v, data) => handleLimitChange(data.value)}
+                    />
+                )}
                 <Button.Group>
                     <Button
                         basic={true}

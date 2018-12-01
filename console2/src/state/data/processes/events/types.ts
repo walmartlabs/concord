@@ -20,7 +20,8 @@
 
 import { Action } from 'redux';
 
-import { AnsibleEvent, AnsibleStatus, ProcessEventEntry } from '../../../../api/process/event';
+import { AnsibleEvent, AnsibleStatus } from '../../../../api/process/ansible';
+import { ProcessEventEntry } from '../../../../api/process/event';
 import { ConcordId, RequestError } from '../../../../api/common';
 
 export interface GetAnsibleEventsRequest extends Action {

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { AnsibleStatus, getStatusColor } from '../../../api/process/event';
+import { AnsibleStatus, getStatusColor } from '../../../api/process/ansible';
 import { ChartEntry } from '../DonutChart';
 import { DonutChart } from '../index';
 
@@ -37,7 +37,11 @@ interface Props {
     };
     data: AnsibleStatChartEntry[];
     uniqueHosts: number;
-    onClick?: (status: AnsibleStatus) => void;
+    onClick?: (status?: AnsibleStatus) => void;
+}
+
+interface State {
+    selectedStatus?: AnsibleStatus;
 }
 
 const toChartData = (data: AnsibleStatChartEntry[]): ChartEntry[] =>
@@ -47,16 +51,35 @@ const toChartData = (data: AnsibleStatChartEntry[]): ChartEntry[] =>
         color: getStatusColor(status)
     }));
 
-class AnsibleStatChart extends React.PureComponent<Props> {
+class AnsibleStatChart extends React.PureComponent<Props, State> {
+    constructor(props: Props) {
+        super(props);
+        this.state = {};
+    }
+
+    handleStatusFilter(status: AnsibleStatus) {
+        const currentStatus = this.state.selectedStatus;
+        const newStatus = currentStatus === status ? undefined : status;
+
+        this.setState({ selectedStatus: newStatus });
+
+        const { onClick } = this.props;
+        if (onClick !== undefined) {
+            onClick(newStatus);
+        }
+    }
+
     render() {
         const {
             width,
             height,
             margin = { top: 40, left: 20 },
             data,
-            uniqueHosts,
-            onClick
+            onClick,
+            uniqueHosts
         } = this.props;
+
+        const { selectedStatus } = this.state;
 
         const radius = Math.min(width, height) / 1.5;
 
@@ -77,15 +100,16 @@ class AnsibleStatChart extends React.PureComponent<Props> {
                                 fill={getStatusColor(d.status)}
                                 rx="7"
                                 ry="7"
-                                onClick={onClick ? () => onClick(d.status) : undefined}
+                                onClick={() => this.handleStatusFilter(d.status)}
                                 style={onClick ? { cursor: 'pointer' } : undefined}
                             />
                             <text
                                 x={x + size}
                                 y={y + size / 2 + (idx + 1) * size + 3}
                                 fontFamily="Verdana; Helvetica; sans-serif"
+                                fontWeight={selectedStatus === d.status ? 'bold' : undefined}
                                 fontSize={size / 2}
-                                onClick={onClick ? () => onClick(d.status) : undefined}
+                                onClick={() => this.handleStatusFilter(d.status)}
                                 style={onClick ? { cursor: 'pointer' } : undefined}>
                                 {d.status}: {d.value}
                             </text>
@@ -98,7 +122,7 @@ class AnsibleStatChart extends React.PureComponent<Props> {
                         outerRadius={radius - 100}
                         cornerRadius={3}
                         data={toChartData(data)}
-                        onClick={onClick ? (e) => onClick(e.key as AnsibleStatus) : undefined}
+                        onClick={(e) => this.handleStatusFilter(e.key as AnsibleStatus)}
                     />
 
                     <text textAnchor="middle" x="0" y="-10" fontSize="35">

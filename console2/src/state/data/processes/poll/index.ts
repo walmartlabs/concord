@@ -20,7 +20,7 @@
 
 import { combineReducers, Reducer } from 'redux';
 import { delay } from 'redux-saga';
-import { all, call, cancel, fork, put, race, take, takeLatest } from 'redux-saga/effects';
+import { all, call, cancel, fork, put, race, select, take, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../../api/common';
 import {
@@ -28,10 +28,10 @@ import {
     isFinal,
     list as apiListForms,
     listEvents as apiListEvents,
-    listAnsibleHosts as apiListAnsibleHosts,
     ProcessEntry
 } from '../../../../api/process';
-import { AnsibleHost, ProcessEventEntry } from '../../../../api/process/event';
+import { actions as ansibleActions } from '../ansible/index';
+import { ProcessEventEntry } from '../../../../api/process/event';
 import { FormListEntry } from '../../../../api/process/form';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
 import {
@@ -42,6 +42,8 @@ import {
     StartProcessPolling,
     State
 } from './types';
+import { State as ProcessState } from '../types';
+import { addMinutes, isAfter } from 'date-fns';
 
 const NAMESPACE = 'processes/poll';
 export const MAX_EVENT_COUNT = 5000;
@@ -76,14 +78,12 @@ export const actions = {
         process: ProcessEntry,
         forms?: FormListEntry[],
         events?: ProcessEventChunk,
-        ansibleHosts?: AnsibleHost[],
         tooMuchData?: boolean
     ): ProcessPollResponse => ({
         type: actionTypes.PROCESS_POLL_RESPONSE,
         process,
         forms,
         events,
-        ansibleHosts,
         tooMuchData
     }),
 
@@ -157,42 +157,19 @@ const eventByIdReducer: Reducer<ProcessEvents> = (
     }
 };
 
-const ansibleHostsReducer: Reducer<AnsibleHost[]> = (
-    state = [],
-    { type, error, ansibleHosts }: ProcessPollResponse
-) => {
-    switch (type) {
-        case actionTypes.RESET_PROCESS_POLL:
-            return [];
-        case actionTypes.PROCESS_POLL_RESPONSE:
-            if (error) {
-                return state;
-            }
-
-            if (!ansibleHosts) {
-                return [];
-            }
-
-            return ansibleHosts;
-        default:
-            return state;
-    }
-};
-
 export const reducers = combineReducers<State>({
     currentRequest: currentRequestReducers,
     forms: formsReducer,
-    ansibleHosts: ansibleHostsReducer,
     eventById: eventByIdReducer
 });
 
 // enforce types
-type BatchData = [FormListEntry[], Array<ProcessEventEntry<{}>>, AnsibleHost[]];
+type BatchData = [FormListEntry[], Array<ProcessEventEntry<{}>>];
 
 function* loadAll(process: ProcessEntry, forceLoadAll?: boolean) {
     const { instanceId } = process;
 
-    const [forms, events, hosts]: BatchData = yield all([
+    const [forms, events]: BatchData = yield all([
         call(apiListForms, instanceId),
         call(
             apiListEvents,
@@ -200,14 +177,19 @@ function* loadAll(process: ProcessEntry, forceLoadAll?: boolean) {
             'ELEMENT',
             process.createdAt,
             forceLoadAll ? null : MAX_EVENT_COUNT + 1
-        ),
-        call(apiListAnsibleHosts, instanceId)
+        )
     ]);
 
-    const tooMuchData = !forceLoadAll && events && events.length > MAX_EVENT_COUNT;
-    yield put(
-        actions.pollResponse(process, forms, { replace: true, data: events }, hosts, tooMuchData)
+    yield put(ansibleActions.getAnsibleStats(instanceId));
+
+    // get the last known filter
+    const lastFilter = yield select(
+        ({ processes }: { processes: ProcessState }) => processes.ansible.lastFilter
     );
+    yield put(ansibleActions.listAnsibleHosts(instanceId, lastFilter));
+
+    const tooMuchData = !forceLoadAll && events && events.length > MAX_EVENT_COUNT;
+    yield put(actions.pollResponse(process, forms, { replace: true, data: events }, tooMuchData));
 }
 
 function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
@@ -220,7 +202,11 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
             // get the process' status
             const process = yield call(apiGet, instanceId);
 
-            if (isFinal(process.status)) {
+            // because Ansible stats are calculated by an async process on the backend, we poll for
+            // additional 10 minutes after the process finishes to make sure we got everything
+            const hasntChangedRecently = isAfter(Date.now(), addMinutes(process.lastUpdatedAt, 10));
+
+            if (isFinal(process.status) && hasntChangedRecently) {
                 // the process is completed, load everything
                 // TODO probably unnecessary? or just try loading new events once
                 yield loadAll(process, forceLoadAll);
@@ -228,10 +214,9 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
             }
 
             // the process is still running, load the next chunk of data
-            const [forms, events, hosts]: BatchData = yield all([
+            const [forms, events]: BatchData = yield all([
                 call(apiListForms, instanceId),
-                call(apiListEvents, instanceId, 'ELEMENT', lastEventTimestamp, 100), // TODO constants
-                call(apiListAnsibleHosts, instanceId)
+                call(apiListEvents, instanceId, 'ELEMENT', lastEventTimestamp, 100) // TODO constants
             ]);
 
             // get the last timestamp of the received events, it will be used to fetch the next data
@@ -239,10 +224,16 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
                 lastEventTimestamp = events[events.length - 1].eventDate;
             }
 
-            // process the received data, append the events
-            yield put(
-                actions.pollResponse(process, forms, { replace: false, data: events }, hosts)
+            // get the last known filter
+            const lastFilter = yield select(
+                ({ processes }: { processes: ProcessState }) => processes.ansible.lastFilter
             );
+
+            yield put(ansibleActions.getAnsibleStats(instanceId));
+            yield put(ansibleActions.listAnsibleHosts(instanceId, lastFilter));
+
+            // process the received data, append the events
+            yield put(actions.pollResponse(process, forms, { replace: false, data: events }));
 
             yield race({
                 delay: call(delay, 5000), // TODO constants
@@ -256,6 +247,7 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
 
 function* onStartPolling({ instanceId, forceLoadAll }: StartProcessPolling) {
     yield put(actions.reset());
+    yield put(ansibleActions.reset());
 
     const task = yield fork(doPoll, instanceId, forceLoadAll);
     yield take(actionTypes.STOP_PROCESS_POLLING);
