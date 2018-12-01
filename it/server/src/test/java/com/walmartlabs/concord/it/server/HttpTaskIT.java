@@ -59,6 +59,7 @@ public class HttpTaskIT extends AbstractServerIT {
     private static final String mockHttpPathToken = "/token";
     private static final String mockHttpPathPassword = "/password";
     private static final String mockHttpPathHeaders = "/headers";
+    private static final String mockHttpPathUnauthorized = "/unauthorized";
 
     @Rule
     public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
@@ -74,6 +75,7 @@ public class HttpTaskIT extends AbstractServerIT {
         stubForGetSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
         stubForPostSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
         stubForHeadersEndpoint(mockHttpPathHeaders);
+        stubForUnAuthorizedRequestEndpoint(mockHttpPathUnauthorized);
     }
 
     @After
@@ -237,6 +239,29 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Response content: request headers:.*h2=v2.*", ab);
     }
 
+    @Test(timeout = 60000)
+    public void testGetWithIgnoreErrors() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpGetWithIgnoreErrors").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.user", "wrongUsername");
+        input.put("arguments.password", "wrongPassword");
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathUnauthorized);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Success response.*", ab);
+        assertLog(".*Response status code: 401*", ab);
+        assertLog(".*Success response: false*", ab);
+    }
+
     private void stubForGetSecureEndpoint(String user, String password, String url) {
         rule.stubFor(get(urlEqualTo(url))
                 .withBasicAuth(user, password)
@@ -285,6 +310,16 @@ public class HttpTaskIT extends AbstractServerIT {
         rule.stubFor(post(urlEqualTo(url))
                 .willReturn(aResponse()
                         .withTransformers("request-headers"))
+        );
+    }
+
+    private void stubForUnAuthorizedRequestEndpoint(String url) {
+        rule.stubFor(get(urlEqualTo(url))
+                .willReturn(aResponse()
+                        .withStatus(401)
+                        .withBody("{\n" +
+                                "  \"Authorized\": \"false\"\n" +
+                                "}"))
         );
     }
 

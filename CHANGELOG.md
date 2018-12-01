@@ -4,6 +4,9 @@
 
 ### Added
 
+- http: new parameter `ignoreErrors` - instead of throwing exceptions
+on unauthorized requests, the task returns the result object with the
+error;
 - slack: new `slackChannel` task for creating and archiving channels
 and groups;
 - concord-server: a metric gauge for the number of currently

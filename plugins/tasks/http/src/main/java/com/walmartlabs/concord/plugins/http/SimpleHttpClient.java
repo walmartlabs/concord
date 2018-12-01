@@ -97,7 +97,7 @@ public class SimpleHttpClient {
     public ClientResponse execute() throws Exception {
         try (CloseableHttpResponse httpResponse = this.client.execute(request)) {
 
-            if (isUnAuthorized(httpResponse.getStatusLine().getStatusCode())) {
+            if (!config.isIgnoreErrors() && isUnAuthorized(httpResponse.getStatusLine().getStatusCode())) {
                 throw new UnauthorizedException("Authorization required for " + request.getURI().toURL());
             }
 

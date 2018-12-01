@@ -47,6 +47,7 @@ public class Configuration {
     private final Object body;
     private final int connectTimeout;
     private final int socketTimeout;
+    private final boolean ignoreErrors;
 
     private Configuration(RequestMethodType methodType,
                           String url,
@@ -57,7 +58,8 @@ public class Configuration {
                           Map<String, String> requestHeaders,
                           Object body,
                           int connectTimeout,
-                          int socketTimeout) {
+                          int socketTimeout,
+                          boolean ignoreErrors) {
 
         this.methodType = methodType;
         this.url = url;
@@ -69,6 +71,7 @@ public class Configuration {
         this.body = body;
         this.connectTimeout = connectTimeout;
         this.socketTimeout = socketTimeout;
+        this.ignoreErrors = ignoreErrors;
     }
 
     /**
@@ -156,6 +159,10 @@ public class Configuration {
         return socketTimeout;
     }
 
+    public boolean isIgnoreErrors() {
+        return ignoreErrors;
+    }
+
     public static class Builder {
 
         private String url;
@@ -168,6 +175,7 @@ public class Configuration {
         private Object body;
         private Integer connectTimeout = 30000;
         private Integer socketTimeout = -1;
+        private boolean ignoreErrors;
 
         /**
          * Used to specify the url which will later use to create {@link org.apache.http.client.methods.HttpUriRequest}
@@ -278,6 +286,17 @@ public class Configuration {
         }
 
         /**
+         * Used to ignore the errors produced by the http task in flow
+         *
+         * @param ignoreErrors
+         * @return instance of this {@link Builder}
+         */
+        public Builder withIgnoreErrors(boolean ignoreErrors) {
+            this.ignoreErrors = ignoreErrors;
+            return this;
+        }
+
+        /**
          * Invoking this method will result in a new configuration
          *
          * @return new instance of this {@link Configuration}
@@ -295,7 +314,7 @@ public class Configuration {
                 throw new IllegalArgumentException("Body is missing for Put method");
             }
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout);
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors);
         }
 
         /**
@@ -356,7 +375,11 @@ public class Configuration {
                 this.socketTimeout = (Integer) ctx.getVariable(SOCKET_TIMEOUT_KEY);
             }
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout);
+            if (ctx.getVariable(IGNORE_ERRORS_KEY) != null) {
+                this.ignoreErrors = (boolean) ctx.getVariable(IGNORE_ERRORS_KEY);
+            }
+
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors);
         }
 
         /**

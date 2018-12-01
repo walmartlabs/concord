@@ -1,0 +1,13 @@
+flows:
+  default:
+  - task: http
+    in:
+     method: GET
+     auth:
+      basic:
+        username: ${user}
+        password: ${password}
+     url: ${url}
+     response: "json"
+     out: rsp
+     ignoreErrors: true
