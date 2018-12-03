@@ -50,6 +50,10 @@ public final class YamlFormConverter {
 
         List<FormField> l = new ArrayList<>();
         for (YamlFormField f : fields) {
+            if (f == null || f.getName() == null) {
+                throw new YamlConverterException("Empty field definition in form '" + name + "'");
+            }
+
             if (OPTIONS_FIELD_NAME.equals(f.getName())) {
                 if (options != null) {
                     throw new YamlConverterException("Duplicate options definition in form '" + name + "'");

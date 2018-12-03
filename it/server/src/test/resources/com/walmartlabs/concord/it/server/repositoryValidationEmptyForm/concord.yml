@@ -1,0 +1,6 @@
+flows:
+  default:
+  - log: "default flow"
+  - form: testForm
+forms:
+  testForm:

@@ -51,8 +51,6 @@ flows:
   - log: hola!
   - form: myForm
 
-  myEmptyFlow:
-
 forms:
   myForm:
   - fullName: { label: "Name", type: "string", pattern: ".* .*" }

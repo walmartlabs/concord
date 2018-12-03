@@ -21,6 +21,7 @@ package com.walmartlabs.concord.project;
  */
 
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import org.junit.Test;
 
 import java.net.URI;
@@ -46,19 +47,12 @@ public class ProjectLoaderTest {
         assertNotNull(pd.getForms().get("myForm"));
     }
 
-    @Test
+    @Test(expected = YamlConverterException.class)
     public void testEmptyField() throws Exception {
         ProjectLoader loader = new ProjectLoader();
 
         URI uri = ClassLoader.getSystemResource("emptyField").toURI();
-        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
-
-        assertNotNull(pd);
-
-        assertNotNull(pd.getFlows().get("main"));
-        assertNotNull(pd.getFlows().get("other"));
-
-        assertNotNull(pd.getForms().get("myForm"));
+        loader.loadProject(Paths.get(uri));
     }
 
     @Test

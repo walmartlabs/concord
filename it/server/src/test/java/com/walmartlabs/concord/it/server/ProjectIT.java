@@ -314,6 +314,68 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(result.isOk());
     }
 
+    @Test(expected = Exception.class)
+    public void testRepositoryValidationForEmptyFlow() throws Exception{
+        Path tmpDir = createTempDir();
+
+        File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+
+        String projectName = "myProject_" + randomString();
+        String username = "myUser_" + randomString();
+        Set<String> permissions = Collections.emptySet();
+        String repoName = "myRepo_" + randomString();
+        String repoUrl = gitUrl;
+
+        // ---
+
+        createProjectAndRepo(projectName, username, permissions, repoName,repoUrl, null, null);
+
+        // ---
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        repositoriesApi.validateRepository("Default",projectName,repoName);
+    }
+
+    @Test(expected = Exception.class)
+    public void testRepositoryValidationForEmptyForm() throws Exception{
+        Path tmpDir = createTempDir();
+
+        File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+
+        String projectName = "myProject_" + randomString();
+        String username = "myUser_" + randomString();
+        Set<String> permissions = Collections.emptySet();
+        String repoName = "myRepo_" + randomString();
+        String repoUrl = gitUrl;
+
+        // ---
+
+        createProjectAndRepo(projectName, username, permissions, repoName,repoUrl, null, null);
+
+        // ---
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        repositoriesApi.validateRepository("Default",projectName,repoName);
+    }
+
 
     private static boolean hasCondition(String src, String k, Object v, Collection<TriggerEntry> entries) {
         for (TriggerEntry e : entries) {

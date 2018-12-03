@@ -38,8 +38,8 @@ public class YamlProfile implements Serializable {
                        @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables) {
 
-        this.flows = removeNullElements(flows);
-        this.forms = removeNullElements(forms);
+        this.flows = flows;
+        this.forms = forms;
 
         // alias "variables" to "configuration"
         if (configuration != null) {
