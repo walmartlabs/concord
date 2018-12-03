@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
@@ -162,12 +163,18 @@ public class ProjectProcessResource implements Resource {
     public Response start(@ApiParam @PathParam("orgName") String orgName,
                           @ApiParam @PathParam("projectName") String projectName,
                           @ApiParam @PathParam("repoName") String repoName,
+                          @ApiParam @QueryParam("repoBranchOrTag") String repoBranchOrTag,
+                          @ApiParam @QueryParam("repoCommitId") String repoCommitId,
                           @ApiParam @PathParam("entryPoint") String entryPoint,
                           @ApiParam @QueryParam("activeProfiles") String activeProfiles,
                           @Context UriInfo uriInfo) {
 
         try {
-            return doStartProcess(orgName, projectName, repoName, entryPoint, activeProfiles, uriInfo);
+            UUID orgId = getOrgId(orgName);
+            UUID projectId = getProjectId(orgId, projectName);
+            UUID repoId = getRepoId(projectId, repoName);
+
+            return doStartProcess(orgId, projectId, repoId, repoBranchOrTag, repoCommitId, entryPoint, activeProfiles, uriInfo);
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error",
                     orgName, projectName, repoName, entryPoint, activeProfiles, e);
@@ -175,26 +182,40 @@ public class ProjectProcessResource implements Resource {
         }
     }
 
-    private Response doStartProcess(String orgName, String projectName, String repoName, String entryPoint, String activeProfiles, UriInfo uriInfo) {
-        Map<String, Object> req = new HashMap<>();
+    private Response doStartProcess(UUID orgId,
+                                    UUID projectId,
+                                    UUID repoId,
+                                    String branchOrTag,
+                                    String commitId,
+                                    String entryPoint,
+                                    String activeProfiles,
+                                    UriInfo uriInfo) {
+
+        Map<String, Object> cfg = new HashMap<>();
+
+        if (branchOrTag != null) {
+            cfg.put(Constants.Request.REPO_BRANCH_OR_TAG, branchOrTag);
+        }
+
+        if (commitId != null) {
+            cfg.put(Constants.Request.REPO_COMMIT_ID, commitId);
+        }
+
         if (activeProfiles != null) {
             String[] as = activeProfiles.split(",");
-            req.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
+            cfg.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
         }
 
         if (uriInfo != null) {
             Map<String, Object> args = new HashMap<>();
             args.put("requestInfo", RequestInfoProcessor.createRequestInfo(uriInfo));
             args.putAll(parseArguments(uriInfo));
-            req.put(InternalConstants.Request.ARGUMENTS_KEY, args);
+            cfg.put(InternalConstants.Request.ARGUMENTS_KEY, args);
         }
 
         PartialProcessKey processKey = PartialProcessKey.create();
 
         try {
-            UUID orgId = getOrgId(orgName);
-            UUID projectId = getProjectId(orgId, projectName);
-            UUID repoId = getRepoId(projectId, repoName);
             UserPrincipal initiator = UserPrincipal.assertCurrent();
 
             Payload payload = PayloadBuilder.start(processKey)
@@ -203,7 +224,7 @@ public class ProjectProcessResource implements Resource {
                     .repository(repoId)
                     .entryPoint(entryPoint)
                     .initiator(initiator.getId(), initiator.getUsername())
-                    .configuration(req)
+                    .configuration(cfg)
                     .build();
 
             Thread processStartThread = new Thread(() -> processManager.start(payload, false));

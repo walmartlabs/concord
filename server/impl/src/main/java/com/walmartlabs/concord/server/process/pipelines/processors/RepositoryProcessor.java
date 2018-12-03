@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -38,6 +39,7 @@ import javax.inject.Named;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -76,13 +78,8 @@ public class RepositoryProcessor implements PayloadProcessor {
         ProcessKey processKey = payload.getProcessKey();
 
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-        UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
-        if (projectId == null || repoId == null) {
-            return chain.process(payload);
-        }
-
-        RepositoryEntry repo = repositoryDao.get(projectId, repoId);
-        if (repo == null) {
+        RepositoryEntry repo = getRepositoryEntry(payload);
+        if (projectId == null || repo == null) {
             return chain.process(payload);
         }
 
@@ -120,6 +117,30 @@ public class RepositoryProcessor implements PayloadProcessor {
                 throw new ProcessException(processKey, "Error while copying a repository: " + repo.getUrl(), e);
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private RepositoryEntry getRepositoryEntry(Payload payload) {
+        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+        UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
+
+        if (projectId == null || repoId == null) {
+            return null;
+        }
+
+        RepositoryEntry repo = repositoryDao.get(projectId, repoId);
+        if (repo == null) {
+            return null;
+        }
+
+        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        if (cfg != null) {
+            String branchOrTag = (String) cfg.getOrDefault(Constants.Request.REPO_BRANCH_OR_TAG, repo.getBranch());
+            String commitId = (String) cfg.getOrDefault(Constants.Request.REPO_COMMIT_ID, repo.getCommitId());
+            repo = new RepositoryEntry(repo, branchOrTag, commitId);
+        }
+
+        return repo;
     }
 
     public static final class RepositoryInfo implements Serializable {

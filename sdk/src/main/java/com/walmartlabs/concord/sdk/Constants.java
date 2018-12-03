@@ -176,6 +176,16 @@ public class Constants {
          * Process timeout.
          */
         public static final String PROCESS_TIMEOUT = "processTimeout";
+
+        /**
+         * A specific GIT commit ID to use.
+         */
+        public static final String REPO_COMMIT_ID = "repoCommitId";
+
+        /**
+         * A specific branch name or a tag to use.
+         */
+        public static final String REPO_BRANCH_OR_TAG = "repoBranchOrTag";
     }
 
     public static class Trigger {
@@ -199,6 +209,11 @@ public class Constants {
          * Whether to use the trigger's initiator as the process' initiator.
          */
         public static final String USE_INITIATOR = "useInitiator";
+
+        /**
+         * Use the trigger's commit id to start the process.
+         */
+        public static final String USE_EVENT_COMMIT_ID = "useEventCommitId";
     }
 
     /**

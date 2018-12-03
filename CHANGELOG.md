@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-server: new `useEventCommitId` parameter of `github`
+triggers;
+- concord-server: `repoBranchOrTag` and `repoCommitId` parameters to
+start a process with the override of the configured
+branch/tag/commitId values;
 - concord-console: pagination for the Ansible host list on the
 process status page;
 - http: new parameter `ignoreErrors` - instead of throwing exceptions

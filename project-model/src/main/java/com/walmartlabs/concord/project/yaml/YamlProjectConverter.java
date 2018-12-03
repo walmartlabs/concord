@@ -38,7 +38,11 @@ import java.util.Map;
 
 public final class YamlProjectConverter {
 
-    private static final String[] TRIGGER_CONFIG_KEYS = { Constants.Trigger.USE_INITIATOR, Constants.Request.ENTRY_POINT_KEY };
+    private static final String[] TRIGGER_CONFIG_KEYS = {
+            Constants.Trigger.USE_INITIATOR,
+            Constants.Trigger.USE_EVENT_COMMIT_ID,
+            Constants.Request.ENTRY_POINT_KEY
+    };
 
 
     public static ProjectDefinition convert(YamlProject project) throws YamlConverterException {
@@ -66,8 +70,8 @@ public final class YamlProjectConverter {
             Map<String, Object> arguments = (Map<String, Object>) opts.remove(Constants.Request.ARGUMENTS_KEY);
 
             Map<String, Object> cfg = new HashMap<>();
-            for(String key : TRIGGER_CONFIG_KEYS) {
-                cfg.put(key,  opts.remove(key));
+            for (String key : TRIGGER_CONFIG_KEYS) {
+                cfg.put(key, opts.remove(key));
             }
 
             JsonLocation l = t.getLocation();

@@ -121,16 +121,12 @@ public class TriggerEntry implements Serializable {
 
     @JsonIgnore
     public boolean isUseInitiator() {
-        if (cfg == null) {
-            return false;
-        }
+        return getBoolean(cfg, Constants.Trigger.USE_INITIATOR);
+    }
 
-        Boolean v = (Boolean) cfg.get(Constants.Trigger.USE_INITIATOR);
-        if (v == null) {
-            return false;
-        }
-
-        return v;
+    @JsonIgnore
+    public boolean isUseEventCommitId() {
+        return getBoolean(cfg, Constants.Trigger.USE_EVENT_COMMIT_ID);
     }
 
     public List<String> getActiveProfiles() {
@@ -163,5 +159,18 @@ public class TriggerEntry implements Serializable {
                 ", conditions=" + conditions +
                 ", cfg=" + cfg +
                 '}';
+    }
+
+    private static boolean getBoolean(Map<String, Object> cfg, String k) {
+        if (cfg == null) {
+            return false;
+        }
+
+        Boolean v = (Boolean) cfg.get(k);
+        if (v == null) {
+            return false;
+        }
+
+        return v;
     }
 }

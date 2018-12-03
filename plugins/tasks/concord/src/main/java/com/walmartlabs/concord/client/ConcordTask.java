@@ -70,6 +70,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
     private static final String ENTRY_POINT_KEY = "entryPoint";
     private static final String FORKS_KEY = "forks";
+    private static final String IGNORE_FAILURES_KEY = "ignoreFailures";
     private static final String INSTANCE_ID_KEY = "instanceId";
     private static final String INSTANCES_KEY = "instances";
     private static final String JOB_OUT_KEY = "jobOut";
@@ -78,11 +79,12 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String OUT_VARS_KEY = "outVars";
     private static final String PAYLOAD_KEY = "payload";
     private static final String PROJECT_KEY = "project";
+    private static final String REPO_BRANCH_OR_TAG_KEY = "repoBranchOrTag";
+    private static final String REPO_COMMIT_ID_KEY = "repoCommitId";
     private static final String REPO_KEY = "repo";
     private static final String START_AT_KEY = "startAt";
     private static final String SYNC_KEY = "sync";
     private static final String TAGS_KEY = "tags";
-    private static final String IGNORE_FAILURES_KEY = "ignoreFailures";
 
     private static final Set<String> FAILED_STATUSES;
     static {
@@ -255,22 +257,18 @@ public class ConcordTask extends AbstractConcordTask {
         ObjectMapper om = new ObjectMapper();
         input.put("request", om.writeValueAsBytes(req));
 
-        if (org != null) {
-            input.put("org", org);
-        }
+        addIfNotNull(input, "org", org);
+        addIfNotNull(input, "project", project);
+        addIfNotNull(input, "repo", repo);
 
-        if (project != null) {
-            input.put("project", project);
-        }
+        String repoBranchOrTag = getString(cfg, REPO_BRANCH_OR_TAG_KEY);
+        addIfNotNull(input, "repoBranchOrTag", repoBranchOrTag);
 
-        if (repo != null) {
-            input.put("repo", repo);
-        }
+        String repoCommitId = getString(cfg, REPO_COMMIT_ID_KEY);
+        addIfNotNull(input, "repoCommitId", repoCommitId);
 
         String startAt = getStartAt(cfg);
-        if (startAt != null) {
-            input.put("startAt", startAt);
-        }
+        addIfNotNull(input, "startAt", startAt);
 
         input.put("parentInstanceId", instanceId);
 
@@ -444,15 +442,39 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private Map<String, Object> createJobCfg(Context ctx, Map<String, Object> job) {
-        Map<String, Object> m = createCfg(ctx, SYNC_KEY, ENTRY_POINT_KEY, PAYLOAD_KEY, ARCHIVE_KEY, ORG_KEY, PROJECT_KEY,
-                REPO_KEY, REPOSITORY_KEY, ARGUMENTS_KEY, INSTANCE_ID_KEY, TAGS_KEY, START_AT_KEY, DISABLE_ON_CANCEL_KEY,
-                DISABLE_ON_FAILURE_KEY, OUT_VARS_KEY, ACTIVE_PROFILES_KEY, IGNORE_FAILURES_KEY);
+        Map<String, Object> m = createCfg(ctx,
+                ACTIVE_PROFILES_KEY,
+                ARCHIVE_KEY,
+                ARGUMENTS_KEY,
+                DISABLE_ON_CANCEL_KEY,
+                DISABLE_ON_FAILURE_KEY,
+                ENTRY_POINT_KEY,
+                IGNORE_FAILURES_KEY,
+                INSTANCE_ID_KEY,
+                ORG_KEY,
+                OUT_VARS_KEY,
+                PAYLOAD_KEY,
+                PROJECT_KEY,
+                REPO_BRANCH_OR_TAG_KEY,
+                REPO_COMMIT_ID_KEY,
+                REPO_KEY,
+                REPOSITORY_KEY,
+                START_AT_KEY,
+                SYNC_KEY,
+                TAGS_KEY);
 
         if (job != null) {
             m.putAll(job);
         }
 
         return m;
+    }
+
+    private static void addIfNotNull(Map<String, Object> m, String k, Object v) {
+        if (v == null) {
+            return;
+        }
+        m.put(k, v);
     }
 
     private static Path archivePayload(Path workDir, Map<String, Object> cfg) throws IOException {
@@ -519,6 +541,19 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         return req;
+    }
+
+    private static String getString(Map<String, Object> cfg, String k) {
+        Object v = cfg.get(k);
+        if (v == null) {
+            return null;
+        }
+
+        if (!(v instanceof String)) {
+            throw new IllegalArgumentException("Expected a string value '" + k + "', got: " + v);
+        }
+
+        return (String) v;
     }
 
     @SuppressWarnings("unchecked")

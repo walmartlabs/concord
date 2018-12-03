@@ -83,6 +83,6 @@ public class PortalIT extends AbstractServerIT {
         // ---
 
         ProjectProcessesApi portalService = new ProjectProcessesApi(getApiClient());
-        portalService.start(orgName, projectName, repoName, "main", "test1,test2");
+        portalService.start(orgName, projectName, repoName, "main", "test1,test2", null, null);
     }
 }

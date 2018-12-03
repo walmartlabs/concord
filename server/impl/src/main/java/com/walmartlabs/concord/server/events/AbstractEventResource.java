@@ -87,7 +87,12 @@ public abstract class AbstractEventResource {
         this.ldapManager = ldapManager;
     }
 
-    protected int process(String eventId, String eventName, Map<String, Object> conditions, Map<String, Object> event) {
+    protected int process(String eventId,
+                          String eventName,
+                          Map<String, Object> conditions,
+                          Map<String, Object> event,
+                          ProcessConfigurationEnricher cfgEnricher) {
+
         List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
                 .map(triggerDefinitionEnricher::enrich)
                 .filter(t -> filter(conditions, t))
@@ -105,11 +110,26 @@ public abstract class AbstractEventResource {
             }
             args.put("event", event);
 
+            Map<String, Object> cfg = new HashMap<>();
+            cfg.put(Constants.Request.ARGUMENTS_KEY, args);
+
+            if (t.getEntryPoint() != null) {
+                cfg.put(Constants.Request.ENTRY_POINT_KEY, t.getEntryPoint());
+            }
+
+            if (t.getActiveProfiles() != null) {
+                cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
+            }
+
+            if (cfgEnricher != null) {
+                cfg = cfgEnricher.enrich(t, cfg);
+            }
+
             try {
                 UserEntry initiator = getInitiator(t, event);
                 UUID orgId = projectDao.getOrgId(t.getProjectId());
 
-                PartialProcessKey processKey = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), t.getEntryPoint(), t.getActiveProfiles(), args, initiator);
+                PartialProcessKey processKey = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), cfg, initiator);
                 log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, processKey, t);
             } catch (Exception e) {
                 log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
@@ -159,29 +179,17 @@ public abstract class AbstractEventResource {
     private PartialProcessKey startProcess(UUID orgId,
                               UUID projectId,
                               UUID repoId,
-                              String entryPoint,
-                              List<String> activeProfiles,
-                              Map<String, Object> args,
+                              Map<String, Object> cfg,
                               UserEntry initiator) throws IOException {
 
         PartialProcessKey processKey = PartialProcessKey.create();
-
-        Map<String, Object> request = new HashMap<>();
-        if (activeProfiles != null) {
-            request.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
-        }
-
-        if (args != null) {
-            request.put(Constants.Request.ARGUMENTS_KEY, args);
-        }
 
         Payload payload = PayloadBuilder.start(processKey)
                 .initiator(initiator.getId(), initiator.getName())
                 .organization(orgId)
                 .project(projectId)
                 .repository(repoId)
-                .entryPoint(entryPoint)
-                .configuration(request)
+                .configuration(cfg)
                 .build();
 
         processManager.start(payload, false);
@@ -191,5 +199,9 @@ public abstract class AbstractEventResource {
 
     public interface TriggerDefinitionEnricher {
         TriggerEntry enrich(TriggerEntry entry);
+    }
+
+    public interface ProcessConfigurationEnricher {
+        Map<String, Object> enrich(TriggerEntry t, Map<String, Object> cfg);
     }
 }

@@ -84,7 +84,7 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
             eventId = UUID.randomUUID().toString();
         }
 
-        int count = process(eventId, eventName, event, event);
+        int count = process(eventId, eventName, event, event, null);
 
         log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, count);
         return Response.ok().build();

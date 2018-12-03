@@ -79,7 +79,7 @@ public class PayloadManager {
 
         UUID repoId = getRepo(input, projectId);
         if (repoId != null && projectId == null) {
-            // allow starting processes using a repository ID only
+            // allow starting processes by specifying repository IDs without project IDs or names
             projectId = repositoryDao.getProjectId(repoId);
         }
 

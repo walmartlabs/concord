@@ -98,7 +98,7 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
 
         String eventId = String.valueOf(event.get("cmsId"));
-        int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent);
+        int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent, null);
 
         log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
         return Response.ok().build();

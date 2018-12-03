@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
@@ -126,7 +127,6 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         }
 
         String eventBranch = getBranch(payload, eventName);
-
         List<RepositoryItem> repos = findRepos(repoName, eventBranch);
         boolean unknownRepo = repos.isEmpty();
         if (unknownRepo) {
@@ -140,7 +140,14 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             Map<String, Object> event = buildTriggerEvent(payload, r.id, r.project, conditions);
 
             String eventId = UUID.randomUUID().toString();
-            int count = process(eventId, EVENT_SOURCE, conditions, event);
+            int count = process(eventId, EVENT_SOURCE, conditions, event, (t, cfg) -> {
+                // if `useEventCommitId` is true then the process is forced to use the specified commit ID
+                String commitId = (String) event.get(COMMIT_ID_KEY);
+                if (commitId != null && t.isUseEventCommitId()) {
+                    cfg.put(Constants.Request.REPO_COMMIT_ID, event.get(COMMIT_ID_KEY));
+                }
+                return cfg;
+            });
 
             log.info("payload ['{}', '{}'] -> {} processes started", eventId, conditions, count);
         }
