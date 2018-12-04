@@ -29,6 +29,7 @@ process metadata;
 
 ### Changed
 
+- docker: set the minimal Ansible version to 2.6.10;
 - concord-project-model: forbid empty flow and form definitions;
 - concord-server: use a single local clone per GIT URL;
 - concord-server: fixed an issue, causing `onFailure` to fire up
