@@ -94,8 +94,8 @@ flows:
     - dockguardAgent(looper-agent):
       - docker network create testnet$DOCKGUARD_STEP_UID
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
-      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db ${dbDockerImage}
-      - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests
+      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db$DOCKGUARD_STEP_UID ${dbDockerImage}
+      - (name build) mvn -U -B -s $MVN_SETTINGS clean deploy -DskipTests -Ddb.container.name=db$DOCKGUARD_STEP_UID
       - call: runsonar
       - hygieia.publishBuild()
       - ws_snapshot: binaries
@@ -109,8 +109,8 @@ flows:
     - dockguardAgent(looper-agent):
       - docker network create testnet$DOCKGUARD_STEP_UID
       - docker network connect testnet$DOCKGUARD_STEP_UID $BUILD_CONTAINER_NAME
-      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db ${dbDockerImage}
-      - (name build) mvn -U -B -s $MVN_SETTINGS release:prepare release:perform -DskipTests
+      - docker run -d --network testnet$DOCKGUARD_STEP_UID --name db$DOCKGUARD_STEP_UID ${dbDockerImage}
+      - (name build) mvn -U -B -s $MVN_SETTINGS release:prepare release:perform -DskipTests -Ddb.container.name=db$DOCKGUARD_STEP_UID
       - hygieia.publishBuild()
       - ws_snapshot: binaries
         includes: docker-images/**

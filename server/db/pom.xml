@@ -210,7 +210,7 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <db.host>db</db.host>
+                <db.host>${db.container.name}</db.host>
                 <db.port>5432</db.port>
             </properties>
             <build>
