@@ -105,7 +105,7 @@ public class EngineFactory {
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
 
         FormStorage formStorage = new FileFormStorage(formsDir);
-        FormService formService = new DefaultFormService(contextFactory, new NoopResumeHandler(), formStorage);
+        FormService formService = new ConcordFormService(contextFactory, new NoopResumeHandler(), formStorage);
 
         ProjectDefinitionAdapter adapter = new ProjectDefinitionAdapter(project, activeProfiles, baseDir);
 

@@ -1,0 +1,25 @@
+flows:
+  default:
+  # a regular form
+  - form: myForm1
+  - log: "${myForm1}"
+
+  # an one-off form
+  - form: myForm2
+    fields:
+    - firstName: {type: "string", label: "First Name"}
+  - log: "${myForm2}"
+
+  # a form with fields stored in a variable
+  - form: myForm3
+    fields: ${myForm3Fields}
+  - log: "${myForm3}"
+
+forms:
+  myForm1:
+  - firstName: {type: "string", label: "First Name"}
+
+configuration:
+  arguments:
+    myForm3Fields:
+    - firstName: {type: "string", label: "First Name"}

@@ -305,4 +305,41 @@ public class FormIT extends AbstractServerIT {
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*(Skills ->) \\[(angular|react), (react|angular)\\].*", ab);
     }
+
+    @Test(timeout = 60000)
+    public void testDynamicFields() throws Exception {
+        byte[] payload = archive(FormIT.class.getResource("dynamicFormFields").toURI());
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // ---
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        // ---
+
+        FormListEntry f0 = forms.get(0);
+        String formName = f0.getName();
+
+        String fieldValue = "test_" + randomString();
+        Map<String, Object> data = Collections.singletonMap("x", fieldValue);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
+        assertTrue(fsr.isOk());
+
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*We got: " + fieldValue + ".*", ab);
+    }
 }

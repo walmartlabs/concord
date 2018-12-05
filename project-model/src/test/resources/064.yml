@@ -1,0 +1,13 @@
+main:
+  - task: myLogger
+    in:
+      message: "None of these are null -> ${item}"
+    withItems: ${fineList}
+  - task: myLogger
+    in:
+      message: "It's okay to have a null item -> ${item}"
+    withItems: ${listWithNull}
+  - task: myLogger
+    in:
+      msg: "Won't print because the list is null -> ${item}"
+    withItems: ${nullVariable}

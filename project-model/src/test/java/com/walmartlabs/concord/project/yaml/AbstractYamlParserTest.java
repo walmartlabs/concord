@@ -32,6 +32,7 @@ import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.form.*;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
+import io.takari.bpm.model.form.FormField;
 import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
@@ -61,7 +62,15 @@ public abstract class AbstractYamlParserTest {
         DefaultExecutionContextFactory contextFactory = new DefaultExecutionContextFactory(expressionManager);
 
         DefaultFormService.ResumeHandler rs = (form, args) -> getEngine().resume(form.getProcessBusinessKey(), form.getEventName(), args);
-        formService = new DefaultFormService(contextFactory, rs, fs);
+        formService = new DefaultFormService(contextFactory, rs, fs) {
+            @Override
+            public FormField toFormField(Map<String, Object> m) {
+                Map.Entry<String, Object> entry = m.entrySet().iterator().next();
+                Map<String, Object> opts = (Map<String, Object>) entry.getValue();
+                return new FormField.Builder(entry.getKey(), (String) opts.get("type"))
+                        .build();
+            }
+        };
 
         ResourceResolver resourceResolver = name -> ClassLoader.getSystemResourceAsStream(name);
 

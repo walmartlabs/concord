@@ -22,7 +22,6 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.yaml.converter.StepConverter;
 import com.walmartlabs.concord.project.yaml.converter.YamlTaskStepConverter;
-import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
@@ -1856,6 +1855,140 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verifyNoMoreInteractions(checkpointTask);
     }
 
+    @Test
+    public void test064() throws Exception {
+        /*
+        Variables provided to withItems may be null. The Task should only execute in cases where the variable provided
+        to withItems is non-null
+         */
+        deploy("064.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("nullVariable", null); // should't execute the task
+        List<String> theList = new ArrayList<>(3);
+        theList.add("hello");
+        theList.add(null);
+        theList.add("world");
+        args.put("listWithNull", theList);
+        theList = new ArrayList<>(2);
+        theList.add("Hello");
+        theList.add("World");
+        args.put("fineList", theList);
+
+        start(key, "main", args);
+
+        // ---
+
+        verify(task, times(5)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("None of these are null -> Hello"));
+        verify(task, times(1)).log(eq("None of these are null -> World"));
+
+        verify(task, times(1)).log(eq("It's okay to have a null item -> hello"));
+        verify(task, times(1)).log(eq("It's okay to have a null item -> "));
+        verify(task, times(1)).log(eq("It's okay to have a null item -> world"));
+
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test065() throws Exception {
+        deploy("065.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default", Collections.emptyMap());
+
+        // ---
+
+        verify(task, times(6)).execute(any(ExecutionContext.class));
+
+        verify(task, times(1)).log(eq("A 0"));
+        verify(task, times(1)).log(eq("A 1"));
+
+        verify(task, times(1)).log(eq("B 0"));
+        verify(task, times(1)).log(eq("B 1"));
+
+        verify(task, times(1)).log(eq("C 0"));
+        verify(task, times(1)).log(eq("C 1"));
+
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test066() throws Exception {
+        deploy("066.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default", Collections.singletonMap("nestedWithItems", Arrays.asList("0", null, "2", "3")));
+
+        // ---
+
+        verify(task, times(12)).execute(any(ExecutionContext.class));
+
+        verify(task, times(1)).log(eq("A 0"));
+        verify(task, times(1)).log(eq("A "));
+        verify(task, times(1)).log(eq("A 2"));
+        verify(task, times(1)).log(eq("A 3"));
+
+        verify(task, times(1)).log(eq("B 0"));
+        verify(task, times(1)).log(eq("B "));
+        verify(task, times(1)).log(eq("B 2"));
+        verify(task, times(1)).log(eq("B 3"));
+
+        verify(task, times(1)).log(eq("C 0"));
+        verify(task, times(1)).log(eq("C "));
+        verify(task, times(1)).log(eq("C 2"));
+        verify(task, times(1)).log(eq("C 3"));
+
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
+    public void test067() throws Exception {
+        deploy("067.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("myLogger", task);
+        register("myTask", new JavaDelegate() {
+            @Override
+            public void execute(ExecutionContext ctx) throws Exception {
+                ctx.setVariable("var", ctx.getVariable("message"));
+            }
+        });
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default", Collections.singletonMap("nestedWithItems", Arrays.asList("0", "1", "2")));
+
+        // ---
+
+        verify(task, times(1)).log(eq(
+                Arrays.asList(
+                        Arrays.asList("A 0", "A 1", "A 2"),
+                        Arrays.asList("B 0", "B 1", "B 2"),
+                        Arrays.asList("C 0", "C 1", "C 2"))));
+    }
+
     // FORMS (100 - 199)
 
     @Test
@@ -2125,136 +2258,27 @@ public class YamlParserTest extends AbstractYamlParserTest {
 
     @Test
     public void test110() throws Exception {
-        /*
-        Variables provided to withItems may be null. The Task should only execute in cases where the variable provided
-        to withItems is non-null
-         */
         deploy("110.yml");
 
-        MyLogger task = spy(new MyLogger());
-        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
-        register("myLogger", task);
+        String formValue = "test#" + System.currentTimeMillis();
+
+        // ---
+
+        TestBean testBean = spy(new TestBean());
+        register("testBean", testBean);
 
         // ---
 
         String key = UUID.randomUUID().toString();
-        Map<String, Object> args = new HashMap<>();
-        args.put("nullVariable", null); // should't execute the task
-        List<String> theList = new ArrayList<>(3);
-        theList.add("hello");
-        theList.add(null);
-        theList.add("world");
-        args.put("listWithNull", theList);
-        theList = new ArrayList<>(2);
-        theList.add("Hello");
-        theList.add("World");
-        args.put("fineList", theList);
-
-        start(key, "main", args);
+        start(key, "main", null);
 
         // ---
 
-        verify(task, times(5)).execute(any(ExecutionContext.class));
-        verify(task, times(1)).log(eq("None of these are null -> Hello"));
-        verify(task, times(1)).log(eq("None of these are null -> World"));
+        UUID formId = getFirstFormId();
+        Map<String, Object> data = Collections.singletonMap("myField", formValue);
+        submitForm(formId, data);
 
-        verify(task, times(1)).log(eq("It's okay to have a null item -> hello"));
-        verify(task, times(1)).log(eq("It's okay to have a null item -> "));
-        verify(task, times(1)).log(eq("It's okay to have a null item -> world"));
-
-        verifyNoMoreInteractions(task);
-    }
-
-    @Test
-    public void test111() throws Exception {
-        deploy("111.yml");
-
-        MyLogger task = spy(new MyLogger());
-        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
-        register("myLogger", task);
-        // ---
-
-        String key = UUID.randomUUID().toString();
-
-        start(key, "default", Collections.emptyMap());
-
-        // ---
-
-        verify(task, times(6)).execute(any(ExecutionContext.class));
-
-        verify(task, times(1)).log(eq("A 0"));
-        verify(task, times(1)).log(eq("A 1"));
-
-        verify(task, times(1)).log(eq("B 0"));
-        verify(task, times(1)).log(eq("B 1"));
-
-        verify(task, times(1)).log(eq("C 0"));
-        verify(task, times(1)).log(eq("C 1"));
-
-        verifyNoMoreInteractions(task);
-    }
-
-    @Test
-    public void test112() throws Exception {
-        deploy("112.yml");
-
-        MyLogger task = spy(new MyLogger());
-        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
-        register("myLogger", task);
-        // ---
-
-        String key = UUID.randomUUID().toString();
-
-        start(key, "default", Collections.singletonMap("nestedWithItems", Arrays.asList("0", null, "2", "3")));
-
-        // ---
-
-        verify(task, times(12)).execute(any(ExecutionContext.class));
-
-        verify(task, times(1)).log(eq("A 0"));
-        verify(task, times(1)).log(eq("A "));
-        verify(task, times(1)).log(eq("A 2"));
-        verify(task, times(1)).log(eq("A 3"));
-
-        verify(task, times(1)).log(eq("B 0"));
-        verify(task, times(1)).log(eq("B "));
-        verify(task, times(1)).log(eq("B 2"));
-        verify(task, times(1)).log(eq("B 3"));
-
-        verify(task, times(1)).log(eq("C 0"));
-        verify(task, times(1)).log(eq("C "));
-        verify(task, times(1)).log(eq("C 2"));
-        verify(task, times(1)).log(eq("C 3"));
-
-        verifyNoMoreInteractions(task);
-    }
-
-    @Test
-    public void test113() throws Exception {
-        deploy("113.yml");
-
-        MyLogger task = spy(new MyLogger());
-        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
-        register("myLogger", task);
-        register("myTask", new JavaDelegate() {
-            @Override
-            public void execute(ExecutionContext ctx) throws Exception {
-                ctx.setVariable("var", ctx.getVariable("message"));
-            }
-        });
-        // ---
-
-        String key = UUID.randomUUID().toString();
-
-        start(key, "default", Collections.singletonMap("nestedWithItems", Arrays.asList("0", "1", "2")));
-
-        // ---
-
-        verify(task, times(1)).log(eq(
-                Arrays.asList(
-                    Arrays.asList("A 0", "A 1", "A 2"),
-                    Arrays.asList("B 0", "B 1", "B 2"),
-                    Arrays.asList("C 0", "C 1", "C 2"))));
+        verify(testBean, times(1)).toString(eq(formValue));
     }
 
     @Test

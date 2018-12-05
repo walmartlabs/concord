@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
 
-    private static final List<String> SUPPORTED_FORM_OPTIONS = Arrays.asList("yield", "runAs", "values");
+    private static final List<String> SUPPORTED_FORM_OPTIONS = Arrays.asList("yield", "runAs", "values", "fields");
 
     @Override
     @SuppressWarnings("unchecked")

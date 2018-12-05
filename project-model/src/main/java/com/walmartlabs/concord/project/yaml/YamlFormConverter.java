@@ -73,8 +73,10 @@ public final class YamlFormConverter {
     }
 
     private static FormField convert(YamlFormField f) throws YamlConverterException {
-        Map<String, Object> opts = f.getOptions();
+        return convert(f.getName(), f.getOptions(), f.getLocation());
+    }
 
+    public static FormField convert(String name, Map<String, Object> opts, JsonLocation loc) throws YamlConverterException {
         // common parameters
         String label = (String) opts.remove("label");
         Object defaultValue = box(opts.remove("value"));
@@ -83,7 +85,7 @@ public final class YamlFormConverter {
         // type-specific options
         Map<Option<?>, Object> options = new HashMap<>();
 
-        TypeInfo tInfo = parseType(opts.remove("type"), f.getLocation());
+        TypeInfo tInfo = parseType(opts.remove("type"), loc);
         switch (tInfo.type) {
             case StringField.TYPE: {
                 options.put(StringField.PATTERN, opts.remove("pattern"));
@@ -107,7 +109,7 @@ public final class YamlFormConverter {
                 break;
             }
             default:
-                throw new YamlConverterException("Unknown field type: " + tInfo.type + " @ " + f.getLocation());
+                throw new YamlConverterException("Unknown field type: " + tInfo.type + (loc != null ? "@ " + loc : ""));
         }
 
         PASSTHROUGH_OPTIONS.forEach((k, option) -> {
@@ -118,10 +120,10 @@ public final class YamlFormConverter {
         });
 
         if (!opts.isEmpty()) {
-            throw new YamlConverterException("Unknown field options: " + opts.keySet() + " @ " + f.getLocation());
+            throw new YamlConverterException("Unknown field options: " + opts.keySet() + (loc != null ? "@ " + loc : ""));
         }
 
-        return new FormField.Builder(f.getName(), tInfo.type)
+        return new FormField.Builder(name, tInfo.type)
                 .label(label)
                 .defaultValue(defaultValue)
                 .allowedValue(allowedValue)
@@ -132,7 +134,7 @@ public final class YamlFormConverter {
 
     private static TypeInfo parseType(Object t, JsonLocation loc) throws YamlConverterException {
         if (!(t instanceof String)) {
-            throw new YamlConverterException("Expected a field type @ " + loc);
+            throw new YamlConverterException("Expected a field type" + (loc != null ? "@ " + loc : ""));
         }
         return TypeInfo.parse((String) t);
     }

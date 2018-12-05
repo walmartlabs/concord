@@ -4,6 +4,7 @@
 
 ### Added
 
+- project-model: support for programmatically-defined form fields;
 - concord-server: new `useEventCommitId` parameter of `github`
 triggers;
 - concord-server: `repoBranchOrTag` and `repoCommitId` parameters to

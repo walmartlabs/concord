@@ -1,0 +1,10 @@
+configuration:
+  arguments:
+    myFields:
+    - x: {type: "string"}
+
+flows:
+  default:
+  - form: myForm
+    fields: "${myFields}"
+  - log: "We got: ${myForm.x}"

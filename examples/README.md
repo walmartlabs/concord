@@ -27,6 +27,7 @@
 * [ansible_docker](ansible_docker) - using a custom Ansible Docker image to run a playbook;
 * [ansible_dynamic_inventory](ansible_dynamic_inventory) - using dynamic inventory scripts in Ansible;
 * [ansible_form](ansible_form) - using forms and Ansible in a single flow;
+* [ansible_form_as_inventory](ansible_form_as_inventory) - using forms to specify an Ansible inventory;
 * [ansible_project](ansible_project) - an example of creating an running an Ansible project;
 * [ansible_remote](ansible_remote) - running an Ansible playbook an a remote host;
 * [ansible_template](ansible_template) - running an Ansible playbook using the Ansible template;
@@ -57,7 +58,7 @@
 * [approval](approval) - using forms and `runAs` to implement an approval process;
 * [boo_ansible](boo_ansible) - using Boo and Ansible together;
 * [context_injection](context_injection) - how to use automatic variable injection with custom tasks written in Groovy;
-* [dynamic_forms](dynamic_forms) - using forms with fields added/removed dynamically;
+* [dynamic_form_values](dynamic_form_values) - using custom forms with values added/removed dynamically;
 * [dynamic_tasks](dynamic_tasks) - using custom tasks provided with the process;
 * [forms_wizard](forms_wizard) - multi-step forms;
 * [inventory](inventory) - using Concord Inventory to retrieve Ansible's inventory data;
@@ -74,4 +75,4 @@
 * [logback_config](logback_config) - overriding logging configuration;
 * [process_from_a_process](process_from_a_process) - starting a new subprocess from a flow using a payload archive;
 * [process_from_a_process2](process_from_a_process2) - using output variables, starting a new subprocess from a project.
-* [process_from_a_process2](process_from_a_process2) - starting a new subprocess using a directory as the payload.
+* [process_from_a_process3](process_from_a_process3) - starting a new subprocess using a directory as the payload.
