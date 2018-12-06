@@ -4,6 +4,7 @@
 
 ### Changed
 
+- ansible: use `/tmp/${USER}/ansible` as the default `remote_tmp`;
 - concord-server: fixed a bug in `/api/service/process_portal`
 preventing the endpoint from working.
 

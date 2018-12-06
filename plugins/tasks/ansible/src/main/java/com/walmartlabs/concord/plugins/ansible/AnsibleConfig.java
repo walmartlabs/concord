@@ -122,12 +122,11 @@ public class AnsibleConfig {
         m.put("timeout", "120");
 
         // use a shorter path to store temporary files
-        m.put("remote_tmp", "/tmp/ansible/$USER");
+        m.put("remote_tmp", "/tmp/${USER}/ansible");
 
         return m;
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, Map<String, Object>> makeAnsibleCfg(Map<String, Object> userCfg) {
         Map<String, Object> m = new HashMap<>();
         m.put("defaults", makeDefaults());
