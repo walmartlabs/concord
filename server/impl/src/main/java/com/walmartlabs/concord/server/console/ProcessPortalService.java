@@ -77,7 +77,7 @@ public class ProcessPortalService implements Resource {
         try {
             EntryPoint ep = parseEntryPoint(entryPoint);
 
-            return processPortalResource.start(OrganizationManager.DEFAULT_ORG_NAME, ep.projectName, ep.repoName, ep.flow, activeProfiles, null, null, uriInfo);
+            return processPortalResource.start(OrganizationManager.DEFAULT_ORG_NAME, ep.projectName, ep.repoName, null, null, ep.flow, activeProfiles, uriInfo);
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}'] -> error", entryPoint, activeProfiles, e);
             return processError("Process error: " + e.getMessage());

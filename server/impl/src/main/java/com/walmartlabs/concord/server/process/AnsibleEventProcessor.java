@@ -134,7 +134,6 @@ public class AnsibleEventProcessor implements ScheduledTask {
             return super.txResult(t);
         }
 
-        @SuppressWarnings("deprecation")
         public List<EventItem> list(DSLContext tx, Timestamp instanceCreatedAt, Long startEventSeq, int count) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
             SelectConditionStep<Record8<UUID, Timestamp, Long, String, String, String, Long, Boolean>> q = tx.select(

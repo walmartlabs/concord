@@ -23,14 +23,18 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
+import com.walmartlabs.concord.it.common.ServerClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
+import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static java.util.Collections.singletonMap;
+import static org.junit.Assert.assertEquals;
 
 public class PortalIT extends AbstractServerIT {
 
@@ -76,13 +80,26 @@ public class PortalIT extends AbstractServerIT {
                 .setBranch("master")
                 .setSecretId(response.getId());
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(singletonMap(repoName, repo)));
 
         // ---
 
         ProjectProcessesApi portalService = new ProjectProcessesApi(getApiClient());
-        portalService.start(orgName, projectName, repoName, "main", "test1,test2", null, null);
+        portalService.start(orgName, projectName, repoName, "main", null, null, "test1,test2");
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        List<ProcessEntry> l = processApi.list(por.getId(), null, null, null, null, null, null, 10, 0);
+        assertEquals(1, l.size());
+
+        // ---
+
+        ProcessEntry pe = l.get(0);
+        pe = waitForCompletion(processApi, pe.getInstanceId());
+
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
     }
 }

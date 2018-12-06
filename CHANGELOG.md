@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed a bug in `/api/service/process_portal`
+preventing the endpoint from working.
+
+
+
 ## [0.99.0] - 2018-12-05
 
 ### Added
