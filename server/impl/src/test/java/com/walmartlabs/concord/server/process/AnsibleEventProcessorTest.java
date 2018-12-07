@@ -22,7 +22,8 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.cfg.AnsibleEventsConfiguration;
-import com.walmartlabs.concord.server.process.AnsibleEventProcessor.AnsibleEventDao;
+import com.walmartlabs.concord.server.process.event.AnsibleEventProcessor;
+import com.walmartlabs.concord.server.process.event.AnsibleEventProcessor.AnsibleEventDao;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

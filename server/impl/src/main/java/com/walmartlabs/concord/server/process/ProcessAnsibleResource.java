@@ -32,6 +32,9 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.event.EventDao;
 import com.walmartlabs.concord.server.process.event.ProcessEventEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.Record8;
@@ -54,6 +57,7 @@ import static org.jooq.impl.DSL.*;
 
 @Named
 @Singleton
+@Api(value = "Ansible Process", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/process")
 public class ProcessAnsibleResource implements Resource {
 
@@ -69,9 +73,10 @@ public class ProcessAnsibleResource implements Resource {
     }
 
     /**
-     * List process ansible hosts.
+     * Lists Ansible hosts of a specific process.
      */
     @GET
+    @ApiOperation("List Ansible hosts of a specific process")
     @Path("/{processInstanceId}/ansible/hosts")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -91,9 +96,10 @@ public class ProcessAnsibleResource implements Resource {
     }
 
     /**
-     * List process ansible stats.
+     * Returns Ansible statistics of a specific process.
      */
     @GET
+    @ApiOperation("Returns Ansible statistics of a specific process")
     @Path("/{processInstanceId}/ansible/stats")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
@@ -106,7 +112,11 @@ public class ProcessAnsibleResource implements Resource {
         return ansibleHostsDao.getStats(key.getInstanceId(), key.getCreatedAt());
     }
 
+    /**
+     * Lists Ansible events of a specific process.
+     */
     @GET
+    @ApiOperation("List Ansible events of a specific process")
     @Path("/{processInstanceId}/ansible/events")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer

@@ -6,6 +6,12 @@
 
 - ansible: new `check` option to run `ansible-playbook --check`.
 
+### Changed
+
+- concord-server: fixed the host status calculation in the Ansible
+event processor. Now `SKIPPED` is correctly overwritten by other
+statuses in multi-step plays.
+
 
 
 ## [0.99.1] - 2018-12-06

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process;
+package com.walmartlabs.concord.server.process.event;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,7 +67,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
     }
 
     public void performTask() {
-        int processedEvents = 0;
+        int processedEvents;
         do {
             processedEvents = processEvents(cfg.getFetchLimit());
         } while (processedEvents >= cfg.getFetchLimit());
@@ -145,8 +145,8 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     field("{0}->>'status'", String.class, pe.EVENT_DATA),
                     coalesce(field("{0}->>'duration'", Long.class, pe.EVENT_DATA), value("0")),
                     coalesce(field("{0}->>'ignore_errors'", Boolean.class, pe.EVENT_DATA), value("false")))
-            .from(pe)
-            .where(pe.EVENT_TYPE.eq(EventType.ANSIBLE.name()));
+                    .from(pe)
+                    .where(pe.EVENT_TYPE.eq(EventType.ANSIBLE.name()));
 
             if (instanceCreatedAt != null && startEventSeq != null) {
                 q.and(pe.INSTANCE_CREATED_AT.greaterOrEqual(instanceCreatedAt))
@@ -185,7 +185,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
                         hostsForInsert.add(hosts.get(i));
                     }
                 }
-                if(!hostsForInsert.isEmpty()) {
+                if (!hostsForInsert.isEmpty()) {
                     insert(tx, conn, hostsForInsert);
                 }
                 log.debug("insert -> updated: {}, inserted: {}", hosts.size() - hostsForInsert.size(), hostsForInsert.size());
@@ -207,18 +207,18 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     .fetchOne(r -> ImmutableEventMarker.of(r.value1(), r.value2())));
         }
 
-        private int[] update(DSLContext tx, Connection conn, List<HostItem> hosts) throws SQLException  {
+        private int[] update(DSLContext tx, Connection conn, List<HostItem> hosts) throws SQLException {
             Field<Integer> currentStatusWeight = decodeStatus(choose(ANSIBLE_HOSTS.STATUS));
-            Field<Integer> newStatusWeight = decodeStatus(choose(value((String)null)));
+            Field<Integer> newStatusWeight = decodeStatus(choose(value((String) null)));
 
             String update = tx.update(ANSIBLE_HOSTS)
-                    .set(ANSIBLE_HOSTS.DURATION, ANSIBLE_HOSTS.DURATION.plus(value((Integer)null)))
-                    .set(ANSIBLE_HOSTS.STATUS, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.STATUS).otherwise(value((String)null)))
-                    .set(ANSIBLE_HOSTS.EVENT_SEQ, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.EVENT_SEQ).otherwise(value((Long)null)))
-                    .where(ANSIBLE_HOSTS.INSTANCE_ID.eq(value((UUID)null))
-                            .and(ANSIBLE_HOSTS.INSTANCE_CREATED_AT.eq(value((Timestamp)null))
-                                    .and(ANSIBLE_HOSTS.HOST.eq(value((String)null))
-                                            .and(ANSIBLE_HOSTS.HOST_GROUP.eq(value((String)null))))))
+                    .set(ANSIBLE_HOSTS.DURATION, ANSIBLE_HOSTS.DURATION.plus(value((Integer) null)))
+                    .set(ANSIBLE_HOSTS.STATUS, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.STATUS).otherwise(value((String) null)))
+                    .set(ANSIBLE_HOSTS.EVENT_SEQ, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.EVENT_SEQ).otherwise(value((Long) null)))
+                    .where(ANSIBLE_HOSTS.INSTANCE_ID.eq(value((UUID) null))
+                            .and(ANSIBLE_HOSTS.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
+                                    .and(ANSIBLE_HOSTS.HOST.eq(value((String) null))
+                                            .and(ANSIBLE_HOSTS.HOST_GROUP.eq(value((String) null))))))
                     .getSQL();
 
             try (PreparedStatement ps = conn.prepareStatement(update)) {
@@ -281,9 +281,9 @@ public class AnsibleEventProcessor implements ScheduledTask {
     private enum Status {
 
         RUNNING(0),
-        OK(1),
-        CHANGED(2),
-        SKIPPED(3),
+        SKIPPED(1),
+        OK(2),
+        CHANGED(3),
         UNREACHABLE(4),
         FAILED(5);
 
@@ -305,6 +305,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
 
     @Value.Immutable
     public interface Key {
+
         @Value.Parameter
         UUID instanceId();
 
@@ -322,8 +323,11 @@ public class AnsibleEventProcessor implements ScheduledTask {
     public interface HostItem {
 
         Key key();
+
         String status();
+
         long duration();
+
         long eventSeq();
 
         static HostItem from(EventItem event) {
@@ -340,11 +344,17 @@ public class AnsibleEventProcessor implements ScheduledTask {
     public interface EventItem {
 
         UUID instanceId();
+
         Timestamp instanceCreatedAt();
+
         long eventSeq();
+
         String host();
+
         String hostGroup();
+
         String status();
+
         long duration();
     }
 
