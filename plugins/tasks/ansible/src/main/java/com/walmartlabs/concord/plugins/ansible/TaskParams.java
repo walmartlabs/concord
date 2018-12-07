@@ -23,6 +23,8 @@ package com.walmartlabs.concord.plugins.ansible;
 
 public enum TaskParams {
 
+    CHECK_KEY("check"),
+
     CONFIG_FILE_KEY("configFile"),
 
     CONFIG_KEY("config"),

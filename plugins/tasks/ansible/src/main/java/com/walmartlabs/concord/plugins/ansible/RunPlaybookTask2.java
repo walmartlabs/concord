@@ -158,6 +158,7 @@ public class RunPlaybookTask2 implements Task {
                     .withExtraVars(getMap(args, TaskParams.EXTRA_VARS_KEY))
                     .withLimit(getLimit(args, playbook))
                     .withVerboseLevel(getVerboseLevel(args))
+                    .withCheck(getCheck(args, playbook))
                     .withEnv(env.get());
 
             Process p = processBuilder
@@ -199,6 +200,10 @@ public class RunPlaybookTask2 implements Task {
         }
 
         return null;
+    }
+
+    private boolean getCheck(Map<String, Object> args, String playbook) {
+        return ArgUtils.getBoolean(args, TaskParams.CHECK_KEY, false);
     }
 
     private static Path createTmpDir(Path workDir) throws IOException {

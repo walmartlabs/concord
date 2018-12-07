@@ -42,6 +42,7 @@ public class PlaybookArgsBuilder {
     private String vaultPasswordFile;
     private Map<String, String> extraEnv = Collections.emptyMap();
     private String limit;
+    private boolean check;
     private int verboseLevel = 0;
 
     public PlaybookArgsBuilder(String playbook, String inventory, Path workDir, Path tmpDir) {
@@ -101,6 +102,11 @@ public class PlaybookArgsBuilder {
         return this;
     }
 
+    public PlaybookArgsBuilder withCheck(boolean check) {
+        this.check = check;
+        return this;
+    }
+
     public List<String> buildArgs() throws IOException {
         List<String> l = new ArrayList<>(Arrays.asList("ansible-playbook", "-i", inventory, playbook));
 
@@ -137,6 +143,10 @@ public class PlaybookArgsBuilder {
         if (limit != null) {
             l.add("--limit");
             l.add(limit);
+        }
+
+        if (check) {
+            l.add("--check");
         }
 
         if (verboseLevel > 0) {

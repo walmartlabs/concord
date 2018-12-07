@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- ansible: new `check` option to run `ansible-playbook --check`.
+
+
+
 ## [0.99.1] - 2018-12-06
 
 ### Changed
