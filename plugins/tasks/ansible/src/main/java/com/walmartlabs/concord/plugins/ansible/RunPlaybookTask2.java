@@ -159,6 +159,7 @@ public class RunPlaybookTask2 implements Task {
                     .withLimit(getLimit(args, playbook))
                     .withVerboseLevel(getVerboseLevel(args))
                     .withCheck(getCheck(args, playbook))
+                    .withSyntaxCheck(getSyntaxCheck(args,playbook))
                     .withEnv(env.get());
 
             Process p = processBuilder
@@ -204,6 +205,10 @@ public class RunPlaybookTask2 implements Task {
 
     private boolean getCheck(Map<String, Object> args, String playbook) {
         return ArgUtils.getBoolean(args, TaskParams.CHECK_KEY, false);
+    }
+
+    private boolean getSyntaxCheck(Map<String, Object> args, String playbook) {
+        return ArgUtils.getBoolean(args, TaskParams.SYNTAX_CHECK_KEY, false);
     }
 
     private static Path createTmpDir(Path workDir) throws IOException {

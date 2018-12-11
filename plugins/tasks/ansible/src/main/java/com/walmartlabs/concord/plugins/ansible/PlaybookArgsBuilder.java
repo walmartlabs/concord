@@ -43,6 +43,7 @@ public class PlaybookArgsBuilder {
     private Map<String, String> extraEnv = Collections.emptyMap();
     private String limit;
     private boolean check;
+    private boolean syntaxCheck;
     private int verboseLevel = 0;
 
     public PlaybookArgsBuilder(String playbook, String inventory, Path workDir, Path tmpDir) {
@@ -107,6 +108,11 @@ public class PlaybookArgsBuilder {
         return this;
     }
 
+    public PlaybookArgsBuilder withSyntaxCheck(boolean syntaxCheck) {
+        this.syntaxCheck = syntaxCheck;
+        return this;
+    }
+
     public List<String> buildArgs() throws IOException {
         List<String> l = new ArrayList<>(Arrays.asList("ansible-playbook", "-i", inventory, playbook));
 
@@ -147,6 +153,10 @@ public class PlaybookArgsBuilder {
 
         if (check) {
             l.add("--check");
+        }
+
+        if (syntaxCheck) {
+            l.add("--syntax-check");
         }
 
         if (verboseLevel > 0) {

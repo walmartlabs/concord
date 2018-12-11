@@ -79,6 +79,8 @@ public enum TaskParams {
 
     STATS_FILE_NAME("ansible_stats.json"),
 
+    SYNTAX_CHECK_KEY("syntaxCheck"),
+
     TAGS_KEY("tags"),
 
     USER_KEY("user"),

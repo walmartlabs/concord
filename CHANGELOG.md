@@ -6,6 +6,8 @@
 
 - concord-console: ability to specify the entry point when starting
 a process;
+- ansible: new `syntaxCheck` option to run
+`ansible-playbook --syntax-check`;
 - ansible: new `check` option to run `ansible-playbook --check`.
 
 ### Changed
