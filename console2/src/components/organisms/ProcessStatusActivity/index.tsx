@@ -164,6 +164,8 @@ class ProcessStatusActivity extends React.Component<Props> {
                         <ProcessActionList instanceId={instanceId} forms={forms} />
                     </>
                 )}
+                
+                <AnsibleStatsActivity instanceId={instanceId} />
 
                 {process &&
                     elementEvents.length > 0 && (
@@ -178,7 +180,6 @@ class ProcessStatusActivity extends React.Component<Props> {
                         </>
                     )}
 
-                <AnsibleStatsActivity instanceId={instanceId} />
             </>
         );
     }

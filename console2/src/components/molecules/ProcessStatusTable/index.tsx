@@ -134,7 +134,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                         definition={true}
                         color={getStatusSemanticColor(data.status)}
                         style={{ height: '100%' }}>
-                        <Table.Body>
+                        <Table.Body style={{ wordBreak: 'break-all' }}>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Project

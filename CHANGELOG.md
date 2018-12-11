@@ -8,6 +8,9 @@
 
 ### Changed
 
+- concord-console: prevent table overflow on process detail table;
+- concord-console: move the Ansible stats table above the flow event
+table;
 - concord-server: fixed the host status calculation in the Ansible
 event processor. Now `SKIPPED` is correctly overwritten by other
 statuses in multi-step plays.
