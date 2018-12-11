@@ -58,6 +58,7 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
                     orgName={orgName}
                     projectName={projectName}
                     repoName={row.name}
+                    repoURL={row.url}
                 />
             </Table.Cell>
         </Table.Row>

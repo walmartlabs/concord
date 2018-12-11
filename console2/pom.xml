@@ -48,7 +48,7 @@
                         </goals>
                         <configuration>
                             <skip>${skipNpm}</skip>
-                            <arguments>install</arguments>
+                            <arguments>ci</arguments>
                         </configuration>
                     </execution>
                     <execution>

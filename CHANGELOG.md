@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: ability to specify the entry point when starting
+a process;
 - ansible: new `check` option to run `ansible-playbook --check`.
 
 ### Changed

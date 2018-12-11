@@ -34,11 +34,12 @@ interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
     repoName: ConcordKey;
+    repoURL: string;
 }
 
 class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
     render() {
-        const { orgName, projectName, repoName } = this.props;
+        const { orgName, projectName, repoName, repoURL } = this.props;
 
         return (
             <Dropdown icon="ellipsis vertical">
@@ -47,6 +48,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         orgName={orgName}
                         projectName={projectName}
                         repoName={repoName}
+                        repoURL={repoURL}
                         trigger={(onClick) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="play" color="blue" />

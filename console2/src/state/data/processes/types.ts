@@ -62,6 +62,7 @@ export interface StartProcessRequest extends Action {
     orgName: ConcordKey;
     projectName: ConcordKey;
     repoName: ConcordKey;
+    entryPoint: string;
 }
 
 export interface RestoreProcessRequest extends Action {

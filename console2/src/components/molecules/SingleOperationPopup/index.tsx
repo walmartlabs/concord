@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Button, Header, Modal } from 'semantic-ui-react';
+import { Button, Header, Modal, Icon, SemanticICONS, SemanticCOLORS } from 'semantic-ui-react';
 
 import { RequestError, RequestErrorData } from '../../../api/common';
 import { RequestErrorMessage } from '../../molecules';
@@ -35,6 +35,12 @@ interface Props {
 
     title: string;
     introMsg: React.ReactNode;
+    icon?: SemanticICONS;
+    iconColor?: SemanticCOLORS;
+    customStyle?: object; // CSS Object
+
+    customNo?: string;
+    customYes?: string;
 
     running: boolean;
     runningMsg?: React.ReactNode;
@@ -101,7 +107,7 @@ class SingleOperationPopup extends React.Component<Props, State> {
     }
 
     renderActions() {
-        const { success, error, running, onDone, onDoneElements } = this.props;
+        const { success, error, running, onDone, onDoneElements, customNo, customYes } = this.props;
 
         if (success) {
             return (
@@ -132,25 +138,31 @@ class SingleOperationPopup extends React.Component<Props, State> {
 
         return (
             <>
-                <Button color="green" disabled={running} onClick={() => this.handleClose()}>
-                    No
+                <Button basic={true} disabled={running} onClick={() => this.handleClose()}>
+                    {customNo || 'No'}
                 </Button>
-                <Button color="red" loading={running} onClick={() => this.handleConfirm()}>
-                    Yes
+                <Button color="blue" loading={running} onClick={() => this.handleConfirm()}>
+                    {customYes || 'Yes'}
                 </Button>
             </>
         );
     }
 
     render() {
-        const { trigger, title } = this.props;
+        const { trigger, title, icon, iconColor, customStyle = {} } = this.props;
 
         return (
             <Modal
+                style={customStyle}
                 open={this.state.open}
                 dimmer="inverted"
                 trigger={trigger(() => this.handleOpen())}>
-                <Header icon="warning sign" content={title} />
+                {/* TODO: Header padding CSS */}
+                <Header>
+                    <Icon name={icon} color={iconColor || 'black'} />
+                    <Header.Content>{title}</Header.Content>
+                </Header>
+
                 <Modal.Content>{this.renderContent()}</Modal.Content>
                 <Modal.Actions>{this.renderActions()}</Modal.Actions>
             </Modal>

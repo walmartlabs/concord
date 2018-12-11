@@ -96,13 +96,15 @@ export interface ProcessEntry {
 export const start = (
     orgName: ConcordKey,
     projectName: ConcordKey,
-    repoName: ConcordKey
+    repoName: ConcordKey,
+    entryPoint: string
 ): Promise<StartProcessResponse> => {
     const data = new FormData();
 
     data.append('org', orgName);
     data.append('project', projectName);
     data.append('repo', repoName);
+    data.append('entryPoint', entryPoint);
 
     const opts = {
         method: 'POST',
