@@ -38,6 +38,7 @@ import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.api.JavaDelegate;
 import io.takari.bpm.el.DefaultExpressionManager;
+import io.takari.bpm.el.ExecutionContextVariableResolver;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.event.EventStorage;
 import io.takari.bpm.form.*;
@@ -52,6 +53,8 @@ import io.takari.bpm.task.UserTaskHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.el.CompositeELResolver;
+import javax.el.ELResolver;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
@@ -96,7 +99,18 @@ public class EngineFactory {
         ExpressionManager expressionManager = new DefaultExpressionManager(
                 new String[]{InternalConstants.Context.CONTEXT_KEY, InternalConstants.Context.EXECUTION_CONTEXT_KEY},
                 new TaskResolver(taskRegistry),
-                new InjectVariableELResolver());
+                new InjectVariableELResolver()) {
+
+            @Override
+            protected ELResolver createResolver(ExecutionContext ctx) {
+                CompositeELResolver cr = new CompositeELResolver();
+                cr.add(new ExecutionContextVariableResolver(ctx));
+                for (ELResolver r : resolvers) {
+                    cr.add(r);
+                }
+                return cr;
+            }
+        };
 
         ProtectedVarContext protectedVarContext = new ProtectedVarContext(PolicyEngineHolder.INSTANCE.getEngine());
         ConcordExecutionContextFactory contextFactory = new ConcordExecutionContextFactory(expressionManager, protectedVarContext);

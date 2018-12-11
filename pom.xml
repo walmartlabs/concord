@@ -62,7 +62,7 @@
 
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.341</aws.version>
-        <bpm.version>0.50.0</bpm.version>
+        <bpm.version>0.51.0</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.compress.version>1.17</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
