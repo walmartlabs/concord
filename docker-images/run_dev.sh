@@ -3,7 +3,7 @@
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ -z ${VERSION} ]]; then
-    VERSION="0.92.0"
+    VERSION="0.99.1"
 fi
 echo "VERSION: ${VERSION}"
 
@@ -63,4 +63,5 @@ docker run -d \
 --link server \
 -p 8080:8080 \
 -v /tmp/concord/console/logs:/opt/concord/logs \
+-v "${BASE_DIR}/console.conf:/opt/concord/console/nginx/app.conf" \
 walmartlabs/concord-console:${VERSION}

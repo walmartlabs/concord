@@ -58,38 +58,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>install node and npm</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${skipNodeInstall}</skip>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm ci</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${skipNpmInstall}</skip>
-                            <arguments>${npm.installCmd}</arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <installDirectory>target</installDirectory>
-                    <nodeDownloadRoot>${node.downloadRoot}</nodeDownloadRoot>
-                    <nodeVersion>v${node.version}</nodeVersion>
-                    <workingDirectory>${basedir}</workingDirectory>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>

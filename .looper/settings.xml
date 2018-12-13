@@ -80,9 +80,4 @@
             </properties>
         </profile>
     </profiles>
-
-    <activeProfiles>
-        <activeProfile>looper</activeProfile>
-        <activeProfile>walmart</activeProfile>
-    </activeProfiles>
 </settings>
