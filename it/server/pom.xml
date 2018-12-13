@@ -23,6 +23,7 @@
         <docker.host.addr>localhost</docker.host.addr>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
+        <tmp.dir>${java.io.tmpdir}</tmp.dir>
     </properties>
 
     <dependencies>
@@ -166,7 +167,7 @@
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
-                        <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
+                        <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
                         <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
                         <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
@@ -264,7 +265,7 @@
                                     <type>pom</type>
                                 </artifactItem>
                             </artifactItems>
-                            <outputDirectory>${java.io.tmpdir}</outputDirectory>
+                            <outputDirectory>${tmp.dir}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -330,7 +331,7 @@
                                         <volumes>
                                             <bind>
                                                 <!-- to share files between tests and the server -->
-                                                <volume>${java.io.tmpdir}:${java.io.tmpdir}</volume>
+                                                <volume>${tmp.dir}:${tmp.dir}</volume>
                                                 <!-- allows the server to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
                                                 <!-- provide the server's cfg -->
@@ -339,7 +340,7 @@
                                         </volumes>
                                         <env>
                                             <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
-                                            <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
+                                            <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
                                             <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
@@ -366,7 +367,7 @@
                                         <volumes>
                                             <bind>
                                                 <!-- to share files between process containers -->
-                                                <volume>${java.io.tmpdir}:${java.io.tmpdir}</volume>
+                                                <volume>${tmp.dir}:${tmp.dir}</volume>
                                                 <!-- allows the agent to pick up local dependencies -->
                                                 <volume>${deps.dir}:${deps.dir}:ro</volume>
                                                 <!-- share host artifacts -->
@@ -377,7 +378,7 @@
                                         <env>
                                             <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
                                             <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
-                                            <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
+                                            <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
                                             <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
                                             <SERVER_WEBSOCKET_URL>ws://localhost:${it.server.port}/websocket</SERVER_WEBSOCKET_URL>

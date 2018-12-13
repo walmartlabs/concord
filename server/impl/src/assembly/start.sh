@@ -1,18 +1,18 @@
 #!/bin/bash
 
-APP_DIR="/opt/concord/server"
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 MAIN_CLASS="com.walmartlabs.concord.server.Main"
 if [[ "${CONCORD_COMMAND}" = "migrateDb" ]]; then
     MAIN_CLASS="com.walmartlabs.concord.server.MigrateDB"
 fi
 
-CFG_FILE="";
-if [[ ! -z "${CONCORD_CFG_FILE}" ]]; then
-    CFG_FILE="-Dollie.conf=${CONCORD_CFG_FILE}"
+if [[ -z "${CONCORD_CFG_FILE}" ]]; then
+    CONCORD_CFG_FILE="${BASE_DIR}/default.conf"
 fi
+echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
 
-GC_LOG_DIR=${GC_LOG_DIR:-"${APP_DIR}/logs/gc"}
+GC_LOG_DIR=${GC_LOG_DIR:-"${BASE_DIR}/logs/gc"}
 mkdir -p ${GC_LOG_DIR}
 echo "GC logs: ${GC_LOG_DIR}"
 
@@ -40,6 +40,6 @@ ${CONCORD_JAVA_OPTS} \
 -server \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
-${CFG_FILE} \
--cp "${APP_DIR}/*" \
+-Dollie.conf=${CONCORD_CFG_FILE} \
+-cp "${BASE_DIR}/lib/*" \
 "${MAIN_CLASS}"

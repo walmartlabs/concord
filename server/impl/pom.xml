@@ -419,29 +419,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>run</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <executable>java</executable>
-                    <arguments>
-                        <argument>-classpath</argument>
-                        <classpath />
-                        <argument>com.walmartlabs.concord.server.Main</argument>
-                    </arguments>
-                    <environmentVariables>
-                        <LDAP_CFG>${user.home}/.concord/ldap.properties</LDAP_CFG>
-                    </environmentVariables>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>com.github.kongchen</groupId>
                 <artifactId>swagger-maven-plugin</artifactId>
                 <executions>

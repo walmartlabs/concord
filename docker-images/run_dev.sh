@@ -2,12 +2,12 @@
 
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ -z $VERSION ]; then
+if [[ -z ${VERSION} ]]; then
     VERSION="0.92.0"
 fi
 echo "VERSION: ${VERSION}"
 
-if [ -z $CONCORD_CFG_FILE ]; then
+if [[ -z ${CONCORD_CFG_FILE} ]]; then
     CONCORD_CFG_FILE=${BASE_DIR}/server.conf
 fi
 echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
@@ -34,7 +34,6 @@ docker run -d \
 --link db \
 --name server \
 -p 8001:8001 \
--v /tmp:/tmp \
 -v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
 -e "CONCORD_CFG_FILE=${CONCORD_CFG_FILE}" \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
@@ -51,17 +50,17 @@ echo "done!"
 docker run -d \
 --name agent \
 --link server \
--v /tmp:/tmp \
 -v "${HOME}/.m2/repository:/home/concord/.m2/repository" \
 -v "${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro" \
 -e 'CONCORD_MAVEN_CFG=/opt/concord/conf/mvn.json' \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 -e 'SERVER_API_BASE_URL=http://server:8001' \
+-e 'SERVER_WEBSOCKET_URL=ws://server:8001/websocket' \
 walmartlabs/concord-agent:${VERSION}
 
 docker run -d \
 --name console \
 --link server \
 -p 8080:8080 \
--v /tmp/console/logs:/opt/concord/logs \
+-v /tmp/concord/console/logs:/opt/concord/logs \
 walmartlabs/concord-console:${VERSION}

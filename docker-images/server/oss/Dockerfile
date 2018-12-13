@@ -8,7 +8,6 @@ EXPOSE 8001
 RUN yum -y install git && yum clean all
 
 ADD target/dist/server.tar.gz /opt/concord/server/
-COPY src/main/docker/start.sh /opt/concord/server/
 
 RUN chown -R concord:concord /opt/concord
 
