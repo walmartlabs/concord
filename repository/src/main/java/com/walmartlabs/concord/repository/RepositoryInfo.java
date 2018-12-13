@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.repository;
+package com.walmartlabs.concord.repository;
 
 /*-
  * *****
@@ -23,9 +23,7 @@ package com.walmartlabs.concord.server.repository;
 public class RepositoryInfo {
 
     private final String commitId;
-
     private final String message;
-
     private final String author;
 
     public RepositoryInfo(String commitId, String message, String author) {

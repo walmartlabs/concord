@@ -42,6 +42,7 @@
         <module>policy-engine</module>
         <module>dependency-manager</module>
         <module>project-model</module>
+        <module>repository</module>
         <module>server</module>
         <module>client</module>
         <module>runner</module>

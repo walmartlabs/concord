@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 
 @Named
 public class StateImportingProcessor implements PayloadProcessor {
@@ -50,22 +51,20 @@ public class StateImportingProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        stateManager.replacePath(processKey, workspace, (this::filter));
+        Snapshot snapshot = payload.getHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT);
+        stateManager.replacePath(processKey, workspace, (p, attrs) -> filter(p, attrs, snapshot));
 
         return chain.process(payload);
     }
 
-    private boolean filter(Path p) {
+    private boolean filter(Path p, BasicFileAttributes attrs, Snapshot snapshot) {
         if (p.isAbsolute()) {
             log.warn("filter ['{}'] -> can't filter absolute paths", p);
             return true;
         }
 
-        String n = p.toString();
-        for (String i : InternalConstants.Files.IGNORED_FILES) {
-            if (n.matches(i)) {
-                return false;
-            }
+        if (snapshot != null) {
+            return snapshot.isModified(p, attrs);
         }
 
         return true;

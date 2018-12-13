@@ -20,7 +20,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.repository.Repository;
+import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -38,12 +39,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
-
-import static com.walmartlabs.concord.server.repository.RepositoryManager.DEFAULT_BRANCH;
 
 /**
  * Adds repository files to a payload.
@@ -57,6 +54,8 @@ public class RepositoryProcessor implements PayloadProcessor {
      * Repository effective parameters.
      */
     public static final HeaderKey<RepositoryInfo> REPOSITORY_INFO_KEY = HeaderKey.register("_repositoryInfo", RepositoryInfo.class);
+
+    public static final HeaderKey<Snapshot> REPOSITORY_SNAPSHOT = HeaderKey.register("_repositorySnapshot", Snapshot.class);
 
     private final RepositoryDao repositoryDao;
     private final RepositoryManager repositoryManager;
@@ -74,7 +73,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
     @Override
     @WithTimer
-    public Payload process(Chain chain, Payload payload) {
+    public Payload process(Chain chain, final Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
@@ -86,37 +85,30 @@ public class RepositoryProcessor implements PayloadProcessor {
         logManager.info(processKey, "Copying the repository's data: {}", repo);
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
-        com.walmartlabs.concord.server.repository.RepositoryInfo r = copyRepositoryData(processKey, projectId, repo, dst);
-        String branch = Optional.ofNullable(repo.getBranch()).orElse(DEFAULT_BRANCH);
 
-        CommitInfo ci = null;
-        if (r != null) {
-            ci = new CommitInfo(r.getCommitId(), r.getAuthor(), r.getMessage());
-        }
-
-        RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), branch, repo.getCommitId(), ci);
-        payload = payload.putHeader(REPOSITORY_INFO_KEY, i);
-
-        return chain.process(payload);
-    }
-
-    private com.walmartlabs.concord.server.repository.RepositoryInfo copyRepositoryData(ProcessKey processKey, UUID projectId, RepositoryEntry repo, Path dst) {
-        final String TO_SKIP_GIT_FILES = "^(\\.git|\\.gitmodules|\\.gitignore)$";
-
-        return repositoryManager.withLock(repo.getUrl(), () -> {
+        Payload newPayload = repositoryManager.withLock(repo.getUrl(), () -> {
             try {
-                Path src = repositoryManager.fetch(projectId, repo);
+                Repository repository = repositoryManager.fetch(projectId, repo);
+                Snapshot snapshot = repository.export(dst);
+                com.walmartlabs.concord.repository.RepositoryInfo info = repository.info();
+                String branch = repository.branch();
 
-                IOUtils.copy(src, dst, TO_SKIP_GIT_FILES, StandardCopyOption.REPLACE_EXISTING);
-                log.info("process ['{}'] -> copy from {} to {}", processKey, src, dst);
+                CommitInfo ci = null;
+                if (info != null) {
+                    ci = new CommitInfo(info.getCommitId(), info.getAuthor(), info.getMessage());
+                }
 
-                return repositoryManager.getInfo(repo, src);
+                RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), branch, repo.getCommitId(), ci);
+                return payload.putHeader(REPOSITORY_INFO_KEY, i)
+                        .putHeader(REPOSITORY_SNAPSHOT, snapshot);
             } catch (Exception e) {
                 log.error("process ['{}'] -> repository error", processKey, e);
-                logManager.error(processKey, "Error while copying a repository: " + repo.getUrl(), e);
-                throw new ProcessException(processKey, "Error while copying a repository: " + repo.getUrl(), e);
+                logManager.error(processKey, "Error while processing a repository: " + repo.getUrl(), e);
+                throw new ProcessException(processKey, "Error while processing a repository: " + repo.getUrl(), e);
             }
         });
+
+        return chain.process(newPayload);
     }
 
     @SuppressWarnings("unchecked")

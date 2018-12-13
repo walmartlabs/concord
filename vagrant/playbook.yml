@@ -61,11 +61,14 @@
       path: /opt/concord/conf
       state: directory
 
-  - name: Copy the LDAP configuration file
+  - name: Copy the configuration files
     become: true
     copy:
-      src: server.conf
-      dest: /opt/concord/conf/server.conf
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+    loop:
+    - { src: "server.conf", dest: "/opt/concord/conf/server.conf" }
+    - { src: "agent.conf", dest: "/opt/concord/conf/agent.conf" }
 
   - name: Start the database
     become: true
@@ -130,9 +133,11 @@
       restart_policy: always
       links:
       - server
+      volumes:
+        - /opt/concord/conf:/opt/concord/conf:ro
       env:
+        CONCORD_CFG_FILE: /opt/concord/conf/agent.conf
         CONCORD_DOCKER_LOCAL_MODE: false
-        SERVER_API_BASE_URL: "http://server:8001"
 
   - name: Copy the LDAP user file
     copy:

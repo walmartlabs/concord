@@ -12,6 +12,8 @@ a process;
 
 ### Changed
 
+- concord-server, concord-agent: perform `git clone` on the Agent,
+keep only the changes in the DB;
 - bpm: updated to 0.51.0, fixed the resolving order of tasks and
 variables. Now flow variables can shadow the registered tasks;
 - concord-console: prevent table overflow on process detail table;

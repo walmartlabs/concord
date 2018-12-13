@@ -198,14 +198,22 @@ public final class IOUtils {
     }
 
     public static void copy(Path src, Path dst) throws IOException {
-        copy(src, dst, null, new CopyOption[0]);
+        copy(src, dst, null, null, new CopyOption[0]);
+    }
+
+    public static void copy(Path src, Path dst, CopyOption... options) throws IOException {
+        copy(src, dst, null, null, options);
     }
 
     public static void copy(Path src, Path dst, String skipContents, CopyOption... options) throws IOException {
-        _copy(1, src, src, dst, skipContents, options);
+        _copy(1, src, src, dst, skipContents, null, options);
     }
 
-    private static void _copy(int depth, Path root, Path src, Path dst, String skipContents, CopyOption... options) throws IOException {
+    public static void copy(Path src, Path dst, String skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
+        _copy(1, src, src, dst, skipContents, visitor, options);
+    }
+
+    private static void _copy(int depth, Path root, Path src, Path dst, String skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
         if (depth >= MAX_COPY_DEPTH) {
             throw new IOException("Too deep: " + src);
         }
@@ -243,7 +251,7 @@ public final class IOUtils {
                     }
 
                     if (Files.isDirectory(a)) {
-                        _copy(depth + 1, root, a, b, skipContents);
+                        _copy(depth + 1, root, a, b, skipContents, visitor, options);
                         return FileVisitResult.CONTINUE;
                     }
                 }
@@ -251,6 +259,10 @@ public final class IOUtils {
                 Path parent = b.getParent();
                 if (!Files.exists(parent)) {
                     Files.createDirectories(parent);
+                }
+
+                if (visitor != null) {
+                    visitor.visit(a, b, attrs);
                 }
 
                 Files.copy(a, b, options);

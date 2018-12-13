@@ -207,10 +207,11 @@ public class LandingPageResource extends AbstractDao implements Resource {
     }
 
     private void refresh(RepositoryEntry r) {
-        Path lpMetaFile = repositoryManager.fetch(r.getProjectId(), r)
-                .resolve(LP_META_FILE_NAME);
-
-        LandingEntry le = loadEntry(lpMetaFile);
+        LandingEntry le = repositoryManager.withLock(r.getUrl(), () ->  {
+            Path lpMetaFile = repositoryManager.fetch(r.getProjectId(), r).path()
+                            .resolve(LP_META_FILE_NAME);
+            return loadEntry(lpMetaFile);
+        });
 
         tx(tx -> {
             landingDao.delete(tx, r.getProjectId(), r.getId());

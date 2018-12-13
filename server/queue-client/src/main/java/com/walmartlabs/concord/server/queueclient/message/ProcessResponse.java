@@ -28,25 +28,64 @@ import java.util.UUID;
 public class ProcessResponse extends Message {
 
     private final UUID processId;
+    private final String orgName;
+    private final String repoUrl;
+    private final String repoPath;
+    private final String commitId;
+    private final String secretName;
 
     @JsonCreator
     public ProcessResponse(
             @JsonProperty("correlationId") long correlationId,
-            @JsonProperty("processId") UUID processId) {
+            @JsonProperty("processId") UUID processId,
+            @JsonProperty("orgName") String orgName,
+            @JsonProperty("repoUrl") String repoUrl,
+            @JsonProperty("repoPath") String repoPath,
+            @JsonProperty("commitId") String commitId,
+            @JsonProperty("secretName") String secretName) {
         super(MessageType.PROCESS_RESPONSE);
         setCorrelationId(correlationId);
         this.processId = processId;
+        this.orgName = orgName;
+        this.repoUrl = repoUrl;
+        this.repoPath = repoPath;
+        this.commitId = commitId;
+        this.secretName = secretName;
     }
 
     public UUID getProcessId() {
         return processId;
     }
 
+    public String getOrgName() {
+        return orgName;
+    }
+
+    public String getRepoUrl() {
+        return repoUrl;
+    }
+
+    public String getRepoPath() {
+        return repoPath;
+    }
+
+    public String getCommitId() {
+        return commitId;
+    }
+
+    public String getSecretName() {
+        return secretName;
+    }
+
     @Override
     public String toString() {
         return "ProcessResponse{" +
-                "correlationId='" + getCorrelationId() + "', " +
-                "processId='" + processId + "'" +
+                "processId=" + processId +
+                ", orgName=" + orgName +
+                ", repoUrl='" + repoUrl + '\'' +
+                ", repoPath='" + repoPath + '\'' +
+                ", commitId='" + commitId + '\'' +
+                ", secretName='" + secretName + '\'' +
                 '}';
     }
 }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.repository;
 
 /*-
  * *****
@@ -20,14 +20,20 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Secret;
 
-public class ExecutionException extends Exception {
+import java.io.IOException;
+import java.nio.file.Path;
 
-    public ExecutionException(String message) {
-        super(message);
-    }
+public interface RepositoryProvider {
 
-    public ExecutionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    String getBranchOrDefault(String branch);
+
+    boolean canHandle(String url);
+
+    void fetch(String uri, String branch, String commitId, Secret secret, Path dst);
+
+    Snapshot export(Path src, Path dst) throws IOException;
+
+    RepositoryInfo getInfo(Path path);
 }

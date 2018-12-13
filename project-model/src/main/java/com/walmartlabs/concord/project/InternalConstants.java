@@ -90,11 +90,6 @@ public final class InternalConstants extends Constants {
         public static final String RESUME_MARKER_FILE_NAME = "_resume";
 
         /**
-         * Files, that won't be added to a payload or saved in the state store.
-         */
-        public static final String[] IGNORED_FILES = {"^\\.git.*", ".*/\\.git/.*"};
-
-        /**
          * File which contains data of process' OUT variables.
          */
         public static final String OUT_VALUES_FILE_NAME = "out.json";

@@ -23,13 +23,14 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.client.ProcessApi;
+import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.queueclient.QueueClientConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 public class ServerConnector implements MaintenanceModeListener {
@@ -83,9 +84,12 @@ public class ServerConnector implements MaintenanceModeListener {
 
         ProcessApiClient processApiClient = new ProcessApiClient(cfg, processApi);
 
+        RepositoryManager repositoryManager = new RepositoryManager(cfg, new SecretClient(apiClient));
+
         for (int i = 0; i < workersCount; i++) {
             workers[i] = new Worker(queueClient, processApiClient, executionManager,
-                    cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities());
+                    repositoryManager,
+                    cfg.getPayloadDir(), cfg.getLogMaxDelay(), cfg.getPollInterval(), cfg.getCapabilities());
 
             workerThreads[i] = new Thread(workers[i], "worker-" + i);
         }

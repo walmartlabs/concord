@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.common;
 
 /*-
  * *****
@@ -20,14 +20,10 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 
-public class ExecutionException extends Exception {
+public interface FileVisitor {
 
-    public ExecutionException(String message) {
-        super(message);
-    }
-
-    public ExecutionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    void visit(Path sourceFile, Path dstFile, BasicFileAttributes attrs);
 }

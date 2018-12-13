@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.project;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -36,8 +37,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -173,10 +172,12 @@ public class ProjectRepositoryManager {
 
     public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) {
         try {
-            Path src = repositoryManager.fetch(projectId, repositoryEntry);
-            ProjectDefinition pd = loader.loadProject(src);
+            ProjectDefinition pd = repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
+                Repository repository = repositoryManager.fetch(projectId, repositoryEntry);
+                return loader.loadProject(repository.path());
+            });
             ProjectValidator.validate(pd);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RepositoryValidationException("Validation failed: " + repositoryEntry.getName(), e);
         }
     }

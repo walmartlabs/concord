@@ -23,16 +23,14 @@ package com.walmartlabs.concord.runner;
 import com.google.gson.reflect.TypeToken;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.SecretEntry;
-import com.walmartlabs.concord.client.SecretsApi;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.sdk.SecretService;
 
 import javax.inject.Inject;
@@ -147,34 +145,8 @@ public class SecretServiceImpl implements SecretService {
         return new String(r.getData());
     }
 
-    private <T> T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
-        Map<String, Object> params = new HashMap<>();
-        String pwd = password;
-        if (password == null) {
-            pwd = ""; // NOSONAR
-        }
-        params.put("storePassword", pwd);
-
-        SecretsApi api = new SecretsApi(clientFactory.create(ctx));
-
-        ApiResponse<File> r = null;
-        try {
-            String path = "/api/v1/org/" + assertOrgName(ctx, orgName) + "/secret/" + secretName + "/data";
-
-            r = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL,
-                    () -> ClientUtils.postData(api.getApiClient(), path, params, File.class));
-            if (r.getData() == null) {
-                throw new IllegalArgumentException("Secret not found: " + secretName);
-            }
-
-            assertSecretType(type, r);
-
-            return readSecret(type, Files.readAllBytes(r.getData().toPath()));
-        } finally {
-            if (r != null && r.getData() != null) {
-                Files.delete(r.getData().toPath());
-            }
-        }
+    private <T extends Secret > T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
+        return new SecretClient(clientFactory.create(ctx)).getData(assertOrgName(ctx, orgName), secretName, password, type);
     }
 
     @SuppressWarnings("unchecked")
@@ -189,32 +161,11 @@ public class SecretServiceImpl implements SecretService {
                 .orElseThrow(() -> new IllegalArgumentException("Organization name not specified"));
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> T readSecret(SecretEntry.TypeEnum type, byte[] bytes) {
-        switch (type) {
-            case DATA:
-                return (T) new BinaryDataSecret(bytes);
-            case KEY_PAIR:
-                return (T) KeyPair.deserialize(bytes);
-            case USERNAME_PASSWORD:
-                return (T) UsernamePassword.deserialize(bytes);
-            default:
-                throw new IllegalArgumentException("unknown secret type: " + type);
-        }
-    }
-
     private static Path assertTempDir(Path baseDir) throws IOException {
         Path p = baseDir.resolve(".tmp");
         if (!Files.exists(p)) {
             Files.createDirectories(p);
         }
         return p;
-    }
-
-    private static void assertSecretType(SecretEntry.TypeEnum expected, ApiResponse<File> response) {
-        SecretEntry.TypeEnum actual = SecretEntry.TypeEnum.valueOf(ClientUtils.getHeader(InternalConstants.Headers.SECRET_TYPE, response));
-        if (expected != actual) {
-            throw new IllegalArgumentException("Expected " + expected + " got " + actual);
-        }
     }
 }

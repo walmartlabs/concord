@@ -34,13 +34,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -57,6 +57,8 @@ public class Worker implements Runnable {
     private final QueueClient queueClient;
     private final ProcessApiClient processApiClient;
     private final ExecutionManager executionManager;
+    private final RepositoryManager repositoryManager;
+    private final Path payloadDir;
     private final long logSteamMaxDelay;
     private final long pollInterval;
     private final Map<String, Object> capabilities;
@@ -66,6 +68,8 @@ public class Worker implements Runnable {
     public Worker(QueueClient queueClient,
                   ProcessApiClient processApiClient,
                   ExecutionManager executionManager,
+                  RepositoryManager repositoryManager,
+                  Path payloadDir,
                   long logSteamMaxDelay,
                   long pollInterval,
                   Map<String, Object> capabilities) {
@@ -74,6 +78,8 @@ public class Worker implements Runnable {
         this.processApiClient = processApiClient;
 
         this.executionManager = executionManager;
+        this.repositoryManager = repositoryManager;
+        this.payloadDir = payloadDir;
         this.logSteamMaxDelay = logSteamMaxDelay;
         this.pollInterval = pollInterval;
         this.capabilities = capabilities;
@@ -121,10 +127,23 @@ public class Worker implements Runnable {
         }
 
         UUID instanceId = response.getProcessId();
+        Path workDir = IOUtils.createTempDir(payloadDir, "workDir");
+        if (response.getRepoUrl() != null && response.getCommitId() != null) {
+            repositoryManager.export(response.getOrgName(), response.getRepoUrl(), response.getCommitId(), response.getRepoPath(), response.getSecretName(), workDir);
+        }
+
         File payload = withRetry(PAYLOAD_DOWNLOAD_MAX_RETRIES, PAYLOAD_DOWNLOAD_RETRY_DELAY,
                 () -> processApiClient.downloadState(instanceId));
 
-        return new JobEntry(instanceId, payload.toPath());
+        try {
+            IOUtils.unzip(payload.toPath(), workDir, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while unpacking a payload", e);
+        } finally {
+            Files.delete(payload.toPath());
+        }
+
+        return new JobEntry(instanceId, workDir);
     }
 
     private void cleanup(JobEntry job) {
@@ -163,7 +182,7 @@ public class Worker implements Runnable {
         JobInstance i;
         try {
             i = executionManager.start(instanceId, "n/a", payload);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             log.error("execute ['{}', '{}'] -> start error", instanceId, payload, e);
             return;
         }

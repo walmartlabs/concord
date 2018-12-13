@@ -49,6 +49,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -280,14 +281,14 @@ public class ProcessStateManager extends AbstractDao {
      */
     @WithTimer
     public void importPath(ProcessKey processKey, String path, Path src) {
-        tx(tx -> importPath(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path, src, f -> true));
+        tx(tx -> importPath(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path, src, (p, attrs) -> true));
     }
 
     /**
      * Imports data from the specified directory or a file replacing the existing data.
      * If the filter function returns {@code false}, the matching file will be skipped.
      */
-    public void replacePath(ProcessKey processKey, Path src, Function<Path, Boolean> filter) {
+    public void replacePath(ProcessKey processKey, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
         UUID instanceId = processKey.getInstanceId();
         Timestamp instanceCreatedAt = processKey.getCreatedAt();
 
@@ -297,7 +298,7 @@ public class ProcessStateManager extends AbstractDao {
         });
     }
 
-    private void importPath(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path, Path src, Function<Path, Boolean> filter) {
+    private void importPath(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
         String prefix = fixPath(path);
 
         String sql = tx.insertInto(PROCESS_STATE)
@@ -311,7 +312,7 @@ public class ProcessStateManager extends AbstractDao {
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     Path p = src.relativize(file);
 
-                    if (!filter.apply(p)) {
+                    if (!filter.apply(p, attrs)) {
                         return FileVisitResult.CONTINUE;
                     }
 

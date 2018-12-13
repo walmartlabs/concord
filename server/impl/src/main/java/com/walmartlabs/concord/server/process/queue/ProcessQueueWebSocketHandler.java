@@ -21,7 +21,10 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.server.PeriodicTask;
-import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
@@ -34,23 +37,29 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Named
 @Singleton
 public class ProcessQueueWebSocketHandler extends PeriodicTask {
 
-    private static final long POLL_DELAY = 1000; // 1 sec
-    private static final long ERROR_DELAY = 1 * 60 * 1000L; // 1 min
+    private static final long POLL_DELAY = TimeUnit.SECONDS.toMillis(1);
+    private static final long ERROR_DELAY = TimeUnit.MINUTES.toMillis(1);
 
     private final WebSocketChannelManager channelManager;
     private final ProcessManager processManager;
+    private final OrganizationDao organizationDao;
+    private final RepositoryDao repositoryDao;
     private final LogManager logManager;
 
     @Inject
-    public ProcessQueueWebSocketHandler(WebSocketChannelManager channelManager, ProcessManager processManager, LogManager logManager) {
+    public ProcessQueueWebSocketHandler(WebSocketChannelManager channelManager, ProcessManager processManager,
+                                        OrganizationDao organizationDao, RepositoryDao repositoryDao, LogManager logManager) {
         super(POLL_DELAY, ERROR_DELAY);
         this.channelManager = channelManager;
         this.processManager = processManager;
+        this.organizationDao = organizationDao;
+        this.repositoryDao = repositoryDao;
         this.logManager = logManager;
     }
 
@@ -62,11 +71,26 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
         }
 
         requests.forEach((channel, req) -> {
-            ProcessKey processKey = processManager.nextPayload(req.getCapabilities());
-            if (processKey != null) {
-                channelManager.sendResponse(channel.getChannelId(), new ProcessResponse(req.getCorrelationId(), processKey.getInstanceId()));
-                logManager.info(processKey, "Acquired by: " + channel.getInfo());
+            ProcessQueueDao.ProcessItem item = processManager.nextProcess(req.getCapabilities());
+            if (item == null) {
+                return;
             }
+            String orgName = null;
+            String secret = null;
+            if (item.getRepoId() != null) {
+                RepositoryEntry repository = repositoryDao.get(item.getRepoId());
+                if (repository != null) {
+                    secret = repository.getSecretName();
+                }
+            }
+            if (item.getOrgId() != null) {
+                orgName = organizationDao.get(item.getOrgId()).getName();
+            }
+
+            channelManager.sendResponse(channel.getChannelId(),
+                    new ProcessResponse(req.getCorrelationId(), item.getKey().getInstanceId(),
+                            orgName, item.getRepoUrl(), item.getRepoPath(), item.getCommitId(), secret));
+            logManager.info(item.getKey(), "Acquired by: " + channel.getInfo());
         });
     }
 }

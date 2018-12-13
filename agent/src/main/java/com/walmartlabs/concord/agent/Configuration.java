@@ -20,13 +20,13 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
+import com.typesafe.config.Config;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.ollie.config.ConfigurationProcessor;
+import com.walmartlabs.ollie.config.EnvironmentSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,155 +34,132 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class Configuration {
 
     private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
-    public static final String AGENT_ID_KEY = "AGENT_ID";
-    public static final String SERVER_API_BASE_URL_KEY = "SERVER_API_BASE_URL";
-    public static final String SERVER_WEBSOCKET_URL_KEY = "SERVER_WEBSOCKET_URL";
-    public static final String LOG_DIR_KEY = "AGENT_LOG_DIR";
-    public static final String LOG_MAX_DELAY_KEY = "LOG_MAX_DELAY";
-    public static final String PAYLOAD_DIR_KEY = "AGENT_PAYLOAD_DIR";
-    public static final String JAVA_CMD_KEY = "AGENT_JAVA_CMD";
-    public static final String DEPENDENCY_CACHE_DIR_KEY = "DEPS_CACHE_DIR";
-    public static final String RUNNER_PATH = "RUNNER_PATH";
-    public static final String WORKERS_COUNT_KEY = "WORKERS_COUNT";
-    public static final String MAX_PREFORK_AGE_KEY = "MAX_PREFORK_AGE";
-    public static final String MAX_PREFORK_COUNT_KEY = "MAX_PREFORK_COUNT";
-    public static final String MAX_WEBSOCKET_INACTIVITY_KEY ="MAX_WEBSOCKET_INACTIVITY";
-
-    public static final String DOCKER_HOST_KEY = "DOCKER_HOST";
-    public static final String DOCKER_ORPHAN_SWEEPER_ENABLED_KEY = "DOCKER_ORPHAN_SWEEPER_ENABLED";
-    public static final String DOCKER_ORPHAN_SWEEPER_PERIOD_KEY = "DOCKER_ORPHAN_SWEEPER_PERIOD";
-
-    public static final String RUNNER_SECURITY_MANAGER_ENABLED_KEY = "RUNNER_SECURITY_MANAGER_ENABLED";
-
-    public static final String API_KEY = "API_KEY";
-    public static final String API_VERIFY_SSL_KEY = "API_VERIFY_SSL";
-    public static final String CONNECT_TIMEOUT_KEY = "API_CONNECT_TIMEOUT";
-    public static final String READ_TIMEOUT_KEY = "API_READ_TIMEOUT";
-    public static final String RETRY_COUNT_KEY = "API_RETRY_COUNT";
-    public static final String RETRY_INTERVAL_KEY = "API_RETRY_INTERVAL";
-    public static final String POLL_INTERVAL_KEY = "QUEUE_POLL_INTERVAL";
-
-    public static final String CAPABILITIES_FILE_KEY = "CAPABILITIES_FILE";
-    public static final String USER_AGENT_KEY = "USER_AGENT";
-    public static final String STORE_DEPS_DIR_KEY = "STORE_DEPS_DIR";
-
-    public static final String JAVA_PATH_KEY = "JAVA_PATH";
-
-    /**
-     * As defined in server/db/src/main/resources/com/walmartlabs/concord/server/db/v0.69.0.xml
-     */
-    private static final String DEFAULT_AGENT_API_KEY = "O+JMYwBsU797EKtlRQYu+Q";
-
     private final String agentId;
-    private final String serverApiBaseUrl;
+    private final Map<String, Object> capabilities;
+    private final Path dependencyCacheDir;
+    private final Path dependencyListsDir;
+    private final Path payloadDir;
+
     private final Path logDir;
     private final long logMaxDelay;
-    private final Path payloadDir;
-    private final String agentJavaCmd;
-    private final Path dependencyCacheDir;
-    private final Path runnerPath;
+
     private final int workersCount;
+    private final Path javaPath;
+    private final long pollInterval;
+
     private final long maxPreforkAge;
     private final int maxPreforkCount;
+
+    private final String serverApiBaseUrl;
+    private final String serverWebsocketUrl;
+    private final boolean apiVerifySsl;
+    private final long connectTimeout;
+    private final long readTimeout;
+    private final int retryCount;
+    private final long retryInterval;
+    private final String userAgent;
+    private final long maxWebSocketInactivity;
 
     private final String dockerHost;
     private final boolean dockerOrphanSweeperEnabled;
     private final long dockerOrphanSweeperPeriod;
 
+    private final Path repositoryCacheDir;
+    private final long repositoryLockTimeout;
+
+    private final String repositoryOauthToken;
+    private final boolean shallowClone;
+    private final int repositoryHttpLowSpeedLimit;
+    private final int repositoryHttpLowSpeedTime;
+    private final int repositorySshTimeout;
+    private final int repositorySshTimeoutRetryCount;
+
+
+    private final Path runnerPath;
+    private final String agentJavaCmd;
+
     private final boolean runnerSecurityManagerEnabled;
 
     private final String apiKey;
-    private final boolean apiVerifySsl;
-    private final int readTimeout;
-    private final int connectTimeout;
-    private final int retryCount;
-    private final long retryInterval;
-    private final long pollInterval;
-
-    private final Map<String, Object> capabilities;
-    private final String userAgent;
-
-    private final Path dependencyListsDir;
-
-    private final Path javaPath;
-    private final String serverWebsocketUrl;
-    private final long maxWebSocketInactivity;
 
     @SuppressWarnings("unchecked")
     public Configuration() {
-        try {
-            this.agentId = getEnv(AGENT_ID_KEY, UUID.randomUUID().toString());
+        Config cfg = load("concord-agent");
 
-            this.serverApiBaseUrl = getEnv(SERVER_API_BASE_URL_KEY, "http://localhost:8001");
-            this.serverWebsocketUrl = getEnv(SERVER_WEBSOCKET_URL_KEY, serverApiBaseUrl.replace("http", "ws").replace("https", "ws") + "/websocket");
-            log.info("Using the API address: {}, {}", serverApiBaseUrl, serverWebsocketUrl);
+        this.agentId = getStringOrDefault(cfg, "id", () -> UUID.randomUUID().toString());
 
-            this.logDir = getDir(LOG_DIR_KEY, "logDir");
-            this.logMaxDelay = Long.parseLong(getEnv(LOG_MAX_DELAY_KEY, "250")); // 250ms
+        this.capabilities = cfg.hasPath("capabilities") ? cfg.getObject("capabilities").unwrapped() : null;
+        log.info("Using the capabilities: {}", this.capabilities);
 
-            this.payloadDir = getDir(PAYLOAD_DIR_KEY, "payloadDir");
-            this.agentJavaCmd = getEnv(JAVA_CMD_KEY, "java");
-            this.dependencyCacheDir = getDir(DEPENDENCY_CACHE_DIR_KEY, "depsCacheDir");
+        this.dependencyCacheDir = getDir(cfg, "dependencyCacheDir");
+        this.dependencyListsDir = getDir(cfg, "dependencyListsDir");
+        this.payloadDir = getDir(cfg, "payloadDir");
 
-            String s = System.getenv(RUNNER_PATH);
-            if (s == null) {
+        this.logDir = getDir(cfg, "logDir");
+        this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
+
+        this.workersCount = cfg.getInt("workersCount");
+
+        String java = getStringOrDefault(cfg, "javaPath", () -> System.getProperty("java.home"));
+        if (java != null) {
+            log.info("Using JAVA_PATH: {}", java);
+            this.javaPath = Paths.get(java);
+        } else {
+            log.warn("Can't determine 'javaPath', running processes in containers may not work");
+            this.javaPath = null;
+        }
+
+        this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
+
+        this.maxPreforkAge = cfg.getDuration("prefork.maxAge", TimeUnit.MILLISECONDS);
+        this.maxPreforkCount = cfg.getInt("prefork.maxCount");
+
+        this.serverApiBaseUrl = cfg.getString("server.apiBaseUrl");
+        this.serverWebsocketUrl = cfg.getString("server.websockerUrl");
+        log.info("Using the API address: {}, {}", serverApiBaseUrl, serverWebsocketUrl);
+
+        this.apiVerifySsl = cfg.getBoolean("server.verifySsl");
+        this.connectTimeout = cfg.getDuration("server.connectTimeout", TimeUnit.MILLISECONDS);
+        this.readTimeout = cfg.getDuration("server.readTimeout", TimeUnit.MILLISECONDS);
+        this.retryCount = cfg.getInt("server.retryCount");
+        this.retryInterval = cfg.getDuration("server.retryInterval", TimeUnit.MILLISECONDS);
+        this.userAgent = getStringOrDefault(cfg, "server.userAgent", () -> "Concord-Agent: id=" + this.agentId);
+        this.maxWebSocketInactivity = cfg.getDuration("server.maxWebSocketInactivity", TimeUnit.MILLISECONDS);
+        this.apiKey = cfg.getString("server.apiKey");
+
+        this.dockerHost = cfg.getString("docker.host");
+        this.dockerOrphanSweeperEnabled = cfg.getBoolean("docker.orphanSweeperEnabled");
+        this.dockerOrphanSweeperPeriod = cfg.getDuration("docker.orphanSweeperPeriod", TimeUnit.MILLISECONDS);
+
+        this.repositoryCacheDir = getDir(cfg, "repositoryCache.cacheDir");
+        this.repositoryLockTimeout = cfg.getDuration("repositoryCache.lockTimeout", TimeUnit.MILLISECONDS);
+
+        this.repositoryOauthToken = getStringOrDefault(cfg, "git.oauth", () -> null);
+        this.shallowClone = cfg.getBoolean("git.shallowClone");
+        this.repositoryHttpLowSpeedLimit = cfg.getInt("git.httpLowSpeedLimit");
+        this.repositoryHttpLowSpeedTime = cfg.getInt("git.httpLowSpeedTime");
+        this.repositorySshTimeout = cfg.getInt("git.sshTimeout");
+        this.repositorySshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
+
+        String path = getStringOrDefault(cfg, "runner.path", () -> {
+            try {
                 Properties props = new Properties();
                 props.load(Configuration.class.getResourceAsStream("runner.properties"));
-                s = props.getProperty("runner.path");
+                return props.getProperty("runner.path");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            this.runnerPath = Paths.get(s);
-
-            this.workersCount = Integer.parseInt(getEnv(WORKERS_COUNT_KEY, "3"));
-
-            this.maxPreforkAge = Long.parseLong(getEnv(MAX_PREFORK_AGE_KEY, "30000"));
-            this.maxPreforkCount = Integer.parseInt(getEnv(MAX_PREFORK_COUNT_KEY, "3"));
-
-            this.dockerHost = getEnv(DOCKER_HOST_KEY, "tcp://127.0.0.1:2375");
-            log.info("Using {}: {}", DOCKER_HOST_KEY, this.dockerHost);
-
-            this.dockerOrphanSweeperEnabled = Boolean.parseBoolean(getEnv(DOCKER_ORPHAN_SWEEPER_ENABLED_KEY, "false"));
-            this.dockerOrphanSweeperPeriod = Long.parseLong(getEnv(DOCKER_ORPHAN_SWEEPER_PERIOD_KEY, "900000")); // 15 min
-
-            this.runnerSecurityManagerEnabled = Boolean.parseBoolean(getEnv(RUNNER_SECURITY_MANAGER_ENABLED_KEY, "false"));
-
-            this.apiKey = getEnv(API_KEY, DEFAULT_AGENT_API_KEY);
-            this.apiVerifySsl = Boolean.parseBoolean(getEnv(API_VERIFY_SSL_KEY, "true"));
-            this.connectTimeout = Integer.parseInt(getEnv(CONNECT_TIMEOUT_KEY, "30000"));
-            this.readTimeout = Integer.parseInt(getEnv(READ_TIMEOUT_KEY, "60000"));
-            this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "5"));
-            this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "30000"));
-            this.pollInterval = Long.parseLong(getEnv(POLL_INTERVAL_KEY, "2000"));
-
-            String capabilitiesFile = getEnv(CAPABILITIES_FILE_KEY, null);
-            if (capabilitiesFile != null) {
-                this.capabilities = new ObjectMapper().readValue(new File(capabilitiesFile), Map.class);
-                log.info("Using the capabilities: {}", this.capabilities);
-            } else {
-                this.capabilities = null;
-            }
-            this.userAgent = getEnv(USER_AGENT_KEY, "Concord-Agent: id=" + agentId);
-
-            this.dependencyListsDir = getDir(STORE_DEPS_DIR_KEY, "dependencyListsDir");
-
-            String java = getEnv(JAVA_PATH_KEY, System.getProperty("java.home"));
-            if (java != null) {
-                log.info("Using JAVA_PATH: {}", java);
-                this.javaPath = Paths.get(java);
-            } else {
-                log.warn("Can't determine 'javaPath', running processes in containers may not work");
-                this.javaPath = null;
-            }
-
-            this.maxWebSocketInactivity = Long.parseLong(getEnv(MAX_WEBSOCKET_INACTIVITY_KEY, "120000"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        });
+        this.runnerPath = Paths.get(path);
+        this.runnerSecurityManagerEnabled = cfg.getBoolean("runner.securityManagerEnabled");
+        this.agentJavaCmd = cfg.getString("runner.javaCmd");
     }
 
     public String getAgentId() {
@@ -257,11 +234,11 @@ public class Configuration {
         return apiVerifySsl;
     }
 
-    public int getReadTimeout() {
+    public long getReadTimeout() {
         return readTimeout;
     }
 
-    public int getConnectTimeout() {
+    public long getConnectTimeout() {
         return connectTimeout;
     }
 
@@ -297,24 +274,109 @@ public class Configuration {
         return maxWebSocketInactivity;
     }
 
-    private static String getEnv(String key, String defaultValue) {
-        String s = System.getenv(key);
-        if (Strings.isNullOrEmpty(s)) {
-            return defaultValue;
-        }
-        return s;
+    public String getRepositoryOauthToken() {
+        return repositoryOauthToken;
     }
 
-    private static Path getDir(String key, String defaultPrefix) throws IOException {
-        String s = System.getenv(key);
-        if (s == null) {
-            return IOUtils.createTempDir(defaultPrefix);
-        }
+    public long getRepositoryLockTimeout() {
+        return repositoryLockTimeout;
+    }
 
-        Path p = Paths.get(s);
-        if (!Files.exists(p)) {
-            Files.createDirectories(p);
+    public Path getRepositoryCacheDir() {
+        return repositoryCacheDir;
+    }
+
+    public int getRepositorySshTimeout() {
+        return repositorySshTimeout;
+    }
+
+    public int getRepositorySshTimeoutRetryCount() {
+        return repositorySshTimeoutRetryCount;
+    }
+
+    public int getRepositoryHttpLowSpeedLimit() {
+        return repositoryHttpLowSpeedLimit;
+    }
+
+    public int getRepositoryHttpLowSpeedTime() {
+        return repositoryHttpLowSpeedTime;
+    }
+
+    public boolean isShallowClone() {
+        return shallowClone;
+    }
+
+    @Override
+    public String toString() {
+        return "Configuration{" +
+                "agentId='" + agentId + '\'' +
+                ", capabilities=" + capabilities +
+                ", dependencyCacheDir=" + dependencyCacheDir +
+                ", dependencyListsDir=" + dependencyListsDir +
+                ", payloadDir=" + payloadDir +
+                ", logDir=" + logDir +
+                ", logMaxDelay=" + logMaxDelay +
+                ", workersCount=" + workersCount +
+                ", javaPath=" + javaPath +
+                ", pollInterval=" + pollInterval +
+                ", maxPreforkAge=" + maxPreforkAge +
+                ", maxPreforkCount=" + maxPreforkCount +
+                ", serverApiBaseUrl='" + serverApiBaseUrl + '\'' +
+                ", serverWebsocketUrl='" + serverWebsocketUrl + '\'' +
+                ", apiVerifySsl=" + apiVerifySsl +
+                ", connectTimeout=" + connectTimeout +
+                ", readTimeout=" + readTimeout +
+                ", retryCount=" + retryCount +
+                ", retryInterval=" + retryInterval +
+                ", userAgent='" + userAgent + '\'' +
+                ", maxWebSocketInactivity=" + maxWebSocketInactivity +
+                ", dockerHost='" + dockerHost + '\'' +
+                ", dockerOrphanSweeperEnabled=" + dockerOrphanSweeperEnabled +
+                ", dockerOrphanSweeperPeriod=" + dockerOrphanSweeperPeriod +
+                ", repositoryCacheDir=" + repositoryCacheDir +
+                ", repositoryLockTimeout=" + repositoryLockTimeout +
+                ", repositoryOauthToken='" + repositoryOauthToken + '\'' +
+                ", shallowClone=" + shallowClone +
+                ", repositoryHttpLowSpeedLimit=" + repositoryHttpLowSpeedLimit +
+                ", repositoryHttpLowSpeedTime=" + repositoryHttpLowSpeedTime +
+                ", repositorySshTimeout=" + repositorySshTimeout +
+                ", repositorySshTimeoutRetryCount=" + repositorySshTimeoutRetryCount +
+                ", runnerPath=" + runnerPath +
+                ", agentJavaCmd='" + agentJavaCmd + '\'' +
+                ", runnerSecurityManagerEnabled=" + runnerSecurityManagerEnabled +
+                ", apiKey='" + apiKey + '\'' +
+                '}';
+    }
+
+    private static Config load(String name) {
+        EnvironmentSelector environmentSelector = new EnvironmentSelector();
+        return new ConfigurationProcessor(name, environmentSelector.select()).process();
+    }
+
+    private static String getStringOrDefault(Config cfg, String key, Supplier<String> defaultValueSupplier) {
+        if (cfg.hasPath(key)) {
+            return cfg.getString(key);
         }
-        return p;
+        return defaultValueSupplier.get();
+    }
+
+    private static Path getDir(Config cfg, String key) {
+        try {
+            if (!cfg.hasPath(key)) {
+                return IOUtils.createTempDir(key);
+            }
+
+            String value = cfg.getString(key);
+            if (value.startsWith("/")) {
+                Path p = Paths.get(value);
+                if (!Files.exists(p)) {
+                    Files.createDirectories(p);
+                }
+                return p;
+            }
+            return IOUtils.createTempDir(value);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

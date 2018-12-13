@@ -423,7 +423,7 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     @WithTimer
-    public ProcessKey poll(Map<String, Object> capabilities) {
+    public ProcessItem poll(Map<String, Object> capabilities) {
         Set<UUID> excludeProjects = new HashSet<>();
         while (true) {
             FindResult result = findEntry(capabilities, excludeProjects);
@@ -543,7 +543,7 @@ public class ProcessQueueDao extends AbstractDao {
 
     private FindResult findEntry(Map<String, Object> capabilities, Set<UUID> excludeProjects) {
         return txResult(tx -> {
-            Record6<UUID, Timestamp, UUID, UUID, UUID, UUID> r = nextItem(tx, capabilities, excludeProjects);
+            Record10<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID> r = nextItem(tx, capabilities, excludeProjects);
             if (r == null) {
                 return FindResult.notFound();
             }
@@ -554,6 +554,10 @@ public class ProcessQueueDao extends AbstractDao {
             UUID orgId = r.value4();
             UUID userId = r.value5();
             UUID parentInstanceId = r.value6();
+            String repoPath = r.value7();
+            String repoUrl = r.value8();
+            String commitId = r.value9();
+            UUID repoId = r.value10();
 
             PolicyEngine pe = getPolicyEngine(tx, orgId, projectId, userId, parentInstanceId);
             if (pe != null) {
@@ -572,7 +576,7 @@ public class ProcessQueueDao extends AbstractDao {
 
             ProcessKey processKey = new ProcessKey(instanceId, createdAt);
             updateStatus(tx, processKey, ProcessStatus.STARTING);
-            return FindResult.done(processKey);
+            return FindResult.done(new ProcessItem(processKey, orgId, repoId, repoPath, repoUrl, commitId));
         });
     }
 
@@ -607,12 +611,23 @@ public class ProcessQueueDao extends AbstractDao {
         return pe.getConcurrentProcessPolicy().hasRule() ? pe : null;
     }
 
-    private Record6<UUID, Timestamp, UUID, UUID, UUID, UUID> nextItem(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjectIds) {
+    private Record10<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID> nextItem(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjectIds) {
         ProcessQueue q = PROCESS_QUEUE.as("q");
 
         Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-        SelectJoinStep<Record6<UUID, Timestamp, UUID, UUID, UUID, UUID>> s = tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, orgIdField, q.INITIATOR_ID, q.PARENT_INSTANCE_ID)
+        SelectJoinStep<Record10<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID>> s =
+                tx.select(
+                        q.INSTANCE_ID,
+                        q.CREATED_AT,
+                        q.PROJECT_ID,
+                        orgIdField,
+                        q.INITIATOR_ID,
+                        q.PARENT_INSTANCE_ID,
+                        q.REPO_PATH,
+                        q.REPO_URL,
+                        q.COMMIT_ID,
+                        q.REPO_ID)
                 .from(q);
 
         s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -769,10 +784,10 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         private final Status status;
-        private final ProcessKey item;
+        private final ProcessItem item;
         private final UUID excludeProject;
 
-        private FindResult(Status status, ProcessKey item, UUID excludeProject) {
+        private FindResult(Status status, ProcessItem item, UUID excludeProject) {
             this.status = status;
             this.item = item;
             this.excludeProject = excludeProject;
@@ -782,7 +797,7 @@ public class ProcessQueueDao extends AbstractDao {
             return status == Status.DONE;
         }
 
-        public static FindResult done(ProcessKey item) {
+        public static FindResult done(ProcessItem item) {
             return new FindResult(Status.DONE, item, null);
         }
 
@@ -792,6 +807,48 @@ public class ProcessQueueDao extends AbstractDao {
 
         static FindResult findNext(UUID excludeProject) {
             return new FindResult(Status.SKIP, null, excludeProject);
+        }
+    }
+
+    public static class ProcessItem {
+        private final ProcessKey key;
+        private final UUID orgId;
+        private final UUID repoId;
+        private final String repoPath;
+        private final String repoUrl;
+        private final String commitId;
+
+        public ProcessItem(ProcessKey key, UUID orgId, UUID repoId, String repoPath, String repoUrl, String commitId) {
+            this.key = key;
+            this.orgId = orgId;
+            this.repoId = repoId;
+            this.repoPath = repoPath;
+            this.repoUrl = repoUrl;
+            this.commitId = commitId;
+        }
+
+        public ProcessKey getKey() {
+            return key;
+        }
+
+        public UUID getOrgId() {
+            return orgId;
+        }
+
+        public UUID getRepoId() {
+            return repoId;
+        }
+
+        public String getRepoPath() {
+            return repoPath;
+        }
+
+        public String getRepoUrl() {
+            return repoUrl;
+        }
+
+        public String getCommitId() {
+            return commitId;
         }
     }
 }

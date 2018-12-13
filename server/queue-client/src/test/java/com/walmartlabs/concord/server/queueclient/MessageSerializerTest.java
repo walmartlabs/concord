@@ -78,7 +78,7 @@ public class MessageSerializerTest {
 
     @Test
     public void testProcessResponse() {
-        ProcessResponse r = new ProcessResponse(123, UUID.randomUUID());
+        ProcessResponse r = new ProcessResponse(123, UUID.randomUUID(), "org-name", "repo-url", "repo-path", "commit-id", "secret-name");
 
         // ---
         String rSerialized = MessageSerializer.serialize(r);

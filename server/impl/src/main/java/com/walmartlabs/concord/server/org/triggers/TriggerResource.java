@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
@@ -51,7 +52,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -163,11 +163,13 @@ public class TriggerResource extends AbstractDao implements Resource {
     }
 
     private void refresh(RepositoryEntry r) {
-        Path repoPath = repositoryManager.fetch(r.getProjectId(), r);
-
         ProjectDefinition pd;
         try {
-            pd = projectLoader.loadProject(repoPath);
+            pd = repositoryManager.withLock(r.getUrl(), () -> {
+                Repository repository = repositoryManager.fetch(r.getProjectId(), r);
+                return projectLoader.loadProject(repository.path());
+            });
+
             ProjectValidator.validate(pd);
         } catch (Exception e) {
             log.error("refresh ['{}'] -> project load error", r.getId(), e);

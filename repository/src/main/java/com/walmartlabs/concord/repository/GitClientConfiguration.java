@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.repository;
+package com.walmartlabs.concord.repository;
 
 /*-
  * *****
@@ -20,14 +20,27 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import org.immutables.value.Value;
 
-import java.nio.file.Path;
-import java.util.UUID;
+import javax.annotation.Nullable;
 
-public interface RepositoryProvider {
+@Value.Immutable
+public interface GitClientConfiguration {
 
-    void fetch(UUID orgId, RepositoryEntry repository, Path dest);
+    @Nullable
+    String oauthToken();
 
-    RepositoryInfo getInfo(Path path);
+    boolean shallowClone();
+
+    int httpLowSpeedLimit();
+
+    int httpLowSpeedTime();
+
+    int sshTimeout();
+
+    int sshTimeoutRetryCount();
+
+    static ImmutableGitClientConfiguration.Builder builder() {
+        return ImmutableGitClientConfiguration.builder();
+    }
 }

@@ -23,14 +23,12 @@ package com.walmartlabs.concord.agent;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.project.InternalConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -60,7 +58,7 @@ public class ExecutionManager {
         this.jobExecutor = new DefaultJobExecutor(cfg, logManager, dependencyManager, createPostProcessors(client));
     }
 
-    public JobInstance start(UUID instanceId, String entryPoint, Path payload) throws ExecutionException {
+    public JobInstance start(UUID instanceId, String entryPoint, Path payload) {
         // remove the previous log file
         // e.g. left after the execution was suspended
         logManager.delete(instanceId);
@@ -68,11 +66,9 @@ public class ExecutionManager {
 
         logManager.log(instanceId, "Agent ID: %s", cfg.getAgentId());
 
-        Path tmpDir = extract(payload);
-
         JobInstance i;
         try {
-            i = jobExecutor.start(instanceId, tmpDir);
+            i = jobExecutor.start(instanceId, payload);
         } catch (Exception e) {
             log.warn("start ['{}', {}] -> failed", instanceId, entryPoint, e);
             throw e;
@@ -112,17 +108,5 @@ public class ExecutionManager {
                 new JobFileUploadPostProcessor(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                         "attachments", client::uploadAttachments)
         );
-    }
-
-    private Path extract(Path in) throws ExecutionException {
-        Path baseDir = cfg.getPayloadDir();
-        try {
-            Path dst = IOUtils.createTempDir(baseDir, "workDir");
-            Files.createDirectories(dst);
-            IOUtils.unzip(in, dst);
-            return dst;
-        } catch (IOException e) {
-            throw new ExecutionException("Error while unpacking a payload", e);
-        }
     }
 }

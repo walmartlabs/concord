@@ -40,7 +40,6 @@ public class RepositoryConfiguration {
     private static final Logger log = LoggerFactory.getLogger(RepositoryConfiguration.class);
 
     private final Path cacheDir;
-    private final Path metaDir;
 
     @Inject
     @Config("repositoryCache.concordFileValidationEnabled")
@@ -51,22 +50,14 @@ public class RepositoryConfiguration {
     private long lockTimeout;
 
     @Inject
-    public RepositoryConfiguration(@Config("repositoryCache.cacheDir") @Nullable String cacheDir,
-                                   @Config("repositoryCache.metaDir") @Nullable String metaDir) throws IOException {
+    public RepositoryConfiguration(@Config("repositoryCache.cacheDir") @Nullable String cacheDir) throws IOException {
 
         this.cacheDir = getPath(cacheDir, "repoCache");
         log.info("init -> using {} to cache repositories", this.cacheDir);
-
-        this.metaDir = getPath(metaDir, "repoMeta");
-        log.info("init -> using {} to store repository metadata", this.metaDir);
     }
 
     public Path getCacheDir() {
         return cacheDir;
-    }
-
-    public Path getMetaDir() {
-        return metaDir;
     }
 
     public long getLockTimeout() {

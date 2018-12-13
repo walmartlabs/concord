@@ -50,7 +50,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.repository.RepositoryManager.DEFAULT_BRANCH;
+import static com.walmartlabs.concord.repository.GitCliRepositoryProvider.DEFAULT_BRANCH;
 
 @Named
 @Singleton

@@ -76,6 +76,12 @@ public class RepositoryDao extends AbstractDao {
                 .fetchOne(RepositoryDao::toEntry);
     }
 
+    public RepositoryEntry get(UUID repoId) {
+        return txResult(tx -> selectRepositoryEntry(tx)
+                .where(REPOSITORIES.REPO_ID.eq(repoId))
+                .fetchOne(RepositoryDao::toEntry));
+    }
+
     public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
         return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId));
     }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.project;
+package com.walmartlabs.concord.repository;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,10 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 
-public class RepositoryException extends RuntimeException {
+public interface Snapshot {
 
-    public RepositoryException(Throwable cause) {
-        super(cause);
-    }
-
-    public RepositoryException(String message) {
-        super(message);
-    }
-
-    public RepositoryException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    boolean isModified(Path path, BasicFileAttributes attrs);
 }

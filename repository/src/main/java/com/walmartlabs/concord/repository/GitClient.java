@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.repository;
+package com.walmartlabs.concord.repository;
 
 /*-
  * *****
@@ -26,19 +26,12 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
-import com.walmartlabs.concord.server.cfg.GitConfiguration;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.org.project.RepositoryException;
-import com.walmartlabs.concord.server.org.secret.SecretManager;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -55,59 +48,43 @@ import java.util.regex.Pattern;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 
-@Named
-@Singleton
-public class GitCliRepositoryProvider implements RepositoryProvider {
+/**
+ * A GIT CLI wrapper. Most of the code was lifted from Jenkins' git-plugin.
+ */
+public class GitClient {
 
-    private static final Logger log = LoggerFactory.getLogger(GitCliRepositoryProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(GitClient.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
-    private static final String DEFAULT_BRANCH = "master";
 
-    private final SecretManager secretManager;
-    private final GitConfiguration cfg;
+    private final GitClientConfiguration cfg;
 
     private final List<String> sensitiveData;
     private final ExecutorService executor;
 
-    @Inject
-    public GitCliRepositoryProvider(SecretManager secretManager, GitConfiguration cfg) {
-        this.secretManager = secretManager;
+    public GitClient(GitClientConfiguration cfg) {
         this.cfg = cfg;
-        this.sensitiveData = cfg.getOauthToken() != null ? Collections.singletonList(cfg.getOauthToken()) : Collections.emptyList();
+        this.sensitiveData = cfg.oauthToken() != null ? Collections.singletonList(cfg.oauthToken()) : Collections.emptyList();
         this.executor = Executors.newCachedThreadPool();
     }
 
-    @Override
-    public void fetch(UUID orgId, RepositoryEntry repository, Path dest) {
-        Secret secret = getSecret(orgId, repository.getSecretName());
-        String branch = Optional.ofNullable(repository.getBranch()).orElse(DEFAULT_BRANCH);
-        fetch(repository.getUrl(), branch, repository.getCommitId(), secret, dest);
-    }
-
-    @Override
     public RepositoryInfo getInfo(Path path) {
-        try {
-            String result = launchCommand(path, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
-            String[] info = result.split("\n");
-            if (info.length < 2) {
-                return null;
-            }
-            String id = info[0];
-            String author = info[1];
-            StringBuilder message = new StringBuilder();
-            for (int i = 2; i < info.length; i++) {
-                message.append(info[i]).append("\n");
-            }
-            return new RepositoryInfo(id, message.toString(), author);
-        } catch (RepositoryException e) {
-            // ignore
+        String result = launchCommand(path, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
+        String[] info = result.split("\n");
+        if (info.length < 2) {
             return null;
         }
+        String id = info[0];
+        String author = info[1];
+        StringBuilder message = new StringBuilder();
+        for (int i = 2; i < info.length; i++) {
+            message.append(info[i]).append("\n");
+        }
+        return new RepositoryInfo(id, message.toString(), author);
     }
 
-    private void fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
-        boolean shallow = commitId == null && cfg.isShallowClone();
+    public void fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
+        boolean shallow = commitId == null && cfg.shallowClone();
 
         if (!hasGitRepo(dest)) {
             cloneCommand(dest, uri, secret, shallow);
@@ -361,8 +338,8 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     }
 
     private String processUrl(String url, Secret secret) {
-        if (secret == null && url.trim().startsWith("https://") && cfg.getOauthToken() != null) {
-            return "https://" + cfg.getOauthToken() + "@" + url.substring("https://".length());
+        if (secret == null && url.trim().startsWith("https://") && cfg.oauthToken() != null) {
+            return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
         }
         return url;
     }
@@ -440,8 +417,8 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
                 log.info("using GIT_ASKPASS to set credentials ");
             }
 
-            env.put("GIT_HTTP_LOW_SPEED_LIMIT", cfg.getHttpLowSpeedLimit());
-            env.put("GIT_HTTP_LOW_SPEED_TIME", cfg.getHttpLowSpeedTime());
+            env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
+            env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime()));
 
             launchCommand(workDir, env, args);
         } catch (IOException e) {
@@ -551,8 +528,8 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             w.println("  DISPLAY=:123.456");
             w.println("  export DISPLAY");
             w.println("fi");
-            w.println("ssh -i \"" + key.toAbsolutePath().toString() + "\" -o ServerAliveCountMax=" + cfg.getSshTimeoutRetryCount() +
-                    " -o ServerAliveInterval=" + cfg.getSshTimeout() +
+            w.println("ssh -i \"" + key.toAbsolutePath().toString() + "\" -o ServerAliveCountMax=" + cfg.sshTimeoutRetryCount() +
+                    " -o ServerAliveInterval=" + cfg.sshTimeout() +
                     " -o StrictHostKeyChecking=no \"$@\"");
         }
         Files.setPosixFilePermissions(ssh, ImmutableSet.of(OWNER_READ, OWNER_EXECUTE));
@@ -575,19 +552,6 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         } catch (IOException e) {
             log.warn("can't delete tmp file: " + tempFile);
         }
-    }
-
-    private Secret getSecret(UUID orgId, String secretName) {
-        if (secretName == null) {
-            return null;
-        }
-
-        SecretManager.DecryptedSecret s = secretManager.getSecret(orgId, secretName, null, null);
-        if (s == null) {
-            throw new RepositoryException("Secret not found: " + secretName);
-        }
-
-        return s.getSecret();
     }
 
     private String hideSensitiveData(String s) {
