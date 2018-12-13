@@ -1,6 +1,6 @@
 flows:
   default:
-  - docker: docker.prod.walmart.com/walmartlabs/concord-base
+  - docker: library/alpine
     cmd: echo "Hello, ${name}"
 
 configuration:

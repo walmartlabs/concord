@@ -7,7 +7,8 @@ flows:
   - task: ansible
     in:
       # specify the docker image to use
-      dockerImage: "docker.prod.walmart.com/walmartlabs/concord-ansible:latest"
+      # add a prefix to use an alternative registry
+      dockerImage: "walmartlabs/concord-ansible:latest"
       # rest of the parameters are the usual
       playbook: playbook/hello.yml
       debug: true

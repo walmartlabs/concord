@@ -4,7 +4,7 @@
         <mirror>
             <id>walmart-gec</id>
             <mirrorOf>external:*</mirrorOf>
-	        <url>https://repository.walmart.com/nexus/content/groups/public</url>
+	        <url>${env.MAVEN_MIRROR}</url>
         </mirror>
     </mirrors>
 
@@ -19,6 +19,12 @@
     <profiles>
         <profile>
             <id>looper</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <scm.connection>${env.SCM_CONNECTION}</scm.connection>
+            </properties>
             <repositories>
                 <repository>
                     <id>central</id>
@@ -43,6 +49,35 @@
                     </snapshots>
                 </pluginRepository>
             </pluginRepositories>
+        </profile>
+
+        <profile>
+            <id>walmart</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <node.downloadRoot>${env.NODE_DOWNLOAD_URL}</node.downloadRoot>
+                <npm.installCmd>${env.NPM_INSTALL_CMD}</npm.installCmd>
+
+                <public.serverId>walmart-gec</public.serverId>
+                <public.nexusUrl>${env.NEXUS_URL}</public.nexusUrl>
+                <public-release.serverId>${public.serverId}</public-release.serverId>
+                <public-release.url>${public.nexusUrl}/content/repositories/devtools</public-release.url>
+                <public-snapshot.serverId>${public.serverId}</public-snapshot.serverId>
+                <public-snapshot.url>${public.nexusUrl}/content/repositories/devtools-snapshots</public-snapshot.url>
+
+                <site.id>mvn-site</site.id>
+                <site.url>${env.MAVEN_SITE_URL}</site.url>
+
+                <db.image>${env.DB_IMAGE}</db.image>
+                <ansible.image>${env.ANSIBLE_IMAGE}</ansible.image>
+                <server.image>${env.SERVER_IMAGE}</server.image>
+                <dind.image>${env.DIND_IMAGE}</dind.image>
+                <agent.image>${env.AGENT_IMAGE}</agent.image>
+                <keywhiz.image>${env.KEYWHIZ_IMAGE}</keywhiz.image>
+                <selenium.image>${env.SELENIUM_IMAGE}</selenium.image>
+            </properties>
         </profile>
     </profiles>
 

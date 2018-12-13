@@ -14,6 +14,8 @@
 
     <properties>
         <skipNpm>false</skipNpm>
+        <node.downloadRoot>https://nodejs.org/dist/</node.downloadRoot>
+        <npm.installCmd>ci</npm.installCmd>
     </properties>
 
     <build>
@@ -48,7 +50,7 @@
                         </goals>
                         <configuration>
                             <skip>${skipNpm}</skip>
-                            <arguments>ci</arguments>
+                            <arguments>${npm.installCmd}</arguments>
                         </configuration>
                     </execution>
                     <execution>
@@ -68,7 +70,7 @@
                 </executions>
                 <configuration>
                     <installDirectory>target</installDirectory>
-                    <nodeDownloadRoot>https://nodejs.org/dist/</nodeDownloadRoot>
+                    <nodeDownloadRoot>${node.downloadRoot}</nodeDownloadRoot>
                     <nodeVersion>v${node.version}</nodeVersion>
                     <workingDirectory>${basedir}</workingDirectory>
                 </configuration>
@@ -93,35 +95,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>walmart</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>npm ci</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>ci --registry=https://npme.walmart.com</arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <nodeDownloadRoot>https://repository.walmart.com/nexus/content/repositories/nodejs/</nodeDownloadRoot>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

@@ -57,14 +57,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>walmart</id>
-            <properties>
-                <docker.tagbase>docker.prod.walmart.com/walmartlabs/concord-server</docker.tagbase>
-                <docker.file>walmart/Dockerfile</docker.file>
-            </properties>
-        </profile>
-    </profiles>
 </project>

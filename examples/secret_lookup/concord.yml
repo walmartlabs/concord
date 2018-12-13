@@ -6,7 +6,7 @@ flows:
   default:
   - task: ansible
     in:
-      dockerImage: "docker.prod.walmart.com/walmartlabs/concord-ansible:latest"
+      dockerImage: "walmartlabs/concord-ansible:latest"
       playbook: playbook/hello.yml
       inventory:
         local:

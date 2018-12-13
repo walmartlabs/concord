@@ -21,6 +21,7 @@
 
         <!-- TODO requires an OSS Docker image of Keywhiz -->
         <skip.it.tests>true</skip.it.tests>
+        <keywhiz.image>n/a</keywhiz.image>
     </properties>
 
     <dependencies>
@@ -120,7 +121,7 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>docker.prod.walmart.com/walmartlabs/concord-keywhiz</name>
+                                    <name>${keywhiz.image}</name>
                                     <alias>keywhiz</alias>
                                     <run>
                                         <ports>
@@ -190,14 +191,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-
-        <profile>
-            <id>walmart</id>
-            <properties>
-                <db.image>hub.docker.prod.walmart.com/library/postgres</db.image>
-                <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
-            </properties>
         </profile>
     </profiles>
 </project>

@@ -15,6 +15,8 @@
     <properties>
         <docker.tagbase>walmartlabs/concord-console</docker.tagbase>
         <docker.file>oss/Dockerfile</docker.file>
+        <node.downloadRoot>https://nodejs.org/dist/</node.downloadRoot>
+        <npm.installCmd>ci</npm.installCmd>
     </properties>
 
     <dependencies>
@@ -70,19 +72,19 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm install</id>
+                        <id>npm ci</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
                         <configuration>
                             <skip>${skipNpmInstall}</skip>
-                            <arguments>install</arguments>
+                            <arguments>${npm.installCmd}</arguments>
                         </configuration>
                     </execution>
                 </executions>
                 <configuration>
                     <installDirectory>target</installDirectory>
-                    <nodeDownloadRoot>https://nodejs.org/dist/</nodeDownloadRoot>
+                    <nodeDownloadRoot>${node.downloadRoot}</nodeDownloadRoot>
                     <nodeVersion>v${node.version}</nodeVersion>
                     <workingDirectory>${basedir}</workingDirectory>
                 </configuration>
@@ -99,39 +101,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>walmart</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <docker.tagbase>docker.prod.walmart.com/walmartlabs/concord-console</docker.tagbase>
-                <docker.file>walmart/Dockerfile</docker.file>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>npm install</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>install --registry=https://npme.walmart.com</arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <nodeDownloadRoot>https://repository.walmart.com/nexus/content/repositories/nodejs/</nodeDownloadRoot>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

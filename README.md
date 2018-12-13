@@ -1,7 +1,5 @@
 # Concord
 
-[![Build Status](https://ci.walmart.com/buildStatus/icon?job=concord)](https://ci.walmart.com/job/concord/)
-
 ## Build Dependencies
 
 - [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
@@ -23,34 +21,6 @@ You can build docker images using this commands:
 ```shell
 ./mvnw clean install -DskipTests -Pdocker
 ```
-
-#### Running Docker Images
-
-User authentication requires an LDAP server.
-
-- create a `ldap.properties` file as detailed in steps 4 and 5 of
-the [Open LDAP setup](http://concord.walmart.com/docs/getting-started/development.html#using-openldap-for-authentication).
-If you have your own LDAP server setup, you can substitute those
-details into the file.
-- set the `LDAP_CFG` environment variable to the location of the
-`ldap.properties` file you created.
-
-Now the docker containers can be started with the following helper
-scripts found in the [docker-images](docker-images) directory.
-
-The `run*` scripts will pull docker images from Docker Hub while
-`run_local*` will start the docker containers you built locally from
-this project.
-
-On Linux use
-
-- [run.sh](docker-images/run.sh)
-- [run_local.sh](docker-images/run_local.sh)
-
-On OSX use these instead
-
-- [run_osx.sh](docker-images/run_osx.sh)
-- [run_local_osx.sh](docker-images/run_local_osx.sh)
 
 ### Console
 
@@ -98,10 +68,6 @@ To automatically start and stop the server and the agent using docker, use the
 ```shell
 ./mvnw verify -Pit -Pdocker
 ```
-
-## Documentation
-
-See [the website](http://concord.walmart.com).
 
 ## Examples
 

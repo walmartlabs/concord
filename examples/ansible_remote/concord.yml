@@ -25,7 +25,7 @@ flows:
       inventory:
         local:
           hosts:
-          - "somehost.walmart.com"
+          - "somehost.example.com"
 
       # pass additional variables to the playbook
       extraVars:

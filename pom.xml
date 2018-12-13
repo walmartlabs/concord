@@ -16,7 +16,6 @@
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Concord: Orchestrate More. Live Better.</description>
-    <url>http://concord.walmart.com</url>
 
     <licenses>
         <license>
@@ -59,6 +58,8 @@
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.341</aws.version>
@@ -805,8 +806,8 @@
     </build>
 
     <scm>
-        <developerConnection>scm:git:https://gecgithub01.walmart.com/devtools/concord.git</developerConnection>
-        <tag>0.98.0</tag>
+        <developerConnection>${scm.connection}</developerConnection>
+        <tag>HEAD</tag>
     </scm>
 
     <profiles>
@@ -833,17 +834,6 @@
         <profile>
             <id>walmart</id>
 
-            <properties>
-                <public.serverId>walmart-gec</public.serverId>
-                <public.nexusUrl>https://repository.walmart.com/nexus</public.nexusUrl>
-                <public-release.serverId>${public.serverId}</public-release.serverId>
-                <public-release.url>${public.nexusUrl}/content/repositories/devtools</public-release.url>
-                <public-snapshot.serverId>${public.serverId}</public-snapshot.serverId>
-                <public-snapshot.url>${public.nexusUrl}/content/repositories/devtools-snapshots</public-snapshot.url>
-                <site.id>mvn-site</site.id>
-                <site.url>dav:https://repository.walmart.com/content/sites/mvn-site/concord</site.url>
-            </properties>
-
             <repositories>
                 <repository>
                     <releases>
@@ -853,7 +843,7 @@
                         <enabled>true</enabled>
                     </snapshots>
                     <id>walmart-gec</id>
-                    <url>https://repository.walmart.com/nexus/content/groups/devtools-public</url>
+                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
                 </repository>
             </repositories>
 
@@ -866,7 +856,7 @@
                         <enabled>true</enabled>
                     </snapshots>
                     <id>walmart-gec</id>
-                    <url>https://repository.walmart.com/nexus/content/groups/devtools-public</url>
+                    <url>${public.nexusUrl}/content/groups/devtools-public</url>
                 </pluginRepository>
             </pluginRepositories>
 

@@ -206,13 +206,5 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>walmart</id>
-            <properties>
-                <db.image>hub.docker.prod.walmart.com/library/postgres:10.4-alpine</db.image>
-                <server.image>docker.prod.walmart.com/walmartlabs/concord-server</server.image>
-                <agent.image>docker.prod.walmart.com/walmartlabs/concord-agent</agent.image>
-            </properties>
-        </profile>
     </profiles>
 </project>

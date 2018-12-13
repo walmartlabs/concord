@@ -34,7 +34,6 @@ This example assumes that the `ansible` template is already uploaded to the serv
 
 ### 1. Create a new repository key
 
-Please refer to the [Generate a new key pair](http://concord.walmart.com/docs/api/secret.html#generate-a-new-key-pair) document.
 Use `mySecret` as a name of the key pair, it will be used on the next step.
 
 ### 2. Create a new Concord project

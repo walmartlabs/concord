@@ -52,7 +52,7 @@ public class GithubUtilsTest {
 
     @Test
     public void testParse() {
-        assertRepositoryName("git@gecgithub01.walmart.com:h1sammo/Anisble-GLS-AppInstall.git", "h1sammo/Anisble-GLS-AppInstall");
+        assertRepositoryName("git@github.example.com:h1sammo/Anisble-GLS-AppInstall.git", "h1sammo/Anisble-GLS-AppInstall");
         assertRepositoryName("git+https://github.com/owner/name.git", "owner/name");
         assertRepositoryName("git://gh.pages.com/owner/name.git", "owner/name");
         assertRepositoryName("git://github.assemble.com/owner/name.git", "owner/name");
