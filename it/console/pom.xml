@@ -214,6 +214,11 @@
                                             <SERVER_ADDR>localhost</SERVER_ADDR>
                                             <SERVER_PORT>${it.server.port}</SERVER_PORT>
                                         </env>
+                                        <volumes>
+                                            <bind>
+                                                <volume>${basedir}/src/test/resources/console.conf:/opt/concord/console/nginx/app.conf:ro</volume>
+                                            </bind>
+                                        </volumes>
                                         <wait>
                                             <http>
                                                 <url>http://localhost:${it.console.port}/index.html</url>
