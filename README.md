@@ -4,7 +4,7 @@
 
 - [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 - [Docker Community Edition](https://www.docker.com/community-edition)
-- [NodeJS and NPM](https://nodejs.org/en/download/) (Node 8 or greater)
+- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 8 or greater)
 
 ## Building
 
@@ -24,20 +24,17 @@ You can build docker images using this commands:
 
 ### Console
 
-Console can be built and ran separately from within the console
-directory.
-
 ```shell
 cd ./console2
 npm install # Install dependencies
 ```
 
-In order for the console to successfully startup the proxy property
-in [console/package.json](console/package.json) needs to point to a
-running concord server instance.
+Verify that the `proxy` property in [console/package.json](console/package.json)
+is set to the Server's API address.
 
+Start the console in dev mode by running:
 ```shell
-npm run start # Starts the Concord Console proxied to concord server
+npm run start
 ```
 
 ### Integration tests
@@ -47,7 +44,7 @@ npm run start # Starts the Concord Console proxied to concord server
 Prerequisites:
 
 - Docker, listening on `tcp://127.0.0.1:2375`;
-- Ansible 2.5.0+ must be installed and available in `$PATH`.
+- Ansible 2.6.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
 - `ujson` python module. It can be installed using `pip install ujson`
 or a system package manager;
