@@ -59,11 +59,12 @@
         "redux-saga": "0.16.2",
         "semantic-ui-css": "2.4.1",
         "semantic-ui-react": "0.83.0",
-        "styled-components": "4.1.2"
+        "styled-components": "4.1.2",
+        "typeface-lato": "0.0.54"
     },
     "scripts": {
         "start": "react-app-rewired start --scripts-version react-scripts-ts",
-        "build": "shx --silent sed -i @import /*import node_modules/semantic-ui-css/semantic.css > /dev/null 2>&1 && react-app-rewired build --scripts-version react-scripts-ts",
+        "build": "shx --silent sed -i @import /*import node_modules/semantic-ui-css/semantic.min.css > /dev/null 2>&1 && react-app-rewired build --scripts-version react-scripts-ts",
         "test": "react-app-rewired test --scripts-version react-scripts-ts --env=jsdom",
         "eject": "react-scripts-ts eject",
         "pretty": "prettier --tab-width 4 --print-width 100 --single-quote --jsx-bracket-same-line --arrow-parens 'always' parser 'typescript' --write 'src/**/*.{ts,tsx}'",
