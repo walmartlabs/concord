@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,15 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown, Image, Menu } from 'semantic-ui-react';
+import { LinkMeta } from '../../../../env';
 
 export type GlobalNavTab = 'activity' | 'process' | 'org' | null;
 
 interface Props {
     activeTab: GlobalNavTab;
     userDisplayName?: string;
-    openDocumentation: () => void;
+    openUrl: (url: string) => void;
+    extraSystemLinks: LinkMeta[];
     openAbout: () => void;
     openProfile: () => void;
     logOut: () => void;
@@ -38,7 +40,8 @@ class GlobalNavMenu extends React.PureComponent<Props> {
         const {
             activeTab,
             userDisplayName,
-            openDocumentation,
+            extraSystemLinks,
+            openUrl,
             openAbout,
             openProfile,
             logOut
@@ -63,15 +66,19 @@ class GlobalNavMenu extends React.PureComponent<Props> {
                         <Menu.Item as={Dropdown} text="System">
                             <Dropdown.Menu>
                                 <Dropdown.Item
-                                    icon="help"
-                                    text="Documentation"
-                                    onClick={() => openDocumentation()}
-                                />
-                                <Dropdown.Item
                                     icon="info"
                                     text="About"
                                     onClick={() => openAbout()}
                                 />
+
+                                {extraSystemLinks.map((x, idx) => (
+                                    <Dropdown.Item
+                                        key={idx}
+                                        icon={x.icon}
+                                        text={x.text}
+                                        onClick={() => openUrl(x.url)}
+                                    />
+                                ))}
                             </Dropdown.Menu>
                         </Menu.Item>
                         <Menu.Item as={Dropdown} text={userDisplayName}>

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -164,22 +164,20 @@ class ProcessStatusActivity extends React.Component<Props> {
                         <ProcessActionList instanceId={instanceId} forms={forms} />
                     </>
                 )}
-                
+
                 <AnsibleStatsActivity instanceId={instanceId} />
 
-                {process &&
-                    elementEvents.length > 0 && (
-                        <>
-                            <Divider content="Flow Events" horizontal={true} />
-                            <ProcessElementList
-                                instanceId={instanceId}
-                                events={elementEvents}
-                                processStatus={process.status}
-                                tooMuchData={tooMuchData}
-                            />
-                        </>
-                    )}
-
+                {process && elementEvents.length > 0 && (
+                    <>
+                        <Divider content="Flow Events" horizontal={true} />
+                        <ProcessElementList
+                            instanceId={instanceId}
+                            events={elementEvents}
+                            processStatus={process.status}
+                            tooMuchData={tooMuchData}
+                        />
+                    </>
+                )}
             </>
         );
     }

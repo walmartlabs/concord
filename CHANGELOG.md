@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: externalize extra links in the system menu, allow
+for environment-specific overrides;
 - concord-console: ability to specify the entry point when starting
 a process;
 - ansible: new `syntaxCheck` option to run

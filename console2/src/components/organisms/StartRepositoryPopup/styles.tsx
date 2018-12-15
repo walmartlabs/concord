@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ export const Table = styled.div`
 const group = styled.div`
     &:first-child {
         margin-top: 0px!;
-    };
+    }
 
     &:last-child {
         margin-bottom: 0px!;
@@ -48,7 +48,7 @@ export const Key = styled.div`
     text-align: right;
     margin: 5px 0px;
     &::after {
-        content: ":"
+        content: ':';
     }
 `;
 
@@ -57,7 +57,7 @@ export const Value = styled.div`
 `;
 
 export const Input = styled.input`
-    border: #2185D0;
+    border: #2185d0;
     padding: 0px;
     border-bottom-style: dashed;
     border-width: 1px;
