@@ -44,10 +44,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ConcordServer {
 
@@ -71,6 +68,7 @@ public class ConcordServer {
                 .serve("/metrics").with(MetricsServlet.class) // prometheus integration
                 .serve("/concord/*").with(new ServiceInitServlet()) // only to start the background services
                 .serve("/websocket").with(new ConcordWebSocketServlet())
+                .at("/resources/console").resource("/com/walmartlabs/concord/server/console/static")
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
