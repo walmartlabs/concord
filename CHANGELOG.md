@@ -14,6 +14,8 @@ a process;
 
 ### Changed
 
+- concord-console: fixed a bug preventing the Ansible host filter
+from working correctly;
 - concord-runner: fix the handling of process arguments when
 restoring a process from a checkpoint;
 - concord-server, concord-agent: perform `git clone` on the Agent,

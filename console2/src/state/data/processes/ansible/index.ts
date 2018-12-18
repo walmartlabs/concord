@@ -102,6 +102,9 @@ const lastFilterReducer = (state = {}, action: ListAnsibleHostsRequest) => {
     if (action.type === actionTypes.LIST_ANSIBLE_HOSTS_REQUEST) {
         return action.filter;
     }
+    if (action.type === actionTypes.GET_ANSIBLE_STATS_RESET) {
+        return {};
+    }
     return state;
 };
 
