@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.google.common.collect.ImmutableMap;
 import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
@@ -125,6 +126,52 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*Start.*", ab);
         assertLog(".*Middle.*", ab);
         assertLog(".*End.*", ab);
+    }
+
+    @Test
+    public void testCheckpointWithArgs() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
+
+        String value = "value_" + randomString();
+
+        EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
+        assertTrue(evr.isOk());
+
+        // prepare the payload
+
+        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointsWithArgs").toURI());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "org", orgName,
+                "project", projectName,
+                "archive", payload,
+                "arguments.encrypted", evr.getData()));
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        System.out.println(">>>>" + new String(ab));
+
+        assertLog(".*hello, World.*", 2, ab);
+        assertLog(".*" + value + ".*", 4, ab);
+        assertLog(".*checkpoint pointA.*", ab);
     }
 
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {

@@ -1,0 +1,16 @@
+configuration:
+  arguments:
+    varA: "hello, World!"
+    varB: "${crypto.decryptString(encrypted)}"
+
+flows:
+  default:
+  - set:
+      keyVar: ${varB}
+  - log: ${varA}
+  - log: ${varB}
+  - log: ${keyVar}
+  - checkpoint: "pointA"
+  - log: ${varA}
+  - log: ${varB}
+  - log: ${keyVar}

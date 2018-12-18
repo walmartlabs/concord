@@ -141,6 +141,7 @@ public class Main {
 
         Engine engine = engineFactory.create(project, baseDir, activeProfiles, metaVariables);
 
+        Map<String, Object> resumeCheckpointReq = null;
         while (true) {
             Collection<Event> resultEvents;
             String eventName = readResumeEvent(baseDir);
@@ -158,6 +159,12 @@ public class Main {
 
             if (checkpointEvent != null) {
                 checkpointManager.process(getCheckpointId(checkpointEvent), checkpointEvent.getName(), baseDir);
+                // clear arguments
+                if (resumeCheckpointReq == null) {
+                    resumeCheckpointReq = new HashMap<>(req);
+                    resumeCheckpointReq.remove(InternalConstants.Request.ARGUMENTS_KEY);
+                }
+                req = resumeCheckpointReq;
             } else {
                 return;
             }
