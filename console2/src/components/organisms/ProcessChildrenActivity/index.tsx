@@ -24,7 +24,7 @@ import { ConcordId, queryParams, RequestError } from '../../../api/common';
 import { actions } from '../../../state/data/processes/children';
 import { State } from '../../../state/data/processes/children/types';
 import { RequestErrorMessage } from '../../molecules';
-import { ProcessEntry, ProcessStatus } from '../../../api/process';
+import { ProcessEntry } from '../../../api/process';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
 import {
     CREATED_AT_COLUMN,
@@ -34,10 +34,11 @@ import {
     UPDATED_AT_COLUMN
 } from '../../molecules/ProcessList';
 import { replace as pushHistory } from 'react-router-redux';
-import { SearchFilter } from '../../../api/org/process';
-import { parse as parseQueryString } from 'query-string';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { PaginatedProcesses } from '../../../state/data/processes';
+import { parseSearchFilter } from '../ProcessListActivity';
+import { PaginationFilter } from '../../molecules/Pagination';
+import { ProcessFilters } from '../../../api/org/process';
 
 const COLUMNS = [
     INSTANCE_ID_COLUMN,
@@ -64,19 +65,10 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    load: (instanceId: ConcordId, filters?: SearchFilter) => void;
+    load: (instanceId: ConcordId, filters?: ProcessFilters, pagination?: PaginationFilter) => void;
 }
 
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
-
-const parseSearchFilter = (s: string): SearchFilter => {
-    const v: any = parseQueryString(s);
-    return {
-        status: v.status ? ProcessStatus[v.status as string] : undefined,
-        limit: v.limit ? v.limit : 50,
-        offset: v.offset ? v.offset : 0
-    };
-};
 
 class ProcessChildrenActivity extends React.Component<Props> {
     constructor(props: Props) {
@@ -85,8 +77,8 @@ class ProcessChildrenActivity extends React.Component<Props> {
 
     componentDidMount() {
         const { instanceId, load, location } = this.props;
-        const filters = parseSearchFilter(location.search);
-        load(instanceId, filters);
+        const f = parseSearchFilter(location.search);
+        load(instanceId, f.filters, f.pagination);
     }
 
     render() {
@@ -100,19 +92,21 @@ class ProcessChildrenActivity extends React.Component<Props> {
             return <h3>No processes found.</h3>;
         }
 
-        const filter = parseSearchFilter(history.location.search);
+        const f = parseSearchFilter(history.location.search);
         return (
             <>
                 {loadError && <RequestErrorMessage error={loadError} />}
 
                 <ProcessListWithSearch
-                    filterProps={filter}
+                    processFilters={f.filters}
+                    paginationFilter={f.pagination}
                     processes={processes}
                     columns={COLUMNS}
                     loading={loading}
                     loadError={loadError}
-                    refresh={(filters) => load(instanceId, filters)}
-                    showInitiatorFilter={false}
+                    refresh={(processFilters, paginationFilters) =>
+                        load(instanceId, processFilters, paginationFilters)
+                    }
                     next={next}
                     prev={prev}
                     usePagination={true}
@@ -143,7 +137,7 @@ export const mapStateToProps = ({ processes: { children } }: StateType): StatePr
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
-    load: (instanceId, filters?) => {
+    load: (instanceId, filters?, paginationFilters?) => {
         if (filters) {
             dispatch(pushHistory({ search: queryParams(filters) }));
         }

@@ -100,6 +100,7 @@ public class ProjectProcessResource implements Resource {
     @Path("/{orgName}/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Deprecated
     // TODO replace with /api/v1/process?orgName=...&status=...
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
@@ -109,7 +110,7 @@ public class ProjectProcessResource implements Resource {
                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         ProcessFilter filter = ProcessFilter.builder()
-                .ordIds(Collections.singleton(org.getId()))
+                .orgIds(Collections.singleton(org.getId()))
                 .status(processStatus)
                 .afterCreatedAt(toTimestamp(afterCreatedAt))
                 .beforeCreatedAt(toTimestamp(beforeCreatedAt))
@@ -122,6 +123,7 @@ public class ProjectProcessResource implements Resource {
     @Path("/{orgName}/project/{projectName}/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Deprecated
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,

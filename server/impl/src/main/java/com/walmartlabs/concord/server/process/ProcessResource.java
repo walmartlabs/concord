@@ -31,8 +31,10 @@ import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
@@ -66,11 +68,8 @@ import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,6 +100,8 @@ public class ProcessResource implements Resource {
     private final EncryptedProjectValueManager encryptedValueManager;
     private final EventDao eventDao;
     private final ProcessKeyCache processKeyCache;
+    private final OrganizationManager orgManager;
+    private final ProjectDao projectDao;
 
     @Inject
     public ProcessResource(ProcessManager processManager,
@@ -113,7 +114,11 @@ public class ProcessResource implements Resource {
                            ProcessStateArchiver stateArchiver,
                            EncryptedProjectValueManager encryptedValueManager,
                            EventDao eventDao,
-                           ProcessKeyCache processKeyCache) {
+                           ProcessKeyCache processKeyCache,
+                           OrganizationManager orgManager,
+                           ProjectDao projectDao) {
+        this.orgManager = orgManager;
+        this.projectDao = projectDao;
 
         this.objectMapper = new ObjectMapper();
         this.processManager = processManager;
@@ -641,7 +646,7 @@ public class ProcessResource implements Resource {
     /**
      * List processes for all user's organizations
      *
-     * @param projectId
+     * @param requestProjectId
      * @param beforeCreatedAt
      * @param tags
      * @param processStatus
@@ -653,7 +658,9 @@ public class ProcessResource implements Resource {
     @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessEntry> list(@ApiParam @QueryParam("projectId") UUID projectId,
+    public List<ProcessEntry> list(@ApiParam @QueryParam("org") String orgName,
+                                   @ApiParam @QueryParam("project") String projectName,
+                                   @ApiParam @QueryParam("projectId") UUID requestProjectId,
                                    @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
                                    @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
@@ -661,28 +668,49 @@ public class ProcessResource implements Resource {
                                    @ApiParam @QueryParam("initiator") String initiator,
                                    @ApiParam @QueryParam("parentInstanceId") UUID parentId,
                                    @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
-                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+                                   @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
+                                   @Context UriInfo uriInfo) {
 
         if (limit <= 0) {
             throw new ConcordApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
         }
 
+        UUID projectId = requestProjectId;
         Set<UUID> orgIds = null;
-        if (!isAdmin()) {
-            // non-admin users can see only their org's processes or processes w/o projects
-            orgIds = getCurrentUserOrgIds();
+        if (orgName != null) {
+            OrganizationEntry org = orgManager.assertAccess(orgName, false);
+            orgIds = Collections.singleton(org.getId());
+
+            if (projectId == null && projectName != null) {
+                projectId = projectDao.getId(org.getId(), projectName);
+                if (projectId == null) {
+                    throw new ConcordApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
+                }
+            }
+        } else {
+            if (!isAdmin()) {
+                // non-admin users can see only their org's processes or processes w/o projects
+                orgIds = getCurrentUserOrgIds();
+            }
         }
+
+        Map<String, String> metaFilters = uriInfo.getQueryParameters().entrySet().stream()
+                .filter(e -> e.getKey().startsWith("meta."))
+                .filter(e -> e.getValue() != null && e.getValue().size() == 1)
+                .collect(Collectors.toMap(e -> e.getKey().substring("meta.".length()), e -> e.getValue().get(0)));
+
 
         ProcessFilter filter = ProcessFilter.builder()
                 .parentId(parentId)
                 .projectId(projectId)
-                .includeWithoutProjects(true)
-                .ordIds(orgIds)
+                .includeWithoutProjects(orgName == null && projectId == null)
+                .orgIds(orgIds)
                 .afterCreatedAt(toTimestamp(afterCreatedAt))
                 .beforeCreatedAt(toTimestamp(beforeCreatedAt))
                 .tags(tags)
                 .status(processStatus)
                 .initiator(initiator)
+                .metaFilters(metaFilters)
                 .build();
 
         return queueDao.list(filter, limit, offset);

@@ -20,7 +20,6 @@
 
 import * as React from 'react';
 import { Button, Dropdown, DropdownItemProps } from 'semantic-ui-react';
-import { SearchFilter } from '../../../api/org/process';
 
 const options: DropdownItemProps[] = [
     { text: '50', value: '50' },
@@ -45,10 +44,10 @@ interface Props {
 }
 
 interface State {
-    filterState: SearchFilter;
+    filterState: PaginationFilter;
 }
 
-const toState = (data?: SearchFilter): State => {
+const toState = (data?: PaginationFilter): State => {
     return { filterState: data || {} };
 };
 

@@ -22,8 +22,9 @@ import { Action } from 'redux';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import {
+    PaginationFilters,
+    ProcessFilters,
     RestoreProcessResponse,
-    SearchFilter,
     StartProcessResponse
 } from '../../../api/org/process';
 import { ProcessEntry } from '../../../api/process';
@@ -39,10 +40,11 @@ export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
 }
 
-export interface ListProjectProcessesRequest extends Action {
+export interface ListProcessesRequest extends Action {
     orgName?: ConcordKey;
     projectName?: ConcordKey;
-    filters?: SearchFilter;
+    filters?: ProcessFilters;
+    pagination?: PaginationFilters;
 }
 
 export interface PaginatedProcessDataResponse extends Action {

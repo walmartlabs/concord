@@ -25,11 +25,11 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import { replace as pushHistory } from 'react-router-redux';
 
 import { queryParams, RequestError } from '../../../api/common';
-import { SearchFilter } from '../../../api/org/process';
-import { ProcessEntry, ProcessStatus } from '../../../api/process';
+import { ProcessEntry } from '../../../api/process';
 import { actions, PaginatedProcesses, State } from '../../../state/data/processes';
 import { RequestErrorMessage } from '../../molecules';
 import {
+    STATUS_COLUMN,
     CREATED_AT_COLUMN,
     INITIATOR_COLUMN,
     REPO_COLUMN,
@@ -39,21 +39,31 @@ import {
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
+import { PaginationFilter } from '../../molecules/Pagination';
+import { ProcessFilters } from '../../../api/org/process';
 
 const defaultColumns = [
+    STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN,
     UPDATED_AT_COLUMN
 ];
+
 const withoutProjectColumns = [
+    STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN,
     UPDATED_AT_COLUMN
 ];
+
+export interface ProcessSearchFilter {
+    filters?: ProcessFilters;
+    pagination?: PaginationFilter;
+}
 
 interface RouteProps {
     status?: string;
@@ -71,7 +81,12 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    load: (orgName?: string, projectName?: string, filters?: SearchFilter) => void;
+    load: (
+        orgName?: string,
+        projectName?: string,
+        filters?: ProcessFilters,
+        pagination?: PaginationFilter
+    ) => void;
 }
 
 interface ExternalProps {
@@ -86,15 +101,41 @@ interface ExternalProps {
 }
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
 
-const parseSearchFilter = (s: string): SearchFilter => {
+export const parseSearchFilter = (s: string): ProcessSearchFilter => {
     const v: any = parseQueryString(s);
+
+    const filters: ProcessFilters = {};
+    Object.keys(v)
+        .filter((k) => k !== 'limit')
+        .filter((k) => k !== 'offset')
+        .filter((k) => v[k] !== undefined)
+        .filter((k) => typeof v[k] === 'string')
+        .forEach((key) => (filters[key] = v[key]));
+
     return {
-        status: v.status ? ProcessStatus[v.status as string] : undefined,
-        initiator: v.initiator ? v.initiator : '',
-        beforeCreatedAt: v.beforeCreatedAt ? v.beforeCreatedAt : undefined,
-        limit: v.limit ? v.limit : 50,
-        offset: v.offset ? v.offset : 0
+        pagination: { limit: v.limit, offset: v.offset },
+        filters
     };
+};
+
+const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | undefined => {
+    if (!columns) {
+        return;
+    }
+
+    return columns.map((c) => {
+        if (c.builtin) {
+            const b = defaultColumns.find((x) => x.source === c.builtin);
+            if (!b) {
+                return {
+                    caption: `Built-in column not found: ${c.builtin}`,
+                    source: 'n/a'
+                };
+            }
+            return b;
+        }
+        return c;
+    });
 };
 
 class ProcessListActivity extends React.Component<Props> {
@@ -104,8 +145,8 @@ class ProcessListActivity extends React.Component<Props> {
 
     componentWillMount() {
         const { orgName, projectName, load, location } = this.props;
-        const filters = parseSearchFilter(location.search);
-        load(orgName, projectName, filters);
+        const f = parseSearchFilter(location.search);
+        load(orgName, projectName, f.filters, f.pagination);
     }
 
     render() {
@@ -133,21 +174,26 @@ class ProcessListActivity extends React.Component<Props> {
         }
 
         const showProjectColumn = !projectName;
-        const cols = columns || (showProjectColumn ? defaultColumns : withoutProjectColumns);
-        const filter = parseSearchFilter(history.location.search);
+        const cols =
+            addBuiltInColumns(columns) ||
+            (showProjectColumn ? defaultColumns : withoutProjectColumns);
+        const f = parseSearchFilter(history.location.search);
         return (
             <>
                 {loadError && <RequestErrorMessage error={loadError} />}
 
                 <ProcessListWithSearch
-                    filterProps={filter}
+                    paginationFilter={f.pagination}
+                    processFilters={f.filters}
                     processes={processes}
                     next={next}
                     prev={prev}
                     columns={cols}
                     loading={loading}
                     loadError={loadError}
-                    refresh={(filters) => load(orgName, projectName, filters)}
+                    refresh={(processFilters, paginationFilters) =>
+                        load(orgName, projectName, processFilters, paginationFilters)
+                    }
                     showInitiatorFilter={showInitiatorFilter}
                     usePagination={usePagination}
                 />
@@ -158,11 +204,9 @@ class ProcessListActivity extends React.Component<Props> {
 
 // TODO move to selectors
 const makeProcessList = (data: PaginatedProcesses): ProcessEntry[] => {
-    const processEntryList = Object.keys(data.processes)
+    return Object.keys(data.processes)
         .map((k) => data.processes[k])
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
-
-    return processEntryList;
 };
 
 const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
@@ -174,11 +218,22 @@ const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
-    load: (orgName?, projectName?, filters?) => {
-        if (filters) {
-            dispatch(pushHistory({ search: queryParams(filters) }));
+    load: (orgName?, projectName?, filters?, paginationFilters?) => {
+        if (filters || paginationFilters) {
+            const f = {};
+            if (filters !== undefined) {
+                Object.keys(filters)
+                    .filter((k) => k !== undefined)
+                    .forEach((key) => (f[key] = filters[key]));
+            }
+            if (paginationFilters !== undefined) {
+                Object.keys(paginationFilters)
+                    .filter((k) => k !== undefined)
+                    .forEach((key) => (f[key] = paginationFilters[key]));
+            }
+            dispatch(pushHistory({ search: queryParams(f) }));
         }
-        dispatch(actions.listProjectProcesses(orgName, projectName, filters));
+        dispatch(actions.listProcesses(orgName, projectName, filters, paginationFilters));
     }
 });
 

@@ -149,7 +149,7 @@ public class GithubEventResourceIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
 
         while (!Thread.currentThread().isInterrupted()) {
-            List<ProcessEntry> process = processApi.list(projectId, null, null, Collections.singletonList(processTag), ProcessEntry.StatusEnum.FINISHED.getValue(), null, null, expectedCount + 1, 0);
+            List<ProcessEntry> process = processApi.list(null, null, projectId, null, null, Collections.singletonList(processTag), ProcessEntry.StatusEnum.FINISHED.getValue(), null, null, expectedCount + 1, 0);
             if (process.size() == expectedCount) {
                 return process;
             }

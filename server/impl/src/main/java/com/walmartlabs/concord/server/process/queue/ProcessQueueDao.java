@@ -439,12 +439,12 @@ public class ProcessQueueDao extends AbstractDao {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
 
-            if (filter.getOrgIds() != null && !filter.getOrgIds().isEmpty()) {
+            if (filter.orgIds() != null && !filter.orgIds().isEmpty()) {
                 SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
                         .from(PROJECTS)
-                        .where(PROJECTS.ORG_ID.in(filter.getOrgIds()));
+                        .where(PROJECTS.ORG_ID.in(filter.orgIds()));
 
-                if (filter.isIncludeWoProjects()) {
+                if (filter.includeWithoutProjects()) {
                     s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds)
                             .or(V_PROCESS_QUEUE.PROJECT_ID.isNull()));
                 } else {
@@ -452,33 +452,35 @@ public class ProcessQueueDao extends AbstractDao {
                 }
             }
 
-            if (filter.getProjectId() != null) {
-                s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(filter.getProjectId()));
+            if (filter.projectId() != null) {
+                s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()));
             }
 
-            if (filter.getAfterCreatedAt() != null) {
-                s.where(V_PROCESS_QUEUE.CREATED_AT.greaterThan(filter.getAfterCreatedAt()));
+            if (filter.afterCreatedAt() != null) {
+                s.where(V_PROCESS_QUEUE.CREATED_AT.greaterThan(filter.afterCreatedAt()));
             }
 
-            if (filter.getBeforeCreatedAt() != null) {
-                s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(filter.getBeforeCreatedAt()));
+            if (filter.beforeCreatedAt() != null) {
+                s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(filter.beforeCreatedAt()));
             }
 
-            if (filter.getInitiator() != null) {
-                s.where(V_PROCESS_QUEUE.INITIATOR.startsWith(filter.getInitiator()));
+            if (filter.initiator() != null) {
+                s.where(V_PROCESS_QUEUE.INITIATOR.startsWith(filter.initiator()));
             }
 
-            if (filter.getProcessStatus() != null) {
-                s.where(V_PROCESS_QUEUE.CURRENT_STATUS.eq(filter.getProcessStatus().name()));
+            if (filter.status() != null) {
+                s.where(V_PROCESS_QUEUE.CURRENT_STATUS.eq(filter.status().name()));
             }
 
-            if (filter.getParentId() != null) {
-                s.where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.getParentId()));
+            if (filter.parentId() != null) {
+                s.where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.parentId()));
             }
 
-            filterByTags(s, filter.getTags());
+            filterByMetaFilters(s, filter.metaFilters());
 
-            boolean findAdjacentToDateRows = filter.getBeforeCreatedAt() == null && filter.getAfterCreatedAt() != null;
+            filterByTags(s, filter.tags());
+
+            boolean findAdjacentToDateRows = filter.beforeCreatedAt() == null && filter.beforeCreatedAt() != null;
             if (findAdjacentToDateRows) {
                 s.orderBy(V_PROCESS_QUEUE.CREATED_AT.asc());
             } else {
@@ -515,22 +517,36 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    private Select<VProcessQueueRecord> filterByTags(SelectWhereStep<VProcessQueueRecord> q, Set<String> tags) {
-        if (tags == null || tags.isEmpty()) {
-            return q;
+    private void filterByMetaFilters(SelectWhereStep<VProcessQueueRecord> q, Map<String, String> filters) {
+        if (filters == null || filters.isEmpty()) {
+            return;
         }
 
-        String[] as = tags.toArray(new String[0]);
-        return q.where(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
+        for (Map.Entry<String, String> e : filters.entrySet()) {
+            q.where(jsonText(V_PROCESS_QUEUE.META, e.getKey()).contains(e.getValue()));
+        }
     }
 
-    private SelectConditionStep<VProcessQueueRecord> filterByTags(SelectConditionStep<VProcessQueueRecord> q, Set<String> tags) {
+    private static Field<String> jsonText(Field<?> field, String name) {
+        return field("{0}::jsonb->>{1}", Object.class, field, inline(name)).cast(String.class);
+    }
+
+    private void filterByTags(SelectWhereStep<VProcessQueueRecord> q, Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
-            return q;
+            return;
         }
 
         String[] as = tags.toArray(new String[0]);
-        return q.and(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
+        q.where(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
+    }
+
+    private void filterByTags(SelectConditionStep<VProcessQueueRecord> q, Set<String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return;
+        }
+
+        String[] as = tags.toArray(new String[0]);
+        q.and(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
     }
 
     public boolean exists(PartialProcessKey processKey) {

@@ -25,10 +25,30 @@ export enum OrganizationVisibility {
     PRIVATE = 'PRIVATE'
 }
 
+export enum SearchValueType {
+    STRING = 'string'
+}
+
+export enum SearchType {
+    SUBSTRING = 'substring',
+    EQUALS = 'equals'
+}
+
+export interface SearchOption {
+    value: string;
+    text: string;
+}
+
 export interface ColumnDefinition {
+    builtin?: string;
     caption: string;
     source: string;
-    render?: 'process-link' | 'project-link' | 'timestamp' | 'repo-link';
+    textAlign?: 'center' | 'left' | 'right';
+    collapsing?: boolean;
+    render?: 'process-link' | 'process-status' | 'project-link' | 'timestamp' | 'repo-link';
+    searchValueType?: SearchValueType;
+    searchType?: SearchType;
+    searchOptions?: SearchOption[];
 }
 
 export interface OrganizationEntryMetaUI {

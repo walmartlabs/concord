@@ -87,7 +87,7 @@ public class UserActivityResource implements Resource {
         ProcessFilter filter = ProcessFilter.builder()
                 .includeWithoutProjects(true)
                 .initiator(user.getUsername())
-                .ordIds(orgIds)
+                .orgIds(orgIds)
                 .build();
         List<ProcessEntry> lastProcesses = processDao.list(filter, maxOwnProcesses, 0);
 

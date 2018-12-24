@@ -92,7 +92,7 @@ public class PortalIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        List<ProcessEntry> l = processApi.list(por.getId(), null, null, null, null, null, null, 10, 0);
+        List<ProcessEntry> l = processApi.list(null, null, por.getId(), null, null, null, null, null, null, 10, 0);
         assertEquals(1, l.size());
 
         // ---

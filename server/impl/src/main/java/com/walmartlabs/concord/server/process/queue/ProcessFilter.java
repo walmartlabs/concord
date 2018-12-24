@@ -21,142 +21,50 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.server.process.ProcessStatus;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class ProcessFilter {
+@Value.Immutable
+public interface ProcessFilter {
 
-    private final Timestamp afterCreatedAt;
+    @Nullable
+    Timestamp afterCreatedAt();
 
-    private final Timestamp beforeCreatedAt;
+    @Nullable
+    Timestamp beforeCreatedAt();
 
-    private final boolean includeWoProjects;
-
-    private final String initiator;
-
-    private final Set<UUID> orgIds;
-
-    private final UUID parentId;
-
-    private final UUID projectId;
-
-    private final ProcessStatus processStatus;
-
-    private final Set<String> tags;
-
-    protected ProcessFilter(Timestamp afterCreatedAt, Timestamp beforeCreatedAt, boolean includeWoProjects, String initiator, Set<UUID> orgIds, UUID parentId, UUID projectId, ProcessStatus processStatus, Set<String> tags) {
-        this.afterCreatedAt = afterCreatedAt;
-        this.beforeCreatedAt = beforeCreatedAt;
-        this.includeWoProjects = includeWoProjects;
-        this.initiator = initiator;
-        this.orgIds = orgIds;
-        this.parentId = parentId;
-        this.projectId = projectId;
-        this.processStatus = processStatus;
-        this.tags = tags;
+    @Value.Default
+    default boolean includeWithoutProjects() {
+        return false;
     }
 
-    public Timestamp getAfterCreatedAt() {
-        return afterCreatedAt;
-    }
+    @Nullable
+    String initiator();
 
-    public Timestamp getBeforeCreatedAt() {
-        return beforeCreatedAt;
-    }
+    @Nullable
+    Set<UUID> orgIds();
 
-    public boolean isIncludeWoProjects() {
-        return includeWoProjects;
-    }
+    @Nullable
+    UUID parentId();
 
-    public String getInitiator() {
-        return initiator;
-    }
+    @Nullable
+    UUID projectId();
 
-    public Set<UUID> getOrgIds() {
-        return orgIds;
-    }
+    @Nullable
+    ProcessStatus status();
 
-    public UUID getParentId() {
-        return parentId;
-    }
+    @Nullable
+    Set<String> tags();
 
-    public UUID getProjectId() {
-        return projectId;
-    }
+    @Nullable
+    Map<String, String> metaFilters();
 
-    public ProcessStatus getProcessStatus() {
-        return processStatus;
-    }
-
-    public Set<String> getTags() {
-        return tags;
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-
-        private Timestamp afterCreatedAt;
-        private Timestamp beforeCreatedAt;
-        private boolean includeWoProjects;
-        private String initiator;
-        private Set<UUID> orgIds;
-        private UUID parentId;
-        private UUID projectId;
-        private ProcessStatus processStatus;
-        private Set<String> tags;
-
-        public Builder projectId(UUID projectId) {
-            this.projectId = projectId;
-            return this;
-        }
-
-        public Builder includeWithoutProjects(boolean includeWoProjects) {
-            this.includeWoProjects = includeWoProjects;
-            return this;
-        }
-
-        public Builder ordIds(Set<UUID> orgIds) {
-            this.orgIds = orgIds;
-            return this;
-        }
-
-        public Builder afterCreatedAt(Timestamp afterCreatedAt) {
-            this.afterCreatedAt = afterCreatedAt;
-            return this;
-        }
-
-        public Builder beforeCreatedAt(Timestamp beforeCreatedAt) {
-            this.beforeCreatedAt = beforeCreatedAt;
-            return this;
-        }
-
-        public Builder tags(Set<String> tags) {
-            this.tags = tags;
-            return this;
-        }
-
-        public Builder status(ProcessStatus processStatus) {
-            this.processStatus = processStatus;
-            return this;
-        }
-
-        public Builder initiator(String initiator) {
-            this.initiator = initiator;
-            return this;
-        }
-
-        public Builder parentId(UUID parentId) {
-            this.parentId = parentId;
-            return this;
-        }
-
-        public ProcessFilter build() {
-            return new ProcessFilter(afterCreatedAt, beforeCreatedAt, includeWoProjects, initiator, orgIds, parentId, projectId, processStatus, tags);
-        }
+    static ImmutableProcessFilter.Builder builder() {
+        return ImmutableProcessFilter.builder();
     }
 }

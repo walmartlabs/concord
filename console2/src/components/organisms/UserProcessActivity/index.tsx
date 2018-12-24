@@ -37,7 +37,8 @@ import {
     REPO_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
-    UPDATED_AT_COLUMN
+    UPDATED_AT_COLUMN,
+    STATUS_COLUMN
 } from '../../molecules/ProcessList';
 
 const MAX_OWN_PROCESSES = 10;
@@ -97,7 +98,7 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
     }
 
     render() {
-        const { userActivity, loading, error, load } = this.props;
+        const { userActivity, loading, error } = this.props;
         if (error) {
             return <RequestErrorMessage error={error} />;
         }
@@ -125,8 +126,8 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
                 </Header>
                 <ProcessList
                     data={processes}
-                    refresh={load}
                     columns={[
+                        STATUS_COLUMN,
                         INSTANCE_ID_COLUMN,
                         PROJECT_COLUMN,
                         REPO_COLUMN,

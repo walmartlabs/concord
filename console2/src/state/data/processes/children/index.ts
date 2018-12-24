@@ -21,7 +21,11 @@ import { ConcordId } from '../../../../api/common';
 import { ListProcessChildrenRequest, State } from './types';
 import { combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
-import { list as apiProcessList, SearchFilter } from '../../../../api/org/process';
+import {
+    list as apiProcessList,
+    PaginationFilters,
+    ProcessFilters
+} from '../../../../api/org/process';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
 import { PaginatedProcessDataResponse, PaginatedProcesses } from '../types';
 
@@ -33,10 +37,15 @@ const actionTypes = {
 };
 
 export const actions = {
-    listChildren: (parentId: ConcordId, filters?: SearchFilter): ListProcessChildrenRequest => ({
+    listChildren: (
+        parentId: ConcordId,
+        filters?: ProcessFilters,
+        pagination?: PaginationFilters
+    ): ListProcessChildrenRequest => ({
         type: actionTypes.LIST_PROCESS_CHILDREN_REQUEST,
         parentId,
-        filters
+        filters,
+        pagination
     })
 };
 
@@ -78,7 +87,7 @@ export const reducers = combineReducers<State>({
     error: errorMsg
 });
 
-function* onList({ parentId, filters }: ListProcessChildrenRequest) {
+function* onList({ parentId, filters, pagination }: ListProcessChildrenRequest) {
     try {
         const orgName = undefined;
         const projectName = undefined;
@@ -87,7 +96,7 @@ function* onList({ parentId, filters }: ListProcessChildrenRequest) {
         } else {
             filters.parentInstanceId = parentId;
         }
-        const response = yield call(apiProcessList, orgName, projectName, filters);
+        const response = yield call(apiProcessList, orgName, projectName, filters, pagination);
         yield put({
             type: actionTypes.LIST_PROCESS_CHILDREN_RESPONSE,
             items: response.items,

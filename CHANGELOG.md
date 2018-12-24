@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: custom process list filters based
+on process metadata;
 - concord-server: new `/api/v2/trigger` endpoint. Currently only the
 list method is provided;
 - concord-console: externalize extra links in the system menu, allow
@@ -24,7 +26,7 @@ from working correctly;
 restoring a process from a checkpoint;
 - concord-server, concord-agent: perform `git clone` on the Agent,
 keep only the changes in the DB;
-- bpm: updated to 0.51.0, fixed the resolving order of tasks and
+- bpm: updated to 0.51.0, fixed the resolution order of tasks and
 variables. Now flow variables can shadow the registered tasks;
 - concord-console: prevent table overflow on process detail table;
 - concord-console: move the Ansible stats table above the flow event

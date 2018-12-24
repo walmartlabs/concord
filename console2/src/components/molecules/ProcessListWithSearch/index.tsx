@@ -19,14 +19,12 @@
  */
 
 import * as React from 'react';
-import { Button, Input, Menu } from 'semantic-ui-react';
+import { Button, Icon, Label, Popup, Table } from 'semantic-ui-react';
 
 import { RequestError, ConcordId } from '../../../api/common';
-import { SearchFilter } from '../../../api/org/process';
-import { ProcessEntry, ProcessStatus } from '../../../api/process';
+import { ProcessEntry } from '../../../api/process';
 import {
     ProcessList,
-    ProcessStatusDropdown,
     RequestErrorMessage,
     BulkProcessActionDropdown,
     Pagination
@@ -34,14 +32,18 @@ import {
 import { ColumnDefinition } from '../../../api/org';
 
 import {
+    STATUS_COLUMN,
     CREATED_AT_COLUMN,
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     UPDATED_AT_COLUMN
 } from '../ProcessList';
+import { PaginationFilter } from '../Pagination';
+import { ProcessFilters } from '../../../api/org/process';
 
 const defaultColumns = [
+    STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
@@ -49,6 +51,7 @@ const defaultColumns = [
     UPDATED_AT_COLUMN
 ];
 const withoutProjectColumns = [
+    STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN,
@@ -61,7 +64,9 @@ interface Props {
     orgName?: string;
     projectName?: string;
 
-    filterProps?: SearchFilter;
+    processFilters?: ProcessFilters;
+    paginationFilter?: PaginationFilter;
+
     showInitiatorFilter?: boolean;
 
     columns: ColumnDefinition[];
@@ -74,60 +79,121 @@ interface Props {
 
     usePagination?: boolean;
 
-    refresh: (filters?: SearchFilter) => void;
+    refresh: (processFilters?: ProcessFilters, paginationFilters?: PaginationFilter) => void;
 }
 
 interface State {
-    filterState: SearchFilter;
+    processFilters: ProcessFilters;
+    paginationFilter: PaginationFilter;
     selectedProcessIds: ConcordId[];
 }
 
-const toState = (selectedProcessIds: ConcordId[], data?: SearchFilter): State => {
-    return { filterState: data || {}, selectedProcessIds };
+const toState = (
+    selectedProcessIds: ConcordId[],
+    processFilters?: ProcessFilters,
+    paginationFilter?: PaginationFilter
+): State => {
+    return {
+        paginationFilter: paginationFilter || {},
+        processFilters: processFilters || {},
+        selectedProcessIds
+    };
 };
+
+function hasFilter(processFilters: ProcessFilters) {
+    return Object.keys(processFilters).filter((k) => processFilters[k] !== '').length > 0;
+}
+
+function renderFilter(
+    filterValue: string,
+    c: ColumnDefinition,
+    clearFilter: (source: string) => void
+) {
+    return (
+        <Label key={c.source} as="a" onClick={() => clearFilter(c.source)}>
+            {c.caption}:<Label.Detail>{filterValue}</Label.Detail>
+            <Icon name="delete" />
+        </Label>
+    );
+}
+
+function getDefinition(source: string, cols: ColumnDefinition[]) {
+    for (const c of cols) {
+        if (c.source === source) {
+            return c;
+        }
+    }
+    return { source, caption: 'n/a' };
+}
+
+function renderFiltersToolbar(
+    cols: ColumnDefinition[],
+    processFilters: ProcessFilters,
+    clearFilter: (source: string) => void
+) {
+    return Object.keys(processFilters).map((k) =>
+        renderFilter(processFilters[k], getDefinition(k, cols), clearFilter)
+    );
+}
 
 class ProcessListWithSearch extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = toState([], this.props.filterProps);
+        this.state = toState([], this.props.processFilters, this.props.paginationFilter);
         this.onSelectProcess = this.onSelectProcess.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
         this.handleNext = this.handleNext.bind(this);
         this.handleFirst = this.handleFirst.bind(this);
+        this.onFilterChange = this.onFilterChange.bind(this);
+        this.onFiltersClear = this.onFiltersClear.bind(this);
+        this.onFilterClear = this.onFilterClear.bind(this);
     }
 
-    handleStatusChange(s?: string) {
-        const { filterState } = this.state;
+    onFilterChange(column: ColumnDefinition, filterValue?: string) {
+        const { processFilters, paginationFilter } = this.state;
         const { refresh } = this.props;
-        const status: ProcessStatus = s && s.length > 0 ? ProcessStatus[s] : undefined;
-        if (filterState.status !== status) {
-            this.setState({
-                filterState: { initiator: filterState.initiator, status, limit: filterState.limit }
-            });
-            refresh({ initiator: filterState.initiator, status, limit: filterState.limit });
+
+        const newProcessFilters = {};
+        Object.keys(processFilters)
+            .filter((k) => k !== column.source)
+            .forEach((k) => (newProcessFilters[k] = processFilters[k]));
+
+        if (filterValue !== undefined) {
+            newProcessFilters[column.source] = filterValue;
         }
+
+        this.setState({ processFilters: newProcessFilters });
+        refresh(newProcessFilters, paginationFilter);
     }
 
-    handleInitiatorChange(s?: string) {
-        const { filterState } = this.state;
-        const initiator = s && s.length > 0 ? s : undefined;
+    onFiltersClear() {
+        const { paginationFilter } = this.state;
+        const { refresh } = this.props;
+        const processFilters = {};
+        this.setState({ processFilters });
+        refresh(processFilters, paginationFilter);
+    }
 
-        if (filterState.initiator !== s) {
-            this.setState({
-                filterState: { status: filterState.status, initiator, limit: filterState.limit }
-            });
-        }
+    onFilterClear(source: string) {
+        const { paginationFilter, processFilters } = this.state;
+        const { refresh } = this.props;
+        const newProcessFilters = {};
+        Object.keys(processFilters)
+            .filter((k) => k !== source)
+            .forEach((k) => (newProcessFilters[k] = processFilters[k]));
+        this.setState({ processFilters: newProcessFilters });
+        refresh(newProcessFilters, paginationFilter);
     }
 
     handleLimitChange(limit: any) {
-        const { filterState } = this.state;
+        const { paginationFilter, processFilters } = this.state;
         const { refresh } = this.props;
-        if (filterState.limit !== limit) {
+        if (paginationFilter.limit !== limit) {
             this.setState({
-                filterState: { limit, initiator: filterState.initiator, status: filterState.status }
+                paginationFilter: { limit }
             });
-            refresh({ initiator: filterState.initiator, status: filterState.status, limit });
+            refresh(processFilters, { limit });
         }
     }
 
@@ -144,28 +210,10 @@ class ProcessListWithSearch extends React.Component<Props, State> {
     }
 
     handleNavigation(offset?: number) {
-        const { filterState } = this.state;
+        const { paginationFilter, processFilters } = this.state;
         const { refresh } = this.props;
 
-        refresh({
-            offset,
-            status: filterState.status,
-            limit: filterState.limit,
-            initiator: filterState.initiator
-        });
-    }
-
-    handleInitiatorOnBlur() {
-        const { refresh, filterProps } = this.props;
-        const { filterState } = this.state;
-        const prevInitiator = filterProps ? filterProps.initiator : '';
-        if (prevInitiator !== filterState.initiator) {
-            refresh({
-                initiator: filterState.initiator,
-                status: filterState.status,
-                limit: filterState.limit
-            });
-        }
+        refresh(processFilters, { offset, limit: paginationFilter.limit });
     }
 
     onSelectProcess(processIds: ConcordId[]) {
@@ -174,18 +222,34 @@ class ProcessListWithSearch extends React.Component<Props, State> {
 
     onRefresh() {
         const { refresh } = this.props;
-        const { filterState } = this.state;
-        refresh({
-            limit: filterState.limit,
-            status: filterState.status,
-            initiator: filterState.initiator
-        });
+        const { processFilters, paginationFilter } = this.state;
+        refresh(processFilters, paginationFilter);
+    }
+
+    renderFilterLabels(cols: ColumnDefinition[], processFilters: ProcessFilters, loading: boolean) {
+        return (
+            <>
+                <span style={{ marginRight: '10px' }}>Active filters:</span>
+                {renderFiltersToolbar(cols, processFilters, this.onFilterClear)}
+                <Popup
+                    trigger={
+                        <Button
+                            basic={true}
+                            icon="ban"
+                            loading={loading}
+                            style={{ marginLeft: '10px' }}
+                            onClick={this.onFiltersClear}
+                        />
+                    }
+                    content="Clear filters"
+                />
+            </>
+        );
     }
 
     render() {
         const {
             processes,
-            showInitiatorFilter = false,
             usePagination = false,
             columns,
             projectName,
@@ -195,7 +259,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
             next
         } = this.props;
 
-        const { filterState } = this.state;
+        const { processFilters, paginationFilter } = this.state;
 
         if (loadError) {
             return <RequestErrorMessage error={loadError} />;
@@ -212,59 +276,51 @@ class ProcessListWithSearch extends React.Component<Props, State> {
             <>
                 {loadError && <RequestErrorMessage error={loadError} />}
 
-                <Menu attached="top" borderless={true}>
-                    <Menu.Item>
-                        <Button
-                            basic={true}
-                            icon="refresh"
-                            loading={loading}
-                            onClick={this.onRefresh}
-                        />
-                    </Menu.Item>
-                    <Menu.Item>
-                        <ProcessStatusDropdown
-                            value={filterState.status}
-                            onChange={(ev, data) => this.handleStatusChange(data.value as string)}
-                        />
-                    </Menu.Item>
-                    {showInitiatorFilter && (
-                        <Menu.Item>
-                            <Input
-                                placeholder="Initiator"
-                                value={filterState.initiator ? filterState.initiator : ''}
-                                onBlur={() => this.handleInitiatorOnBlur()}
-                                onChange={(ev, data) => this.handleInitiatorChange(data.value)}
-                            />
-                        </Menu.Item>
-                    )}
-
-                    <Menu.Item>
-                        <BulkProcessActionDropdown
-                            data={this.state.selectedProcessIds}
-                            refresh={this.onRefresh}
-                        />
-                    </Menu.Item>
-                    {usePagination && (
-                        <Menu.Item position="right">
-                            <Pagination
-                                filterProps={filterState}
-                                handleLimitChange={(limit) => this.handleLimitChange(limit)}
-                                handleNext={this.handleNext}
-                                handlePrev={this.handlePrev}
-                                handleFirst={this.handleFirst}
-                                disablePrevious={prev === undefined}
-                                disableNext={next === undefined}
-                                disableFirst={prev === undefined}
-                            />
-                        </Menu.Item>
-                    )}
-                </Menu>
+                <Table attached="top" basic={true} style={{ borderBottom: 0 }}>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell collapsing={true}>
+                                <Button
+                                    basic={true}
+                                    icon="refresh"
+                                    loading={loading}
+                                    onClick={this.onRefresh}
+                                />
+                            </Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>
+                                <BulkProcessActionDropdown
+                                    data={this.state.selectedProcessIds}
+                                    refresh={this.onRefresh}
+                                />
+                            </Table.HeaderCell>
+                            <Table.HeaderCell>
+                                {hasFilter(processFilters) &&
+                                    this.renderFilterLabels(cols, processFilters, loading)}
+                            </Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true} style={{ fontWeight: 'normal' }}>
+                                {usePagination && (
+                                    <Pagination
+                                        filterProps={paginationFilter}
+                                        handleLimitChange={(limit) => this.handleLimitChange(limit)}
+                                        handleNext={this.handleNext}
+                                        handlePrev={this.handlePrev}
+                                        handleFirst={this.handleFirst}
+                                        disablePrevious={prev === undefined}
+                                        disableNext={next === undefined}
+                                        disableFirst={prev === undefined}
+                                    />
+                                )}
+                            </Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                </Table>
 
                 <ProcessList
                     data={processes}
                     columns={cols}
-                    refresh={this.onRefresh}
                     onSelectProcess={this.onSelectProcess}
+                    filterProps={processFilters}
+                    onFilterChange={this.onFilterChange}
                 />
             </>
         );

@@ -22,7 +22,11 @@ import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
-import { list as apiOrgList, SearchFilter } from '../../../api/org/process';
+import {
+    list as apiProcessList,
+    PaginationFilters,
+    ProcessFilters
+} from '../../../api/org/process';
 import {
     get as apiGet,
     kill as apiKill,
@@ -44,7 +48,7 @@ import {
     CancelProcessRequest,
     CancelProcessState,
     GetProcessRequest,
-    ListProjectProcessesRequest,
+    ListProcessesRequest,
     PaginatedProcessDataResponse,
     PaginatedProcesses,
     ProcessDataResponse,
@@ -88,15 +92,17 @@ export const actions = {
         instanceId
     }),
 
-    listProjectProcesses: (
+    listProcesses: (
         orgName?: ConcordKey,
         projectName?: ConcordKey,
-        filters?: SearchFilter
-    ): ListProjectProcessesRequest => ({
+        filters?: ProcessFilters,
+        pagination?: PaginationFilters
+    ): ListProcessesRequest => ({
         type: actionTypes.LIST_PROJECT_PROCESSES_REQUEST,
         orgName,
         projectName,
-        filters
+        filters,
+        pagination
     }),
 
     startProcess: (
@@ -286,9 +292,9 @@ function* onGetProcess({ instanceId }: GetProcessRequest) {
     }
 }
 
-function* onProjectList({ orgName, projectName, filters }: ListProjectProcessesRequest) {
+function* onProcessList({ orgName, projectName, filters, pagination }: ListProcessesRequest) {
     try {
-        const response = yield call(apiOrgList, orgName, projectName, filters);
+        const response = yield call(apiProcessList, orgName, projectName, filters, pagination);
         yield put({
             type: actionTypes.PROCESSES_DATA_RESPONSE,
             items: response.items,
@@ -351,7 +357,7 @@ function* onRestoreProcess({ instanceId, checkpointId }: RestoreProcessRequest) 
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
-        throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProjectList),
+        throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProcessList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),
         takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),

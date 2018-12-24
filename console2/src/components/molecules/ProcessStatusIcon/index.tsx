@@ -55,7 +55,15 @@ export default ({ status, size = 'large', inverted = true }: ProcessStatusIconPr
 
     return (
         <Popup
-            trigger={<Icon name={i.name} color={i.color} size={size} loading={i.loading} />}
+            trigger={
+                <Icon
+                    name={i.name}
+                    color={i.color}
+                    size={size}
+                    loading={i.loading}
+                    style={{ margin: 0 }}
+                />
+            }
             content={status}
             inverted={inverted}
             position="top center"

@@ -22,9 +22,25 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Checkbox, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
-import { ColumnDefinition } from '../../../api/org';
-import { canBeCancelled, ProcessEntry } from '../../../api/process';
+import { ColumnDefinition, SearchType, SearchValueType } from '../../../api/org';
+import { canBeCancelled, ProcessEntry, ProcessStatus } from '../../../api/process';
 import { LocalTimestamp, ProcessStatusIcon } from '../../molecules';
+import { TableSearchFilter } from '../../atoms';
+import { ProcessFilters } from '../../../api/org/process';
+
+export const STATUS_COLUMN: ColumnDefinition = {
+    caption: 'Status',
+    source: 'status',
+    render: 'process-status',
+    textAlign: 'center',
+    collapsing: true,
+    searchValueType: SearchValueType.STRING,
+    searchType: SearchType.EQUALS,
+    searchOptions: Object.keys(ProcessStatus).map((k) => ({
+        value: k,
+        text: k
+    }))
+};
 
 export const INSTANCE_ID_COLUMN: ColumnDefinition = {
     caption: 'Instance ID',
@@ -46,7 +62,9 @@ export const REPO_COLUMN: ColumnDefinition = {
 
 export const INITIATOR_COLUMN: ColumnDefinition = {
     caption: 'Initiator',
-    source: 'initiator'
+    source: 'initiator',
+    searchValueType: SearchValueType.STRING,
+    searchType: SearchType.SUBSTRING
 };
 
 export const CREATED_AT_COLUMN: ColumnDefinition = {
@@ -69,12 +87,15 @@ interface Props {
     data: ProcessEntry[];
     orgName?: string;
     columns: ColumnDefinition[];
-    refresh: () => void;
     onSelectProcess?: (selectedIds: ConcordId[]) => void;
+
+    filterProps?: ProcessFilters;
+    onFilterChange?: (column: ColumnDefinition, filterValue?: string) => void;
 }
 
 interface State {
     data: Entry[];
+    active: boolean;
 }
 
 const toState = (data: ProcessEntry[]): Entry[] => {
@@ -86,25 +107,16 @@ const getValue = (source: string, e: ProcessEntry) => {
         return {};
     }
 
-    const result = {};
-    Object.keys(e).forEach((k) => {
-        const v = e[k];
-        if (v !== undefined && v !== null) {
-            result[k] = v;
+    if (source.startsWith('meta.')) {
+        if (e.meta === undefined) {
+            return 'n/a';
         }
-    });
 
-    if (e.meta !== undefined) {
-        const meta = e.meta;
-        Object.keys(meta).forEach((k) => {
-            const v = meta[k];
-            if (v !== undefined && v !== null) {
-                result[k] = v;
-            }
-        });
+        const src = source.substring('meta.'.length);
+        return e.meta[src];
     }
 
-    return result[source];
+    return e[source];
 };
 
 const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
@@ -123,24 +135,67 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
                 {v}
             </Link>
         );
+    } else if (c.render === 'process-status') {
+        return <ProcessStatusIcon status={e.status} />;
     }
 
     return v;
 };
 
 const renderColumn = (idx: number, e: Entry, c: ColumnDefinition) => {
-    return <Table.Cell key={idx}>{renderColumnContent(e, c)}</Table.Cell>;
+    return (
+        <Table.Cell key={idx} textAlign={c.textAlign}>
+            {renderColumnContent(e, c)}
+        </Table.Cell>
+    );
 };
 
-const renderColumnCaption = (c: ColumnDefinition) => {
-    return <Table.HeaderCell key={c.caption}>{c.caption}</Table.HeaderCell>;
+const renderSearchFilter = (
+    c: ColumnDefinition,
+    filterProps?: ProcessFilters,
+    onFilterChange?: (column: ColumnDefinition, filterValue: string) => void
+) => {
+    if (
+        c.searchValueType === undefined ||
+        onFilterChange === undefined ||
+        filterProps === undefined
+    ) {
+        return;
+    }
+
+    const filterCurrentValue = filterProps[c.source];
+
+    return (
+        <TableSearchFilter
+            column={c}
+            currentValue={filterCurrentValue}
+            onFilterChange={(column, filterValue) => onFilterChange(column, filterValue)}
+        />
+    );
+};
+
+const renderColumnCaption = (
+    c: ColumnDefinition,
+    filterProps?: ProcessFilters,
+    onFilterChange?: (column: ColumnDefinition, filterValue: string) => void
+) => {
+    const searchFilter = renderSearchFilter(c, filterProps, onFilterChange);
+    return (
+        <Table.HeaderCell
+            style={{ whiteSpace: 'nowrap' }}
+            key={c.caption}
+            collapsing={c.collapsing}>
+            {c.caption}
+            {searchFilter}
+        </Table.HeaderCell>
+    );
 };
 
 class ProcessList extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
 
-        this.state = { data: toState(props.data) };
+        this.state = { data: toState(props.data), active: false };
     }
 
     componentDidUpdate(prevProps: Props) {
@@ -209,8 +264,8 @@ class ProcessList extends React.Component<Props, State> {
         }
     }
 
-    renderTableHeader(rows: Entry[], refresh: () => void, columns: ColumnDefinition[]) {
-        const { onSelectProcess } = this.props;
+    renderTableHeader(rows: Entry[], columns: ColumnDefinition[]) {
+        const { onSelectProcess, onFilterChange, filterProps } = this.props;
         const selectedProcessIds: ConcordId[] = [];
         rows.forEach((p) => {
             if (p.checked) {
@@ -241,8 +296,7 @@ class ProcessList extends React.Component<Props, State> {
                         />
                     </Table.HeaderCell>
                 )}
-                <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
-                {columns.map((c) => renderColumnCaption(c))}
+                {columns.map((c) => renderColumnCaption(c, filterProps, onFilterChange))}
             </Table.Row>
         );
     }
@@ -264,25 +318,33 @@ class ProcessList extends React.Component<Props, State> {
                         />
                     </Table.Cell>
                 )}
-                <Table.Cell textAlign="center">
-                    <ProcessStatusIcon status={row.status} />
-                </Table.Cell>
                 {columns.map((c, id) => renderColumn(id, row, c))}
             </Table.Row>
         );
     }
 
     render() {
-        const { columns, refresh } = this.props;
+        const { columns, onFilterChange } = this.props;
         const { data } = this.state;
 
+        const canBeFiltered = onFilterChange !== undefined;
+
         if (!data || data.length === 0) {
-            return <h3>No processes found.</h3>;
+            return (
+                <>
+                    {canBeFiltered && (
+                        <Table celled={true} attached="bottom" selectable={true}>
+                            <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
+                        </Table>
+                    )}
+                    <h3>No processes found.</h3>
+                </>
+            );
         }
 
         return (
             <Table celled={true} attached="bottom" selectable={true}>
-                <Table.Header>{this.renderTableHeader(data, refresh, columns)}</Table.Header>
+                <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
 
                 <Table.Body>{data.map((p, idx) => this.renderTableRow(p, columns))}</Table.Body>
             </Table>

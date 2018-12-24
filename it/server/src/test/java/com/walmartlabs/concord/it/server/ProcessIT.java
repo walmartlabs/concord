@@ -353,10 +353,10 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        l = processApi.list(null, null, null, Collections.singletonList("xyz"), null, null, null, 1, 0);
+        l = processApi.list(null, null, null, null, null, Collections.singletonList("xyz"), null, null, null, 1, 0);
         assertTrue(l.isEmpty());
 
-        l = processApi.list(null, null, null, Collections.singletonList("IT"), null, null, null, 1, 0);
+        l = processApi.list(null, null, null, null, null, Collections.singletonList("IT"), null, null, null, 1, 0);
         assertEquals(1, l.size());
 
         e = l.get(0);
@@ -392,13 +392,13 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        List<ProcessEntry> l = processApi.list(UUID.randomUUID(), null, null, null, null, null, null, 30, 0);
+        List<ProcessEntry> l = processApi.list(null, null, UUID.randomUUID(), null, null, null, null, null, null, 30, 0);
         assertTrue(l.isEmpty());
 
-        l = processApi.list(cpr.getId(), null, null, null, null, null, null, 30, 0);
+        l = processApi.list(null, null, cpr.getId(), null, null, null, null, null, null, 30, 0);
         assertEquals(1, l.size());
 
-        l = processApi.list(null, null, null, null, null, null, null, 30, 0);
+        l = processApi.list(null, null, null, null, null, null, null, null, null, 30, 0);
         ProcessEntry p = null;
         for (ProcessEntry e : l) {
             if (e.getInstanceId().equals(sprB.getInstanceId())) {
@@ -501,7 +501,7 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        List<ProcessEntry> processEntry = processApi.list(por.getId(), null, null, null, null, null, null, 10, 0);
+        List<ProcessEntry> processEntry = processApi.list(null, null, por.getId(), null, null, null, null, null, null, 10, 0);
         for (ProcessEntry pe : processEntry) {
             if (pe.getInstanceId().equals(singleNodeProcess.getInstanceId())) {
                 assertTrue(pe.getChildrenIds() == null || pe.getChildrenIds().isEmpty());

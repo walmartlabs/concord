@@ -18,16 +18,20 @@
  * =====
  */
 
-import { ConcordId, ConcordKey, fetchJson, queryParams } from '../../common';
-import { ProcessEntry, ProcessStatus } from '../../process';
+import { ConcordKey, fetchJson, queryParams } from '../../common';
+import { ProcessEntry } from '../../process';
+import { ColumnDefinition } from '../index';
 
-export interface SearchFilter {
-    parentInstanceId?: ConcordId;
-    projectId?: ConcordId;
-    beforeCreatedAt?: string;
-    tags?: string[];
-    status?: ProcessStatus;
-    initiator?: string;
+export interface ColumnFilter {
+    column: ColumnDefinition;
+    filter: string;
+}
+
+export interface ProcessFilters {
+    [source: string]: string;
+}
+
+export interface PaginationFilters {
     limit?: number;
     offset?: number;
 }
@@ -38,30 +42,45 @@ export interface PaginatedProcessEntries {
     prev?: number;
 }
 
+function combine(filters?: object, pagination?: object) {
+    if (filters === undefined && pagination === undefined) {
+        return undefined;
+    }
+
+    const result = {};
+    if (filters !== undefined) {
+        Object.keys(filters)
+            .filter((k) => k !== undefined)
+            .forEach((key) => (result[key] = filters[key]));
+    }
+    if (pagination !== undefined) {
+        Object.keys(pagination)
+            .filter((k) => k !== undefined)
+            .forEach((key) => (result[key] = pagination[key]));
+    }
+
+    return result;
+}
+
 export const list = (
     orgName?: ConcordKey,
     projectName?: ConcordKey,
-    filters?: SearchFilter
+    filters?: ProcessFilters,
+    pagination?: PaginationFilters
 ): Promise<PaginatedProcessEntries> => {
-    const limit = filters && filters.limit ? filters.limit : 50;
-    if (filters && filters.limit) {
-        filters.limit = parseInt(filters.limit.toString(), 10) + 1;
-    }
+    const limit = pagination && pagination.limit ? pagination.limit : 50;
+    const requestLimit = parseInt(limit.toString(), 10) + 1;
 
-    let baseUri = '/api/v1';
+    const filterParams = combine(
+        { ...filters, org: orgName, project: projectName },
+        { ...pagination, limit: requestLimit }
+    );
 
-    if (orgName) {
-        baseUri = `/api/v1/org/${orgName}`;
-        if (projectName) {
-            baseUri += `/project/${projectName}`;
-        }
-    }
+    const qp = filterParams ? '?' + queryParams(filterParams) : '';
 
-    const qp = filters ? '?' + queryParams(filters) : '';
-
-    return fetchJson(`${baseUri}/process${qp}`).then((processEntries: ProcessEntry[]) => {
+    return fetchJson(`/api/v1/process${qp}`).then((processEntries: ProcessEntry[]) => {
         const hasMoreElements = limit && processEntries.length > limit;
-        const offset: number = filters && filters.offset ? filters.offset : 0;
+        const offset: number = pagination && pagination.offset ? pagination.offset : 0;
 
         if (hasMoreElements) {
             processEntries.pop();

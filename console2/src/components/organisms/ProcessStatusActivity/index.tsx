@@ -36,8 +36,7 @@ import { actions, MAX_EVENT_COUNT } from '../../../state/data/processes/poll';
 import { ProcessEvents, State } from '../../../state/data/processes/poll/types';
 import { timestampDiffMs } from '../../../utils';
 import { ProcessActionList, ProcessElementList, ProcessStatusTable } from '../../molecules';
-import { CancelProcessPopup } from '../../organisms';
-import AnsibleStatsActivity from '../AnsibleStatsActivity';
+import { CancelProcessPopup, AnsibleStatsActivity } from '../../organisms';
 
 interface ExternalProps {
     instanceId: ConcordId;
