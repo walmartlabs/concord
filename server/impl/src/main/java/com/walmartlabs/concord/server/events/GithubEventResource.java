@@ -331,6 +331,8 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             conditions.putIfAbsent(TYPE_KEY, DEFAULT_EVENT_TYPE);
 
             return new TriggerEntry(entry.getId(),
+                    entry.getOrgId(),
+                    entry.getOrgName(),
                     entry.getProjectId(),
                     entry.getProjectName(),
                     entry.getRepositoryId(),

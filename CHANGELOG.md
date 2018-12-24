@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: new `/api/v2/trigger` endpoint. Currently only the
+list method is provided;
 - concord-console: externalize extra links in the system menu, allow
 for environment-specific overrides;
 - concord-console: ability to specify the entry point when starting

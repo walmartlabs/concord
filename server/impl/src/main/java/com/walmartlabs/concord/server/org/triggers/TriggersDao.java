@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.triggers;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,9 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.jooq.tables.Organizations;
+import com.walmartlabs.concord.server.jooq.tables.Projects;
+import com.walmartlabs.concord.server.jooq.tables.Repositories;
 import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -35,8 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
-import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.*;
 
@@ -53,24 +55,10 @@ public class TriggersDao extends AbstractDao {
     }
 
     public TriggerEntry get(UUID id) {
-        Triggers t = TRIGGERS.as("t");
-
-        Field<String> repositoryNameField = select(REPOSITORIES.REPO_NAME).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(t.REPO_ID)).asField();
-        Field<String> projectNameField = select(PROJECTS.PROJECT_NAME).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
-
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(t.TRIGGER_ID,
-                    t.PROJECT_ID,
-                    projectNameField,
-                    t.REPO_ID,
-                    repositoryNameField,
-                    t.EVENT_SOURCE,
-                    t.ACTIVE_PROFILES,
-                    t.ARGUMENTS.cast(String.class),
-                    t.CONDITIONS.cast(String.class),
-                    t.TRIGGER_CFG.cast(String.class))
-                    .from(t)
-                    .where(t.TRIGGER_ID.eq(id))
+            SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String>> query = selectTriggers(tx);
+
+            return query.where(TRIGGERS.TRIGGER_ID.eq(id))
                     .fetchOne(this::toEntity);
         }
     }
@@ -119,23 +107,9 @@ public class TriggersDao extends AbstractDao {
 
     public List<TriggerEntry> list(UUID projectId, UUID repositoryId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Triggers t = TRIGGERS.as("t");
+            SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String>> query = selectTriggers(tx);
 
-            Field<String> repositoryNameField = select(REPOSITORIES.REPO_NAME).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(t.REPO_ID)).asField();
-            Field<String> projectNameField = select(PROJECTS.PROJECT_NAME).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
-
-            return tx.select(t.TRIGGER_ID,
-                    t.PROJECT_ID,
-                    projectNameField,
-                    t.REPO_ID,
-                    repositoryNameField,
-                    t.EVENT_SOURCE,
-                    t.ACTIVE_PROFILES,
-                    t.ARGUMENTS.cast(String.class),
-                    t.CONDITIONS.cast(String.class),
-                    t.TRIGGER_CFG.cast(String.class))
-                    .from(t)
-                    .where(t.PROJECT_ID.eq(projectId).and(t.REPO_ID.eq(repositoryId)))
+            return query.where(TRIGGERS.PROJECT_ID.eq(projectId).and(TRIGGERS.REPO_ID.eq(repositoryId)))
                     .fetch(this::toEntity);
         }
     }
@@ -153,24 +127,62 @@ public class TriggersDao extends AbstractDao {
     }
 
     public List<TriggerEntry> list(DSLContext tx, String eventSource, Map<String, String> conditions) {
-        Triggers t = TRIGGERS.as("t");
+        SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String>> query = selectTriggers(tx);
 
-        Field<String> repositoryNameField = select(REPOSITORIES.REPO_NAME).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(t.REPO_ID)).asField();
-        Field<String> projectNameField = select(PROJECTS.PROJECT_NAME).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
-
-        return tx.select(t.TRIGGER_ID,
-                t.PROJECT_ID,
-                projectNameField,
-                t.REPO_ID,
-                repositoryNameField,
-                t.EVENT_SOURCE,
-                t.ACTIVE_PROFILES,
-                t.ARGUMENTS.cast(String.class),
-                t.CONDITIONS.cast(String.class),
-                t.TRIGGER_CFG.cast(String.class))
-                .from(t)
-                .where(buildConditionClause(t, eventSource, conditions))
+        return query.where(buildConditionClause(TRIGGERS, eventSource, conditions))
                 .fetch(this::toEntity);
+    }
+
+    public List<TriggerEntry> list(UUID orgId, UUID projectId, UUID repositoryId, String type) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String>> query = selectTriggers(tx);
+
+            if (orgId != null) {
+                SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
+                        .from(PROJECTS)
+                        .where(PROJECTS.ORG_ID.eq(orgId));
+
+                query.where(TRIGGERS.PROJECT_ID.in(projectIds));
+            }
+
+            if (projectId != null) {
+                query.where(TRIGGERS.PROJECT_ID.eq(projectId));
+            }
+
+            if (repositoryId != null) {
+                query.where(TRIGGERS.REPO_ID.eq(repositoryId));
+            }
+
+            if (type != null) {
+                query.where(TRIGGERS.EVENT_SOURCE.eq(type));
+            }
+
+            return query.fetch(this::toEntity);
+        }
+    }
+
+    private SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String>> selectTriggers(DSLContext tx) {
+        Organizations o = ORGANIZATIONS.as("o");
+        Projects p = PROJECTS.as("p");
+        Repositories r = REPOSITORIES.as("r");
+
+        return tx.select(
+                TRIGGERS.TRIGGER_ID,
+                o.ORG_ID,
+                o.ORG_NAME,
+                TRIGGERS.PROJECT_ID,
+                p.PROJECT_NAME,
+                TRIGGERS.REPO_ID,
+                r.REPO_NAME,
+                TRIGGERS.EVENT_SOURCE,
+                TRIGGERS.ACTIVE_PROFILES,
+                TRIGGERS.ARGUMENTS.cast(String.class),
+                TRIGGERS.CONDITIONS.cast(String.class),
+                TRIGGERS.TRIGGER_CFG.cast(String.class))
+                .from(TRIGGERS)
+                .leftJoin(p).on(p.PROJECT_ID.eq(TRIGGERS.PROJECT_ID))
+                .leftJoin(o).on(o.ORG_ID.eq(p.ORG_ID))
+                .leftJoin(r).on(r.REPO_ID.eq(TRIGGERS.REPO_ID));
     }
 
     private Condition buildConditionClause(Triggers t, String eventSource, Map<String, String> conditions) {
@@ -179,11 +191,11 @@ public class TriggersDao extends AbstractDao {
             return result;
         }
 
-        for(Map.Entry<String, String> e : conditions.entrySet()) {
+        for (Map.Entry<String, String> e : conditions.entrySet()) {
             result = result.and(
                     jsonText(t.CONDITIONS, e.getKey()).isNull()
                             .or(
-                    value(e.getValue()).likeRegex(jsonText(t.CONDITIONS, e.getKey()).cast(String.class))));
+                                    value(e.getValue()).likeRegex(jsonText(t.CONDITIONS, e.getKey()).cast(String.class))));
         }
         return result;
     }
@@ -217,13 +229,14 @@ public class TriggersDao extends AbstractDao {
         }
     }
 
-    private TriggerEntry toEntity(Record10<UUID, UUID, String, UUID, String, String, String[], String, String, String> item) {
+    private TriggerEntry toEntity(Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String> item) {
         List<String> activeProfiles = null;
-        if (item.value7() != null) {
-            activeProfiles = Arrays.asList(item.value7());
+        if (item.value9() != null) {
+            activeProfiles = Arrays.asList(item.value9());
         }
 
         return new TriggerEntry(item.value1(), item.value2(), item.value3(), item.value4(), item.value5(), item.value6(),
-                activeProfiles, deserialize(item.value8()), deserialize(item.value9()), deserialize(item.value10()));
+                item.value7(), item.value8(), activeProfiles,
+                deserialize(item.value10()), deserialize(item.value11()), deserialize(item.value12()));
     }
 }

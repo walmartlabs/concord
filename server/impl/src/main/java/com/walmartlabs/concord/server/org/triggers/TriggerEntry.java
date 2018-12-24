@@ -39,15 +39,20 @@ public class TriggerEntry implements Serializable {
 
     private final UUID id;
 
-    private final UUID repositoryId;
-
     @ConcordKey
-    private final String repositoryName;
+    private final UUID orgId;
+
+    private final String orgName;
 
     private final UUID projectId;
 
     @ConcordKey
     private final String projectName;
+
+    private final UUID repositoryId;
+
+    @ConcordKey
+    private final String repositoryName;
 
     @NotNull
     @ConcordKey
@@ -64,6 +69,8 @@ public class TriggerEntry implements Serializable {
 
     @JsonCreator
     public TriggerEntry(@JsonProperty("id") UUID id,
+                        @JsonProperty("orgId") UUID orgId,
+                        @JsonProperty("orgName") String orgName,
                         @JsonProperty("projectId") UUID projectId,
                         @JsonProperty("projectName") String projectName,
                         @JsonProperty("repositoryId") UUID repositoryId,
@@ -75,10 +82,12 @@ public class TriggerEntry implements Serializable {
                         @JsonProperty("cfg") Map<String, Object> cfg) {
 
         this.id = id;
-        this.repositoryId = repositoryId;
-        this.repositoryName = repositoryName;
+        this.orgId = orgId;
+        this.orgName = orgName;
         this.projectId = projectId;
         this.projectName = projectName;
+        this.repositoryId = repositoryId;
+        this.repositoryName = repositoryName;
         this.eventSource = eventSource;
         this.activeProfiles = activeProfiles;
         this.arguments = arguments;
@@ -90,12 +99,12 @@ public class TriggerEntry implements Serializable {
         return id;
     }
 
-    public UUID getRepositoryId() {
-        return repositoryId;
+    public UUID getOrgId() {
+        return orgId;
     }
 
-    public String getRepositoryName() {
-        return repositoryName;
+    public String getOrgName() {
+        return orgName;
     }
 
     public UUID getProjectId() {
@@ -104,6 +113,14 @@ public class TriggerEntry implements Serializable {
 
     public String getProjectName() {
         return projectName;
+    }
+
+    public UUID getRepositoryId() {
+        return repositoryId;
+    }
+
+    public String getRepositoryName() {
+        return repositoryName;
     }
 
     public String getEventSource() {
@@ -149,10 +166,12 @@ public class TriggerEntry implements Serializable {
     public String toString() {
         return "TriggerEntry{" +
                 "id=" + id +
-                ", repositoryId=" + repositoryId +
-                ", repositoryName='" + repositoryName + '\'' +
+                ", orgId=" + orgId +
+                ", orgName='" + orgName + '\'' +
                 ", projectId=" + projectId +
                 ", projectName='" + projectName + '\'' +
+                ", repositoryId=" + repositoryId +
+                ", repositoryName='" + repositoryName + '\'' +
                 ", eventSource='" + eventSource + '\'' +
                 ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
