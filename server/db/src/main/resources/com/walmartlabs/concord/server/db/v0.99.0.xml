@@ -51,6 +51,7 @@
         </createTable>
     </changeSet>
 
+    <!-- removed in 1.0.0+
     <changeSet id="99200" author="ybrigo@gmail.com">
         <createTable tableName="EVENT_PROCESSOR_MARKERS">
             <column name="PROCESSOR_NAME" type="varchar(64)">
@@ -68,6 +69,7 @@
             <column name="PROCESSOR_NAME" value="ansible-event-processor"/>
         </insert>
     </changeSet>
+    -->
 
     <changeSet id="99300" author="ibodrov@gmail.com">
         <createIndex tableName="PROCESS_EVENTS" indexName="IDX_PROC_EVENTS_FOLDING">

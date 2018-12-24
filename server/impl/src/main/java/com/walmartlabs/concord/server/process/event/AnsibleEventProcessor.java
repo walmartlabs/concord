@@ -23,7 +23,9 @@ package com.walmartlabs.concord.server.process.event;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.cfg.AnsibleEventsConfiguration;
+import com.walmartlabs.concord.server.jooq.tables.EventProcessorMarker;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.immutables.value.Value;
 import org.jooq.*;
@@ -38,11 +40,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.Tables.EVENT_PROCESSOR_MARKER;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.AnsibleHosts.ANSIBLE_HOSTS;
-import static com.walmartlabs.concord.server.jooq.tables.EventProcessorMarkers.EVENT_PROCESSOR_MARKERS;
 import static org.jooq.impl.DSL.*;
 
 @Named("ansible-event-processor")
@@ -67,29 +72,104 @@ public class AnsibleEventProcessor implements ScheduledTask {
     }
 
     public void performTask() {
-        int processedEvents;
-        do {
-            processedEvents = processEvents(cfg.getFetchLimit());
-        } while (processedEvents >= cfg.getFetchLimit());
+        List<EventMarker> markers = dao.listMarkers(PROCESSOR_NAME);
+        if (markers.isEmpty()) {
+            Timestamp firstProcess = dao.getFirstProcessDate();
+            if (firstProcess == null) {
+                return;
+            }
+            EventMarker m = EventMarker.builder()
+                    .startFrom(startOfDay(firstProcess))
+                    .eventDate(firstProcess)
+                    .eventSeq(-1)
+                    .build();
+            markers.add(m);
+            dao.updateMarker(PROCESSOR_NAME, m, MarkerStatus.IN_PROCESS);
+        }
+
+        for (EventMarker m : markers) {
+            int processedEvents;
+            do {
+                processedEvents = process(m, cfg.getFetchLimit());
+            } while (processedEvents >= cfg.getFetchLimit());
+        }
+
+        dao.cleanUpMarkers(PROCESSOR_NAME);
     }
 
-    private int processEvents(int fetchLimit) {
-        return dao.txResult(tx -> {
-            EventMarker marker = dao.getMarker(PROCESSOR_NAME);
+    private int process(EventMarker marker, int fetchLimit) {
+        if (marker.endTo() != null) {
+            return processOldMarker(marker, fetchLimit);
+        } else {
+            return processActiveMarker(marker, fetchLimit);
+        }
+    }
 
-            List<EventItem> events = dao.list(tx, marker.instanceCreatedAt(), marker.eventSeq(), fetchLimit);
+    private int processActiveMarker(EventMarker marker, int fetchLimit) {
+        return dao.txResult(tx -> {
+            List<EventItem> events = processEvents(tx, marker, fetchLimit);
             if (events.isEmpty()) {
                 return 0;
             }
 
-            List<HostItem> result = combineEvents(events);
-            dao.insert(tx, result);
-
-            EventItem lastEvent = events.get(events.size() - 1);
-            dao.updateMarker(tx, PROCESSOR_NAME, ImmutableEventMarker.of(lastEvent.instanceCreatedAt(), lastEvent.eventSeq()));
+            List<EventMarker> markers = collectMarkers(marker, events);
+            dao.updateMarkers(tx, PROCESSOR_NAME, markers, MarkerStatus.IN_PROCESS);
 
             return events.size();
         });
+    }
+
+    private int processOldMarker(EventMarker marker, int fetchLimit) {
+        return dao.txResult(tx -> {
+            boolean hasActiveProcesses = dao.hasActiveProcess(tx, marker.startFrom(), marker.endTo());
+            List<EventItem> events = processEvents(tx, marker, fetchLimit);
+            if (events.isEmpty()) {
+                if (!hasActiveProcesses) {
+                    dao.updateMarker(tx, PROCESSOR_NAME, marker, MarkerStatus.DONE);
+                }
+
+                return 0;
+            }
+
+            EventItem lastEvent = events.get(events.size() - 1);
+            dao.updateMarker(tx, PROCESSOR_NAME, EventMarker.builder().from(marker)
+                    .eventDate(lastEvent.eventDate())
+                    .eventSeq(lastEvent.eventSeq())
+                    .build(),
+                    MarkerStatus.IN_PROCESS);
+
+            return events.size();
+        });
+    }
+
+    private List<EventItem> processEvents(DSLContext tx, EventMarker marker, int fetchLimit) {
+        List<EventItem> events = dao.list(tx, marker, fetchLimit);
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<HostItem> result = combineEvents(events);
+        dao.insert(tx, result);
+        return events;
+    }
+
+    private List<EventMarker> collectMarkers(EventMarker marker, List<EventItem> events) {
+        List<ImmutableEventMarker.Builder> result = new ArrayList<>();
+        result.add(EventMarker.builder().from(marker));
+        Timestamp startFrom = marker.startFrom();
+        for(EventItem e : events) {
+            ImmutableEventMarker.Builder currentMarker = result.get(result.size() - 1);
+            Timestamp t = startOfDay(e.instanceCreatedAt());
+            if (!startFrom.equals(t)) {
+                currentMarker.endTo(t);
+                result.add(EventMarker.builder().startFrom(t));
+                startFrom = t;
+            } else {
+                currentMarker.eventDate(e.eventDate())
+                        .eventSeq(e.eventSeq());
+            }
+        }
+        return result.stream().map(ImmutableEventMarker.Builder::build).collect(Collectors.toList());
     }
 
     private List<HostItem> combineEvents(List<EventItem> events) {
@@ -121,6 +201,10 @@ public class AnsibleEventProcessor implements ScheduledTask {
                 .build();
     }
 
+    private static Timestamp startOfDay(Timestamp ts) {
+        return Timestamp.valueOf(ts.toLocalDateTime().toLocalDate().atTime(LocalTime.MIN));
+    }
+
     @Named
     public static class AnsibleEventDao extends AbstractDao {
 
@@ -134,12 +218,13 @@ public class AnsibleEventProcessor implements ScheduledTask {
             return super.txResult(t);
         }
 
-        public List<EventItem> list(DSLContext tx, Timestamp instanceCreatedAt, Long startEventSeq, int count) {
+        public List<EventItem> list(DSLContext tx, EventMarker marker, int count) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            SelectConditionStep<Record8<UUID, Timestamp, Long, String, String, String, Long, Boolean>> q = tx.select(
+            SelectConditionStep<Record9<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean>> q = tx.select(
                     pe.INSTANCE_ID,
                     pe.INSTANCE_CREATED_AT,
                     pe.EVENT_SEQ,
+                    pe.EVENT_DATE,
                     field("{0}->>'host'", String.class, pe.EVENT_DATA),
                     coalesce(field("{0}->>'hostGroup'", String.class, pe.EVENT_DATA), value("-")),
                     field("{0}->>'status'", String.class, pe.EVENT_DATA),
@@ -148,9 +233,14 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     .from(pe)
                     .where(pe.EVENT_TYPE.eq(EventType.ANSIBLE.name()));
 
-            if (instanceCreatedAt != null && startEventSeq != null) {
-                q.and(pe.INSTANCE_CREATED_AT.greaterOrEqual(instanceCreatedAt))
-                        .and(pe.EVENT_SEQ.greaterThan(startEventSeq));
+            if (marker != null) {
+                q.and(pe.EVENT_DATE.greaterOrEqual(marker.eventDate()))
+                        .and(pe.INSTANCE_CREATED_AT.greaterOrEqual(marker.startFrom())
+                        .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));
+
+                if (marker.endTo() != null) {
+                    q.and(pe.INSTANCE_CREATED_AT.lessThan(marker.endTo()));
+                }
             }
 
             return q.orderBy(pe.EVENT_SEQ)
@@ -158,9 +248,9 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     .fetch(AnsibleEventDao::toEntity);
         }
 
-        private static EventItem toEntity(Record8<UUID, Timestamp, Long, String, String, String, Long, Boolean> r) {
-            boolean ignoreErrors = Boolean.TRUE.equals(r.value8());
-            String status = r.value6();
+        private static EventItem toEntity(Record9<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean> r) {
+            boolean ignoreErrors = Boolean.TRUE.equals(r.value9());
+            String status = r.value7();
             if (ignoreErrors && Status.FAILED.name().equals(status)) {
                 status = Status.OK.name();
             }
@@ -169,11 +259,32 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     .instanceId(r.value1())
                     .instanceCreatedAt(r.value2())
                     .eventSeq(r.value3())
-                    .host(r.value4())
-                    .hostGroup(r.value5())
+                    .eventDate(r.value4())
+                    .host(r.value5())
+                    .hostGroup(r.value6())
                     .status(status)
-                    .duration(r.value7())
+                    .duration(r.value8())
                     .build();
+        }
+
+        public Timestamp getFirstProcessDate() {
+            return txResult(tx -> tx.select(PROCESS_QUEUE.CREATED_AT)
+                    .from(PROCESS_QUEUE)
+                    .orderBy(PROCESS_QUEUE.CREATED_AT)
+                    .limit(1)
+                    .fetchOne(Record1::value1));
+        }
+
+        public boolean hasActiveProcess(DSLContext tx, Timestamp fromTime, Timestamp toTime) {
+            int count = tx.selectCount()
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.CREATED_AT.between(fromTime, toTime)
+                    .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(ProcessStatus.FINISHED.name(),
+                            ProcessStatus.FAILED.name(),
+                            ProcessStatus.CANCELLED.name(),
+                            ProcessStatus.TIMED_OUT.name())))
+                    .fetchOne(Record1::value1);
+            return count > 0;
         }
 
         public void insert(DSLContext tx, List<HostItem> hosts) {
@@ -192,19 +303,51 @@ public class AnsibleEventProcessor implements ScheduledTask {
             });
         }
 
-        public void updateMarker(DSLContext tx, String processorName, EventMarker marker) {
-            tx.update(EVENT_PROCESSOR_MARKERS)
-                    .set(EVENT_PROCESSOR_MARKERS.INSTANCE_CREATED_AT, value(marker.instanceCreatedAt()))
-                    .set(EVENT_PROCESSOR_MARKERS.EVENT_SEQ, value(marker.eventSeq()))
-                    .where(EVENT_PROCESSOR_MARKERS.PROCESSOR_NAME.eq(processorName))
+        public void updateMarkers(DSLContext tx, String processorName, List<EventMarker> markers, MarkerStatus status) {
+            for (EventMarker m: markers) {
+                updateMarker(tx, processorName, m, status);
+            }
+        }
+
+        public void updateMarker(String processorName, EventMarker marker, MarkerStatus status) {
+            tx(tx -> updateMarker(tx, processorName, marker, status));
+        }
+
+        public void updateMarker(DSLContext tx, String processorName, EventMarker marker, MarkerStatus status) {
+            EventProcessorMarker e = EVENT_PROCESSOR_MARKER.as("e");
+            tx.insertInto(e)
+                    .columns(e.PROCESSOR_NAME, e.START_FROM, e.END_TO, e.EVENT_DATE, e.EVENT_SEQ, e.STATUS)
+                    .values(processorName, marker.startFrom(), marker.endTo(), marker.eventDate(), marker.eventSeq(), status.name())
+                    .onDuplicateKeyUpdate()
+                    .set(e.START_FROM, value(marker.startFrom()))
+                    .set(e.END_TO, value(marker.endTo()))
+                    .set(e.EVENT_DATE, value(marker.eventDate()))
+                    .set(e.EVENT_SEQ, value(marker.eventSeq()))
+                    .set(e.STATUS, value(status.name()))
+                    .where(e.PROCESSOR_NAME.eq(processorName))
                     .execute();
         }
 
-        public EventMarker getMarker(String processorName) {
-            return txResult(tx -> tx.select(EVENT_PROCESSOR_MARKERS.INSTANCE_CREATED_AT, EVENT_PROCESSOR_MARKERS.EVENT_SEQ)
-                    .from(EVENT_PROCESSOR_MARKERS)
-                    .where(EVENT_PROCESSOR_MARKERS.PROCESSOR_NAME.eq(processorName))
-                    .fetchOne(r -> ImmutableEventMarker.of(r.value1(), r.value2())));
+        public void cleanUpMarkers(String processorName) {
+            tx(tx -> {
+                tx.deleteFrom(EVENT_PROCESSOR_MARKER)
+                        .where(EVENT_PROCESSOR_MARKER.PROCESSOR_NAME.eq(processorName)
+                        .and(EVENT_PROCESSOR_MARKER.STATUS.eq(MarkerStatus.DONE.name())))
+                        .execute();
+            });
+        }
+
+        public List<EventMarker> listMarkers(String processorName) {
+            return txResult(tx -> tx.selectFrom(EVENT_PROCESSOR_MARKER)
+                    .where(EVENT_PROCESSOR_MARKER.PROCESSOR_NAME.eq(processorName)
+                            .and(EVENT_PROCESSOR_MARKER.STATUS.eq(MarkerStatus.IN_PROCESS.name())))
+                    .orderBy(EVENT_PROCESSOR_MARKER.START_FROM.desc()))
+                    .fetch(e -> EventMarker.builder()
+                            .startFrom(e.getStartFrom())
+                            .endTo(e.getEndTo())
+                            .eventDate(e.getEventDate())
+                            .eventSeq(e.getEventSeq())
+                            .build());
         }
 
         private int[] update(DSLContext tx, Connection conn, List<HostItem> hosts) throws SQLException {
@@ -347,6 +490,8 @@ public class AnsibleEventProcessor implements ScheduledTask {
 
         Timestamp instanceCreatedAt();
 
+        Timestamp eventDate();
+
         long eventSeq();
 
         String host();
@@ -362,11 +507,25 @@ public class AnsibleEventProcessor implements ScheduledTask {
     public interface EventMarker {
 
         @Value.Parameter
+        Timestamp startFrom();
+
         @Nullable
-        Timestamp instanceCreatedAt();
+        @Value.Parameter
+        Timestamp endTo();
 
         @Value.Parameter
-        @Nullable
-        Long eventSeq();
+        Timestamp eventDate();
+
+        @Value.Parameter
+        long eventSeq();
+
+        static ImmutableEventMarker.Builder builder() {
+            return ImmutableEventMarker.builder();
+        }
+    }
+
+    public enum MarkerStatus {
+        IN_PROCESS,
+        DONE
     }
 }

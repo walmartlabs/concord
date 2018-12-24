@@ -16,6 +16,8 @@ a process;
 
 ### Changed
 
+- concord-server: fixed the logic of the Ansible event processor. Now
+it should correctly handle very long-running processes;
 - concord-console: fixed a bug preventing the Ansible host filter
 from working correctly;
 - concord-runner: fix the handling of process arguments when

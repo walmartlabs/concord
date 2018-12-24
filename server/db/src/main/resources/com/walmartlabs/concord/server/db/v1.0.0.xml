@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="100100" author="ybrigo@gmail.com">
+        <createTable tableName="EVENT_PROCESSOR_MARKER">
+            <column name="PROCESSOR_NAME" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="START_FROM" type="timestamp">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="END_TO" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="EVENT_DATE" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EVENT_SEQ" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STATUS" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
