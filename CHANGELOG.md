@@ -18,6 +18,8 @@ a process;
 
 ### Changed
 
+- concord-console: fixed an issue with error messages persisting
+after navigating out of the page;
 - concord-server: fixed the logic of the Ansible event processor. Now
 it should correctly handle very long-running processes;
 - concord-console: fixed a bug preventing the Ansible host filter

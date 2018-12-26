@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { push as pushHistory } from 'react-router-redux';
+import { LOCATION_CHANGE, push as pushHistory } from 'react-router-redux';
 import { Action, Reducer } from 'redux';
 import { put } from 'redux-saga/effects';
 
@@ -50,6 +50,11 @@ export const makeErrorReducer = <T>(
     requestTypes: T[],
     responseTypes: T[]
 ): Reducer<RequestError> => (state = null, { type, error }: { type: T; error: RequestError }) => {
+    if (String(type) === LOCATION_CHANGE) {
+        // reset error for location change
+        return null;
+    }
+
     for (const t of requestTypes) {
         if (t === type) {
             return null;
