@@ -32,7 +32,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.StartProcessResponse;
-import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,7 +40,6 @@ import org.junit.Test;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -63,7 +61,6 @@ public class HttpTaskIT extends AbstractServerIT {
 
     @Rule
     public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .threadPoolFactory(options -> new ExecutorThreadPool(Executors.newCachedThreadPool()))
             .extensions(new RequestHeaders())
             .dynamicPort());
 

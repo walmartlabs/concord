@@ -63,44 +63,44 @@
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
         <aopalliance.version>1.0</aopalliance.version>
-        <aws.version>1.11.341</aws.version>
+        <aws.version>1.11.475</aws.version>
         <bpm.version>0.51.0</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
-        <commons.compress.version>1.17</commons.compress.version>
+        <commons.compress.version>1.18</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
         <commons.io.version>2.6</commons.io.version> <!-- necessary for resteasy -->
-        <commons.lang.version>3.7</commons.lang.version>
+        <commons.lang.version>3.8.1</commons.lang.version>
         <commons.pool.version>2.6.0</commons.pool.version>
         <commons.validator>1.6</commons.validator>
         <config.version>1.3.3</config.version>
-        <cronutils.version>7.0.2</cronutils.version>
+        <cronutils.version>8.0.0</cronutils.version>
         <docker.plugin.version>0.23.0</docker.plugin.version>
-        <errorproneannotations.version>2.2.0</errorproneannotations.version>
-        <glassfish.el.version>3.0.1-b10</glassfish.el.version>
-        <greenmail.version>1.5.7</greenmail.version>
+        <errorproneannotations.version>2.3.2</errorproneannotations.version>
+        <glassfish.el.version>3.0.1-b11</glassfish.el.version>
+        <greenmail.version>1.5.9</greenmail.version>
         <groovy.version>2.4.11</groovy.version>
         <gson.fire.version>1.8.0</gson.fire.version>
-        <gson.version>2.8.0</gson.version>
+        <gson.version>2.8.0</gson.version> <!-- updates break concord-client codegen -->
         <guava.version>25.1-jre</guava.version>
-        <guice.version>4.2.0</guice.version>
+        <guice.version>4.2.2</guice.version>
         <hikaricp.version>3.2.0</hikaricp.version>
         <http.request.version>6.0</http.request.version>
         <httpclient.version>4.5.6</httpclient.version>
         <httpcore.version>4.4.10</httpcore.version>
-        <immutables.version>2.7.3</immutables.version>
+        <immutables.version>2.7.4</immutables.version>
         <ini4j.version>0.5.4</ini4j.version>
-        <jackson.version>2.9.6</jackson.version>
+        <jackson.version>2.9.8</jackson.version>
         <javax.inject.version>1</javax.inject.version>
-        <javax.mail.version>1.6.0</javax.mail.version>
+        <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <javax.ws.rs.version>1.0.1.Final</javax.ws.rs.version>
         <javers.version>3.11.1</javers.version>
         <jaxb.version>2.3.0.1</jaxb.version>
-        <jetty.version>9.4.8.v20180619</jetty.version>
-        <jgit.version>5.0.1.201806211838-r</jgit.version>
-        <jooq.version>3.11.3</jooq.version>
-        <jsch.version>0.1.54</jsch.version>
-        <jsqlparser.version>1.2</jsqlparser.version>
+        <jetty.version>9.4.14.v20181114</jetty.version>
+        <jgit.version>5.2.0.201812061821-r</jgit.version>
+        <jooq.version>3.11.8</jooq.version>
+        <jsch.version>0.1.55</jsch.version>
+        <jsqlparser.version>1.3</jsqlparser.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.12</junit.version>
         <launcher.version>0.128</launcher.version>
@@ -113,15 +113,15 @@
         <maven.resolver.provider.version>3.5.0</maven.resolver.provider.version>
         <maven.resolver.version>1.1.0</maven.resolver.version>
         <metrics.version>3.2.2</metrics.version>
-        <mockito.version>2.20.0</mockito.version>
+        <mockito.version>2.23.4</mockito.version>
         <mustache.version>0.9.5</mustache.version>
         <node.version>10.11.0</node.version>
         <okhttp.version>2.7.5</okhttp.version>
         <okio.version>1.15.0</okio.version>
         <ollie.version>0.0.28</ollie.version>
         <parc.version>0.1.2</parc.version>
-        <postgres.version>42.2.4</postgres.version>
-        <prometheus.simpleclient.version>0.4.0</prometheus.simpleclient.version>
+        <postgres.version>42.2.5</postgres.version>
+        <prometheus.simpleclient.version>0.6.0</prometheus.simpleclient.version>
         <resteasy.version>3.1.4.Final</resteasy.version>
         <servlet.version>3.1.0</servlet.version>
         <shiro.version>1.4.0</shiro.version>
@@ -131,7 +131,7 @@
         <sshd.version>1.6.0</sshd.version>
         <swagger.version>1.5.20</swagger.version>
         <threetenbp.version>1.3.5</threetenbp.version>
-        <wiremock.version>2.18.0</wiremock.version>
+        <wiremock.version>2.20.0</wiremock.version>
     </properties>
 
     <dependencyManagement>
@@ -375,7 +375,37 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlets</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-webapp</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-jmx</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-deploy</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-security</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
@@ -396,6 +426,11 @@
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
                 <artifactId>websocket-common</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.websocket</groupId>
+                <artifactId>websocket-api</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
@@ -577,11 +612,6 @@
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-impl</artifactId>
                 <version>2.3.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-api</artifactId>
-                <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.immutables</groupId>
