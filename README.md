@@ -1,5 +1,7 @@
 # Concord
 
+![](https://img.shields.io/maven-central/v/com.walmartlabs.concord/parent.svg)
+
 ## Build Dependencies
 
 - [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
