@@ -163,13 +163,25 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private List<RepositoryItem> findRepos(String repoName, String branch) {
         return repositoryDao.find(repoName).stream()
                 .filter(r -> GithubUtils.isRepositoryUrl(repoName, r.getUrl(), cfg.getGithubDomain()))
-                .filter(r -> Optional.ofNullable(r.getBranch()).orElse(DEFAULT_BRANCH).equals(branch))
+                .filter(r -> isBranchEq(r.getBranch(), branch))
                 .map(r -> {
                     ProjectEntry project = projectDao.get(r.getProjectId());
                     return new RepositoryItem(r.getId(), project, r.getName());
                 })
                 .filter(r -> r.project != null)
                 .collect(Collectors.toList());
+    }
+
+    private static boolean isBranchEq(String repoBranch, String eventBranch) {
+        if (eventBranch == null) {
+            return true;
+        }
+
+        if (repoBranch == null) {
+            return DEFAULT_BRANCH.equals(eventBranch);
+        }
+
+        return repoBranch.equals(eventBranch);
     }
 
     private static class RepositoryItem {

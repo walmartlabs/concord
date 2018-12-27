@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: accept GitHub events without branch information
+(e.g. archive events).
+
+
+
 ## [1.0.0] - 2018-12-26
 
 ### Added
