@@ -1,28 +1,8 @@
 flows:
   default:
   - form: myForm
-  - log: "Hello, ${myForm.firstName} ${myForm.lastName}"
-  - log: "We got your password: ${myForm.password}"
-  - log: "We know that you are ${myForm.age} years old"
-  - log: "And your height is: ${myForm.height}"
-  - log: "'Remember me' checked: ${myForm.rememberMe}"
-  - log: "File ${myForm.file} content: ${resource.asString(myForm.file)}"
-  - log: "Email: ${myForm.email}"
-  - log: "Skills -> ${myForm.skills}"
-  - task: log
-    in:
-     msg: "Skill -> ${item}"
-    withItems: ${myForm.skills}
+  - log: "${myForm}"
 
 forms:
   myForm:
-  - firstName: { label: "First name", type: "string", placeholder: "Place first name here" }
-  - lastName: { label: "Last name", type: "string" }
-  - password:  { label: "Password", type: "string", inputType: 'password' }
-  - age: { label: "Age", type: "int?" }
-  - height: { label: "Height", type: "decimal?" }
-  - rememberMe: { label: "Remember me", type: "boolean", value: true }
-  - file: { label: "File", type: "file"}
-  - skills: { label: "Skills", type: "string*", allow: ["css", "design", "angular"], search: true }
-  - email: { label: "Email", type: "string", inputType: "email" }
-  - readOnlyField: { label: "Read only field", type: "string", value: "constant", readonly: true}
+  - items: {type: "string+", allow: ["a", "b", "c"]}

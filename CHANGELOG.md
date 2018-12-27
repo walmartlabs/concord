@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: allow addition of new elements for `type*` and
+`type+` form fields.
+
 ### Changed
 
 - concord-server: accept GitHub events without branch information

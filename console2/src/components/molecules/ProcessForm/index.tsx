@@ -22,7 +22,6 @@ import * as React from 'react';
 import {
     Button,
     Checkbox,
-    Dropdown,
     Form,
     Header,
     Input,
@@ -30,8 +29,8 @@ import {
     CheckboxProps,
     DropdownProps
 } from 'semantic-ui-react';
-import { RequestError } from '../../../api/common';
 
+import { RequestError } from '../../../api/common';
 import {
     Cardinality,
     FormField,
@@ -39,6 +38,7 @@ import {
     FormInstanceEntry
 } from '../../../api/process/form';
 import { RequestErrorMessage } from '../index';
+import { DropdownWithAddition } from '../../molecules';
 
 interface State {
     [name: string]: any;
@@ -161,16 +161,16 @@ class ProcessForm extends React.Component<Props, State> {
         cardinality: Cardinality,
         value: DropdownValue,
         allowedValue: DropdownAllowedValue,
+        multiple: boolean,
         opts?: {}
     ) {
         const { submitting, completed } = this.props;
 
         const options = allowedValue ? allowedValue.map((v) => ({ text: v, value: v })) : [];
-        const multiple =
-            cardinality === Cardinality.AT_LEAST_ONE || cardinality === Cardinality.ANY;
         const required =
             cardinality === Cardinality.AT_LEAST_ONE ||
             cardinality === Cardinality.ONE_AND_ONLY_ONE;
+        const allowAdditions = options.length === 0;
 
         if (value === null) {
             value = undefined;
@@ -181,14 +181,14 @@ class ProcessForm extends React.Component<Props, State> {
         }
 
         return (
-            <Dropdown
-                clearable={!required}
-                selection={true}
-                multiple={multiple}
-                name={name}
-                disabled={submitting || completed}
-                value={value}
+            <DropdownWithAddition
                 options={options}
+                value={value}
+                required={required}
+                multiple={multiple}
+                completed={completed}
+                submitting={submitting}
+                allowAdditions={allowAdditions}
                 onChange={this.handleDropdown(name)}
                 {...opts}
             />
@@ -207,8 +207,12 @@ class ProcessForm extends React.Component<Props, State> {
             cardinality = Cardinality.ONE_OR_NONE;
         }
 
-        // TODO check cardinality
-        const dropdown = allowedValue instanceof Array;
+        const singleSelect =
+            cardinality === Cardinality.ONE_AND_ONLY_ONE || Cardinality.ONE_OR_NONE;
+        const multiSelect =
+            cardinality === Cardinality.AT_LEAST_ONE || cardinality === Cardinality.ANY;
+
+        const dropdown = (allowedValue instanceof Array && singleSelect) || multiSelect;
         const required =
             cardinality === Cardinality.AT_LEAST_ONE ||
             cardinality === Cardinality.ONE_AND_ONLY_ONE;
@@ -218,7 +222,14 @@ class ProcessForm extends React.Component<Props, State> {
                 <label>{label}</label>
 
                 {dropdown
-                    ? this.renderDropdown(name, cardinality, value, allowedValue, options)
+                    ? this.renderDropdown(
+                          name,
+                          cardinality,
+                          value,
+                          allowedValue,
+                          multiSelect,
+                          options
+                      )
                     : this.renderInput(name, type, value, inputType, options)}
 
                 {error && (
