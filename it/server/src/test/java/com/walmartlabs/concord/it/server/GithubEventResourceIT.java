@@ -53,7 +53,7 @@ public class GithubEventResourceIT extends AbstractServerIT {
     private static final String GITHUB_WEBHOOK_SECRET = "12345";
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void pushUnknownRepo() throws Exception {
         String processTag = "tag_" + randomString();
         Path tmpDir = createTempDir();
@@ -95,7 +95,7 @@ public class GithubEventResourceIT extends AbstractServerIT {
         projectsApi.delete(orgName, projectName);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void pushWithPayload() throws Exception {
         String orgName = "Default";
         String projectName = "test_" + randomString();

@@ -33,7 +33,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class VariablesIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();
@@ -71,7 +71,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*var1=var1-value.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCrypto() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();
@@ -106,7 +106,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*" + secretValue + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testArrayInterpolation() throws Exception {
         String varA = "varA_" + System.currentTimeMillis();
         String varB = "varB_" + System.currentTimeMillis();
@@ -135,7 +135,7 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*" + varA + ".*" + varB + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSetVar() throws Exception {
         byte[] payload = archive(VariablesIT.class.getResource("setVar").toURI(),
                 ITConstants.DEPENDENCIES_DIR);

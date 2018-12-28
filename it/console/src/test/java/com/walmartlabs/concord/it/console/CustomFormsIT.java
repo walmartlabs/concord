@@ -72,6 +72,11 @@ public class CustomFormsIT {
 
         // ---
 
+        // TODO necessary on some systems, investigate
+        Thread.sleep(5000);
+
+        // ---
+
         consoleRule.login(Concord.ADMIN_API_KEY);
 
         // ---
@@ -85,9 +90,9 @@ public class CustomFormsIT {
         WebElement element = consoleRule.waitFor(selector);
         assertEquals(testValue, element.getText());
 
-        Map<String,Object> formFields = (Map<String,Object>) consoleRule.executeJavaScript("return data.definitions");
-        Map<String,Object> fieldX = (Map<String,Object>) formFields.get("x");
-        List<Object> allowedValues = (List<Object>)fieldX.get("allow");
-        assertEquals("Expression object should have added two allowed values",2, allowedValues.size());
+        Map<String, Object> formFields = (Map<String, Object>) consoleRule.executeJavaScript("return data.definitions");
+        Map<String, Object> fieldX = (Map<String, Object>) formFields.get("x");
+        List<Object> allowedValues = (List<Object>) fieldX.get("allow");
+        assertEquals("Expression object should have added two allowed values", 2, allowedValues.size());
     }
 }

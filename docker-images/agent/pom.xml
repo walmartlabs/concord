@@ -13,7 +13,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <docker.tagbase>walmartlabs/concord-agent</docker.tagbase>
+        <agent.image>walmartlabs/concord-agent</agent.image>
+        <docker.tagbase>${agent.image}</docker.tagbase>
         <docker.file>oss/Dockerfile</docker.file>
     </properties>
 

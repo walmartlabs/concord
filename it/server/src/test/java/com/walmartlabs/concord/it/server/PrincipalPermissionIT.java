@@ -35,7 +35,7 @@ import static org.junit.Assert.*;
 public class PrincipalPermissionIT extends AbstractServerIT {
 
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPrincipalPermission() throws Exception {
 
         byte[] payload = archive(PrincipalPermissionIT.class.getResource("principalPermission").toURI());

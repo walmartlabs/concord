@@ -35,7 +35,7 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class RunAsIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSwitchCurrentUser() throws Exception {
         // create a new org
 
@@ -112,7 +112,7 @@ public class RunAsIT extends AbstractServerIT {
         assertLog(".*Now we are running as admin. Initiator: " + userAName + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPayload() throws Exception {
         // create a new org
 

@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 
 public class FailureHandlingIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testFailure() throws Exception {
         ProcessApi processApi = new ProcessApi(getApiClient());
 
@@ -80,7 +80,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testFailureHandlingError() throws Exception {
         ProcessApi processApi = new ProcessApi(getApiClient());
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
@@ -93,7 +93,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FAILED);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCancel() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
 
@@ -116,7 +116,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         assertLog(".*abc!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCancelSuspended() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendHandling").toURI());
 

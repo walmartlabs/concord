@@ -42,7 +42,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class KvServiceIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testKv() throws Exception {
         String testKey = "key_" + randomString();
 
@@ -62,7 +62,7 @@ public class KvServiceIT extends AbstractServerIT {
         assertLog(".*xyz.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testKvLong() throws Exception {
         String testKey = "key_" + randomString();
 

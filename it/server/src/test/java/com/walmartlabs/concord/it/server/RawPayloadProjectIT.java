@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
 
 public class RawPayloadProjectIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testReject() throws Exception {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 

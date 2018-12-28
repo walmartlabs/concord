@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
 
 public class ProjectDeleteIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();

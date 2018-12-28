@@ -41,7 +41,7 @@ public class TemplateIT extends AbstractServerIT {
 
     private static final String META_JS = "({ entryPoint: \"main\", arguments: { greeting: \"Hello, \" + _input.name }})";
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         final String processYml = "main:\n- expr: ${log.info(\"test\", greeting)}";
 
@@ -89,7 +89,7 @@ public class TemplateIT extends AbstractServerIT {
         assertLog(".*Hello, " + myName + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInputVariablesStillPresent() throws Exception {
         final String processYml = "main:\n- expr: ${log.info(\"test\", xxx)}";
 

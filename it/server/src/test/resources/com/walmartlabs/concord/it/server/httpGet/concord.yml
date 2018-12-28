@@ -1,10 +1,16 @@
 flows:
   default:
+  - try:
+    - task: http
+      in:
+        method: GET
+        url: ${url}
+        response: json
+        out: rsp
+    - log: "Out Response: ${rsp.success}"
+    error:
+    - log: "Gotcha! ${lastError}"
 
-  - task: http
-    in:
-      method: GET
-      url: http://localhost:8001/api/v1/server/ping
-      response: json
-      out: rsp
-  - log: "Out Response: ${rsp.success}"
+configuration:
+  arguments:
+    url: "http://localhost:8001"

@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TemplateMergeIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         Path template = createTemplate();
         byte[] payload = archive(TemplateMergeIT.class.getResource("templateMerge/process").toURI());

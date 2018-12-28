@@ -35,7 +35,7 @@ import static org.junit.Assert.fail;
 
 public class WorkspacePolicyIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String orgName = "org_" + randomString();
 

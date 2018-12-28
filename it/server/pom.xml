@@ -19,11 +19,17 @@
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <dind.image>docker:stable-dind</dind.image>
+        <socat.image>bobrik/socat</socat.image>
         <deps.dir>${project.basedir}/target/deps</deps.dir>
         <docker.host.addr>localhost</docker.host.addr>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
+        <network>net-server-it</network>
+        <skip.socat>true</skip.socat>
+        <it.docker.port>2375</it.docker.port>
+        <it.server.network.mode>custom</it.server.network.mode>
+        <it.db.addr>db-node:5432</it.db.addr>
     </properties>
 
     <dependencies>
@@ -174,6 +180,9 @@
                         <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                     </environmentVariables>
+                    <systemProperties>
+                        <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
+                    </systemProperties>
                 </configuration>
             </plugin>
             <plugin>
@@ -275,6 +284,34 @@
 
     <profiles>
         <profile>
+            <id>mac-os</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <tmp.dir>/tmp</tmp.dir>
+                <docker.host.addr>host.docker.internal</docker.host.addr>
+                <skip.socat>false</skip.socat>
+            </properties>
+        </profile>
+        <profile>
+            <id>not-mac-os</id>
+            <activation>
+                <os>
+                    <family>
+                        !mac
+                    </family>
+                </os>
+            </activation>
+            <properties>
+                <it.server.network.mode>host</it.server.network.mode>
+                <it.server.port>8001</it.server.port>
+                <it.db.addr>localhost:${it.db.port}</it.db.addr>
+            </properties>
+        </profile>
+        <profile>
             <id>docker</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -304,7 +341,24 @@
                         <configuration>
                             <skipRun>${skip.it.tests}</skipRun>
                             <showLogs>false</showLogs>
+                            <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
+                                <image>
+                                    <name>${socat.image}</name>
+                                    <alias>socat</alias>
+                                    <run>
+                                        <skip>${skip.socat}</skip>
+                                        <network>
+                                            <mode>host</mode>
+                                        </network>
+                                        <volumes>
+                                            <bind>
+                                                <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
+                                            </bind>
+                                        </volumes>
+                                        <cmd> TCP-LISTEN:${it.docker.port},fork UNIX-CONNECT:/var/run/docker.sock</cmd>
+                                    </run>
+                                </image>
                                 <image>
                                     <name>${db.image}</name>
                                     <alias>db</alias>
@@ -312,6 +366,11 @@
                                         <ports>
                                             <port>it.db.port:5432</port>
                                         </ports>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>${network}</name>
+                                            <alias>db-node</alias>
+                                        </network>
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
                                         </env>
@@ -325,8 +384,13 @@
                                     <name>${server.image}</name>
                                     <alias>server</alias>
                                     <run>
+                                        <ports>
+                                            <port>it.server.port:8001</port>
+                                        </ports>
                                         <network>
-                                            <mode>host</mode>
+                                            <mode>${it.server.network.mode}</mode>
+                                            <name>${network}</name>
+                                            <alias>server-node</alias>
                                         </network>
                                         <volumes>
                                             <bind>
@@ -341,7 +405,7 @@
                                         <env>
                                             <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
                                             <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                                            <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
+                                            <DB_URL>jdbc:postgresql://${it.db.addr}/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>

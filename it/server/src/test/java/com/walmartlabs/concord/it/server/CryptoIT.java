@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 
 public class CryptoIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPlain() throws Exception {
         String orgName = "Default";
 
@@ -50,7 +50,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoPlain", secretName, storePassword, ".*value=" + secretValue + ".*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testUsernamePassword() throws Exception {
         String orgName = "Default";
 
@@ -68,7 +68,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoPwd", secretName, storePassword, ".*" + secretUsername + " " + secretPassword + ".*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExportAsFile() throws Exception {
         String orgName = "Default";
 
@@ -85,7 +85,7 @@ public class CryptoIT extends AbstractServerIT {
         test("cryptoFile", secretName, storePassword, ".*We got " + secretValue + ".*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExportAsFileWithOrg() throws Exception {
         String orgName = "org@" + randomString();
 
@@ -119,7 +119,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + secretValue + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWithoutPassword() throws Exception {
         String orgName = "org@" + randomString();
 
@@ -151,7 +151,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + secretValue + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDecryptString() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -193,7 +193,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*We got " + value + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDecryptStringTooBig() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -234,7 +234,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*too big.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDecryptInvalidString() throws Exception {
         String orgName = "org_" + randomString();
 

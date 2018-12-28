@@ -40,7 +40,7 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class CheckpointsIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCheckpoint() throws Exception {
         // prepare the payload
 
@@ -84,7 +84,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*End.*", 3, ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCheckpointWithError() throws Exception {
         // prepare the payload
 
@@ -166,8 +166,6 @@ public class CheckpointsIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
-
-        System.out.println(">>>>" + new String(ab));
 
         assertLog(".*hello, World.*", 2, ab);
         assertLog(".*" + value + ".*", 4, ab);

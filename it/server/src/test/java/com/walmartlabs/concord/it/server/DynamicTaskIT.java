@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(ParallelRunner.class)
 public class DynamicTaskIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDynamicTask() throws Exception {
         // prepare the payload
 

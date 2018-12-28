@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ClasspathRepoIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String url = "classpath://com/walmartlabs/concord/server/selfcheck/concord.yml";
         String projectName = "project_" + randomString();

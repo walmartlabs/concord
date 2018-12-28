@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(ParallelRunner.class)
 public class ProjectIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -74,7 +74,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*" + greeting + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testEntryPointFromYml() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -103,7 +103,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWithCommitId() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -150,7 +150,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWithTag() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -180,8 +180,6 @@ public class ProjectIT extends AbstractServerIT {
 
         String gitUrl = tmpDir.toAbsolutePath().toString();
 
-        System.out.println(">>>" + gitUrl);
-
         // ---
         String projectName = "myProject_" + randomString();
         String username = "myUser_" + randomString();
@@ -200,7 +198,7 @@ public class ProjectIT extends AbstractServerIT {
         assertLog(".*test-commit-1.*" + greeting + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSync() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -246,7 +244,7 @@ public class ProjectIT extends AbstractServerIT {
         assertTrue(psr.getStatus() == ProcessEntry.StatusEnum.FINISHED);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInitImport() throws Exception {
         Path tmpDir = createTempDir();
 
@@ -282,7 +280,7 @@ public class ProjectIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRepositoryValidation() throws Exception{
         Path tmpDir = createTempDir();
 

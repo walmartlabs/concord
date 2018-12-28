@@ -13,7 +13,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <docker.tagbase>walmartlabs/concord-ansible</docker.tagbase>
+        <ansible.image>walmartlabs/concord-ansible</ansible.image>
+        <docker.tagbase>${ansible.image}</docker.tagbase>
         <docker.file>oss/Dockerfile</docker.file>
     </properties>
 

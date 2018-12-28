@@ -45,42 +45,42 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class ProjectFileIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSingleProfile() throws Exception {
         simpleTest("projectfile/singleprofile", ".*Hello, world.*", ".*xyz54321abc.*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSingleProfileUsingConfiguration() throws Exception {
         simpleTest("projectfile/singleprofilecfg", ".*Hello, world.*", ".*54321.*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExternalProfile() throws Exception {
         simpleTest("projectfile/externalprofile", ".*Hello, world.*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testAltName() throws Exception {
         simpleTest("projectfile/altname", ".*Hello, world.*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOverrideFlow() throws Exception {
         simpleTest("projectfile/overrideflow", ".*Hello, world.*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExpressionsInVariables() throws Exception {
         simpleTest("projectfile/expr");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExternalScript() throws Exception {
         simpleTest("projectfile/externalscript", ".*hello!.*", ".*bye!.*");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDependencies() throws Exception {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
         Path tmpDir = createTempDir();
@@ -130,7 +130,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testArchiveOverride() throws Exception {
         String orgName = "Default";
 
@@ -176,7 +176,7 @@ public class ProjectFileIT extends AbstractServerIT {
         assertLog(".*54321.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testArchiveOverrideSync() throws Exception {
         String orgName = "Default";
 

@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 
 public class InventoryQueryIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testQueryWithEmptyParams() throws Exception {
 
         InventoryQueriesApi resource = new InventoryQueriesApi(getApiClient());

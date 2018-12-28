@@ -48,7 +48,9 @@ Prerequisites:
 - Docker, listening on `tcp://127.0.0.1:2375`;
 - Ansible 2.6.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);
-- `ujson` python module. It can be installed using `pip install ujson`
+- `ujson` python module is required. It can be installed using `pip install ujson`
+or a system package manager;
+- `requests` python module is required. It can be installed using `pip install requests`
 or a system package manager;
 - Java must be available in `$PATH` as `java`.
 

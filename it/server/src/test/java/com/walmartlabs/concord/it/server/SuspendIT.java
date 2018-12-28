@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 
 public class SuspendIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         URI dir = SuspendIT.class.getResource("suspend").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);

@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
 
 public class ProcessRbacIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         // create a new org
 

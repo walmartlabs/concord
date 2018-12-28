@@ -13,7 +13,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <docker.tagbase>walmartlabs/concord-console</docker.tagbase>
+        <console.image>walmartlabs/concord-console</console.image>
+        <docker.tagbase>${console.image}</docker.tagbase>
         <docker.file>oss/Dockerfile</docker.file>
         <node.downloadRoot>https://nodejs.org/dist/</node.downloadRoot>
         <npm.installCmd>ci</npm.installCmd>

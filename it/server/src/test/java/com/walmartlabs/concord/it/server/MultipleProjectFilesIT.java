@@ -43,7 +43,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
 public class MultipleProjectFilesIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         Path template = zip(Paths.get(MultipleProjectFilesIT.class.getResource("multiProjectTemplate/template").toURI()));
         String templateUrl = "file://" + template.toAbsolutePath();

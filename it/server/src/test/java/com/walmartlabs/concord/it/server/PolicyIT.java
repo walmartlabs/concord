@@ -35,7 +35,7 @@ import static org.junit.Assert.fail;
 
 public class PolicyIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCfg() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
@@ -91,7 +91,7 @@ public class PolicyIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMaxForkDepth() throws Exception {
         String orgName = createOrg();
         String projectName = createProject(orgName);
@@ -119,7 +119,7 @@ public class PolicyIT extends AbstractServerIT {
         waitForCompletion(processApi, spr.getInstanceId());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMaxProcess() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
@@ -184,7 +184,7 @@ public class PolicyIT extends AbstractServerIT {
         waitForCompletion(processApi, spr2.getInstanceId());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMaxProcessTimeout() throws Exception {
         String orgName = createOrg();
         String projectName = createProject(orgName);

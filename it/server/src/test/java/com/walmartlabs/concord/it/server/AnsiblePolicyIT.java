@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AnsiblePolicyIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTaskDeny() throws Exception {
         // ---
 

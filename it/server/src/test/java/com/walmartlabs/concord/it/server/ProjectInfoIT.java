@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class ProjectInfoIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String orgName = "Default";
         UUID orgId = UUID.fromString("0fac1b18-d179-11e7-b3e7-d7df4543ed4f");

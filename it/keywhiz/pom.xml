@@ -14,11 +14,10 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <docker.host.addr>127.0.0.1</docker.host.addr>
-        <it.server.port>8001</it.server.port>
         <db.image>library/postgres</db.image>
         <server.image>walmartlabs/concord-server</server.image>
-
+        <tmp.dir>${java.io.tmpdir}</tmp.dir>
+        <network>net-keywhiz-it</network>
         <!-- TODO requires an OSS Docker image of Keywhiz -->
         <skip.it.tests>true</skip.it.tests>
         <keywhiz.image>n/a</keywhiz.image>
@@ -80,8 +79,9 @@
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
-                        <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
+                        <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
+                        <KEYWHIZ_URL>https://keywhiz-node:4444</KEYWHIZ_URL>
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -89,6 +89,17 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>mac-os</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <tmp.dir>/tmp</tmp.dir>
+            </properties>
+        </profile>
         <profile>
             <id>docker</id>
             <activation>
@@ -118,15 +129,18 @@
                         </executions>
                         <configuration>
                             <skipRun>${skip.it.tests}</skipRun>
-                            <showLogs>true</showLogs>
+                            <showLogs>false</showLogs>
+                            <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
                                     <name>${keywhiz.image}</name>
                                     <alias>keywhiz</alias>
                                     <run>
-                                        <ports>
-                                            <port>4444:4444</port>
-                                        </ports>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>${network}</name>
+                                            <alias>keywhiz-node</alias>
+                                        </network>
                                         <env>
                                             <KEYWHIZ_CONFIG>/keywhiz/keywhiz-development-docker.yaml</KEYWHIZ_CONFIG>
                                         </env>
@@ -146,9 +160,11 @@
                                     <name>${db.image}</name>
                                     <alias>db</alias>
                                     <run>
-                                        <ports>
-                                            <port>it.db.port:5432</port>
-                                        </ports>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>${network}</name>
+                                            <alias>db-node</alias>
+                                        </network>
                                         <env>
                                             <POSTGRES_PASSWORD>it</POSTGRES_PASSWORD>
                                         </env>
@@ -162,16 +178,25 @@
                                     <name>${server.image}</name>
                                     <alias>server</alias>
                                     <run>
+                                        <ports>
+                                            <port>
+                                                it.server.port:8001
+                                            </port>
+                                        </ports>
                                         <network>
-                                            <mode>host</mode>
+                                            <mode>custom</mode>
+                                            <name>${network}</name>
+                                            <alias>server-node</alias>
                                         </network>
                                         <env>
+                                            <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
                                             <CONCORD_CFG_FILE>/keywhiz/server.conf</CONCORD_CFG_FILE>
-                                            <DB_URL>jdbc:postgresql://localhost:${it.db.port}/postgres</DB_URL>
+                                            <DB_URL>jdbc:postgresql://db-node:5432/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
                                             <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
+                                            <KEYWHIZ_URL>https://keywhiz-node:4444</KEYWHIZ_URL>
                                         </env>
                                         <volumes>
                                             <bind>

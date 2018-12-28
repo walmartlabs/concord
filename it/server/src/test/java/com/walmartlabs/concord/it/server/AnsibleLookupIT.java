@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AnsibleLookupIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -79,7 +79,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSecretData() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -125,7 +125,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSecretDataNoPassword() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -167,7 +167,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertNoLog(".*Implicit org " + secretValue + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPublickey() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());

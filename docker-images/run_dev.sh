@@ -65,5 +65,5 @@ docker run -d \
 --link server \
 -p 8080:8080 \
 -v /tmp/concord/console/logs:/opt/concord/logs \
--v "${BASE_DIR}/console.conf:/opt/concord/console/nginx/app.conf" \
+-v "${BASE_DIR}/console.conf:/opt/concord/console/nginx/app.conf:ro" \
 walmartlabs/concord-console:${VERSION}

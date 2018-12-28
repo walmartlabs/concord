@@ -50,14 +50,23 @@ import static org.junit.Assert.assertEquals;
 
 public class HttpTaskIT extends AbstractServerIT {
 
+    private static final String mockHttpBaseUrl;
     private static final String mockHttpAuthToken = "Y249dGVzdDpwYXNzd29yZA==";
     private static final String mockHttpAuthUser = "cn=test";
     private static final String mockHttpAuthPassword = "password";
-    private static final String mockHttpBaseUrl = "http://localhost:";
+    private static final String mockHttpPathPing = "/api/v1/server/ping";
     private static final String mockHttpPathToken = "/token";
     private static final String mockHttpPathPassword = "/password";
     private static final String mockHttpPathHeaders = "/headers";
     private static final String mockHttpPathUnauthorized = "/unauthorized";
+
+
+    private static final String SERVER_URL;
+
+    static {
+        SERVER_URL = "http://localhost" + ":" + env("IT_SERVER_PORT", "8001");
+        mockHttpBaseUrl = "http://" + env("IT_DOCKER_HOST_ADDR", "localhost") + ":";
+    }
 
     @Rule
     public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
@@ -66,7 +75,7 @@ public class HttpTaskIT extends AbstractServerIT {
 
     @Before
     public void setup() {
-
+        stubForGetAsStringEndpoint(mockHttpPathPing);
         stubForGetSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
         stubForPostSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
         stubForGetSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
@@ -80,13 +89,18 @@ public class HttpTaskIT extends AbstractServerIT {
         rule.shutdownServer();
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetAsString() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetAsString").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        StartProcessResponse spr = start(payload);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.url", SERVER_URL + mockHttpPathPing);
+
+        StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
@@ -95,13 +109,18 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Success response.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGet() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGet").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        StartProcessResponse spr = start(payload);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.url", SERVER_URL + mockHttpPathPing);
+
+        StartProcessResponse spr = start(input);
 
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
@@ -111,7 +130,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetWithAuthUsingPassword() throws Exception {
 
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingPassword").toURI();
@@ -134,7 +153,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingToken").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -155,7 +174,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPost() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPost").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -177,7 +196,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPostWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithAuthUsingToken").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -198,7 +217,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetWithInvalidUrl() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithInvalidUrl").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -213,7 +232,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*server not exists.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetWithHeaders() throws Exception {
 
         URI dir = HttpTaskIT.class.getResource("httpGetWithHeaders").toURI();
@@ -234,6 +253,16 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Out Response: true*", ab);
         assertLog(".*Response content: request headers:.*h1=v1.*", ab);
         assertLog(".*Response content: request headers:.*h2=v2.*", ab);
+    }
+
+    private void stubForGetAsStringEndpoint(String url) {
+        rule.stubFor(get(urlEqualTo(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("{\n" +
+                                "  \"Success\": \"true\"\n" +
+                                "}"))
+        );
     }
 
     @Test(timeout = 60000)

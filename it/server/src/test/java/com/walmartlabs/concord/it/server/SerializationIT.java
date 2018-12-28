@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class SerializationIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         byte[] payload = archive(SerializationIT.class.getResource("serialization").toURI(),
                 ITConstants.DEPENDENCIES_DIR);

@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AnsibleIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testHello() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -63,7 +63,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hello, world.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSkipTags() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleSkipTags").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -85,7 +85,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertEquals("unexpected 'Hello, world' log", 0, grep(".*Hello, world.*", ab).size());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testVault() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleVault").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -106,7 +106,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTwoAnsibleRuns() throws Exception {
         URI dir = AnsibleIT.class.getResource("twoAnsible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -130,7 +130,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Bye-bye!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWithForm() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithForm").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -165,7 +165,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hello!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWithFormSuspensionPostAnsible() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleWithPostFormSuspension/payload").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -207,7 +207,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExtenalPlaybook() throws Exception {
 
         URI dir = AnsibleIT.class.getResource("ansibleExternalPlaybook/payload").toURI();
@@ -231,7 +231,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMergeDefaults() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleMergeDefaults").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -256,7 +256,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*_callbacks:myCallbackDir.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGroupVars() throws Exception {
         String orgName = "org_" + randomString();
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
@@ -292,7 +292,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Hi there!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOutVars() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleOutVars").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
@@ -314,7 +314,7 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*\"msg\":.*Second message.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testStats() throws Exception {
         URI dir = AnsibleIT.class.getResource("ansibleStats").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);

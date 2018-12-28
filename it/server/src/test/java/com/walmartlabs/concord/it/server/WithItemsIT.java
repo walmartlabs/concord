@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 public class WithItemsIT extends AbstractServerIT {
 
-    @Test(timeout = 90000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testAnsible() throws Exception {
         URI uri = ProcessIT.class.getResource("ansibleWithItems").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -59,7 +59,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertLog(".*Howdy!.*", ab);
     }
 
-    @Test(timeout = 90000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testForms() throws Exception {
         URI uri = ProcessIT.class.getResource("formsWithItems").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -99,7 +99,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertLog(".*Hi there!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExternalItems() throws Exception {
         URI uri = ProcessIT.class.getResource("externalWithItems").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -126,7 +126,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertLog(".*Howdy!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testLotsOfItems() throws Exception {
         URI uri = ProcessIT.class.getResource("externalWithItems").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -151,7 +151,7 @@ public class WithItemsIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSubsequentCalls() throws Exception {
         URI uri = ProcessIT.class.getResource("multipleWithItems").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);

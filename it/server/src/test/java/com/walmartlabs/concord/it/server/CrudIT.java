@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class CrudIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrgUpdate() throws Exception {
         String orgName = "org_" + randomString();
         Map<String, Object> meta = Collections.singletonMap("x", "123");
@@ -64,7 +64,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals("234", e.getMeta().get("x"));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testProject() throws Exception {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
 
@@ -110,7 +110,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(deleteResp.isOk());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testNonUniqueRepositoryNames() throws Exception {
         String orgName = "Default";
 
@@ -133,7 +133,7 @@ public class CrudIT extends AbstractServerIT {
                         .setUrl("n/a"))));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInventory() throws Exception {
         InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
 
@@ -172,7 +172,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(deleteInventoryResponse.getResult() == GenericOperationResult.ResultEnum.DELETED);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInventoryData() throws Exception {
         InventoryDataApi dataApi = new InventoryDataApi(getApiClient());
 
@@ -205,7 +205,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(didr.isOk());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     @SuppressWarnings("unchecked")
     public void testInventoryQuery() throws Exception {
         InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
@@ -259,7 +259,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(dqr.isOk());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInvalidQueryName() throws Exception {
         InventoryQueriesApi queriesApi = new InventoryQueriesApi(getApiClient());
 
@@ -280,7 +280,7 @@ public class CrudIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testLanding() throws Exception {
         LandingPagesApi resource = new LandingPagesApi(getApiClient());
 
@@ -329,7 +329,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(listResult);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDashes() throws Exception {
         String orgName = randomString() + "-test~";
 
@@ -365,7 +365,7 @@ public class CrudIT extends AbstractServerIT {
         secretResource.delete(orgName, secretName);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTeam() throws Exception {
         String teamName = "team_" + randomString();
         String orgName = "Default";
@@ -400,7 +400,7 @@ public class CrudIT extends AbstractServerIT {
 
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSecrets() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -445,7 +445,7 @@ public class CrudIT extends AbstractServerIT {
         return l.stream().filter(e -> name.equals(e.getName())).findAny().get();
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrganization() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -480,7 +480,7 @@ public class CrudIT extends AbstractServerIT {
         assertNotNull(organizationEntry);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrgVisibility() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -515,7 +515,7 @@ public class CrudIT extends AbstractServerIT {
         assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrgMeta() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -551,7 +551,7 @@ public class CrudIT extends AbstractServerIT {
         assertEquals(meta.get("y"), meta3.get("y"));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPolicies() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 

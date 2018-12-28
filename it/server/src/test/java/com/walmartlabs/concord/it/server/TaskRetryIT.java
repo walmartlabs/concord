@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TaskRetryIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testAnsibleRetry() throws Exception {
         URI uri = ProcessIT.class.getResource("taskRetry").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);

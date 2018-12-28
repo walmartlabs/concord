@@ -29,7 +29,7 @@ import static org.junit.Assert.fail;
 
 public class UserManagementIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         UsersApi usersApi = new UsersApi(getApiClient());
 
@@ -51,7 +51,7 @@ public class UserManagementIT extends AbstractServerIT {
         usersApi.delete(cur.getId());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testAdmins() throws Exception {
         UsersApi usersApi = new UsersApi(getApiClient());
 

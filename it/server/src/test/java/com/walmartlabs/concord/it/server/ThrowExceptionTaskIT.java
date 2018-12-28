@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ThrowExceptionTaskIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testThrowException() throws Exception {
         URI uri = ThrowExceptionTaskIT.class.getResource("throwExceptionTask").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -54,7 +54,7 @@ public class ThrowExceptionTaskIT extends AbstractServerIT {
         assertLog(".*Catch that!.*", 2, ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testThrowExceptionMessage() throws Exception {
         URI uri = ThrowExceptionTaskIT.class.getResource("throwExceptionMessage").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);

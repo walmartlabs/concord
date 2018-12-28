@@ -42,6 +42,8 @@ import java.util.Map;
 
 public abstract class AbstractServerIT {
 
+    protected final long DEFAULT_TEST_TIMEOUT = 120000;
+
     private ServerClient serverClient;
 
     @Before
@@ -161,5 +163,13 @@ public abstract class AbstractServerIT {
         try (Reader r = new FileReader(f)) {
             return getApiClient().getJSON().getGson().fromJson(r, Map.class);
         }
+    }
+
+    protected static String env(String k, String def) {
+        String v = System.getenv(k);
+        if (v == null) {
+            return def;
+        }
+        return v;
     }
 }

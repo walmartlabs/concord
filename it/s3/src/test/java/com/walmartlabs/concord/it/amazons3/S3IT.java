@@ -118,7 +118,7 @@ public class S3IT {
         assertTrue(isArchivedDone);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 90000)
     public void processCheckPointArchiveTest() throws Exception {
 
         ApiClient apiClient = serverClient.getClient();

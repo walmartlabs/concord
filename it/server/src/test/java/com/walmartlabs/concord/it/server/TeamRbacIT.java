@@ -35,7 +35,7 @@ import static org.junit.Assert.fail;
 @RunWith(ParallelRunner.class)
 public class TeamRbacIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrgs() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -106,7 +106,7 @@ public class TeamRbacIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgBName, new ProjectEntry().setName(projectBName));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTeamCreators() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -182,7 +182,7 @@ public class TeamRbacIT extends AbstractServerIT {
         teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamBName));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTeamMaintainers() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -235,7 +235,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setRole(TeamUserEntry.RoleEnum.MEMBER)));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testNewTeamOwner() throws Exception {
         String userA = "userA_" + randomString();
 
@@ -292,7 +292,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setRole(TeamUserEntry.RoleEnum.MEMBER)));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTeamDelete() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -327,7 +327,7 @@ public class TeamRbacIT extends AbstractServerIT {
         assertEquals(1, l.size());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrgProjects() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -440,7 +440,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setAcceptsRawPayload(true));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOrgPublicSecrets() throws Exception {
         OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
 
@@ -515,7 +515,7 @@ public class TeamRbacIT extends AbstractServerIT {
         secretResource.delete(orgAName, secretAName);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInventory() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -599,7 +599,7 @@ public class TeamRbacIT extends AbstractServerIT {
         inventoryResource.get(orgName, inventoryName);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTeamUsersUpsert() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -632,7 +632,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setRole(TeamUserEntry.RoleEnum.MAINTAINER)));
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSecretAccessLevels() throws Exception {
         SecretsApi secretResource = new SecretsApi(getApiClient());
 

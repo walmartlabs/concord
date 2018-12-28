@@ -1,4 +1,11 @@
-
 flows:
   default:
-  - log: "${http.asString('http://localhost:8001/api/v1/server/ping')}"
+  - try:
+    - log: "Url is: ${url}"
+    - log: "${http.asString( url )}"
+    error:
+    - log: "Gotcha! ${lastError}"
+
+configuration:
+  arguments:
+    url: "http://localhost:8001"

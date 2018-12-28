@@ -33,7 +33,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.*;
 
 public class ForceSuspendIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTask() throws Exception {
         String eventName = "ev_" + randomString();
 

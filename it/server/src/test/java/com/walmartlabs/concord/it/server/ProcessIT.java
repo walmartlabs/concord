@@ -39,7 +39,7 @@ import static org.junit.Assert.*;
 @RunWith(ParallelRunner.class)
 public class ProcessIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testUploadAndRun() throws Exception {
         // prepare the payload
 
@@ -67,7 +67,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Hello, local files!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDefaultEntryPoint() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("defaultEntryPoint").toURI());
 
@@ -92,7 +92,7 @@ public class ProcessIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testUploadAndRunSync() throws Exception {
         // prepare the payload
 
@@ -128,7 +128,7 @@ public class ProcessIT extends AbstractServerIT {
         assertTrue(pir.getStatus() == StatusEnum.FINISHED);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTimeout() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("timeout").toURI());
 
@@ -152,7 +152,7 @@ public class ProcessIT extends AbstractServerIT {
         waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED, StatusEnum.FAILED, StatusEnum.FINISHED);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInterpolation() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("interpolation").toURI());
 
@@ -173,7 +173,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Hello, world.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testErrorHandling() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("errorHandling").toURI());
 
@@ -189,7 +189,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*We got:.*java.lang.RuntimeException.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testStartupProblem() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("startupProblem").toURI());
 
@@ -203,7 +203,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*gaaarbage.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMultipart() throws Exception {
         String zVal = "z" + randomString();
         String myFileVal = "myFile" + randomString();
@@ -233,7 +233,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*myfile=" + myFileVal + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWorkDir() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("workDir").toURI());
 
@@ -264,7 +264,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLogAtLeast(".*Bye!", 2, ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSwitch() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("switchCase").toURI());
 
@@ -283,7 +283,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Bye!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTaskOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("taskOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
@@ -300,7 +300,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*I said: Hello!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDelegateOut() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("delegateOut").toURI(), ITConstants.DEPENDENCIES_DIR);
 
@@ -317,7 +317,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*I said: Hello!.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTags() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("example").toURI());
 
@@ -363,7 +363,7 @@ public class ProcessIT extends AbstractServerIT {
         assertEquals(childSpr.getInstanceId(), e.getInstanceId());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testProjectId() throws Exception {
         String orgName = "Default";
         String projectName = "project_" + randomString();
@@ -409,7 +409,7 @@ public class ProcessIT extends AbstractServerIT {
         assertNotNull(p);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetProcessForChildIds() throws Exception {
 
         // ---
@@ -426,7 +426,7 @@ public class ProcessIT extends AbstractServerIT {
         assertEquals(3, processEntry.getChildrenIds().size());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetAllProcessesForChildIds() throws Exception {
         // create a new org
 
@@ -511,7 +511,7 @@ public class ProcessIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testKillCascade() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("killCascade").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -532,7 +532,7 @@ public class ProcessIT extends AbstractServerIT {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testActiveProfiles() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("activeProfiles").toURI());
 
@@ -555,7 +555,7 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*We got \\[profileA, profileB].*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetProcessErrorMessageFromRuntime() throws Exception {
         // prepare the payload
 
@@ -575,7 +575,7 @@ public class ProcessIT extends AbstractServerIT {
         assertProcessErrorMessage(pir, "BOOOM");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetProcessErrorMessageFromBpmnError() throws Exception {
         // prepare the payload
 
@@ -595,7 +595,7 @@ public class ProcessIT extends AbstractServerIT {
         assertProcessErrorMessage(pir, "myBnpmError");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInvalidEntryPointError() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("multipart").toURI());
 

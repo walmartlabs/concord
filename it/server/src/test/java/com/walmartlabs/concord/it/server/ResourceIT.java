@@ -37,22 +37,22 @@ import static org.junit.Assert.assertEquals;
 @RunWith(ParallelRunner.class)
 public class ResourceIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testReadAsJson() throws Exception {
         test("resourceReadAsJson", ".*Hello Concord!");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testReadAsString() throws Exception {
         test("resourceReadAsString", ".*Hello Concord!");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWriteAsJson() throws Exception {
         test("resourceWriteAsJson", ".*Hello Concord!");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testWriteAsString() throws Exception {
         test("resourceWriteAsString", ".*Hello Concord!");
     }

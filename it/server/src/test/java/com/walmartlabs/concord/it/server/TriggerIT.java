@@ -38,7 +38,7 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 
 public class TriggerIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTriggerProcessStartupFailure() throws Exception {
         String orgName = "org_" + randomString();
         String projectAName = "projectA_" + randomString();
@@ -69,7 +69,7 @@ public class TriggerIT extends AbstractServerIT {
         waitForProcs(porB.getId(), 1, StatusEnum.FINISHED);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTriggerProfiles() throws Exception {
         String orgName = "org_" + randomString();
         String projectName = "project_" + randomString();

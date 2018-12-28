@@ -32,7 +32,7 @@ import static org.junit.Assert.*;
 
 public class FormIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String firstName = "john_" + randomString();
         String lastName = "smith_" + randomString();
@@ -100,7 +100,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*AAA true.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSubmitMultipart() throws Exception {
         String firstName = "john_" + randomString();
         String lastName = "smith_" + randomString();
@@ -167,7 +167,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*AAA true.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testValues() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formValues").toURI());
 
@@ -200,7 +200,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testAdditionalValuesSubmit() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formValuesSubmit").toURI());
 
@@ -230,7 +230,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*we got 123 hello 234.*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExternalFormFile() throws Exception {
         String fieldValue = "value_" + randomString();
 
@@ -270,7 +270,7 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*We got " + fieldValue + ".*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMultiValueInput() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formMultiValue").toURI());
 

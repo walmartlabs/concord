@@ -42,7 +42,7 @@ import static org.junit.Assert.assertFalse;
 
 public class TriggersRefreshIT extends AbstractServerIT {
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         String orgName = "ConcordSystem";
         String projectName = "concordTriggers";
@@ -77,7 +77,7 @@ public class TriggersRefreshIT extends AbstractServerIT {
         assertFalse(list.isEmpty());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTriggerRepoRefresh() throws Exception {
         Path tmpDir = createTempDir();
 

@@ -13,7 +13,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <docker.tagbase>walmartlabs/concord-base</docker.tagbase>
+        <base.image>walmartlabs/concord-base</base.image>
+        <docker.tagbase>${base.image}</docker.tagbase>
         <docker.file>oss/Dockerfile</docker.file>
     </properties>
 

@@ -86,7 +86,7 @@ public class ConcordConsoleRule extends WebDriverRule {
 
         WebDriver driver = getDriver();
 
-        WebDriverWait wait = new WebDriverWait(driver, 10);
+        WebDriverWait wait = new WebDriverWait(driver, 60);
         wait.until(condition);
 
         return driver.findElement(by);

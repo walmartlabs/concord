@@ -70,13 +70,16 @@
                 <site.id>mvn-site</site.id>
                 <site.url>${env.MAVEN_SITE_URL}</site.url>
 
-                <db.image>${env.DB_IMAGE}</db.image>
-                <ansible.image>${env.ANSIBLE_IMAGE}</ansible.image>
-                <server.image>${env.SERVER_IMAGE}</server.image>
-                <dind.image>${env.DIND_IMAGE}</dind.image>
                 <agent.image>${env.AGENT_IMAGE}</agent.image>
+                <ansible.image>${env.ANSIBLE_IMAGE}</ansible.image>
+                <console.image>${env.CONSOLE_IMAGE}</console.image>
+                <db.image>${env.DB_IMAGE}</db.image>
+                <dind.image>${env.DIND_IMAGE}</dind.image>
                 <keywhiz.image>${env.KEYWHIZ_IMAGE}</keywhiz.image>
+                <s3mock.image>${env.S3MOCK_IMAGE}</s3mock.image>
                 <selenium.image>${env.SELENIUM_IMAGE}</selenium.image>
+                <server.image>${env.SERVER_IMAGE}</server.image>
+                <socat.image>${env.SOCAT_IMAGE}</socat.image>
             </properties>
         </profile>
     </profiles>
