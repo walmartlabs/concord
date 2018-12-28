@@ -48,7 +48,7 @@ public class TaskResolver extends ServiceTaskResolver {
     }
 
     private static void injectVariables(ELContext context, Object o, Object property) {
-        Class clazz = o.getClass();
+        Class<?> clazz = o.getClass();
         boolean isSingleton = clazz.isAnnotationPresent(Singleton.class);
         while (clazz != null) {
             for (Field f : clazz.getDeclaredFields()) {

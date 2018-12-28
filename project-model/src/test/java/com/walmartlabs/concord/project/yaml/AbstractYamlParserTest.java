@@ -52,6 +52,7 @@ public abstract class AbstractYamlParserTest {
     private FormService formService;
 
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() {
         taskRegistry = new TestServiceTaskRegistry();
 
@@ -72,7 +73,7 @@ public abstract class AbstractYamlParserTest {
             }
         };
 
-        ResourceResolver resourceResolver = name -> ClassLoader.getSystemResourceAsStream(name);
+        ResourceResolver resourceResolver = ClassLoader::getSystemResourceAsStream;
 
         engine = new EngineBuilder()
                 .withDefinitionProvider(workflowProvider.processes())
@@ -102,7 +103,7 @@ public abstract class AbstractYamlParserTest {
         engine.start(processBusinessKey, processDefinitionId, variables);
     }
 
-    protected void resume(String processBusinessKey, String eventName, Map<String, Object> variables) throws ExecutionException {
+    protected void resume(String processBusinessKey, String eventName) throws ExecutionException {
         engine.resume(processBusinessKey, eventName, null);
     }
 

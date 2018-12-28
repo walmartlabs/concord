@@ -75,6 +75,7 @@ public abstract class AbstractHttpTaskTest {
         response = null;
     }
 
+    @SuppressWarnings("unchecked")
     protected void initCxtForRequest(Context ctx, String requestMethod, String requestType, String responseType, String url) {
         when(ctx.getVariable("url")).thenReturn(url);
         when(ctx.getVariable("method")).thenReturn(requestMethod);

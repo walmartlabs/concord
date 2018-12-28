@@ -533,7 +533,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
 
         // ---
 
-        resume(key, "ev1", null);
+        resume(key, "ev1");
 
         verify(testBean, times(1)).toString(eq("b"));
         verifyNoMoreInteractions(testBean);

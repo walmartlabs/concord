@@ -156,6 +156,7 @@ public abstract class AbstractServerIT {
         return tmpDir;
     }
 
+    @SuppressWarnings("unchecked")
     protected Map<String, Object> fromJson(File f) throws IOException {
         try (Reader r = new FileReader(f)) {
             return getApiClient().getJSON().getGson().fromJson(r, Map.class);

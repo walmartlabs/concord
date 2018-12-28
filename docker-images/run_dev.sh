@@ -34,6 +34,7 @@ docker run -d \
 --link db \
 --name server \
 -p 8001:8001 \
+-v "/tmp:/tmp" \
 -v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
 -e "CONCORD_CFG_FILE=${CONCORD_CFG_FILE}" \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
@@ -50,6 +51,7 @@ echo "done!"
 docker run -d \
 --name agent \
 --link server \
+-v "/tmp:/tmp" \
 -v "${HOME}/.m2/repository:/home/concord/.m2/repository" \
 -v "${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro" \
 -e 'CONCORD_MAVEN_CFG=/opt/concord/conf/mvn.json' \

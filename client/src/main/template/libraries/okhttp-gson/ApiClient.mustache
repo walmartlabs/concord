@@ -926,6 +926,7 @@ public class ApiClient {
      *   fail to deserialize the response body
      * @return Type
      */
+    @SuppressWarnings("unchecked")
     public <T> T handleResponse(Response response, Type returnType) throws ApiException {
         if (response.isSuccessful()) {
             if (returnType == null || response.code() == 204) {

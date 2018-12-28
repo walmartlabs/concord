@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class PolicyRules<E> implements Serializable {
+public class PolicyRules<E extends Serializable> implements Serializable {
 
     private final List<E> allow;
     private final List<E> warn;
