@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-runner: fixed an issue preventing the runner from
+terminating correctly on `java.lang.Error`;
 - concord-server: set the default session timeout to 10 hrs (was
 unlimited);
 - concord-server: accept GitHub events without branch information
