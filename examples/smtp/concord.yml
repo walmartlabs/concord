@@ -10,7 +10,7 @@ flows:
       # a custom SMTP server can be specified here.
       # Otherwise, the task will use the global SMTP configuration.
 
-      # smtp:
+      #smtpParams:
       #  host: "localhost"
       #  port: 25
 
