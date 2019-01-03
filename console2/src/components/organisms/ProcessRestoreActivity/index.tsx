@@ -30,6 +30,7 @@ interface ExternalProps {
     processStatus: ProcessStatus;
     checkpointId: ConcordKey;
     checkpoint: string;
+    renderOverride?: React.ReactNode;
 }
 
 interface StateProps {
@@ -55,7 +56,8 @@ class ProcessRestoreActivity extends React.PureComponent<Props> {
             instanceId,
             checkpointId,
             checkpoint,
-            processStatus
+            processStatus,
+            renderOverride
         } = this.props;
 
         return (
@@ -63,6 +65,7 @@ class ProcessRestoreActivity extends React.PureComponent<Props> {
                 {error && <RequestErrorMessage error={error} />}
 
                 <ButtonWithConfirmation
+                    renderOverride={renderOverride}
                     size={'mini'}
                     floated={'right'}
                     disabled={!isFinalStatus(processStatus)}

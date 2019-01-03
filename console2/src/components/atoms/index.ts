@@ -22,4 +22,5 @@ export { default as FormikCheckbox } from './FormikCheckbox';
 export { default as FormikDropdown } from './FormikDropdown';
 export { default as FormikFileInput } from './FormikFileInput';
 export { default as FormikInput } from './FormikInput';
+export { default as Truncate } from './Truncate';
 export { default as TableSearchFilter } from './TableSearchFilter';

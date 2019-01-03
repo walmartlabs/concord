@@ -23,6 +23,7 @@ import { ProcessStatus } from '../index';
 
 export interface ProcessHistoryEntry {
     id: ConcordId;
+    checkpointId?: string;
     status: ProcessStatus;
     changeDate: string;
 }

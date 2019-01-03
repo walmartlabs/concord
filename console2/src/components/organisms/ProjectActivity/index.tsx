@@ -39,8 +39,9 @@ import {
     RedirectButton,
     EditProjectActivity
 } from '../index';
+import CheckpointView from '../CheckpointView';
 
-export type TabLink = 'process' | 'repository' | 'settings' | 'access' | null;
+export type TabLink = 'process' | 'checkpoint' | 'repository' | 'settings' | 'access' | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -190,6 +191,10 @@ class ProjectActivity extends React.PureComponent<Props> {
                         <Icon name="tasks" />
                         <Link to={`${baseUrl}/process`}>Processes</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'checkpoint'}>
+                        <Icon name="checkmark" />
+                        <Link to={`${baseUrl}/checkpoint`}>Checkpoints</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'repository'}>
                         <Icon name="code" />
                         <Link to={`${baseUrl}/repository`}>Repositories</Link>
@@ -211,6 +216,9 @@ class ProjectActivity extends React.PureComponent<Props> {
 
                     <Route path={`${baseUrl}/process`} exact={true}>
                         {ProjectActivity.renderProcesses(data)}
+                    </Route>
+                    <Route path={`${baseUrl}/checkpoint`} exact={true}>
+                        <CheckpointView orgId={data.orgId} projectId={data.id} />
                     </Route>
                     <Route path={`${baseUrl}/repository`} exact={true}>
                         {ProjectActivity.renderRepositories(data)}

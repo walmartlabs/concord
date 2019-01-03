@@ -1,7 +1,8 @@
-export {}
+export {};
 
 export interface ConcordEnvironment {
-    topBar?: TopBarMeta
+    documentationSite: string;
+    topBar?: TopBarMeta;
 }
 
 export interface TopBarMeta {
@@ -17,5 +18,7 @@ export interface LinkMeta {
 }
 
 declare global {
-    interface Window { concord: ConcordEnvironment; }
+    interface Window {
+        concord: ConcordEnvironment;
+    }
 }

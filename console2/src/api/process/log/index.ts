@@ -69,11 +69,11 @@ export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<Lo
 
     const resp = await managedFetch(`/api/v1/process/${instanceId}/log`, opts);
 
-    const h = resp.headers.get('Content-Range');
-    if (!h) {
+    const headers = resp.headers.get('Content-Range');
+    if (!headers) {
         throw new Object({ error: true, message: `Range header is missing: ${instanceId}` });
     }
 
     const data = await resp.text();
-    return toChunk(data, parseRange(h));
+    return toChunk(data, parseRange(headers));
 };

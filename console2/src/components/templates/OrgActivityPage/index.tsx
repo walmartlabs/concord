@@ -37,6 +37,7 @@ interface RouteProps {
 
 type Props = ExternalProps & RouteComponentProps<RouteProps>;
 
+// TODO: Make a generic layout rather than page specific?
 class OrgActivityPage extends React.PureComponent<Props> {
     render() {
         const { title, breadcrumbs, activity } = this.props;

@@ -15,8 +15,6 @@
 .vagrant
 .vscode
 buildNumber.properties
-console/build
-console/storybook-static
 console2/build
 flow-typed/
 jmeter.log

@@ -36,6 +36,8 @@ interface RouteProps {
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/process')) {
         return 'process';
+    } else if (s.endsWith('/checkpoint')) {
+        return 'checkpoint';
     } else if (s.endsWith('/repository')) {
         return 'repository';
     } else if (s.endsWith('/settings')) {

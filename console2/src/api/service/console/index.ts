@@ -20,6 +20,9 @@
 
 import { throttle } from 'lodash';
 import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
+import { ProcessStatus } from '../../process';
+import { ProcessCheckpointEntry } from '../../process/checkpoint';
+import { ProcessHistoryEntry } from '../../process/history';
 
 export interface UserResponse {
     username: string;
@@ -139,3 +142,28 @@ export const validatePassword = throttle(
         return json as boolean;
     }
 );
+
+export interface ProcessEntryEx {
+    instanceId: ConcordId;
+    orgId?: ConcordId;
+    orgName?: ConcordKey;
+    projectId?: ConcordId;
+    projectName?: ConcordKey;
+    repoId?: ConcordId;
+    repoName?: ConcordKey;
+    initiator?: string;
+    status: ProcessStatus;
+    createdAt: string;
+    lastUpdatedAt: string;
+    meta?: {};
+    checkpoints?: ProcessCheckpointEntry[];
+    statusHistory?: ProcessHistoryEntry[];
+}
+
+export const listProcesses = (
+    orgId?: ConcordId,
+    projectId?: ConcordId,
+    limit?: number,
+    offset?: number
+): Promise<ProcessEntryEx[]> =>
+    fetchJson(`/api/service/console/process?${queryParams({ orgId, projectId, limit, offset })}`);

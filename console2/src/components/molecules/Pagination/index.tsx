@@ -19,18 +19,14 @@
  */
 
 import * as React from 'react';
-import { Button, Dropdown, DropdownItemProps } from 'semantic-ui-react';
-
-const options: DropdownItemProps[] = [
-    { text: '50', value: '50' },
-    { text: '100', value: '100' },
-    { text: '500', value: '500' }
-];
+import { Button, Dropdown } from 'semantic-ui-react';
 
 export interface PaginationFilter {
     limit?: number;
     offset?: number;
 }
+
+const defaultDropDownValues = [50, 100, 500];
 
 interface Props {
     filterProps?: PaginationFilter;
@@ -41,6 +37,8 @@ interface Props {
     disablePrevious?: boolean;
     disableNext?: boolean;
     disableFirst?: boolean;
+    dropDownValues?: number[]; // Numbers
+    maxValue?: number; // Maximum Items that could render
 }
 
 interface State {
@@ -58,15 +56,19 @@ class Pagination extends React.Component<Props, State> {
     }
 
     render() {
-        const { handleLimitChange } = this.props;
+        const { handleLimitChange, dropDownValues = defaultDropDownValues, maxValue } = this.props;
 
         return (
             <>
                 {handleLimitChange !== undefined && (
                     <Dropdown
                         compact={true}
-                        options={options}
-                        defaultValue="50"
+                        options={dropDownValues.map((value) => ({
+                            text: value,
+                            value,
+                            disabled: maxValue ? value >= maxValue : false
+                        }))}
+                        defaultValue={dropDownValues[0]}
                         selection={true}
                         basic={true}
                         fluid={false}

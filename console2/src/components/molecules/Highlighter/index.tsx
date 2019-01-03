@@ -30,6 +30,7 @@ interface HighlighterProps {
 interface Config {
     string: string;
     style: string;
+    divide?: boolean;
 }
 
 const ansiUp = new AnsiUp();
@@ -47,10 +48,15 @@ class Highlighter extends React.PureComponent<HighlighterProps> {
         let txt = value;
 
         for (const cfg of config) {
-            txt = txt.replace(
-                RegExp(cfg.string, regExpCfg),
-                () => `<span style="${cfg.style}"><b>${cfg.string}</b></span>`
-            );
+            if (typeof txt === 'string') {
+                txt = txt.replace(
+                    RegExp(cfg.string, regExpCfg),
+                    () =>
+                        `<span style="${cfg.style}"><b>${cfg.string}</b></span>${
+                            cfg.divide ? '<hr/>' : ''
+                        }`
+                );
+            }
         }
 
         txt = ansiUp.ansi_to_html(txt);

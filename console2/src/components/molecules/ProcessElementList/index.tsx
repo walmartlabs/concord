@@ -107,7 +107,7 @@ const renderElementRow = (
     return (
         <Table.Row key={idx}>
             <Table.Cell textAlign="right">{renderDefinitionId(ev, idx, arr)}</Table.Cell>
-            <Table.Cell verticalAlign={'middle'}>
+            <Table.Cell verticalAlign={'middle'} style={{ wordBreak: 'break-all' }}>
                 {ev.data.description}
                 {renderRestoreCheckpoint(instanceId, processStatus, ev.data.out)}
             </Table.Cell>

@@ -104,7 +104,14 @@ class ProcessHistoryActivity extends React.Component<Props> {
 
                 <Table celled={true} attached="bottom">
                     <Table.Header>{this.renderTableHeader()}</Table.Header>
-                    <Table.Body>{data.map((p, idx) => this.renderTableRow(p, idx))}</Table.Body>
+                    <Table.Body>
+                        {data && data.map((p, idx) => this.renderTableRow(p, idx))}
+                        {!data && (
+                            <tr style={{ color: 'red', fontWeight: 'bold' }}>
+                                <Table.Cell negative={true}>No history available</Table.Cell>
+                            </tr>
+                        )}
+                    </Table.Body>
                 </Table>
             </>
         );

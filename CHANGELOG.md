@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: new "Checkpoint View" for projects;
 - concord-console: allow addition of new elements for `type*` and
 `type+` form fields.
 

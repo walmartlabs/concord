@@ -26,6 +26,7 @@ interface State {
 }
 
 interface Props extends ButtonProps {
+    renderOverride?: React.ReactNode;
     confirmationHeader: string;
     confirmationContent: string;
     onConfirm: () => void;
@@ -52,11 +53,21 @@ class ButtonWithConfirmation extends React.Component<Props, State> {
     }
 
     render() {
-        const { confirmationHeader, confirmationContent, onConfirm, ...rest } = this.props;
+        const {
+            confirmationHeader,
+            confirmationContent,
+            onConfirm,
+            renderOverride,
+            ...rest
+        } = this.props;
 
         return (
             <>
-                <Button {...rest} onClick={(ev) => this.handleShowConfirm(ev)} />
+                {renderOverride ? (
+                    <div onClick={(ev) => this.handleShowConfirm(ev)}>{renderOverride}</div>
+                ) : (
+                    <Button {...rest} onClick={(ev) => this.handleShowConfirm(ev)} />
+                )}
 
                 <Confirm
                     open={this.state.showConfirm}

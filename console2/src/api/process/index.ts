@@ -39,27 +39,21 @@ export enum ProcessStatus {
     TIMED_OUT = 'TIMED_OUT'
 }
 
-export const getStatusSemanticColor = (s: ProcessStatus): SemanticCOLORS => {
-    switch (s) {
+export const getStatusSemanticColor = (status: ProcessStatus): SemanticCOLORS => {
+    switch (status) {
         case ProcessStatus.PREPARING:
-            return 'blue';
-        case ProcessStatus.ENQUEUED:
-            return 'grey';
         case ProcessStatus.RUNNING:
-            return 'blue';
         case ProcessStatus.STARTING:
-            return 'blue';
         case ProcessStatus.SUSPENDED:
             return 'blue';
-        case ProcessStatus.RESUMING:
-            return 'grey';
         case ProcessStatus.FINISHED:
             return 'green';
+        case ProcessStatus.CANCELLED:
         case ProcessStatus.FAILED:
-            return 'red';
         case ProcessStatus.TIMED_OUT:
             return 'red';
-        case ProcessStatus.CANCELLED:
+        case ProcessStatus.ENQUEUED:
+        case ProcessStatus.RESUMING:
         default:
             return 'grey';
     }
