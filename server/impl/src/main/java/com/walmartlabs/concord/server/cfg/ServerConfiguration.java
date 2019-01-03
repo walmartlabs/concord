@@ -22,16 +22,37 @@ package com.walmartlabs.concord.server.cfg;
 
 import java.io.Serializable;
 
+/**
+ * These configuration parameters cannot be put into the configuration file as
+ * they are needed before {@link com.walmartlabs.ollie.OllieServer} is
+ * instantiated.
+ */
 public class ServerConfiguration implements Serializable {
 
     private static final String SECURE_COOKIES_KEY = "SECURE_COOKIES";
+    private static final String SESSION_TIMEOUT_KEY = "SESSION_TIMEOUT";
 
     public static final boolean secureCookies;
+    public static final int sessionTimeout;
+
     static {
-        secureCookies = Boolean.parseBoolean(System.getenv(SECURE_COOKIES_KEY));
+        secureCookies = Boolean.parseBoolean(getEnv(SECURE_COOKIES_KEY, "false"));
+        sessionTimeout = Integer.parseInt(getEnv(SESSION_TIMEOUT_KEY, "36000")); // 10 hrs
     }
 
     public boolean isSecureCookies() {
         return secureCookies;
+    }
+
+    public int getSessionTimeout() {
+        return sessionTimeout;
+    }
+
+    private static String getEnv(String k, String defaultValue) {
+        String v = System.getenv(k);
+        if (v == null) {
+            return defaultValue;
+        }
+        return v;
     }
 }

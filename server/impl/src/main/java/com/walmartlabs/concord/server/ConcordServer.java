@@ -74,6 +74,7 @@ public class ConcordServer {
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
                 .sessionCookieOptions(getSessionCookieOptions())
                 .sessionsEnabled(true)
+                .sessionMaxInactiveInterval(ServerConfiguration.sessionTimeout)
                 .jmxEnabled(true);
 
         OllieServer server = builder.build();

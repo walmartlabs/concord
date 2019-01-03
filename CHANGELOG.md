@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-server: set the default session timeout to 10 hrs (was
+unlimited);
 - concord-server: accept GitHub events without branch information
 (e.g. archive events).
 
