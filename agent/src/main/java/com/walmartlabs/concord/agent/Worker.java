@@ -23,6 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.LogUtils;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
@@ -127,23 +128,38 @@ public class Worker implements Runnable {
         }
 
         UUID instanceId = response.getProcessId();
-        Path workDir = IOUtils.createTempDir(payloadDir, "workDir");
-        if (response.getRepoUrl() != null && response.getCommitId() != null) {
-            repositoryManager.export(response.getOrgName(), response.getRepoUrl(), response.getCommitId(), response.getRepoPath(), response.getSecretName(), workDir);
-        }
-
-        File payload = withRetry(PAYLOAD_DOWNLOAD_MAX_RETRIES, PAYLOAD_DOWNLOAD_RETRY_DELAY,
-                () -> processApiClient.downloadState(instanceId));
-
+        Path workDir = null;
         try {
-            IOUtils.unzip(payload.toPath(), workDir, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new ExecutionException("Error while unpacking a payload", e);
-        } finally {
-            Files.delete(payload.toPath());
+            workDir = IOUtils.createTempDir(payloadDir, "workDir");
+
+            if (response.getRepoUrl() != null && response.getCommitId() != null) {
+                repositoryManager.export(response.getOrgName(), response.getRepoUrl(), response.getCommitId(), response.getRepoPath(), response.getSecretName(), workDir);
+            }
+
+            downloadState(instanceId, workDir);
+        } catch (Exception e) {
+            delete(workDir);
+
+            logError(instanceId, "Error while processing payload", e);
+            handleError(instanceId, e);
+            return null;
         }
 
         return new JobEntry(instanceId, workDir);
+    }
+
+    private void downloadState(UUID instanceId, Path workDir) throws Exception {
+        File payload = null;
+        try {
+            payload = withRetry(PAYLOAD_DOWNLOAD_MAX_RETRIES, PAYLOAD_DOWNLOAD_RETRY_DELAY,
+                    () -> processApiClient.downloadState(instanceId));
+
+            IOUtils.unzip(payload.toPath(), workDir, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            if (payload != null) {
+                delete(payload.toPath());
+            }
+        }
     }
 
     private void cleanup(JobEntry job) {
@@ -168,12 +184,28 @@ public class Worker implements Runnable {
         }
     }
 
+    private void delete(Path dir) {
+        if (dir == null) {
+            return;
+        }
+
+        try {
+            IOUtils.deleteRecursively(dir);
+        } catch (Exception e) {
+            log.warn("delete ['{}'] -> error", dir, e);
+        }
+    }
+
     private void log(UUID instanceId, String s) {
         try {
             processApiClient.appendLog(instanceId, s.getBytes());
         } catch (ApiException e) {
             log.warn("log ['{}'] -> unable to append a log entry ({}): {}", instanceId, e.getMessage(), s);
         }
+    }
+
+    private void logError(UUID instanceId, String log, Object... args) {
+        log(instanceId, LogUtils.formatMessage(LogUtils.LogLevel.ERROR, log, args));
     }
 
     private void execute(UUID instanceId, Path payload) {

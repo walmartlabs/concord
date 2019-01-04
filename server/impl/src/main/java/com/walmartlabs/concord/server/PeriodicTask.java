@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class PeriodicTask implements BackgroundTask{
+public abstract class PeriodicTask implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(PeriodicTask.class);
 

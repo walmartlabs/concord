@@ -10,6 +10,7 @@
 
 ### Changed
 
+- concord-agent: improved error logging when cloning repositories;
 - concord-runner: fixed an issue preventing the runner from
 terminating correctly on `java.lang.Error`;
 - concord-server: set the default session timeout to 10 hrs (was

@@ -69,7 +69,7 @@ public class RepositoryManager {
         try {
             return secretClient.getData(orgName, secretName, null, null);
         } catch (Exception e) {
-            throw new ExecutionException("Error while retrieving a secret: " + orgName + "/" + secretName, e);
+            throw new ExecutionException("Error while retrieving a secret '" + secretName + "' in org '" + orgName + "': " + e.getMessage(), e);
         }
     }
 }
