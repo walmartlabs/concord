@@ -7,4 +7,5 @@ flows:
   - script: ruby
     body: |
       puts "Hello!"
-
+      $execution.setVariable("test", "foo");
+  - log: "done: ${test}"
