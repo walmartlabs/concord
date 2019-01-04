@@ -57,8 +57,7 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
                 <RepositoryActionDropdown
                     orgName={orgName}
                     projectName={projectName}
-                    repoName={row.name}
-                    repoURL={row.url}
+                    repo={row}
                 />
             </Table.Cell>
         </Table.Row>
@@ -79,7 +78,7 @@ class RepositoryList extends React.PureComponent<Props> {
                     <Table.Row>
                         <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
                         <Table.HeaderCell>Repository URL</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>
                         <Table.HeaderCell singleLine={true}>Path</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Secret</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true} />

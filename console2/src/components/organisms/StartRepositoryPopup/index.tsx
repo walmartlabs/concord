@@ -35,6 +35,8 @@ interface ExternalProps {
     projectName: ConcordKey;
     repoName: ConcordKey;
     repoURL: string;
+    repoBranchOrCommitId: string;
+    repoPath: string;
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
@@ -72,11 +74,13 @@ class StartRepositoryPopup extends React.Component<Props, State> {
     render() {
         const {
             repoName,
+            repoURL,
+            repoBranchOrCommitId,
+            repoPath,
             trigger,
             starting,
             success,
             response,
-            repoURL,
             error,
             reset,
             onConfirm,
@@ -109,17 +113,17 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                     <Table>
                         <Keys>
                             <Key>Repository URL</Key>
-                            <Key>Source</Key>
+                            <Key>Branch</Key>
                             <Key>Path</Key>
-                            <Key>Entry Point</Key>
+                            <Key>Flow</Key>
                         </Keys>
 
                         <Values>
                             <Value>
                                 <GitHubLink url={repoURL} text={repoURL} />
                             </Value>
-                            <Value>master</Value>
-                            <Value>/</Value>
+                            <Value>{repoBranchOrCommitId}</Value>
+                            <Value>{repoPath}</Value>
                             <Value>
                                 <Input
                                     type="text"

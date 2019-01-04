@@ -282,7 +282,7 @@ const validator = async (values: FormValues, props: Props) => {
             }
             break;
         case RepositorySourceType.COMMIT_ID:
-            e = validation.commitId(values.branch);
+            e = validation.commitId(values.commitId);
             if (e) {
                 throw { commitId: e };
             }

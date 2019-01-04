@@ -22,6 +22,7 @@ import * as React from 'react';
 import { Dropdown, Icon } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
+import { RepositoryEntry } from "../../../api/org/project/repository";
 import {
     DeleteRepositoryPopup,
     RefreshRepositoryPopup,
@@ -33,13 +34,18 @@ import {
 interface ExternalProps {
     orgName: ConcordKey;
     projectName: ConcordKey;
-    repoName: ConcordKey;
-    repoURL: string;
+    repo: RepositoryEntry;
 }
 
 class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
     render() {
-        const { orgName, projectName, repoName, repoURL } = this.props;
+        const { orgName, projectName, repo } = this.props;
+
+        const {name: repoName, url: repoURL, branch: repoBranch, commitId: repoCommitId, path: repoPath} = repo;
+
+        // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
+        const repoBranchOrCommitId = repoCommitId ? repoCommitId : (repoBranch ? repoBranch : 'master');
+        const repoPathOrDefault = repoPath ? repoPath : '/';
 
         return (
             <Dropdown icon="ellipsis vertical">
@@ -49,6 +55,8 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         projectName={projectName}
                         repoName={repoName}
                         repoURL={repoURL}
+                        repoBranchOrCommitId={repoBranchOrCommitId}
+                        repoPath={repoPathOrDefault}
                         trigger={(onClick) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="play" color="blue" />

@@ -10,6 +10,8 @@
 
 ### Changed
 
+- concord-console: the process start popup now correctly displays the
+branch of the selected repository;
 - concord-server: allow project-scoped secrets to be used when
 cloning the project's repositories;
 - concord-agent: improved error logging when cloning repositories;
