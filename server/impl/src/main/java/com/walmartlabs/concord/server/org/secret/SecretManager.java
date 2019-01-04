@@ -51,6 +51,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -147,6 +148,9 @@ public class SecretManager {
         return e;
     }
 
+    /**
+     * Generates and stores a new SSH key pair.
+     */
     public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
                                           SecretVisibility visibility, SecretStoreType secretStoreType) {
 
@@ -157,6 +161,9 @@ public class SecretManager {
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
+    /**
+     * Stores a new SSH key pair using the provided public and private keys.
+     */
     public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
                                           InputStream publicKey,
                                           InputStream privateKey, SecretVisibility visibility,
@@ -171,6 +178,9 @@ public class SecretManager {
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
+    /**
+     * Stores a new username and password secret.
+     */
     public DecryptedUsernamePassword createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
                                                             String username, char[] password, SecretVisibility visibility,
                                                             SecretStoreType secretStoreType) {
@@ -182,6 +192,9 @@ public class SecretManager {
         return new DecryptedUsernamePassword(id);
     }
 
+    /**
+     * Stores a new single value secret.
+     */
     public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
                                                 InputStream data, SecretVisibility visibility,
                                                 SecretStoreType storeType) throws IOException {
@@ -198,8 +211,11 @@ public class SecretManager {
         return new DecryptedBinaryData(id);
     }
 
-    public DecryptedKeyPair getKeyPair(UUID orgId, String name) {
-        DecryptedSecret e = getSecret(orgId, name, null, SecretType.KEY_PAIR);
+    /**
+     * Decrypts a stored SSH key pair.
+     */
+    public DecryptedKeyPair getKeyPair(AccessScope accessScope, UUID orgId, String name) {
+        DecryptedSecret e = getSecret(accessScope, orgId, name, null, SecretType.KEY_PAIR);
         if (e == null) {
             return null;
         }
@@ -209,11 +225,17 @@ public class SecretManager {
         return new DecryptedKeyPair(e.getId(), k.getPublicKey());
     }
 
+    /**
+     * Updates name and/or visibility of an existing secret.
+     */
     public void update(UUID secretId, String newName, SecretVisibility visibility) {
         SecretEntry e = assertAccess(null, secretId, newName, ResourceAccessLevel.WRITER, true);
         secretDao.update(e.getId(), newName, visibility);
     }
 
+    /**
+     * Removes an existing secret.
+     */
     public void delete(UUID orgId, String secretName) {
         SecretEntry e = assertAccess(orgId, null, secretName, ResourceAccessLevel.WRITER, true);
 
@@ -229,8 +251,11 @@ public class SecretManager {
                 .log();
     }
 
-    public DecryptedSecret getSecret(UUID orgId, String name, String password, SecretType expectedType) {
-        SecretDataEntry e = getRaw(orgId, name, password);
+    /**
+     * Decrypts and returns an existing secret.
+     */
+    public DecryptedSecret getSecret(AccessScope accessScope, UUID orgId, String name, String password, SecretType expectedType) {
+        SecretDataEntry e = getRaw(accessScope, orgId, name, password);
 
         if (expectedType != null && e.getType() != expectedType) {
             throw new IllegalArgumentException("Invalid secret type: " + name + ", expected " + expectedType + ", got: " + e.getType());
@@ -240,29 +265,17 @@ public class SecretManager {
         return new DecryptedSecret(e.getId(), s);
     }
 
-    public SecretDataEntry getRaw(UUID orgId, String name, String password) {
+    /**
+     * Returns a raw (unencrypted) secret value.
+     */
+    public SecretDataEntry getRaw(AccessScope accessScope, UUID orgId, String name, String password) {
         SecretEntry e = assertAccess(orgId, null, name, ResourceAccessLevel.READER, false);
         if (e == null) {
             return null;
         }
 
-        // handle project-scoped secrets
-        UUID projectId = e.getProjectId();
-        if (projectId != null) {
-            SessionKeyPrincipal session = SessionKeyPrincipal.getCurrent();
-            if (session == null) {
-                throw new UnauthorizedException("Project-scoped secrets can only be accessed within a running process. Secret: " + e.getName());
-            }
-
-            ProcessEntry p = processQueueDao.get(session.getProcessKey());
-            if (p == null) {
-                throw new IllegalStateException("Process not found: " + session.getProcessKey());
-            }
-
-            if (!projectId.equals(p.projectId())) {
-                throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
-            }
-        }
+        // getting a decrypted secret requires additional checks in some cases
+        assertProjectScope(accessScope, e);
 
         SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
         assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedBy());
@@ -277,19 +290,22 @@ public class SecretManager {
 
         byte[] ab = SecretUtils.decrypt(data, pwd, salt);
 
-        // TODO add access context? e.g. access from a flow, repo, etc
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
                 .field("id", e.getId())
                 .field("orgId", e.getOrgId())
                 .field("name", e.getName())
                 .field("type", e.getType())
+                .field("scope", accessScope)
                 .log();
 
         return new SecretDataEntry(e, ab);
     }
 
-    public KeyPair getKeyPair(UUID orgId, String name, String password) {
-        DecryptedSecret e = getSecret(orgId, name, password, SecretType.KEY_PAIR);
+    /**
+     * Decrypts and returns an existing SSH key pair.
+     */
+    public KeyPair getKeyPair(AccessScope accessScope, UUID orgId, String name, String password) {
+        DecryptedSecret e = getSecret(accessScope, orgId, name, password, SecretType.KEY_PAIR);
         if (e == null) {
             return null;
         }
@@ -298,6 +314,9 @@ public class SecretManager {
         return (KeyPair) s;
     }
 
+    /**
+     * Returns a list of secrets for the specified organization.
+     */
     public List<SecretEntry> list(UUID orgId) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
@@ -308,6 +327,9 @@ public class SecretManager {
         return secretDao.list(orgId, userId, SECRETS.SECRET_NAME, true);
     }
 
+    /**
+     * Updates a secret's access level for the specified team.
+     */
     public void updateAccessLevel(UUID secretId, UUID teamId, ResourceAccessLevel level) {
         assertAccess(null, secretId, null, ResourceAccessLevel.OWNER, true);
         secretDao.upsertAccessLevel(secretId, teamId, level);
@@ -385,6 +407,45 @@ public class SecretManager {
             return secretCfg.getServerPwd();
         }
         return pwd.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private void assertProjectScope(AccessScope scope, SecretEntry e) {
+        UUID projectId = e.getProjectId();
+        if (projectId == null) {
+            return;
+        }
+
+        // currently both the server and the agent access repositories and thus require access to secrets
+        // the agent uses its own API key which is typically a "globalReader". That is why we need to check both
+        // "globalReaders" and the current session token
+        // TODO create a separate role or move the repository cloning into the runner and use session tokens?
+        UserPrincipal u = UserPrincipal.getCurrent();
+        if (u != null && u.isGlobalReader()) {
+            return;
+        }
+
+        // internal access within a scope of a project
+        if (scope instanceof ProjectAccessScope) {
+            UUID scopeProjectId = ((ProjectAccessScope) scope).getProjectId();
+            if (!projectId.equals(scopeProjectId)) {
+                throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
+            }
+            return;
+        }
+
+        SessionKeyPrincipal session = SessionKeyPrincipal.getCurrent();
+        if (session == null) {
+            throw new UnauthorizedException("Project-scoped secrets can only be accessed within a running process. Secret: " + e.getName());
+        }
+
+        ProcessEntry p = processQueueDao.get(session.getProcessKey());
+        if (p == null) {
+            throw new IllegalStateException("Process not found: " + session.getProcessKey());
+        }
+
+        if (!projectId.equals(p.projectId())) {
+            throw new UnauthorizedException("Project-scoped secrets can only be accessed within the project they belong to. Secret: " + e.getName());
+        }
     }
 
     private static void assertEncryptedByType(String name, SecretEncryptedByType provided, SecretEncryptedByType actual) {
@@ -525,6 +586,75 @@ public class SecretManager {
 
         public UUID getId() {
             return id;
+        }
+    }
+
+    /**
+     * Scope in which access to secrets is performed. Some scopes require additional security checks.
+     */
+    public static abstract class AccessScope implements Serializable {
+
+        /**
+         * External access via API. Requires additional security checks.
+         */
+        public static AccessScope apiRequest() {
+            return new ApiAccessScope();
+        }
+
+        /**
+         * Internal access. The server requires a secret for some internal operations related to a
+         * specific project (e.g. repository cloning).
+         */
+        public static AccessScope project(UUID projectId) {
+            return new ProjectAccessScope(projectId);
+        }
+
+        /**
+         * Generic internal access. Should be used sparingly.
+         */
+        public static AccessScope internal() {
+            return new InternalAccessScope();
+        }
+
+        protected AccessScope() {
+        }
+
+        public abstract String getName();
+    }
+
+
+    private static class ApiAccessScope extends AccessScope {
+
+        @Override
+        public String getName() {
+            return "apiAccess";
+        }
+    }
+
+    public static class ProjectAccessScope extends AccessScope {
+
+        private final UUID projectId;
+
+        public ProjectAccessScope(UUID projectId) {
+            super();
+            this.projectId = projectId;
+        }
+
+        public UUID getProjectId() {
+            return projectId;
+        }
+
+        @Override
+        public String getName() {
+            return "projectAccess";
+        }
+    }
+
+    public static class InternalAccessScope extends AccessScope {
+
+        @Override
+        public String getName() {
+            return "internal";
         }
     }
 }

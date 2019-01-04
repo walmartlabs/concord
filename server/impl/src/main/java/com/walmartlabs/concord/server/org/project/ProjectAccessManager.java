@@ -54,6 +54,21 @@ public class ProjectAccessManager {
         projectDao.upsertAccessLevel(projectId, teamId, level);
     }
 
+    public ProjectEntry assertProjectAccess(UUID orgId, UUID projectId, String projectName, ResourceAccessLevel level, boolean orgMembersOnly) {
+        if (projectId == null && projectName == null) {
+            throw new ValidationErrorsException("Project ID or name is required");
+        }
+
+        if (projectId == null) {
+            projectId = projectDao.getId(orgId, projectName);
+            if (projectId == null) {
+                throw new ValidationErrorsException("Project not found: " + projectName);
+            }
+        }
+
+        return assertProjectAccess(projectId, level, orgMembersOnly);
+    }
+
     @WithTimer
     public ProjectEntry assertProjectAccess(UUID projectId, ResourceAccessLevel level, boolean orgMembersOnly) {
         ProjectEntry e = projectDao.get(projectId);

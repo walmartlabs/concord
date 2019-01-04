@@ -82,7 +82,7 @@ class EditRepositoryActivity extends React.PureComponent<Props> {
                         }
                     }
                     testRepository={({ name, sourceType, id, ...rest }) =>
-                        testRepository({ orgName, ...rest })
+                        testRepository({ orgName, projectName, ...rest })
                     }
                 />
             </>

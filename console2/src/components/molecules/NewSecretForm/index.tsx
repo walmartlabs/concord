@@ -189,7 +189,7 @@ class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValue
                 <Segment secondary={true} basic={true}>
                     <p>
                         Project-scoped secrets can only be used in the processes of specified
-                        projects. They cannot be used as repository credentials.
+                        projects. They cannot be reused for multiple projects.
                     </p>
 
                     <p>

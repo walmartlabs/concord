@@ -89,7 +89,7 @@ public class PrivateKeyProcessor implements PayloadProcessor {
         }
 
         UUID orgId = getOrgId(payload);
-        KeyPair keyPair = secretManager.getKeyPair(orgId, secret, null);
+        KeyPair keyPair = secretManager.getKeyPair(SecretManager.AccessScope.internal(), orgId, secret, null);
         if (keyPair == null) {
             logManager.error(processKey, "Secret not found: " + secret);
             throw new ProcessException(processKey, "Secret not found: " + secret);

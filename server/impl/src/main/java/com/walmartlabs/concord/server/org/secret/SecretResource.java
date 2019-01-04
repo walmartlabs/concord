@@ -185,7 +185,7 @@ public class SecretResource implements Resource {
 
         SecretDao.SecretDataEntry entry;
         try {
-            entry = secretManager.getRaw(org.getId(), secretName, password);
+            entry = secretManager.getRaw(SecretManager.AccessScope.apiRequest(), org.getId(), secretName, password);
             if (entry == null) {
                 throw new WebApplicationException("Secret not found: " + secretName, Status.NOT_FOUND);
             }
@@ -218,7 +218,7 @@ public class SecretResource implements Resource {
                                           @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        DecryptedKeyPair k = secretManager.getKeyPair(org.getId(), secretName);
+        DecryptedKeyPair k = secretManager.getKeyPair(SecretManager.AccessScope.apiRequest(), org.getId(), secretName);
         return new PublicKeyResponse(k.getId(), null, null, new String(k.getData()));
     }
 

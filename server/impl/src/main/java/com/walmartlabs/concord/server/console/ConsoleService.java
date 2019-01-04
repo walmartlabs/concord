@@ -35,7 +35,10 @@ import com.walmartlabs.concord.server.jooq.tables.VProcessQueue;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.PasswordChecker;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
@@ -94,6 +97,7 @@ public class ConsoleService implements Resource {
     private final LdapManager ldapManager;
     private final ProcessDao processDao;
     private final ApiKeyDao apiKeyDao;
+    private final ProjectAccessManager projectAccessManager;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -105,7 +109,8 @@ public class ConsoleService implements Resource {
                           TeamDao teamDao,
                           LdapManager ldapManager,
                           ProcessDao processDao,
-                          ApiKeyDao apiKeyDao) {
+                          ApiKeyDao apiKeyDao,
+                          ProjectAccessManager projectAccessManager) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -117,6 +122,7 @@ public class ConsoleService implements Resource {
         this.ldapManager = ldapManager;
         this.apiKeyDao = apiKeyDao;
         this.processDao = processDao;
+        this.projectAccessManager = projectAccessManager;
     }
 
     @GET
@@ -233,11 +239,12 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public boolean testRepository(RepositoryTestRequest req) {
-        OrganizationEntry org = orgManager.assertAccess(req.getOrgId(), req.getOrgName(), false);
+        OrganizationEntry org = orgManager.assertAccess(null, req.getOrgName(), false);
+        ProjectEntry project = projectAccessManager.assertProjectAccess(org.getId(), null, req.getProjectName(), ResourceAccessLevel.READER, false);
 
         try {
             String secretName = secretDao.getName(req.getSecretId());
-            repositoryManager.testConnection(org.getId(), req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), secretName);
+            repositoryManager.testConnection(project.getOrgId(), project.getId(), req.getUrl(), req.getBranch(), req.getCommitId(), req.getPath(), secretName);
             return true;
         } catch (InvalidRepositoryPathException e) {
             Map<String, String> m = new HashMap<>();

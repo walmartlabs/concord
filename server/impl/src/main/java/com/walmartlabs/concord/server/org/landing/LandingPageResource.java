@@ -229,12 +229,7 @@ public class LandingPageResource extends AbstractDao implements Resource {
             throw new ValidationErrorsException("A valid project name is required");
         }
 
-        UUID id = projectDao.getId(orgId, projectName);
-        if (id == null) {
-            throw new ValidationErrorsException("Project not found: " + projectName);
-        }
-
-        return projectAccessManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertProjectAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
     }
 
     private static void assertAdmin() {

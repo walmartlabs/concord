@@ -67,7 +67,6 @@ public class TriggerResource extends AbstractDao implements Resource {
     private static final Logger log = LoggerFactory.getLogger(TriggerResource.class);
 
     private final ProjectLoader projectLoader = new ProjectLoader();
-    private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final TriggersDao triggersDao;
     private final RepositoryManager repositoryManager;
@@ -76,17 +75,15 @@ public class TriggerResource extends AbstractDao implements Resource {
     private final Map<String, TriggerProcessor> triggerProcessors;
 
     @Inject
-    public TriggerResource(ProjectDao projectDao,
+    public TriggerResource(@Named("app") Configuration cfg,
                            RepositoryDao repositoryDao,
                            TriggersDao triggersDao,
                            RepositoryManager repositoryManager,
-                           @Named("app") Configuration cfg,
                            ProjectAccessManager projectAccessManager,
                            OrganizationManager orgManager,
                            Map<String, TriggerProcessor> triggerProcessors) {
 
         super(cfg);
-        this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.triggersDao = triggersDao;
         this.repositoryManager = repositoryManager;
@@ -199,12 +196,7 @@ public class TriggerResource extends AbstractDao implements Resource {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        UUID id = projectDao.getId(orgId, projectName);
-        if (id == null) {
-            throw new ValidationErrorsException("Project not found: " + projectName);
-        }
-
-        return projectAccessManager.assertProjectAccess(id, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertProjectAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
     }
 
     private static void assertAdmin() {

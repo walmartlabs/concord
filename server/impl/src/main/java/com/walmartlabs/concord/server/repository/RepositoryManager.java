@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.org.secret.SecretManager.AccessScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,12 +79,12 @@ public class RepositoryManager {
         this.repoCfg = repoCfg;
     }
 
-    public void testConnection(UUID orgId, String uri, String branch, String commitId, String path, String secretName) {
+    public void testConnection(UUID orgId, UUID projectId, String uri, String branch, String commitId, String path, String secretName) {
         Path tmpDir = null;
         try {
             tmpDir = IOUtils.createTempDir("repository");
 
-            Secret secret = getSecret(orgId, secretName);
+            Secret secret = getSecret(orgId, projectId, secretName);
 
             Repository repo = providers.fetch(uri, branch, commitId, path, secret, tmpDir);
 
@@ -108,7 +109,7 @@ public class RepositoryManager {
 
     public Repository fetch(UUID projectId, RepositoryEntry repository) {
         UUID orgId = getOrgId(projectId);
-        Secret secret = getSecret(orgId, repository.getSecretName());
+        Secret secret = getSecret(orgId, projectId, repository.getSecretName());
 
         return providers.fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret, repoCfg.getCacheDir());
     }
@@ -128,12 +129,12 @@ public class RepositoryManager {
         return orgId;
     }
 
-    private Secret getSecret(UUID orgId, String secretName) {
+    private Secret getSecret(UUID orgId, UUID projectId, String secretName) {
         if (secretName == null) {
             return null;
         }
 
-        SecretManager.DecryptedSecret s = secretManager.getSecret(orgId, secretName, null, null);
+        SecretManager.DecryptedSecret s = secretManager.getSecret(AccessScope.project(projectId), orgId, secretName, null, null);
         if (s == null) {
             throw new RepositoryException("Secret not found: " + secretName);
         }

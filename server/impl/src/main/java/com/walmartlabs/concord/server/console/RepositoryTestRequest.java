@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -34,8 +35,11 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class RepositoryTestRequest implements Serializable {
 
-    private final UUID orgId;
+    @ConcordKey
     private final String orgName;
+
+    @ConcordKey
+    private final String projectName;
 
     @NotNull
     private final String url;
@@ -46,15 +50,16 @@ public class RepositoryTestRequest implements Serializable {
     private final UUID secretId;
 
     @JsonCreator
-    public RepositoryTestRequest(@JsonProperty("orgId") UUID orgId,
-                                 @JsonProperty("orgName") String orgName,
+    public RepositoryTestRequest(@JsonProperty("orgName") String orgName,
+                                 @JsonProperty("projectName") String projectName,
                                  @JsonProperty("url") String url,
                                  @JsonProperty("branch") String branch,
                                  @JsonProperty("commitId") String commitId,
                                  @JsonProperty("path") String path,
                                  @JsonProperty("secretId") UUID secretId) {
-        this.orgId = orgId;
+
         this.orgName = orgName;
+        this.projectName = projectName;
         this.url = url;
         this.branch = branch;
         this.commitId = commitId;
@@ -62,12 +67,12 @@ public class RepositoryTestRequest implements Serializable {
         this.secretId = secretId;
     }
 
-    public UUID getOrgId() {
-        return orgId;
-    }
-
     public String getOrgName() {
         return orgName;
+    }
+
+    public String getProjectName() {
+        return projectName;
     }
 
     public String getUrl() {

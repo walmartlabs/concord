@@ -95,8 +95,8 @@ export const isApiTokenExists = throttle(async (name: string): Promise<boolean> 
 }, 1000);
 
 export interface RepositoryTestRequest {
-    orgId?: ConcordId;
-    orgName?: ConcordKey;
+    orgName: ConcordKey;
+    projectName: ConcordKey;
     url: string;
     branch?: string;
     commitId?: string;
