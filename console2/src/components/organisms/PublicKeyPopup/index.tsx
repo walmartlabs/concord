@@ -91,7 +91,7 @@ class PublicKeyPopup extends React.Component<Props, State> {
                     size="mini"
                     icon="copy"
                     content="Copy"
-                    onClick={() => copyToClipboard(publicKey)}
+                    onClick={() => (copyToClipboard as any)(publicKey)}
                 />
                 <TextArea className="publicKeyData" value={publicKey} />
             </>

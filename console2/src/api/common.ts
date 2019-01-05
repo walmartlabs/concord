@@ -123,7 +123,7 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
     return response;
 };
 
-export const queryParams = (params: object): string => {
+export const queryParams = (params: any): string => {
     const esc = encodeURIComponent;
     return Object.keys(params)
         .filter((k) => !!params[k])

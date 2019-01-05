@@ -29,7 +29,8 @@ import {
 } from '../../../../api/process/ansible';
 import { ConcordId } from '../../../../api/common';
 
-export { State };
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './types';
 
 const NAMESPACE = 'processes/events';
 

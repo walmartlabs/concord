@@ -25,7 +25,8 @@ import { getActivity as apiGetActivity } from '../../../api/service/console/user
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { GetUserActivityState, State, UserActivityDataRequest } from './types';
 
-export { State };
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './types';
 
 const NAMESPACE = 'userActivity';
 

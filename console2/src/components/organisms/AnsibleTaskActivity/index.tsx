@@ -25,9 +25,8 @@ import { AnsibleEvent, AnsibleStatus } from '../../../api/process/ansible';
 import { ProcessEventEntry } from '../../../api/process/event';
 import { AnsibleTaskList, RequestErrorMessage } from '../../molecules';
 import { ConcordId, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/processes/events';
+import { actions, State, AnsibleEvents } from '../../../state/data/processes/events';
 import { connect, Dispatch } from 'react-redux';
-import { AnsibleEvents } from '../../../state/data/processes/events/types';
 import { combinePrePostEvents } from '../ProcessStatusActivity';
 
 interface ExternalProps {

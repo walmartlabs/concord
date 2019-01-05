@@ -38,7 +38,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    onSearch: (value?: string) => void;
+    onSearch: (filter: string) => void;
     reset: () => void;
 }
 
@@ -89,7 +89,11 @@ class FindUserField extends React.PureComponent<Props> {
                 loading={loading}
                 showNoResults={!loading}
                 onSearchChange={(ev, data) => {
-                    onSearch(data.value);
+                    const filter = data.value;
+                    if (filter && filter.length >= 5) {
+                        onSearch(filter);
+                    }
+
                     if (onChange) {
                         onChange(data.value);
                     }

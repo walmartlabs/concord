@@ -21,7 +21,7 @@
 import { Field, getIn } from 'formik';
 import { FieldProps } from 'formik/dist/Field';
 import * as React from 'react';
-import { Checkbox, Form, FormCheckboxProps, Label } from 'semantic-ui-react';
+import { Checkbox, CheckboxProps, Form, FormCheckboxProps, Label } from 'semantic-ui-react';
 
 interface Props {
     name: string;
@@ -39,7 +39,7 @@ export default class extends React.PureComponent<FormCheckboxProps & Props> {
                     const error = getIn(form.errors, fieldName);
                     const invalid = !!(touched && error);
 
-                    const handleChanges = (ev: {}, { checked }: { checked: boolean }) =>
+                    const handleChanges = (ev: {}, { checked }: CheckboxProps) =>
                         form.setFieldValue(fieldName, checked);
 
                     return (

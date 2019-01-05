@@ -21,7 +21,7 @@
 import { Field, getIn } from 'formik';
 import { FieldProps } from 'formik/dist/Field';
 import * as React from 'react';
-import { Dropdown, Form, FormDropdownProps, Label } from 'semantic-ui-react';
+import { Dropdown, DropdownProps, Form, FormDropdownProps, Label } from 'semantic-ui-react';
 
 export default class extends React.PureComponent<FormDropdownProps> {
     render() {
@@ -35,7 +35,7 @@ export default class extends React.PureComponent<FormDropdownProps> {
                     const error = getIn(form.errors, fieldName);
                     const invalid = !!(touched && error);
 
-                    const handleChange = (ev: {}, { value }: { value: string }) => {
+                    const handleChange = (ev: {}, { value }: DropdownProps) => {
                         form.setFieldValue(fieldName, value);
                     };
 

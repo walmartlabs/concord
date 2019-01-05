@@ -26,7 +26,7 @@ export const SidebarToggleComponent: React.SFC<{}> = (props) => {
     return (
         <Sidebar.Container context={namespace}>
             {(sidebar) => (
-                <Block as={Sidebar.Toggle} {...sidebar}>
+                <Block as={Sidebar.Toggle as any} {...sidebar}>
                     {props.children}
                 </Block>
             )}
@@ -38,7 +38,7 @@ export const SidebarShowComponent: React.SFC<{}> = (props) => {
     return (
         <Sidebar.Container context={namespace}>
             {(sidebar) => (
-                <Block as={Sidebar.Toggle} {...sidebar}>
+                <Block as={Sidebar.Toggle as any} {...sidebar}>
                     {props.children}
                 </Block>
             )}
@@ -50,7 +50,7 @@ export const SidebarHideComponent: React.SFC<{}> = (props) => {
     return (
         <Sidebar.Container context={namespace}>
             {(sidebar) => (
-                <Block as={Sidebar.Hide} {...sidebar}>
+                <Block as={Sidebar.Hide as any} {...sidebar}>
                     {props.children}
                 </Block>
             )}

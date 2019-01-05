@@ -140,7 +140,7 @@ class EncryptValueActivity extends React.PureComponent<ExternalProps, State> {
                                             <Icon
                                                 name="copy"
                                                 link={true}
-                                                onClick={() => copyToClipboard(result.data)}
+                                                onClick={() => (copyToClipboard as any)(result.data)}
                                             />
                                         }
                                         fluid={true}

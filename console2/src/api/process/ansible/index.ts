@@ -73,7 +73,7 @@ export interface PaginatedAnsibleHostEntries {
 export interface AnsibleStatsEntry {
     uniqueHosts: number;
     hostGroups: string[];
-    stats: {};
+    stats: any;
 }
 
 export interface AnsibleEvent {
@@ -100,29 +100,30 @@ export const listAnsibleHosts = (
 
     const qp = filters ? '?' + queryParams(filters) : '';
 
-    return fetchJson(`/api/v1/process/${instanceId}/ansible/hosts${qp}`).then(
-        (hosts: AnsibleHost[]) => {
-            const hasMoreElements = limit && hosts.length > limit;
-            const offset: number = filters && filters.offset ? filters.offset : 0;
-
-            if (hasMoreElements) {
-                hosts.pop();
-            }
-
-            const nextOffset = offset + parseInt(limit.toString(), 10);
-            const prevOffset = offset - limit;
-            const onFirstPage = offset === 0;
-
-            const nextPage = !!hasMoreElements ? nextOffset : undefined;
-            const prevPage = !onFirstPage ? prevOffset : undefined;
-
-            return {
-                items: hosts,
-                next: nextPage,
-                prev: prevPage
-            };
-        }
+    const data: Promise<AnsibleHost[]> = fetchJson(
+        `/api/v1/process/${instanceId}/ansible/hosts${qp}`
     );
+    return data.then((hosts: AnsibleHost[]) => {
+        const hasMoreElements = limit && hosts.length > limit;
+        const offset: number = filters && filters.offset ? filters.offset : 0;
+
+        if (hasMoreElements) {
+            hosts.pop();
+        }
+
+        const nextOffset = offset + parseInt(limit.toString(), 10);
+        const prevOffset = offset - limit;
+        const onFirstPage = offset === 0;
+
+        const nextPage = !!hasMoreElements ? nextOffset : undefined;
+        const prevPage = !onFirstPage ? prevOffset : undefined;
+
+        return {
+            items: hosts,
+            next: nextPage,
+            prev: prevPage
+        };
+    });
 };
 
 export const getAnsibleStats = (instanceId: ConcordId): Promise<AnsibleStatsEntry> =>

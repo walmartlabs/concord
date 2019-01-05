@@ -111,7 +111,7 @@ class NewSecretActivity extends React.Component<Props, OwnState> {
                                 icon="copy"
                                 size="mini"
                                 basic={true}
-                                onClick={() => copyToClipboard(publicKey)}
+                                onClick={() => (copyToClipboard as any)(publicKey)}
                             />
                             <TextArea className="secretData" value={publicKey} rows={5} />
                         </div>
@@ -124,7 +124,7 @@ class NewSecretActivity extends React.Component<Props, OwnState> {
                                 icon="copy"
                                 size="mini"
                                 basic={true}
-                                onClick={() => copyToClipboard(password)}
+                                onClick={() => (copyToClipboard as any)(password)}
                             />
                             <TextArea className="secretData" value={password} rows={2} />
                         </div>

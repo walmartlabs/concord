@@ -17,8 +17,9 @@
  * limitations under the License.
  * =====
  */
+import { ProcessCheckpointEntry } from "../../../../api/process/checkpoint";
 import { ProcessHistoryEntry } from '../../../../api/process/history';
-import { ProcessCheckpointEntry, CheckpointGroup, Status, CustomCheckpoint } from '../shared/types';
+import { CheckpointGroup, Status, CustomCheckpoint } from '../shared/types';
 import { isBefore, isAfter } from 'date-fns';
 
 // * Sort callback to order objects by a specific date property

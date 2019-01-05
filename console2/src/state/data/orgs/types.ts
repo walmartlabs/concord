@@ -28,7 +28,7 @@ export interface ListOrganizationsRequest extends Action {
 }
 
 export interface ListOrganizationsResponse extends Action {
-    error: RequestError;
+    error?: RequestError;
     items?: OrganizationEntry[];
 }
 

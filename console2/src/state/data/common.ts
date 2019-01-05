@@ -18,7 +18,7 @@
  * =====
  */
 import { LOCATION_CHANGE, push as pushHistory } from 'react-router-redux';
-import { Action, Reducer } from 'redux';
+import { Action, AnyAction, Reducer } from 'redux';
 import { put } from 'redux-saga/effects';
 
 import { ConcordId, GenericOperationResult, OperationResult, RequestError } from '../../api/common';
@@ -46,10 +46,14 @@ export const makeLoadingReducer = <T>(requestTypes: T[], responseTypes: T[]): Re
     return state;
 };
 
+interface HasError {
+    error?: RequestError;
+}
+
 export const makeErrorReducer = <T>(
     requestTypes: T[],
     responseTypes: T[]
-): Reducer<RequestError> => (state = null, { type, error }: { type: T; error: RequestError }) => {
+): Reducer<RequestError> => (state = null, { type, error }: Action<T> & HasError) => {
     if (String(type) === LOCATION_CHANGE) {
         // reset error for location change
         return null;
@@ -70,14 +74,10 @@ export const makeErrorReducer = <T>(
     return state;
 };
 
-interface HasError {
-    error?: RequestError;
-}
-
 export const makeResponseReducer = <R, A extends R & Action & HasError>(
     responseType: {},
     resetType?: {}
-): Reducer<R | null> => (state = null, action: A) => {
+): Reducer<R | null, A> => (state = null, action: A) => {
     switch (action.type) {
         case responseType:
             return action;

@@ -38,7 +38,8 @@ import { actions, selectors } from './effects';
 
 import './styles.css';
 
-export { actions, selectors, sagas, reducers, State } from './effects';
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './effects';
 
 interface LoginData {
     username: string;

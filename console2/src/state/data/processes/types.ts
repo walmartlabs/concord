@@ -48,7 +48,7 @@ export interface ListProcessesRequest extends Action {
 }
 
 export interface PaginatedProcessDataResponse extends Action {
-    error: RequestError;
+    error?: RequestError;
     items?: ProcessEntry[];
     prev?: number;
     next?: number;
@@ -56,7 +56,7 @@ export interface PaginatedProcessDataResponse extends Action {
 
 export interface ProcessDataResponse extends Action {
     // TODO replace with RequestState<ProcessDataResponse>
-    error: RequestError;
+    error?: RequestError;
     items?: ProcessEntry[];
 }
 

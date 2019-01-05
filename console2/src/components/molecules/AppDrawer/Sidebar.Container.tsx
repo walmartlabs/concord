@@ -32,7 +32,7 @@ const SidebarContainer: React.SFC<SidebarContainerProps> = ({ align, children })
         <Sidebar.Container context={namespace}>
             {(sidebar) => (
                 <Block>
-                    <Backdrop fade={true} as={Sidebar.Hide} {...sidebar} />
+                    <Backdrop fade={true} as={Sidebar.Hide as any} {...sidebar} />
                     <StyledSidebar slide={true} align={align} {...sidebar}>
                         {children}
                     </StyledSidebar>

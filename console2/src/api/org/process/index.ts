@@ -42,12 +42,14 @@ export interface PaginatedProcessEntries {
     prev?: number;
 }
 
-function combine(filters?: object, pagination?: object) {
+function combine(filters?: any, pagination?: any) {
     if (filters === undefined && pagination === undefined) {
         return undefined;
     }
 
-    const result = {};
+    type Result = { [name: string]: any };
+    const result: Result = {};
+
     if (filters !== undefined) {
         Object.keys(filters)
             .filter((k) => k !== undefined)
@@ -78,7 +80,8 @@ export const list = (
 
     const qp = filterParams ? '?' + queryParams(filterParams) : '';
 
-    return fetchJson(`/api/v1/process${qp}`).then((processEntries: ProcessEntry[]) => {
+    const data: Promise<ProcessEntry[]> = fetchJson(`/api/v1/process${qp}`);
+    return data.then((processEntries: ProcessEntry[]) => {
         const hasMoreElements = limit && processEntries.length > limit;
         const offset: number = pagination && pagination.offset ? pagination.offset : 0;
 

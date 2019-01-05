@@ -22,9 +22,10 @@ import { SemanticCOLORS } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, fetchJson, managedFetch } from '../common';
 import { StartProcessResponse } from '../org/process';
 
-export { getLog, LogChunk, LogRange } from './log';
-export { list, FormListEntry, FormRunAs } from './form';
-export { listEvents, ProcessEventType, ProcessEventEntry } from './event';
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './form';
+export * from './log';
+export * from './event';
 
 export enum ProcessStatus {
     PREPARING = 'PREPARING',

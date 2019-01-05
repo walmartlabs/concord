@@ -32,7 +32,7 @@ export interface GetAnsibleEventsRequest extends Action {
 }
 
 export interface GetAnsibleEventsResponse extends Action {
-    error: RequestError;
+    error?: RequestError;
     events?: Array<ProcessEventEntry<{}>>;
 }
 

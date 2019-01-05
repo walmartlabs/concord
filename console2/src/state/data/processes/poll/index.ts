@@ -172,7 +172,7 @@ function* loadAll(process: ProcessEntry, forceLoadAll?: boolean) {
     const [forms, events]: BatchData = yield all([
         call(apiListForms, instanceId),
         call(
-            apiListEvents,
+            apiListEvents as any,
             instanceId,
             'ELEMENT',
             process.createdAt,
@@ -216,7 +216,7 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
             // the process is still running, load the next chunk of data
             const [forms, events]: BatchData = yield all([
                 call(apiListForms, instanceId),
-                call(apiListEvents, instanceId, 'ELEMENT', lastEventTimestamp, 100) // TODO constants
+                call(apiListEvents as any, instanceId, 'ELEMENT', lastEventTimestamp, 100) // TODO constants
             ]);
 
             // get the last timestamp of the received events, it will be used to fetch the next data

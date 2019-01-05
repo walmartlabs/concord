@@ -31,7 +31,8 @@ import {
 } from './types';
 import { ConcordKey } from '../../../api/common';
 
-export { State };
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './types';
 
 const NAMESPACE = 'orgs';
 

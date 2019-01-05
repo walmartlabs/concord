@@ -25,7 +25,8 @@ import { findUsers as apiFindUsers } from '../../../api/service/console';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { SearchUsersRequest, SearchUsersState, State } from './types';
 
-export { State };
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './types';
 
 const NAMESPACE = 'search';
 

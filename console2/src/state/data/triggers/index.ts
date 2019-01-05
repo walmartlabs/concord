@@ -24,7 +24,8 @@ import { listTriggers as apiList } from '../../../api/org/project/repository';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { ListTriggersRequest, ListTriggersState, State } from './types';
 
-export { State };
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './types';
 
 const NAMESPACE = 'triggers';
 

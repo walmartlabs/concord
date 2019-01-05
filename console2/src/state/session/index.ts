@@ -27,7 +27,8 @@ import { actions as login } from '../../components/organisms/Login';
 
 import { CheckAuthAction, Logout, SetCurrentSessionAction, State, UserInfo } from './types';
 
-export { State };
+// https://github.com/facebook/create-react-app/issues/6054
+export * from './types';
 
 const NAMESPACE = 'session';
 

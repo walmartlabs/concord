@@ -17,12 +17,13 @@
  * limitations under the License.
  * =====
  */
+import { ActionMap, ComposableContainer, Container, EffectMap, SelectorMap } from 'constate';
 import * as React from 'react';
-import { Container, ComposableContainer, EffectMap, ActionMap, SelectorMap } from 'constate';
-import { ProcessEntryEx } from '../../../../api/service/console';
 
+import { ConcordId } from "../../../../api/common";
+import { ProcessEntryEx } from '../../../../api/service/console';
+import { CheckpointGroup } from '../shared/types';
 import { FetchProcessArgs, loadData } from './loadData';
-import { CheckpointGroup, ConcordId } from '../shared/types';
 
 export interface State {
     orgId: ConcordId; // Concord org UUID
