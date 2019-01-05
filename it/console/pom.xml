@@ -14,11 +14,14 @@
     <packaging>takari-jar</packaging>
 
     <properties>
+        <!-- pin down the version of DB and Selenium images -->
         <db.image>library/postgres:10.4-alpine</db.image>
+        <selenium.image>selenium/standalone-chrome:3.141.5</selenium.image>
+
+        <!-- use the latest locally built Concord images -->
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <console.image>walmartlabs/concord-console</console.image>
-        <selenium.image>selenium/standalone-chrome</selenium.image>
 
         <selenium.version>3.14.0</selenium.version>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>

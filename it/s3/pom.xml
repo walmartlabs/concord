@@ -192,17 +192,20 @@
                                         </network>
                                         <volumes>
                                             <bind>
-                                                <volume>/tmp:/tmp</volume>
-                                                <volume>${settings.localRepository}:/home/concord/.m2/repository:ro</volume>
+                                                <!-- to share files between process containers -->
+                                                <volume>${tmp.dir}:${tmp.dir}</volume>
+                                                <!-- share host artifacts -->
+                                                <volume>${settings.localRepository}:/host/.m2/repository:ro</volume>
+                                                <volume>${basedir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
                                             <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
+                                            <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
                                             <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
                                             <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
-                                            <QUEUE_POLL_INTERVAL>500</QUEUE_POLL_INTERVAL>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
-                                            <WORKERS_COUNT>3</WORKERS_COUNT>
+                                            <SERVER_WEBSOCKET_URL>ws://localhost:${it.server.port}/websocket</SERVER_WEBSOCKET_URL>
                                         </env>
                                     </run>
                                 </image>
