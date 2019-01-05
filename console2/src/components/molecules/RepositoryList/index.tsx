@@ -54,11 +54,7 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
             <Table.Cell>{row.path}</Table.Cell>
             <Table.Cell>{row.secretName}</Table.Cell>
             <Table.Cell>
-                <RepositoryActionDropdown
-                    orgName={orgName}
-                    projectName={projectName}
-                    repo={row}
-                />
+                <RepositoryActionDropdown orgName={orgName} projectName={projectName} repo={row} />
             </Table.Cell>
         </Table.Row>
     );

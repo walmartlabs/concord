@@ -20,7 +20,7 @@
 import { ActionMap, ComposableContainer, Container, EffectMap, SelectorMap } from 'constate';
 import * as React from 'react';
 
-import { ConcordId } from "../../../../api/common";
+import { ConcordId } from '../../../../api/common';
 import { ProcessEntryEx } from '../../../../api/service/console';
 import { CheckpointGroup } from '../shared/types';
 import { FetchProcessArgs, loadData } from './loadData';

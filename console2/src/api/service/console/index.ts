@@ -20,6 +20,7 @@
 
 import { throttle } from 'lodash';
 import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
+import { Organizations } from '../../../state/data/orgs/types';
 import { ProcessStatus } from '../../process';
 import { ProcessCheckpointEntry } from '../../process/checkpoint';
 import { ProcessHistoryEntry } from '../../process/history';
@@ -27,6 +28,7 @@ import { ProcessHistoryEntry } from '../../process/history';
 export interface UserResponse {
     username: string;
     displayName: string;
+    orgs: Organizations;
 }
 
 export const whoami = async (

@@ -71,7 +71,10 @@ const loggingIn = (state = false, action: LoginAction | LoginResponse) => {
     }
 };
 
-const error: Reducer<string | null, LoginResponse> = (state = null, action: LoginResponse): string | null => {
+const error: Reducer<string | null, LoginResponse> = (
+    state = null,
+    action: LoginResponse
+): string | null => {
     switch (action.type) {
         case actionTypes.LOGIN_RESPONSE:
             return action.error ? action.error : null;

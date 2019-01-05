@@ -19,10 +19,12 @@
  */
 
 import { Action } from 'redux';
+import { Organizations } from '../data/orgs/types';
 
 export interface UserInfo {
     username?: string;
     displayName?: string;
+    orgs?: Organizations;
 }
 
 export type SetCurrentSessionAction = Action & UserInfo;

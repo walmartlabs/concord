@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Dropdown, Icon } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
-import { RepositoryEntry } from "../../../api/org/project/repository";
+import { RepositoryEntry } from '../../../api/org/project/repository';
 import {
     DeleteRepositoryPopup,
     RefreshRepositoryPopup,
@@ -41,10 +41,20 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
     render() {
         const { orgName, projectName, repo } = this.props;
 
-        const {name: repoName, url: repoURL, branch: repoBranch, commitId: repoCommitId, path: repoPath} = repo;
+        const {
+            name: repoName,
+            url: repoURL,
+            branch: repoBranch,
+            commitId: repoCommitId,
+            path: repoPath
+        } = repo;
 
         // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
-        const repoBranchOrCommitId = repoCommitId ? repoCommitId : (repoBranch ? repoBranch : 'master');
+        const repoBranchOrCommitId = repoCommitId
+            ? repoCommitId
+            : repoBranch
+            ? repoBranch
+            : 'master';
         const repoPathOrDefault = repoPath ? repoPath : '/';
 
         return (

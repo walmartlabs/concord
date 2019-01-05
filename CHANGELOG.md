@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: disable "New Project" button if the user is not a
+member of the organization.
+
+
+
 ## [1.1.0] - 2019-01-04
 
 ### Added
