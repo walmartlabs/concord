@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: reject flow attachments if "Allow payload archives"
+is disabled in the project's settings;
 - concord-console: disable "New Project" button if the user is not a
 member of the organization.
 
