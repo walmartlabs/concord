@@ -80,6 +80,7 @@ public class HttpTaskIT extends AbstractServerIT {
         stubForPostSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
         stubForGetSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
         stubForPostSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
+        stubForPatchSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathPassword);
         stubForHeadersEndpoint(mockHttpPathHeaders);
         stubForUnAuthorizedRequestEndpoint(mockHttpPathUnauthorized);
     }
@@ -177,6 +178,28 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPost() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPost").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.user", mockHttpAuthUser);
+        input.put("arguments.password", mockHttpAuthPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Success response.*", ab);
+        assertLog(".*Out Response: true*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testPatch() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpPatch").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
         Map<String, Object> input = new HashMap<>();
@@ -323,6 +346,17 @@ public class HttpTaskIT extends AbstractServerIT {
 
     private void stubForPostSecureTokenEndpoint(String authToken, String url) {
         rule.stubFor(post(urlEqualTo(url))
+                .withHeader("Authorization", equalTo("Basic " + authToken))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("{\n" +
+                                "  \"Authorized\": \"true\"\n" +
+                                "}"))
+        );
+    }
+
+    private void stubForPatchSecureTokenEndpoint(String authToken, String url) {
+        rule.stubFor(patch(urlEqualTo(url))
                 .withHeader("Authorization", equalTo("Basic " + authToken))
                 .willReturn(aResponse()
                         .withStatus(200)

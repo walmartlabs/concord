@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.http;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         initCxtForRequest(mockContext, "GET", "json", "json", "http://localhost:" + rule.port() + "/json");
         task.execute(mockContext);
         verify(getRequestedFor(urlEqualTo("/json")));
-        assertEquals(response.get("statusCode"), 200);
+        assertEquals(200, response.get("statusCode"));
         assertNull(response.get("errorString"));
     }
 
@@ -109,7 +109,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         when(mockContext.getVariable("body")).thenReturn("src/test/resources/__files/file.bin");
         task.execute(mockContext);
         assertNotNull(response);
-        assertTrue((Boolean)response.get("success"));
+        assertTrue((Boolean) response.get("success"));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -127,7 +127,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         task.execute(mockContext);
         assertNotNull(response);
         assertTrue((Boolean) response.get("success"));
-        assertEquals("stringFile", (new File((String)response.get("content"))).getName());
+        assertEquals("stringFile", (new File((String) response.get("content"))).getName());
     }
 
     @Test
@@ -137,7 +137,7 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         task.execute(mockContext);
         assertNotNull(response);
         assertTrue((Boolean) response.get("success"));
-        assertTrue(((String)response.get("content")).matches(".*/tmpfile_.*\\.tmp$"));
+        assertTrue(((String) response.get("content")).matches(".*/tmpfile_.*\\.tmp$"));
     }
 
     @Test
@@ -202,6 +202,17 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         initCxtForRequest(mockContext, "DELETE", "string", "json", "http://localhost:" + rule.port() + "/delete");
         task.execute(mockContext);
         verify(deleteRequestedFor(urlEqualTo("/delete")));
+        assertNotNull(response);
+        assertEquals("Success", ((Map<String, Object>) response.get("content")).get("message"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testPatch() throws Exception {
+        initCxtForRequest(mockContext, "PATCH", "json", "json", "http://localhost:" + rule.port() + "/patch");
+        when(mockContext.getVariable("body")).thenReturn("{ \"request\": \"PatchTest\" }");
+        task.execute(mockContext);
+        verify(patchRequestedFor(urlEqualTo("/patch")));
         assertNotNull(response);
         assertEquals("Success", ((Map<String, Object>) response.get("content")).get("message"));
     }

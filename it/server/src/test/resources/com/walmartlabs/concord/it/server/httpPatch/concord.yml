@@ -1,0 +1,18 @@
+flows:
+  default:
+
+  - task: http
+    in:
+      method: PATCH
+      url: ${url}
+      auth:
+        basic:
+          username: ${user}
+          password: ${password}
+      body:
+        obj:
+          nestedVar: 123
+      request: json
+      response: json
+      out: rsp
+  - log: "Out Response: ${rsp.success}"

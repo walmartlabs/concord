@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.http;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,6 @@ package com.walmartlabs.concord.plugins.http;
  * limitations under the License.
  * =====
  */
-
-
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.plugins.http.exception.UnauthorizedException;
@@ -131,15 +129,12 @@ public class SimpleHttpClient {
         HttpEntity e = r.getEntity();
 
         switch (t) {
-            case FILE: {
+            case FILE:
                 return storeFile(e);
-            }
-            case JSON: {
+            case JSON:
                 return objectMapper.readValue(e.getContent(), Object.class);
-            }
-            default: {
+            default:
                 return EntityUtils.toString(e);
-            }
         }
     }
 
@@ -177,20 +172,21 @@ public class SimpleHttpClient {
 
     /**
      * Converts a URI to a temporary Path. If no filename can be parsed from the URI, then a filename will be generated
+     *
      * @param uri URI of the file
      * @param dir Directory in which to save the file
      * @return Path object representing the file
      * @throws IOException when the file cannot be created with {@link Files#createFile(Path, FileAttribute[])} or
-     * {@link Files#createTempFile(Path, String, String, FileAttribute[])}
+     *                     {@link Files#createTempFile(Path, String, String, FileAttribute[])}
      */
     private Path uriToPath(java.net.URI uri, Path dir) throws IOException {
         String filename = null;
         String s = uri.toString();
         Path path;
 
-        final int lastSlashIndex = s.lastIndexOf("/");
+        final int lastSlashIndex = s.lastIndexOf('/');
         if (lastSlashIndex > 0) {
-            filename = s.substring(lastSlashIndex+1);
+            filename = s.substring(lastSlashIndex + 1);
         }
 
         if (filename == null || filename.isEmpty()) {
@@ -199,7 +195,7 @@ public class SimpleHttpClient {
             path = Files.createFile(dir.resolve(filename));
         }
 
-        return  path;
+        return path;
     }
 
     /**
@@ -250,28 +246,20 @@ public class SimpleHttpClient {
     }
 
     private HttpUriRequest buildHttpUriRequest(Configuration cfg) throws Exception {
-        HttpUriRequest request;
         switch (cfg.getMethodType()) {
-            case DELETE: {
-                request = buildDeleteRequest(cfg);
-                break;
-            }
-            case POST: {
-                request = buildPostRequest(cfg);
-                break;
-            }
-            case GET: {
-                request = buildGetRequest(cfg);
-                break;
-            }
-            case PUT: {
-                request = buildPutRequest(cfg);
-                break;
-            }
+            case DELETE:
+                return buildDeleteRequest(cfg);
+            case POST:
+                return buildPostRequest(cfg);
+            case GET:
+                return buildGetRequest(cfg);
+            case PUT:
+                return buildPutRequest(cfg);
+            case PATCH:
+                return buildPatchRequest(cfg);
             default:
                 throw new IllegalArgumentException("Unsupported method type: " + cfg.getMethodType());
         }
-        return request;
     }
 
     /**
@@ -317,6 +305,23 @@ public class SimpleHttpClient {
                 .withRequestType(cfg.getRequestType())
                 .withResponseType(ResponseType.ANY)
                 .withHeaders(cfg.getRequestHeaders())
+                .get();
+    }
+
+    /**
+     * Method to build the patch request using the given configuration
+     *
+     * @param cfg {@link Configuration}
+     * @return HttpUriRequest
+     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, HttpTask.RequestType)} method
+     */
+    private HttpUriRequest buildPatchRequest(Configuration cfg) throws Exception {
+        return HttpTaskRequest.patch(cfg.getUrl())
+                .withBasicAuth(cfg.getEncodedAuthToken())
+                .withRequestType(cfg.getRequestType())
+                .withResponseType(ResponseType.ANY)
+                .withHeaders(cfg.getRequestHeaders())
+                .withBody(getHttpEntity(cfg.getBody(), cfg.getRequestType()))
                 .get();
     }
 

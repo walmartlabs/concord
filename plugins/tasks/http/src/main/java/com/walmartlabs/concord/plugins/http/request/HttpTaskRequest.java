@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.http.request;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -58,6 +58,26 @@ public class HttpTaskRequest implements Request {
      */
     public static HttpTaskRequest post(String url) {
         return new HttpTaskRequest(new HttpPost(url));
+    }
+
+    /**
+     * Method to create {@link HttpPut} request
+     *
+     * @param url Endpoint
+     * @return HttpTaskRequest
+     */
+    public static HttpTaskRequest put(String url) {
+        return new HttpTaskRequest(new HttpPut(url));
+    }
+
+    /**
+     * Method to create {@link HttpPatch} request
+     *
+     * @param url Endpoint
+     * @return HttpTaskRequest
+     */
+    public static HttpTaskRequest patch(String url) {
+        return new HttpTaskRequest(new HttpPatch(url));
     }
 
     /**
@@ -111,8 +131,10 @@ public class HttpTaskRequest implements Request {
     public Request withBody(HttpEntity body) {
         if (this.request instanceof HttpPost) {
             ((HttpPost) this.request).setEntity(body);
-        }else if (this.request instanceof HttpPut) {
+        } else if (this.request instanceof HttpPut) {
             ((HttpPut) this.request).setEntity(body);
+        } else if (this.request instanceof HttpPatch) {
+            ((HttpPatch) this.request).setEntity(body);
         }
 
         return this;
@@ -121,16 +143,6 @@ public class HttpTaskRequest implements Request {
     @Override
     public HttpUriRequest get() {
         return this.request;
-    }
-
-    /**
-     * Method to create {@link HttpPut} request
-     *
-     * @param url Endpoint
-     * @return HttpTaskRequest
-     */
-    public static HttpTaskRequest put(String url) {
-        return new HttpTaskRequest(new HttpPut(url));
     }
 
     /**

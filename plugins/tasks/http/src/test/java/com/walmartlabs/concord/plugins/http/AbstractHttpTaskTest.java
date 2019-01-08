@@ -68,6 +68,7 @@ public abstract class AbstractHttpTaskTest {
         stubForGetRequestForResponseTypeJSONFile();
         stubForUnsuccessfulResponse();
         stubForDeleteRequest();
+        stubForPatchRequest();
     }
 
     @After
@@ -204,6 +205,18 @@ public abstract class AbstractHttpTaskTest {
 
     protected void stubForDeleteRequest() {
         rule.stubFor(delete(urlEqualTo("/delete"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withHeader("Accept", "application/json")
+                        .withBody("{\n" +
+                                "  \"message\": \"Success\"\n" +
+                                "}"))
+        );
+    }
+
+    protected void stubForPatchRequest() {
+        rule.stubFor(patch(urlEqualTo("/patch"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")

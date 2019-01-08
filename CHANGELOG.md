@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- http: support for `PATCH` method.
+
 ### Changed
 
 - concord-server: fixed an issue preventing git submodules using the
