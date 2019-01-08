@@ -172,11 +172,20 @@ public class GitClient {
             String sModuleName = matcher.group(1);
 
             // Find the URL for this submodule
+            String url = getSubmoduleUrl(dest, sModuleName);
+            if (url == null) {
+                throw new RepositoryException("Empty repository for " + sModuleName);
+            }
             try {
-                new URIish(getSubmoduleUrl(dest, sModuleName));
+                new URIish(url);
             } catch (URISyntaxException e) {
                 log.error("Invalid repository for " + sModuleName);
                 throw new RepositoryException("Invalid repository for " + sModuleName);
+            }
+
+            String pUrl = processUrl(url, secret);
+            if (!pUrl.equals(url)) {
+                launchCommand(dest, "config", "submodule." + sModuleName + ".url", pUrl);
             }
 
             // Find the path for this submodule
