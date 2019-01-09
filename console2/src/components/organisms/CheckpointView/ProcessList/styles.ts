@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
+import { styled } from 'reakit';
 import { Column } from '../shared/Layout';
 
 export const LeftWrap = styled(Column)`

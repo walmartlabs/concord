@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import styled from 'styled-components';
+import { styled } from 'reakit';
 import { Highlighter } from '../../../components/molecules';
 import { escapeHtml } from '../../../utils';
 
@@ -49,7 +49,9 @@ class FileFromBlob extends React.Component<Props, State> {
     // TODO: Add fetch to log Container
     // * Saga code already supports this.
     async componentDidMount() {
-        const blob = await fetch(this.props.blobUrl).then((r) => r.blob());
+        const blob = await fetch(this.props.blobUrl, { credentials: 'same-origin' }).then((r) =>
+            r.blob()
+        );
         const reader = new FileReader();
 
         // This fires after the blob has been read/loaded.

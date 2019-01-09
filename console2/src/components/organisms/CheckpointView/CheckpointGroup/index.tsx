@@ -52,9 +52,7 @@ export const CheckpointData: React.SFC<Props> = ({ processId, checkpointGroups }
                                 <GroupItems>
                                     {group.checkpoints.map((checkpoint, indexB) => (
                                         <CheckpointNode key={indexB}>
-                                            <CheckpointName as="span">
-                                                {checkpoint.name}
-                                            </CheckpointName>
+                                            <CheckpointName>{checkpoint.name}</CheckpointName>
                                             <CheckpointPopup
                                                 checkpoint={checkpoint}
                                                 processId={processId}

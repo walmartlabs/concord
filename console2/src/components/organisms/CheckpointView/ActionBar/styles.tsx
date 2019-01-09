@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
+import { styled } from 'reakit';
 
 export const FullBar = styled.div`
     width: 100%;

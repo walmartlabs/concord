@@ -17,8 +17,7 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
-
+import { styled } from 'reakit';
 import { ProcessStatus } from '../../../../api/process';
 
 export const FlexWrapper = styled.div`

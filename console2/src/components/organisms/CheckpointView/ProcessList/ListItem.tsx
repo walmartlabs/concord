@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import styled from 'styled-components';
+import { styled } from 'reakit';
 
 export const ListItem = styled('li')`
     font-family: lato;

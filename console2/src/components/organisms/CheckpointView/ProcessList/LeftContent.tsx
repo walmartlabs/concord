@@ -57,16 +57,14 @@ export default ({ process }: Props) => (
                     </div>
                     <div>
                         <Label>
-                            <LogDrawer.Show>
-                                <a
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={(ev) => {
-                                        fetchLog(process.instanceId);
-                                        setActiveProcess(process.instanceId);
-                                    }}>
-                                    View Log
-                                </a>
-                            </LogDrawer.Show>
+                            <a
+                                style={{ cursor: 'pointer' }}
+                                onClick={(ev) => {
+                                    fetchLog(process.instanceId);
+                                    setActiveProcess(process.instanceId);
+                                }}>
+                                <LogDrawer.Show>View Log</LogDrawer.Show>
+                            </a>
                         </Label>
                     </div>
                     <Divider />
