@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-console: fixed the parsing of GIT URLs on the repository
+list page;
 - concord-server: fixed an issue preventing git submodules using the
 default (token-based) auth from working;
 - concord-server: reject flow attachments if "Allow payload archives"

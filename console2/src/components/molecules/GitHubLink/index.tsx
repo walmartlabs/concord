@@ -30,7 +30,7 @@ interface Props {
 const gitUrlParse = (s: string): string | undefined => {
     if (s.startsWith('git')) {
         // git@github.example.com:devtools/concord.git
-        const regex = /git@(.*):(.*)\.git/;
+        const regex = /git@(.*):(.*)/;
         const match = regex.exec(s);
         if (!match || match.length !== 3) {
             return;
@@ -38,7 +38,7 @@ const gitUrlParse = (s: string): string | undefined => {
         return `https://${match[1]}/${match[2]}`;
     } else if (s.startsWith('http')) {
         // https://github.example.com/devtools/concord.git
-        const regex = /http[s]?:\/\/(.*).git/;
+        const regex = /http[s]?:\/\/(.*)/;
         const match = regex.exec(s);
         if (!match || match.length !== 2) {
             return;
