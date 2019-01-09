@@ -261,11 +261,12 @@ public final class IOUtils {
                     Files.createDirectories(parent);
                 }
 
+                Files.copy(a, b, options);
+
                 if (visitor != null) {
-                    visitor.visit(a, b, attrs);
+                    visitor.visit(a, b);
                 }
 
-                Files.copy(a, b, options);
                 return FileVisitResult.CONTINUE;
             }
         });

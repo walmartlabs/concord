@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: last modified date of process state files is now
+correctly calculated when importing the state.
+
+
+
 ## [1.2.0] - 2019-01-09
 
 ### Added

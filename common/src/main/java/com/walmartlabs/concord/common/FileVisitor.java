@@ -20,10 +20,11 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public interface FileVisitor {
 
-    void visit(Path sourceFile, Path dstFile, BasicFileAttributes attrs);
+    void visit(Path sourceFile, Path dstFile) throws IOException;
 }
