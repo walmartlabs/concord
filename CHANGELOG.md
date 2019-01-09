@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-server: fixed a bug preventing the Ansible events from
+being processed correctly;
 - concord-console: fixed the parsing of GIT URLs on the repository
 list page;
 - concord-server: fixed an issue preventing git submodules using the
