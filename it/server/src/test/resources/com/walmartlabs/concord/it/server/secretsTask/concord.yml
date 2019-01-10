@@ -1,0 +1,131 @@
+configuration:
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
+    - "mvn://com.walmartlabs.concord.plugins.basic:concord-tasks:1.2.0-SNAPSHOT"
+
+  arguments:
+
+flows:
+  default:
+    - call: delete-secret
+    - call: validate-secret-missing
+    - call: create-secret
+    - call: validate-secret
+    - call: get-secret
+    - call: validate-secret-invalid
+    - call: replace-secret-password
+    - call: replace-secret-data
+    - call: get-secret-again
+    - call: delete-secret
+    - call: replace-secret-create
+    - call: delete-secret2
+
+  create-secret:
+    - log: "Create secret"
+    - task: secrets
+      in:
+        action: CREATE
+        name: anders-test-secret
+        data: anders-test-value
+        storePassword: Dingo1234
+    - log: "Create Result: ${result}"
+
+  get-secret:
+    - log: "Get secret"
+    - task: secrets
+      in:
+        name: anders-test-secret
+        storePassword: Dingo1234
+    - log: "Get Result: ${result}"
+    - if: ${result != "anders-test-value"}
+      then:
+        - throw: "Expected anders-test-value, got ${result}"
+
+  validate-secret:
+    - log: "Validate secret"
+    - task: secrets
+      in:
+        action: VALIDATE
+        name: anders-test-secret
+        storePassword: Dingo1234
+    - log: "Validate Result: ${result}"
+    - if: ${result != "OK"}
+      then:
+        - throw: "Expected 'OK', got ${result}"
+
+  validate-secret-missing:
+    - log: "Validate secret MISSING"
+    - task: secrets
+      in:
+        action: VALIDATE
+        name: anders-MISSING-secret
+    - log: "Validate Result: ${result}"
+    - if: ${result != "MISSING"}
+      then:
+        - throw: "Expected 'MISSING', got ${result}"
+
+  validate-secret-invalid:
+    - log: "Validate secret INVALID"
+    - task: secrets
+      in:
+        action: VALIDATE
+        name: anders-test-secret
+        storePassword: wrong
+    - log: "Validate Result: ${result}"
+    - if: ${result != "INVALID"}
+      then:
+        - throw: "Expected 'INVALID', got ${result}"
+
+  replace-secret-password:
+    - log: "Update secret password"
+    - task: secrets
+      in:
+        action: REPLACE
+        name: anders-test-secret
+        storePassword: Dingo1234
+        newStorePassword: Tapir1234
+
+  replace-secret-data:
+    - log: "Update secret data"
+    - task: secrets
+      in:
+        action: REPLACE
+        name: anders-test-secret
+        storePassword: Tapir1234
+        data: anders-test-elephant
+
+  get-secret-again:
+    - log: "Get secret (with new password and data)"
+    - task: secrets
+      in:
+        name: anders-test-secret
+        storePassword: Tapir1234
+    - log: "Get Result: ${result}"
+    - if: ${result != "anders-test-elephant"}
+      then:
+        - throw: "Expected anders-test-elephant, got ${result}"
+
+  delete-secret:
+    - log: "Delete secret"
+    - task: secrets
+      in:
+        action: DELETE
+        name: anders-test-secret
+
+  replace-secret-create:
+    - log: "Update secret create"
+    - task: secrets
+      in:
+        action: REPLACE
+        name: anders-test-secret2
+        storePassword: Tapir1234
+        data: anders-test-elephant
+
+  delete-secret2:
+    - log: "Delete secret2"
+    - task: secrets
+      in:
+        action: DELETE
+        name: anders-test-secret2
+        skipValidation: true
+        storePassword: wrong
