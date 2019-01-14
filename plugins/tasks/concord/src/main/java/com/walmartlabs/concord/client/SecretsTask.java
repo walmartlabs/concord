@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Named("secrets")
+@Named("wipSecrets")
 public class SecretsTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(SecretsTask.class);
     private static final String NEW_STORE_PASSWORD = "newStorePassword";
@@ -53,6 +53,8 @@ public class SecretsTask implements Task {
 
     @Override
     public void execute(Context ctx) throws Exception {
+        log.info("This task marked as WIP and may change in a backward incompatible manner.");
+
         Action action = getAction(ctx);
         switch (action) {
             case GET: {

@@ -91,7 +91,6 @@ public class Worker implements Runnable {
         while (!Thread.currentThread().isInterrupted() && !maintenanceMode) {
             JobEntry job = null;
             try {
-
                 job = take();
 
                 if (job != null) {
@@ -133,7 +132,10 @@ public class Worker implements Runnable {
             workDir = IOUtils.createTempDir(payloadDir, "workDir");
 
             if (response.getRepoUrl() != null && response.getCommitId() != null) {
+                long t1 = System.currentTimeMillis();
                 repositoryManager.export(response.getOrgName(), response.getRepoUrl(), response.getCommitId(), response.getRepoPath(), response.getSecretName(), workDir);
+                long t2 = System.currentTimeMillis();
+                log(response.getProcessId(), String.format("Repository data export took %dms\n", (t2 - t1)));
             }
 
             downloadState(instanceId, workDir);
@@ -149,6 +151,8 @@ public class Worker implements Runnable {
     }
 
     private void downloadState(UUID instanceId, Path workDir) throws Exception {
+        long t1 = System.currentTimeMillis();
+
         File payload = null;
         try {
             payload = withRetry(PAYLOAD_DOWNLOAD_MAX_RETRIES, PAYLOAD_DOWNLOAD_RETRY_DELAY,
@@ -160,6 +164,9 @@ public class Worker implements Runnable {
                 delete(payload.toPath());
             }
         }
+
+        long t2 = System.currentTimeMillis();
+        log(instanceId, String.format("Process state download took %dms\n", (t2 - t1)));
     }
 
     private void cleanup(JobEntry job) {

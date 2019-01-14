@@ -4,6 +4,11 @@
 
 ### Changed
 
+- concord-agent, concord-runner: log additional performance metrics
+when running in `debug` mode;
+- dependency-manager: pre-sort dependency URIs to ensure stable
+dependency resolution order. This improves chances of getting a
+pre-forked JVM instead of spinning a new one;
 - concord-console: fix potential data race when loading process
 checkpoints;
 - concord-server: last modified date of process state files is now

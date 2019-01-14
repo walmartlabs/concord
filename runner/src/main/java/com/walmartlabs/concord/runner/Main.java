@@ -78,15 +78,22 @@ public class Main {
         this.apiClientFactory = apiClientFactory;
     }
 
-    public void run() throws Exception {
+    public void run(boolean debug) throws Exception {
         // determine current working directory, it should contain the payload
         Path baseDir = Paths.get(System.getProperty("user.dir"));
         log.info("run -> working directory: {}", baseDir.toAbsolutePath());
+
+        long t1 = System.currentTimeMillis();
 
         Path idPath = baseDir.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
         while (!Files.exists(idPath)) {
             // TODO replace with WatchService
             Thread.sleep(100);
+        }
+
+        long t2 = System.currentTimeMillis();
+        if (debug) {
+            log.info("Spent {}ms waiting for the payload", (t2 - t1));
         }
 
         UUID instanceId = UUID.fromString(new String(Files.readAllBytes(idPath)));
@@ -107,6 +114,11 @@ public class Main {
         processApiClient.updateStatus(instanceId, agentId, ProcessEntry.StatusEnum.RUNNING);
 
         CheckpointManager checkpointManager = new CheckpointManager(instanceId, processApiClient);
+
+        long t3 = System.currentTimeMillis();
+        if (debug) {
+            log.info("Ready to start in {}ms", (t3 - t2));
+        }
 
         try {
             executeProcess(instanceId.toString(), checkpointManager, baseDir);
@@ -363,7 +375,11 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        boolean debug = Boolean.parseBoolean(System.getProperty("debug"));
+
         try {
+            long t1 = System.currentTimeMillis();
+
             List<URL> deps = Collections.emptyList();
             if (args.length > 0) {
                 deps = parseDeps(Paths.get(args[0]));
@@ -374,7 +390,13 @@ public class Main {
 
             Injector injector = createInjector(depsClassLoader);
             Main main = injector.getInstance(Main.class);
-            main.run();
+
+            long t2 = System.currentTimeMillis();
+            if (debug) {
+                log.info("Runtime loaded in {}ms", (t2 - t1));
+            }
+
+            main.run(debug);
 
             // force exit
             System.exit(0);

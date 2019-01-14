@@ -43,6 +43,7 @@ public class RunnerCommandBuilder {
     private boolean securityManagerEnabled;
     private Path dependencies;
     private Path runnerPath;
+    private boolean debug;
 
     public RunnerCommandBuilder() {
         this.objectMapper = new ObjectMapper();
@@ -88,6 +89,11 @@ public class RunnerCommandBuilder {
         return this;
     }
 
+    public RunnerCommandBuilder debug(boolean debug) {
+        this.debug = debug;
+        return this;
+    }
+
     public String[] build() {
         List<String> l = new ArrayList<>();
 
@@ -116,6 +122,10 @@ public class RunnerCommandBuilder {
 
         if (procDir != null) {
             l.add("-Duser.dir=" + procDir.toString());
+        }
+
+        if (debug) {
+            l.add("-Ddebug=true");
         }
 
         // Runner's security manager

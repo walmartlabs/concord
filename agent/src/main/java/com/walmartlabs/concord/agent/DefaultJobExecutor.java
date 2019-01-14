@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,60 +81,21 @@ public class DefaultJobExecutor {
         this.postProcessors = postProcessors;
     }
 
-    private void logDependencies(UUID instanceId, Collection<?> deps) {
-        if (deps == null || deps.isEmpty()) {
-            logManager.log(instanceId, "No external dependencies.");
-            return;
-        }
-
-        List<String> l = deps.stream()
-                .map(Object::toString)
-                .collect(Collectors.toList());
-
-        StringBuilder b = new StringBuilder();
-        for (String s : l) {
-            b.append("\n\t").append(s);
-        }
-
-        logManager.log(instanceId, "Dependencies: %s", b);
-    }
-
-    private Collection<Path> resolveDeps(UUID instanceId, Path workDir) throws IOException, ExecutionException {
-        Collection<URI> uris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(workDir).stream())
-                .collect(Collectors.toList());
-
-        Collection<DependencyEntity> deps = dependencyManager.resolve(uris);
-
-        checkDependencies(instanceId, workDir, deps);
-
-        Collection<Path> paths = deps.stream()
-                .map(DependencyEntity::getPath)
-                .sorted()
-                .collect(Collectors.toList());
-
-        boolean debugMode = debugMode(workDir);
-        if (debugMode) {
-            logDependencies(instanceId, paths);
-        } else {
-            logDependencies(instanceId, uris);
-        }
-
-        return paths;
-    }
-
     public JobInstance start(UUID instanceId, Path workDir) {
         try {
-            Collection<Path> resolvedDeps = resolveDeps(instanceId, workDir);
+            Job job = new Job(instanceId, workDir, readCfg(workDir));
+
+            Collection<Path> resolvedDeps = resolveDeps(job);
 
             ProcessEntry entry;
-            if (canUsePrefork(workDir)) {
-                String[] cmd = createCmd(instanceId, resolvedDeps, workDir, null);
-                entry = fork(instanceId, workDir, cmd);
+            if (canUsePrefork(job)) {
+                String[] cmd = createCmd(job, resolvedDeps, null);
+                entry = fork(job, cmd);
             } else {
                 log.info("start ['{}'] -> can't use a pre-forked instance", instanceId);
                 Path procDir = IOUtils.createTempDir("onetime");
-                String[] cmd = createCmd(instanceId, resolvedDeps, workDir, procDir);
-                entry = startOneTime(instanceId, workDir, cmd, procDir);
+                String[] cmd = createCmd(job, resolvedDeps, procDir);
+                entry = startOneTime(job, cmd, procDir);
             }
 
             Path payloadDir = entry.getWorkDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
@@ -148,12 +109,58 @@ public class DefaultJobExecutor {
 
             CompletableFuture<?> f = new CompletableFuture<>();
             f.completeExceptionally(e);
+
             return createJobInstance(instanceId, workDir, null, f);
         }
     }
 
-    private String[] createCmd(UUID instanceId, Collection<Path> deps, Path workDir, Path procDir) throws IOException, ExecutionException {
-        Map<String, Object> containerCfg = readContainerCfg(workDir);
+    private void logDependencies(Job job, Collection<?> deps) {
+        if (deps == null || deps.isEmpty()) {
+            logManager.log(job.instanceId, "No external dependencies.");
+            return;
+        }
+
+        List<String> l = deps.stream()
+                .map(Object::toString)
+                .collect(Collectors.toList());
+
+        StringBuilder b = new StringBuilder();
+        for (String s : l) {
+            b.append("\n\t").append(s);
+        }
+
+        logManager.log(job.instanceId, "Dependencies: %s", b);
+    }
+
+    private Collection<Path> resolveDeps(Job job) throws IOException, ExecutionException {
+        long t1 = System.currentTimeMillis();
+
+        Collection<URI> uris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(job).stream())
+                .collect(Collectors.toList());
+
+        Collection<DependencyEntity> deps = dependencyManager.resolve(uris);
+
+        checkDependencies(job, deps);
+
+        Collection<Path> paths = deps.stream()
+                .map(DependencyEntity::getPath)
+                .sorted()
+                .collect(Collectors.toList());
+
+        long t2 = System.currentTimeMillis();
+
+        if (job.debugMode) {
+            logManager.log(job.instanceId, "Dependency resolution took %dms", (t2 - t1));
+            logDependencies(job, paths);
+        } else {
+            logDependencies(job, uris);
+        }
+
+        return paths;
+    }
+
+    private String[] createCmd(Job job, Collection<Path> deps, Path procDir) throws IOException, ExecutionException {
+        Map<String, Object> containerCfg = getContainerCfg(job);
         boolean withContainer = !containerCfg.isEmpty();
 
         String javaCmd = withContainer ? DockerCommandBuilder.getJavaCmd() : cfg.getAgentJavaCmd();
@@ -166,12 +173,13 @@ public class DefaultJobExecutor {
 
         RunnerCommandBuilder runner = new RunnerCommandBuilder()
                 .javaCmd(javaCmd)
-                .workDir(workDir)
+                .workDir(job.workDir)
                 .procDir(runnerDir)
                 .agentId(cfg.getAgentId())
                 .serverApiBaseUrl(cfg.getServerApiBaseUrl())
                 .securityManagerEnabled(cfg.isRunnerSecurityManagerEnabled())
                 .dependencies(depsFile)
+                .debug(job.debugMode)
                 .runnerPath(runnerPath);
 
         if (!withContainer) {
@@ -180,7 +188,7 @@ public class DefaultJobExecutor {
 
         return new DockerCommandBuilder(logManager, cfg.getJavaPath(), containerCfg)
                 .procDir(procDir)
-                .instanceId(instanceId)
+                .instanceId(job.instanceId)
                 .dependencyListsDir(cfg.getDependencyListsDir())
                 .dependencyCacheDir(cfg.getDependencyCacheDir())
                 .dependencyDir(dependencyManager.getLocalCacheDir())
@@ -192,22 +200,24 @@ public class DefaultJobExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> readContainerCfg(Path workDir) throws ExecutionException {
+    private Map<String, Object> readCfg(Path workDir) throws ExecutionException {
         Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
             return Collections.emptyMap();
         }
 
         try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            return (Map<String, Object>) m.getOrDefault(InternalConstants.Request.CONTAINER, Collections.emptyMap());
+            return objectMapper.readValue(in, Map.class);
         } catch (IOException e) {
-            throw new ExecutionException("Error while reading container options", e);
+            throw new ExecutionException("Error while reading process configuration", e);
         }
     }
 
     private Path storeDeps(Collection<Path> dependencies) throws IOException {
-        List<String> deps = dependencies.stream().map(p -> p.toAbsolutePath().toString()).collect(Collectors.toList());
+        List<String> deps = dependencies.stream()
+                .map(p -> p.toAbsolutePath().toString())
+                .collect(Collectors.toList());
+
         HashCode depsHash = hash(deps.toArray(new String[0]));
 
         Path result = cfg.getDependencyListsDir().resolve(depsHash.toString() + ".deps");
@@ -218,23 +228,24 @@ public class DefaultJobExecutor {
         Files.write(result,
                 (Iterable<String>) deps.stream()::iterator,
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
         return result;
     }
 
-    private void checkDependencies(UUID instanceId, Path workDir, Collection<DependencyEntity> resolvedDepEntities) throws IOException {
-        Map<String, Object> policyRules = readPolicyRules(workDir);
+    private void checkDependencies(Job job, Collection<DependencyEntity> resolvedDepEntities) throws IOException {
+        Map<String, Object> policyRules = readPolicyRules(job);
         if (policyRules.isEmpty()) {
             return;
         }
 
-        logManager.info(instanceId, "Checking the dependency policy");
+        logManager.info(job.instanceId, "Checking the dependency policy");
 
         CheckResult<DependencyRule, DependencyEntity> result = new PolicyEngine(policyRules).getDependencyPolicy().check(resolvedDepEntities);
         result.getWarn().forEach(d -> {
-            logManager.warn(instanceId, "Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity().toString(), d.getRule().toString());
+            logManager.warn(job.instanceId, "Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity().toString(), d.getRule().toString());
         });
         result.getDeny().forEach(d -> {
-            logManager.error(instanceId, "Artifact '{}' is forbidden by the dependency policy {}", d.getEntity().toString(), d.getRule().toString());
+            logManager.error(job.instanceId, "Artifact '{}' is forbidden by the dependency policy {}", d.getEntity().toString(), d.getRule().toString());
         });
 
         if (!result.getDeny().isEmpty()) {
@@ -287,7 +298,9 @@ public class DefaultJobExecutor {
         }
     }
 
-    private ProcessEntry fork(UUID instanceId, Path workDir, String[] cmd) throws ExecutionException {
+    private ProcessEntry fork(Job job, String[] cmd) throws ExecutionException {
+        long t1 = System.currentTimeMillis();
+
         HashCode hc = hash(cmd);
 
         ProcessEntry entry = pool.take(hc, () -> {
@@ -298,10 +311,16 @@ public class DefaultJobExecutor {
         try {
             Path payloadDir = entry.getWorkDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
             // TODO use move
-            IOUtils.copy(workDir, payloadDir);
-            writeInstanceId(instanceId, payloadDir);
+            IOUtils.copy(job.workDir, payloadDir);
+            writeInstanceId(job.instanceId, payloadDir);
         } catch (IOException e) {
             throw new ExecutionException("Error while starting a process", e);
+        }
+
+        long t2 = System.currentTimeMillis();
+
+        if (job.debugMode) {
+            logManager.log(job.instanceId, "Forking a VM took %dms", (t2 - t1));
         }
 
         return entry;
@@ -344,16 +363,16 @@ public class DefaultJobExecutor {
         };
     }
 
-    private ProcessEntry startOneTime(UUID instanceId, Path workDir, String[] cmd, Path procDir) throws IOException {
+    private ProcessEntry startOneTime(Job job, String[] cmd, Path procDir) throws IOException {
         Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
-        Files.move(workDir, payloadDir, StandardCopyOption.ATOMIC_MOVE);
-        writeInstanceId(instanceId, payloadDir);
+        Files.move(job.workDir, payloadDir, StandardCopyOption.ATOMIC_MOVE);
+        writeInstanceId(job.instanceId, payloadDir);
 
         return start(procDir, cmd);
     }
 
-    private ProcessEntry start(Path workDir, String[] cmd) throws IOException {
-        Path payloadDir = workDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
+    private ProcessEntry start(Path procDir, String[] cmd) throws IOException {
+        Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
         if (!Files.exists(payloadDir)) {
             Files.createDirectories(payloadDir);
         }
@@ -379,7 +398,7 @@ public class DefaultJobExecutor {
         }
 
         Process p = b.start();
-        return new ProcessEntry(p, workDir);
+        return new ProcessEntry(p, procDir);
     }
 
     private void handleError(UUID id, Path workDir, Process proc, String error) {
@@ -392,19 +411,31 @@ public class DefaultJobExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<URI> getDependencyUris(Path workDir) throws ExecutionException {
-        Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
-        if (!Files.exists(p)) {
-            return Collections.emptySet();
+    private Map<String, Object> readPolicyRules(Job job) throws IOException {
+        Path policyFile = job.workDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(InternalConstants.Files.POLICY_FILE_NAME);
+
+        if (!Files.exists(policyFile)) {
+            return Collections.emptyMap();
         }
 
-        try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> m = objectMapper.readValue(in, Map.class);
+        return objectMapper.readValue(policyFile.toFile(), Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Collection<URI> getDependencyUris(Job j) throws ExecutionException {
+        try {
+            Map<String, Object> m = j.cfg;
             Collection<String> deps = (Collection<String>) m.get(InternalConstants.Request.DEPENDENCIES_KEY);
             return normalizeUrls(deps);
         } catch (URISyntaxException | IOException e) {
             throw new ExecutionException("Error while reading the list of dependencies", e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getContainerCfg(Job job) {
+        return (Map<String, Object>) job.cfg.getOrDefault(InternalConstants.Request.CONTAINER, Collections.emptyMap());
     }
 
     private static Collection<URI> normalizeUrls(Collection<String> urls) throws IOException, URISyntaxException {
@@ -468,17 +499,17 @@ public class DefaultJobExecutor {
         return result;
     }
 
-    private boolean canUsePrefork(Path workDir) throws ExecutionException {
-        if (!readContainerCfg(workDir).isEmpty()) {
+    private static boolean canUsePrefork(Job job) {
+        if (!getContainerCfg(job).isEmpty()) {
             return false;
         }
 
-        if (Files.exists(workDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME))) {
+        if (Files.exists(job.workDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME))) {
             // payload supplied its own libraries
             return false;
         }
 
-        return !Files.exists(workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME));
+        return !Files.exists(job.workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME));
     }
 
     private static void writeInstanceId(UUID instanceId, Path dst) throws IOException {
@@ -495,28 +526,29 @@ public class DefaultJobExecutor {
         return h.hash();
     }
 
-    @SuppressWarnings("unchecked")
-    private static boolean debugMode(Path workDir) throws IOException {
-        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
-        if (!Files.exists(p)) {
-            return false;
+    private static class Job {
+
+        private final UUID instanceId;
+        private final Path workDir;
+        private final Map<String, Object> cfg;
+        private final boolean debugMode;
+
+        private Job(UUID instanceId, Path workDir, Map<String, Object> cfg) {
+            this.instanceId = instanceId;
+            this.workDir = workDir;
+            this.cfg = cfg;
+
+            this.debugMode = debugMode(this);
         }
 
-        ObjectMapper om = new ObjectMapper();
-        try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> m = om.readValue(in, Map.class);
-            Object v = m.get(Constants.Request.DEBUG_KEY);
+        private static boolean debugMode(Job job) {
+            Object v = job.cfg.get(Constants.Request.DEBUG_KEY);
+            if (v instanceof String) {
+                // allows `curl ... -F debug=true`
+                return Boolean.parseBoolean((String) v);
+            }
+
             return Boolean.TRUE.equals(v);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> readPolicyRules(Path ws) throws IOException {
-        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.POLICY_FILE_NAME);
-        if (!Files.exists(policyFile)) {
-            return Collections.emptyMap();
-        }
-
-        return objectMapper.readValue(policyFile.toFile(), Map.class);
     }
 }

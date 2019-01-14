@@ -112,7 +112,11 @@ public class DependencyManager {
             return Collections.emptySet();
         }
 
-        DependencyList deps = categorize(items);
+        // ensure stable order
+        List<URI> uris = new ArrayList<>(items);
+        Collections.sort(uris);
+
+        DependencyList deps = categorize(uris);
 
         Collection<DependencyEntity> result = new HashSet<>();
 
@@ -129,10 +133,10 @@ public class DependencyManager {
         return result;
     }
 
-    private DependencyList categorize(Collection<URI> items) throws IOException {
-        Set<MavenDependency> mavenTransitiveDependencies = new HashSet<>();
-        Set<MavenDependency> mavenSingleDependencies = new HashSet<>();
-        Set<URI> directLinks = new HashSet<>();
+    private DependencyList categorize(List<URI> items) throws IOException {
+        List<MavenDependency> mavenTransitiveDependencies = new ArrayList<>();
+        List<MavenDependency> mavenSingleDependencies = new ArrayList<>();
+        List<URI> directLinks = new ArrayList<>();
 
         for (URI item : items) {
             String scheme = item.getScheme();
@@ -422,13 +426,13 @@ public class DependencyManager {
 
     private static final class DependencyList {
 
-        private final Set<MavenDependency> mavenTransitiveDependencies;
-        private final Set<MavenDependency> mavenSingleDependencies;
-        private final Set<URI> directLinks;
+        private final List<MavenDependency> mavenTransitiveDependencies;
+        private final List<MavenDependency> mavenSingleDependencies;
+        private final List<URI> directLinks;
 
-        private DependencyList(Set<MavenDependency> mavenTransitiveDependencies,
-                               Set<MavenDependency> mavenSingleDependencies,
-                               Set<URI> directLinks) {
+        private DependencyList(List<MavenDependency> mavenTransitiveDependencies,
+                               List<MavenDependency> mavenSingleDependencies,
+                               List<URI> directLinks) {
 
             this.mavenTransitiveDependencies = mavenTransitiveDependencies;
             this.mavenSingleDependencies = mavenSingleDependencies;

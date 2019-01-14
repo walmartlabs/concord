@@ -22,7 +22,7 @@ flows:
 
   create-secret:
     - log: "Create secret"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: CREATE
         name: anders-test-secret
@@ -32,7 +32,7 @@ flows:
 
   get-secret:
     - log: "Get secret"
-    - task: secrets
+    - task: wipSecrets
       in:
         name: anders-test-secret
         storePassword: Dingo1234
@@ -43,7 +43,7 @@ flows:
 
   validate-secret:
     - log: "Validate secret"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: VALIDATE
         name: anders-test-secret
@@ -55,7 +55,7 @@ flows:
 
   validate-secret-missing:
     - log: "Validate secret MISSING"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: VALIDATE
         name: anders-MISSING-secret
@@ -66,7 +66,7 @@ flows:
 
   validate-secret-invalid:
     - log: "Validate secret INVALID"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: VALIDATE
         name: anders-test-secret
@@ -78,7 +78,7 @@ flows:
 
   replace-secret-password:
     - log: "Update secret password"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: REPLACE
         name: anders-test-secret
@@ -87,7 +87,7 @@ flows:
 
   replace-secret-data:
     - log: "Update secret data"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: REPLACE
         name: anders-test-secret
@@ -96,7 +96,7 @@ flows:
 
   get-secret-again:
     - log: "Get secret (with new password and data)"
-    - task: secrets
+    - task: wipSecrets
       in:
         name: anders-test-secret
         storePassword: Tapir1234
@@ -107,14 +107,14 @@ flows:
 
   delete-secret:
     - log: "Delete secret"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: DELETE
         name: anders-test-secret
 
   replace-secret-create:
     - log: "Update secret create"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: REPLACE
         name: anders-test-secret2
@@ -123,7 +123,7 @@ flows:
 
   delete-secret2:
     - log: "Delete secret2"
-    - task: secrets
+    - task: wipSecrets
       in:
         action: DELETE
         name: anders-test-secret2
