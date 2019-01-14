@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: store custom form files in the process state
+regardless of whether they are form a repository or not. This fixes
+an issue preventing custom forms from working correctly.
+
+
+
 ## [1.2.1] - 2019-01-13
 
 ### Changed
