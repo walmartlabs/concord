@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-console: fix potential data race when loading process
+checkpoints;
 - concord-server: last modified date of process state files is now
 correctly calculated when importing the state.
 

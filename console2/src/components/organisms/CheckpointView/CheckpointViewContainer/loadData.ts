@@ -17,8 +17,8 @@
  * limitations under the License.
  * =====
  */
-import { generateCheckpointGroups } from './checkpointUtils';
 import { listProcesses } from '../../../../api/service/console';
+import { generateCheckpointGroups } from './checkpointUtils';
 
 export interface FetchProcessArgs {
     orgId: string;
@@ -27,12 +27,15 @@ export interface FetchProcessArgs {
     offset?: number;
 }
 
-export const loadData = (args: FetchProcessArgs) => async ({ setState }: any) => {
+export const loadData = (args: FetchProcessArgs) => async ({ setState, state }: any) => {
+    if (state.loadingData) {
+        return;
+    }
+
     setState({ loadingData: true });
 
     const processes = await listProcesses(args.orgId, args.projectId, args.limit, args.offset);
     const checkpointGroups = {};
-
     processes.forEach((p) => {
         if (p.checkpoints && p.statusHistory) {
             checkpointGroups[p.instanceId] = generateCheckpointGroups(
