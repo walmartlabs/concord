@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- slack: when sending a message, the task now returns a `result`
+object.
+
+
 ## [1.2.2] - 2019-01-14
 
 ### Changed

@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 @Named("slack")
 public class SlackTask implements Task {
@@ -36,7 +38,7 @@ public class SlackTask implements Task {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void execute(Context ctx) throws Exception {
+    public void execute(Context ctx) {
         String channelId = (String) ctx.getVariable("channelId");
         String text = (String) ctx.getVariable("text");
         String iconEmoji = (String) ctx.getVariable("iconEmoji");
@@ -62,6 +64,11 @@ public class SlackTask implements Task {
             } else {
                 log.info("Slack message sent into '{}' channel", channelId);
             }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("ok", r.isOk());
+            result.put("error", r.getError());
+            ctx.setVariable("result", result);
         } catch (Exception e) {
             log.error("call ['{}', '{}', '{}', '{}', '{}'] -> error",
                     channelId, text, iconEmoji, username, attachments, e);
