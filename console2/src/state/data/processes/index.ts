@@ -38,6 +38,7 @@ import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer
 import { reducers as logReducers, sagas as logSagas } from './logs';
 import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';
 import { reducers as historyReducers, sagas as historySagas } from './history';
+import { reducers as attachmentReducers, sagas as attachmentSagas } from './attachments';
 import { reducers as childrenReducers, sagas as childrenSagas } from './children';
 import { reducers as eventsReducers, sagas as eventsSagas } from './events';
 import { reducers as ansibleReducers, sagas as ansibleSagas } from './ansible';
@@ -278,6 +279,7 @@ export const reducers = combineReducers<State>({
     poll: pollReducers,
     history: historyReducers,
     children: childrenReducers,
+    attachments: attachmentReducers,
     events: eventsReducers
 });
 
@@ -367,6 +369,7 @@ export const sagas = function*() {
         fork(pollSagas),
         fork(historySagas),
         fork(childrenSagas),
+        fork(attachmentSagas),
         fork(eventsSagas),
         fork(ansibleSagas)
     ]);

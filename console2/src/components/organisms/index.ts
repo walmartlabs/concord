@@ -41,6 +41,7 @@ export { default as ProcessChildrenActivity } from './ProcessChildrenActivity';
 export { default as ProcessEventsActivity } from './ProcessEventsActivity';
 export { default as ProcessFormActivity } from './ProcessFormActivity';
 export { default as ProcessHistoryActivity } from './ProcessHistoryActivity';
+export { default as ProcessAttachmentsActivity } from './ProcessAttachmentsActivity';
 export { default as ProcessListActivity } from './ProcessListActivity';
 export { default as ProcessLogActivity } from './ProcessLogActivity';
 export { default as ProcessStatusActivity } from './ProcessStatusActivity';

@@ -33,10 +33,11 @@ import {
     ProcessStatusActivity,
     ProcessHistoryActivity,
     ProcessChildrenActivity,
+    ProcessAttachmentsActivity,
     ProcessEventsActivity
 } from '../index';
 
-export type TabLink = 'status' | 'log' | 'events' | 'history' | 'children' | null;
+export type TabLink = 'status' | 'log' | 'events' | 'history' | 'children' | 'attachments' | null;
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -147,6 +148,10 @@ class ProcessActivity extends React.PureComponent<Props> {
                         <Icon name="chain" />
                         <Link to={`${baseUrl}/children`}>Child Processes</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'attachments'}>
+                        <Icon name="paperclip" />
+                        <Link to={`${baseUrl}/attachments`}>Attachments</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -167,6 +172,9 @@ class ProcessActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/children`} exact={true}>
                         <ProcessChildrenActivity instanceId={instanceId} />
+                    </Route>
+                    <Route path={`${baseUrl}/attachments`} exact={true}>
+                        <ProcessAttachmentsActivity instanceId={instanceId} />
                     </Route>
 
                     <Route component={NotFoundPage} />

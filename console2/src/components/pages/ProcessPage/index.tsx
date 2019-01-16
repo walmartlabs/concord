@@ -38,6 +38,8 @@ const pathToTab = (s: string): TabLink => {
         return 'history';
     } else if (s.endsWith('/children')) {
         return 'children';
+    } else if (s.endsWith('/attachments')) {
+        return 'attachments';
     }
 
     return null;
