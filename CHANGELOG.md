@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: bring back the status column to the child process
+list;
+
 ### Changed
 
 - ansible: fixed an issue that caused the sensitive data masking
@@ -13,8 +18,6 @@ plugin (`concord_protectdata.py`) to fail on non-ASCII strings.
 
 ### Added
 
-- concord-console: bring back the status column to the child process
-list;
 - concord-console: list of attachments added to the process status
 page;
 - slack: when sending a message, the task now returns a `result`
