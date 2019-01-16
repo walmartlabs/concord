@@ -9,6 +9,8 @@ object.
 
 ### Changed
 
+- concord-console: flow events moved to a separate tab on the process
+status page;
 - concord-server: copy the parent process' repository info to forked
 processes. This fixes an issue preventing process forks from working
 correctly.

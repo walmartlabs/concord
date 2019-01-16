@@ -27,7 +27,7 @@ import { AnsibleTaskList, RequestErrorMessage } from '../../molecules';
 import { ConcordId, RequestError } from '../../../api/common';
 import { actions, State, AnsibleEvents } from '../../../state/data/processes/events';
 import { connect, Dispatch } from 'react-redux';
-import { combinePrePostEvents } from '../ProcessStatusActivity';
+import { combinePrePostEvents } from '../ProcessEventsActivity';
 
 interface ExternalProps {
     instanceId: ConcordId;

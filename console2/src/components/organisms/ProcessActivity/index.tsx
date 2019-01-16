@@ -32,7 +32,8 @@ import {
     ProcessLogActivity,
     ProcessStatusActivity,
     ProcessHistoryActivity,
-    ProcessChildrenActivity
+    ProcessChildrenActivity,
+    ProcessEventsActivity
 } from '../index';
 
 export type TabLink = 'status' | 'log' | 'events' | 'history' | 'children' | null;
@@ -130,6 +131,10 @@ class ProcessActivity extends React.PureComponent<Props> {
                         <Icon name="hourglass half" />
                         <Link to={`${baseUrl}/status`}>Status</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'events'}>
+                        <Icon name="content" />
+                        <Link to={`${baseUrl}/events`}>Events</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'log'}>
                         <Icon name="book" />
                         <Link to={`${baseUrl}/log`}>Logs</Link>
@@ -150,6 +155,9 @@ class ProcessActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/status`}>
                         <ProcessStatusActivity instanceId={instanceId} />
+                    </Route>
+                    <Route path={`${baseUrl}/events`}>
+                        <ProcessEventsActivity instanceId={instanceId} />
                     </Route>
                     <Route path={`${baseUrl}/log`} exact={true}>
                         <ProcessLogActivity instanceId={instanceId} />
