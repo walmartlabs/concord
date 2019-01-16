@@ -1,0 +1,29 @@
+configuration:
+  arguments:
+    myName: "Concord"
+
+flows:
+  default:
+    # "forks" the current process as a child process
+    - task: concord
+      in:
+        action: fork
+
+        # if not specified, the parent's entry point will be used
+        entryPoint: sayHello
+
+        # additional arguments
+        arguments:
+          otherName: "${initiator.username}"
+
+      # out variable "myJobs" will contain a list of process IDs
+      out:
+        myJobs: ${jobs}
+
+    - log: "Done! Status of the jobs: ${concord.waitForCompletion(myJobs)}"
+
+  sayHello:
+    # forked processes can access the latest snapshot of the parent's
+    # state in addition to the arguments provided by the parent task
+    - log: "FORK: Hello, ${otherName}. I'm ${myName}"
+

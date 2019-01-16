@@ -7,6 +7,13 @@
 - slack: when sending a message, the task now returns a `result`
 object.
 
+### Changed
+
+- concord-server: copy the parent process' repository info to forked
+processes. This fixes an issue preventing process forks from working
+correctly.
+
+
 
 ## [1.2.2] - 2019-01-14
 
