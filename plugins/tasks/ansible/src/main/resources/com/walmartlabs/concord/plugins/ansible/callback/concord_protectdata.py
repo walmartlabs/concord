@@ -4,6 +4,11 @@ __metaclass__ = type
 from ansible.plugins.callback.default import CallbackModule as CallbackModule_default
 import collections
 
+def enc(s):
+    # we shouldn't use `str` as the input string can contain non-ascii characters
+    # and we can't use `s.encode('utf-8')` because the input can be a non string value
+    return repr(s)
+
 class CallbackModule(CallbackModule_default):
 
     '''
@@ -26,7 +31,7 @@ class CallbackModule(CallbackModule_default):
         for key, value in result.iteritems():
             if isinstance(value, collections.Mapping):
                 ret[key] = self.hide_password(value)
-            elif any (x in str(value).lower() for x in self.secret_list) or any (y in str(key).lower() for y in self.secret_list):
+            elif any (x in enc(value).lower() for x in self.secret_list) or any (y in enc(key).lower() for y in self.secret_list):
                     ret[key] = "******"
             else:       
                     ret[key] = value
@@ -36,7 +41,7 @@ class CallbackModule(CallbackModule_default):
         print "TASK", "[",task.get_name(),"]" , "*************************************************************************"
         task_args = task._attributes.get('args')
         for k, v in task_args.iteritems():
-           if any(s in str(v).lower() for s in self.secret_list):
+           if any(s in enc(v).lower() for s in self.secret_list):
              print "*********** THIS TASK CONTAINS SENSITIVE INFORMATION. ENABLING NO_LOG ******************"
              task.no_log = True     
     

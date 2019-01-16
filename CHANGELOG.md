@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible: fixed an issue that caused the sensitive data masking
+plugin (`concord_protectdata.py`) to fail on non-ASCII strings.
+
+
+
 ## [1.3.0] - 2019-01-15
 
 ### Added

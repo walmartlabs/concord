@@ -1,0 +1,11 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "password"
+      verbosity: 0
+
+  - debug:
+      msg: "{{ item | b64decode | to_json }}"
+      verbosity: 0
+    with_items: "{{ lookup('file', 'blns.base64.json') | from_json }}"

@@ -334,4 +334,25 @@ public class AnsibleIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*OK:.*127.0.0.1.*", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testBadStrings() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleBadStrings").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*THIS TASK CONTAINS SENSITIVE INFORMATION.*", ab);
+    }
 }
