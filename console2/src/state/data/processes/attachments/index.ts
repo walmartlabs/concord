@@ -21,7 +21,12 @@ import { combineReducers } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 import { ConcordId } from '../../../../api/common';
 import { list as apiList } from '../../../../api/process/attachment';
-import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../../common';
+import {
+    handleErrors,
+    makeErrorReducer,
+    makeLoadingReducer,
+    makeResponseReducer
+} from '../../common';
 import { ListProcessAttachments, ListProcessAttachmentState, State } from './types';
 
 const NAMESPACE = 'processes/attachments';

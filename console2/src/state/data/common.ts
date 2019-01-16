@@ -18,7 +18,7 @@
  * =====
  */
 import { LOCATION_CHANGE, push as pushHistory } from 'react-router-redux';
-import { Action, AnyAction, Reducer } from 'redux';
+import { Action, Reducer } from 'redux';
 import { put } from 'redux-saga/effects';
 
 import { ConcordId, GenericOperationResult, OperationResult, RequestError } from '../../api/common';

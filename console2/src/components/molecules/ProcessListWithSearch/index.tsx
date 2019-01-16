@@ -100,8 +100,12 @@ const toState = (
     };
 };
 
-function hasFilter(processFilters: ProcessFilters) {
-    return Object.keys(processFilters).filter((k) => processFilters[k] !== '').length > 0;
+function hasFilter(processFilters: ProcessFilters, columns: ColumnDefinition[]) {
+    return (
+        Object.keys(processFilters)
+            .filter((k) => processFilters[k] !== '')
+            .filter((k) => columns.find((c) => c.source === k) !== undefined).length > 0
+    );
 }
 
 function renderFilter(
@@ -131,9 +135,9 @@ function renderFiltersToolbar(
     processFilters: ProcessFilters,
     clearFilter: (source: string) => void
 ) {
-    return Object.keys(processFilters).map((k) =>
-        renderFilter(processFilters[k], getDefinition(k, cols), clearFilter)
-    );
+    return Object.keys(processFilters)
+        .filter((k) => cols.find((c) => c.source === k) !== undefined)
+        .map((k) => renderFilter(processFilters[k], getDefinition(k, cols), clearFilter));
 }
 
 class ProcessListWithSearch extends React.Component<Props, State> {
@@ -294,7 +298,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                                 />
                             </Table.HeaderCell>
                             <Table.HeaderCell>
-                                {hasFilter(processFilters) &&
+                                {hasFilter(processFilters, columns) &&
                                     this.renderFilterLabels(cols, processFilters, loading)}
                             </Table.HeaderCell>
                             <Table.HeaderCell collapsing={true} style={{ fontWeight: 'normal' }}>

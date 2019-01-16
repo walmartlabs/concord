@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: bring back the status column to the child process
+list;
 - concord-console: list of attachments added to the process status
 page;
 - slack: when sending a message, the task now returns a `result`

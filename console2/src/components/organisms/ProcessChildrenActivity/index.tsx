@@ -31,6 +31,7 @@ import {
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
+    STATUS_COLUMN,
     UPDATED_AT_COLUMN
 } from '../../molecules/ProcessList';
 import { replace as pushHistory } from 'react-router-redux';
@@ -41,6 +42,7 @@ import { PaginationFilter } from '../../molecules/Pagination';
 import { ProcessFilters } from '../../../api/org/process';
 
 const COLUMNS = [
+    STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
     INITIATOR_COLUMN,
