@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server;
  */
 
 import com.walmartlabs.concord.server.task.TaskScheduler;
+import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -44,9 +45,13 @@ public class ServerResource implements Resource {
     private final String env;
 
     private final TaskScheduler scheduler;
+    private final WebSocketChannelManager webSocketChannelManager;
 
     @Inject
-    public ServerResource(TaskScheduler scheduler) {
+    public ServerResource(TaskScheduler scheduler, WebSocketChannelManager webSocketChannelManager) {
+        this.scheduler = scheduler;
+        this.webSocketChannelManager = webSocketChannelManager;
+
         Properties props = new Properties();
 
         try (InputStream in = ServerResource.class.getResourceAsStream("version.properties")) {
@@ -57,8 +62,6 @@ public class ServerResource implements Resource {
 
         this.version = props.getProperty("version");
         this.env = Utils.getEnv("CONCORD_ENV", "n/a");
-
-        this.scheduler = scheduler;
     }
 
     @GET
@@ -79,5 +82,6 @@ public class ServerResource implements Resource {
     @Path("maintenance-mode")
     public void maintenanceMode() {
         scheduler.stop();
+        webSocketChannelManager.shutdown();
     }
 }

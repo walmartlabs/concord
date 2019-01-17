@@ -40,6 +40,19 @@ public class WebSocketChannelManager {
 
     private final Map<UUID, WebSocketChannel> channels = new ConcurrentHashMap<>();
 
+    private volatile boolean isShutdown;
+
+    public boolean isShutdown() {
+        return isShutdown;
+    }
+
+    public void shutdown() {
+        isShutdown = true;
+
+        channels.forEach((uuid, webSocketChannel) -> webSocketChannel.close());
+        log.info("shutdown -> done");
+    }
+
     public void close(UUID channelId) {
         WebSocketChannel channel = channels.remove(channelId);
         if (channel == null) {

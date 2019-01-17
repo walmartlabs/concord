@@ -47,6 +47,11 @@ public class WebSocketCreator implements org.eclipse.jetty.websocket.servlet.Web
 
     @Override
     public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
+        if (channelManager.isShutdown()) {
+            sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Server is in the maintenance mode", resp);
+            return null;
+        }
+
         String auth = req.getHeader(HttpHeaders.AUTHORIZATION);
         if (auth == null) {
             sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing " + HttpHeaders.AUTHORIZATION + " header", resp);

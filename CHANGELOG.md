@@ -11,6 +11,8 @@ list;
 
 ### Changed
 
+- concord-server: close websocket channels when the maintenance mode
+is enabled;
 - ansible: fixed an issue that caused the sensitive data masking
 plugin (`concord_protectdata.py`) to fail on non-ASCII strings.
 
