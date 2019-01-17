@@ -57,6 +57,15 @@ public class CheckpointDao extends AbstractDao {
                 .fetch(CheckpointDao::toEntry));
     }
 
+    public UUID getRecentId(UUID instanceId, String checkpointName) {
+        return txResult(tx -> tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_ID)
+                .from(PROCESS_CHECKPOINTS)
+                .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(instanceId).and(PROCESS_CHECKPOINTS.CHECKPOINT_NAME.eq(checkpointName)))
+                .orderBy(PROCESS_CHECKPOINTS.CHECKPOINT_DATE.desc())
+                .limit(1)
+                .fetchOne(PROCESS_CHECKPOINTS.CHECKPOINT_ID));
+    }
+
     public void importCheckpoint(UUID instanceId, UUID checkpointId, String checkpointName, Path data) {
         tx(tx -> {
             String sql = tx.insertInto(PROCESS_CHECKPOINTS)

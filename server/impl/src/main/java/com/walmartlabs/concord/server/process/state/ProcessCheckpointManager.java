@@ -23,12 +23,17 @@ package com.walmartlabs.concord.server.process.state;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.OutVariablesUtils;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.archive.ProcessCheckpointArchiver;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import org.apache.shiro.authz.UnauthorizedException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,17 +54,24 @@ public class ProcessCheckpointManager {
     private final CheckpointDao checkpointDao;
     private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
+    private final ProjectAccessManager projectAccessManager;
 
     @Inject
     protected ProcessCheckpointManager(ProcessCheckpointArchiver archiver,
                                        CheckpointDao checkpointDao,
                                        ProcessQueueDao queueDao,
-                                       ProcessStateManager stateManager) {
+                                       ProcessStateManager stateManager,
+                                       ProjectAccessManager projectAccessManager) {
 
         this.archiver = archiver;
         this.checkpointDao = checkpointDao;
         this.queueDao = queueDao;
         this.stateManager = stateManager;
+        this.projectAccessManager = projectAccessManager;
+    }
+
+    public UUID getRecentCheckpointId(UUID instanceId, String checkpointName) {
+        return checkpointDao.getRecentId(instanceId, checkpointName);
     }
 
     public void importCheckpoint(PartialProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
@@ -117,6 +129,29 @@ public class ProcessCheckpointManager {
      */
     public List<ProcessCheckpointEntry> list(PartialProcessKey processKey) {
         return checkpointDao.list(processKey);
+    }
+
+    public void assertProcessAccess(ProcessEntry p) {
+        UserPrincipal principal = UserPrincipal.assertCurrent();
+
+        UUID initiatorId = p.initiatorId();
+        if (principal.getId().equals(initiatorId)) {
+            // process owners should be able to restore the process from a checkpoint
+            return;
+        }
+
+        if (principal.isAdmin()) {
+            return;
+        }
+
+        UUID projectId = p.projectId();
+        if (projectId != null) {
+            projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
+            return;
+        }
+
+        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+                "the necessary permissions to restore the process using a checkpoint: " + p.instanceId());
     }
 
     private String readCheckpointName(Path checkpointDir) throws IOException {

@@ -35,6 +35,7 @@ import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
+import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.Serializable;
@@ -63,6 +65,8 @@ public class ProcessManager {
     private final LogManager logManager;
     private final ConcordFormService formService;
     private final ProjectAccessManager projectAccessManager;
+    private final ProcessCheckpointManager checkpointManager;
+    private final PayloadManager payloadManager;
 
     private final Chain processPipeline;
     private final Chain resumePipeline;
@@ -72,15 +76,24 @@ public class ProcessManager {
             ProcessStatus.ENQUEUED,
             ProcessStatus.PREPARING,
             ProcessStatus.SUSPENDED);
+
     private static final List<ProcessStatus> TERMINATED_PROCESS_STATUSES = Arrays.asList(
             ProcessStatus.CANCELLED,
             ProcessStatus.FAILED,
             ProcessStatus.FINISHED,
             ProcessStatus.TIMED_OUT);
+
     private static final List<ProcessStatus> AGENT_PROCESS_STATUSES = Arrays.asList(
             ProcessStatus.STARTING,
             ProcessStatus.RUNNING,
             ProcessStatus.RESUMING);
+
+    private static final Set<ProcessStatus> RESTORE_ALLOWED_STATUSES = new HashSet<>(Arrays.asList(
+            ProcessStatus.FAILED,
+            ProcessStatus.FINISHED,
+            ProcessStatus.SUSPENDED,
+            ProcessStatus.TIMED_OUT,
+            ProcessStatus.CANCELLED));
 
     @Inject
     public ProcessManager(ProcessQueueDao queueDao,
@@ -89,6 +102,8 @@ public class ProcessManager {
                           LogManager logManager,
                           ConcordFormService formService,
                           ProjectAccessManager projectAccessManager,
+                          ProcessCheckpointManager checkpointManager,
+                          PayloadManager payloadManager,
                           ProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
@@ -99,6 +114,8 @@ public class ProcessManager {
         this.logManager = logManager;
         this.formService = formService;
         this.projectAccessManager = projectAccessManager;
+        this.checkpointManager = checkpointManager;
+        this.payloadManager = payloadManager;
 
         this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
@@ -163,6 +180,38 @@ public class ProcessManager {
         }
     }
 
+    public void restoreFromCheckpoint(ProcessKey processKey, UUID checkpointId) {
+        ProcessEntry entry = queueDao.get(processKey);
+
+        checkpointManager.assertProcessAccess(entry);
+
+        if (checkpointId == null) {
+            throw new ConcordApplicationException("'checkpointId' is mandatory");
+        }
+
+        ProcessStatus s = entry.status();
+        if (!RESTORE_ALLOWED_STATUSES.contains(s)) {
+            throw new ConcordApplicationException("Unable to restore a checkpoint, the process is " + s);
+        }
+
+        String eventName = checkpointManager.restoreCheckpoint(processKey, checkpointId);
+        if (eventName == null) {
+            throw new ConcordApplicationException("Checkpoint " + checkpointId + " not found");
+        }
+
+        Payload payload;
+        try {
+            payload = payloadManager.createResumePayload(processKey, eventName, null);
+        } catch (IOException e) {
+            log.error("restore ['{}', '{}'] -> error creating a payload: {}", processKey, eventName, e);
+            throw new ConcordApplicationException("Error creating a payload", e);
+        }
+
+        queueDao.updateStatus(processKey, ProcessStatus.SUSPENDED, Collections.singletonMap("checkpointId", checkpointId));
+
+        resume(payload);
+    }
+
     public void updateStatus(ProcessKey processKey, String agentId, ProcessStatus status) {
         assertUpdateRights(processKey);
 
@@ -179,6 +228,14 @@ public class ProcessManager {
         logManager.info(processKey, "Process status: {}", status);
 
         log.info("updateStatus [{}, '{}', {}] -> done", processKey, agentId, status);
+    }
+
+    public ProcessEntry assertProcess(UUID instanceId) {
+        ProcessEntry p = queueDao.get(PartialProcessKey.from(instanceId));
+        if (p == null) {
+            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+        }
+        return p;
     }
 
     private boolean isSuspended(ProcessKey processKey) {
@@ -242,7 +299,6 @@ public class ProcessManager {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void wakeUpProcess(ProcessKey processKey, Map<String, Object> data) {
         FormSubmitResult r = formService.submitNext(processKey, data);
         if (r != null && !r.isValid()) {
@@ -312,7 +368,7 @@ public class ProcessManager {
                 "to kill the process: " + e.instanceId());
     }
 
-    public void assertUpdateRights(PartialProcessKey processKey) {
+    private void assertUpdateRights(PartialProcessKey processKey) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.isAdmin() || p.isGlobalWriter()) {
             return;

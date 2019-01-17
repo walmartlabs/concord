@@ -1,0 +1,5 @@
+flows:
+  default:
+    - log: "aaa"
+    - checkpoint: "one"
+    - log: "bbb"

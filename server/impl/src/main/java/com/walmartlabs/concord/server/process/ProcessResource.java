@@ -117,10 +117,9 @@ public class ProcessResource implements Resource {
                            ProcessKeyCache processKeyCache,
                            OrganizationManager orgManager,
                            ProjectDao projectDao) {
+
         this.orgManager = orgManager;
         this.projectDao = projectDao;
-
-        this.objectMapper = new ObjectMapper();
         this.processManager = processManager;
         this.queueDao = queueDao;
         this.logsDao = logsDao;
@@ -132,6 +131,8 @@ public class ProcessResource implements Resource {
         this.encryptedValueManager = encryptedValueManager;
         this.eventDao = eventDao;
         this.processKeyCache = processKeyCache;
+
+        this.objectMapper = new ObjectMapper();
     }
 
     /**

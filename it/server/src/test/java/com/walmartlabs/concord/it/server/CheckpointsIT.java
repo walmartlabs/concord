@@ -85,6 +85,39 @@ public class CheckpointsIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testRestoreCheckpointWithGetByName() throws Exception {
+        byte[] payload = archive(CheckpointsIT.class.getResource("oneCheckpoint").toURI());
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*aaa.*", ab);
+        assertLog(".*bbb.*", ab);
+
+        // ---
+
+        CheckpointV2Api checkpointV2Api = new CheckpointV2Api(getApiClient());
+        checkpointV2Api.processCheckpoint(pir.getInstanceId(), "one", "restore");
+
+        // ---
+
+        waitForCompletion(processApi, spr.getInstanceId());
+
+        ab = getLog(pir.getLogFileName());
+        assertLog(".*aaa.*", ab);
+        assertLog(".*bbb.*", 2, ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCheckpointWithError() throws Exception {
         // prepare the payload
 
@@ -183,6 +216,7 @@ public class CheckpointsIT extends AbstractServerIT {
 
         ResumeProcessResponse resp = checkpointApi.restore(instanceId,
                 new RestoreCheckpointRequest().setId(UUID.fromString(checkpointId)));
+
         assertNotNull(resp);
     }
 
