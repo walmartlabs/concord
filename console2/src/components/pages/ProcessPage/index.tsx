@@ -40,6 +40,8 @@ const pathToTab = (s: string): TabLink => {
         return 'children';
     } else if (s.endsWith('/attachments')) {
         return 'attachments';
+    } else if (s.endsWith('/events')) {
+        return 'events';
     }
 
     return null;
