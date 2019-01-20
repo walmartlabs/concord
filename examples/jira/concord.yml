@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:jira-task:0.50.1"
+  - "mvn://com.walmartlabs.concord.plugins:jira-task:0.78.0"
 
 flows:
   default:
