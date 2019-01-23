@@ -36,7 +36,18 @@ public class VariablesTask implements Task {
     private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
 
     public Object get(@InjectVariable("context") Context ctx, String key, Object defaultValue) {
-        Object v = ctx.getVariable(key);
+        Object v;
+        if (isNestedVariable(key)) {
+            StandardELContext sc = createELContext(ctx);
+            ValueExpression x = expressionFactory.createValueExpression(sc, "${" + key + "}", Object.class);
+            try {
+                v = x.getValue(sc);
+            } catch (PropertyNotFoundException e) {
+                v = null;
+            }
+        } else {
+            v = ctx.getVariable(key);
+        }
         return v != null ? v : defaultValue;
     }
 
@@ -51,7 +62,9 @@ public class VariablesTask implements Task {
     public void set(@InjectVariable("context") Context ctx, Map<String, Object> vars) {
         vars.forEach((k, v) -> {
             if (isNestedVariable(k)) {
-                evalNestedVariable(ctx, k, v);
+                StandardELContext sc = createELContext(ctx);
+                ValueExpression x = expressionFactory.createValueExpression(sc, "${" + k + "}", Object.class);
+                x.setValue(sc, v);
             } else {
                 ctx.setVariable(k, v);
             }
@@ -81,7 +94,7 @@ public class VariablesTask implements Task {
         return str.contains(".");
     }
 
-    private void evalNestedVariable(Context ctx, String expr, Object value) {
+    private StandardELContext createELContext(Context ctx) {
         ELResolver r = new VariablesResolver(ctx);
 
         StandardELContext sc = new StandardELContext(expressionFactory);
@@ -90,9 +103,7 @@ public class VariablesTask implements Task {
 
         VariableMapper vm = sc.getVariableMapper();
         vm.setVariable(InternalConstants.Context.CONTEXT_KEY, expressionFactory.createValueExpression(ctx, Context.class));
-
-        ValueExpression x = expressionFactory.createValueExpression(sc, "${" + expr + "}", Object.class);
-        x.setValue(sc, value);
+        return sc;
     }
 
     private static class VariablesResolver extends ELResolver {

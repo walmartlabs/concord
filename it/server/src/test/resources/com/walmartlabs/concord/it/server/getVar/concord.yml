@@ -1,0 +1,9 @@
+flows:
+  default:
+  - set:
+      cfg:
+        param1: 1
+
+  - log: "param1: ${vars.get('cfg.param1', 100)}"
+  - log: "defaultValue: ${vars.get('cfg.param2', 101)}"
+  - log: "defaultValueFromUnknown: ${vars.get('xxx.yyy', 102)}"

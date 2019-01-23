@@ -4,6 +4,8 @@
 
 ### Added
 
+- vars plugin: `get` method can now return nested variables or
+fallback to a specified value;
 - concord-server: new endpoint `/api/v2/process/{id}`, allows
 customization of the data included in the response;
 - concord-server: new API endpoint `/api/v2/process/{id}/checkpoint`,
