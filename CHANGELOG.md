@@ -15,6 +15,8 @@ list;
 
 ### Changed
 
+- concord-server, project-model: allow expressions in the form's `runAs`
+parameter;
 - concord-server: close websocket channels when the maintenance mode
 is enabled;
 - ansible: fixed an issue that caused the sensitive data masking

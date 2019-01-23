@@ -48,13 +48,6 @@ public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
 
         validate(opts, s.getLocation());
 
-        if (opts != null && opts.get(InternalConstants.Forms.RUN_AS_KEY) != null) {
-            Map<String, Object> runAsParams = (Map<String, Object>) opts.get(InternalConstants.Forms.RUN_AS_KEY);
-            Object ldapObj = runAsParams.get(InternalConstants.Forms.RUN_AS_LDAP_KEY);
-
-            runAsParams.put(InternalConstants.Forms.RUN_AS_LDAP_KEY, getGroupsMap(ldapObj));
-        }
-
         c.addElement(new UserTask(id, new FormExtension(s.getKey(), opts)));
         c.addOutput(id);
         c.addSourceMap(id, toSourceMap(s, "Form: " + s.getKey()));

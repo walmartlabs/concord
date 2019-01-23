@@ -30,6 +30,29 @@ interface Props {
     forms: FormListEntry[];
 }
 
+// this ugly mess handles all our different ways of specifying LDAP groups in `runAs` form parameter
+// see also server/impl/src/main/java/com/walmartlabs/concord/server/process/form/FormUtils.java getRunAsLdapGroups method
+
+const groupToString = (item: { group: string } | string): string => {
+    if (typeof item === 'string') {
+        return item;
+    }
+    return item.group;
+};
+
+const renderStringOrArrayOfStrings = (item: string | string[]): string => {
+    if (typeof item === 'string') {
+        return item;
+    }
+    return item.join(',');
+};
+
+const renderExpectedGroups = (items: string | string[]) => (
+    <p>
+        <b>Expect groups:</b> [{renderStringOrArrayOfStrings(items)}]
+    </p>
+);
+
 const renderRunAs = (v?: FormRunAs) => {
     if (!v) {
         return;
@@ -43,20 +66,12 @@ const renderRunAs = (v?: FormRunAs) => {
         );
     }
 
-    if (v.ldap && v.ldap.group) {
-        if (Array.isArray(v.ldap.group)) {
-            return (
-                <p>
-                    <b>Expect groups:</b> {v.ldap.group.map((item) => '[' + item + ']')}
-                </p>
-            );
-        } else {
-            // For backward compatibility - Previously suspended forms still have `group` as string
-            return (
-                <p>
-                    <b>Expects group:</b> [{v.ldap.group}]
-                </p>
-            );
+    if (v.ldap) {
+        if (Array.isArray(v.ldap)) {
+            return renderExpectedGroups(v.ldap.map(groupToString));
+        } else if (v.ldap.group) {
+            // for backward compatibility - previously suspended forms still have `group` as string
+            return renderExpectedGroups(v.ldap.group);
         }
     }
 

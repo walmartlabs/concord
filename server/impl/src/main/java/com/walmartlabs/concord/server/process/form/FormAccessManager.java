@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.form;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,6 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -70,33 +69,23 @@ public class FormAccessManager {
 
         Map<String, Object> runAsParams = (Map<String, Object>) opts.get(InternalConstants.Forms.RUN_AS_KEY);
 
-        String expectedUser = (String) runAsParams.get(InternalConstants.Forms.RUN_AS_USERNAME_KEY);
+        String expectedUser = FormUtils.getRunAsUser(formName, runAsParams);
         if (expectedUser != null && !expectedUser.equals(p.getUsername())) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                     "the necessary permissions to access the form.");
         }
 
-        Object groups = Optional.ofNullable(runAsParams.get(InternalConstants.Forms.RUN_AS_LDAP_KEY))
-                .map(v -> (Map<String, Object>) v)
-                .map(v -> v.get(InternalConstants.Forms.RUN_AS_GROUP_KEY))
-                .orElse(null);
-
-        if (groups != null) {
+        Set<String> groups = FormUtils.getRunAsLdapGroups(formName, runAsParams);
+        if (!groups.isEmpty()) {
             Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
                     .map(LdapPrincipal::getGroups)
                     .orElse(null);
 
-            boolean isGroupMatched = false;
-            // For backward compatibility - Previously suspended forms on prod still have group as String type
-            if (groups instanceof String) {
-                isGroupMatched = matchesLdapGroup((String) groups, userLdapGroups);
-            } else if (groups instanceof List) {
-                isGroupMatched = ((List<String>) groups).stream()
-                        .anyMatch(group -> matchesLdapGroup(group, userLdapGroups));
-            }
+            boolean isGroupMatched = groups.stream()
+                    .anyMatch(group -> matchesLdapGroup(group, userLdapGroups));
 
             if (!isGroupMatched) {
-                throw new UnauthorizedException("The current user (" + p.getUsername() + "[" + userLdapGroups + "]) doesn't have " +
+                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                         "the necessary permissions to resume process. Expected LDAP group(s) '" + groups + "'");
             }
         }
