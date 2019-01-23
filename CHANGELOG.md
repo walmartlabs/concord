@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: return the build's commit id in the server version
+response;
 - vars plugin: `get` method can now return nested variables or
 fallback to a specified value;
 - concord-server: new endpoint `/api/v2/process/{id}`, allows

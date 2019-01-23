@@ -31,6 +31,9 @@ public class Main {
     public static void main(String[] args) {
         SLF4JBridgeHandler.install();
 
+        Version v = Version.getCurrent();
+        log.info("Starting Concord Server ({}, {}, {})...", v.getVersion(), v.getCommitId(), v.getEnv());
+
         long t1 = System.currentTimeMillis();
         new ConcordServer().start();
         long t2 = System.currentTimeMillis();

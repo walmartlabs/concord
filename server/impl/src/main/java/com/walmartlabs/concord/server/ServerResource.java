@@ -41,9 +41,6 @@ import java.util.Properties;
 @Path("/api/v1/server")
 public class ServerResource implements Resource {
 
-    private final String version;
-    private final String env;
-
     private final TaskScheduler scheduler;
     private final WebSocketChannelManager webSocketChannelManager;
 
@@ -51,17 +48,6 @@ public class ServerResource implements Resource {
     public ServerResource(TaskScheduler scheduler, WebSocketChannelManager webSocketChannelManager) {
         this.scheduler = scheduler;
         this.webSocketChannelManager = webSocketChannelManager;
-
-        Properties props = new Properties();
-
-        try (InputStream in = ServerResource.class.getResourceAsStream("version.properties")) {
-            props.load(in);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        this.version = props.getProperty("version");
-        this.env = Utils.getEnv("CONCORD_ENV", "n/a");
     }
 
     @GET
@@ -75,7 +61,8 @@ public class ServerResource implements Resource {
     @Path("version")
     @Produces(MediaType.APPLICATION_JSON)
     public VersionResponse version() {
-        return new VersionResponse(version, env);
+        Version v = Version.getCurrent();
+        return new VersionResponse(v.getVersion(), v.getCommitId(), v.getEnv());
     }
 
     @POST

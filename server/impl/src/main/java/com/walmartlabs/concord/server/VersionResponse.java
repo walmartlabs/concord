@@ -29,13 +29,16 @@ public class VersionResponse implements Serializable {
 
     private final boolean ok = true;
     private final String version;
+    private final String commitId;
     private final String env;
 
     @JsonCreator
     public VersionResponse(@JsonProperty("version") String version,
+                           @JsonProperty("commitId") String commitId,
                            @JsonProperty("env") String env) {
 
         this.version = version;
+        this.commitId = commitId;
         this.env = env;
     }
 
@@ -47,6 +50,10 @@ public class VersionResponse implements Serializable {
         return version;
     }
 
+    public String getCommitId() {
+        return commitId;
+    }
+
     public String getEnv() {
         return env;
     }
@@ -56,6 +63,7 @@ public class VersionResponse implements Serializable {
         return "VersionResponse{" +
                 "ok=" + ok +
                 ", version='" + version + '\'' +
+                ", commitId='" + commitId + '\'' +
                 ", env='" + env + '\'' +
                 '}';
     }

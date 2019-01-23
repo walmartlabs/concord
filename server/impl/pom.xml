@@ -455,6 +455,23 @@
                     </apiSources>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>get-commit-id</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <verbose>true</verbose>
+                    <dotGitDirectory>${project.basedir}/../../.git</dotGitDirectory>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
