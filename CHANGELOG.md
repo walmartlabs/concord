@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: new endpoint `/api/v2/process/{id}`, allows
+customization of the data included in the response;
 - concord-server: new API endpoint `/api/v2/process/{id}/checkpoint`,
 allows restoring checkpoints with a `GET` request;
 - concord-console: bring back the status column to the child process

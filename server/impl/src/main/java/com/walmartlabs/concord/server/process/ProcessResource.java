@@ -530,6 +530,7 @@ public class ProcessResource implements Resource {
      *
      * @param instanceId
      * @return
+     * @deprecated use {@link ProcessResourceV2#get(UUID, Set)}
      */
     @GET
     @ApiOperation("Get status of a process")
@@ -537,6 +538,7 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     @SuppressWarnings("unchecked")
+    @Deprecated
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
         ProcessEntry e = queueDao.get(processKey);

@@ -183,7 +183,7 @@ public class ServerClient {
 
             if (--retries < 0) {
                 throw new IllegalStateException("Child process not found: " +
-                        "kind=" + kind + "status=" + status + "+" + Arrays.toString(more) + ", " +
+                        "kind=" + kind + ", status=" + status + "+" + Arrays.toString(more) + ", " +
                         "got " + l);
             }
 

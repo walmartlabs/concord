@@ -26,9 +26,11 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.sdk.EventType;
+import com.walmartlabs.concord.server.jooq.Tables;
+import com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints;
+import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
-import com.walmartlabs.concord.server.jooq.tables.records.VProcessQueueRecord;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyRules;
@@ -51,9 +53,13 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.Tables.USERS;
+import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
-import static com.walmartlabs.concord.server.jooq.tables.VProcessQueue.V_PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -65,6 +71,8 @@ public class ProcessQueueDao extends AbstractDao {
             ProcessStatus.STARTING,
             ProcessStatus.RUNNING,
             ProcessStatus.RESUMING);
+
+    private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
 
     private final PolicyDao policyDao;
     private final EventDao eventDao;
@@ -93,8 +101,8 @@ public class ProcessQueueDao extends AbstractDao {
         tx(tx -> insertInitial(tx, processKey, kind, parentInstanceId, projectId, initiatorId, meta));
     }
 
-    public void insertInitial(DSLContext tx, ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, UUID initiatorId, Map<String, Object> meta) {
+    private void insertInitial(DSLContext tx, ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
+                               UUID projectId, UUID initiatorId, Map<String, Object> meta) {
 
         tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
@@ -222,11 +230,11 @@ public class ProcessQueueDao extends AbstractDao {
         tx(tx -> updateStatus(tx, processKey, status, statusPayload));
     }
 
-    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
+    private void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         updateStatus(tx, processKey, status, Collections.emptyMap());
     }
 
-    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
+    private void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
         UUID instanceId = processKey.getInstanceId();
 
         tx.update(PROCESS_QUEUE)
@@ -351,12 +359,11 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public ProcessEntry get(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.selectFrom(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
-                    .fetchOne(this::toEntry);
-        }
+        return get(processKey, DEFAULT_INCLUDES);
+    }
+
+    public ProcessEntry get(PartialProcessKey processKey, Set<ProcessDataInclude> includes) {
+        return txResult(tx -> get(tx, processKey, includes));
     }
 
     public ProcessStatus getStatus(UUID instanceId) {
@@ -378,15 +385,10 @@ public class ProcessQueueDao extends AbstractDao {
                     .map(PartialProcessKey::getInstanceId)
                     .collect(Collectors.toList());
 
-            List<VProcessQueueRecord> r = tx.selectFrom(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.INSTANCE_ID.in(instanceIds))
-                    .fetch();
+            SelectQuery<Record> query = buildSelect(tx, DEFAULT_INCLUDES);
 
-            if (r == null) {
-                return null;
-            }
-
-            return toEntryList(r);
+            query.addConditions(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
+            return query.fetch(this::toEntry);
         }
     }
 
@@ -437,57 +439,62 @@ public class ProcessQueueDao extends AbstractDao {
 
     public List<ProcessEntry> list(ProcessFilter filter, int limit, int offset) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectWhereStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE);
+            SelectQuery<Record> query = buildSelect(tx, DEFAULT_INCLUDES);
 
-            if (filter.orgIds() != null && !filter.orgIds().isEmpty()) {
+            Set<UUID> orgIds = filter.orgIds();
+            if (orgIds != null && !orgIds.isEmpty()) {
                 SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
                         .from(PROJECTS)
-                        .where(PROJECTS.ORG_ID.in(filter.orgIds()));
+                        .where(PROJECTS.ORG_ID.in(orgIds));
 
                 if (filter.includeWithoutProjects()) {
-                    s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds)
-                            .or(V_PROCESS_QUEUE.PROJECT_ID.isNull()));
+                    query.addConditions(PROCESS_QUEUE.PROJECT_ID.in(projectIds)
+                            .or(PROCESS_QUEUE.PROJECT_ID.isNull()));
                 } else {
-                    s.where(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds));
+                    query.addConditions(PROCESS_QUEUE.PROJECT_ID.in(projectIds));
                 }
             }
 
             if (filter.projectId() != null) {
-                s.where(V_PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()));
+                query.addConditions(PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()));
             }
 
             if (filter.afterCreatedAt() != null) {
-                s.where(V_PROCESS_QUEUE.CREATED_AT.greaterThan(filter.afterCreatedAt()));
+                query.addConditions(PROCESS_QUEUE.CREATED_AT.greaterThan(filter.afterCreatedAt()));
             }
 
             if (filter.beforeCreatedAt() != null) {
-                s.where(V_PROCESS_QUEUE.CREATED_AT.lessThan(filter.beforeCreatedAt()));
+                query.addConditions(PROCESS_QUEUE.CREATED_AT.lessThan(filter.beforeCreatedAt()));
             }
 
             if (filter.initiator() != null) {
-                s.where(V_PROCESS_QUEUE.INITIATOR.startsWith(filter.initiator()));
+                query.addConditions(USERS.USERNAME.startsWith(filter.initiator()));
             }
 
-            if (filter.status() != null) {
-                s.where(V_PROCESS_QUEUE.CURRENT_STATUS.eq(filter.status().name()));
+            ProcessStatus status = filter.status();
+            if (status != null) {
+                query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(status.name()));
             }
 
             if (filter.parentId() != null) {
-                s.where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.parentId()));
+                query.addConditions(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.parentId()));
             }
 
-            filterByMetaFilters(s, filter.metaFilters());
+            filterByMetaFilters(query, filter.metaFilters());
 
-            filterByTags(s, filter.tags());
+            filterByTags(query, filter.tags());
 
             boolean findAdjacentToDateRows = filter.beforeCreatedAt() == null && filter.beforeCreatedAt() != null;
             if (findAdjacentToDateRows) {
-                s.orderBy(V_PROCESS_QUEUE.CREATED_AT.asc());
+                query.addOrderBy(PROCESS_QUEUE.CREATED_AT.asc());
             } else {
-                s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc());
+                query.addOrderBy(PROCESS_QUEUE.CREATED_AT.desc());
             }
 
-            List<ProcessEntry> processEntries = s.limit(limit).offset(offset).fetch(this::toEntry);
+            query.addLimit(limit);
+            query.addOffset(offset);
+
+            List<ProcessEntry> processEntries = query.fetch(this::toEntry);
 
             if (findAdjacentToDateRows) {
                 Collections.reverse(processEntries);
@@ -499,13 +506,13 @@ public class ProcessQueueDao extends AbstractDao {
 
     public List<ProcessEntry> list(UUID parentInstanceId, Set<String> tags) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<VProcessQueueRecord> s = tx.selectFrom(V_PROCESS_QUEUE)
-                    .where(V_PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId));
+            SelectQuery<Record> query = buildSelect(tx, DEFAULT_INCLUDES);
+            query.addConditions(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId));
 
-            filterByTags(s, tags);
+            filterByTags(query, tags);
 
-            return s.orderBy(V_PROCESS_QUEUE.CREATED_AT.desc())
-                    .fetch(this::toEntry);
+            query.addOrderBy(PROCESS_QUEUE.CREATED_AT.desc());
+            return query.fetch(this::toEntry);
         }
     }
 
@@ -517,13 +524,13 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    private void filterByMetaFilters(SelectWhereStep<VProcessQueueRecord> q, Map<String, String> filters) {
+    private void filterByMetaFilters(SelectQuery<Record> query, Map<String, String> filters) {
         if (filters == null || filters.isEmpty()) {
             return;
         }
 
         for (Map.Entry<String, String> e : filters.entrySet()) {
-            q.where(jsonText(V_PROCESS_QUEUE.META, e.getKey()).contains(e.getValue()));
+            query.addConditions(jsonText(PROCESS_QUEUE.META, e.getKey()).contains(e.getValue()));
         }
     }
 
@@ -531,22 +538,13 @@ public class ProcessQueueDao extends AbstractDao {
         return field("{0}::jsonb->>{1}", Object.class, field, inline(name)).cast(String.class);
     }
 
-    private void filterByTags(SelectWhereStep<VProcessQueueRecord> q, Set<String> tags) {
+    private void filterByTags(SelectQuery<Record> query, Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return;
         }
 
         String[] as = tags.toArray(new String[0]);
-        q.where(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
-    }
-
-    private void filterByTags(SelectConditionStep<VProcessQueueRecord> q, Set<String> tags) {
-        if (tags == null || tags.isEmpty()) {
-            return;
-        }
-
-        String[] as = tags.toArray(new String[0]);
-        q.and(PgUtils.contains(V_PROCESS_QUEUE.PROCESS_TAGS, as));
+        query.addConditions(PgUtils.contains(PROCESS_QUEUE.PROCESS_TAGS, as));
     }
 
     public boolean exists(PartialProcessKey processKey) {
@@ -644,7 +642,7 @@ public class ProcessQueueDao extends AbstractDao {
                         q.REPO_URL,
                         q.COMMIT_ID,
                         q.REPO_ID)
-                .from(q);
+                        .from(q);
 
         s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
                 .and(or(q.START_AT.isNull(),
@@ -689,21 +687,100 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> deserialize(String o) {
+    private Map<String, Object> deserialize(Object o) {
         if (o == null) {
             return null;
         }
 
         try {
-            return objectMapper.readValue(o, Map.class);
+            return objectMapper.readValue(String.valueOf(o), Map.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private ProcessEntry toEntry(VProcessQueueRecord r) {
+    private SelectQuery<Record> buildSelect(DSLContext tx, Set<ProcessDataInclude> includes) {
+        SelectQuery<Record> query = tx.selectQuery();
+        query.addSelect(PROCESS_QUEUE.fields());
+        query.addFrom(PROCESS_QUEUE);
+
+        // users
+        query.addSelect(USERS.USERNAME);
+        query.addJoin(USERS, JoinType.LEFT_OUTER_JOIN, USERS.USER_ID.eq(PROCESS_QUEUE.INITIATOR_ID));
+
+        // repositories
+        query.addSelect(REPOSITORIES.REPO_NAME);
+        query.addJoin(REPOSITORIES, JoinType.LEFT_OUTER_JOIN, REPOSITORIES.REPO_ID.eq(PROCESS_QUEUE.REPO_ID));
+
+        // organizations
+        Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
+                .from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(Tables.PROJECTS.ORG_ID)).asField(ORGANIZATIONS.ORG_NAME.getName());
+        query.addSelect(orgNameField);
+
+        // projects
+        query.addSelect(Tables.PROJECTS.PROJECT_NAME, Tables.PROJECTS.ORG_ID);
+        query.addJoin(Tables.PROJECTS, JoinType.LEFT_OUTER_JOIN, Tables.PROJECTS.PROJECT_ID.eq(PROCESS_QUEUE.PROJECT_ID));
+
+        if (includes.contains(ProcessDataInclude.CHILDREN_IDS)) {
+            ProcessQueue pq = PROCESS_QUEUE.as("pq");
+            SelectConditionStep<Record1<UUID>> childIds = DSL.select(pq.INSTANCE_ID)
+                    .from(pq)
+                    .where(pq.PARENT_INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID));
+
+            Field<UUID[]> childIdsField = DSL.field("array({0})", UUID[].class, childIds).as("children_ids");
+
+            query.addSelect(childIdsField);
+        }
+
+        if (includes.contains(ProcessDataInclude.CHECKPOINTS)) {
+            ProcessCheckpoints pc = PROCESS_CHECKPOINTS.as("pc");
+            Field<Object> checkpoints = tx.select(
+                    function("array_to_json", Object.class,
+                            function("array_agg", Object.class,
+                                    function("jsonb_strip_nulls", Object.class,
+                                            function("jsonb_build_object", Object.class,
+                                                    inline("id"), pc.CHECKPOINT_ID,
+                                                    inline("name"), pc.CHECKPOINT_NAME,
+                                                    inline("createdAt"), pc.CHECKPOINT_DATE)))))
+                    .from(pc)
+                    .where(pc.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)).asField("checkpoints");
+
+            query.addSelect(checkpoints);
+        }
+
+        if (includes.contains(ProcessDataInclude.HISTORY)) {
+            ProcessEvents pe = PROCESS_EVENTS.as("pe");
+            Field<Object> history = tx.select(
+                    function("array_to_json", Object.class,
+                            function("array_agg", Object.class,
+                                    function("jsonb_strip_nulls", Object.class,
+                                            function("jsonb_build_object", Object.class,
+                                                    inline("changeDate"), pe.EVENT_DATE,
+                                                    inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
+                                                    inline("checkpointId"), field("{0}->'checkpointId'", Object.class, pe.EVENT_DATA))))))
+                    .from(pe)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()).and(pe.EVENT_DATE.greaterOrEqual(PROCESS_QUEUE.CREATED_AT))))
+                    .asField("status_history");
+            query.addSelect(history);
+        }
+
+        return query;
+    }
+
+    private ProcessEntry get(DSLContext tx, PartialProcessKey key, Set<ProcessDataInclude> includes) {
+        SelectQuery<Record> query = buildSelect(tx, includes);
+        query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
+        return query.fetchOne(this::toEntry);
+    }
+
+    private ProcessEntry toEntry(Record r) {
+        if (r == null) {
+            return null;
+        }
+
         ProcessKind kind;
-        String s = r.getProcessKind();
+        String s = r.get(PROCESS_QUEUE.PROCESS_KIND);
         if (s != null) {
             kind = ProcessKind.valueOf(s);
         } else {
@@ -711,58 +788,57 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         Set<String> tags = Collections.emptySet();
-        String[] as = r.getProcessTags();
+        String[] as = r.get(PROCESS_QUEUE.PROCESS_TAGS);
         if (as != null && as.length > 0) {
             tags = new HashSet<>(as.length);
             Collections.addAll(tags, as);
         }
 
         return ImmutableProcessEntry.builder()
-                .instanceId(r.getInstanceId())
+                .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
                 .kind(kind)
-                .parentInstanceId(r.getParentInstanceId())
-                .orgId(r.getOrgId())
-                .orgName(r.getOrgName())
-                .projectId(r.getProjectId())
-                .projectName(r.getProjectName())
-                .repoId(r.getRepoId())
-                .repoName(r.getRepoName())
-                .repoUrl(r.getRepoUrl())
-                .repoPath(r.getRepoPath())
-                .commitId(r.getCommitId())
-                .commitMsg(r.getCommitMsg())
-                .initiator(r.getInitiator())
-                .initiatorId(r.getInitiatorId())
-                .lastUpdatedAt(r.getLastUpdatedAt())
-                .createdAt(r.getCreatedAt())
-                .status(ProcessStatus.valueOf(r.getCurrentStatus()))
-                .lastAgentId(r.getLastAgentId())
+                .parentInstanceId(r.get(PROCESS_QUEUE.PARENT_INSTANCE_ID))
+                .orgId(r.get(Tables.PROJECTS.ORG_ID))
+                .orgName(r.get(ORGANIZATIONS.ORG_NAME))
+                .projectId(r.get(PROCESS_QUEUE.PROJECT_ID))
+                .projectName(r.get(Tables.PROJECTS.PROJECT_NAME))
+                .repoId(r.get(PROCESS_QUEUE.REPO_ID))
+                .repoName(r.get(REPOSITORIES.REPO_NAME))
+                .repoUrl(r.get(PROCESS_QUEUE.REPO_URL))
+                .repoPath(r.get(PROCESS_QUEUE.REPO_PATH))
+                .commitId(r.get(PROCESS_QUEUE.COMMIT_ID))
+                .commitMsg(r.get(PROCESS_QUEUE.COMMIT_MSG))
+                .initiator(r.get(USERS.USERNAME))
+                .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
+                .lastUpdatedAt(r.get(PROCESS_QUEUE.LAST_UPDATED_AT))
+                .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
+                .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
+                .lastAgentId(r.get(PROCESS_QUEUE.LAST_AGENT_ID))
                 .tags(tags)
-                .childrenIds(toSet(r.getChildrenIds()))
-                .meta(deserialize(r.getMeta()))
-                .handlers(toSet(r.getHandlers()))
-                .logFileName(r.getInstanceId() + ".log")
+                .childrenIds(toSet(getOrNull(r, "children_ids")))
+                .meta(deserialize(r.get(PROCESS_QUEUE.META)))
+                .handlers(toSet(r.get(PROCESS_QUEUE.HANDLERS)))
+                .logFileName(r.get(PROCESS_QUEUE.INSTANCE_ID) + ".log")
+                .checkpoints(getOrNull(r, "checkpoints"))
+                .history(getOrNull(r, "status_history"))
                 .build();
     }
 
-    private static Set<UUID> toSet(UUID[] arr) {
-        if (arr == null) {
+    @SuppressWarnings("unchecked")
+    private <E> E getOrNull(Record r, String fieldName) {
+        Field<?> field = r.field(fieldName);
+        if (field == null) {
             return null;
         }
-        return new HashSet<>(Arrays.asList(arr));
+
+        return (E) r.get(field);
     }
 
-    private static Set<String> toSet(String[] arr) {
+    private static <E> Set<E> toSet(E[] arr) {
         if (arr == null) {
-            return null;
+            return Collections.emptySet();
         }
         return new HashSet<>(Arrays.asList(arr));
-    }
-
-    private List<ProcessEntry> toEntryList(List<VProcessQueueRecord> records) {
-        return records.stream()
-                .map(this::toEntry)
-                .collect(Collectors.toList());
     }
 
     private static String[] toArray(Set<String> s) {
@@ -827,6 +903,7 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public static class ProcessItem {
+
         private final ProcessKey key;
         private final UUID orgId;
         private final UUID repoId;

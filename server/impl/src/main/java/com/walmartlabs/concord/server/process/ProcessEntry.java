@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
@@ -109,4 +110,12 @@ public interface ProcessEntry extends Serializable {
 
     @Nullable
     Set<String> handlers();
+
+    @Nullable
+    @JsonRawValue
+    Object checkpoints();
+
+    @Nullable
+    @JsonRawValue
+    Object history();
 }
