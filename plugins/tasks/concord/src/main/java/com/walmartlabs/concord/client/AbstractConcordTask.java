@@ -9,9 +9,9 @@ package com.walmartlabs.concord.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -144,7 +144,7 @@ public abstract class AbstractConcordTask implements Task {
         return createCfg(ctx, (String[]) null);
     }
 
-    protected Map<String, Object> createCfg(Context ctx, String ... keys) {
+    protected Map<String, Object> createCfg(Context ctx, String... keys) {
         Map<String, Object> m = new HashMap<>();
 
         String sessionToken = apiCfg.getSessionToken(ctx);

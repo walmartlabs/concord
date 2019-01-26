@@ -37,10 +37,13 @@ public class SecretsTaskIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
+        String secretName = "secret_" + randomString();
+
         byte[] payload = archive(SecretsTaskIT.class.getResource("secretsTask").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
+        input.put("arguments.secretName", secretName);
 
         StartProcessResponse spr = start(input);
 

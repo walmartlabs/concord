@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Target({FIELD, PARAMETER, ANNOTATION_TYPE})
+@Target({FIELD, METHOD, PARAMETER, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 @Pattern(regexp = ConcordKey.PATTERN)
 @Constraint(validatedBy = {})

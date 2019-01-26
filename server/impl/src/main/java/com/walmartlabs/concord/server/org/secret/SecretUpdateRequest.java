@@ -20,55 +20,40 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import io.swagger.annotations.ApiModelProperty;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.UUID;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class SecretUpdateRequest implements Serializable {
+@Value.Immutable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableSecretUpdateRequest.class)
+@JsonDeserialize(as = ImmutableSecretUpdateRequest.class)
+public interface SecretUpdateRequest extends Serializable {
 
-    private final UUID id;
+    @Nullable
+    UUID id();
 
+    @Nullable
     @ConcordKey
-    private final String name;
+    String name();
 
-    private final SecretVisibility visibility;
+    @Nullable
+    SecretVisibility visibility();
 
-    public SecretUpdateRequest(UUID id, SecretVisibility visibility) {
-        this(id, null, visibility);
-    }
+    @Nullable
+    String storePassword();
 
-    @JsonCreator
-    public SecretUpdateRequest(@JsonProperty("id") UUID id,
-                               @JsonProperty("name") String name,
-                               @JsonProperty("visibility") SecretVisibility visibility) {
-        this.id = id;
-        this.name = name;
-        this.visibility = visibility;
-    }
+    @Nullable
+    String newStorePassword();
 
-    public UUID getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public SecretVisibility getVisibility() {
-        return visibility;
-    }
-
-    @Override
-    public String toString() {
-        return "SecretUpdateRequest{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", visibility=" + visibility +
-                '}';
-    }
+    @Nullable
+    @ApiModelProperty(dataType = "string")
+    byte[] data();
 }

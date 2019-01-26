@@ -1,131 +1,126 @@
-configuration:
-  dependencies:
-    - "mvn://org.codehaus.groovy:groovy-all:2.4.12"
-    - "mvn://com.walmartlabs.concord.plugins.basic:concord-tasks:1.2.0-SNAPSHOT"
-
-  arguments:
-
 flows:
   default:
     - call: delete-secret
-    - call: validate-secret-missing
+    - call: validate-secret-NOT_FOUND
     - call: create-secret
     - call: validate-secret
     - call: get-secret
-    - call: validate-secret-invalid
-    - call: replace-secret-password
-    - call: replace-secret-data
+    - call: validate-secret-INVALID_REQUEST
+    - call: update-secret-password
+    - call: update-secret-data
     - call: get-secret-again
     - call: delete-secret
-    - call: replace-secret-create
+    - call: update-secret-create
     - call: delete-secret2
 
   create-secret:
     - log: "Create secret"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        action: CREATE
-        name: anders-test-secret
+        action: create
+        name: ${secretName}
         data: anders-test-value
         storePassword: Dingo1234
     - log: "Create Result: ${result}"
 
   get-secret:
     - log: "Get secret"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        name: anders-test-secret
+        name: ${secretName}
         storePassword: Dingo1234
     - log: "Get Result: ${result}"
-    - if: ${result != "anders-test-value"}
+    - if: ${result.data != "anders-test-value"}
       then:
         - throw: "Expected anders-test-value, got ${result}"
 
   validate-secret:
     - log: "Validate secret"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        action: VALIDATE
-        name: anders-test-secret
+        action: getAsString
+        name: ${secretName}
         storePassword: Dingo1234
     - log: "Validate Result: ${result}"
-    - if: ${result != "OK"}
+    - if: ${result.status != "OK"}
       then:
         - throw: "Expected 'OK', got ${result}"
 
-  validate-secret-missing:
-    - log: "Validate secret MISSING"
-    - task: wipSecrets
+  validate-secret-NOT_FOUND:
+    - log: "Validate secret NOT_FOUND"
+    - task: concordSecrets
       in:
-        action: VALIDATE
-        name: anders-MISSING-secret
+        action: getAsString
+        name: anders-NOT_FOUND-secret
+        ignoreErrors: true
     - log: "Validate Result: ${result}"
-    - if: ${result != "MISSING"}
+    - if: ${result.status != "NOT_FOUND"}
       then:
-        - throw: "Expected 'MISSING', got ${result}"
+        - throw: "Expected 'NOT_FOUND', got ${result}"
 
-  validate-secret-invalid:
-    - log: "Validate secret INVALID"
-    - task: wipSecrets
+  validate-secret-INVALID_REQUEST:
+    - log: "Validate secret INVALID_REQUEST"
+    - task: concordSecrets
       in:
-        action: VALIDATE
-        name: anders-test-secret
+        action: getAsString
+        name: ${secretName}
         storePassword: wrong
+        ignoreErrors: true
     - log: "Validate Result: ${result}"
-    - if: ${result != "INVALID"}
+    - if: ${result.status != "INVALID_REQUEST"}
       then:
-        - throw: "Expected 'INVALID', got ${result}"
+        - throw: "Expected 'INVALID_REQUEST', got ${result}"
 
-  replace-secret-password:
+  update-secret-password:
     - log: "Update secret password"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        action: REPLACE
-        name: anders-test-secret
+        action: update
+        name: ${secretName}
         storePassword: Dingo1234
         newStorePassword: Tapir1234
 
-  replace-secret-data:
+  update-secret-data:
     - log: "Update secret data"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        action: REPLACE
-        name: anders-test-secret
+        action: update
+        name: ${secretName}
         storePassword: Tapir1234
         data: anders-test-elephant
 
   get-secret-again:
     - log: "Get secret (with new password and data)"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        name: anders-test-secret
+        name: ${secretName}
         storePassword: Tapir1234
     - log: "Get Result: ${result}"
-    - if: ${result != "anders-test-elephant"}
+    - if: ${result.data != "anders-test-elephant"}
       then:
         - throw: "Expected anders-test-elephant, got ${result}"
 
   delete-secret:
     - log: "Delete secret"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        action: DELETE
-        name: anders-test-secret
+        action: delete
+        name: ${secretName}
+        ignoreErrors: true
 
-  replace-secret-create:
+  update-secret-create:
     - log: "Update secret create"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        action: REPLACE
-        name: anders-test-secret2
+        action: update
+        name: ${secretName}2
         storePassword: Tapir1234
         data: anders-test-elephant
+        createIfMissing: true
 
   delete-secret2:
     - log: "Delete secret2"
-    - task: wipSecrets
+    - task: concordSecrets
       in:
-        action: DELETE
-        name: anders-test-secret2
-        skipValidation: true
-        storePassword: wrong
+        action: delete
+        name: ${secretName}2

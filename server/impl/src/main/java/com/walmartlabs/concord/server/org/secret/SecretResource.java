@@ -131,6 +131,7 @@ public class SecretResource implements Resource {
         }
     }
 
+    // TODO replace (or add) with a multipart/form-data version, similar to #create
     @POST
     @ApiOperation("Updates an existing secret") // weird URLs as a workaround for swagger-maven-plugin issue
     @Path("/{orgName}/secret/{secretName}")
@@ -141,16 +142,7 @@ public class SecretResource implements Resource {
                                          @ApiParam @PathParam("secretName") @ConcordKey String secretName,
                                          @ApiParam @Valid SecretUpdateRequest req) {
 
-        if (req.getId() == null) {
-            throw new ValidationErrorsException("Secret ID is required");
-        }
-
-        if (req.getName() == null && req.getVisibility() == null) {
-            throw new ValidationErrorsException("Nothing to update");
-        }
-
-        secretManager.update(req.getId(), req.getName(), req.getVisibility());
-
+        secretManager.update(orgName, secretName, req);
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 

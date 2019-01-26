@@ -142,7 +142,7 @@ public class SecretDao extends AbstractDao {
         tx(tx -> updateData(tx, id, data));
     }
 
-    public void updateData(DSLContext tx, UUID id, byte[] data) {
+    private void updateData(DSLContext tx, UUID id, byte[] data) {
         int i = tx.update(SECRETS)
                 .set(SECRETS.SECRET_DATA, data)
                 .where(SECRETS.SECRET_ID.eq(id))
@@ -154,8 +154,8 @@ public class SecretDao extends AbstractDao {
     }
 
     @SuppressWarnings("unchecked")
-    public void update(UUID id, String newName, SecretVisibility visibility) {
-        if (newName == null && visibility == null) {
+    public void update(UUID id, String newName, byte[] data, SecretVisibility visibility) {
+        if (newName == null && data == null && visibility == null) {
             throw new IllegalArgumentException("Nothing to update");
         }
 
@@ -168,6 +168,10 @@ public class SecretDao extends AbstractDao {
 
             if (visibility != null) {
                 u.set(SECRETS.VISIBILITY, visibility.toString());
+            }
+
+            if (data != null) {
+                u.set(SECRETS.SECRET_DATA, data);
             }
 
             int i = ((UpdateSetMoreStep<SecretsRecord>) u)
@@ -188,6 +192,7 @@ public class SecretDao extends AbstractDao {
                 .set(SECRETS.SECRET_TYPE, type.toString())
                 .set(SECRETS.ENCRYPTED_BY, encryptedByType.toString())
                 .set(SECRETS.SECRET_DATA, data)
+                .set(SECRETS.VISIBILITY, visibility.toString())
                 .where(SECRETS.SECRET_ID.eq(id))
                 .execute();
 
@@ -268,7 +273,7 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public boolean hasAccessLevel(DSLContext tx, UUID secretId, UUID userId, ResourceAccessLevel... levels) {
+    private boolean hasAccessLevel(DSLContext tx, UUID secretId, UUID userId, ResourceAccessLevel... levels) {
         SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
                 .from(USER_TEAMS)
                 .where(USER_TEAMS.USER_ID.eq(userId));

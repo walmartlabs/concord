@@ -9,9 +9,9 @@ package com.walmartlabs.concord.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -87,6 +87,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String TAGS_KEY = "tags";
 
     private static final Set<String> FAILED_STATUSES;
+
     static {
         FAILED_STATUSES = new HashSet<>();
         FAILED_STATUSES.add(ProcessEntry.StatusEnum.FAILED.toString());
@@ -311,7 +312,7 @@ public class ConcordTask extends AbstractConcordTask {
                     continue;
                 }
 
-                errors.append("Child process ").append(id).append(" " ).append(status).append(" ").append(errorMessage);
+                errors.append("Child process ").append(id).append(" ").append(status).append(" ").append(errorMessage);
                 errors.append("\n");
                 hasErrors = true;
             }

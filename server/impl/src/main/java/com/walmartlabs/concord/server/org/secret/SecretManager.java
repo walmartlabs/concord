@@ -26,14 +26,17 @@ import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
@@ -53,9 +56,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
@@ -157,7 +158,7 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create();
-        UUID id = store(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
+        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
@@ -174,7 +175,7 @@ public class SecretManager {
         KeyPair k = KeyPairUtils.create(publicKey, privateKey);
         validate(k);
 
-        UUID id = store(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
+        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
@@ -188,7 +189,7 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         UsernamePassword p = new UsernamePassword(username, password);
-        UUID id = store(name, orgId, projectId, p, storePassword, visibility, secretStoreType);
+        UUID id = create(name, orgId, projectId, p, storePassword, visibility, secretStoreType);
         return new DecryptedUsernamePassword(id);
     }
 
@@ -207,7 +208,7 @@ public class SecretManager {
         if (d.getData().length > maxSecretDataSize) {
             throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");
         }
-        UUID id = store(name, orgId, projectId, d, storePassword, visibility, storeType);
+        UUID id = create(name, orgId, projectId, d, storePassword, visibility, storeType);
         return new DecryptedBinaryData(id);
     }
 
@@ -226,11 +227,69 @@ public class SecretManager {
     }
 
     /**
-     * Updates name and/or visibility of an existing secret.
+     * Updates name and/or visibility and/or data of an existing secret.
      */
-    public void update(UUID secretId, String newName, SecretVisibility visibility) {
-        SecretEntry e = assertAccess(null, secretId, newName, ResourceAccessLevel.WRITER, true);
-        secretDao.update(e.getId(), newName, visibility);
+    public void update(String orgName, String secretName, SecretUpdateRequest req) {
+        SecretEntry e;
+        if (req.id() == null) {
+            OrganizationEntry org = orgManager.assertAccess(null, orgName, false);
+            e = assertAccess(org.getId(), null, secretName, ResourceAccessLevel.WRITER, true);
+        } else {
+            e = assertAccess(null, req.id(), null, ResourceAccessLevel.WRITER, true);
+        }
+
+        String currentPassword = req.storePassword();
+        String newPassword = req.newStorePassword();
+
+        if (e.getEncryptedBy() == SecretEncryptedByType.SERVER_KEY && (currentPassword != null || newPassword != null)) {
+            throw new ConcordApplicationException("The secret is encrypted with the server's key, can't use or set 'storePassword'", Status.BAD_REQUEST);
+        }
+
+        Map<String, Object> updated = new HashMap<>();
+
+        byte[] newData = req.data();
+        if (newData != null) {
+            // updating the data and/or the store password
+            if (e.getEncryptedBy() == SecretEncryptedByType.PASSWORD && currentPassword == null) {
+                throw new ConcordApplicationException("Updating the secret's data requires the original 'storePassword'", Status.BAD_REQUEST);
+            }
+
+            if (e.getType() != SecretType.DATA) {
+                throw new ConcordApplicationException("Can't update the data of a non-single value secret (current type: " + e.getType() + ")", Status.BAD_REQUEST);
+            }
+
+            // validate the current password
+            decryptData(e.getId(), e.getStoreType(), currentPassword);
+
+            updated.put("data", true);
+        } else if (newPassword != null) {
+            // keeping the old data, just changing the store password
+            newData = decryptData(e.getId(), e.getStoreType(), currentPassword);
+        }
+
+        String pwd = currentPassword;
+        if (newPassword != null && !newPassword.equals(currentPassword)) {
+            pwd = req.newStorePassword();
+            updated.put("storePassword", true);
+        }
+
+        if (newData != null) {
+            // encrypt the supplied data
+            byte[] salt = secretCfg.getSecretStoreSalt();
+            newData = SecretUtils.encrypt(newData, getPwd(pwd), salt);
+        }
+
+        secretDao.update(e.getId(), req.name(), newData, req.visibility());
+
+        Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
+        changes.put("updated", updated);
+
+        auditLog.add(AuditObject.SECRET, AuditAction.UPDATE)
+                .field("orgId", e.getId())
+                .field("secretId", e.getId())
+                .field("secretName", e.getName())
+                .field("changes", changes)
+                .log();
     }
 
     /**
@@ -265,6 +324,18 @@ public class SecretManager {
         return new DecryptedSecret(e.getId(), s);
     }
 
+    private byte[] decryptData(UUID secretId, SecretStoreType storeType, String password) {
+        byte[] data = getSecretStore(storeType).get(secretId);
+        if (data == null) {
+            throw new IllegalStateException("Can't find the secret's data in the store " + storeType + " : " + secretId);
+        }
+
+        byte[] pwd = getPwd(password);
+        byte[] salt = secretCfg.getSecretStoreSalt();
+
+        return SecretUtils.decrypt(data, pwd, salt);
+    }
+
     /**
      * Returns a raw (unencrypted) secret value.
      */
@@ -280,15 +351,7 @@ public class SecretManager {
         SecretEncryptedByType providedEncryptedByType = getEncryptedBy(password);
         assertEncryptedByType(name, providedEncryptedByType, e.getEncryptedBy());
 
-        byte[] data = getSecretStore(e.getStoreType()).get(e.getId());
-        if (data == null) {
-            throw new IllegalStateException("Can't find the secret's data in the store " + e.getStoreType() + " : " + e.getId());
-        }
-
-        byte[] pwd = getPwd(password);
-        byte[] salt = secretCfg.getSecretStoreSalt();
-
-        byte[] ab = SecretUtils.decrypt(data, pwd, salt);
+        byte[] ab = decryptData(e.getId(), e.getStoreType(), password);
 
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
                 .field("id", e.getId())
@@ -335,7 +398,7 @@ public class SecretManager {
         secretDao.upsertAccessLevel(secretId, teamId, level);
     }
 
-    private UUID store(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, SecretStoreType storeType) {
+    private UUID create(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, SecretStoreType storeType) {
         byte[] data;
 
         SecretType type;
@@ -455,10 +518,10 @@ public class SecretManager {
 
         switch (actual) {
             case SERVER_KEY: {
-                throw new SecurityException("Not a password-protected secret: " + name);
+                throw new SecurityException("Not a password-protected secret '" + name + "'");
             }
             case PASSWORD: {
-                throw new SecurityException("The secret requires a password to decrypt: " + name);
+                throw new SecurityException("The secret '" + name + "' requires a password to decrypt");
             }
             default: {
                 throw new IllegalArgumentException("Unsupported secret encrypted by type: " + actual);

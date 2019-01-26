@@ -132,7 +132,7 @@ public final class ClientUtils {
             } else if (v instanceof UUID) {
                 mpb.addFormDataPart(k, v.toString());
             } else {
-                throw new IllegalArgumentException("Unknown input type: " + v);
+                throw new IllegalArgumentException("Unknown input type: " + k + "=" + v);
             }
         }
 

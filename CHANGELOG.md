@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-tasks: new task `concordSecrets`.
+
+
+
 ## [1.4.0] - 2019-01-23
 
 ### Added
