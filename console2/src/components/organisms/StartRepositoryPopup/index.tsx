@@ -106,7 +106,7 @@ class StartRepositoryPopup extends React.Component<Props, State> {
             <SingleOperationPopup
                 customStyle={{ maxWidth: '800px' }}
                 trigger={trigger}
-                title={`Start flow ${repoName}`}
+                title={`Start repository: ${repoName}`}
                 icon="triangle right"
                 iconColor="blue"
                 introMsg={

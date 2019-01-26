@@ -65,6 +65,10 @@ class GitHubLink extends React.PureComponent<Props> {
             return url;
         }
 
+        if (s.endsWith('.git')) {
+            s = s.substr(0, s.length - 4);
+        }
+
         if (commitId && !path) {
             s += `/commit/${commitId}`;
         } else if (commitId && path) {
