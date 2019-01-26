@@ -21,10 +21,11 @@
     shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
     register: local_image_ids
 
-  - name: Get target images digests
+  - name: Get target images digests (if exist)
     become: true
     shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
     register: target_image_ids
+    no_log: true
     ignore_errors: yes
     
   - name: Export local Docker images
@@ -69,6 +70,7 @@
     loop:
     - { src: "server.conf", dest: "/opt/concord/conf/server.conf" }
     - { src: "agent.conf", dest: "/opt/concord/conf/agent.conf" }
+    - { src: "console.conf", dest: "/opt/concord/conf/console.conf" }
 
   - name: Start the database
     become: true
@@ -119,6 +121,8 @@
       image: walmartlabs/concord-console
       restart: true
       restart_policy: always
+      volumes:
+      - /opt/concord/conf/console.conf:/opt/concord/console/nginx/app.conf:ro
       links:
       - server
       ports:
