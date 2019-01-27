@@ -92,7 +92,8 @@ export const start = (
     orgName: ConcordKey,
     projectName: ConcordKey,
     repoName: ConcordKey,
-    entryPoint: string
+    entryPoint: string,
+    profile: string
 ): Promise<StartProcessResponse> => {
     const data = new FormData();
 
@@ -100,6 +101,7 @@ export const start = (
     data.append('project', projectName);
     data.append('repo', repoName);
     data.append('entryPoint', entryPoint);
+    data.append('activeProfiles', profile);
 
     const opts = {
         method: 'POST',

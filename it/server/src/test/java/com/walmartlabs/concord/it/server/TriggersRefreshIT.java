@@ -31,51 +31,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class TriggersRefreshIT extends AbstractServerIT {
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void test() throws Exception {
-        String orgName = "ConcordSystem";
-        String projectName = "concordTriggers";
-        String repoName = "triggers";
-
-        // ---
-
-        byte[] payload = archive(TriggersRefreshIT.class.getResource("triggersRefresh").toURI());
-
-        Map<String, Object> req = new HashMap<>();
-        req.put("archive", payload);
-
-        Map<String, Object> args = new HashMap<>();
-        args.put("orgName", orgName);
-        args.put("projectName", projectName);
-        args.put("repoName", repoName);
-
-        req.put("request", Collections.singletonMap("arguments", args));
-
-        StartProcessResponse spr = start(req);
-
-        // ---
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
-
-        // ---
-
-        TriggersApi triggerResource = new TriggersApi(getApiClient());
-        List<TriggerEntry> list = triggerResource.list(orgName, projectName, repoName);
-        assertFalse(list.isEmpty());
-    }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTriggerRepoRefresh() throws Exception {
@@ -147,7 +108,7 @@ public class TriggersRefreshIT extends AbstractServerIT {
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        repositoriesApi.refreshRepository(orgName, projectName, repoName);
+        repositoriesApi.refreshRepository(orgName, projectName, repoName, true);
 
         // ---
 

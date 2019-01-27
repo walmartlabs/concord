@@ -123,7 +123,7 @@ public class ProjectRepositoryManager {
         UUID repoId = repositoryDao.insert(tx, projectId,
                 entry.getName(), entry.getUrl(),
                 trim(entry.getBranch()), trim(entry.getCommitId()),
-                trim(entry.getPath()), secretId);
+                trim(entry.getPath()), secretId, entry.getMeta());
 
         Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);

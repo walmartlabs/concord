@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Dropdown, Icon } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
-import { RepositoryEntry } from '../../../api/org/project/repository';
+import { RepositoryEntry, RepositoryMeta } from '../../../api/org/project/repository';
 import {
     DeleteRepositoryPopup,
     RefreshRepositoryPopup,
@@ -37,6 +37,13 @@ interface ExternalProps {
     repo: RepositoryEntry;
 }
 
+const getProfiles = (meta?: RepositoryMeta): string[] => {
+    if (!meta) {
+        return [];
+    }
+    return meta.profiles || [];
+};
+
 class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
     render() {
         const { orgName, projectName, repo } = this.props;
@@ -46,7 +53,8 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
             url: repoURL,
             branch: repoBranch,
             commitId: repoCommitId,
-            path: repoPath
+            path: repoPath,
+            meta: repoMeta
         } = repo;
 
         // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
@@ -67,6 +75,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         repoURL={repoURL}
                         repoBranchOrCommitId={repoBranchOrCommitId}
                         repoPath={repoPathOrDefault}
+                        repoProfiles={getProfiles(repoMeta)}
                         trigger={(onClick) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="play" color="blue" />

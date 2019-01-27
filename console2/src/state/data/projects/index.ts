@@ -624,7 +624,7 @@ function* onDeleteRepository({ orgName, projectName, repoName }: DeleteRepositor
 
 function* onRefreshRepository({ orgName, projectName, repoName }: RefreshRepositoryRequest) {
     try {
-        const response = yield call(apiRepoRefresh, orgName, projectName, repoName);
+        const response = yield call(apiRepoRefresh, orgName, projectName, repoName, true);
         yield put(genericResult(actionTypes.REFRESH_REPOSITORY_RESPONSE, response));
     } catch (e) {
         yield handleErrors(actionTypes.REFRESH_REPOSITORY_RESPONSE, e);

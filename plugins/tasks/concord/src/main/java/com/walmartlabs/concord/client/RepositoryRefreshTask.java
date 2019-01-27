@@ -26,8 +26,8 @@ import com.walmartlabs.concord.sdk.Task;
 import javax.inject.Named;
 import java.util.Map;
 
-@Named("triggersRefresh")
-public class TriggerRefreshTask extends AbstractConcordTask implements Task {
+@Named("repositoryRefresh")
+public class RepositoryRefreshTask extends AbstractConcordTask implements Task {
 
     private static final String ORG_KEY = "org";
     private static final String REPOSITORY_KEY = "repository";
@@ -41,8 +41,8 @@ public class TriggerRefreshTask extends AbstractConcordTask implements Task {
         String repositoryName = get(cfg, REPOSITORY_KEY);
 
         withClient(ctx, client -> {
-            TriggersApi api = new TriggersApi(client);
-            api.refresh(orgName, projectName, repositoryName);
+            RepositoriesApi api = new RepositoriesApi(client);
+            api.refreshRepository(orgName, projectName, repositoryName, true);
             return null;
         });
     }

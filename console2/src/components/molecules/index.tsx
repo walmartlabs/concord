@@ -48,6 +48,7 @@ export { default as ProcessLogs } from './ProcessLogs';
 export { default as ProcessLogViewer } from './ProcessLogViewer';
 export { default as ProcessStatusIcon } from './ProcessStatusIcon';
 export { default as ProcessStatusTable } from './ProcessStatusTable';
+export { default as ProfileDropdown } from './ProfileDropdown';
 export { default as RepositoryActionDropdown } from './RepositoryActionDropdown';
 export { default as RepositoryForm } from './RepositoryForm';
 export { default as RepositoryList } from './RepositoryList';

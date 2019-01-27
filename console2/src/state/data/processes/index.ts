@@ -111,13 +111,15 @@ export const actions = {
         orgName: ConcordKey,
         projectName: ConcordKey,
         repoName: ConcordKey,
-        entryPoint: string
+        entryPoint: string,
+        profile: string
     ): StartProcessRequest => ({
         type: actionTypes.START_PROCESS_REQUEST,
         orgName,
         projectName,
         repoName,
-        entryPoint
+        entryPoint,
+        profile
     }),
 
     restoreProcess: (instanceId: ConcordKey, checkpointId: ConcordKey): RestoreProcessRequest => ({
@@ -309,9 +311,15 @@ function* onProcessList({ orgName, projectName, filters, pagination }: ListProce
     }
 }
 
-function* onStartProcess({ orgName, projectName, repoName, entryPoint }: StartProcessRequest) {
+function* onStartProcess({
+    orgName,
+    projectName,
+    repoName,
+    entryPoint,
+    profile
+}: StartProcessRequest) {
     try {
-        const response = yield call(apiStart, orgName, projectName, repoName, entryPoint);
+        const response = yield call(apiStart, orgName, projectName, repoName, entryPoint, profile);
         yield put({
             type: actionTypes.START_PROCESS_RESPONSE,
             ...response

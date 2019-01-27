@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -27,18 +28,24 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
+import static org.jooq.impl.DSL.field;
 
 @Named
 public class RepositoryDao extends AbstractDao {
 
+    private final ObjectMapper objectMapper;
+
     @Inject
     public RepositoryDao(@Named("app") Configuration cfg) {
         super(cfg);
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -73,25 +80,25 @@ public class RepositoryDao extends AbstractDao {
         return selectRepositoryEntry(tx)
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId)
                         .and(REPOSITORIES.REPO_ID.eq(repoId)))
-                .fetchOne(RepositoryDao::toEntry);
+                .fetchOne(this::toEntry);
     }
 
     public RepositoryEntry get(UUID repoId) {
         return txResult(tx -> selectRepositoryEntry(tx)
                 .where(REPOSITORIES.REPO_ID.eq(repoId))
-                .fetchOne(RepositoryDao::toEntry));
+                .fetchOne(this::toEntry));
     }
 
-    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
-        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId));
+    public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, Map<String, Object> meta) {
+        return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId, meta));
     }
 
-    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId) {
+    public UUID insert(DSLContext tx, UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, Map<String, Object> meta) {
         return tx.insertInto(REPOSITORIES)
                 .columns(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
-                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID)
-                .values(projectId, repositoryName, url, branch, commitId, path, secretId)
+                        REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID, REPOSITORIES.META)
+                .values(projectId, repositoryName, url, branch, commitId, path, secretId, field("?::jsonb", serialize(meta)))
                 .returning(REPOSITORIES.REPO_ID)
                 .fetchOne()
                 .getRepoId();
@@ -132,7 +139,7 @@ public class RepositoryDao extends AbstractDao {
     public List<RepositoryEntry> list() {
         try (DSLContext tx = DSL.using(cfg)) {
             return selectRepositoryEntry(tx)
-                    .fetch(RepositoryDao::toEntry);
+                    .fetch(this::toEntry);
         }
     }
 
@@ -151,25 +158,36 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public List<RepositoryEntry> list(DSLContext tx, UUID projectId, Field<?> sortField, boolean asc) {
-        SelectConditionStep<Record10<UUID, UUID, String, String, String, String, String, UUID, String, String>> query = selectRepositoryEntry(tx)
+        SelectConditionStep<Record11<UUID, UUID, String, String, String, String, String, String, UUID, String, String>> query = selectRepositoryEntry(tx)
                 .where(REPOSITORIES.PROJECT_ID.eq(projectId));
 
         if (sortField != null) {
             query.orderBy(asc ? sortField.asc() : sortField.desc());
         }
 
-        return query.fetch(RepositoryDao::toEntry);
+        return query.fetch(this::toEntry);
     }
 
     public List<RepositoryEntry> find(String repoUrl) {
         try (DSLContext tx = DSL.using(cfg)) {
             return selectRepositoryEntry(tx)
                     .where(REPOSITORIES.REPO_URL.contains(repoUrl))
-                    .fetch(RepositoryDao::toEntry);
+                    .fetch(this::toEntry);
         }
     }
 
-    private static SelectJoinStep<Record10<UUID, UUID, String, String, String, String, String, UUID, String, String>> selectRepositoryEntry(DSLContext tx) {
+    public void updateMeta(UUID id, Map<String, Object> meta) {
+        tx(tx -> updateMeta(tx, id, meta));
+    }
+
+    public void updateMeta(DSLContext tx, UUID id, Map<String, Object> meta) {
+        tx.update(REPOSITORIES)
+                .set(REPOSITORIES.META, field("?::jsonb", String.class, serialize(meta)))
+                .where(REPOSITORIES.REPO_ID.eq(id))
+                .execute();
+    }
+
+    private static SelectJoinStep<Record11<UUID, UUID, String, String, String, String, String, String, UUID, String, String>> selectRepositoryEntry(DSLContext tx) {
         return tx.select(REPOSITORIES.REPO_ID,
                 REPOSITORIES.PROJECT_ID,
                 REPOSITORIES.REPO_NAME,
@@ -177,6 +195,7 @@ public class RepositoryDao extends AbstractDao {
                 REPOSITORIES.REPO_BRANCH,
                 REPOSITORIES.REPO_COMMIT_ID,
                 REPOSITORIES.REPO_PATH,
+                REPOSITORIES.META.cast(String.class),
                 SECRETS.SECRET_ID,
                 SECRETS.SECRET_NAME,
                 SECRETS.STORE_TYPE)
@@ -184,7 +203,7 @@ public class RepositoryDao extends AbstractDao {
                 .leftOuterJoin(SECRETS).on(SECRETS.SECRET_ID.eq(REPOSITORIES.SECRET_ID));
     }
 
-    private static RepositoryEntry toEntry(Record10<UUID, UUID, String, String, String, String, String, UUID, String, String> r) {
+    private RepositoryEntry toEntry(Record11<UUID, UUID, String, String, String, String, String, String, UUID, String, String> r) {
         return new RepositoryEntry(r.get(REPOSITORIES.REPO_ID),
                 r.get(REPOSITORIES.PROJECT_ID),
                 r.get(REPOSITORIES.REPO_NAME),
@@ -194,6 +213,32 @@ public class RepositoryDao extends AbstractDao {
                 r.get(REPOSITORIES.REPO_PATH),
                 r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
-                r.get(SECRETS.STORE_TYPE));
+                r.get(SECRETS.STORE_TYPE),
+                deserialize(r.get(REPOSITORIES.META.cast(String.class))));
+    }
+
+    private String serialize(Map<String, Object> m) {
+        if (m == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.writeValueAsString(m);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> deserialize(String ab) {
+        if (ab == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(ab, Map.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

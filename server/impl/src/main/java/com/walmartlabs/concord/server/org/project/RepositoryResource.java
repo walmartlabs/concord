@@ -24,10 +24,10 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
-import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.repository.RepositoryRefresher;
 import com.walmartlabs.concord.server.repository.RepositoryValidationResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -42,8 +42,6 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Named
@@ -54,25 +52,25 @@ public class RepositoryResource implements Resource {
 
     private final OrganizationManager orgManager;
     private final ProjectAccessManager accessManager;
-    private final ExternalEventResource externalEventResource;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final ProjectRepositoryManager projectRepositoryManager;
+    private final RepositoryRefresher repositoryRefresher;
 
     @Inject
     public RepositoryResource(OrganizationManager orgManager,
                               ProjectAccessManager accessManager,
-                              ExternalEventResource externalEventResource,
                               ProjectDao projectDao,
                               RepositoryDao repositoryDao,
-                              ProjectRepositoryManager projectRepositoryManager) {
+                              ProjectRepositoryManager projectRepositoryManager,
+                              RepositoryRefresher repositoryRefresher) {
 
         this.orgManager = orgManager;
         this.accessManager = accessManager;
-        this.externalEventResource = externalEventResource;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.projectRepositoryManager = projectRepositoryManager;
+        this.repositoryRefresher = repositoryRefresher;
     }
 
     @POST
@@ -116,52 +114,23 @@ public class RepositoryResource implements Resource {
     }
 
     /**
-     * Refresh a repository.
-     *
-     * @param projectName
-     * @param repositoryName
-     * @return
+     * Refresh a local copy of the repository.
      */
     @POST
-    @ApiOperation("Refresh an existing repository")
+    @ApiOperation("Refresh a local copy of the repository")
     @Path("/{orgName}/project/{projectName}/repository/{repositoryName}/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     public GenericOperationResult refreshRepository(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                                     @ApiParam @PathParam("projectName") @ConcordKey String projectName,
-                                                    @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName) {
+                                                    @ApiParam @PathParam("repositoryName") @ConcordKey String repositoryName,
+                                                    @ApiParam @QueryParam("sync") @DefaultValue("false") boolean sync) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-
-        UUID projectId = projectDao.getId(org.getId(), projectName);
-        if (projectId == null) {
-            throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
-        }
-
-        ProjectEntry prj = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
-
-        Map<String, RepositoryEntry> repos = prj.getRepositories();
-        if (repos == null || !repos.containsKey(repositoryName)) {
-            throw new ConcordApplicationException("Repository not found: " + projectName, Status.NOT_FOUND);
-        }
-
-        Map<String, Object> event = new HashMap<>();
-        event.put("event", "repositoryRefresh");
-        event.put("org", orgName);
-        event.put("project", projectName);
-        event.put("repository", repositoryName);
-
-        externalEventResource.event("concord", event);
-
+        repositoryRefresher.refresh(orgName, projectName, repositoryName, sync);
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
     /**
      * Validate a repository.
-     *
-     * @param orgName
-     * @param projectName
-     * @param repositoryName
-     * @return
      */
     @POST
     @ApiOperation("Validate an existing repository")

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -60,12 +61,14 @@ public class RepositoryEntry implements Serializable {
 
     private final String secretStoreType;
 
+    private final Map<String, Object> meta;
+
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, null, null, null);
+        this(null, null, name, url, null, null, null, null, null, null, null);
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {
-        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.getSecretId(), e.secretName, e.secretStoreType);
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.getSecretId(), e.secretName, e.secretStoreType, e.meta);
     }
 
     public RepositoryEntry(RepositoryEntry e, String branch, String commitId) {
@@ -78,7 +81,8 @@ public class RepositoryEntry implements Serializable {
                 e.path,
                 e.getSecretId(),
                 e.secretName,
-                e.secretStoreType);
+                e.secretStoreType,
+                e.meta);
     }
 
     @JsonCreator
@@ -91,7 +95,8 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("path") String path,
                            @JsonProperty("secretId") UUID secretId,
                            @JsonProperty("secretName") String secretName,
-                           @JsonProperty("secretStoreType") String secretStoreType) {
+                           @JsonProperty("secretStoreType") String secretStoreType,
+                           @JsonProperty("meta") Map<String, Object> meta) {
 
         this.id = id;
         this.projectId = projectId;
@@ -103,6 +108,7 @@ public class RepositoryEntry implements Serializable {
         this.secretId = secretId;
         this.secretName = secretName;
         this.secretStoreType = secretStoreType;
+        this.meta = meta;
     }
 
     public UUID getId() {
@@ -145,6 +151,10 @@ public class RepositoryEntry implements Serializable {
         return secretStoreType;
     }
 
+    public Map<String, Object> getMeta() {
+        return meta;
+    }
+
     @Override
     public String toString() {
         return "RepositoryEntry{" +
@@ -157,7 +167,8 @@ public class RepositoryEntry implements Serializable {
                 ", path='" + path + '\'' +
                 ", secretId=" + secretId +
                 ", secretName='" + secretName + '\'' +
-                ", secretStoreType=" + secretStoreType +
+                ", secretStoreType='" + secretStoreType + '\'' +
+                ", meta=" + meta +
                 '}';
     }
 }

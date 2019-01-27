@@ -1,6 +1,6 @@
 flows:
   default:
-  - task: triggersRefresh
+  - task: repositoryRefresh
     in:
       org: "ConcordSystem"
       project: "concordTriggers"

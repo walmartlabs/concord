@@ -26,6 +26,10 @@ import {
     OperationResult
 } from '../../../common';
 
+export interface RepositoryMeta {
+    profiles?: string[];
+}
+
 export interface RepositoryEntry {
     id: ConcordId;
     name: ConcordKey;
@@ -36,6 +40,7 @@ export interface RepositoryEntry {
     secretStoreType?: string;
     secretId: string;
     secretName: string;
+    meta?: RepositoryMeta;
 }
 
 export interface EditRepositoryEntry {
@@ -96,14 +101,15 @@ export const deleteRepository = (
 export const refreshRepository = (
     orgName: ConcordKey,
     projectName: ConcordKey,
-    repoName: ConcordKey
+    repoName: ConcordKey,
+    sync: boolean
 ): Promise<GenericOperationResult> => {
     const opts = {
         method: 'POST'
     };
 
     return fetchJson(
-        `/api/v1/org/${orgName}/project/${projectName}/repository/${repoName}/refresh`,
+        `/api/v1/org/${orgName}/project/${projectName}/repository/${repoName}/refresh?sync=${sync}`,
         opts
     );
 };

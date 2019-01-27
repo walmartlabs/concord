@@ -135,7 +135,7 @@ public class ProjectDao extends AbstractDao {
                 return null;
             }
 
-            Result<Record10<UUID, UUID, String, String, String, String, String, UUID, String, String>> repos = tx.select(
+            Result<Record11<UUID, UUID, String, String, String, String, String, String, UUID, String, String>> repos = tx.select(
                     REPOSITORIES.REPO_ID,
                     REPOSITORIES.PROJECT_ID,
                     REPOSITORIES.REPO_NAME,
@@ -143,6 +143,7 @@ public class ProjectDao extends AbstractDao {
                     REPOSITORIES.REPO_BRANCH,
                     REPOSITORIES.REPO_COMMIT_ID,
                     REPOSITORIES.REPO_PATH,
+                    REPOSITORIES.META.cast(String.class),
                     SECRETS.SECRET_ID,
                     SECRETS.SECRET_NAME,
                     SECRETS.STORE_TYPE)
@@ -152,7 +153,7 @@ public class ProjectDao extends AbstractDao {
                     .fetch();
 
             Map<String, RepositoryEntry> m = new HashMap<>();
-            for (Record10<UUID, UUID, String, String, String, String, String, UUID, String, String> repo : repos) {
+            for (Record11<UUID, UUID, String, String, String, String, String, String, UUID, String, String> repo : repos) {
                 m.put(repo.get(REPOSITORIES.REPO_NAME),
                         new RepositoryEntry(
                                 repo.get(REPOSITORIES.REPO_ID),
@@ -164,7 +165,8 @@ public class ProjectDao extends AbstractDao {
                                 repo.get(REPOSITORIES.REPO_PATH),
                                 repo.get(SECRETS.SECRET_ID),
                                 repo.get(SECRETS.SECRET_NAME),
-                                repo.get(SECRETS.STORE_TYPE)));
+                                repo.get(SECRETS.STORE_TYPE),
+                                deserialize(repo.get(REPOSITORIES.META.cast(String.class)))));
             }
 
             Map<String, Object> cfg = deserialize(r.get(cfgField));

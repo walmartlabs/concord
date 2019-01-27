@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.repository.Repository;
@@ -37,7 +36,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
@@ -53,7 +51,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
@@ -62,7 +59,7 @@ import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertR
 @Singleton
 @Api(value = "Triggers", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @javax.ws.rs.Path("/api/v1/org")
-public class TriggerResource extends AbstractDao implements Resource {
+public class TriggerResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerResource.class);
 
@@ -72,24 +69,22 @@ public class TriggerResource extends AbstractDao implements Resource {
     private final RepositoryManager repositoryManager;
     private final ProjectAccessManager projectAccessManager;
     private final OrganizationManager orgManager;
-    private final Map<String, TriggerProcessor> triggerProcessors;
+    private final TriggerManager triggerManager;
 
     @Inject
-    public TriggerResource(@Named("app") Configuration cfg,
-                           RepositoryDao repositoryDao,
+    public TriggerResource(RepositoryDao repositoryDao,
                            TriggersDao triggersDao,
                            RepositoryManager repositoryManager,
                            ProjectAccessManager projectAccessManager,
                            OrganizationManager orgManager,
-                           Map<String, TriggerProcessor> triggerProcessors) {
+                           TriggerManager triggerManager) {
 
-        super(cfg);
         this.repositoryDao = repositoryDao;
         this.triggersDao = triggersDao;
         this.repositoryManager = repositoryManager;
         this.projectAccessManager = projectAccessManager;
         this.orgManager = orgManager;
-        this.triggerProcessors = triggerProcessors;
+        this.triggerManager = triggerManager;
     }
 
     /**
@@ -173,22 +168,7 @@ public class TriggerResource extends AbstractDao implements Resource {
             throw new ConcordApplicationException("Refresh failed (repository ID: " + r.getId() + "): " + e.getMessage(), e);
         }
 
-        tx(tx -> {
-            triggersDao.delete(tx, r.getProjectId(), r.getId());
-
-            pd.getTriggers().forEach(t -> {
-                UUID triggerId = triggersDao.insert(tx,
-                        r.getProjectId(), r.getId(), t.getName(),
-                        t.getActiveProfiles(), t.getArguments(), t.getParams(), t.getCfg());
-
-                TriggerProcessor processor = triggerProcessors.get(t.getName());
-                if (processor != null) {
-                    processor.process(tx, triggerId, t);
-                }
-            });
-        });
-
-        log.info("refresh ['{}'] -> done, triggers count: {}", r.getId(), pd.getTriggers().size());
+        triggerManager.refresh(r.getProjectId(), r.getId(), pd);
     }
 
     private ProjectEntry assertProject(UUID orgId, String projectName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {

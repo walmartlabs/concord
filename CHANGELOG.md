@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: profile selection when starting a process;
 - concord-tasks: new task `concordSecrets`.
 
 

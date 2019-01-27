@@ -26,7 +26,7 @@ import { Button } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { StartProcessResponse } from '../../../api/org/process';
 import { actions, State as ProcessState } from '../../../state/data/processes';
-import { SingleOperationPopup, GitHubLink } from '../../molecules';
+import { SingleOperationPopup, GitHubLink, ProfileDropdown } from '../../molecules';
 
 import { Table, Keys, Key, Values, Value, Input } from './styles';
 
@@ -37,12 +37,13 @@ interface ExternalProps {
     repoURL: string;
     repoBranchOrCommitId: string;
     repoPath: string;
+    repoProfiles: string[];
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
 interface DispatchProps {
     reset: () => void;
-    onConfirm: (entryPoint: string) => void;
+    onConfirm: (entryPoint: string, profile: string) => void;
     openProcessPage: (instanceId: ConcordId) => void;
 }
 
@@ -57,13 +58,15 @@ type Props = DispatchProps & ExternalProps & StateProps;
 
 interface State {
     entryPoint: string;
+    selectedProfile: string;
 }
 
 class StartRepositoryPopup extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            entryPoint: 'default'
+            entryPoint: 'default',
+            selectedProfile: 'default'
         };
     }
 
@@ -71,12 +74,23 @@ class StartRepositoryPopup extends React.Component<Props, State> {
         this.setState({ entryPoint: e.currentTarget.value });
     }
 
+    updateEntryPoint2(data: string) {
+        this.setState({ entryPoint: data });
+    }
+
+    updateProfile(data: string) {
+        this.setState({ selectedProfile: data });
+    }
+
     render() {
         const {
+            orgName,
+            projectName,
             repoName,
             repoURL,
             repoBranchOrCommitId,
             repoPath,
+            repoProfiles,
             trigger,
             starting,
             success,
@@ -116,6 +130,7 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                             <Key>Branch</Key>
                             <Key>Path</Key>
                             <Key>Flow</Key>
+                            <Key>Profile</Key>
                         </Keys>
 
                         <Values>
@@ -128,7 +143,13 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                                 <Input
                                     type="text"
                                     placeholder="default"
-                                    onKeyUp={(e: any) => this.updateEntryPoint(e)}
+                                    onChange={(e: any) => this.updateEntryPoint(e)}
+                                />
+                            </Value>
+                            <Value>
+                                <ProfileDropdown
+                                    profiles={repoProfiles}
+                                    onChange={(data) => this.updateProfile(data)}
                                 />
                             </Value>
                         </Values>
@@ -140,7 +161,9 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                 successMsg={successMsg}
                 error={error}
                 reset={reset}
-                onConfirm={() => onConfirm(this.state.entryPoint || 'default')}
+                onConfirm={() =>
+                    onConfirm(this.state.entryPoint || 'default', this.state.selectedProfile)
+                }
                 onDoneElements={() => (
                     <Button
                         basic={true}
@@ -167,8 +190,8 @@ const mapDispatchToProps = (
     { orgName, projectName, repoName }: ExternalProps
 ): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
-    onConfirm: (entryPoint: string) =>
-        dispatch(actions.startProcess(orgName, projectName, repoName, entryPoint)),
+    onConfirm: (entryPoint: string, profile: string) =>
+        dispatch(actions.startProcess(orgName, projectName, repoName, entryPoint, profile)),
     openProcessPage: (instanceId: ConcordId) => dispatch(pushHistory(`/process/${instanceId}`))
 });
 

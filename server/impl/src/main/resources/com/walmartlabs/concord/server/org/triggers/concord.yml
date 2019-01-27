@@ -1,14 +1,7 @@
 flows:
   onChange:
-  - log: "Refreshing triggers... ${event}"
-  - task: triggersRefresh
-    in:
-      org: ${event.org}
-      repository: ${event.repository}
-      project: ${event.project}
-
-  - log: "Refreshing LPs... ${event}"
-  - task: landingPageRefresh
+  - log: "Refreshing repository... ${event}"
+  - task: repositoryRefresh
     in:
       org: ${event.org}
       repository: ${event.repository}
