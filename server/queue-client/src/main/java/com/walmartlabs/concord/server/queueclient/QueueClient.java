@@ -126,7 +126,7 @@ public class QueueClient {
 
         public Worker(QueueClientConfiguration cfg, List<RequestEntry> requests) throws URISyntaxException {
             this.userAgent = cfg.getUserAgent();
-            this.apiToken = cfg.getApiToken();
+            this.apiToken = cfg.getApiKey();
 
             this.requests = requests;
             this.destUri = new URI(cfg.getAddress());

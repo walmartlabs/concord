@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,27 +28,32 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CommandHandler implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
+
     private static final long ERROR_DELAY = 5000;
+
+    private final ExecutorService executor;
 
     private final UUID agentId;
     private final QueueClient queueClient;
-    private final ExecutionManager executionManager;
-    private final ExecutorService executor;
-
     private final long pollInterval;
+    private final CancelHandler cancelHandler;
 
-    public CommandHandler(String agentId, QueueClient queueClient,
-                          ExecutionManager executionManager, ExecutorService executor,
-                          long pollInterval) {
+    public CommandHandler(String agentId,
+                          QueueClient queueClient,
+                          long pollInterval,
+                          CancelHandler cancelHandler) {
+
+        this.executor = Executors.newCachedThreadPool();
+
         this.agentId = UUID.fromString(agentId);
         this.queueClient = queueClient;
-        this.executionManager = executionManager;
-        this.executor = executor;
         this.pollInterval = pollInterval;
+        this.cancelHandler = cancelHandler;
     }
 
     @Override
@@ -56,13 +61,14 @@ public class CommandHandler implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 CommandResponse cmd = take();
-                if (cmd != null) {
-                    executor.submit(() -> execute(cmd));
-                } else {
+                if (cmd == null) {
                     sleep(pollInterval);
+                    continue;
                 }
+
+                executor.submit(() -> execute(cmd));
             } catch (Exception e) {
-                log.error("run -> command process error: {}", e.getMessage(), e);
+                log.error("run -> error while processing a command: {}", e.getMessage(), e);
                 sleep(ERROR_DELAY);
             }
         }
@@ -75,10 +81,12 @@ public class CommandHandler implements Runnable {
     private void execute(CommandResponse cmd) {
         log.info("execute -> got a command: {}", cmd);
 
-        if (cmd.getType() == CommandResponse.CommandType.CANCEL_JOB) {
-            executionManager.cancel(UUID.fromString((String)cmd.getPayload().get("instanceId")));
+        CommandResponse.CommandType type = cmd.getType();
+        if (type == CommandResponse.CommandType.CANCEL_JOB) {
+            UUID instanceId = UUID.fromString((String) cmd.getPayload().get("instanceId"));
+            cancelHandler.cancel(instanceId);
         } else {
-            log.warn("execute -> unsupported command type: " + cmd.getClass());
+            log.warn("execute -> unsupported command type: {}", type);
         }
     }
 
@@ -88,5 +96,9 @@ public class CommandHandler implements Runnable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    public interface CancelHandler {
+        void cancel(UUID instanceId);
     }
 }

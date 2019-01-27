@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.executors.runner;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ public class DefaultDependencies {
         if (path != null) {
             try (Stream<String> stream = Files.lines(Paths.get(path))) {
                 this.dependencies = stream.map(DefaultDependencies::parseUri)
-                .collect(Collectors.toList());
+                        .collect(Collectors.toList());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

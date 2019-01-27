@@ -1,14 +1,14 @@
 flows:
   default:
-  - log: "Start"
+  - log: "==Start"
   - checkpoint: "ONE"
   - form: myForm
   - if: ${myForm.shouldFail}
     then:
     - throw: "As you wish"
-  - log: "Middle"
+  - log: "==Middle"
   - checkpoint: "TWO"
-  - log: "End"
+  - log: "==End"
 
 forms:
   myForm:

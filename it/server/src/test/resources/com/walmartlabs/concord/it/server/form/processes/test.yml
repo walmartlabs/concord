@@ -1,4 +1,5 @@
 main:
+  - log: "before form"
   - form: myForm1
   - ${log.info("test", myForm1.x + 100)}
 

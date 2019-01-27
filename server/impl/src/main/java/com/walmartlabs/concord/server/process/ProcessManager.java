@@ -215,6 +215,7 @@ public class ProcessManager {
     public void updateStatus(ProcessKey processKey, String agentId, ProcessStatus status) {
         assertUpdateRights(processKey);
 
+        // TODO determine the correct status on the agent?
         if (status == ProcessStatus.FINISHED && isSuspended(processKey)) {
             status = ProcessStatus.SUSPENDED;
         }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.executors.runner;
 
 /*-
  * *****
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class DockerCommandBuilder {
     private static final String VOLUME_RUNNER_DEST = "/opt/concord/runner";
     private static final String VOLUME_DEPS_DEST = "/opt/concord/deps";
 
-    private final LogManager logManager;
+    private final ProcessLog log;
     private final Path javaPath;
 
     private Path procDir;
@@ -48,8 +49,8 @@ public class DockerCommandBuilder {
     private final Cfg cfg;
     private final Map<String, Object> env = new HashMap<>();
 
-    public DockerCommandBuilder(LogManager logManager, Path javaPath, Map<String, Object> cfg) {
-        this.logManager = logManager;
+    public DockerCommandBuilder(ProcessLog log, Path javaPath, Map<String, Object> cfg) {
+        this.log = log;
         this.javaPath = javaPath;
         this.cfg = new Cfg(cfg);
     }
@@ -133,7 +134,7 @@ public class DockerCommandBuilder {
                 .buildCmd();
 
         if (debug) {
-            logManager.info(instanceId, "CMD: {}", (Object) cmd);
+            log.info("CMD: {}", (Object) cmd);
         }
 
         return cmd;

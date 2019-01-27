@@ -31,8 +31,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-import static com.walmartlabs.concord.agent.MaintenanceModeListener.Status;
-
 public class MaintenanceModeNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(MaintenanceModeNotifier.class);
@@ -68,7 +66,7 @@ public class MaintenanceModeNotifier {
 
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
-            Status status = null;
+            MaintenanceModeListener.Status status = null;
             if ("GET".equals(httpExchange.getRequestMethod())) {
                 status = onMaintenanceModeStatus();
             } else if ("POST".equals(httpExchange.getRequestMethod())) {
@@ -91,16 +89,16 @@ public class MaintenanceModeNotifier {
             }
         }
 
-        private Status onMaintenanceMode() {
-            Status status = listener.onMaintenanceMode();
+        private MaintenanceModeListener.Status onMaintenanceMode() {
+            MaintenanceModeListener.Status status = listener.onMaintenanceMode();
 
             log.info("onMaintenanceMode -> {}", status);
 
             return status;
         }
 
-        private Status onMaintenanceModeStatus() {
-            Status status = listener.getMaintenanceModeStatus();
+        private MaintenanceModeListener.Status onMaintenanceModeStatus() {
+            MaintenanceModeListener.Status status = listener.getMaintenanceModeStatus();
 
             log.info("onMaintenanceModeStatus -> {}", status);
 

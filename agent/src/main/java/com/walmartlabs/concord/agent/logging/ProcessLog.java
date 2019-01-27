@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.logging;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,25 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.function.Supplier;
 
-public class Main {
+public interface ProcessLog {
 
-    public static void main(String[] args) throws Exception {
-        Configuration cfg = new Configuration();
-        Agent a = new Agent(cfg);
-        a.run();
-    }
+    /**
+     * Removed the associated resources.
+     */
+    void delete();
+
+    /**
+     * Copies the specified stream into the log.
+     */
+    void log(InputStream src) throws IOException;
+
+    void info(String log, Object... args);
+
+    void warn(String log, Object... args);
+
+    void error(String log, Object... args);
 }

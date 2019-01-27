@@ -468,6 +468,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <verbose>false</verbose>
                     <dotGitDirectory>${project.basedir}/../../.git</dotGitDirectory>
                 </configuration>
             </plugin>

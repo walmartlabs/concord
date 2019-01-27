@@ -51,7 +51,7 @@ public class RepositoryManager {
         this.cacheDir = cfg.getRepositoryCacheDir();
     }
 
-    public void export(String orgName, String repoUrl, String commitId, String repoPath, String secretName, Path workDir) throws ExecutionException {
+    public void export(String orgName, String secretName, String repoUrl, String commitId, String repoPath, Path workDir) throws ExecutionException {
         Secret secret = getSecret(orgName, secretName);
 
         providers.withLock(repoUrl, () -> {

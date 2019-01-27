@@ -20,16 +20,18 @@ package com.walmartlabs.concord.agent.docker;
  * =====
  */
 
-import com.walmartlabs.concord.agent.ExecutionManager;
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class OrphanSweeper implements Runnable {
 
@@ -41,11 +43,11 @@ public class OrphanSweeper implements Runnable {
 
     private static final long RETRY_DELAY = TimeUnit.SECONDS.toMillis(30);
 
-    private final ExecutionManager executionManager;
+    private final StatusChecker statusChecker;
     private final long period;
 
-    public OrphanSweeper(ExecutionManager executionManager, long period) {
-        this.executionManager = executionManager;
+    public OrphanSweeper(StatusChecker statusChecker, long period) {
+        this.statusChecker = statusChecker;
         this.period = period;
     }
 
@@ -59,13 +61,13 @@ public class OrphanSweeper implements Runnable {
                 log.debug("run -> found {} container(s)...", containers.size());
 
                 for (Map.Entry<UUID, String> c : containers.entrySet()) {
-                    UUID txId = c.getKey();
-                    if (executionManager.isRunning(txId)) {
+                    UUID instanceId = c.getKey();
+                    if (statusChecker.isAlive(instanceId)) {
                         continue;
                     }
 
                     String cId = c.getValue();
-                    log.warn("run -> found an orphaned container {} (process {}), attempting to kill...", cId, txId);
+                    log.warn("run -> found an orphaned container {} (process {}), attempting to kill...", cId, instanceId);
                     killContainer(cId);
                 }
 
@@ -89,17 +91,19 @@ public class OrphanSweeper implements Runnable {
 
     private static Map<UUID, String> findContainers() throws IOException, InterruptedException {
         Map<UUID, String> ids = new HashMap<>();
-        Utils.exec(PS_CMD, line -> {
+        exec(PS_CMD, line -> {
             int idx = line.indexOf(" ");
             if (idx < 0 || idx + 1 >= line.length()) {
                 log.warn("findContainers -> invalid line: {}", line);
-                return;
+                return null;
             }
 
             UUID k = UUID.fromString(line.substring(0, idx));
             String v = line.substring(idx + 1);
 
             ids.put(k, v);
+
+            return null;
         });
         return ids;
     }
@@ -119,5 +123,33 @@ public class OrphanSweeper implements Runnable {
 
     private static String[] createKillCommand(String cId) {
         return new String[]{"docker", "rm", "-f", cId};
+    }
+
+    private static void exec(String[] cmd, Function<String, Void> callback) throws IOException, InterruptedException {
+        Process b = new ProcessBuilder()
+                .command(cmd)
+                .redirectErrorStream(true)
+                .start();
+
+        int code = b.waitFor();
+        if (code != 0) {
+            throw new IOException("Error while executing a command " + String.join(" ", cmd) + " : docker exit code " + code);
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(b.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                callback.apply(line);
+            }
+        }
+    }
+
+    public interface StatusChecker {
+
+        boolean isAlive(UUID instanceId);
     }
 }

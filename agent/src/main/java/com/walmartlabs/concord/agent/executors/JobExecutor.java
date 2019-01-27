@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.executors;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,10 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.agent.JobInstance;
+import com.walmartlabs.concord.agent.JobRequest;
 
-public class Main {
+public interface JobExecutor {
 
-    public static void main(String[] args) throws Exception {
-        Configuration cfg = new Configuration();
-        Agent a = new Agent(cfg);
-        a.run();
-    }
+    JobInstance exec(JobRequest jobRequest) throws Exception;
 }

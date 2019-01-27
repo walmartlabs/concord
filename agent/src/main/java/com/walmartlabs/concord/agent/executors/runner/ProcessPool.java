@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.executors.runner;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,8 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.google.common.hash.HashCode;
+import com.walmartlabs.concord.agent.Utils;
+import com.walmartlabs.concord.agent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,9 +78,9 @@ public class ProcessPool {
                     throw new ExecutionException("Error while starting a new process", e);
                 }
 
-                log.info("take -> started a new process: {}", entry.workDir);
+                log.info("take -> started a new process: {}", entry.procDir);
             } else {
-                log.info("take -> using a pre-forked instance: {}", entry.workDir);
+                log.info("take -> using a pre-forked instance: {}", entry.procDir);
             }
 
             executor.submit(() -> populate(hc, launcher));
@@ -165,22 +167,22 @@ public class ProcessPool {
 
         private final long timestamp;
         private final Process process;
-        private final Path workDir;
+        private final Path procDir;
 
         private boolean remove = false;
 
-        public ProcessEntry(Process process, Path workDir) {
+        public ProcessEntry(Process process, Path procDir) {
             this.timestamp = System.currentTimeMillis();
             this.process = process;
-            this.workDir = workDir;
+            this.procDir = procDir;
         }
 
         public Process getProcess() {
             return process;
         }
 
-        public Path getWorkDir() {
-            return workDir;
+        public Path getProcDir() {
+            return procDir;
         }
     }
 }

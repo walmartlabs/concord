@@ -60,9 +60,9 @@ public class CheckpointsIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
 
-        assertLog(".*Start.*", ab);
-        assertLog(".*Middle.*", ab);
-        assertLog(".*End.*", ab);
+        assertLog(".*==Start.*", ab);
+        assertLog(".*==Middle.*", ab);
+        assertLog(".*==End.*", ab);
 
         // restore from TWO checkpoint
         restoreFromCheckpoint(pir.getInstanceId(), "TWO");
@@ -70,18 +70,18 @@ public class CheckpointsIT extends AbstractServerIT {
         waitForCompletion(processApi, spr.getInstanceId());
 
         ab = getLog(pir.getLogFileName());
-        assertLog(".*Start.*", ab);
-        assertLog(".*Middle.*", ab);
-        assertLog(".*End.*", 2, ab);
+        assertLog(".*==Start.*", ab);
+        assertLog(".*==Middle.*", ab);
+        assertLog(".*==End.*", 2, ab);
 
         // restore from ONE checkpoint
         restoreFromCheckpoint(pir.getInstanceId(), "ONE");
 
         waitForCompletion(processApi, spr.getInstanceId());
         ab = getLog(pir.getLogFileName());
-        assertLog(".*Start.*", ab);
-        assertLog(".*Middle.*", 2, ab);
-        assertLog(".*End.*", 3, ab);
+        assertLog(".*==Start.*", ab);
+        assertLog(".*==Middle.*", 2, ab);
+        assertLog(".*==End.*", 3, ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -156,9 +156,9 @@ public class CheckpointsIT extends AbstractServerIT {
         waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Start.*", ab);
-        assertLog(".*Middle.*", ab);
-        assertLog(".*End.*", ab);
+        assertLog(".*==Start.*", ab);
+        assertLog(".*==Middle.*", ab);
+        assertLog(".*==End.*", ab);
     }
 
     @Test

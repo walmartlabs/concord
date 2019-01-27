@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.client;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,14 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-public class JobExecutorException extends RuntimeException {
+import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 
-    public JobExecutorException(String message) {
-        super(message);
+public class ProcessUtils {
+
+    public static boolean isFinal(StatusEnum s) {
+        return s == StatusEnum.FINISHED || s == StatusEnum.FAILED || s == StatusEnum.CANCELLED || s == StatusEnum.SUSPENDED || s == StatusEnum.TIMED_OUT;
+    }
+
+    private ProcessUtils() {
     }
 }

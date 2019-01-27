@@ -25,14 +25,14 @@ import java.io.Serializable;
 public class QueueClientConfiguration implements Serializable {
 
     private final String address;
-    private final String apiToken;
+    private final String apiKey;
     private final String userAgent;
     private final long connectTimeout;
     private final long maxInactivityPeriod;
 
-    private QueueClientConfiguration(String address, String apiToken, String userAgent, long connectTimeout, long maxInactivityPeriod) {
+    private QueueClientConfiguration(String address, String apiKey, String userAgent, long connectTimeout, long maxInactivityPeriod) {
         this.address = address;
-        this.apiToken = apiToken;
+        this.apiKey = apiKey;
         this.userAgent = userAgent;
         this.connectTimeout = connectTimeout;
         this.maxInactivityPeriod = maxInactivityPeriod;
@@ -42,8 +42,8 @@ public class QueueClientConfiguration implements Serializable {
         return address;
     }
 
-    public String getApiToken() {
-        return apiToken;
+    public String getApiKey() {
+        return apiKey;
     }
 
     public String getUserAgent() {
@@ -62,7 +62,7 @@ public class QueueClientConfiguration implements Serializable {
 
         private final String address;
 
-        private String apiToken;
+        private String apiKey;
         private String userAgent;
         private long connectTimeout = 30000;
         private long maxInactivityPeriod = 120000;
@@ -71,8 +71,8 @@ public class QueueClientConfiguration implements Serializable {
             this.address = address;
         }
 
-        public Builder apiToken(String apiToken) {
-            this.apiToken = apiToken;
+        public Builder apiKey(String apiKey) {
+            this.apiKey = apiKey;
             return this;
         }
 
@@ -92,7 +92,7 @@ public class QueueClientConfiguration implements Serializable {
         }
 
         public QueueClientConfiguration build() {
-            return new QueueClientConfiguration(address, apiToken, userAgent, connectTimeout, maxInactivityPeriod);
+            return new QueueClientConfiguration(address, apiKey, userAgent, connectTimeout, maxInactivityPeriod);
         }
     }
 }
