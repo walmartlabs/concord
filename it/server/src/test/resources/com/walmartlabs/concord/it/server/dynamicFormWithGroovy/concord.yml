@@ -1,0 +1,18 @@
+configuration:
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
+flows:
+  default:
+    - script: groovy
+      body: |
+        def myForm = [
+          "fields": [
+            ["firstName": ["type": "string"]],
+            ["lastName": ["type": "string"]]
+          ]
+        ]
+
+        execution.form('myForm', myForm);
+
+    - log: "${myForm}"

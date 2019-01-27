@@ -100,4 +100,9 @@ public class MockContext implements Context {
     public String getElementId() {
         throw new IllegalStateException("Not supported");
     }
+
+    @Override
+    public void form(String formName, Map<String, Object> formOptions) {
+        throw new IllegalStateException("Not supported");
+    }
 }

@@ -1,0 +1,41 @@
+configuration:
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
+flows:
+  default:
+
+    # creating a form using a Groovy script
+    - script: groovy
+      body: |
+        // define the form's fields and options
+        // the structure is the same as in the form call's syntax
+        def myForm = [
+          "fields": [
+            ["firstName": ["type": "string", "label": "First Name"]],
+            ["lastName": ["type": "string", "label": "Last Name"]]
+          ],
+          "values": [
+              "firstName": "John",
+              "lastName": "Smith"
+          ]
+        ]
+
+        // create the form, the process will be suspended after the script is done
+        execution.form('myForm', myForm);
+
+    - log: "${myForm}"
+
+    # creating a form using an expression
+    - set:
+        myForm:
+          fields:
+          - firstName: { label: "First name", type: "string" }
+          - lastName: { label: "Last name", type: "string" }
+          values:
+            firstName: "John"
+            lastName: "Smith"
+
+    - ${execution.form('myForm', myForm)}
+
+    - log: "${myForm}"

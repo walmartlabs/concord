@@ -37,6 +37,7 @@ import io.takari.bpm.api.Engine;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.api.JavaDelegate;
+import io.takari.bpm.context.DefaultExecutionContextFactory;
 import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExecutionContextVariableResolver;
 import io.takari.bpm.el.ExpressionManager;
@@ -112,14 +113,17 @@ public class EngineFactory {
             }
         };
 
+        FormStorage formStorage = new FileFormStorage(formsDir);
+        // here we create a separate ContextFactory to avoid circular references
+        // between ConcordFormService and ConcordExecutionContextFactory
+        // TODO find a better way
+        FormService formService = new ConcordFormService(new DefaultExecutionContextFactory(expressionManager), new NoopResumeHandler(), formStorage);
+
         ProtectedVarContext protectedVarContext = new ProtectedVarContext(PolicyEngineHolder.INSTANCE.getEngine());
-        ConcordExecutionContextFactory contextFactory = new ConcordExecutionContextFactory(expressionManager, protectedVarContext);
+        ConcordExecutionContextFactory contextFactory = new ConcordExecutionContextFactory(expressionManager, protectedVarContext, formService);
 
         EventStorage eventStorage = new FileEventStorage(eventsDir);
         PersistenceManager persistenceManager = new FilePersistenceManager(instancesDir);
-
-        FormStorage formStorage = new FileFormStorage(formsDir);
-        FormService formService = new ConcordFormService(contextFactory, new NoopResumeHandler(), formStorage);
 
         ProjectDefinitionAdapter adapter = new ProjectDefinitionAdapter(project, activeProfiles, baseDir);
 

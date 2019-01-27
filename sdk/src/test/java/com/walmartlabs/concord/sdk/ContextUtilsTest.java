@@ -186,5 +186,10 @@ public class ContextUtilsTest {
         public String getElementId() {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public void form(String formName, Map<String, Object> formOptions) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

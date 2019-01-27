@@ -113,7 +113,19 @@ public interface Context {
      */
     void suspend(String eventName);
 
-    void suspend(String messageRef, Object payload);
+    /**
+     * Reserved for future use.
+     * @see #suspend(String)
+     */
+    void suspend(String eventName, Object payload);
+
+    /**
+     * Creates a new form and suspends the process.
+     *
+     * @param formName the form's name
+     * @param formOptions the form's options. The data structure is the same as the form call's syntax.
+     */
+    void form(String formName, Map<String, Object> formOptions);
 
     /**
      * Returns the ID of a current process definition (flow).

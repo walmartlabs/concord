@@ -9,9 +9,9 @@ package com.walmartlabs.concord.sdk;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,14 +79,15 @@ public final class ContextUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> T getVariable(Context ctx, String name, T defaultValue) {
-        T result = (T)ctx.getVariable(name);
+        T result = (T) ctx.getVariable(name);
+
         if (result != null) {
             return result;
         }
+
         return defaultValue;
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> T getVariable(Context ctx, String name, T defaultValue, Class<T> type) {
         Object value = getVariable(ctx, name, defaultValue);
         if (value == null) {
@@ -96,14 +97,17 @@ public final class ContextUtils {
         if (type.isInstance(value)) {
             return type.cast(value);
         }
+
         throw new IllegalArgumentException("Invalid variable '" + name + "' type, expected: " + type + ", got: " + value.getClass());
     }
 
     public static <T> T assertVariable(Context ctx, String name, Class<T> type) {
         T result = getVariable(ctx, name, null, type);
+
         if (result != null) {
             return result;
         }
+
         throw new IllegalArgumentException("Mandatory variable '" + name + "' is required");
     }
 

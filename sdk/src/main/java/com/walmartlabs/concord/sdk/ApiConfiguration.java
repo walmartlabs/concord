@@ -20,10 +20,19 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
-
+/**
+ * Provides basic configuration details of Concord API.
+ * Can be injected into a task plugin using {@code @Inject}.
+ */
 public interface ApiConfiguration {
 
+    /**
+     * @return the base URL of the API, e.g. https://concord.example.com/
+     */
     String getBaseUrl();
 
+    /**
+     * @return the current session token that can be used to talk to the API.
+     */
     String getSessionToken(Context ctx);
 }

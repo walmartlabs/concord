@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-runner: new method `context#form`, allows dynamic creation
+of forms in tasks, scripts and expressions;
 - concord-console: profile selection when starting a process;
 - concord-tasks: new task `concordSecrets`.
 

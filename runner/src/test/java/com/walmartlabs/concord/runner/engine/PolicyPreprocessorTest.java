@@ -48,7 +48,7 @@ public class PolicyPreprocessorTest {
                 new String[]{InternalConstants.Context.CONTEXT_KEY, InternalConstants.Context.EXECUTION_CONTEXT_KEY},
                 new InjectVariableELResolver());
 
-        Context ctx = new ConcordExecutionContextFactory.ConcordExecutionContext(null, expressionManager, new Variables(), null);
+        Context ctx = new ConcordExecutionContextFactory.ConcordExecutionContext(null, expressionManager, new Variables(), null, null);
         ctx.setVariable("gatekeeperArtifacts", Arrays.asList("a", "b", "c"));
 
         Path workDir = Files.createTempDirectory("concord-test");

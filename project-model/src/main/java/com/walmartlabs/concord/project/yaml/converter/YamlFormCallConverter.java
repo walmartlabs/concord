@@ -21,15 +21,12 @@ package com.walmartlabs.concord.project.yaml.converter;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlFormCall;
 import io.takari.bpm.model.UserTask;
 import io.takari.bpm.model.form.FormExtension;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
 
 public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
 
@@ -53,21 +50,6 @@ public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
         c.addSourceMap(id, toSourceMap(s, "Form: " + s.getKey()));
 
         return c;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> getGroupsMap(Object ldapObj) {
-        List<String> groupList = null;
-        if (ldapObj instanceof List) {
-            groupList = ((List<Map>) ldapObj).stream()
-                    .map(group -> (String) group.get(InternalConstants.Forms.RUN_AS_GROUP_KEY))
-                    .collect(Collectors.toList());
-        } else if (ldapObj instanceof Map) {
-            groupList = new ArrayList<>();
-            groupList.add((String) ((Map) ldapObj).get(InternalConstants.Forms.RUN_AS_GROUP_KEY));
-        }
-
-        return Collections.singletonMap(InternalConstants.Forms.RUN_AS_GROUP_KEY, groupList);
     }
 
     private static void validate(Map<String, Object> opts, JsonLocation loc) {

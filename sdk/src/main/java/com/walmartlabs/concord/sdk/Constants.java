@@ -326,6 +326,9 @@ public class Constants {
         public static final String ON_TIMEOUT_FLOW = "onTimeout";
     }
 
+    /**
+     * Typical part names in multipart/form-data requests, e.g. the start process request.
+     */
     public static class Multipart {
 
         public static final String PROJECT_ID = "projectId";

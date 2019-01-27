@@ -26,6 +26,7 @@ import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionContextFactory;
 import io.takari.bpm.api.Variables;
 import io.takari.bpm.el.ExpressionManager;
+import io.takari.bpm.form.FormService;
 import org.junit.Test;
 
 import static com.walmartlabs.concord.runner.engine.ConcordExecutionContextFactory.ConcordExecutionContext;
@@ -69,8 +70,9 @@ public class ConcordExecutionContextTest {
     private ConcordExecutionContext ctx() {
         ExecutionContextFactory<? extends ExecutionContext> ctxFactory = null;
         ExpressionManager expressionManager = null;
+        FormService formService = null;
         Variables source = new Variables();
-        return new ConcordExecutionContext(ctxFactory, expressionManager, source, varContext);
+        return new ConcordExecutionContext(ctxFactory, expressionManager, source, varContext, formService);
     }
 
     private static PolicyEngine policyEngine() {

@@ -84,6 +84,7 @@
 ## Expert
 
 * [ansible_oneops_replace](ansible_oneops_replace) - using triggers to run a playbook on OneOps VM replacement events;
+* [dynamic_forms](dynamic_forms) - how to create a form dynamically (in runtime);
 * [fork](fork) - starting a subprocess;
 * [fork_join](fork_join) - starting multiple subprocesses and waiting for completion;
 * [generic_triggers](generic_triggers) - how to use custom trigger events;
