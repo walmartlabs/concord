@@ -30,10 +30,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Value.Immutable
 @JsonInclude(Include.NON_EMPTY)
@@ -112,10 +109,34 @@ public interface ProcessEntry extends Serializable {
     Set<String> handlers();
 
     @Nullable
-    @JsonRawValue
-    Object checkpoints();
+    List<Checkpoint> checkpoints();
 
     @Nullable
-    @JsonRawValue
-    Object history();
+    List<StatusHistory> statusHistory();
+
+    @Value.Immutable
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableCheckpoint.class)
+    @JsonDeserialize(as = ImmutableCheckpoint.class)
+    interface Checkpoint {
+
+        UUID id();
+
+        String name();
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+        Date createdAt();
+    }
+
+    @Value.Immutable
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableStatusHistory.class)
+    @JsonDeserialize(as = ImmutableStatusHistory.class)
+    interface StatusHistory {
+
+        ProcessStatus status();
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+        Date changeDate();
+    }
 }

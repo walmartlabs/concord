@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
@@ -53,6 +54,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.db.PgUtils.toChar;
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
@@ -73,6 +75,9 @@ public class ProcessQueueDao extends AbstractDao {
             ProcessStatus.RESUMING);
 
     private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
+
+    private static final TypeReference<List<ProcessEntry.Checkpoint>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessEntry.Checkpoint>>() {};
+    private static final TypeReference<List<ProcessEntry.StatusHistory>> LIST_OF_STATUS_HISTORY = new TypeReference<List<ProcessEntry.StatusHistory>>() {};
 
     private final PolicyDao policyDao;
     private final EventDao eventDao;
@@ -686,14 +691,18 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> deserialize(Object o) {
+        return deserialize(o, new TypeReference<Map<String, Object>>() {
+        });
+    }
+
+    private <T> T deserialize(Object o, TypeReference valueTypeRef) {
         if (o == null) {
             return null;
         }
 
         try {
-            return objectMapper.readValue(String.valueOf(o), Map.class);
+            return objectMapper.readValue(String.valueOf(o), valueTypeRef);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -742,7 +751,7 @@ public class ProcessQueueDao extends AbstractDao {
                                             function("jsonb_build_object", Object.class,
                                                     inline("id"), pc.CHECKPOINT_ID,
                                                     inline("name"), pc.CHECKPOINT_NAME,
-                                                    inline("createdAt"), pc.CHECKPOINT_DATE)))))
+                                                    inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
                     .from(pc)
                     .where(pc.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)).asField("checkpoints");
 
@@ -756,7 +765,7 @@ public class ProcessQueueDao extends AbstractDao {
                             function("array_agg", Object.class,
                                     function("jsonb_strip_nulls", Object.class,
                                             function("jsonb_build_object", Object.class,
-                                                    inline("changeDate"), pe.EVENT_DATE,
+                                                    inline("changeDate"), toJsonDate(pe.EVENT_DATE),
                                                     inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
                                                     inline("checkpointId"), field("{0}->'checkpointId'", Object.class, pe.EVENT_DATA))))))
                     .from(pe)
@@ -772,6 +781,10 @@ public class ProcessQueueDao extends AbstractDao {
         SelectQuery<Record> query = buildSelect(tx, includes);
         query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
         return query.fetchOne(this::toEntry);
+    }
+
+    private static Field<String> toJsonDate(Field<Timestamp> date) {
+        return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"");
     }
 
     private ProcessEntry toEntry(Record r) {
@@ -819,8 +832,8 @@ public class ProcessQueueDao extends AbstractDao {
                 .meta(deserialize(r.get(PROCESS_QUEUE.META)))
                 .handlers(toSet(r.get(PROCESS_QUEUE.HANDLERS)))
                 .logFileName(r.get(PROCESS_QUEUE.INSTANCE_ID) + ".log")
-                .checkpoints(getOrNull(r, "checkpoints"))
-                .history(getOrNull(r, "status_history"))
+                .checkpoints(deserialize(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
+                .statusHistory(deserialize(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .build();
     }
 

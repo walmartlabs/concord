@@ -24,7 +24,10 @@ import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
 
+import java.sql.Timestamp;
+
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.inline;
 
 public final class PgUtils {
 
@@ -34,6 +37,10 @@ public final class PgUtils {
 
     public static Field<?> interval(String s) {
         return field("interval '" + s + "'");
+    }
+
+    public static Field<String> toChar(Field<Timestamp> date, String format) {
+        return field("to_char({0}, {1})", String.class, date, inline(format));
     }
 
     private PgUtils() {
