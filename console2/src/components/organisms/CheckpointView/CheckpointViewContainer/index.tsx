@@ -21,14 +21,14 @@ import { ActionMap, ComposableContainer, Container, EffectMap, SelectorMap } fro
 import * as React from 'react';
 
 import { ConcordId } from '../../../../api/common';
-import { ProcessEntryEx } from '../../../../api/service/console';
+import { ProcessEntry } from '../../../../api/process';
 import { CheckpointGroup } from '../shared/types';
 import { FetchProcessArgs, loadData } from './loadData';
 
 export interface State {
     orgId: ConcordId; // Concord org UUID
     projectId: ConcordId; // Concord project UUID
-    processes: ProcessEntryEx[]; // Array of processes
+    processes: ProcessEntry[]; // Array of processes
     checkpointGroups: { [id: string]: CheckpointGroup[] };
     currentPage: number; // Current data page
     limitPerPage: number; // Processes per page

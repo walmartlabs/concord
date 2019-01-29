@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: list of checkpoints on the process status page;
 - concord-runner: new method `context#form`, allows dynamic creation
 of forms in tasks, scripts and expressions;
 - concord-console: profile selection when starting a process;

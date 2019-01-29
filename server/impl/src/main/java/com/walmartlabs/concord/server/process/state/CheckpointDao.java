@@ -21,8 +21,9 @@ package com.walmartlabs.concord.server.process.state;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.process.ImmutableProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
-import com.walmartlabs.concord.server.process.checkpoint.ProcessCheckpointEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import org.jooq.Configuration;
 import org.jooq.Record;
 
@@ -128,8 +129,10 @@ public class CheckpointDao extends AbstractDao {
     }
 
     private static ProcessCheckpointEntry toEntry(Record r) {
-        return new ProcessCheckpointEntry(r.get(PROCESS_CHECKPOINTS.CHECKPOINT_ID),
-                r.get(PROCESS_CHECKPOINTS.CHECKPOINT_NAME),
-                r.get(PROCESS_CHECKPOINTS.CHECKPOINT_DATE));
+        return ImmutableProcessCheckpointEntry.builder()
+                .id(r.get(PROCESS_CHECKPOINTS.CHECKPOINT_ID))
+                .name(r.get(PROCESS_CHECKPOINTS.CHECKPOINT_NAME))
+                .createdAt(r.get(PROCESS_CHECKPOINTS.CHECKPOINT_DATE))
+                .build();
     }
 }

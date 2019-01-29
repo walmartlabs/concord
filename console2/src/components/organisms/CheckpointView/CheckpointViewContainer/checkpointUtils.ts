@@ -17,8 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { ProcessCheckpointEntry } from '../../../../api/process/checkpoint';
-import { ProcessHistoryEntry } from '../../../../api/process/history';
+import { ProcessCheckpointEntry, ProcessHistoryEntry } from "../../../../api/process";
 import { CheckpointGroup, Status, CustomCheckpoint } from '../shared/types';
 import { isBefore, isAfter } from 'date-fns';
 
@@ -73,47 +72,52 @@ export const generateCheckpointGroups = (
     checkpoints: ProcessCheckpointEntry[],
     historyEntries: ProcessHistoryEntry[]
 ): CheckpointGroup[] => {
-    // * Sort History in chronological order
-    const cronoHist = historyEntries.sort(sortChrono('changeDate'));
+    try {
+        // * Sort History in chronological order
+        const cronoHist = historyEntries.sort(sortChrono('changeDate'));
 
-    const checkpointGroups: CheckpointGroup[] = [];
-    let groupCount = 1; //
-    const initialWipGroup: CheckpointGroup = { name: '', checkpoints: [] };
-    let wipGroup: CheckpointGroup = initialWipGroup;
+        const checkpointGroups: CheckpointGroup[] = [];
+        let groupCount = 1; //
+        const initialWipGroup: CheckpointGroup = { name: '', checkpoints: [] };
+        let wipGroup: CheckpointGroup = initialWipGroup;
 
-    cronoHist.forEach((event) => {
-        // * Create Group Starting point of Process meets this criteria
-        if (
-            (event.checkpointId !== undefined && event.status === 'SUSPENDED') ||
-            event.status === 'STARTING'
-        ) {
-            wipGroup.name = `#${groupCount}`;
-            wipGroup.Start = new Date(event.changeDate);
-        }
+        cronoHist.forEach((event) => {
+            // * Create Group Starting point of Process meets this criteria
+            if (
+                (event.payload && event.payload.checkpointId && event.status === 'SUSPENDED') ||
+                event.status === 'STARTING'
+            ) {
+                wipGroup.name = `#${groupCount}`;
+                wipGroup.Start = new Date(event.changeDate);
+            }
 
-        // * If we come across a Finalized state gather the events inbetween start and finish
-        if (
-            event.status === 'FINISHED' ||
-            event.status === 'FAILED' ||
-            event.status === 'CANCELLED'
-        ) {
-            wipGroup.End = new Date(event.changeDate);
+            // * If we come across a Finalized state gather the events inbetween start and finish
+            if (
+                event.status === 'FINISHED' ||
+                event.status === 'FAILED' ||
+                event.status === 'CANCELLED'
+            ) {
+                wipGroup.End = new Date(event.changeDate);
 
-            wipGroup.checkpoints = getGroupsBetweenTime(
-                wipGroup.Start!,
-                wipGroup.End,
-                checkpoints,
-                event.status
-            );
+                wipGroup.checkpoints = getGroupsBetweenTime(
+                    wipGroup.Start!,
+                    wipGroup.End,
+                    checkpoints,
+                    event.status
+                );
 
-            // * Add group to collection
-            checkpointGroups.push({ ...wipGroup });
+                // * Add group to collection
+                checkpointGroups.push({ ...wipGroup });
 
-            // * Reset
-            groupCount++;
-            wipGroup = initialWipGroup;
-        }
-    });
+                // * Reset
+                groupCount++;
+                wipGroup = initialWipGroup;
+            }
+        });
 
-    return [...checkpointGroups];
+        return [...checkpointGroups];
+    } catch (e) {
+        // If data creation fails return nothing
+        return [];
+    }
 };

@@ -27,7 +27,7 @@ import {
     RestoreProcessResponse,
     StartProcessResponse
 } from '../../../api/org/process';
-import { ProcessEntry } from '../../../api/process';
+import { ProcessDataInclude, ProcessEntry } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as LogState } from './logs/types';
 import { State as PollState } from './poll/types';
@@ -39,6 +39,7 @@ import { State as AnsibleState } from './ansible/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
+    includes: ProcessDataInclude;
 }
 
 export interface ListProcessesRequest extends Action {

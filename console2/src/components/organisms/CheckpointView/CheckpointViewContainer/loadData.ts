@@ -19,6 +19,7 @@
  */
 import { listProcesses } from '../../../../api/service/console';
 import { generateCheckpointGroups } from './checkpointUtils';
+import { ProcessEntry } from '../../../../api/process';
 
 export interface FetchProcessArgs {
     orgId: string;
@@ -27,7 +28,7 @@ export interface FetchProcessArgs {
     offset?: number;
 }
 
-export const loadData = (args: FetchProcessArgs) => async ({ setState, state }: any) => {
+export const loadData = (args: FetchProcessArgs) => async ({ setState, state }: any): Promise<ProcessEntry[] | undefined> => {
     if (state.loadingData) {
         return;
     }
@@ -38,10 +39,7 @@ export const loadData = (args: FetchProcessArgs) => async ({ setState, state }: 
     const checkpointGroups = {};
     processes.forEach((p) => {
         if (p.checkpoints && p.statusHistory) {
-            checkpointGroups[p.instanceId] = generateCheckpointGroups(
-                p.checkpoints,
-                p.statusHistory
-            );
+            checkpointGroups[p.instanceId] = generateCheckpointGroups(p.checkpoints, p.statusHistory);
         }
     });
 

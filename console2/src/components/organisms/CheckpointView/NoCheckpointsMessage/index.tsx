@@ -26,7 +26,7 @@ export const NoCheckpointsMessage: React.SFC<{}> = () => (
     <LoadError>
         No checkpoints have been created for this process.
         <br />
-        Find out more in {/* // TODO: Replace with ENV var metadata */}
+        Find out more in
         <a
             href={`${
                 window.concord.documentationSite

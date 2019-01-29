@@ -17,7 +17,8 @@
  * limitations under the License.
  * =====
  */
-import { ProcessCheckpointEntry } from '../../../../api/process/checkpoint';
+
+import { ProcessCheckpointEntry } from "../../../../api/process";
 
 export interface CheckpointGroup {
     name: string;

@@ -20,7 +20,7 @@
 import * as React from 'react';
 
 import { CheckpointGroupName, CheckpointName } from '../shared/Labels';
-import { ProcessStatus } from '../../../../api/process';
+import { ProcessEntry } from '../../../../api/process';
 import { CheckpointGroup } from '../shared/types';
 
 import {
@@ -33,14 +33,14 @@ import {
 } from './styles';
 import CheckpointPopup from '../CheckpointPopup';
 import { formatDuration, timestampDiffMs } from '../../../../utils';
+import NoCheckpointsMessage from '../NoCheckpointsMessage';
 
 interface Props {
-    processId: string;
-    processStatus: ProcessStatus;
+    process: ProcessEntry;
     checkpointGroups: CheckpointGroup[];
 }
 
-export const CheckpointData: React.SFC<Props> = ({ processId, checkpointGroups }) => {
+export const CheckpointData: React.SFC<Props> = ({ process, checkpointGroups }) => {
     if (checkpointGroups && checkpointGroups.length > 0) {
         return (
             <FlexWrapper>
@@ -55,7 +55,7 @@ export const CheckpointData: React.SFC<Props> = ({ processId, checkpointGroups }
                                             <CheckpointName>{checkpoint.name}</CheckpointName>
                                             <CheckpointPopup
                                                 checkpoint={checkpoint}
-                                                processId={processId}
+                                                process={process}
                                                 render={
                                                     <TimeBox
                                                         statusColor={getStatusColor(
@@ -82,7 +82,7 @@ export const CheckpointData: React.SFC<Props> = ({ processId, checkpointGroups }
             </FlexWrapper>
         );
     } else {
-        return null;
+        return <NoCheckpointsMessage />;
     }
 };
 

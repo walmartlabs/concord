@@ -21,9 +21,9 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
@@ -109,16 +109,16 @@ public interface ProcessEntry extends Serializable {
     Set<String> handlers();
 
     @Nullable
-    List<Checkpoint> checkpoints();
+    List<ProcessCheckpointEntry> checkpoints();
 
     @Nullable
-    List<StatusHistory> statusHistory();
+    List<ProcessStatusHistoryEntry> statusHistory();
 
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)
-    @JsonSerialize(as = ImmutableCheckpoint.class)
-    @JsonDeserialize(as = ImmutableCheckpoint.class)
-    interface Checkpoint {
+    @JsonSerialize(as = ImmutableProcessCheckpointEntry.class)
+    @JsonDeserialize(as = ImmutableProcessCheckpointEntry.class)
+    interface ProcessCheckpointEntry {
 
         UUID id();
 
@@ -130,11 +130,27 @@ public interface ProcessEntry extends Serializable {
 
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)
-    @JsonSerialize(as = ImmutableStatusHistory.class)
-    @JsonDeserialize(as = ImmutableStatusHistory.class)
-    interface StatusHistory {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonSerialize(as = ImmutableProcessStatusHistoryPayload.class)
+    @JsonDeserialize(as = ImmutableProcessStatusHistoryPayload.class)
+    interface ProcessStatusHistoryPayload {
+
+        @Nullable
+        UUID checkpointId();
+    }
+
+    @Value.Immutable
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableProcessStatusHistoryEntry.class)
+    @JsonDeserialize(as = ImmutableProcessStatusHistoryEntry.class)
+    interface ProcessStatusHistoryEntry {
+
+        UUID id();
 
         ProcessStatus status();
+
+        @Nullable
+        ProcessStatusHistoryPayload payload();
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
         Date changeDate();

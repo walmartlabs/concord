@@ -35,8 +35,7 @@ export default ({ process, checkpointGroups }: Props) => (
             <>
                 {process.checkpoints.length && (
                     <CheckpointGroup
-                        processStatus={process.status}
-                        processId={process.instanceId}
+                        process={process}
                         checkpointGroups={checkpointGroups[process.instanceId]}
                     />
                 )}

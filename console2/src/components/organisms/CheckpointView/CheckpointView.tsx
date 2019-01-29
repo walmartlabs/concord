@@ -28,10 +28,13 @@ import { Row } from './shared/Layout';
 import ActionBar from './ActionBar';
 import LeftContent from './ProcessList/LeftContent';
 import RightContent from './ProcessList/RightContent';
+import { ProcessEntry } from '../../../api/process';
+import { CheckpointGroup } from './shared/types';
+import { Loader } from 'semantic-ui-react';
 
 interface Props {
-    processes: any[];
-    checkpointGroups: any;
+    processes: ProcessEntry[];
+    checkpointGroups: { [id: string]: CheckpointGroup[] };
     pollDataFn?: () => void;
     pollInterval?: number;
 }
@@ -103,7 +106,7 @@ class CheckpointView extends React.Component<Props, { activeId: string }> {
             );
         } else {
             // Loading state
-            return null;
+            return <Loader active={true} />;
         }
     }
 }

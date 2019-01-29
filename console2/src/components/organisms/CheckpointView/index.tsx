@@ -22,6 +22,7 @@ import { Provider } from 'constate';
 import CheckpointView from './CheckpointView';
 
 import CPContainer, { initialState } from './CheckpointViewContainer';
+import CheckpointErrorBoundary from './CheckpointErrorBoundry';
 
 interface Props {
     orgId: string;
@@ -41,19 +42,21 @@ export default ({ orgId, projectId }: Props) => {
                     currentPage,
                     processes
                 }) => (
-                    <CheckpointView
-                        processes={processes}
-                        checkpointGroups={checkpointGroups}
-                        pollDataFn={() =>
-                            refreshProcessData({
-                                orgId,
-                                projectId,
-                                limit: limitPerPage,
-                                offset: (currentPage - 1) * limitPerPage
-                            })
-                        }
-                        pollInterval={5000}
-                    />
+                    <CheckpointErrorBoundary>
+                        <CheckpointView
+                            processes={processes}
+                            checkpointGroups={checkpointGroups}
+                            pollDataFn={() =>
+                                refreshProcessData({
+                                    orgId,
+                                    projectId,
+                                    limit: limitPerPage,
+                                    offset: (currentPage - 1) * limitPerPage
+                                })
+                            }
+                            pollInterval={5000}
+                        />
+                    </CheckpointErrorBoundary>
                 )}
             </CPContainer>
         </Provider>

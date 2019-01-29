@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ResumeProcessResponse;

@@ -322,6 +322,7 @@ public class ConsoleService implements Resource {
     @Path("/process")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    // TODO move to ProcessResourceV2
     public List<ProcessEntryEx> listProcesses(@QueryParam("orgId") UUID orgId,
                                               @QueryParam("projectId") UUID projectId,
                                               @QueryParam("limit") @DefaultValue("30") int limit,
@@ -364,9 +365,10 @@ public class ConsoleService implements Resource {
                                 function("array_agg", Object.class,
                                         function("jsonb_strip_nulls", Object.class,
                                                 function("jsonb_build_object", Object.class,
+                                                        inline("id"), pe.EVENT_ID,
                                                         inline("changeDate"), pe.EVENT_DATE,
                                                         inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
-                                                        inline("checkpointId"), field("{0}->'checkpointId'", Object.class, pe.EVENT_DATA))))))
+                                                        inline("payload"), field("{0} - 'status'", Object.class, pe.EVENT_DATA))))))
                         .from(pe)
                         .where(pq.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()).and(pe.EVENT_DATE.greaterOrEqual(pq.CREATED_AT))))
                         .asField();

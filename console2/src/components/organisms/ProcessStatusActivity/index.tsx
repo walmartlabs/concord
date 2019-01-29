@@ -25,12 +25,14 @@ import { Button, Divider, Header, Icon } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
 import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
-import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
 import { FormListEntry } from '../../../api/process/form';
 import { actions } from '../../../state/data/processes/poll';
 import { State } from '../../../state/data/processes/poll/types';
 import { ProcessActionList, ProcessStatusTable } from '../../molecules';
 import { CancelProcessPopup, AnsibleStatsActivity } from '../../organisms';
+import ProcessCheckpoint from '../CheckpointView/ProcessCheckpoint';
+import LogDrawer from '../CheckpointView/LogDrawer';
+import { Provider as ConstateProvider } from 'constate';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -134,6 +136,16 @@ class ProcessStatusActivity extends React.Component<Props> {
                         <Divider content="Required Actions" horizontal={true} />
                         <ProcessActionList instanceId={instanceId} forms={forms} />
                     </>
+                )}
+
+                {process && (
+                    <ConstateProvider>
+                        <LogDrawer />
+
+                        <Divider content="Checkpoints" horizontal={true} />
+
+                        <ProcessCheckpoint process={process} />
+                    </ConstateProvider>
                 )}
 
                 <AnsibleStatsActivity instanceId={instanceId} />

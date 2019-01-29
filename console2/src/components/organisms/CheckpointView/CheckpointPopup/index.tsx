@@ -29,12 +29,13 @@ import RestoreProcess from './RestoreProcess';
 import { CheckpointName } from '../shared/Labels';
 import { CustomCheckpoint } from '../shared/types';
 import CheckpointViewContainer from '../CheckpointViewContainer';
+import { ProcessEntry, isFinal } from '../../../../api/process';
 
 const CheckpointPopup: React.SFC<{
     checkpoint: CustomCheckpoint;
-    processId: string;
+    process: ProcessEntry;
     render: React.ReactNode;
-}> = ({ checkpoint, processId, render }) => (
+}> = ({ checkpoint, process, render }) => (
     <Popup
         inverted={false}
         trigger={<div>{render}</div>}
@@ -64,9 +65,9 @@ const CheckpointPopup: React.SFC<{
                                     <Sidebar.Show>
                                         <a
                                             onClick={() => {
-                                                fetchLog(processId);
+                                                fetchLog(process.instanceId);
                                                 setActiveAnchor(checkpoint.id);
-                                                setActiveProcess(processId);
+                                                setActiveProcess(process.instanceId);
                                                 queueScrollTo(checkpoint.id);
                                             }}
                                             style={{
@@ -103,13 +104,21 @@ const CheckpointPopup: React.SFC<{
                 </Grid>
                 <hr />
                 <CheckpointViewContainer>
-                    {({ refreshProcessData, orgId, projectId, limitPerPage, currentPage }) => (
+                    {({
+                        refreshProcessData,
+                        orgId,
+                        projectId,
+                        limitPerPage,
+                        currentPage
+                    }) => (
                         <RestoreProcess>
                             {({ restoreProcess }) => (
                                 <Button
                                     primary={true}
+                                    disabled={!isFinal(process.status)}
+                                    loading={process.status === "ENQUEUED"}
                                     onClick={() => {
-                                        restoreProcess(processId, checkpoint.id);
+                                        restoreProcess(process.instanceId, checkpoint.id);
                                         // TODO: ಠ_ಠ ... hack, needs to be better.
                                         setTimeout(() => {
                                             refreshProcessData({
@@ -118,7 +127,7 @@ const CheckpointPopup: React.SFC<{
                                                 limit: limitPerPage,
                                                 offset: (currentPage - 1) * limitPerPage
                                             });
-                                        }, 500);
+                                        }, 200);
                                     }}>
                                     <ClassIcon
                                         classes="icon redo white"

@@ -71,6 +71,23 @@ export const hasState = (s: ProcessStatus) => s !== ProcessStatus.PREPARING;
 export const canBeCancelled = (s: ProcessStatus) =>
     s === ProcessStatus.ENQUEUED || s === ProcessStatus.RUNNING || s === ProcessStatus.SUSPENDED;
 
+export interface ProcessCheckpointEntry {
+    id: string;
+    name: string;
+    createdAt: string;
+}
+
+export interface ProcessHistoryPayload {
+    checkpointId?: string;
+}
+
+export interface ProcessHistoryEntry {
+    id: ConcordId;
+    payload?: ProcessHistoryPayload;
+    status: ProcessStatus;
+    changeDate: string;
+}
+
 export interface ProcessEntry {
     instanceId: ConcordId;
     parentInstanceId?: ConcordId;
@@ -86,6 +103,8 @@ export interface ProcessEntry {
     createdAt: string;
     lastUpdatedAt: string;
     meta?: {};
+    checkpoints?: ProcessCheckpointEntry[];
+    statusHistory?: ProcessHistoryEntry[];
 }
 
 export const start = (
@@ -111,8 +130,13 @@ export const start = (
     return fetchJson('/api/v1/process', opts);
 };
 
-export const get = (instanceId: ConcordId): Promise<ProcessEntry> =>
-    fetchJson(`/api/v1/process/${instanceId}`);
+export type ProcessDataInclude = Array<'checkpoints' | 'history' | 'childrenIds'>;
+
+export const get = (instanceId: ConcordId, includes: ProcessDataInclude): Promise<ProcessEntry> => {
+    const params = new URLSearchParams();
+    includes.forEach((i) => params.append('include', i));
+    return fetchJson(`/api/v2/process/${instanceId}?${params.toString()}`);
+};
 
 export const kill = (instanceId: ConcordId): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}`, { method: 'DELETE' });

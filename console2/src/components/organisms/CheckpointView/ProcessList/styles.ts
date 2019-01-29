@@ -27,10 +27,9 @@ export const LeftWrap = styled(Column)`
     float: left;
 `;
 
-export const RightWrap = styled(Column)`
+export const ContentBlock = styled(Column)`
     border: 1px solid #dedfde;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-radius: 5px;
     overflow-y: hidden;
     overflow-x: auto;
 
@@ -64,4 +63,9 @@ export const RightWrap = styled(Column)`
         border-radius: 10px;
         box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
     }
+`;
+
+export const RightWrap = styled(ContentBlock)`
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
 `;

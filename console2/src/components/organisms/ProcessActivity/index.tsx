@@ -194,7 +194,7 @@ const mapStateToProps = (
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
-    load: (instanceId) => dispatch(actions.getProcess(instanceId))
+    load: (instanceId) => dispatch(actions.getProcess(instanceId, ['history', 'checkpoints']))
 });
 
 export default connect(

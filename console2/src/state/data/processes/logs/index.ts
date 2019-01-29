@@ -205,7 +205,7 @@ function* doPoll(instanceId: ConcordId, range: LogRange) {
             });
 
             const [proc, chunk] = yield all([
-                call(apiGet, instanceId),
+                call(apiGet, instanceId, []),
                 call(apiGetLog, instanceId, r)
             ]);
 

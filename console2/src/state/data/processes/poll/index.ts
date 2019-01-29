@@ -200,7 +200,7 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
             yield put(actions.pollRequest());
 
             // get the process' status
-            const process = yield call(apiGet, instanceId);
+            const process = yield call(apiGet, instanceId, ['history', 'checkpoints']);
 
             // because Ansible stats are calculated by an async process on the backend, we poll for
             // additional 10 minutes after the process finishes to make sure we got everything

@@ -31,9 +31,3 @@ export const restoreProcess = (
         },
         body: JSON.stringify({ id: checkpointId })
     });
-
-export interface ProcessCheckpointEntry {
-    id: string;
-    name: string;
-    createdAt: string;
-}

@@ -205,7 +205,7 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
                 break;
             }
 
-            const { status } = yield call(apiGetProcess, processInstanceId);
+            const { status } = yield call(apiGetProcess, processInstanceId, []);
 
             const stopped = isFinal(status);
 

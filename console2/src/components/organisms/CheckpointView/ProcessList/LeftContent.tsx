@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Divider } from 'semantic-ui-react';
 
-import { ProcessEntryEx } from '../../../../api/service/console';
+import { ProcessEntry } from '../../../../api/process';
 import { Truncate } from '../../../atoms';
 import { AppDrawer as LogDrawer, ProcessLogs as LogContainer } from '../../../molecules';
 import { Label, Status } from '../shared/Labels';
@@ -30,7 +30,7 @@ import { ListItem } from './ListItem';
 import { LeftWrap } from './styles';
 
 interface Props {
-    process: ProcessEntryEx;
+    process: ProcessEntry;
 }
 
 export default ({ process }: Props) => (

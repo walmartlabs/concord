@@ -20,12 +20,10 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
@@ -37,9 +35,8 @@ import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
-import com.walmartlabs.concord.server.process.event.EventDao;
-import com.walmartlabs.concord.server.process.event.ProcessEventEntry;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
@@ -88,7 +85,6 @@ public class ProcessResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessResource.class);
 
-    private final ObjectMapper objectMapper;
     private final ProcessManager processManager;
     private final ProcessQueueDao queueDao;
     private final ProcessLogsDao logsDao;
@@ -98,7 +94,6 @@ public class ProcessResource implements Resource {
     private final SecretStoreConfiguration secretStoreCfg;
     private final ProcessStateArchiver stateArchiver;
     private final EncryptedProjectValueManager encryptedValueManager;
-    private final EventDao eventDao;
     private final ProcessKeyCache processKeyCache;
     private final OrganizationManager orgManager;
     private final ProjectDao projectDao;
@@ -113,7 +108,6 @@ public class ProcessResource implements Resource {
                            SecretStoreConfiguration secretStoreCfg,
                            ProcessStateArchiver stateArchiver,
                            EncryptedProjectValueManager encryptedValueManager,
-                           EventDao eventDao,
                            ProcessKeyCache processKeyCache,
                            OrganizationManager orgManager,
                            ProjectDao projectDao) {
@@ -129,10 +123,7 @@ public class ProcessResource implements Resource {
         this.secretStoreCfg = secretStoreCfg;
         this.stateArchiver = stateArchiver;
         this.encryptedValueManager = encryptedValueManager;
-        this.eventDao = eventDao;
         this.processKeyCache = processKeyCache;
-
-        this.objectMapper = new ObjectMapper();
     }
 
     /**
@@ -561,19 +552,9 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{instanceId}/history")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @SuppressWarnings("unchecked")
     public List<ProcessStatusHistoryEntry> getStatusHistory(@ApiParam @PathParam("instanceId") UUID instanceId) throws IOException {
         ProcessKey pk = assertKey(instanceId);
-
-        List<ProcessEventEntry> events = eventDao.list(pk, null, EventType.PROCESS_STATUS.name(), -1);
-        List<ProcessStatusHistoryEntry> result = new ArrayList<>(events.size());
-        for (ProcessEventEntry e : events) {
-            Map<String, Object> payload = new HashMap<>(objectMapper.readValue((String) e.data(), Map.class));
-            ProcessStatus status = ProcessStatus.valueOf((String) payload.remove("status"));
-            result.add(new ProcessStatusHistoryEntry(e.id(), status, e.eventDate(), payload));
-        }
-
-        return result;
+        return queueDao.getHistory(pk);
     }
 
     /**

@@ -31,7 +31,8 @@ import {
     get as apiGet,
     kill as apiKill,
     start as apiStart,
-    killBulk as apiKillBulk
+    killBulk as apiKillBulk,
+    ProcessDataInclude
 } from '../../../api/process';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
@@ -89,9 +90,10 @@ const actionTypes = {
 };
 
 export const actions = {
-    getProcess: (instanceId: ConcordId): GetProcessRequest => ({
+    getProcess: (instanceId: ConcordId, includes: ProcessDataInclude): GetProcessRequest => ({
         type: actionTypes.GET_PROCESS_REQUEST,
-        instanceId
+        instanceId,
+        includes
     }),
 
     listProcesses: (
@@ -285,9 +287,9 @@ export const reducers = combineReducers<State>({
     events: eventsReducers
 });
 
-function* onGetProcess({ instanceId }: GetProcessRequest) {
+function* onGetProcess({ instanceId, includes }: GetProcessRequest) {
     try {
-        const response = yield call(apiGet, instanceId);
+        const response = yield call(apiGet, instanceId, includes);
         yield put({
             type: actionTypes.PROCESS_DATA_RESPONSE,
             items: [response]

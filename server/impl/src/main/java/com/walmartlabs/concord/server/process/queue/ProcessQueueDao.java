@@ -36,6 +36,8 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.*;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.event.EventDao;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -76,8 +78,12 @@ public class ProcessQueueDao extends AbstractDao {
 
     private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
 
-    private static final TypeReference<List<ProcessEntry.Checkpoint>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessEntry.Checkpoint>>() {};
-    private static final TypeReference<List<ProcessEntry.StatusHistory>> LIST_OF_STATUS_HISTORY = new TypeReference<List<ProcessEntry.StatusHistory>>() {};
+    private static final TypeReference<List<ProcessCheckpointEntry>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessCheckpointEntry>>() {
+    };
+    private static final TypeReference<ProcessStatusHistoryEntry> STATUS_HISTORY_ENTRY = new TypeReference<ProcessStatusHistoryEntry>() {
+    };
+    private static final TypeReference<List<ProcessStatusHistoryEntry>> LIST_OF_STATUS_HISTORY = new TypeReference<List<ProcessStatusHistoryEntry>>() {
+    };
 
     private final PolicyDao policyDao;
     private final EventDao eventDao;
@@ -529,6 +535,29 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public List<ProcessStatusHistoryEntry> getHistory(ProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            ProcessEvents pe = PROCESS_EVENTS.as("pe");
+            return tx.select(historyEntryToJsonb(pe))
+                    .from(pe)
+                    .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                            .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())
+                                    .and(pe.EVENT_DATE.greaterOrEqual(processKey.getCreatedAt()))))
+                    .fetch(r -> deserialize(r.value1(), STATUS_HISTORY_ENTRY));
+
+        }
+    }
+
+    private Field<Object> historyEntryToJsonb(ProcessEvents pe) {
+        return function("jsonb_strip_nulls", Object.class,
+                function("jsonb_build_object", Object.class,
+                        inline("id"), pe.EVENT_ID,
+                        inline("changeDate"), toJsonDate(pe.EVENT_DATE),
+                        inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
+                        inline("payload"), field("{0} - 'status'", Object.class, pe.EVENT_DATA)));
+    }
+
     private void filterByMetaFilters(SelectQuery<Record> query, Map<String, String> filters) {
         if (filters == null || filters.isEmpty()) {
             return;
@@ -760,16 +789,13 @@ public class ProcessQueueDao extends AbstractDao {
 
         if (includes.contains(ProcessDataInclude.HISTORY)) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            Field<Object> history = tx.select(
-                    function("array_to_json", Object.class,
-                            function("array_agg", Object.class,
-                                    function("jsonb_strip_nulls", Object.class,
-                                            function("jsonb_build_object", Object.class,
-                                                    inline("changeDate"), toJsonDate(pe.EVENT_DATE),
-                                                    inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
-                                                    inline("checkpointId"), field("{0}->'checkpointId'", Object.class, pe.EVENT_DATA))))))
+            Field<Object> history = tx.select(function("array_to_json", Object.class,
+                    function("array_agg", Object.class, historyEntryToJsonb(pe))))
                     .from(pe)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()).and(pe.EVENT_DATE.greaterOrEqual(PROCESS_QUEUE.CREATED_AT))))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID)
+                            .and(PROCESS_QUEUE.CREATED_AT.eq(pe.INSTANCE_CREATED_AT))
+                            .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())
+                                    .and(pe.EVENT_DATE.greaterOrEqual(PROCESS_QUEUE.CREATED_AT))))
                     .asField("status_history");
             query.addSelect(history);
         }
