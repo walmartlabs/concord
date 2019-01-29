@@ -4,11 +4,16 @@
 
 ### Added
 
+- concord-server, concord-console: "Remember Me" cookie support;
 - concord-console: list of checkpoints on the process status page;
 - concord-runner: new method `context#form`, allows dynamic creation
 of forms in tasks, scripts and expressions;
 - concord-console: profile selection when starting a process;
 - concord-tasks: new task `concordSecrets`.
+
+### Changed
+
+- concord-server: reduce the default max session age to 30 minutes.
 
 
 

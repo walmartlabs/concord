@@ -11,4 +11,22 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="150100" author="ibodrov@gmail.com">
+        <createTable tableName="REMEMBER_ME_COOKIES">
+            <column name="COOKIE_HASH" type="bytea">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="SESSION_DATA" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_AT" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="REMEMBER_ME_COOKIES" indexName="IDX_R_ME_AGE">
+            <column name="CREATED_AT"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

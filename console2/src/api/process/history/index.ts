@@ -19,7 +19,7 @@
  */
 
 import { ConcordId, fetchJson } from '../../common';
-import { ProcessHistoryEntry } from "../";
+import { ProcessHistoryEntry } from '../';
 
 export const get = (instanceId: ConcordId): Promise<ProcessHistoryEntry[]> =>
     fetchJson(`/api/v1/process/${instanceId}/history`);

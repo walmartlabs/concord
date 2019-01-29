@@ -25,6 +25,7 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
 import com.walmartlabs.concord.server.cfg.ServerConfiguration;
 import com.walmartlabs.concord.server.security.ConcordAuthenticatingFilter;
+import com.walmartlabs.concord.server.security.ConcordSecurityModule;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
@@ -57,6 +58,7 @@ public class ConcordServer {
                 .apiPatterns("/api/*", "/events/github/*")
                 .name("concord-server")
                 .module(new ServerModule())
+                .securityModuleProvider(ConcordSecurityModule::new)
                 .packageToScan("com.walmartlabs.concord.server")
                 .realm(ApiKeyRealm.class)
                 .realm(SessionKeyRealm.class)

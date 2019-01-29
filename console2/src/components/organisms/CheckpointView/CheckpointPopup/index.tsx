@@ -104,19 +104,13 @@ const CheckpointPopup: React.SFC<{
                 </Grid>
                 <hr />
                 <CheckpointViewContainer>
-                    {({
-                        refreshProcessData,
-                        orgId,
-                        projectId,
-                        limitPerPage,
-                        currentPage
-                    }) => (
+                    {({ refreshProcessData, orgId, projectId, limitPerPage, currentPage }) => (
                         <RestoreProcess>
                             {({ restoreProcess }) => (
                                 <Button
                                     primary={true}
                                     disabled={!isFinal(process.status)}
-                                    loading={process.status === "ENQUEUED"}
+                                    loading={process.status === 'ENQUEUED'}
                                     onClick={() => {
                                         restoreProcess(process.instanceId, checkpoint.id);
                                         // TODO: ಠ_ಠ ... hack, needs to be better.

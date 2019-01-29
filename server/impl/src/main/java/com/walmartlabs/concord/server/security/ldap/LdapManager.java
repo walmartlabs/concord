@@ -145,14 +145,16 @@ public class LdapManager {
 
     private void processAttribute(LdapPrincipalBuilder b, Attribute attr) throws NamingException {
         String id = attr.getID();
+        Object v = attr.get();
+
         if (id.equals(cfg.getUsernameProperty())) {
-            b.username(attr.get().toString());
+            b.username(v.toString());
             return;
         }
 
         if (id.equals(cfg.getMailProperty())) {
-            b.email(attr.get().toString());
-            b.addAttribute(id, attr.get().toString());
+            b.email(v.toString());
+            b.addAttribute(id, v.toString());
             return;
         }
 
@@ -163,17 +165,17 @@ public class LdapManager {
                 break;
             }
             case DISPLAY_NAME_ATTR: {
-                b.displayName(attr.get().toString());
+                b.displayName(v.toString());
                 break;
             }
             case USER_PRINCIPAL_NAME_ATTR: {
-                b.userPrincipalName(attr.get().toString());
+                b.userPrincipalName(v.toString());
                 break;
             }
             default: {
                 Set<String> exposedAttr = cfg.getExposeAttributes();
                 if (exposedAttr == null || exposedAttr.isEmpty() || exposedAttr.contains(id)) {
-                    b.addAttribute(id, attr.get().toString());
+                    b.addAttribute(id, v.toString());
                 }
             }
         }

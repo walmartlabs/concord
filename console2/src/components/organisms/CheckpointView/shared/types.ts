@@ -18,7 +18,7 @@
  * =====
  */
 
-import { ProcessCheckpointEntry } from "../../../../api/process";
+import { ProcessCheckpointEntry } from '../../../../api/process';
 
 export interface CheckpointGroup {
     name: string;

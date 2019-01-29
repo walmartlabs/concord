@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'redux';
-import { ProcessHistoryEntry } from "../../../../api/process";
+import { ProcessHistoryEntry } from '../../../../api/process';
 import { RequestState, CollectionById } from '../../common';
 import { ConcordId } from '../../../../api/common';
 

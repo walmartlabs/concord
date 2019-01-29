@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { ProcessCheckpointEntry, ProcessHistoryEntry } from "../../../../api/process";
+import { ProcessCheckpointEntry, ProcessHistoryEntry } from '../../../../api/process';
 import { CheckpointGroup, Status, CustomCheckpoint } from '../shared/types';
 import { isBefore, isAfter } from 'date-fns';
 

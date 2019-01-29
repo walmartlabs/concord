@@ -19,9 +19,9 @@
  */
 
 import { throttle } from 'lodash';
+import { Organizations } from '../../../state/data/orgs';
 import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
-import { Organizations } from '../../../state/data/orgs/types';
-import { ProcessStatus, ProcessEntry } from '../../process';
+import { ProcessEntry } from '../../process';
 
 export interface UserResponse {
     username: string;
@@ -32,20 +32,21 @@ export interface UserResponse {
 export const whoami = async (
     username?: string,
     password?: string,
+    rememberMe?: boolean,
     apiKey?: string
 ): Promise<UserResponse> => {
-    const opts: RequestInit = {};
+    const h = new Headers();
     if (apiKey) {
-        opts.headers = {
-            Authorization: apiKey
-        };
+        h.set('Authorization', apiKey);
     } else if (username && password) {
-        opts.headers = {
-            Authorization: 'Basic ' + btoa(username + ':' + password)
-        };
+        h.set('Authorization', `Basic ${btoa(username + ':' + password)}`);
     }
 
-    const json = await fetchJson('/api/service/console/whoami', opts);
+    if (rememberMe) {
+        h.set('X-Concord-RememberMe', 'true');
+    }
+
+    const json = await fetchJson('/api/service/console/whoami', { headers: h });
     return json as UserResponse;
 };
 

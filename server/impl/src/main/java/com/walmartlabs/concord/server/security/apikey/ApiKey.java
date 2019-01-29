@@ -20,18 +20,20 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.RememberMeAuthenticationToken;
 
 import java.util.UUID;
 
-public class ApiKey implements AuthenticationToken {
+public class ApiKey implements RememberMeAuthenticationToken {
 
     private final UUID userId;
     private final String key;
+    private final boolean rememberMe;
 
-    public ApiKey(UUID userId, String key) {
+    public ApiKey(UUID userId, String key, boolean rememberMe) {
         this.userId = userId;
         this.key = key;
+        this.rememberMe = rememberMe;
     }
 
     public UUID getUserId() {
@@ -53,10 +55,16 @@ public class ApiKey implements AuthenticationToken {
     }
 
     @Override
+    public boolean isRememberMe() {
+        return rememberMe;
+    }
+
+    @Override
     public String toString() {
         return "ApiKey{" +
                 "userId=" + userId +
                 ", key='" + key + '\'' +
+                ", rememberMe=" + rememberMe +
                 '}';
     }
 }

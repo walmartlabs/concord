@@ -45,6 +45,7 @@ interface LoginData {
     username: string;
     password: string;
     apiKey: string;
+    rememberMe: boolean;
 }
 
 interface StateProps {
@@ -61,7 +62,7 @@ type Props = StateProps & DispatchProps & RouteComponentProps<{}>;
 class Login extends React.Component<Props, LoginData> {
     constructor(props: Props) {
         super(props);
-        this.state = { username: '', password: '', apiKey: '' };
+        this.state = { username: '', password: '', apiKey: '', rememberMe: false };
     }
 
     handleUsernameChange(e: {}, { value }: InputOnChangeData) {
@@ -81,7 +82,7 @@ class Login extends React.Component<Props, LoginData> {
     }
 
     render() {
-        const { username, password, apiKey } = this.state;
+        const { username, password, rememberMe, apiKey } = this.state;
 
         const useApiKey = this.props.location.search.search('useApiKey=true') >= 0;
 
@@ -96,26 +97,26 @@ class Login extends React.Component<Props, LoginData> {
 
                     <Form error={!!this.props.apiError} onSubmit={() => this.handleSubmit()}>
                         {!useApiKey && (
-                            <Form.Input
-                                name="username"
-                                label="Username"
-                                icon="user"
-                                required={true}
-                                value={username}
-                                onChange={(e, data) => this.handleUsernameChange(e, data)}
-                            />
-                        )}
-                        {!useApiKey && (
-                            <Form.Input
-                                name="password"
-                                label="Password"
-                                type="password"
-                                icon="lock"
-                                required={true}
-                                value={password}
-                                autoComplete="current-password"
-                                onChange={(e, data) => this.handlePasswordChange(e, data)}
-                            />
+                            <>
+                                <Form.Input
+                                    name="username"
+                                    label="Username"
+                                    icon="user"
+                                    required={true}
+                                    value={username}
+                                    onChange={(e, { value }) => this.setState({ username: value })}
+                                />
+                                <Form.Input
+                                    name="password"
+                                    label="Password"
+                                    type="password"
+                                    icon="lock"
+                                    required={true}
+                                    value={password}
+                                    autoComplete="current-password"
+                                    onChange={(e, { value }) => this.setState({ password: value })}
+                                />
+                            </>
                         )}
 
                         {useApiKey && (
@@ -130,6 +131,15 @@ class Login extends React.Component<Props, LoginData> {
                                 onChange={(e, data) => this.handleApiKeyChange(e, data)}
                             />
                         )}
+
+                        <Form.Checkbox
+                            name="rememberMe"
+                            label="Remember me"
+                            checked={rememberMe}
+                            onChange={(e, { checked }) =>
+                                this.setState({ rememberMe: checked as boolean })
+                            }
+                        />
 
                         <Divider />
 
@@ -150,8 +160,8 @@ const mapStateToProps = ({ login }: AppState): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
-    onSubmit: ({ username, password, apiKey }: LoginData) =>
-        dispatch(actions.doLogin(username, password, apiKey))
+    onSubmit: ({ username, password, rememberMe, apiKey }: LoginData) =>
+        dispatch(actions.doLogin(username, password, rememberMe, apiKey))
 });
 
 export default withRouter(

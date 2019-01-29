@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -40,9 +41,7 @@ import org.apache.shiro.util.ThreadContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.*;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -85,7 +84,7 @@ public class ProcessSecurityContext {
             }
         }
 
-        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, serialize(dst));
+        stateManager.replace(processKey, PRINCIPAL_FILE_PATH, PrincipalUtils.serialize(dst));
     }
 
     public PrincipalCollection getPrincipals(PartialProcessKey processKey) {
@@ -97,7 +96,7 @@ public class ProcessSecurityContext {
     }
 
     private PrincipalCollection doGetPrincipals(PartialProcessKey processKey) {
-        return stateManager.get(processKey, PRINCIPAL_FILE_PATH, ProcessSecurityContext::deserialize)
+        return stateManager.get(processKey, PRINCIPAL_FILE_PATH, PrincipalUtils::deserialize)
                 .orElse(null);
     }
 
@@ -136,24 +135,6 @@ public class ProcessSecurityContext {
             return c.call();
         } finally {
             ThreadContext.unbindSubject();
-        }
-    }
-
-    private static byte[] serialize(PrincipalCollection principals) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(principals);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return baos.toByteArray();
-    }
-
-    private static Optional<PrincipalCollection> deserialize(InputStream in) {
-        try (ObjectInputStream ois = new ObjectInputStream(in)) {
-            return Optional.of((PrincipalCollection) ois.readObject());
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
         }
     }
 }

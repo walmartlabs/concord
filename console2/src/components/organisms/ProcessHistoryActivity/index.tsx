@@ -22,7 +22,7 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { Header, Icon, Table, Loader } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
-import { ProcessHistoryEntry } from "../../../api/process";
+import { ProcessHistoryEntry } from '../../../api/process';
 import { actions, selectors } from '../../../state/data/processes/history';
 import { State } from '../../../state/data/processes/history/types';
 import { LocalTimestamp } from '../../molecules';

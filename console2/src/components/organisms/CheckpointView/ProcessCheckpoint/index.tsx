@@ -31,7 +31,6 @@ interface Props {
 }
 
 export const ProcessCheckpoint: React.SFC<Props> = ({ process }) => {
-
     if (process.checkpoints) {
         return (
             <ContentBlock style={{ margin: '16px 0' }}>

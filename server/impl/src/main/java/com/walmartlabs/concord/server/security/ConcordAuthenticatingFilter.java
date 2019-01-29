@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,9 +27,11 @@ import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
@@ -54,6 +56,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
     private static final String SESSION_TOKEN_HEADER = "X-Concord-SessionToken";
+    private static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
     private static final String BEARER_AUTH_PREFIX = "Bearer ";
 
@@ -101,6 +104,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     }
 
     @Override
+    protected boolean isRememberMe(ServletRequest request) {
+        // enable "remember me"
+        return true;
+    }
+
+    @Override
     public boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
         HttpServletRequest r = WebUtils.toHttp(request);
         String p = r.getRequestURI();
@@ -112,7 +121,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         for (String s : LOCAL_URLS) {
             if (p.matches(s)) {
-                if(isLocalRequest(r)) {
+                if (isLocalRequest(r)) {
                     return true;
                 } else {
                     throw new AuthenticationException("Only localhost requests allowed");
@@ -124,18 +133,24 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     }
 
     @Override
-    protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
+    protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
+        Subject subject = SecurityUtils.getSubject();
+        if (subject != null && subject.isRemembered()) {
+            AuthenticationToken t = getFirstToken(subject);
+            if (t != null) {
+                return t;
+            }
+        }
+
         HttpServletRequest req = WebUtils.toHttp(request);
 
         // session header takes precedence
-        String h = req.getHeader(SESSION_TOKEN_HEADER);
-        if (h != null) {
-            return createFromSessionHeader(h, request);
+        if (req.getHeader(SESSION_TOKEN_HEADER) != null) {
+            return createFromSessionHeader(req);
         }
 
-        h = req.getHeader(AUTHORIZATION_HEADER);
-        if (h != null) {
-            return createFromAuthHeader(h, request);
+        if (req.getHeader(AUTHORIZATION_HEADER) != null) {
+            return createFromAuthHeader(req);
         }
 
         return new UsernamePasswordToken();
@@ -143,16 +158,16 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
-        boolean loggedId = executeLogin(request, response);
+        boolean loggedIn = executeLogin(request, response);
 
-        if (!loggedId) {
+        if (!loggedIn) {
             HttpServletResponse resp = WebUtils.toHttp(response);
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
             reportAuthSchemes(request, response);
         }
 
-        return loggedId;
+        return loggedIn;
     }
 
     @Override
@@ -168,32 +183,43 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         return super.onLoginFailure(token, e, request, response);
     }
 
-    private AuthenticationToken createFromAuthHeader(String h, ServletRequest req) {
-        if (h.startsWith(BASIC_AUTH_PREFIX)) {
-            // create sessions if users are using username/password auth
-            req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
-            return parseBasicAuth(h);
-        }
+    private AuthenticationToken createFromAuthHeader(HttpServletRequest req) {
+        String h = req.getHeader(AUTHORIZATION_HEADER);
 
-        if (h.startsWith(BEARER_AUTH_PREFIX)) {
-            h = h.substring(BASIC_AUTH_PREFIX.length() + 1);
-        }
-
-        validateApiKey(h);
-
+        // enable sessions
         req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
 
-        UUID userId = apiKeyDao.findUserId(h);
-        if (userId == null) {
-            return new UsernamePasswordToken();
+        // check the 'remember me' status
+        boolean rememberMe = Boolean.parseBoolean(req.getHeader(REMEMBER_ME_HEADER));
+
+        AuthenticationToken token;
+        if (h.startsWith(BASIC_AUTH_PREFIX)) {
+            token = parseBasicAuth(h, rememberMe);
+        } else {
+            if (h.startsWith(BEARER_AUTH_PREFIX)) {
+                h = h.substring(BASIC_AUTH_PREFIX.length() + 1);
+            }
+
+            validateApiKey(h);
+
+            UUID userId = apiKeyDao.findUserId(h);
+            if (userId == null) {
+                return new UsernamePasswordToken();
+            }
+
+            token = new ApiKey(userId, h, rememberMe);
         }
 
-        return new ApiKey(userId, h);
+        return token;
     }
 
-    private AuthenticationToken createFromSessionHeader(String h, ServletRequest request) {
-        request.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
-        return new SessionKey(decryptSessionKey(h));
+    private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
+        String h = req.getHeader(SESSION_TOKEN_HEADER);
+        AuthenticationToken t = new SessionKey(decryptSessionKey(h));
+
+        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+
+        return t;
     }
 
     private UUID decryptSessionKey(String h) {
@@ -210,6 +236,20 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         } catch (IllegalArgumentException e) {
             throw new AuthenticationException("Invalid API token: " + e.getMessage());
         }
+    }
+
+    private static AuthenticationToken getFirstToken(Subject subject) {
+        PrincipalCollection principals = subject.getPrincipals();
+        if (principals == null || principals.isEmpty()) {
+            return null;
+        }
+
+        AuthenticationToken t = principals.oneByType(UsernamePasswordToken.class);
+        if (t != null) {
+            return t;
+        }
+
+        return principals.oneByType(ApiKey.class);
     }
 
     private static void reportAuthSchemes(ServletRequest request, ServletResponse response) {
@@ -230,7 +270,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
     }
 
-    private static UsernamePasswordToken parseBasicAuth(String s) {
+    private static UsernamePasswordToken parseBasicAuth(String s, boolean rememberMe) {
         s = s.substring(BASIC_AUTH_PREFIX.length());
         s = new String(Base64.getDecoder().decode(s));
 
@@ -242,7 +282,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         String username = s.substring(0, idx).trim();
         String password = s.substring(idx + 1);
 
-        return new UsernamePasswordToken(username, password);
+        return new UsernamePasswordToken(username, password, rememberMe);
     }
 
     private static boolean isLocalRequest(HttpServletRequest request) throws UnknownHostException {
