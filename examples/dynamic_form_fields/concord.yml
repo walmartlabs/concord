@@ -15,11 +15,26 @@ flows:
     fields: ${myForm3Fields}
   - log: "${myForm3}"
 
+  # a form with fields created in a script
+  - script: groovy
+    body: |
+      def myFields = [
+        ["firstName": ["type": "string", "label": "First Name"]],
+        ["lastName": ["type": "string", "label": "Last Name"]]
+      ]
+
+      execution.setVariable('myForm4Fields', myFields)
+  - form: myForm4
+    fields: ${myForm4Fields}
+  - log: "${myForm4}"
+
 forms:
   myForm1:
   - firstName: {type: "string", label: "First Name"}
 
 configuration:
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
   arguments:
     myForm3Fields:
     - firstName: {type: "string", label: "First Name"}
