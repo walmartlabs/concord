@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-agent: additional logging while downloading the process'
+repository data and state;
 - concord-server, concord-console: "Remember Me" cookie support;
 - concord-console: list of checkpoints on the process status page;
 - concord-runner: new method `context#form`, allows dynamic creation

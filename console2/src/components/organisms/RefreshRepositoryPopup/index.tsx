@@ -61,7 +61,7 @@ class RefreshRepositoryPopup extends React.Component<Props> {
                 }
                 running={refreshing}
                 success={success}
-                successMsg={<p>The repository will be refreshed momentarily.</p>}
+                successMsg={<p>The repository was refreshed successfully.</p>}
                 error={error}
                 reset={reset}
                 onConfirm={onConfirm}

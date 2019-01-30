@@ -119,6 +119,8 @@ public class Worker implements Runnable {
             return;
         }
 
+        r.getLog().info("Exporting the repository data: {}", r.getRepoUrl());
+
         long dt = withTimer(() -> repositoryManager.export(r.getOrgName(),
                 r.getSecretName(),
                 r.getRepoUrl(),
@@ -130,6 +132,7 @@ public class Worker implements Runnable {
     }
 
     private void downloadState(JobRequest r) throws Exception {
+        r.getLog().info("Downloading the process state...");
         long dt = withTimer(() -> stateFetcher.downloadState(r));
         r.getLog().info("Process state download took {}ms", dt);
     }

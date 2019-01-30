@@ -45,6 +45,7 @@ npm run start
 
 Prerequisites:
 
+- Git 2.3+
 - Docker, listening on `tcp://127.0.0.1:2375`;
 - Ansible 2.6.0+ must be installed and available in `$PATH`.
   See [the official documentation](http://docs.ansible.com/ansible/intro_installation.html);

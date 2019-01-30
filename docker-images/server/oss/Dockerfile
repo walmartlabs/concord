@@ -5,6 +5,7 @@ MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 EXPOSE 8001
 
+# requires Git >= 2.3
 RUN yum -y install git && yum clean all
 
 ADD target/dist/server.tar.gz /opt/concord/server/

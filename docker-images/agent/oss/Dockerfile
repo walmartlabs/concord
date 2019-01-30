@@ -8,6 +8,7 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 
 USER root
 
+# requires Git >= 2.3
 RUN yum -y install docker-client git
 
 COPY target/deps/ /home/concord/.m2/repository

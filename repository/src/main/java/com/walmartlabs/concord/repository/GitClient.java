@@ -26,14 +26,10 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.URIish;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,8 +38,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
@@ -84,60 +78,25 @@ public class GitClient {
     }
 
     public void fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
-        boolean shallow = commitId == null && cfg.shallowClone();
-
-        if (!hasGitRepo(dest)) {
-            cloneCommand(dest, uri, secret, shallow);
+        if (hasGitRepo(dest)) {
+            throw new IllegalStateException("fetch error: repository already exists");
         }
 
-        launchCommand(dest, "config", "remote.origin.url", uri);
+        cloneCommand(uri, branch, commitId, secret, dest);
 
-        List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
-        fetchCommand(dest, uri, refspecs, secret, shallow);
-
-        ObjectId rev;
         if (commitId != null) {
-            rev = getCommitRevision(dest, commitId);
-        } else {
-            rev = getBranchRevision(dest, branch);
+            checkoutCommand(commitId, dest);
         }
-
-        checkoutCommand(dest, rev.name());
 
         if (hasGitModules(dest)) {
-            fetchSubmodules(dest, secret);
+            fetchSubmodules(secret, dest);
         }
     }
 
-    private void fetchSubmodules(Path dest, Secret secret) {
+    private void fetchSubmodules(Secret secret, Path dest) {
         launchCommand(dest, "submodule", "init");
         launchCommand(dest, "submodule", "sync");
-        submoduleUpdate(dest, secret);
-    }
 
-    // based on the code from https://github.com/jenkinsci/git-plugin
-    // MIT License, Copyright 2014 Nicolas De loof
-
-    /* git config --get-regex applies the regex to match keys, and returns all matches (including substring matches).
-     * Thus, a config call:
-     *   git config -f .gitmodules --get-regexp "^submodule\.([^ ]+)\.url"
-     * will report two lines of output if the submodule URL includes ".url":
-     *   submodule.modules/JENKINS-46504.url.path modules/JENKINS-46504.url
-     *   submodule.modules/JENKINS-46504.url.url https://github.com/MarkEWaite/JENKINS-46054.url
-     * The code originally used the same pattern for get-regexp and for output parsing.
-     * By using the same pattern in both places, it incorrectly took the first line
-     * of output as the URL of a submodule (when it is instead the path of a submodule).
-     */
-    private final static String SUBMODULE_REMOTE_PATTERN_CONFIG_KEY = "^submodule\\.([^ ]+)\\.url";
-
-    /* See comments for SUBMODULE_REMOTE_PATTERN_CONFIG_KEY to explain why this
-     * regular expression string adds the trailing space character as part of its match.
-     * Without the trailing whitespace character in the pattern, too many matches are found.
-     */
-    /* Package protected for testing */
-    private final static String SUBMODULE_REMOTE_PATTERN_STRING = SUBMODULE_REMOTE_PATTERN_CONFIG_KEY + "\\b\\s";
-
-    private void submoduleUpdate(Path dest, Secret secret) {
         List<String> args = new ArrayList<>();
         args.add("submodule");
         args.add("update");
@@ -145,52 +104,38 @@ public class GitClient {
         args.add("--init");
         args.add("--recursive");
 
-        // We need to call submodule update for each configured
-        // submodule. Note that we can't reliably depend on the
-        // getSubmodules() since it is possible "HEAD" doesn't exist,
-        // and we don't really want to recursively find all possible
-        // submodules, just the ones for this super project. Thus,
-        // loop through the config output and parse it for configured
-        // modules.
-        String cfgOutput;
+        String[] modulePaths;
+
         try {
-            // We might fail if we have no modules, so catch this
-            // exception and just return.
-            cfgOutput = launchCommand(dest, "config", "-f", ".gitmodules", "--get-regexp", SUBMODULE_REMOTE_PATTERN_CONFIG_KEY);
+            modulePaths =launchCommand(dest, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
+                    .split("\\r?\\n");
         } catch (RepositoryException e) {
-            log.info("No submodules found.");
+            log.warn("fetchSubmodules ['{}'] -> error while retrieving the list of submodules: {}", dest, e.getMessage());
             return;
         }
 
-        // Use a matcher to find each configured submodule name, and
-        // then run the submodule update command with the provided
-        // path.
-        Pattern pattern = Pattern.compile(SUBMODULE_REMOTE_PATTERN_STRING, Pattern.MULTILINE);
-        Matcher matcher = pattern.matcher(cfgOutput);
-        while (matcher.find()) {
-            List<String> perModuleArgs = new ArrayList<>(args);
-            String sModuleName = matcher.group(1);
+        for (String mp : modulePaths) {
+            if (mp.trim().isEmpty()) {
+                continue;
+            }
+
+            String moduleName = mp.substring("submodule.".length(), mp.length() - ".path".length());
 
             // Find the URL for this submodule
-            String url = getSubmoduleUrl(dest, sModuleName);
+            String url = getSubmoduleUrl(dest, moduleName);
             if (url == null) {
-                throw new RepositoryException("Empty repository for " + sModuleName);
-            }
-            try {
-                new URIish(url);
-            } catch (URISyntaxException e) {
-                log.error("Invalid repository for " + sModuleName);
-                throw new RepositoryException("Invalid repository for " + sModuleName);
+                throw new RepositoryException("Empty repository for " + moduleName);
             }
 
             String pUrl = processUrl(url, secret);
             if (!pUrl.equals(url)) {
-                launchCommand(dest, "config", "submodule." + sModuleName + ".url", pUrl);
+                launchCommand(dest, "config", "submodule." + moduleName + ".url", pUrl);
             }
 
             // Find the path for this submodule
-            String sModulePath = getSubmodulePath(dest, sModuleName);
+            String sModulePath = getSubmodulePath(dest, moduleName);
 
+            List<String> perModuleArgs = new ArrayList<>(args);
             perModuleArgs.add(sModulePath);
             launchCommandWithCredentials(dest, perModuleArgs, secret);
         }
@@ -226,122 +171,43 @@ public class GitClient {
         return line;
     }
 
-    private ObjectId getCommitRevision(Path dest, String commitId) {
-        try {
-            return revParse(dest, commitId);
-        } catch (RepositoryException e) {
-            throw new RepositoryException("Couldn't find any revision to build. Verify the repository and commitId configuration.");
-        }
-    }
-
-    private ObjectId getBranchRevision(Path dest, String branchSpec) {
-
-        // if it doesn't contain '/' then it could be an unqualified branch
-        if (!branchSpec.contains("/")) {
-
-            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
-            // so check all remotes to fully qualify this branch spec
-            String fqbn = "origin/" + branchSpec;
-            ObjectId result = getHeadRevision(dest, fqbn);
-            if (result != null) {
-                return result;
-            }
-        } else {
-            // either the branch is qualified (first part should match a valid remote)
-            // or it is still unqualified, but the branch name contains a '/'
-            String repository = "origin";
-            String fqbn;
-            if (branchSpec.startsWith(repository + "/")) {
-                fqbn = "refs/remotes/" + branchSpec;
-            } else if (branchSpec.startsWith("remotes/" + repository + "/")) {
-                fqbn = "refs/" + branchSpec;
-            } else if (branchSpec.startsWith("refs/heads/")) {
-                fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
-            } else {
-                //Try branchSpec as it is - e.g. "refs/tags/mytag"
-                fqbn = branchSpec;
-            }
-
-            ObjectId result = getHeadRevision(dest, fqbn);
-            if (result != null) {
-                return result;
-            }
-
-            //Check if exact branch name <branchSpec> exists
-            fqbn = "refs/remotes/" + repository + "/" + branchSpec;
-            result = getHeadRevision(dest, fqbn);
-            if (result != null) {
-                return result;
-            }
-        }
-
-        ObjectId result = getHeadRevision(dest, branchSpec);
-        if (result != null) {
-            return result;
-        }
-
-        throw new RepositoryException("Couldn't find any revision to build. Verify the repository and branch configuration.");
-    }
-
-    private ObjectId getHeadRevision(Path dest, String branchSpec) {
-        try {
-            return revParse(dest, branchSpec);
-        } catch (RepositoryException e) {
-            // ignore
-            return null;
-        }
-    }
-
     private boolean hasGitRepo(Path dest) {
-        if (Files.notExists(dest.resolve(".git"))) {
-            return false;
-        }
-
-        // Check if this is a valid git repo with --is-inside-work-tree
-        try {
-            launchCommand(dest, "rev-parse", "--is-inside-work-tree");
-        } catch (Exception ex) {
-            log.info("Workspace has a .git repository, but it appears to be corrupt.", dest);
-            try {
-                IOUtils.deleteRecursively(dest);
-            } catch (IOException ee) {
-                log.warn("hasGitRepo ['{}'] -> cleanup error: {}", dest, ee.getMessage());
-            }
-            return false;
-        }
-        return true;
+        return Files.exists(dest.resolve(".git"));
     }
 
     private boolean hasGitModules(Path dest) {
         return Files.exists(dest.resolve(".gitmodules"));
     }
 
-
-    private void cloneCommand(Path dest, String url, Secret secret, boolean shallow) {
+    private void cloneCommand(String url, String branch, String commitId, Secret secret, Path dest) {
         log.info("Cloning repository '{}' into '{}'", url, dest.toString());
 
+        // can use shallow clone only with branch/tag
+        boolean shallow = commitId == null && cfg.shallowClone();
+
         try {
+            List<String> args = new ArrayList<>();
+            args.add("clone");
+            if (shallow) {
+                args.add("--depth=1");
+            }
+
+            if (branch != null) {
+                args.add("--branch");
+                args.add(branch);
+            }
+
+            args.add(processUrl(url, secret));
+
+            args.add(".");
+
             if (Files.notExists(dest)) {
                 Files.createDirectories(dest);
             }
 
-            // we don't run a 'git clone' command but git init + git fetch
-            // this allows launchCommandWithCredentials() to pass credentials via a local gitconfig
-
-            // init
-            launchCommand(dest, "init");
-
-            // fetch
-            List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
-            fetchCommand(dest, url, refspecs, secret, shallow);
-
-            launchCommand(dest, "config", "remote.origin.url", url);
-
-            for (RefSpec refSpec : refspecs) {
-                launchCommand(dest, "config", "--add", "remote.origin.fetch", refSpec.toString());
-            }
+            launchCommandWithCredentials(dest, args, secret);
         } catch (IOException e) {
-            log.error("cloneCommand ['{}'] -> error", dest, e);
+            log.error("cloneCommand ['{}', '{}', '{}'] -> error", url, branch, dest, e);
             throw new RepositoryException("clone repository error: " + e.getMessage());
         }
     }
@@ -353,40 +219,10 @@ public class GitClient {
         return url;
     }
 
-    private void fetchCommand(Path dest, String url, List<RefSpec> refspecs, Secret secret, boolean shallow) {
-        log.info("Fetching upstream changes from '{}'", url);
-
-        List<String> args = new ArrayList<>();
-        args.add("fetch");
-        if (shallow) {
-            args.add("--depth=1");
-        }
-
-        args.add("--tags");
-
-        args.add(processUrl(url, secret));
-
-        for (RefSpec r : refspecs) {
-            args.add(r.toString());
-        }
-
-        launchCommandWithCredentials(dest, args, secret);
-    }
-
-    private void checkoutCommand(Path dest, String ref) {
+    private void checkoutCommand(String ref, Path dest) {
         log.info("Checking out revision '{}'", ref);
 
         launchCommand(dest, "checkout", "-f", ref);
-    }
-
-    private ObjectId revParse(Path dest, String revName) {
-        String arg = revName + "^{commit}";
-        String result = launchCommand(dest, "rev-parse", arg);
-        String line = result.trim();
-        if (line.isEmpty()) {
-            throw new RepositoryException("rev-parse no content returned for " + revName);
-        }
-        return ObjectId.fromString(line);
     }
 
     private void launchCommandWithCredentials(Path workDir, List<String> args, Secret secret) {
@@ -406,6 +242,7 @@ public class GitClient {
                 ssh = createUnixGitSSH(key);
 
                 env.put("GIT_SSH", ssh.toAbsolutePath().toString());
+                env.put("GIT_SSH_COMMAND", ssh.toAbsolutePath().toString());
 
                 // supply a dummy value for DISPLAY if not already present
                 // or else ssh will not invoke SSH_ASKPASS
@@ -420,7 +257,6 @@ public class GitClient {
                 askpass = createUnixStandardAskpass(userPass);
 
                 env.put("GIT_ASKPASS", askpass.toAbsolutePath().toString());
-                // SSH binary does not recognize GIT_ASKPASS, so set SSH_ASKPASS also, in the case we have an ssh:// URL
                 env.put("SSH_ASKPASS", askpass.toAbsolutePath().toString());
 
                 log.info("using GIT_ASKPASS to set credentials ");
@@ -493,7 +329,7 @@ public class GitClient {
 
             int code = p.waitFor();
             if (code != SUCCESS_EXIT_CODE) {
-                String msg = hideSensitiveData(error.get().toString());
+                String msg = "code: " + code + ", " + hideSensitiveData(error.get().toString());
                 log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'", cmd, code, msg);
                 throw new RepositoryException(msg);
             }
@@ -521,7 +357,6 @@ public class GitClient {
     private Path createSshKeyFile(KeyPair keyPair) throws IOException {
         Path keyFile = IOUtils.createTempFile("ssh", ".key");
 
-        // TODO: chmod ?
         Files.write(keyFile, keyPair.getPrivateKey());
 
         return keyFile;
