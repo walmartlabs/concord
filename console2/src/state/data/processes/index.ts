@@ -113,8 +113,8 @@ export const actions = {
         orgName: ConcordKey,
         projectName: ConcordKey,
         repoName: ConcordKey,
-        entryPoint: string,
-        profile: string
+        entryPoint?: string,
+        profile?: string
     ): StartProcessRequest => ({
         type: actionTypes.START_PROCESS_REQUEST,
         orgName,

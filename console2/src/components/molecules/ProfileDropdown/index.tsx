@@ -31,14 +31,12 @@ const makeOptions = (data?: string[]): DropdownItemProps[] => {
         return [];
     }
 
-    let options = data.map((name) => ({ text: name, value: name }));
-    options.unshift({ text: 'default', value: 'default' });
-    return options;
+    return data.map((name) => ({ text: name, value: name }));
 };
 
 export default ({ onChange, profiles }: Props) => (
     <Dropdown
-        defaultValue="default"
+        clearable={true}
         options={makeOptions(profiles)}
         onChange={(e, data) => onChange(data.value as string)}
     />

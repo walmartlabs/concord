@@ -43,7 +43,7 @@ interface ExternalProps {
 
 interface DispatchProps {
     reset: () => void;
-    onConfirm: (entryPoint: string, profile: string) => void;
+    onConfirm: (entryPoint?: string, profile?: string) => void;
     openProcessPage: (instanceId: ConcordId) => void;
 }
 
@@ -57,17 +57,14 @@ interface StateProps {
 type Props = DispatchProps & ExternalProps & StateProps;
 
 interface State {
-    entryPoint: string;
-    selectedProfile: string;
+    entryPoint?: string;
+    selectedProfile?: string;
 }
 
 class StartRepositoryPopup extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = {
-            entryPoint: 'default',
-            selectedProfile: 'default'
-        };
+        this.state = {};
     }
 
     updateEntryPoint(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -142,7 +139,6 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                             <Value>
                                 <Input
                                     type="text"
-                                    placeholder="default"
                                     onChange={(e: any) => this.updateEntryPoint(e)}
                                 />
                             </Value>
@@ -161,9 +157,7 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                 successMsg={successMsg}
                 error={error}
                 reset={reset}
-                onConfirm={() =>
-                    onConfirm(this.state.entryPoint || 'default', this.state.selectedProfile)
-                }
+                onConfirm={() => onConfirm(this.state.entryPoint, this.state.selectedProfile)}
                 onDoneElements={() => (
                     <Button
                         basic={true}
@@ -190,7 +184,7 @@ const mapDispatchToProps = (
     { orgName, projectName, repoName }: ExternalProps
 ): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
-    onConfirm: (entryPoint: string, profile: string) =>
+    onConfirm: (entryPoint?: string, profile?: string) =>
         dispatch(actions.startProcess(orgName, projectName, repoName, entryPoint, profile)),
     openProcessPage: (instanceId: ConcordId) => dispatch(pushHistory(`/process/${instanceId}`))
 });
