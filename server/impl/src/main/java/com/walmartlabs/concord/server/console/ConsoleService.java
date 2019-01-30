@@ -52,7 +52,9 @@ import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.apache.shiro.subject.Subject;
 import org.immutables.value.Value;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -65,7 +67,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -154,11 +156,9 @@ public class ConsoleService implements Resource {
 
     @POST
     @Path("/logout")
-    public void logout(@Context HttpServletRequest request) {
-        HttpSession s = request.getSession(false);
-        if (s != null) {
-            s.invalidate();
-        }
+    public void logout() {
+        Subject subject = SecurityUtils.getSubject();
+        subject.logout();
     }
 
     @GET
