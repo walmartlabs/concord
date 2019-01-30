@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-console: add option to convert log timestamps into local
+time;
+- concord-server, concord-runner: use UTC in log timestamps;
 - concord-agent: additional logging while downloading the process'
 repository data and state;
 - concord-server, concord-console: "Remember Me" cookie support;

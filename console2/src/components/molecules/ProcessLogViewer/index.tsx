@@ -19,18 +19,31 @@
  */
 
 import * as React from 'react';
-import { Button, Header, Icon, Menu, Radio, Sticky, Transition } from 'semantic-ui-react';
+import {
+    Button,
+    Container,
+    Header,
+    Icon,
+    Menu,
+    Popup,
+    Radio,
+    Sticky,
+    Transition
+} from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
 import { escapeHtml } from '../../../utils';
 import { Highlighter, RequestErrorMessage } from '../../molecules';
+import { formatDateTime } from './datetime';
 
 import './styles.css';
 
 interface State {
     refreshStuck: boolean;
     scrollAnchorRef: boolean;
+    useLocalTime: boolean;
+    showDate: boolean;
 }
 
 interface Props {
@@ -56,7 +69,9 @@ class ProcessLogViewer extends React.Component<Props, State> {
         super(props);
         this.state = {
             refreshStuck: false,
-            scrollAnchorRef: false
+            scrollAnchorRef: false,
+            useLocalTime: true,
+            showDate: false
         };
         this.handleScroll = this.handleScroll.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
@@ -100,7 +115,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
     renderToolbar() {
         const { loading, refresh, status, completed, loadWholeLog, instanceId } = this.props;
-        const { scrollAnchorRef } = this.state;
+        const { useLocalTime, showDate, scrollAnchorRef } = this.state;
 
         return (
             <Menu borderless={true} secondary={!this.state.refreshStuck}>
@@ -121,9 +136,35 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         toggle={true}
                         checked={scrollAnchorRef}
                         onChange={this.handleScroll}
-                        style={{ paddingRight: 20 }}
+                        style={{ paddingLeft: 20, paddingRight: 20 }}
                     />
                     <Button.Group>
+                        <Popup
+                            trigger={<Button>Time Format</Button>}
+                            flowing={true}
+                            hoverable={true}
+                            position={'bottom center'}>
+                            <div>
+                                <Radio
+                                    label="Use local time"
+                                    toggle={true}
+                                    checked={useLocalTime}
+                                    onChange={(ev, data) =>
+                                        this.setState({ useLocalTime: data.checked as boolean })
+                                    }
+                                />
+                            </div>
+                            <div style={{ marginTop: 10 }}>
+                                <Radio
+                                    label="Show date"
+                                    toggle={true}
+                                    checked={showDate}
+                                    onChange={(ev, data) =>
+                                        this.setState({ showDate: data.checked as boolean })
+                                    }
+                                />
+                            </div>
+                        </Popup>
                         {status && !completed && (
                             <Button disabled={loading} onClick={() => loadWholeLog()}>
                                 Show the whole log
@@ -143,6 +184,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
     render() {
         const { error, data } = this.props;
+        const { useLocalTime, showDate } = this.state;
 
         if (error) {
             return <RequestErrorMessage error={error} />;
@@ -161,7 +203,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                 {data.map((value, idx) => (
                     <pre className="logEntry" key={idx}>
                         <Highlighter
-                            value={escapeHtml(value)}
+                            value={escapeHtml(formatDateTime(useLocalTime, showDate, value))}
                             config={[
                                 { string: 'INFO ', style: 'color: #00B5F0' },
                                 { string: 'WARN ', style: 'color: #ffae42' },

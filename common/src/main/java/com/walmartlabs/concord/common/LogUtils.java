@@ -26,11 +26,21 @@ import org.slf4j.helpers.MessageFormatter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.chrono.IsoChronology;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
+import java.time.format.TextStyle;
+import java.util.Locale;
 
 public final class LogUtils {
 
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+    // the UI expects log timestamps in a specific format to be able to convert it to the local time
+    // see also runner/src/main/resources/logback.xml and console2/src/components/molecules/ProcessLogViewer/datetime.tsx
+    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+    private static final ZoneId DEFAULT_TIMESTAMP_TZ = ZoneId.of("UTC");
 
     public enum LogLevel {
         DEBUG,
@@ -40,14 +50,13 @@ public final class LogUtils {
     }
 
     public static String formatMessage(LogLevel level, String log, Object... args) {
-        String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
+        String timestamp = ZonedDateTime.now(DEFAULT_TIMESTAMP_TZ).format(TIMESTAMP_FORMAT);
         FormattingTuple m = MessageFormatter.arrayFormat(log, args);
         if (m.getThrowable() != null) {
-            return String.format("%s [%-5s] %s%n%s%n", timestamp, level.name(), m.getMessage(),
-                    formatException(m.getThrowable()));
-        } else {
-            return String.format("%s [%-5s] %s%n", timestamp, level.name(), m.getMessage());
+            return String.format("%s [%-5s] %s%n%s%n", timestamp, level.name(), m.getMessage(), formatException(m.getThrowable()));
         }
+
+        return String.format("%s [%-5s] %s%n", timestamp, level.name(), m.getMessage());
     }
 
     private static String formatException(Throwable t) {

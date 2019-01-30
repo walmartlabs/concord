@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 
@@ -41,24 +40,20 @@ public class LogManager {
     private final ProcessLogsDao logsDao;
 
     @Inject
-    public LogManager(ProcessLogsDao logsDao) throws IOException {
+    public LogManager(ProcessLogsDao logsDao) {
         this.logsDao = logsDao;
     }
 
-    public void debug(ProcessKey processKey, String log, Object... args) {
-        log_(processKey, LogLevel.DEBUG, log, args);
-    }
-
     public void info(ProcessKey processKey, String log, Object... args) {
-        log_(processKey, LogLevel.INFO, log, args);
+        log(processKey, LogLevel.INFO, log, args);
     }
 
     public void warn(ProcessKey processKey, String log, Object... args) {
-        log_(processKey, LogLevel.WARN, log, args);
+        log(processKey, LogLevel.WARN, log, args);
     }
 
     public void error(ProcessKey processKey, String log, Object... args) {
-        log_(processKey, LogLevel.ERROR, log, args);
+        log(processKey, LogLevel.ERROR, log, args);
     }
 
     public void log(ProcessKey processKey, String msg) {
@@ -69,7 +64,7 @@ public class LogManager {
         logsDao.append(processKey, msg);
     }
 
-    private void log_(ProcessKey processKey, LogLevel level, String msg, Object... args) {
+    private void log(ProcessKey processKey, LogLevel level, String msg, Object... args) {
         log(processKey, LogUtils.formatMessage(level, msg, args));
     }
 }

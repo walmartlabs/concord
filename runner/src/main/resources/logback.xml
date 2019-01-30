@@ -1,13 +1,15 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}</pattern>
+            <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
+            <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}</pattern>
         </encoder>
     </appender>
 
     <appender name="PROCESS_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %msg%n</pattern>
+            <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
+            <pattern>%date{YYYY-MM-dd HH:mm:ss.SSS, UTC} %msg%n</pattern>
         </encoder>
     </appender>
 
