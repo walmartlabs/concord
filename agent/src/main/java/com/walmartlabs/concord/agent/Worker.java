@@ -80,7 +80,7 @@ public class Worker implements Runnable {
             Throwable t = unwrap(e);
 
             // handle any error during the startup or the execution
-            handleError(instanceId, e);
+            handleError(instanceId, t);
         } finally {
             Path payloadDir = jobRequest.getPayloadDir();
             try {

@@ -107,7 +107,7 @@ public class QueueClient {
         }
 
         private static final long PROCESS_REQUEST_DELAY = 1000;
-        private static final long RECONNECT_DELAY = 1000;
+        private static final long RECONNECT_DELAY = 10000;
 
         private final AtomicLong requestIdGenerator = new AtomicLong();
 

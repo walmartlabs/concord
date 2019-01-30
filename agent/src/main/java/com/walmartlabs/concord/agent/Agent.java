@@ -142,7 +142,8 @@ public class Agent {
             }
 
             if (jobRequest == null) {
-                // can happen on switching to maintenance mode
+                // can happen on switching to maintenance mode or reconnecting, etc
+                workersAvailable.release();
                 continue;
             }
 
