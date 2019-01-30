@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: new form attribute `submittedBy` - automatically
+created for each form after it submitted, contains the form user
+information. Can be enabled with `saveSubmittedBy` form call option;
 - concord-console: add option to convert log timestamps into local
 time;
 - concord-server, concord-runner: use UTC in log timestamps;

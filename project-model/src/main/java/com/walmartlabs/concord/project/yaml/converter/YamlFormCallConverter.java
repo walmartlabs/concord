@@ -21,6 +21,7 @@ package com.walmartlabs.concord.project.yaml.converter;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlFormCall;
 import io.takari.bpm.model.UserTask;
@@ -30,7 +31,11 @@ import java.util.*;
 
 public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
 
-    private static final List<String> SUPPORTED_FORM_OPTIONS = Arrays.asList("yield", "runAs", "values", "fields");
+    private static final List<String> SUPPORTED_FORM_OPTIONS = Arrays.asList(InternalConstants.Forms.YIELD_KEY,
+            InternalConstants.Forms.RUN_AS_KEY,
+            InternalConstants.Forms.VALUES_KEY,
+            InternalConstants.Forms.FIELDS_KEY,
+            InternalConstants.Forms.SAVE_SUBMITTED_BY_KEY);
 
     @Override
     @SuppressWarnings("unchecked")
@@ -64,7 +69,7 @@ public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
             return;
         }
 
-        throw new IllegalArgumentException("'" + keys + "' are not form supported options. Supported options are only:"
-                + SUPPORTED_FORM_OPTIONS + ". Error in form step @:" + loc);
+        throw new IllegalArgumentException("'" + keys + "' are not supported options for a form. Supported options: "
+                + SUPPORTED_FORM_OPTIONS + ". Error in a form step @:" + loc);
     }
 }

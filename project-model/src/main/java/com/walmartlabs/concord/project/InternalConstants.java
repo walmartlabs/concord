@@ -130,6 +130,18 @@ public final class InternalConstants extends Constants {
     public static final class Forms {
 
         /**
+         * The form wizard will stop on the form with {@code yield=true}.
+         */
+        public static final String YIELD_KEY = "yield";
+
+        public static final String FIELDS_KEY = "fields";
+
+        /**
+         * Additional values provided for the form.
+         */
+        public static final String VALUES_KEY = "values";
+
+        /**
          * User qualifiers of forms.
          */
         public static final String RUN_AS_KEY = "runAs";
@@ -141,6 +153,16 @@ public final class InternalConstants extends Constants {
         public static final String RUN_AS_GROUP_KEY = "group";
 
         public static final String RUN_AS_KEEP_KEY = "keep";
+
+        /**
+         * Form data field containing the submitter's user data.
+         */
+        public static final String SUBMITTED_BY_KEY = "submittedBy";
+
+        /**
+         * If {@code true} then the submitter's data will be stored in the {@link Forms#SUBMITTED_BY_KEY} field.
+         */
+        public static final String SAVE_SUBMITTED_BY_KEY = "saveSubmittedBy";
     }
 
     public static final class Headers {

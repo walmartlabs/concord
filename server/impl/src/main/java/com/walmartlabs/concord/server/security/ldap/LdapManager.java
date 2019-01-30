@@ -20,8 +20,11 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.console.UserSearchResult;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 import org.slf4j.Logger;
@@ -141,6 +144,28 @@ public class LdapManager {
             }
         }
         return b.build();
+    }
+
+    public UserInfo getCurrentUserInfo() {
+        UserPrincipal p = UserPrincipal.getCurrent();
+        if (p == null) {
+            return null;
+        }
+
+        LdapPrincipal l = LdapPrincipal.getCurrent();
+        if (l == null && p.getType() == UserType.LDAP) {
+            try {
+                l = getPrincipal(p.getUsername());
+            } catch (NamingException e) {
+                throw new ConcordApplicationException("Error while retrieving LDAP information for " + p.getUsername() + ": " + e.getMessage());
+            }
+        }
+
+        if (l == null) {
+            return new UserInfo(p.getUsername(), p.getUsername(), Collections.emptySet(), Collections.emptyMap());
+        }
+
+        return new UserInfo(p.getUsername(), l.getDisplayName(), l.getGroups(), l.getAttributes());
     }
 
     private void processAttribute(LdapPrincipalBuilder b, Attribute attr) throws NamingException {

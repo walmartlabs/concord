@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
@@ -60,6 +61,7 @@ public class ConcordFormService {
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final FormAccessManager formAccessManager;
+    private final LdapManager ldapManager;
     private final Chain resumePipeline;
 
     @Inject
@@ -67,11 +69,13 @@ public class ConcordFormService {
             PayloadManager payloadManager,
             ProcessStateManager stateManager,
             FormAccessManager formAccessManager,
+            LdapManager ldapManager,
             ResumePipeline resumePipeline) {
 
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.formAccessManager = formAccessManager;
+        this.ldapManager = ldapManager;
         this.resumePipeline = resumePipeline;
     }
 
@@ -179,6 +183,13 @@ public class ConcordFormService {
         };
 
         Map<String, Object> merged = merge(form, data);
+
+        // optionally save the user who submitted the form
+        boolean saveSubmittedBy = getBoolean(form.getOptions(), InternalConstants.Forms.SAVE_SUBMITTED_BY_KEY, false);
+        if (saveSubmittedBy) {
+            merged.put(InternalConstants.Forms.SUBMITTED_BY_KEY, ldapManager.getCurrentUserInfo());
+        }
+
         try {
             FormValidator validator = createFormValidator(processKey, formName);
             return toResult(processKey, form, DefaultFormService.submit(resumeHandler, validator, form, merged));
@@ -321,14 +332,6 @@ public class ConcordFormService {
         }
 
         return (Map<String, Object>) v;
-    }
-
-    private static UUID parseFormInstanceId(String s) {
-        try {
-            return UUID.fromString(s);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     public static final class FormSubmitResult implements Serializable {
