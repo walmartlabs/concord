@@ -26,6 +26,8 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.transport.RefSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,19 +80,50 @@ public class GitClient {
     }
 
     public void fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
-        if (hasGitRepo(dest)) {
-            throw new IllegalStateException("fetch error: repository already exists");
+        // can use shallow clone only with branch/tag
+        boolean shallow = commitId == null && cfg.shallowClone();
+
+        if (!hasGitRepo(dest)) {
+            cloneCommand(uri, branch, commitId, shallow, secret, dest);
         }
 
-        cloneCommand(uri, branch, commitId, secret, dest);
+        launchCommand(dest, "config", "remote.origin.url", uri);
 
+        List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+        fetchCommand(uri, refspecs, secret, shallow, dest);
+
+        ObjectId rev;
         if (commitId != null) {
-            checkoutCommand(commitId, dest);
+            rev = getCommitRevision(commitId, dest);
+        } else {
+            rev = getBranchRevision(branch, dest);
         }
+
+        checkoutCommand(rev.name(), dest);
 
         if (hasGitModules(dest)) {
             fetchSubmodules(secret, dest);
         }
+    }
+
+    private void fetchCommand(String url, List<RefSpec> refspecs, Secret secret, boolean shallow, Path dest) {
+        log.info("Fetching upstream changes from '{}'", url);
+
+        List<String> args = new ArrayList<>();
+        args.add("fetch");
+        if (shallow) {
+            args.add("--depth=1");
+        }
+
+        args.add("--tags");
+
+        args.add(processUrl(url, secret));
+
+        for (RefSpec r : refspecs) {
+            args.add(r.toString());
+        }
+
+        launchCommandWithCredentials(dest, args, secret);
     }
 
     private void fetchSubmodules(Secret secret, Path dest) {
@@ -153,6 +186,82 @@ public class GitClient {
         return s != null ? s.trim() : null;
     }
 
+    private ObjectId getCommitRevision(String commitId, Path dest) {
+        try {
+            return revParse(commitId, dest);
+        } catch (RepositoryException e) {
+            throw new RepositoryException("Couldn't find any revision to build. Verify the repository and commitId configuration.");
+        }
+    }
+
+    private ObjectId revParse(String revName, Path dest) {
+        String arg = revName + "^{commit}";
+        String result = launchCommand(dest, "rev-parse", arg);
+        String line = result.trim();
+        if (line.isEmpty()) {
+            throw new RepositoryException("rev-parse no content returned for " + revName);
+        }
+        return ObjectId.fromString(line);
+    }
+
+    private ObjectId getBranchRevision(String branchSpec, Path dest) {
+
+        // if it doesn't contain '/' then it could be an unqualified branch
+        if (!branchSpec.contains("/")) {
+
+            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
+            // so check all remotes to fully qualify this branch spec
+            String fqbn = "origin/" + branchSpec;
+            ObjectId result = getHeadRevision(fqbn, dest);
+            if (result != null) {
+                return result;
+            }
+        } else {
+            // either the branch is qualified (first part should match a valid remote)
+            // or it is still unqualified, but the branch name contains a '/'
+            String repository = "origin";
+            String fqbn;
+            if (branchSpec.startsWith(repository + "/")) {
+                fqbn = "refs/remotes/" + branchSpec;
+            } else if (branchSpec.startsWith("remotes/" + repository + "/")) {
+                fqbn = "refs/" + branchSpec;
+            } else if (branchSpec.startsWith("refs/heads/")) {
+                fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
+            } else {
+                //Try branchSpec as it is - e.g. "refs/tags/mytag"
+                fqbn = branchSpec;
+            }
+
+            ObjectId result = getHeadRevision(fqbn, dest);
+            if (result != null) {
+                return result;
+            }
+
+            //Check if exact branch name <branchSpec> exists
+            fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+            result = getHeadRevision(fqbn, dest);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        ObjectId result = getHeadRevision(branchSpec, dest);
+        if (result != null) {
+            return result;
+        }
+
+        throw new RepositoryException("Couldn't find any revision to build. Verify the repository and branch configuration.");
+    }
+
+    private ObjectId getHeadRevision(String branchSpec, Path dest) {
+        try {
+            return revParse(branchSpec, dest);
+        } catch (RepositoryException e) {
+            // ignore
+            return null;
+        }
+    }
+
     private String firstLine(String result) {
         BufferedReader reader = new BufferedReader(new StringReader(result));
         String line;
@@ -179,11 +288,8 @@ public class GitClient {
         return Files.exists(dest.resolve(".gitmodules"));
     }
 
-    private void cloneCommand(String url, String branch, String commitId, Secret secret, Path dest) {
+    private void cloneCommand(String url, String branch, String commitId, boolean shallow, Secret secret, Path dest) {
         log.info("Cloning repository '{}' into '{}'", url, dest.toString());
-
-        // can use shallow clone only with branch/tag
-        boolean shallow = commitId == null && cfg.shallowClone();
 
         try {
             List<String> args = new ArrayList<>();
