@@ -21,20 +21,19 @@ package com.walmartlabs.concord.server.security.rememberme;
  */
 
 import com.walmartlabs.concord.server.cfg.RememberMeConfiguration;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
+import com.walmartlabs.concord.server.security.apikey.ApiKey;
+import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.io.SerializationException;
 import org.apache.shiro.io.Serializer;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
-import org.apache.shiro.subject.SubjectContext;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.util.Collection;
 
 /**
  * Implementation of {@link org.apache.shiro.mgt.RememberMeManager}. Uses the DB to store session data.
@@ -42,14 +41,8 @@ import java.security.SecureRandom;
 @Named
 public class ConcordRememberMeManager extends CookieRememberMeManager {
 
-    private final SecureRandom rng;
-    private final CookieStoreDao storeDao;
-
     @Inject
-    public ConcordRememberMeManager(RememberMeConfiguration cfg, SecureRandom rng, CookieStoreDao storeDao) {
-        this.rng = rng;
-        this.storeDao = storeDao;
-
+    public ConcordRememberMeManager(RememberMeConfiguration cfg) {
         byte[] cipherKey = cfg.getCipherKey();
         if (cipherKey != null) {
             if (cipherKey.length != 16 && cipherKey.length != 24 && cipherKey.length != 32) {
@@ -58,37 +51,27 @@ public class ConcordRememberMeManager extends CookieRememberMeManager {
             setCipherKey(cipherKey);
         }
 
+        int maxAge = cfg.getRememberMeMaxAge();
+        getCookie().setMaxAge(maxAge);
+
         setSerializer(new PrincipalCollectionSerializer());
     }
 
     @Override
-    @WithTimer
-    protected void rememberSerializedIdentity(Subject subject, byte[] serialized) {
-        byte[] key = new byte[128];
-        rng.nextBytes(key);
-        storeDao.insert(hash(key), serialized);
-        super.rememberSerializedIdentity(subject, key);
-    }
+    protected void rememberIdentity(Subject subject, PrincipalCollection src) {
+        SimplePrincipalCollection dst = new SimplePrincipalCollection();
 
-    @Override
-    @WithTimer
-    protected byte[] getRememberedSerializedIdentity(SubjectContext subjectContext) {
-        byte[] key = super.getRememberedSerializedIdentity(subjectContext);
-        if (key == null) {
-            return null;
-        }
-        return storeDao.get(hash(key));
-    }
-
-    private static byte[] hash(byte[] ab) {
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+        // keep only the specific types of principals to keep the cookie small
+        for (String realmName : src.getRealmNames()) {
+            Collection<?> principals = src.fromRealm(realmName);
+            for (Object p : principals) {
+                if (p instanceof UsernamePasswordToken || p instanceof ApiKey) {
+                    dst.add(p, realmName);
+                }
+            }
         }
 
-        return md.digest(ab);
+        super.rememberIdentity(subject, dst);
     }
 
     private static class PrincipalCollectionSerializer implements Serializer<PrincipalCollection> {

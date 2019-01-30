@@ -37,20 +37,12 @@ public class RememberMeConfiguration implements Serializable {
     private int rememberMeMaxAge;
 
     @Inject
-    @Config("rememberMe.cleanupPeriod")
-    private int rememberMeCleanupPeriod;
-
-    @Inject
     @Config("rememberMe.cipherKey")
     @Nullable
     private byte[] cipherKey;
 
     public int getRememberMeMaxAge() {
         return rememberMeMaxAge;
-    }
-
-    public int getRememberMeCleanupPeriod() {
-        return rememberMeCleanupPeriod;
     }
 
     public byte[] getCipherKey() {
