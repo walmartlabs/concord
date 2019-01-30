@@ -13,6 +13,9 @@ of forms in tasks, scripts and expressions;
 
 ### Changed
 
+- concord-server, concord-agent: disable `git.httpLowSpeedLimit` as
+it was causing major performance issues when cloning large
+repositories;
 - concord-server: reduce the default max session age to 30 minutes.
 
 
