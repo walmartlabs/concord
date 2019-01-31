@@ -28,6 +28,7 @@ import {
 
 export interface RepositoryMeta {
     profiles?: string[];
+    entryPoints?: string[];
 }
 
 export interface RepositoryEntry {

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-console: new flow selection dropdown in the process start
+popup.
+
 ### Changed
 
 - concord-runner: fix the timestamp format in the `processLog`

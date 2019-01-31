@@ -21,14 +21,12 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { push as pushHistory } from 'react-router-redux';
-import { Button } from 'semantic-ui-react';
+import { Button, Dropdown, DropdownItemProps, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { StartProcessResponse } from '../../../api/org/process';
 import { actions, State as ProcessState } from '../../../state/data/processes';
-import { SingleOperationPopup, GitHubLink, ProfileDropdown } from '../../molecules';
-
-import { Table, Keys, Key, Values, Value, Input } from './styles';
+import { GitHubLink, SingleOperationPopup } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -38,6 +36,7 @@ interface ExternalProps {
     repoBranchOrCommitId: string;
     repoPath: string;
     repoProfiles: string[];
+    repoEntryPoints: string[];
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
@@ -56,38 +55,52 @@ interface StateProps {
 
 type Props = DispatchProps & ExternalProps & StateProps;
 
-interface State {
-    entryPoint?: string;
+interface OwnState {
+    entryPoints: string[];
+    selectedEntryPoint?: string;
+
+    profiles: string[];
     selectedProfile?: string;
 }
 
-class StartRepositoryPopup extends React.Component<Props, State> {
+const makeOptions = (data?: string[]): DropdownItemProps[] => {
+    if (!data) {
+        return [];
+    }
+
+    return data.map((name) => ({ text: name, value: name }));
+};
+
+interface SimpleDropdownProps {
+    data: string[];
+    onAdd: (value: string) => void;
+    onChange: (value: string) => void;
+}
+
+const SimpleDropdown = ({ data, onAdd, onChange }: SimpleDropdownProps) => (
+    <Dropdown
+        clearable={true}
+        selection={true}
+        allowAdditions={true}
+        search={true}
+        options={makeOptions(data)}
+        onAddItem={(e, data) => onAdd(data.value as string)}
+        onChange={(e, data) => onChange(data.value as string)}
+    />
+);
+
+class StartRepositoryPopup extends React.Component<Props, OwnState> {
     constructor(props: Props) {
         super(props);
-        this.state = {};
-    }
-
-    updateEntryPoint(e: React.KeyboardEvent<HTMLInputElement>) {
-        this.setState({ entryPoint: e.currentTarget.value });
-    }
-
-    updateEntryPoint2(data: string) {
-        this.setState({ entryPoint: data });
-    }
-
-    updateProfile(data: string) {
-        this.setState({ selectedProfile: data });
+        this.state = { entryPoints: [...props.repoEntryPoints], profiles: [...props.repoProfiles] };
     }
 
     render() {
         const {
-            orgName,
-            projectName,
             repoName,
             repoURL,
             repoBranchOrCommitId,
             repoPath,
-            repoProfiles,
             trigger,
             starting,
             success,
@@ -121,34 +134,53 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                 icon="triangle right"
                 iconColor="blue"
                 introMsg={
-                    <Table>
-                        <Keys>
-                            <Key>Repository URL</Key>
-                            <Key>Branch</Key>
-                            <Key>Path</Key>
-                            <Key>Flow</Key>
-                            <Key>Profile</Key>
-                        </Keys>
-
-                        <Values>
-                            <Value>
-                                <GitHubLink url={repoURL} text={repoURL} />
-                            </Value>
-                            <Value>{repoBranchOrCommitId}</Value>
-                            <Value>{repoPath}</Value>
-                            <Value>
-                                <Input
-                                    type="text"
-                                    onChange={(e: any) => this.updateEntryPoint(e)}
-                                />
-                            </Value>
-                            <Value>
-                                <ProfileDropdown
-                                    profiles={repoProfiles}
-                                    onChange={(data) => this.updateProfile(data)}
-                                />
-                            </Value>
-                        </Values>
+                    <Table definition={true}>
+                        <Table.Body>
+                            <Table.Row>
+                                <Table.Cell textAlign={'right'}>Repository URL</Table.Cell>
+                                <Table.Cell>
+                                    <GitHubLink url={repoURL} text={repoURL} />
+                                </Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell textAlign={'right'}>Branch</Table.Cell>
+                                <Table.Cell>{repoBranchOrCommitId}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell textAlign={'right'}>Path</Table.Cell>
+                                <Table.Cell>{repoPath}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell textAlign={'right'}>Flow</Table.Cell>
+                                <Table.Cell>
+                                    <SimpleDropdown
+                                        data={this.state.entryPoints}
+                                        onAdd={(v) =>
+                                            this.setState({
+                                                selectedEntryPoint: v,
+                                                entryPoints: [v, ...this.state.entryPoints]
+                                            })
+                                        }
+                                        onChange={(v) => this.setState({ selectedEntryPoint: v })}
+                                    />
+                                </Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell textAlign={'right'}>Profile</Table.Cell>
+                                <Table.Cell>
+                                    <SimpleDropdown
+                                        data={this.state.profiles}
+                                        onAdd={(v) =>
+                                            this.setState({
+                                                selectedProfile: v,
+                                                profiles: [v, ...this.state.profiles]
+                                            })
+                                        }
+                                        onChange={(v) => this.setState({ selectedProfile: v })}
+                                    />
+                                </Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
                     </Table>
                 }
                 running={starting}
@@ -157,7 +189,9 @@ class StartRepositoryPopup extends React.Component<Props, State> {
                 successMsg={successMsg}
                 error={error}
                 reset={reset}
-                onConfirm={() => onConfirm(this.state.entryPoint, this.state.selectedProfile)}
+                onConfirm={() =>
+                    onConfirm(this.state.selectedEntryPoint, this.state.selectedProfile)
+                }
                 onDoneElements={() => (
                     <Button
                         basic={true}

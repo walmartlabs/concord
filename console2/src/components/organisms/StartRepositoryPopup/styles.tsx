@@ -46,22 +46,12 @@ export const Values = styled(group)`
 export const Key = styled.div`
     font-weight: bold;
     text-align: right;
-    margin: 5px 0px;
+    margin: 15px 0px;
     &::after {
         content: ':';
     }
 `;
 
 export const Value = styled.div`
-    margin: 5px 0px;
-`;
-
-export const Input = styled.input`
-    border: #2185d0;
-    padding: 0px;
-    border-bottom-style: dashed;
-    border-width: 1px;
-    &:focus {
-        outline: none;
-    }
+    margin: 15px 0px;
 `;

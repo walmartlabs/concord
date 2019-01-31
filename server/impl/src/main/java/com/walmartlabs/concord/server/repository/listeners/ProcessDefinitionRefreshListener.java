@@ -34,27 +34,35 @@ import java.nio.file.Path;
 import java.util.*;
 
 @Named
-public class ProfileRefreshListener implements RepositoryRefreshListener {
+public class ProcessDefinitionRefreshListener implements RepositoryRefreshListener {
 
-    private static final Logger log = LoggerFactory.getLogger(ProfileRefreshListener.class);
+    private static final Logger log = LoggerFactory.getLogger(ProcessDefinitionRefreshListener.class);
 
     private final RepositoryDao repositoryDao;
 
     @Inject
-    public ProfileRefreshListener(RepositoryDao repositoryDao) {
+    public ProcessDefinitionRefreshListener(RepositoryDao repositoryDao) {
         this.repositoryDao = repositoryDao;
     }
 
     @Override
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
         ProjectDefinition pd = new ProjectLoader().loadProject(repoPath);
+        Set<String> entryPoints = pd.getFlows().keySet();
         List<String> profiles = new ArrayList<>(pd.getProfiles().keySet());
 
-        Map<String, Object> oldMeta = repo.getMeta();
-        Map<String, Object> meta = new HashMap<>(oldMeta != null ? repo.getMeta() : Collections.emptyMap());
-        meta.put("profiles", profiles);
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("entryPoints", emptyToNull(entryPoints));
+        meta.put("profiles", emptyToNull(profiles));
         repositoryDao.updateMeta(ctx, repo.getId(), meta);
 
-        log.info("onRefresh ['{}', '{}'] -> done", repo.getId(), repoPath);
+        log.info("onRefresh ['{}', '{}'] -> done ({})", repo.getId(), repoPath, entryPoints);
+    }
+
+    private static <E extends Collection<?>> E emptyToNull(E items) {
+        if (items.isEmpty()) {
+            return null;
+        }
+        return items;
     }
 }

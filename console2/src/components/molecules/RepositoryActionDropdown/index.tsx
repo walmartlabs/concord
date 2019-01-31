@@ -44,6 +44,13 @@ const getProfiles = (meta?: RepositoryMeta): string[] => {
     return meta.profiles || [];
 };
 
+const getEntryPoints = (meta?: RepositoryMeta): string[] => {
+    if (!meta) {
+        return [];
+    }
+    return meta.entryPoints || [];
+};
+
 class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
     render() {
         const { orgName, projectName, repo } = this.props;
@@ -76,6 +83,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         repoBranchOrCommitId={repoBranchOrCommitId}
                         repoPath={repoPathOrDefault}
                         repoProfiles={getProfiles(repoMeta)}
+                        repoEntryPoints={getEntryPoints(repoMeta)}
                         trigger={(onClick) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="play" color="blue" />

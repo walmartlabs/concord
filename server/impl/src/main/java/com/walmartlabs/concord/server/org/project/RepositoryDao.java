@@ -33,9 +33,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
-import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class RepositoryDao extends AbstractDao {
@@ -176,13 +177,12 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
-    public void updateMeta(UUID id, Map<String, Object> meta) {
-        tx(tx -> updateMeta(tx, id, meta));
-    }
-
     public void updateMeta(DSLContext tx, UUID id, Map<String, Object> meta) {
+        Field<String> updateJson = field(coalesce(REPOSITORIES.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta));
+        Field<Object> metaField = function("jsonb_strip_nulls", Object.class, updateJson);
+
         tx.update(REPOSITORIES)
-                .set(REPOSITORIES.META, field("?::jsonb", String.class, serialize(meta)))
+                .set(REPOSITORIES.META, (Object) metaField)
                 .where(REPOSITORIES.REPO_ID.eq(id))
                 .execute();
     }
