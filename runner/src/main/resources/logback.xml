@@ -9,7 +9,7 @@
     <appender name="PROCESS_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
-            <pattern>%date{YYYY-MM-dd HH:mm:ss.SSS, UTC} %msg%n</pattern>
+            <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} %msg%n</pattern>
         </encoder>
     </appender>
 

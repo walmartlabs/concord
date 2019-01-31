@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-runner: fix the timestamp format in the `processLog`
+logger. Plugins such as Ansible should use the correct timestamp
+format now. 
+
+
+
 ## [1.5.0] - 2019-01-30
 
 ### Added
