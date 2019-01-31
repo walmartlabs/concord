@@ -21,6 +21,7 @@ import { distanceInWords, distanceInWordsToNow } from 'date-fns';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Divider } from 'semantic-ui-react';
+import { parse as parseDate } from 'date-fns';
 
 import { ProcessEntry } from '../../../../api/process';
 import { Truncate } from '../../../atoms';
@@ -74,14 +75,14 @@ export default ({ process }: Props) => (
                     </div>
                     <div>
                         <Label>Last update: </Label>
-                        <Status>{distanceInWordsToNow(new Date(process.lastUpdatedAt))}</Status>
+                        <Status>{distanceInWordsToNow(parseDate(process.lastUpdatedAt))}</Status>
                     </div>
                     <div>
                         <Label>Run duration: </Label>
                         {/* TODO: find last runtime start instead created at */}
                         {distanceInWords(
-                            new Date(process.lastUpdatedAt),
-                            new Date(process.createdAt)
+                            parseDate(process.lastUpdatedAt),
+                            parseDate(process.createdAt)
                         )}
                     </div>
                 </ListItem>

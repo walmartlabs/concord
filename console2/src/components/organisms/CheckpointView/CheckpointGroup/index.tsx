@@ -29,7 +29,8 @@ import {
     GroupItems,
     CheckpointNode,
     TimeBox,
-    getStatusColor
+    getStatusColor,
+    EmptyBox
 } from './styles';
 import CheckpointPopup from '../CheckpointPopup';
 import { formatDuration, timestampDiffMs } from '../../../../utils';
@@ -40,50 +41,48 @@ interface Props {
     checkpointGroups: CheckpointGroup[];
 }
 
-export const CheckpointData: React.SFC<Props> = ({ process, checkpointGroups }) => {
+// TODO a better layout
+export default ({ process, checkpointGroups }: Props) => {
     if (checkpointGroups && checkpointGroups.length > 0) {
         return (
             <FlexWrapper>
-                {checkpointGroups.map((group, indexA) => {
-                    if (group.checkpoints.length > 0) {
-                        return (
-                            <GroupWrapper key={indexA}>
-                                <CheckpointGroupName>Run {group.name}</CheckpointGroupName>
-                                <GroupItems>
-                                    {group.checkpoints.map((checkpoint, indexB) => (
-                                        <CheckpointNode key={indexB}>
-                                            <CheckpointName>{checkpoint.name}</CheckpointName>
-                                            <CheckpointPopup
-                                                checkpoint={checkpoint}
-                                                process={process}
-                                                render={
-                                                    <TimeBox
-                                                        statusColor={getStatusColor(
-                                                            checkpoint.status
-                                                        )}>
-                                                        {formatDuration(
-                                                            timestampDiffMs(
-                                                                checkpoint.endTime,
-                                                                checkpoint.startTime
-                                                            )
-                                                        )}
-                                                    </TimeBox>
-                                                }
-                                            />
-                                        </CheckpointNode>
-                                    ))}
-                                </GroupItems>
-                            </GroupWrapper>
-                        );
-                    } else {
-                        return null;
-                    }
-                })}
+                {checkpointGroups.map(({ name, checkpoints }, indexA) => (
+                    <GroupWrapper key={indexA}>
+                        <CheckpointGroupName>Run {name}</CheckpointGroupName>
+                        <GroupItems>
+                            {checkpoints.length == 0 && (
+                                <div>
+                                    <CheckpointName>...</CheckpointName>
+                                    <EmptyBox>No checkpoints</EmptyBox>
+                                </div>
+                            )}
+                            {checkpoints.length > 0 &&
+                                checkpoints.map((checkpoint, indexB) => (
+                                    <CheckpointNode key={indexB}>
+                                        <CheckpointName>{checkpoint.name}</CheckpointName>
+                                        <CheckpointPopup
+                                            checkpoint={checkpoint}
+                                            process={process}
+                                            render={
+                                                <TimeBox
+                                                    statusColor={getStatusColor(checkpoint.status)}>
+                                                    {formatDuration(
+                                                        timestampDiffMs(
+                                                            checkpoint.endTime,
+                                                            checkpoint.startTime
+                                                        )
+                                                    )}
+                                                </TimeBox>
+                                            }
+                                        />
+                                    </CheckpointNode>
+                                ))}
+                        </GroupItems>
+                    </GroupWrapper>
+                ))}
             </FlexWrapper>
         );
     } else {
         return <NoCheckpointsMessage />;
     }
 };
-
-export default CheckpointData;

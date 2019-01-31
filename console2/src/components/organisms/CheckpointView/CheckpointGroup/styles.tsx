@@ -68,6 +68,16 @@ export const TimeBox = styled('div')<{ statusColor?: any }>`
     font-weight: 900;
 `;
 
+export const EmptyBox = styled('div')`
+    background: lightgray;
+    padding: 0.7rem 0.7rem;
+    text-align: center;
+    border-radius: 5px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 900;
+`;
+
 export const GroupItems = styled.div`
     display: flex;
     flex-direction: row;

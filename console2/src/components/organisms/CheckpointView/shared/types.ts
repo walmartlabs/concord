@@ -18,20 +18,18 @@
  * =====
  */
 
-import { ProcessCheckpointEntry } from '../../../../api/process';
+import { ProcessCheckpointEntry, ProcessStatus } from '../../../../api/process';
 
 export interface CheckpointGroup {
     name: string;
     SubText?: string;
     checkpoints: CustomCheckpoint[];
-    Start?: Date;
-    End?: Date;
+    start?: Date;
+    end?: Date;
 }
-
-export type Status = 'FINISHED' | 'CANCELLED' | 'FAILED' | 'RUNNING' | 'FINISHED' | 'SUSPENDED';
 
 export interface CustomCheckpoint extends ProcessCheckpointEntry {
     startTime: Date;
     endTime: Date;
-    status: Status;
+    status: ProcessStatus;
 }

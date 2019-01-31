@@ -17,30 +17,34 @@
  * limitations under the License.
  * =====
  */
-import { ProcessCheckpointEntry, ProcessHistoryEntry } from '../../../../api/process';
-import { CheckpointGroup, Status, CustomCheckpoint } from '../shared/types';
-import { isBefore, isAfter } from 'date-fns';
 
-// * Sort callback to order objects by a specific date property
-const sortChrono = (sortByKey: string) => (a: any, b: any) =>
-    new Date(a[sortByKey]).getTime() - new Date(b[sortByKey]).getTime();
+import { isAfter, isBefore, parse as parseDate } from 'date-fns';
+
+import {
+    isFinal,
+    ProcessCheckpointEntry,
+    ProcessHistoryEntry,
+    ProcessStatus
+} from '../../../../api/process';
+import { comparators } from '../../../../utils';
+import { CheckpointGroup, CustomCheckpoint } from '../shared/types';
 
 // * Generate CustomCheckpoint array between time
 export const getGroupsBetweenTime = (
     start: Date,
     end: Date,
     checkpoints: ProcessCheckpointEntry[],
-    status: Status
+    status: ProcessStatus
 ): CustomCheckpoint[] => {
     // * Custom checkpoints extend checkpoints and add start/end times and status
     const resultCheckpoints: CustomCheckpoint[] = [];
 
     checkpoints
         // * Sort Checkpoints in chronological order
-        .sort(sortChrono('createdAt'))
+        .sort(comparators.byProperty((i) => i.createdAt))
         // * Filter for checkpoints between a start and end date
         .filter((checkpoint) => {
-            const checkTime = new Date(checkpoint.createdAt);
+            const checkTime = parseDate(checkpoint.createdAt);
             if (isAfter(checkTime, start) && isBefore(checkTime, end)) {
                 return true;
             }
@@ -51,16 +55,16 @@ export const getGroupsBetweenTime = (
             if (index !== array.length - 1) {
                 resultCheckpoints.push({
                     ...checkpoint,
-                    status: 'FINISHED',
-                    startTime: new Date(checkpoint.createdAt),
-                    endTime: new Date(array[index + 1].createdAt)
+                    status: ProcessStatus.FINISHED,
+                    startTime: parseDate(checkpoint.createdAt),
+                    endTime: parseDate(array[index + 1].createdAt)
                 });
             } else {
                 resultCheckpoints.push({
                     ...checkpoint,
                     status,
-                    startTime: new Date(checkpoint.createdAt),
-                    endTime: new Date(end)
+                    startTime: parseDate(checkpoint.createdAt),
+                    endTime: parseDate(end)
                 });
             }
         });
@@ -72,52 +76,48 @@ export const generateCheckpointGroups = (
     checkpoints: ProcessCheckpointEntry[],
     historyEntries: ProcessHistoryEntry[]
 ): CheckpointGroup[] => {
-    try {
-        // * Sort History in chronological order
-        const cronoHist = historyEntries.sort(sortChrono('changeDate'));
+    // make sure that the history is sorted
+    const history = historyEntries.sort(comparators.byProperty((i) => i.changeDate));
 
-        const checkpointGroups: CheckpointGroup[] = [];
-        let groupCount = 1; //
-        const initialWipGroup: CheckpointGroup = { name: '', checkpoints: [] };
-        let wipGroup: CheckpointGroup = initialWipGroup;
+    const groups: CheckpointGroup[] = [];
+    let currentGroup: CheckpointGroup | undefined;
 
-        cronoHist.forEach((event) => {
-            // * Create Group Starting point of Process meets this criteria
-            if (
-                (event.payload && event.payload.checkpointId && event.status === 'SUSPENDED') ||
-                event.status === 'STARTING'
-            ) {
-                wipGroup.name = `#${groupCount}`;
-                wipGroup.Start = new Date(event.changeDate);
+    history.forEach((event) => {
+        // find the next STARTING history event
+        if (event.status === ProcessStatus.STARTING) {
+            // close the previous group
+            if (currentGroup) {
+                groups.push({ ...currentGroup });
             }
 
-            // * If we come across a Finalized state gather the events inbetween start and finish
-            if (
-                event.status === 'FINISHED' ||
-                event.status === 'FAILED' ||
-                event.status === 'CANCELLED'
-            ) {
-                wipGroup.End = new Date(event.changeDate);
+            currentGroup = {
+                name: `#${groups.length + 1}`,
+                start: parseDate(event.changeDate),
+                checkpoints: []
+            };
+        }
 
-                wipGroup.checkpoints = getGroupsBetweenTime(
-                    wipGroup.Start!,
-                    wipGroup.End,
-                    checkpoints,
-                    event.status
-                );
-
-                // * Add group to collection
-                checkpointGroups.push({ ...wipGroup });
-
-                // * Reset
-                groupCount++;
-                wipGroup = initialWipGroup;
+        // find an event that might look like an end of the group
+        if (event.status === ProcessStatus.SUSPENDED || isFinal(event.status)) {
+            if (!currentGroup) {
+                return;
             }
-        });
 
-        return [...checkpointGroups];
-    } catch (e) {
-        // If data creation fails return nothing
-        return [];
+            currentGroup.end = parseDate(event.changeDate);
+
+            currentGroup.checkpoints = getGroupsBetweenTime(
+                currentGroup.start!,
+                currentGroup.end,
+                checkpoints,
+                event.status
+            );
+        }
+    });
+
+    // close the last group
+    if (currentGroup) {
+        groups.push({ ...currentGroup });
     }
+
+    return groups;
 };

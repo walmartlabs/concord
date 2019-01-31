@@ -9,10 +9,12 @@ popup.
 
 ### Changed
 
+- concord-console: fix the checkpoint grouping issue, preventing
+checkpoints from being correctly rendered;
 - project-model: improve stacktraces in case of YAML parsing errors;
 - concord-runner: fix the timestamp format in the `processLog`
 logger. Plugins such as Ansible should use the correct timestamp
-format now. 
+format now.
 
 
 
