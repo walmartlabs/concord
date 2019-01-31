@@ -1,7 +1,6 @@
 export {};
 
 export interface ConcordEnvironment {
-    documentationSite: string;
     topBar?: TopBarMeta;
 }
 

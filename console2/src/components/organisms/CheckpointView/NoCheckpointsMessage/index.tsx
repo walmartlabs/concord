@@ -22,18 +22,8 @@ import * as React from 'react';
 
 import { LoadError } from '../shared/Labels';
 
-export const NoCheckpointsMessage: React.SFC<{}> = () => (
+export default () => (
     <LoadError>
         No checkpoints have been created for this process.
-        <br />
-        Find out more in
-        <a
-            href={`${
-                window.concord.documentationSite
-            }/docs/getting-started/concord-dsl.html#checkpoints`}>
-            the documentation.
-        </a>
     </LoadError>
 );
-
-export default NoCheckpointsMessage;
