@@ -9,6 +9,8 @@ popup.
 
 ### Changed
 
+- repository: fix the GIT clone bug for repositories without a
+`master` branch;
 - concord-console: fix the checkpoint grouping issue, preventing
 checkpoints from being correctly rendered;
 - project-model: improve stacktraces in case of YAML parsing errors;

@@ -84,7 +84,7 @@ public class GitClient {
         boolean shallow = commitId == null && cfg.shallowClone();
 
         if (!hasGitRepo(dest)) {
-            cloneCommand(uri, branch, commitId, shallow, secret, dest);
+            cloneCommand(uri, secret, shallow, dest);
         }
 
         launchCommand(dest, "config", "remote.origin.url", uri);
@@ -288,32 +288,28 @@ public class GitClient {
         return Files.exists(dest.resolve(".gitmodules"));
     }
 
-    private void cloneCommand(String url, String branch, String commitId, boolean shallow, Secret secret, Path dest) {
+    private void cloneCommand(String url, Secret secret, boolean shallow, Path dest) {
         log.info("Cloning repository '{}' into '{}'", url, dest.toString());
 
         try {
-            List<String> args = new ArrayList<>();
-            args.add("clone");
-            if (shallow) {
-                args.add("--depth=1");
-            }
-
-            if (branch != null) {
-                args.add("--branch");
-                args.add(branch);
-            }
-
-            args.add(processUrl(url, secret));
-
-            args.add(".");
-
             if (Files.notExists(dest)) {
                 Files.createDirectories(dest);
             }
 
-            launchCommandWithCredentials(dest, args, secret);
+            // init
+            launchCommand(dest, "init");
+
+            // fetch
+            List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+            fetchCommand(url, refspecs, secret, shallow, dest);
+
+            launchCommand(dest, "config", "remote.origin.url", url);
+
+            for (RefSpec refSpec : refspecs) {
+                launchCommand(dest, "config", "--add", "remote.origin.fetch", refSpec.toString());
+            }
         } catch (IOException e) {
-            log.error("cloneCommand ['{}', '{}', '{}'] -> error", url, branch, dest, e);
+            log.error("cloneCommand ['{}'] -> error", dest, e);
             throw new RepositoryException("clone repository error: " + e.getMessage());
         }
     }

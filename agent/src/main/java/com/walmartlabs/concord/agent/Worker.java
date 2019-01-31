@@ -121,19 +121,33 @@ public class Worker implements Runnable {
 
         r.getLog().info("Exporting the repository data: {}", r.getRepoUrl());
 
-        long dt = withTimer(() -> repositoryManager.export(r.getOrgName(),
-                r.getSecretName(),
-                r.getRepoUrl(),
-                r.getCommitId(),
-                r.getRepoPath(),
-                r.getPayloadDir()));
+        long dt;
+        try {
+            dt = withTimer(() -> repositoryManager.export(r.getOrgName(),
+                    r.getSecretName(),
+                    r.getRepoUrl(),
+                    r.getCommitId(),
+                    r.getRepoPath(),
+                    r.getPayloadDir()));
+        } catch (Exception e) {
+            r.getLog().error("Repository export error: {}", e.getMessage());
+            throw e;
+        }
 
         r.getLog().info("Repository data export took {}ms", dt);
     }
 
     private void downloadState(JobRequest r) throws Exception {
         r.getLog().info("Downloading the process state...");
-        long dt = withTimer(() -> stateFetcher.downloadState(r));
+
+        long dt;
+        try {
+            dt = withTimer(() -> stateFetcher.downloadState(r));
+        } catch (Exception e) {
+            r.getLog().error("State download error: {}", e.getMessage());
+            throw e;
+        }
+
         r.getLog().info("Process state download took {}ms", dt);
     }
 
