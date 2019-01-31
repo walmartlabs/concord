@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.yaml;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,11 +20,15 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.walmartlabs.concord.project.yaml.model.*;
+import org.yaml.snakeyaml.error.MarkedYAMLException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,31 +53,56 @@ public class YamlParser {
         this.objectMapper = om;
     }
 
-    public YamlProject parseProject(Path file) throws IOException {
+    public YamlProject parseProject(Path baseDir, Path file) throws YamlParserException {
         try {
             return objectMapper.readValue(file.toFile(), YamlProject.class);
         } catch (IOException e) {
-            throw new IOException("Error while loading a project file: " + file, e);
+            if (e instanceof JsonProcessingException) {
+                JsonProcessingException jpe = (JsonProcessingException) e;
+                throw toErr("(" + baseDir.relativize(file) + "): Error", jpe);
+            }
+            throw new YamlParserException("Error while loading a project file: " + baseDir.relativize(file), e);
         }
     }
 
-    public YamlDefinitionFile parseDefinitionFile(Path path) throws IOException {
+    public YamlDefinitionFile parseDefinitionFile(Path baseDir, Path path) throws YamlParserException {
         try {
             return objectMapper.readValue(path.toFile(), YamlDefinitionFile.class);
         } catch (IOException e) {
-            throw new IOException("Error while loading flow definitions: " + path, e);
+            if (e instanceof JsonProcessingException) {
+                JsonProcessingException jpe = (JsonProcessingException) e;
+                throw toErr("Error while loading flow definitions: " + baseDir.relativize(path), jpe);
+            }
+            throw new YamlParserException("Error while loading flow definitions: " + baseDir.relativize(path), e);
         }
     }
 
-    public YamlDefinitionFile parseDefinitionFile(InputStream in) throws IOException {
-        return objectMapper.readValue(in, YamlDefinitionFile.class);
+    public YamlDefinitionFile parseDefinitionFile(InputStream in) throws YamlParserException {
+        try {
+            return objectMapper.readValue(in, YamlDefinitionFile.class);
+        } catch (IOException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof MarkedYAMLException) {
+                throw new YamlParserException("Error while loading a definition file: " + e.getMessage());
+            }
+            throw new YamlParserException("Error while loading a definition file", e);
+        }
     }
 
-    public YamlProfileFile parseProfileFile(Path path) throws IOException {
+    public YamlProfileFile parseProfileFile(Path baseDir, Path path) throws YamlParserException {
         try {
             return objectMapper.readValue(path.toFile(), YamlProfileFile.class);
         } catch (IOException e) {
-            throw new IOException("Error while loading profiles: " + path, e);
+            if (e instanceof MismatchedInputException) {
+                throw new YamlParserException("Error while loading profiles: " + baseDir.relativize(path) + ". " + e.getMessage());
+            }
+            throw new YamlParserException("Error while loading profiles: " + baseDir.relativize(path), e);
         }
+    }
+
+    private static YamlParserException toErr(String msg, JsonProcessingException jpe) {
+        JsonLocation loc = jpe.getLocation();
+        String originalMsg = jpe.getOriginalMessage();
+        return new YamlParserException(msg + " @ " + loc + ". " + originalMsg);
     }
 }

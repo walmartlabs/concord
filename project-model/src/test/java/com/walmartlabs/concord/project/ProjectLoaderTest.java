@@ -22,6 +22,7 @@ package com.walmartlabs.concord.project;
 
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
+import com.walmartlabs.concord.project.yaml.YamlParserException;
 import org.junit.Test;
 
 import java.net.URI;
@@ -63,9 +64,8 @@ public class ProjectLoaderTest {
         try {
             loader.loadProject(Paths.get(uri));
             fail("exception expected");
-        } catch (Exception e) {
-            assertNotNull(e.getCause());
-            assertTrue(e.getCause().getMessage().contains("Duplicate field 'configuration'"));
+        } catch (YamlParserException e) {
+            assertTrue(e.getMessage().contains("Duplicate field 'configuration'"));
         }
     }
 
@@ -77,9 +77,8 @@ public class ProjectLoaderTest {
         try {
             loader.loadProject(Paths.get(uri));
             fail("exception expected");
-        } catch (Exception e) {
-            assertNotNull(e.getCause());
-            assertTrue(e.getCause().getMessage().contains("Duplicate field 'x'"));
+        } catch (YamlParserException e) {
+            assertTrue(e.getMessage().contains("Duplicate field 'x'"));
         }
     }
 

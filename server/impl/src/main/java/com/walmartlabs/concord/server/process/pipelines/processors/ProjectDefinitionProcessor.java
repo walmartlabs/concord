@@ -25,11 +25,9 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
@@ -42,13 +40,6 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
     private static final Logger log = LoggerFactory.getLogger(ProjectDefinitionProcessor.class);
 
     private final ProjectLoader loader = new ProjectLoader();
-
-    private final LogManager logManager;
-
-    @Inject
-    public ProjectDefinitionProcessor(LogManager logManager) {
-        this.logManager = logManager;
-    }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
@@ -64,9 +55,8 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
             return chain.process(payload);
         } catch (IOException e) {
-            log.warn("process ['{}'] -> project loading error: {}", processKey, workspace, e);
-            logManager.error(processKey,"Error while loading a project file: " + workspace, e);
-            throw new ProcessException(processKey, "Error while loading a project file: " + workspace, e);
+            log.warn("process ['{}'] -> ({}) project loading error: {}", processKey, workspace, e.getMessage());
+            throw new ProcessException(processKey, "Error while loading the project, check the syntax. " + e.getMessage());
         }
     }
 }

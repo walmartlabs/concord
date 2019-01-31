@@ -58,7 +58,7 @@ public class ProjectLoader {
         for (String n : PROJECT_FILE_NAMES) {
             Path p = baseDir.resolve(n);
             if (Files.exists(p)) {
-                b.addProjectFile(p);
+                b.addProjectFile(baseDir, p);
                 break;
             }
         }
@@ -98,8 +98,8 @@ public class ProjectLoader {
             this.parser = parser;
         }
 
-        public ProjectDefinitionBuilder addProjectFile(Path file) throws IOException {
-            YamlProject yml = parser.parseProject(file);
+        public ProjectDefinitionBuilder addProjectFile(Path baseDir, Path file) throws IOException {
+            YamlProject yml = parser.parseProject(baseDir, file);
             if (yml == null) {
                 throw new IOException("Empty project definition: " + file);
             }
@@ -124,7 +124,7 @@ public class ProjectLoader {
                         return FileVisitResult.CONTINUE;
                     }
 
-                    loadDefinitions(file);
+                    loadDefinitions(path, file);
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -138,7 +138,7 @@ public class ProjectLoader {
                         return FileVisitResult.CONTINUE;
                     }
 
-                    loadProfiles(file);
+                    loadProfiles(path, file);
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -160,12 +160,12 @@ public class ProjectLoader {
             Collections.sort(files);
 
             for (Path f : files) {
-                addProjectFile(f);
+                addProjectFile(path, f);
             }
         }
 
-        private void loadDefinitions(Path file) throws IOException {
-            YamlDefinitionFile df = parser.parseDefinitionFile(file);
+        private void loadDefinitions(Path baseDir, Path file) throws IOException {
+            YamlDefinitionFile df = parser.parseDefinitionFile(baseDir, file);
             loadDefinitions(df);
         }
 
@@ -203,12 +203,12 @@ public class ProjectLoader {
             }
         }
 
-        private void loadProfiles(Path file) throws IOException {
+        private void loadProfiles(Path baseDir, Path file) throws IOException {
             if (!isYaml(file)) {
                 return;
             }
 
-            YamlProfileFile pf = parser.parseProfileFile(file);
+            YamlProfileFile pf = parser.parseProfileFile(baseDir, file);
             loadProfiles(pf);
         }
 

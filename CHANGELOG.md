@@ -9,6 +9,7 @@ popup.
 
 ### Changed
 
+- project-model: improve stacktraces in case of YAML parsing errors;
 - concord-runner: fix the timestamp format in the `processLog`
 logger. Plugins such as Ansible should use the correct timestamp
 format now. 

@@ -61,6 +61,14 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!-- to process YAML parsing errors -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.23</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
