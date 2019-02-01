@@ -509,6 +509,10 @@ public class ProcessStateManager extends AbstractDao {
         return new ZipConsumer(dst);
     }
 
+    public static ItemConsumer exclude(String pattern, ItemConsumer delegate) {
+        return new FilteringConsumer(delegate, n -> !n.matches(pattern));
+    }
+
     /**
      * Creates a path from the specified array of elements.
      */
@@ -610,6 +614,24 @@ public class ProcessStateManager extends AbstractDao {
                 dst.closeArchiveEntry();
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static final class FilteringConsumer implements ItemConsumer {
+
+        private final ItemConsumer delegate;
+        private final Function<String, Boolean> checkFn;
+
+        public FilteringConsumer(ItemConsumer delegate, Function<String, Boolean> checkFn) {
+            this.delegate = delegate;
+            this.checkFn = checkFn;
+        }
+
+        @Override
+        public void accept(String name, int unixMode, InputStream src) {
+            if (checkFn.apply(name)) {
+                delegate.accept(name, unixMode, src);
             }
         }
     }

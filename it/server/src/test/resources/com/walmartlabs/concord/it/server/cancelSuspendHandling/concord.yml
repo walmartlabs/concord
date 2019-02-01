@@ -1,9 +1,16 @@
+configuration:
+  arguments:
+    bValue: "still here"
+
 flows:
   default:
   - form: myForm
 
   onCancel:
-  - log: "!cancelled by a user!"
+  - call: testFlow
+
+  testFlow:
+  - log: "${aValue} ${bValue}"
 
 forms:
   myForm:

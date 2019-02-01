@@ -27,6 +27,7 @@ import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -118,13 +119,25 @@ public class FailureHandlingIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCancelSuspended() throws Exception {
+        String aValue = "value_" + randomString();
         byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendHandling").toURI());
 
+        // start the process
+
         ProcessApi processApi = new ProcessApi(getApiClient());
-        StartProcessResponse spr = start(payload);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.aValue", aValue);
+        StartProcessResponse spr = start(input);
         waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
-        // cancel the running process
+        // check if the form is there
+        ProcessFormsApi processFormsApi = new ProcessFormsApi(getApiClient());
+        List<FormListEntry> forms = processFormsApi.list(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        // cancel the suspended process
 
         processApi.kill(spr.getInstanceId());
         waitForStatus(processApi, spr.getInstanceId(), StatusEnum.CANCELLED);
@@ -136,6 +149,6 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
 
         byte[] ab = getLog(child.getLogFileName());
-        assertLog(".*!cancelled by a user!.*", ab);
+        assertLog(".*" + aValue + " still here.*", ab);
     }
 }

@@ -119,7 +119,7 @@ public class Worker implements Runnable {
             return;
         }
 
-        r.getLog().info("Exporting the repository data: {}", r.getRepoUrl());
+        r.getLog().info("Exporting the repository data: {} @ {}, {}", r.getRepoUrl(), r.getCommitId(), r.getRepoPath());
 
         long dt;
         try {
@@ -138,7 +138,7 @@ public class Worker implements Runnable {
     }
 
     private void downloadState(JobRequest r) throws Exception {
-        r.getLog().info("Downloading the process state...");
+        r.getLog().info("Downloading the process state {}...", r.getInstanceId());
 
         long dt;
         try {

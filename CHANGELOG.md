@@ -9,6 +9,8 @@ popup.
 
 ### Changed
 
+- concord-server: do not copy the parent process' forms when forking
+a process;
 - repository: fix the GIT clone bug for repositories without a
 `master` branch;
 - concord-console: fix the checkpoint grouping issue, preventing

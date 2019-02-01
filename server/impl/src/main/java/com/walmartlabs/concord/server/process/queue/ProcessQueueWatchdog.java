@@ -57,7 +57,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessQueueWatchdog.class);
 
-    private static final PollEntry POLL_ENTRIES[] = {
+    private static final PollEntry[] POLL_ENTRIES = {
             new PollEntry(ProcessStatus.FAILED,
                     Constants.Flows.ON_FAILURE_FLOW,
                     ProcessKind.FAILURE_HANDLER, 3),

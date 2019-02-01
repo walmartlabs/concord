@@ -47,9 +47,13 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.exclude;
 
 @Named
 public class PayloadManager {
+
+    private static final String FORMS_PATH_PATTERN = String.format("%s/%s/%s/.*", Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+            Constants.Files.JOB_STATE_DIR_NAME, Constants.Files.JOB_FORMS_DIR_NAME);
 
     private final ProcessStateManager stateManager;
     private final OrganizationDao orgDao;
@@ -210,7 +214,7 @@ public class PayloadManager {
                               UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
         Path tmpDir = IOUtils.createTempDir("payload");
-        if (!stateManager.export(parentProcessKey, copyTo(tmpDir))) {
+        if (!stateManager.export(parentProcessKey, exclude(FORMS_PATH_PATTERN, copyTo(tmpDir)))) {
             throw new ProcessException(processKey, "Can't fork '" + parentProcessKey + "', the state snapshot not found");
         }
 
