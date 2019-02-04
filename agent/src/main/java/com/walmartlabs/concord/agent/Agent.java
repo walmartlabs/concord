@@ -325,7 +325,7 @@ public class Agent {
                 cfg.getServerApiBaseUrl(),
                 cfg.getAgentJavaCmd(),
                 cfg.getDockerHost(),
-                cfg.getDependencyCacheDir(),
+                cfg.getDependencyListsDir(),
                 cfg.getDependencyCacheDir(),
                 cfg.getRunnerPath(),
                 cfg.getJavaPath(),
