@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,14 +21,12 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -38,7 +36,6 @@ import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(ParallelRunner.class)
 public class ProjectIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -281,7 +278,7 @@ public class ProjectIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testRepositoryValidation() throws Exception{
+    public void testRepositoryValidation() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("repositoryValidation").toURI());
@@ -303,17 +300,17 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        createProjectAndRepo(projectName, username, permissions, repoName,repoUrl, null, null);
+        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
 
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        RepositoryValidationResponse result =  repositoriesApi.validateRepository("Default",projectName,repoName);
+        RepositoryValidationResponse result = repositoriesApi.validateRepository("Default", projectName, repoName);
         assertTrue(result.isOk());
     }
 
     @Test(expected = Exception.class)
-    public void testRepositoryValidationForEmptyFlow() throws Exception{
+    public void testRepositoryValidationForEmptyFlow() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyFlow").toURI());
@@ -335,16 +332,16 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        createProjectAndRepo(projectName, username, permissions, repoName,repoUrl, null, null);
+        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
 
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        repositoriesApi.validateRepository("Default",projectName,repoName);
+        repositoriesApi.validateRepository("Default", projectName, repoName);
     }
 
     @Test(expected = Exception.class)
-    public void testRepositoryValidationForEmptyForm() throws Exception{
+    public void testRepositoryValidationForEmptyForm() throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ProjectIT.class.getResource("repositoryValidationEmptyForm").toURI());
@@ -366,12 +363,12 @@ public class ProjectIT extends AbstractServerIT {
 
         // ---
 
-        createProjectAndRepo(projectName, username, permissions, repoName,repoUrl, null, null);
+        createProjectAndRepo(projectName, username, permissions, repoName, repoUrl, null, null);
 
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        repositoriesApi.validateRepository("Default",projectName,repoName);
+        repositoriesApi.validateRepository("Default", projectName, repoName);
     }
 
 

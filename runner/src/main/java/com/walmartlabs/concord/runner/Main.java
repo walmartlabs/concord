@@ -34,6 +34,7 @@ import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.ProcessErrorProcessor;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
@@ -46,14 +47,14 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -78,9 +79,7 @@ public class Main {
         this.apiClientFactory = apiClientFactory;
     }
 
-    public void run(boolean debug) throws Exception {
-        // determine current working directory, it should contain the payload
-        Path baseDir = Paths.get(System.getProperty("user.dir"));
+    public void run(Path baseDir, boolean debug) throws Exception {
         log.info("run -> working directory: {}", baseDir.toAbsolutePath());
 
         long t1 = System.currentTimeMillis();
@@ -120,23 +119,7 @@ public class Main {
             log.info("Ready to start in {}ms", (t3 - t2));
         }
 
-        try {
-            executeProcess(instanceId.toString(), checkpointManager, baseDir);
-        } catch (Throwable e) {
-            writeError(e, baseDir);
-            throw e;
-        }
-    }
-
-    private void writeError(Throwable e, Path baseDir) {
-        Map<String, Object> error = ProcessErrorProcessor.process(e);
-
-        Path storeDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
-        Map<String, Object> outVars = OutVariablesParser.read(storeDir);
-
-        Map<String, Object> result = new HashMap<>(outVars);
-        result.putAll(error);
-        OutVariablesParser.write(storeDir, result);
+        executeProcess(instanceId.toString(), checkpointManager, baseDir);
     }
 
     private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir) throws ExecutionException {
@@ -149,6 +132,7 @@ public class Main {
         // load the project
         ProjectDefinition project = loadProject(baseDir);
 
+        // read the list of metadata variables
         Set<String> metaVariables = getMetaVariables(req);
 
         Engine engine = engineFactory.create(project, baseDir, activeProfiles, metaVariables);
@@ -156,9 +140,14 @@ public class Main {
         Map<String, Object> resumeCheckpointReq = null;
         while (true) {
             Collection<Event> resultEvents;
+
+            // check if we need to resume the process from a saved point
             String eventName = readResumeEvent(baseDir);
             if (eventName == null) {
-                resultEvents = start(engine, req, instanceId, baseDir);
+                // running fresh
+                // let's check if there are some saved variables (e.g. from the parent process)
+                Variables vars = readSavedVariables(baseDir);
+                resultEvents = start(engine, vars, req, instanceId, baseDir);
             } else {
                 resultEvents = resume(engine, req, instanceId, baseDir, eventName);
             }
@@ -169,6 +158,7 @@ public class Main {
                     .findFirst()
                     .orElse(null);
 
+            // found a checkpoint, resume the process immediately
             if (checkpointEvent != null) {
                 checkpointManager.process(getCheckpointId(checkpointEvent), checkpointEvent.getName(), baseDir);
                 // clear arguments
@@ -178,6 +168,7 @@ public class Main {
                 }
                 req = resumeCheckpointReq;
             } else {
+                // no checkpoints, stop the execution and wait for an external event
                 return;
             }
         }
@@ -191,7 +182,7 @@ public class Main {
         return UUID.fromString(s);
     }
 
-    private Collection<Event> start(Engine e, Map<String, Object> req, String instanceId, Path baseDir) throws ExecutionException {
+    private Collection<Event> start(Engine e, Variables vars, Map<String, Object> req, String instanceId, Path baseDir) throws ExecutionException {
         // get the entry point
         String entryPoint = (String) req.get(InternalConstants.Request.ENTRY_POINT_KEY);
         if (entryPoint == null) {
@@ -210,7 +201,7 @@ public class Main {
         // start the process
         log.debug("start ['{}', '{}'] -> entry point: {}, starting...", instanceId, baseDir, entryPoint);
 
-        e.start(instanceId, entryPoint, args);
+        e.start(instanceId, entryPoint, vars, args);
 
         // save the suspended state marker if needed
         return finalizeState(e, instanceId, baseDir);
@@ -267,8 +258,47 @@ public class Main {
         try {
             return new String(Files.readAllBytes(p));
         } catch (IOException e) {
-            throw new ExecutionException("Read resume event error", e);
+            throw new ExecutionException("Error while reading the resume event: " + e.getMessage(), e);
         }
+    }
+
+    private static Variables readSavedVariables(Path baseDir) {
+        Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
+
+        Path varsFile = stateDir.resolve(InternalConstants.Files.LAST_KNOWN_VARIABLES_FILE_NAME);
+        if (!Files.exists(varsFile)) {
+            return null;
+        }
+
+        Variables vars;
+        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(varsFile))) {
+            vars = (Variables) in.readObject();
+        } catch (ClassNotFoundException | IOException e) {
+            log.error("Can't restore the saved variables: {}", e.getMessage());
+            return null;
+        }
+
+        // if a process error was succesfully handled by the engine, it will be saved as a `lastError` variable
+        // we shoudn't overwrite it with the Agent's version
+        if (vars.hasVariable(Constants.Context.LAST_ERROR_KEY)) {
+            return vars;
+        }
+
+        Path lastErrorFile = stateDir.resolve(InternalConstants.Files.LAST_ERROR_FILE_NAME);
+        if (!Files.exists(lastErrorFile)) {
+            return vars;
+        }
+
+        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(lastErrorFile))) {
+            Throwable t = (Throwable) in.readObject();
+            vars = vars.setVariable(Constants.Context.LAST_ERROR_KEY, t);
+        } catch (ClassNotFoundException | IOException e) {
+            log.error("Can't restore the saved last error variable: {}", e.getMessage());
+            return vars;
+        }
+
+        return vars;
     }
 
     @SuppressWarnings("unchecked")
@@ -375,6 +405,9 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        // determine current working directory, it should contain the payload
+        Path baseDir = Paths.get(System.getProperty("user.dir"));
+
         boolean debug = Boolean.parseBoolean(System.getProperty("debug"));
 
         try {
@@ -396,7 +429,7 @@ public class Main {
                 log.info("Runtime loaded in {}ms", (t2 - t1));
             }
 
-            main.run(debug);
+            main.run(baseDir, debug);
 
             // force exit
             System.exit(0);
@@ -404,6 +437,7 @@ public class Main {
             // try to unroll nested exceptions to get a meaningful one
             Throwable t = unroll(e);
             log.error("main -> unhandled exception", t);
+            saveLastError(baseDir, e);
             System.exit(1);
         }
     }
@@ -509,6 +543,33 @@ public class Main {
                 new SpaceModule(new URLClassSpace(depsClassLoader), BeanScanning.CACHE));
 
         return Guice.createInjector(m);
+    }
+
+    private static void saveLastError(Path baseDir, Throwable t) {
+        Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
+
+        Path dst = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
+                .resolve(InternalConstants.Files.LAST_ERROR_FILE_NAME);
+
+        try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+             ObjectOutputStream oos = new ObjectOutputStream(out)) {
+
+            oos.writeObject(t);
+        } catch (IOException e) {
+            log.error("Can't save the last unhandled error: {}", e.getMessage());
+        }
+
+        Map<String, Object> error = ProcessErrorProcessor.process(t);
+
+        Map<String, Object> outVars = OutVariablesParser.read(attachmentsDir);
+        Map<String, Object> result = new HashMap<>(outVars);
+        result.putAll(error);
+
+        OutVariablesParser.write(attachmentsDir, result);
+    }
+
+    private void writeError(Throwable e, Path baseDir) {
+
     }
 
     private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {

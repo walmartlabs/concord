@@ -90,6 +90,16 @@ public final class InternalConstants extends Constants {
         public static final String RESUME_MARKER_FILE_NAME = "_resume";
 
         /**
+         * Snapshot of the process' variables, taken each time the process stops.
+         */
+        public static final String LAST_KNOWN_VARIABLES_FILE_NAME = "_lastVariables";
+
+        /**
+         * The last unhandled error of the process, serialized to a file.
+         */
+        public static final String LAST_ERROR_FILE_NAME = "_lastError";
+
+        /**
          * File which contains data of process' OUT variables.
          */
         public static final String OUT_VALUES_FILE_NAME = "out.json";

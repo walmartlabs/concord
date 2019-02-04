@@ -21,12 +21,10 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +35,6 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.*;
 
-@RunWith(ParallelRunner.class)
 public class CheckpointsIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

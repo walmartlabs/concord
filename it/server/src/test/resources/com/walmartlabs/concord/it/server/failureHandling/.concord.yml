@@ -4,6 +4,8 @@ flows:
   - ${misc.throwBpmnError("boom!")}
 
   onFailure:
+  - log: "lastError: ${lastError}"
+  - log: "txId: ${txId}"
   - log: "projectInfo: ${projectInfo}"
   - log: "processInfo: ${processInfo}"
 

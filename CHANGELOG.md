@@ -9,6 +9,9 @@
 
 ### Changed
 
+- concord-runner: save and restore the last known variables for
+forked processes. This allows forks and onCancel/onError/etc
+handlers to access the parent process' variables;
 - concord-server: use roles instead of user flags. E.g.
 `concordAdmin` role instead of `USERS.IS_ADMIN`.
 

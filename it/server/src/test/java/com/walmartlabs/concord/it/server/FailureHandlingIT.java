@@ -77,6 +77,7 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
 
         ab = getLog(child.getLogFileName());
+        assertLog(".*lastError:.*boom.*", ab);
         assertLog(".*projectInfo: \\{.*orgName=Default.*\\}.*", ab);
         assertLog(".*processInfo: \\{.*sessionKey=.*\\}.*", ab);
     }
@@ -150,5 +151,42 @@ public class FailureHandlingIT extends AbstractServerIT {
 
         byte[] ab = getLog(child.getLogFileName());
         assertLog(".*" + aValue + " still here.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCancelSuspendedAfterTwoForms() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("cancelSuspendAfterTwoForms").toURI());
+
+        // start the process
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+
+        // check if the first form is there
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        // submit the first form
+        formsApi.submit(spr.getInstanceId(), "myForm1", Collections.singletonMap("x", "123"));
+
+        // wait for the process to suspend
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+
+        // check if the second form's ready
+        forms = formsApi.list(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        // cancel the process
+        processApi.kill(spr.getInstanceId());
+
+        // find the child processes
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.CANCEL_HANDLER,
+                StatusEnum.FINISHED, StatusEnum.FAILED);
+        assertEquals(StatusEnum.FINISHED, child.getStatus());
+
+        // check the logs for the successful message
+        byte[] ab = getLog(child.getLogFileName());
+        assertLog(".*Hello!.*", ab);
     }
 }

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner.engine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.runner.PolicyEngineHolder;
+import com.walmartlabs.concord.runner.VariablesSnapshotListener;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
 import com.walmartlabs.concord.runner.engine.el.TaskResolver;
 import com.walmartlabs.concord.sdk.Context;
@@ -42,8 +43,11 @@ import io.takari.bpm.el.DefaultExpressionManager;
 import io.takari.bpm.el.ExecutionContextVariableResolver;
 import io.takari.bpm.el.ExpressionManager;
 import io.takari.bpm.event.EventStorage;
-import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.NoopResumeHandler;
+import io.takari.bpm.form.FormDefinitionProvider;
+import io.takari.bpm.form.FormService;
+import io.takari.bpm.form.FormStorage;
+import io.takari.bpm.form.FormTaskHandler;
 import io.takari.bpm.lock.NoopLockManager;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceAwareProcessDefinition;
@@ -78,8 +82,11 @@ public class EngineFactory {
     }
 
     @SuppressWarnings("deprecation")
-    public Engine create(ProjectDefinition project, Path baseDir,
-                         Collection<String> activeProfiles, Set<String> metaVariables) {
+    public Engine create(ProjectDefinition project,
+                         Path baseDir,
+                         Collection<String> activeProfiles,
+                         Set<String> metaVariables) {
+
         log.info("create -> using profiles: {}", activeProfiles);
 
         Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
@@ -154,6 +161,7 @@ public class EngineFactory {
                 .withUserTaskHandler(uth)
                 .withConfiguration(cfg)
                 .withListener(new ProcessOutVariablesListener(attachmentsDir, outVariables))
+                .withListener(new VariablesSnapshotListener(stateDir))
                 .withResourceResolver(new ResourceResolverImpl(baseDir))
                 .build();
 
@@ -201,7 +209,7 @@ public class EngineFactory {
             Map<String, String> m = new HashMap<>(current);
             m.putAll(attr);
 
-            if(pd instanceof SourceAwareProcessDefinition) {
+            if (pd instanceof SourceAwareProcessDefinition) {
                 SourceAwareProcessDefinition spd = (SourceAwareProcessDefinition) pd;
                 return new SourceAwareProcessDefinition(pd.getId(), pd.getChildren(), m, spd.getSourceMaps());
             } else {

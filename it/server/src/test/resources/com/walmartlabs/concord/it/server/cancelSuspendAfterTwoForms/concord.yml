@@ -1,0 +1,15 @@
+configuration:
+  arguments:
+    z: "Hello!"
+
+flows:
+  default:
+    - form: myForm1
+      fields:
+        - x: {type: "string"}
+    - form: myForm2
+      fields:
+        - y: {type: "string"}
+
+  onCancel:
+    - log: "${z}"

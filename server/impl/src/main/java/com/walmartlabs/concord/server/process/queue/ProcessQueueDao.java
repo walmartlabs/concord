@@ -42,6 +42,7 @@ import com.walmartlabs.concord.server.process.event.EventDao;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
+import org.jooq.util.postgres.PostgresDSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -329,6 +330,13 @@ public class ProcessQueueDao extends AbstractDao {
 
             return i == processKeys.size();
         });
+    }
+
+    public void removeHandler(PartialProcessKey processKey, String handler) {
+        tx(tx -> tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.HANDLERS, PostgresDSL.arrayRemove(PROCESS_QUEUE.HANDLERS, field("{0}::text", String.class, handler)))
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .execute());
     }
 
     private void insertHistoryStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
