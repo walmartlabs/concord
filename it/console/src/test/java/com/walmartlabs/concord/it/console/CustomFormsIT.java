@@ -72,11 +72,6 @@ public class CustomFormsIT {
 
         // ---
 
-        // TODO necessary on some systems, investigate
-        Thread.sleep(5000);
-
-        // ---
-
         consoleRule.login(Concord.ADMIN_API_KEY);
 
         // ---

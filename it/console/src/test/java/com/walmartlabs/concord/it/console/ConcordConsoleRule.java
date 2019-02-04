@@ -20,11 +20,7 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -61,6 +57,8 @@ public class ConcordConsoleRule extends WebDriverRule {
 
         WebElement loginButton = driver.findElement(By.id("loginButton"));
         loginButton.click();
+
+        waitForLoad();
     }
 
     public Object executeJavaScript(String js) {
@@ -90,6 +88,19 @@ public class ConcordConsoleRule extends WebDriverRule {
         wait.until(condition);
 
         return driver.findElement(by);
+    }
+
+    public void waitForLoad() throws InterruptedException {
+        ExpectedCondition<Boolean> expectation = new
+                ExpectedCondition<Boolean>() {
+                    public Boolean apply(WebDriver driver) {
+                        return executeJavaScript("return document.readyState").toString().equals("complete");
+                    }
+                };
+
+        Thread.sleep(500);
+        WebDriverWait wait = new WebDriverWait(getDriver(), 30);
+        wait.until(expectation);
     }
 
     @Override
