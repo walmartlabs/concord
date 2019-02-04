@@ -78,13 +78,24 @@ export const generateCheckpointGroups = (
 ): CheckpointGroup[] => {
     // make sure that the history is sorted
     const history = historyEntries.sort(comparators.byProperty((i) => i.changeDate));
+    if (history.length == 0) {
+        return [];
+    }
 
     const groups: CheckpointGroup[] = [];
-    let currentGroup: CheckpointGroup | undefined;
+    let currentGroup: CheckpointGroup = {
+        name: `#1`,
+        start: parseDate(history[0].changeDate),
+        checkpoints: []
+    };
 
     history.forEach((event) => {
-        // find the next STARTING history event
-        if (event.status === ProcessStatus.STARTING) {
+        // find the next group
+        if (
+            event.status === ProcessStatus.SUSPENDED &&
+            event.payload &&
+            event.payload.checkpointId
+        ) {
             // close the previous group
             if (currentGroup) {
                 groups.push({ ...currentGroup });

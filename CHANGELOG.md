@@ -10,6 +10,8 @@
 
 ### Changed
 
+- concord-console: display empty checkpoint group for suspended
+processes;
 - concord-runner: save and restore the last known variables for
 forked processes. This allows forks and onCancel/onError/etc
 handlers to access the parent process' variables;

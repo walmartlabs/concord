@@ -22,8 +22,4 @@ import * as React from 'react';
 
 import { LoadError } from '../shared/Labels';
 
-export default () => (
-    <LoadError>
-        No checkpoints have been created for this process.
-    </LoadError>
-);
+export default () => <LoadError>No checkpoints have been created for this process.</LoadError>;
