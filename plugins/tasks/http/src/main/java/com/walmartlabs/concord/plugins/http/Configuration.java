@@ -48,6 +48,7 @@ public class Configuration {
     private final int connectTimeout;
     private final int socketTimeout;
     private final boolean ignoreErrors;
+    private final String proxy;
 
     private Configuration(RequestMethodType methodType,
                           String url,
@@ -59,7 +60,8 @@ public class Configuration {
                           Object body,
                           int connectTimeout,
                           int socketTimeout,
-                          boolean ignoreErrors) {
+                          boolean ignoreErrors,
+                          String proxy) {
 
         this.methodType = methodType;
         this.url = url;
@@ -72,6 +74,7 @@ public class Configuration {
         this.connectTimeout = connectTimeout;
         this.socketTimeout = socketTimeout;
         this.ignoreErrors = ignoreErrors;
+        this.proxy = proxy;
     }
 
     /**
@@ -163,6 +166,10 @@ public class Configuration {
         return ignoreErrors;
     }
 
+    public String getProxy() {
+        return proxy;
+    }
+
     public static class Builder {
 
         private String url;
@@ -176,6 +183,7 @@ public class Configuration {
         private Integer connectTimeout = 30000;
         private Integer socketTimeout = -1;
         private boolean ignoreErrors;
+        private String proxy;
 
         /**
          * Used to specify the url which will later use to create {@link org.apache.http.client.methods.HttpUriRequest}
@@ -296,6 +304,11 @@ public class Configuration {
             return this;
         }
 
+        public Builder withProxy(String proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+
         /**
          * Invoking this method will result in a new configuration
          *
@@ -314,7 +327,7 @@ public class Configuration {
                 throw new IllegalArgumentException("Body is missing for Put method");
             }
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors);
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors, proxy);
         }
 
         /**
@@ -379,7 +392,9 @@ public class Configuration {
                 this.ignoreErrors = (boolean) ctx.getVariable(IGNORE_ERRORS_KEY);
             }
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors);
+            this.proxy = (String) ctx.getVariable(PROXY_KEY);
+
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors, proxy);
         }
 
         /**

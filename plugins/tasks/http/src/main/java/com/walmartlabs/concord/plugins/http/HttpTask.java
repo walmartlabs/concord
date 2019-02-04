@@ -150,25 +150,26 @@ public class HttpTask implements Task {
      */
     final class HttpTaskConstant {
 
-        static final String METHOD_KEY = "method";
         static final String AUTH_KEY = "auth";
-        static final String REQUEST_KEY = "request";
-        static final String BODY_KEY = "body";
-        static final String RESPONSE_KEY = "response";
-        static final String REQUEST_POST_KEY = "POST";
-        static final String REQUEST_PUT_KEY = "PUT";
-        static final String URL_KEY = "url";
-        static final String OUT_KEY = "out";
-        static final String TOKEN_KEY = "token";
-        static final String USERNAME_KEY = "username";
-        static final String PASSWORD_KEY = "password"; // NOSONAR
         static final String BASIC_KEY = "basic";
-        static final String SUCCESS_KEY = "success";
+        static final String BODY_KEY = "body";
+        static final String CONNECT_TIMEOUT_KEY = "connectTimeout";
         static final String CONTENT_KEY = "content";
         static final String HEADERS_KEY = "headers";
-        static final String CONNECT_TIMEOUT_KEY = "connectTimeout";
-        static final String SOCKET_TIMEOUT_KEY = "socketTimeout";
         static final String IGNORE_ERRORS_KEY = "ignoreErrors";
+        static final String METHOD_KEY = "method";
+        static final String OUT_KEY = "out";
+        static final String PASSWORD_KEY = "password"; // NOSONAR
+        static final String PROXY_KEY = "proxy";
+        static final String REQUEST_KEY = "request";
+        static final String REQUEST_POST_KEY = "POST";
+        static final String REQUEST_PUT_KEY = "PUT";
+        static final String RESPONSE_KEY = "response";
+        static final String SOCKET_TIMEOUT_KEY = "socketTimeout";
+        static final String SUCCESS_KEY = "success";
+        static final String TOKEN_KEY = "token";
+        static final String URL_KEY = "url";
+        static final String USERNAME_KEY = "username";
 
         private HttpTaskConstant() {
         }

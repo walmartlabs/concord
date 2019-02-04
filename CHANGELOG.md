@@ -4,6 +4,7 @@
 
 ### Added
 
+- http: proxy support via `proxy` parameter;
 - concord-server: option to restrict the external events endpoint
 `/api/v1/events/{eventName}` to users with specific roles.
 

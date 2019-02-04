@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.plugins.http.exception.UnauthorizedException;
 import com.walmartlabs.concord.plugins.http.request.HttpTaskRequest;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -215,12 +216,19 @@ public class SimpleHttpClient {
      * @throws Exception exception
      */
     private static CloseableHttpClient createClient(Configuration cfg) throws Exception {
+        RequestConfig.Builder c = RequestConfig.custom()
+                .setConnectTimeout(cfg.getConnectTimeout())
+                .setSocketTimeout(cfg.getSocketTimeout());
+
+        String proxy = cfg.getProxy();
+        if (proxy != null) {
+            log.info("Using proxy: {}", proxy);
+            c.setProxy(HttpHost.create(proxy));
+        }
+
         return HttpClientBuilder.create()
                 .setConnectionManager(buildConnectionManager())
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setConnectTimeout(cfg.getConnectTimeout())
-                        .setSocketTimeout(cfg.getSocketTimeout())
-                        .build())
+                .setDefaultRequestConfig(c.build())
                 .build();
     }
 
