@@ -30,6 +30,8 @@ import java.util.Map;
 
 public class Trigger implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String name;
     private final List<String> activeProfiles;
     private final Map<String, Object> arguments;

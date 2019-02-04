@@ -32,6 +32,8 @@ import java.util.Set;
  */
 public class LdapPrincipal implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String username;
     private final String nameInNamespace;
     private final String userPrincipalName;

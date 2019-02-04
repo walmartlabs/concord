@@ -26,6 +26,8 @@ import java.util.UUID;
 
 public class SessionKey implements AuthenticationToken {
 
+    private static final long serialVersionUID = 1L;
+
     private final UUID instanceId;
 
     public SessionKey(UUID instanceId) {

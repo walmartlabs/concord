@@ -260,6 +260,8 @@ public interface StepConverter<T extends YamlStep> {
 
     class ELCall implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         private final String expression;
         private final Set<VariableMapping> args;
 

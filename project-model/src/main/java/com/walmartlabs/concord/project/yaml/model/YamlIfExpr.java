@@ -25,6 +25,8 @@ import io.takari.parc.Seq;
 
 public class YamlIfExpr extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final String expr;
     private final Seq<YamlStep> thenSteps;
     private final Seq<YamlStep> elseSteps;

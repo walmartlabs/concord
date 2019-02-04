@@ -26,6 +26,8 @@ import java.io.Serializable;
 
 public abstract class YamlStep implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final JsonLocation location;
 
     protected YamlStep(JsonLocation location) {

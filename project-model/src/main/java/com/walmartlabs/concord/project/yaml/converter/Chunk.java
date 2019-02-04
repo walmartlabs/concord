@@ -28,6 +28,8 @@ import java.util.*;
 
 public class Chunk implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final List<AbstractElement> elements = new ArrayList<>();
     private final Set<String> outputs = new HashSet<>();
     private final Map<String, SourceMap> sourceMap = new HashMap<>();

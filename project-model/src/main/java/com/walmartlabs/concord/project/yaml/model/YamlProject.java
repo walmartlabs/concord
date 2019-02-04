@@ -28,6 +28,8 @@ import java.util.Map;
 
 public class YamlProject extends YamlProfile {
 
+    private static final long serialVersionUID = 1L;
+
     private final Map<String, YamlProfile> profiles;
     private final List<YamlTrigger> triggers;
 

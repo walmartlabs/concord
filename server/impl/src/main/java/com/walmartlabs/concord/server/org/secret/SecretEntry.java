@@ -34,6 +34,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class SecretEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final UUID id;
 
     @NotNull

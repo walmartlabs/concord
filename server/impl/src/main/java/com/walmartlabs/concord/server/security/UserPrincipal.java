@@ -32,6 +32,8 @@ import java.util.UUID;
  */
 public class UserPrincipal implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static UserPrincipal getCurrent() {
         return PrincipalUtils.getCurrent(UserPrincipal.class);
     }

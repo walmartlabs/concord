@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 
 public class YamlProfile implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final Map<String, List<YamlStep>> flows;
     private final Map<String, List<YamlFormField>> forms;
     private final Map<String, Object> configuration;

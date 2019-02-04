@@ -29,6 +29,8 @@ import java.util.UUID;
  */
 public class ProcessKey extends PartialProcessKey {
 
+    private static final long serialVersionUID = 1L;
+
     public static ProcessKey from(ProcessEntry e) {
         return new ProcessKey(e.instanceId(), new Timestamp(e.createdAt().getTime()));
     }

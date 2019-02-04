@@ -26,6 +26,8 @@ import java.util.UUID;
 
 public class ApiKey implements RememberMeAuthenticationToken {
 
+    private static final long serialVersionUID = 1L;
+
     private final UUID userId;
     private final String key;
     private final boolean rememberMe;

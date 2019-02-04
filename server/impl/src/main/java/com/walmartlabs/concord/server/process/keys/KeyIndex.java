@@ -28,7 +28,7 @@ import java.util.function.BiFunction;
 /**
  * @param <K> type of a key
  */
-public final class KeyIndex<K extends Key<?>> implements Serializable {
+public final class KeyIndex<K extends Key<?>> {
 
     private final Map<String, K> keys = new HashMap<>();
     private final BiFunction<String, Class<?>, K> keyMaker;

@@ -26,6 +26,8 @@ import java.util.Map;
 
 public class YamlTaskStep extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final String key;
     private final Map<String, Object> options;
 

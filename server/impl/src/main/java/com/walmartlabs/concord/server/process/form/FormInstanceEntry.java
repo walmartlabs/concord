@@ -35,6 +35,8 @@ import java.util.stream.Collectors;
 @JsonInclude(Include.NON_NULL)
 public class FormInstanceEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String processInstanceId;
     private final String name;
     private final List<Field> fields;

@@ -25,6 +25,8 @@ import io.takari.bpm.model.ScriptTask.Type;
 
 public class YamlScript extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final Type type;
     private final String language;
     private final String body;

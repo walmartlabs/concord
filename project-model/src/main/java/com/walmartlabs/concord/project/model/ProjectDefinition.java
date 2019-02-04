@@ -28,6 +28,8 @@ import java.util.Map;
 
 public class ProjectDefinition extends Profile {
 
+    private static final long serialVersionUID = 1L;
+
     private final Map<String, Profile> profiles;
 
     private final List<Trigger> triggers;

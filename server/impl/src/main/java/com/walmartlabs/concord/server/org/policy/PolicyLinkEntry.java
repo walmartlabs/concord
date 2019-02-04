@@ -31,6 +31,8 @@ import java.io.Serializable;
 @JsonInclude(Include.NON_NULL)
 public class PolicyLinkEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @ConcordKey
     private final String orgName;
 

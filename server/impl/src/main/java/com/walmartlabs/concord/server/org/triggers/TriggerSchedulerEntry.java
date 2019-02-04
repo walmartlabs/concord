@@ -29,6 +29,8 @@ import java.util.UUID;
 
 public class TriggerSchedulerEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final Date fireAt;
     private final UUID triggerId;
     private final UUID orgId;

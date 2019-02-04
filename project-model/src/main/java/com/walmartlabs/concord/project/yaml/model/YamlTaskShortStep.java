@@ -24,6 +24,8 @@ import com.fasterxml.jackson.core.JsonLocation;
 
 public class YamlTaskShortStep extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final String key;
     private final Object arg;
 

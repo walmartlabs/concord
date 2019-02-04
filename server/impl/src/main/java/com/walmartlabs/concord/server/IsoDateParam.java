@@ -26,6 +26,8 @@ import java.util.Calendar;
 
 public class IsoDateParam implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static IsoDateParam valueOf(String s) {
         Calendar calendar = DatatypeConverter.parseDateTime(s);
         return new IsoDateParam(calendar);

@@ -35,6 +35,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class ProjectEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static ProjectEntry replace(ProjectEntry e, Map<String, RepositoryEntry> repos) {
         return new ProjectEntry(e.id, e.name, e.description, e.orgId, e.orgName, repos,
                 e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.meta);

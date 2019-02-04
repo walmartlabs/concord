@@ -35,6 +35,8 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 @JsonInclude(NON_NULL)
 public class TeamEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final UUID id;
 
     private final UUID orgId;

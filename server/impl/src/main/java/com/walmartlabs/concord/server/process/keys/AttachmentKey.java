@@ -24,6 +24,8 @@ import java.nio.file.Path;
 
 public final class AttachmentKey extends Key<Path> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final KeyIndex<AttachmentKey> index = new KeyIndex<>((n, type) -> new AttachmentKey(n));
 
     public static AttachmentKey register(String name) {

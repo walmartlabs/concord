@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class YamlGroup extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final Seq<YamlStep> steps;
     private final Map<String, Object> options;
 

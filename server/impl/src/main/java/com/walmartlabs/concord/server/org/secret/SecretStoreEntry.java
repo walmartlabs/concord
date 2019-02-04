@@ -29,7 +29,9 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 @JsonInclude(Include.NON_NULL)
-public class SecretStoreEntry implements Serializable{
+public class SecretStoreEntry implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @NotNull
     private final SecretStoreType storeType;

@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class YamlTrigger implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final JsonLocation location;
     private final String name;
     private final Map<String, Object> options;

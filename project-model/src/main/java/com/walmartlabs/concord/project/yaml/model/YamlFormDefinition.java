@@ -24,6 +24,8 @@ import io.takari.parc.Seq;
 
 public class YamlFormDefinition implements YamlDefinition {
 
+    private static final long serialVersionUID = 1L;
+
     private final String name;
     private final Seq<YamlFormField> fields;
 

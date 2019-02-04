@@ -27,6 +27,8 @@ import java.util.Set;
 
 public class HeaderKey<T> extends Key<T> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final KeyIndex<HeaderKey<?>> index = new KeyIndex<>(HeaderKey::new);
 
     @SuppressWarnings("unchecked")

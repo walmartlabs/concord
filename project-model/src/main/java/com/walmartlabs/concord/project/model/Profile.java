@@ -28,6 +28,8 @@ import java.util.Map;
 
 public class Profile implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final Map<String, ProcessDefinition> flows;
     private final Map<String, FormDefinition> forms;
     private final Map<String, Object> configuration;

@@ -34,6 +34,8 @@ import java.util.UUID;
 @JsonInclude(Include.NON_NULL)
 public class UserEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static final int MAX_USERNAME_LENGTH = 128;
 
     private final UUID id;

@@ -30,6 +30,8 @@ import java.util.UUID;
  */
 public class PartialProcessKey implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Creates a partial process key from a known instance ID.
      */

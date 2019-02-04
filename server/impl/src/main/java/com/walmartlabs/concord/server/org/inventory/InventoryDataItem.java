@@ -24,6 +24,8 @@ import java.io.Serializable;
 
 public class InventoryDataItem implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String path;
 
     private final int level;

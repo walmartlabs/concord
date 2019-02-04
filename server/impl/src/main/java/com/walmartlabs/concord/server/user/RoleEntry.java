@@ -31,6 +31,8 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RoleEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final UUID id;
 
     @ConcordKey

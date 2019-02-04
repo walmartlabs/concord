@@ -28,6 +28,8 @@ import java.util.UUID;
 
 public class CreateApiKeyResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok = true;
     private final UUID id;
     private final String key;

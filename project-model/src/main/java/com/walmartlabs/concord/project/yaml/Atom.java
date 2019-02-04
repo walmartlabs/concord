@@ -29,6 +29,8 @@ import java.io.Serializable;
 
 public class Atom implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public static Atom current(JsonParser p) throws IOException {
         if (p.currentToken() == null) {
             return null;

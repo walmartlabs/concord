@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class YamlDockerStep extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final String image;
     private final String cmd;
     private final boolean forcePull;

@@ -30,6 +30,8 @@ import java.io.Serializable;
 
 public class TemplateAliasEntry implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @NotNull
     @ConcordKey
     private final String alias;

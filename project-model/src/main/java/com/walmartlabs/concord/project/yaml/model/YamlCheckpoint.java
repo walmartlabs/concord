@@ -26,6 +26,8 @@ import java.util.Map;
 
 public class YamlCheckpoint extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final String key;
 
     public YamlCheckpoint(JsonLocation location, String key) {

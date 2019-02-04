@@ -24,6 +24,8 @@ import java.io.Serializable;
 
 public abstract class Key<T> implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final String name;
     private final Class<T> type;
 

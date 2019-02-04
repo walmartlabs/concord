@@ -28,6 +28,8 @@ import java.util.Map;
 
 public class YamlProfileFile implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final Map<String, YamlProfile> profiles;
 
     @JsonCreator

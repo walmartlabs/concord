@@ -24,6 +24,8 @@ import org.apache.shiro.authc.AuthenticationToken;
 
 public class GithubKey implements AuthenticationToken {
 
+    private static final long serialVersionUID = 1L;
+
     private final String key;
 
     public GithubKey(String key) {

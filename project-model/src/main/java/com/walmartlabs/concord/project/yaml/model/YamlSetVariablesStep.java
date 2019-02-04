@@ -26,6 +26,8 @@ import java.util.Map;
 
 public class YamlSetVariablesStep extends YamlStep {
 
+    private static final long serialVersionUID = 1L;
+
     private final Map<String, Object> variables;
 
     public YamlSetVariablesStep(JsonLocation location, Map<String, Object> variables) {

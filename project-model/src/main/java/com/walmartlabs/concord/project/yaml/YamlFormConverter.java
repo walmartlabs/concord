@@ -196,6 +196,8 @@ public final class YamlFormConverter {
 
     private static class TypeInfo implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         public static TypeInfo parse(String s) {
             String type = s;
             Cardinality cardinality = Cardinality.ONE_AND_ONLY_ONE;

@@ -28,7 +28,7 @@ import io.takari.parc.Seq;
 import java.io.Serializable;
 import java.util.*;
 
-public class ConverterContext implements Serializable {
+public class ConverterContext {
 
     private static final Map<Class, StepConverter> converters = new HashMap<>();
 
