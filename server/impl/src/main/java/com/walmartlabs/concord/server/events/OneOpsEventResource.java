@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -74,14 +75,15 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     private final ObjectMapper objectMapper;
 
     @Inject
-    public OneOpsEventResource(ProcessManager processManager,
+    public OneOpsEventResource(ExternalEventsConfiguration cfg,
+                               ProcessManager processManager,
                                TriggersDao triggersDao,
                                ProjectDao projectDao,
                                TriggersConfiguration triggersCfg,
                                UserManager userManager,
                                LdapManager ldapManager) {
 
-        super(processManager, triggersDao, projectDao, triggersCfg, userManager, ldapManager);
+        super(cfg, processManager, triggersDao, projectDao, triggersCfg, userManager, ldapManager);
         this.objectMapper = new ObjectMapper();
     }
 

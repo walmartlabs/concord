@@ -43,8 +43,6 @@ public class UserEntry implements Serializable {
 
     private final Set<OrganizationEntry> orgs;
 
-    private final boolean admin;
-
     private final UserType type;
 
     @Size(max = 256)
@@ -56,7 +54,6 @@ public class UserEntry implements Serializable {
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
                      @JsonProperty("orgs") Set<OrganizationEntry> orgs,
-                     @JsonProperty("admin") boolean admin,
                      @JsonProperty("type") UserType type,
                      @JsonProperty("email") String email,
                      @JsonProperty("roles") Set<RoleEntry> roles) {
@@ -64,7 +61,6 @@ public class UserEntry implements Serializable {
         this.id = id;
         this.name = name;
         this.orgs = orgs;
-        this.admin = admin;
         this.type = type;
         this.email = email;
         this.roles = roles;
@@ -80,10 +76,6 @@ public class UserEntry implements Serializable {
 
     public Set<OrganizationEntry> getOrgs() {
         return orgs;
-    }
-
-    public boolean isAdmin() {
-        return admin;
     }
 
     public UserType getType() {
@@ -104,7 +96,6 @@ public class UserEntry implements Serializable {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", orgs=" + orgs +
-                ", admin=" + admin +
                 ", type=" + type +
                 ", email='" + email + '\'' +
                 ", roles=" + roles +

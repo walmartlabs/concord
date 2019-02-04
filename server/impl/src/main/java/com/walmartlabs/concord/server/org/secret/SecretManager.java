@@ -42,6 +42,7 @@ import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -112,17 +113,18 @@ public class SecretManager {
             }
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             // an admin can access any secret
             return e;
         }
 
-        if (level == ResourceAccessLevel.READER && (p.isGlobalReader() || p.isGlobalWriter())) {
+        if (level == ResourceAccessLevel.READER && (Roles.isGlobalReader() || Roles.isGlobalWriter())) {
             return e;
-        } else if (level == ResourceAccessLevel.WRITER && p.isGlobalWriter()) {
+        } else if (level == ResourceAccessLevel.WRITER && Roles.isGlobalWriter()) {
             return e;
         }
+
+        UserPrincipal p = UserPrincipal.assertCurrent();
 
         SecretOwner owner = e.getOwner();
         if (owner != null && owner.getId().equals(p.getId())) {
@@ -383,7 +385,7 @@ public class SecretManager {
     public List<SecretEntry> list(UUID orgId) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
-        if (p.isAdmin() || p.isGlobalReader() || p.isGlobalWriter()) {
+        if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
             userId = null;
         }
 
@@ -483,7 +485,7 @@ public class SecretManager {
         // "globalReaders" and the current session token
         // TODO create a separate role or move the repository cloning into the runner and use session tokens?
         UserPrincipal u = UserPrincipal.getCurrent();
-        if (u != null && u.isGlobalReader()) {
+        if (u != null && Roles.isGlobalReader()) {
             return;
         }
 

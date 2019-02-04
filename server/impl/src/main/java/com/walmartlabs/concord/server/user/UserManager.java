@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,14 +42,10 @@ public class UserManager {
         this.teamDao = teamDao;
     }
 
-    public UserEntry getOrCreate(String username, UserType userType) {
-        return getOrCreate(username, userType, false);
-    }
-
-    public UserEntry getOrCreate(String username, UserType type, boolean admin) {
+    public UserEntry getOrCreate(String username, UserType type) {
         UUID id = userDao.getId(username);
         if (id == null) {
-            return create(username, type, admin);
+            return create(username, type);
         }
         return userDao.get(id);
     }
@@ -68,15 +64,15 @@ public class UserManager {
     }
 
     public Optional<UserEntry> update(UUID userId, String email) {
-        return Optional.ofNullable(userDao.update(userId, null, email));
+        return Optional.ofNullable(userDao.update(userId, email));
     }
 
-    public UserEntry create(String username, UserType type, boolean admin) {
+    public UserEntry create(String username, UserType type) {
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UUID id = userDao.insert(username, type, admin);
+        UUID id = userDao.insert(username, type);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;

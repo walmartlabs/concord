@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntr
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.archive.ProcessCheckpointArchiver;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
 
@@ -131,27 +132,27 @@ public class ProcessCheckpointManager {
         return checkpointDao.list(processKey);
     }
 
-    public void assertProcessAccess(ProcessEntry p) {
-        UserPrincipal principal = UserPrincipal.assertCurrent();
+    public void assertProcessAccess(ProcessEntry e) {
+        UserPrincipal p = UserPrincipal.assertCurrent();
 
-        UUID initiatorId = p.initiatorId();
-        if (principal.getId().equals(initiatorId)) {
+        UUID initiatorId = e.initiatorId();
+        if (p.getId().equals(initiatorId)) {
             // process owners should be able to restore the process from a checkpoint
             return;
         }
 
-        if (principal.isAdmin()) {
+        if (Roles.isAdmin()) {
             return;
         }
 
-        UUID projectId = p.projectId();
+        UUID projectId = e.projectId();
         if (projectId != null) {
             projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
             return;
         }
 
-        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to restore the process using a checkpoint: " + p.instanceId());
+        throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+                "the necessary permissions to restore the process using a checkpoint: " + e.instanceId());
     }
 
     private String readCheckpointName(Path checkpointDir) throws IOException {

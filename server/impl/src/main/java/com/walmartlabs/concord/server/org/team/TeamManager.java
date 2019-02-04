@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.team;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
@@ -171,7 +172,7 @@ public class TeamManager {
     }
 
     private void validateUsers(DSLContext tx, UUID orgId) {
-        if(!orgDao.hasRole(tx, orgId, TeamRole.OWNER)) {
+        if (!orgDao.hasRole(tx, orgId, TeamRole.OWNER)) {
             throw new ValidationErrorsException("Organization must have at least one OWNER");
         }
     }
@@ -216,11 +217,11 @@ public class TeamManager {
     }
 
     public void assertAccess(UUID orgId, TeamRole requiredRole) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             return;
         }
 
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!teamDao.isInAnyTeam(orgId, p.getId(), TeamRole.atLeast(requiredRole))) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);
         }
@@ -233,11 +234,11 @@ public class TeamManager {
     public TeamEntry assertAccess(UUID orgId, UUID teamId, String teamName, TeamRole requiredRole, boolean teamMembersOnly) {
         TeamEntry e = assertExisting(orgId, teamId, teamName);
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             return e;
         }
 
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (requiredRole != null && teamMembersOnly) {
             if (!teamDao.hasUser(e.getId(), p.getId(), TeamRole.atLeast(requiredRole))) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);

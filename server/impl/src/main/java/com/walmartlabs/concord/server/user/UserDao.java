@@ -39,8 +39,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserRoles.USER_ROLES;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectFrom;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class UserDao extends AbstractDao {
@@ -50,14 +49,14 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
-    public UUID insert(String username, UserType type, boolean admin) {
-        return txResult(tx -> insert(tx, username, type, admin));
+    public UUID insert(String username, UserType type) {
+        return txResult(tx -> insert(tx, username, type));
     }
 
-    public UUID insert(DSLContext tx, String username, UserType type, boolean admin) {
+    public UUID insert(DSLContext tx, String username, UserType type) {
         return tx.insertInto(USERS)
-                .columns(USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_TYPE)
-                .values(username, admin, type.toString())
+                .columns(USERS.USERNAME, USERS.USER_TYPE)
+                .values(username, type.toString())
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
     }
@@ -68,13 +67,9 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
-    public UserEntry update(UUID id, Boolean admin, String email) {
+    public UserEntry update(UUID id, String email) {
         return txResult(tx -> {
             UpdateQuery<UsersRecord> q = tx.updateQuery(USERS);
-
-            if (admin != null) {
-                q.addValue(USERS.IS_ADMIN, admin);
-            }
 
             if (email != null) {
                 q.addValue(USERS.USER_EMAIL, email);
@@ -89,8 +84,8 @@ public class UserDao extends AbstractDao {
 
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record5<UUID, String, String, Boolean, String> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_EMAIL)
+            Record4<UUID, String, String, String> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL)
                             .from(USERS)
                             .where(USERS.USER_ID.eq(id))
                             .fetchOne();
@@ -105,8 +100,8 @@ public class UserDao extends AbstractDao {
 
     public UserEntry getByName(String username) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record5<UUID, String, String, Boolean, String> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.IS_ADMIN, USERS.USER_EMAIL)
+            Record4<UUID, String, String, String> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL)
                             .from(USERS)
                             .where(USERS.USERNAME.eq(username))
                             .fetchOne();
@@ -119,7 +114,7 @@ public class UserDao extends AbstractDao {
         }
     }
 
-    private UserEntry getUserInfo(DSLContext tx, Record5<UUID, String, String, Boolean, String> r) {
+    private UserEntry getUserInfo(DSLContext tx, Record4<UUID, String, String, String> r) {
         // TODO join?
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
@@ -132,17 +127,16 @@ public class UserDao extends AbstractDao {
         List<OrganizationEntry> orgs = tx.selectDistinct(TEAMS.ORG_ID, orgNameField)
                 .from(TEAMS)
                 .where(TEAMS.TEAM_ID.in(teamIds))
-                .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null,null));
+                .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null, null));
 
-        List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME, ROLES.GLOBAL_READER, ROLES.GLOBAL_WRITER)
+        List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME)
                 .from(ROLES)
                 .where(ROLES.ROLE_ID.in(select(USER_ROLES.ROLE_ID).from(USER_ROLES).where(USER_ROLES.USER_ID.eq(r.get(USERS.USER_ID)))))
-                .fetch(e -> new RoleEntry(e.value1(), e.value2(), e.value3(), e.value4()));
+                .fetch(e -> new RoleEntry(e.value1(), e.value2()));
 
         return new UserEntry(r.get(USERS.USER_ID),
                 r.get(USERS.USERNAME),
                 new HashSet<>(orgs),
-                r.get(USERS.IS_ADMIN),
                 UserType.valueOf(r.get(USERS.USER_TYPE)),
                 r.get(USERS.USER_EMAIL),
                 new HashSet<>(roles));
@@ -207,5 +201,18 @@ public class UserDao extends AbstractDao {
                     .where(USERS.USER_ID.eq(id))
                     .fetchOne(USERS.USER_EMAIL);
         }
+    }
+
+    public void updateRoles(UUID id, Set<String> roles) {
+        tx(tx -> {
+            tx.deleteFrom(USER_ROLES).where(USER_ROLES.USER_ID.eq(id)).execute();
+
+            tx.insertInto(USER_ROLES).select(
+                    select(
+                            value(id).as(USER_ROLES.USER_ID),
+                            ROLES.ROLE_ID.as(USER_ROLES.ROLE_ID)
+                    ).from(ROLES).where(ROLES.ROLE_NAME.in(roles)))
+                    .execute();
+        });
     }
 }

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="170000" author="ibodrov@gmail.com">
+        <insert tableName="ROLES">
+            <column name="ROLE_NAME">concordAdmin</column>
+        </insert>
+
+        <sql>
+            insert into USER_ROLES
+                select
+                    USER_ID,
+                    (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin')
+                from USERS where is_admin = true
+        </sql>
+    </changeSet>
+
+    <changeSet id="170010" author="ibodrov@gmail.com">
+        <dropColumn tableName="ROLES" columnName="GLOBAL_READER"/>
+        <dropColumn tableName="ROLES" columnName="GLOBAL_WRITER"/>
+        <dropColumn tableName="USERS" columnName="IS_ADMIN"/>
+    </changeSet>
+</databaseChangeLog>

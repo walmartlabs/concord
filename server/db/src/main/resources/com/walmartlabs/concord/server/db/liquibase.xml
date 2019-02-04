@@ -59,5 +59,6 @@
     <include file="v0.99.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.0.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.5.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.7.0.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

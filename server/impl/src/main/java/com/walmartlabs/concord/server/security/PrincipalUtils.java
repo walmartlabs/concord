@@ -20,13 +20,18 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.walmartlabs.concord.server.user.RoleEntry;
+import com.walmartlabs.concord.server.user.UserEntry;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 
 import java.io.*;
 import java.util.Optional;
+import java.util.Set;
 
 public final class PrincipalUtils {
 
@@ -73,6 +78,23 @@ public final class PrincipalUtils {
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static AuthorizationInfo toAuthorizationInfo(PrincipalCollection principals) {
+        SimpleAuthorizationInfo i = new SimpleAuthorizationInfo();
+
+        UserPrincipal p = principals.oneByType(UserPrincipal.class);
+        if (p == null) {
+            return i;
+        }
+
+        UserEntry u = p.getUser();
+        Set<RoleEntry> roles = u.getRoles();
+        if (roles != null) {
+            roles.forEach(r -> i.addRole(r.getName()));
+        }
+
+        return i;
     }
 
     private PrincipalUtils() {

@@ -45,6 +45,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.annotations.Api;
@@ -672,7 +673,7 @@ public class ProcessResource implements Resource {
                 }
             }
         } else {
-            if (!isAdmin()) {
+            if (!Roles.isAdmin()) {
                 // non-admin users can see only their org's processes or processes w/o projects
                 orgIds = getCurrentUserOrgIds();
             }
@@ -1029,7 +1030,7 @@ public class ProcessResource implements Resource {
             return;
         }
 
-        if (principal.isAdmin() || principal.isGlobalReader()) {
+        if (Roles.isAdmin() || Roles.isGlobalReader()) {
             return;
         }
 
@@ -1070,11 +1071,6 @@ public class ProcessResource implements Resource {
     private Set<UUID> getCurrentUserOrgIds() {
         UserPrincipal p = UserPrincipal.assertCurrent();
         return userDao.getOrgIds(p.getId());
-    }
-
-    private static boolean isAdmin() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        return p.isAdmin();
     }
 
     private static Timestamp toTimestamp(IsoDateParam p) {

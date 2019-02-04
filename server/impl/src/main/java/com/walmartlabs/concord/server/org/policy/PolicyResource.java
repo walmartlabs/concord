@@ -33,7 +33,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -298,8 +298,7 @@ public class PolicyResource implements Resource {
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (!p.isAdmin()) {
+        if (!Roles.isAdmin()) {
             throw new UnauthorizedException("Only admins can do that");
         }
     }

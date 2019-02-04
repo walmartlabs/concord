@@ -30,7 +30,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -180,9 +180,8 @@ public class TriggerResource implements Resource {
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (!p.isAdmin()) {
-            throw new UnauthorizedException("Not authorized");
+        if (!Roles.isAdmin()) {
+            throw new UnauthorizedException("Not authorized, admin access required");
         }
     }
 }

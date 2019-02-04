@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.form;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import io.takari.bpm.form.Form;
@@ -57,8 +58,7 @@ public class FormAccessManager {
             return null;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             return f;
         }
 
@@ -68,6 +68,8 @@ public class FormAccessManager {
         }
 
         Map<String, Object> runAsParams = (Map<String, Object>) opts.get(InternalConstants.Forms.RUN_AS_KEY);
+
+        UserPrincipal p = UserPrincipal.assertCurrent();
 
         String expectedUser = FormUtils.getRunAsUser(formName, runAsParams);
         if (expectedUser != null && !expectedUser.equals(p.getUsername())) {

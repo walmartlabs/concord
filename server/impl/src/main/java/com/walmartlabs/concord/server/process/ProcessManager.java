@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -348,11 +349,11 @@ public class ProcessManager {
     }
 
     private void assertKillRights(ProcessEntry e) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             return;
         }
 
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.getId().equals(e.initiatorId())) {
             // process owners can kill their own processes
             return;
@@ -370,10 +371,12 @@ public class ProcessManager {
     }
 
     private void assertUpdateRights(PartialProcessKey processKey) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin() || p.isGlobalWriter()) {
+        if (Roles.isAdmin() || Roles.isGlobalWriter()) {
             return;
         }
+
+        UserPrincipal p = UserPrincipal.assertCurrent();
+
         SessionKeyPrincipal s = SessionKeyPrincipal.getCurrent();
         if (s != null && processKey.partOf(s.getProcessKey())) {
             // processes can update their own statuses

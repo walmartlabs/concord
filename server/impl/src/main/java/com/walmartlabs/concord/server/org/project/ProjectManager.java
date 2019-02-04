@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 
 import javax.inject.Inject;
@@ -147,7 +148,7 @@ public class ProjectManager {
     public List<ProjectEntry> list(UUID orgId) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
-        if (p.isAdmin() || p.isGlobalReader() || p.isGlobalWriter()) {
+        if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
             // admins or "global readers" can see any project, so we shouldn't filter projects by user
             userId = null;
         }

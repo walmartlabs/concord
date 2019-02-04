@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -172,12 +173,12 @@ public class ApiKeyResource implements Resource {
     }
 
     private static void assertOwner(UUID userId) {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             // admin users can manage other user's keys
             return;
         }
 
+        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!userId.equals(p.getId())) {
             throw new UnauthorizedException("Operation is not permitted");
         }

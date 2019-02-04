@@ -49,7 +49,7 @@ public class UserDaoTest extends AbstractDaoTest {
     public void testInsertDelete() throws Exception {
         String username = "user#" + System.currentTimeMillis();
 
-        UUID userId = userDao.insert(username, UserType.LOCAL, false);
+        UUID userId = userDao.insert(username, UserType.LOCAL);
 
         String s = "key#" + System.currentTimeMillis();
         String name = "name#" + System.currentTimeMillis();

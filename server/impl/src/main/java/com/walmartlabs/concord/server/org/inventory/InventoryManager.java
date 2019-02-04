@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -116,17 +117,18 @@ public class InventoryManager {
             throw new ValidationErrorsException("Inventory not found: " + inventoryId);
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             // an admin can access any project
             return e;
         }
 
-        if (level == ResourceAccessLevel.READER && (p.isGlobalReader() || p.isGlobalWriter())) {
+        if (level == ResourceAccessLevel.READER && (Roles.isGlobalReader() || Roles.isGlobalWriter())) {
             return e;
-        } else if (level == ResourceAccessLevel.WRITER && p.isGlobalWriter()) {
+        } else if (level == ResourceAccessLevel.WRITER && Roles.isGlobalWriter()) {
             return e;
         }
+
+        UserPrincipal p = UserPrincipal.assertCurrent();
 
         InventoryOwner owner = e.getOwner();
         if (owner != null && owner.getId().equals(p.getId())) {

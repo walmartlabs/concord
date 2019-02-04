@@ -24,6 +24,8 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -83,8 +85,10 @@ public class UserManagementIT extends AbstractServerIT {
         resetApiKey();
         usersApi.createOrUpdate(new CreateUserRequest()
                 .setUsername(userAName)
-                .setType(CreateUserRequest.TypeEnum.LOCAL)
-                .setAdmin(true));
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        usersApi.updateUserRoles(userAName, new UpdateUserRolesRequest()
+                .setRoles(Collections.singletonList("concordAdmin")));
 
         // ---
 

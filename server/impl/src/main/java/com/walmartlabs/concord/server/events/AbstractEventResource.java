@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
@@ -36,10 +37,13 @@ import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.naming.NamingException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +56,7 @@ public abstract class AbstractEventResource {
     private static final TriggerDefinitionEnricher AS_IS_ENRICHER = entry -> entry;
 
     private final Logger log;
+    private final ExternalEventsConfiguration cfg;
     private final ProcessManager processManager;
     private final TriggersDao triggersDao;
     private final ProjectDao projectDao;
@@ -60,23 +65,24 @@ public abstract class AbstractEventResource {
     private final UserManager userManager;
     private final LdapManager ldapManager;
 
-    public AbstractEventResource(ProcessManager processManager,
+    public AbstractEventResource(ExternalEventsConfiguration cfg, ProcessManager processManager,
                                  TriggersDao triggersDao,
                                  ProjectDao projectDao,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
                                  LdapManager ldapManager) {
 
-        this(processManager, triggersDao, projectDao, AS_IS_ENRICHER, triggersCfg, userManager, ldapManager);
+        this(cfg, processManager, triggersDao, projectDao, AS_IS_ENRICHER, triggersCfg, userManager, ldapManager);
     }
 
-    public AbstractEventResource(ProcessManager processManager,
+    public AbstractEventResource(ExternalEventsConfiguration cfg, ProcessManager processManager,
                                  TriggersDao triggersDao, ProjectDao projectDao,
                                  TriggerDefinitionEnricher enricher,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
                                  LdapManager ldapManager) {
 
+        this.cfg = cfg;
         this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.projectDao = projectDao;
@@ -92,6 +98,8 @@ public abstract class AbstractEventResource {
                           Map<String, Object> conditions,
                           Map<String, Object> event,
                           ProcessConfigurationEnricher cfgEnricher) {
+
+        assertRoles(eventName);
 
         List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
                 .map(triggerDefinitionEnricher::enrich)
@@ -139,6 +147,22 @@ public abstract class AbstractEventResource {
         return triggers.size();
     }
 
+    private void assertRoles(String eventName) {
+        // optional feature: require a specific user role to access the external events endpoint
+        Map<String, String> requiredRoles = cfg.getRequiredRoles();
+        if (requiredRoles == null || requiredRoles.isEmpty()) {
+            return;
+        }
+
+        Subject s = SecurityUtils.getSubject();
+
+        requiredRoles.forEach((k, v) -> {
+            if (eventName.matches(k) && !s.hasRole(v)) {
+                throw new ConcordApplicationException("'" + v + "' role is required", Response.Status.FORBIDDEN);
+            }
+        });
+    }
+
     private boolean isDisabled(String eventName) {
         return triggersCfg.isDisableAll() || triggersCfg.getDisabled().contains(eventName);
     }
@@ -177,10 +201,10 @@ public abstract class AbstractEventResource {
     }
 
     private PartialProcessKey startProcess(UUID orgId,
-                              UUID projectId,
-                              UUID repoId,
-                              Map<String, Object> cfg,
-                              UserEntry initiator) throws IOException {
+                                           UUID projectId,
+                                           UUID repoId,
+                                           Map<String, Object> cfg,
+                                           UserEntry initiator) throws IOException {
 
         PartialProcessKey processKey = PartialProcessKey.create();
 

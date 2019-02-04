@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -79,14 +80,14 @@ public class ProjectAccessManager {
         orgManager.assertAccess(e.getOrgId(), false);
 
         UserPrincipal p = UserPrincipal.assertCurrent();
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             // an admin can access any project
             return e;
         }
 
-        if (level == ResourceAccessLevel.READER && (p.isGlobalReader() || p.isGlobalWriter())) {
+        if (level == ResourceAccessLevel.READER && (Roles.isGlobalReader() || Roles.isGlobalWriter())) {
             return e;
-        } else if (level == ResourceAccessLevel.WRITER && p.isGlobalWriter()) {
+        } else if (level == ResourceAccessLevel.WRITER && Roles.isGlobalWriter()) {
             return e;
         }
 

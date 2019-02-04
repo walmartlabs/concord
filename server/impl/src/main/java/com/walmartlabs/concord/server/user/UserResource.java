@@ -22,8 +22,9 @@ package com.walmartlabs.concord.server.user;
 
 import com.walmartlabs.concord.common.validation.ConcordUsername;
 import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
-import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -42,6 +43,7 @@ import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
+import java.util.Set;
 import java.util.UUID;
 
 @Named
@@ -77,11 +79,10 @@ public class UserResource implements Resource {
 
         UUID id = userDao.getId(username);
         if (id == null) {
-            boolean admin = req.getAdmin() != null ? req.getAdmin() : false;
-            UserEntry e = userManager.create(username, req.getType(), admin);
+            UserEntry e = userManager.create(username, req.getType());
             return new CreateUserResponse(e.getId(), OperationResult.CREATED);
         } else {
-            userDao.update(id, req.getAdmin(), null);
+            // TODO allow updating of the type?
             return new CreateUserResponse(id, OperationResult.UPDATED);
         }
     }
@@ -117,6 +118,7 @@ public class UserResource implements Resource {
     @ApiOperation("Delete an existing user")
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
+    // TODO use usernames instead of IDs?
     public DeleteUserResponse delete(@ApiParam @PathParam("id") UUID id) {
         assertAdmin();
 
@@ -128,9 +130,27 @@ public class UserResource implements Resource {
         return new DeleteUserResponse();
     }
 
+    @POST
+    @ApiOperation("Update the list of roles for the existing user")
+    @Path("/{username}/roles")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public GenericOperationResult updateUserRoles(@ApiParam @PathParam("username") @ConcordUsername @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
+                                                  @ApiParam @Valid UpdateUserRolesRequest req) {
+        assertAdmin();
+
+        UUID id = userDao.getId(username);
+        if (id == null) {
+            throw new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND);
+        }
+
+        userDao.updateRoles(id, req.getRoles());
+        return new GenericOperationResult(OperationResult.UPDATED);
+    }
+
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (!p.isAdmin()) {
+        if (!Roles.isAdmin()) {
             throw new UnauthorizedException("Only admins can do that");
         }
     }

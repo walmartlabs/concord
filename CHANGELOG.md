@@ -1,5 +1,19 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: option to restrict the external events endpoint
+`/api/v1/events/{eventName}` to users with specific roles.
+
+### Changed
+
+- concord-server: use roles instead of user flags. E.g.
+`concordAdmin` role instead of `USERS.IS_ADMIN`.
+
+
+
 ## [1.6.0] - 2019-01-31
 
 ### Added

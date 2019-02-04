@@ -309,8 +309,7 @@ public class CryptoIT extends AbstractServerIT {
         UsersApi usersApi = new UsersApi(getApiClient());
         usersApi.createOrUpdate(new CreateUserRequest()
                 .setUsername(username)
-                .setType(CreateUserRequest.TypeEnum.LOCAL)
-                .setAdmin(false));
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
 
         ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
         CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()

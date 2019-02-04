@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -142,7 +143,7 @@ public class LandingPageResource extends AbstractDao implements Resource {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
 
-        if (p.isAdmin()) {
+        if (Roles.isAdmin()) {
             // admins can see any LP
             userId = null;
         }
@@ -207,9 +208,9 @@ public class LandingPageResource extends AbstractDao implements Resource {
     }
 
     private void refresh(RepositoryEntry r) {
-        LandingEntry le = repositoryManager.withLock(r.getUrl(), () ->  {
+        LandingEntry le = repositoryManager.withLock(r.getUrl(), () -> {
             Path lpMetaFile = repositoryManager.fetch(r.getProjectId(), r).path()
-                            .resolve(LP_META_FILE_NAME);
+                    .resolve(LP_META_FILE_NAME);
             return loadEntry(lpMetaFile);
         });
 
@@ -233,8 +234,7 @@ public class LandingPageResource extends AbstractDao implements Resource {
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        if (!p.isAdmin()) {
+        if (!Roles.isAdmin()) {
             throw new UnauthorizedException("Not authorized");
         }
     }

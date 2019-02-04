@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -88,7 +89,7 @@ public class OrganizationResource implements Resource {
 
         if (onlyCurrent) {
             UserPrincipal p = UserPrincipal.assertCurrent();
-            if (!p.isAdmin() && !p.isGlobalReader() && !p.isGlobalWriter()) {
+            if (!Roles.isAdmin() && !Roles.isGlobalReader() && !Roles.isGlobalWriter()) {
                 userId = p.getId();
             }
         }

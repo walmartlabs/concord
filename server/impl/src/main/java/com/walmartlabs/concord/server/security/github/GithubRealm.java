@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.github;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.github;
  */
 
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authc.AuthenticationException;
@@ -28,7 +29,6 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAccount;
 import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
@@ -84,10 +84,11 @@ public class GithubRealm extends AuthorizingRealm {
     @Override
     @WithTimer
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        UserPrincipal p = (UserPrincipal) principals.getPrimaryPrincipal();
+        UserPrincipal p = principals.oneByType(UserPrincipal.class);
         if (!REALM_NAME.equals(p.getRealm())) {
             return null;
         }
-        return new SimpleAuthorizationInfo();
+
+        return PrincipalUtils.toAuthorizationInfo(principals);
     }
 }

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
@@ -82,23 +83,24 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final GithubConfiguration cfg;
+    private final GithubConfiguration githubCfg;
 
     @Inject
-    public GithubEventResource(ProjectDao projectDao,
+    public GithubEventResource(ExternalEventsConfiguration cfg,
+                               ProjectDao projectDao,
                                TriggersDao triggersDao,
                                RepositoryDao repositoryDao,
                                ProcessManager processManager,
                                TriggersConfiguration triggersConfiguration,
                                UserManager userManager,
                                LdapManager ldapManager,
-                               GithubConfiguration cfg) {
+                               GithubConfiguration githubCfg) {
 
-        super(processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao, cfg), triggersConfiguration, userManager, ldapManager);
+        super(cfg, processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao, githubCfg), triggersConfiguration, userManager, ldapManager);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.cfg = cfg;
+        this.githubCfg = githubCfg;
     }
 
     @POST
@@ -162,7 +164,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
     private List<RepositoryItem> findRepos(String repoName, String branch) {
         return repositoryDao.find(repoName).stream()
-                .filter(r -> GithubUtils.isRepositoryUrl(repoName, r.getUrl(), cfg.getGithubDomain()))
+                .filter(r -> GithubUtils.isRepositoryUrl(repoName, r.getUrl(), githubCfg.getGithubDomain()))
                 .filter(r -> isBranchEq(r.getBranch(), branch))
                 .map(r -> {
                     ProjectEntry project = projectDao.get(r.getProjectId());

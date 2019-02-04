@@ -36,19 +36,12 @@ public class RoleEntry implements Serializable {
     @ConcordKey
     private final String name;
 
-    private final boolean globalReader;
-    private final boolean globalWriter;
-
     @JsonCreator
     public RoleEntry(@JsonProperty("id") UUID id,
-                     @JsonProperty("name") String name,
-                     @JsonProperty("globalReader") boolean globalReader,
-                     @JsonProperty("globalWriter") boolean globalWriter) {
+                     @JsonProperty("name") String name) {
 
         this.id = id;
         this.name = name;
-        this.globalReader = globalReader;
-        this.globalWriter = globalWriter;
     }
 
     public UUID getId() {
@@ -59,21 +52,11 @@ public class RoleEntry implements Serializable {
         return name;
     }
 
-    public boolean isGlobalReader() {
-        return globalReader;
-    }
-
-    public boolean isGlobalWriter() {
-        return globalWriter;
-    }
-
     @Override
     public String toString() {
         return "RoleEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", globalReader=" + globalReader +
-                ", globalWriter=" + globalWriter +
                 '}';
     }
 }

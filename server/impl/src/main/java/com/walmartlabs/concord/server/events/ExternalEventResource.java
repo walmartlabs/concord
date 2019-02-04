@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -57,14 +58,15 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
     private static final Logger log = LoggerFactory.getLogger(ExternalEventResource.class);
 
     @Inject
-    public ExternalEventResource(ProcessManager processManager,
+    public ExternalEventResource(ExternalEventsConfiguration cfg,
+                                 ProcessManager processManager,
                                  TriggersDao triggersDao,
                                  ProjectDao projectDao,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
                                  LdapManager ldapManager) {
 
-        super(processManager, triggersDao, projectDao, triggersCfg, userManager, ldapManager);
+        super(cfg, processManager, triggersDao, projectDao, triggersCfg, userManager, ldapManager);
     }
 
     @POST

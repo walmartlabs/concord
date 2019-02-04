@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,10 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
-import com.walmartlabs.concord.server.user.RoleEntry;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserType;
 
 import java.io.Serializable;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -33,11 +31,6 @@ import java.util.UUID;
  * the process state. It must maintain backward compatibility.
  */
 public class UserPrincipal implements Serializable {
-
-    public UserPrincipal(String realm, UserEntry user) {
-        this.realm = realm;
-        this.user = user;
-    }
 
     public static UserPrincipal getCurrent() {
         return PrincipalUtils.getCurrent(UserPrincipal.class);
@@ -49,6 +42,11 @@ public class UserPrincipal implements Serializable {
 
     private final String realm;
     private final UserEntry user;
+
+    public UserPrincipal(String realm, UserEntry user) {
+        this.realm = realm;
+        this.user = user;
+    }
 
     public String getRealm() {
         return realm;
@@ -64,39 +62,6 @@ public class UserPrincipal implements Serializable {
 
     public String getUsername() {
         return user.getName();
-    }
-
-    public boolean isAdmin() {
-        return user.isAdmin();
-    }
-
-    public boolean isGlobalReader() {
-        Set<RoleEntry> s = user.getRoles();
-        if (s == null) {
-            return false;
-        }
-
-        for (RoleEntry e : s) {
-            if (e.isGlobalReader()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-    public boolean isGlobalWriter() {
-        Set<RoleEntry> s = user.getRoles();
-        if (s == null) {
-            return false;
-        }
-
-        for (RoleEntry e : s) {
-            if (e.isGlobalWriter()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public UserType getType() {
