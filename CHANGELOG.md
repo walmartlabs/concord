@@ -10,6 +10,7 @@
 
 ### Changed
 
+- ansible: Concord polices now receive interpolated variable values;
 - concord-console: display empty checkpoint group for suspended
 processes;
 - concord-runner: save and restore the last known variables for

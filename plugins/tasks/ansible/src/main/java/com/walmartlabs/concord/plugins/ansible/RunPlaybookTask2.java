@@ -78,7 +78,6 @@ public class RunPlaybookTask2 implements Task {
                         .withDockerOptions(dockerOpts));
     }
 
-    @SuppressWarnings({"unchecked", "deprecation"})
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
         run(args, payloadPath, new PlaybookProcessBuilderImpl(payloadPath));
     }
@@ -126,7 +125,6 @@ public class RunPlaybookTask2 implements Task {
         AnsibleCallbacks.process(tmpDir, args, cfg);
         AnsibleLibs.process(workDir, tmpDir, env);
         AnsibleLookup.process(tmpDir, cfg);
-        AnsibleStrategy.process(tmpDir, cfg);
 
         Path inventoryPath = new AnsibleInventory(workDir, tmpDir, debug).write(args);
 

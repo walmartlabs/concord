@@ -1,20 +1,46 @@
 {
+  "task":{
+    "deny":[
+      {
+        "msg":"Can't run Ansible without or failed Gatekeeper",
+        "method":"execute",
+        "params":[
+          {
+            "name":"gatekeeperResult",
+            "index":0,
+            "values":[
+              false,
+              null
+            ],
+            "protected":true
+          }
+        ],
+        "taskName":"ansible.*"
+      }
+    ],
+    "warn":[
+
+    ],
+    "allow":[
+
+    ]
+  },
   "ansible":{
     "deny":[
       {
         "msg":"Can't download artifacts without Gatekeeper. `Artifact used in gatekeeper task does not match with that of Ansible Task`: GateKeeper Atrifact: {gatekeeperArtifacts}, AnsibleTask Artifact: {url}",
-        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}",
-        "action":"uri"
+        "action":"uri",
+        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}"
       },
       {
         "msg":"Can't download artifacts without Gatekeeper. `Artifact used in gatekeeper task does not match with that of Ansible Task`: GateKeeper Atrifact: {gatekeeperArtifacts}, AnsibleTask Artifact: {artifact_url}",
-        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}",
-        "action":"maven_artifact"
+        "action":"maven_artifact",
+        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}"
       },
       {
         "msg":"Can't download artifacts without Gatekeeper. `Artifact used in gatekeeper task does not match with that of Ansible Task`: GateKeeper Atrifact: {gatekeeperArtifacts}, AnsibleTask Artifact: {image}",
-        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}",
-        "action":"docker_container"
+        "action":"docker_container",
+        "gatekeeperArtifacts":"${context.getProtectedVariable('gatekeeperArtifacts')}"
       }
     ],
     "warn":[
@@ -50,34 +76,9 @@
       }
     ]
   },
-  "task":{
-    "allow":[
-
-    ],
-    "warn":[
-
-    ],
-    "deny":[
-      {
-        "msg":"Can't run Ansible without or failed Gatekeeper",
-        "taskName":"ansible.*",
-        "method":"execute",
-        "params":[
-          {
-            "index":0,
-            "name":"gatekeeperResult",
-            "protected": true,
-            "values":[
-              false,
-              null
-            ]
-          }
-        ]
-      }
+  "protectedTask":{
+    "names":[
+      "gatekeeper"
     ]
-  },
-
-  "protectedTask": {
-    "names": ["gatekeeper"]
   }
 }

@@ -83,6 +83,7 @@
 
 ## Expert
 
+* [ansible_gatekeeper](ansible_gatekeeper) - how to forbid execution of certain Ansible steps;
 * [ansible_oneops_replace](ansible_oneops_replace) - using triggers to run a playbook on OneOps VM replacement events;
 * [dynamic_forms](dynamic_forms) - how to create a form dynamically (in runtime);
 * [fork](fork) - starting a subprocess;

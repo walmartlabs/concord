@@ -1,34 +1,35 @@
 ---
 - hosts: all
   tasks:
+#  - name: download via maven
+#    local_action: maven_artifact group_id=junit artifact_id=junit dest=/tmp/junit-latest.jar
+#
 #   - maven_artifact:
 #       version: latest
-#       artifact_id: spring-core
+#       artifact_id: "{{ artifactId }}"
 #       group_id: org.springframework
 #       dest: /tmp/a
 #       keep_name: yes
 #       repository_url: 'https://repo.company.com/maven'
 
-#  - name: Enable the maintenance mode
-#    uri:
-#      url: http://localhost:8001/api/v1/server/maintenance-mode
-#      method: POST
-#      status_code: -1, 200
-#      headers:
-#        Authorization: "Basic dm4wdGowYjoxcktoX3QweHRob3M3cDJD"
+  - name: Enable the maintenance mode
+    uri:
+      url: "http://repo1.maven.org/maven2/com/google/guava/guava-testlib/10.0/{{ guava }}"
+      method: GET
+      status_code: 200
 
-  - name: Create the console container
-    tags:
-    - console
-    become: true
-    docker_container:
-      env:
-        TERMINATED_SSL: "{{ concordTerminatedSsl | default('false') }}"
-        SERVER_ADDR: localhost
-        SERVER_PORT: 8001
-      image: "walmartlabs/concord-console:0.90.0"
-      name: console
-      network_mode: host
-      pull: true
-      restart_policy: unless-stopped
-      state: started
+#  - name: Create the console container
+#    tags:
+#    - console
+#    become: true
+#    docker_container:
+#      env:
+#        TERMINATED_SSL: "{{ concordTerminatedSsl | default('false') }}"
+#        SERVER_ADDR: localhost
+#        SERVER_PORT: 8001
+#      image: "walmartlabs/concord-console:0.90.0"
+#      name: console
+#      network_mode: host
+#      pull: true
+#      restart_policy: unless-stopped
+#      state: started

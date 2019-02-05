@@ -39,7 +39,6 @@ public class AnsibleConfigTest extends AbstractTest {
 
         new AnsibleCallbacks(tmpDir).enrich(cfg);
         new AnsibleLookup(tmpDir).enrich(cfg);
-        new AnsibleStrategy(tmpDir).enrich(cfg);
 
         Path cfgPath = cfg.write();
         assertFile("ansible.cfg", workDir.resolve(cfgPath));
