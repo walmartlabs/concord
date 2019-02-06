@@ -4,6 +4,8 @@
 
 ### Added
 
+- throw-tasks: now capable of throwing exceptions with custom
+payload: maps, lists, etc;
 - concord-console: new "Wait Conditions" tab on the process status
 page;
 - concord-server: new process configuration option `exclusiveExec`:
