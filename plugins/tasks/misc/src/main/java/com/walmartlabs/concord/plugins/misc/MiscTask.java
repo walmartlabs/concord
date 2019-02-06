@@ -33,6 +33,6 @@ public class MiscTask implements Task {
     }
 
     public void throwBpmnError(String errorRef) {
-        throw new BpmnError(errorRef, new RuntimeException("A user asked for this: " + errorRef));
+        throw new BpmnError(errorRef, new RuntimeException("Requested by the user. Error: " + errorRef));
     }
 }

@@ -51,7 +51,7 @@ public class ThrowExceptionTaskIT extends AbstractServerIT {
 
         // check logs
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Catch that!.*", 2, ab);
+        assertLog(".*Catch that!.*", 3, ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

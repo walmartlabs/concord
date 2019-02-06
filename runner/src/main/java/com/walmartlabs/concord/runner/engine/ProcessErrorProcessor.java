@@ -58,12 +58,10 @@ public class ProcessErrorProcessor {
             if (cause == null) {
                 return error;
             }
+        }
 
-            if (cause instanceof ELException) {
-                return cause.getCause();
-            }
-
-            return cause;
+        if (t instanceof ELException && t.getCause() != null) {
+            return t.getCause();
         }
 
         return t;

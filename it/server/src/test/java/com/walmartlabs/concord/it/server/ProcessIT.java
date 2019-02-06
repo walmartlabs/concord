@@ -589,7 +589,7 @@ public class ProcessIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         assertEquals(StatusEnum.FAILED, pir.getStatus());
-        assertProcessErrorMessage(pir, "myBnpmError");
+        assertProcessErrorMessage(pir, ".*myBnpmError.*");
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -651,6 +651,6 @@ public class ProcessIT extends AbstractServerIT {
         Map<String, Object> error = (Map<String, Object>) out.get(Constants.Context.LAST_ERROR_KEY);
         assertNotNull(error);
 
-        assertEquals(expected, error.get("message"));
+        assertTrue(error.get("message").toString().matches(expected));
     }
 }
