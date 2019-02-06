@@ -509,8 +509,8 @@ public class ProcessStateManager extends AbstractDao {
         return new ZipConsumer(dst);
     }
 
-    public static ItemConsumer exclude(String pattern, ItemConsumer delegate) {
-        return new FilteringConsumer(delegate, n -> !n.matches(pattern));
+    public static ItemConsumer exclude(ItemConsumer delegate, String... patterns) {
+        return new FilteringConsumer(delegate, n -> Arrays.stream(patterns).noneMatch(n::matches));
     }
 
     /**

@@ -437,7 +437,7 @@ public class Main {
             // try to unroll nested exceptions to get a meaningful one
             Throwable t = unroll(e);
             log.error("main -> unhandled exception", t);
-            saveLastError(baseDir, e);
+            saveLastError(baseDir, t);
             System.exit(1);
         }
     }

@@ -214,7 +214,9 @@ public class PayloadManager {
                               UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
 
         Path tmpDir = IOUtils.createTempDir("payload");
-        if (!stateManager.export(parentProcessKey, exclude(FORMS_PATH_PATTERN, copyTo(tmpDir)))) {
+
+        // skip forms and the parent process' arguments
+        if (!stateManager.export(parentProcessKey, exclude(copyTo(tmpDir), FORMS_PATH_PATTERN))) {
             throw new ProcessException(processKey, "Can't fork '" + parentProcessKey + "', the state snapshot not found");
         }
 
