@@ -21,8 +21,6 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -56,7 +54,6 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessWaitWatchdog.class);
 
-    private final ObjectMapper objectMapper;
     private final WatchdogDao dao;
     private final ProcessQueueDao processQueueDao;
     private final Map<WaitType, ProcessWaitHandler> processWaitHandlers;
@@ -64,7 +61,6 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Inject
     @SuppressWarnings("unchecked")
     public ProcessWaitWatchdog(WatchdogDao dao, ProcessQueueDao processQueueDao, Set<ProcessWaitHandler> handlers) {
-        this.objectMapper = createObjectMapper();
         this.dao = dao;
         this.processQueueDao = processQueueDao;
         this.processWaitHandlers = new HashMap<>();
@@ -100,14 +96,6 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             }
             lastUpdatedAt = p.lastUpdatedAt();
         }
-    }
-
-    // TODO replace with a system-wide provider
-    private static ObjectMapper createObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        om.registerModule(new GuavaModule());
-        om.registerModule(new Jdk8Module());
-        return om;
     }
 
     @Value.Immutable

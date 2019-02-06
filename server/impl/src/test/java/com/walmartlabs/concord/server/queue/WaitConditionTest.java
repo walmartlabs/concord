@@ -25,8 +25,6 @@ import com.walmartlabs.concord.server.process.queue.WaitCondition;
 import com.walmartlabs.concord.server.process.queue.WaitType;
 import org.junit.Test;
 
-import java.util.Collections;
-
 import static org.junit.Assert.assertEquals;
 
 public class WaitConditionTest {

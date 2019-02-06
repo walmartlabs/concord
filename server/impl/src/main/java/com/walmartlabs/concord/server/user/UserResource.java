@@ -43,7 +43,6 @@ import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
-import java.util.Set;
 import java.util.UUID;
 
 @Named

@@ -25,7 +25,6 @@ import com.walmartlabs.concord.project.yaml.model.*;
 import io.takari.bpm.model.*;
 import io.takari.parc.Seq;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class ConverterContext {

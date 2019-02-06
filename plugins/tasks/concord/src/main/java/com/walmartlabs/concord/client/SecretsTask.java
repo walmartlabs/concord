@@ -48,7 +48,7 @@ public class SecretsTask implements Task {
     private static final long RETRY_INTERVAL = 5000;
 
     public static final String ACTION_KEY = "action";
-    public static final String NEW_STORE_PASSWORD_KEY = "newStorePassword";
+    public static final String NEW_STORE_PASSWORD_KEY = "newStorePassword"; // NOSONAR
     public static final String RESULT_KEY = "result";
     public static final String IGNORE_ERRORS_KEY = "ignoreErrors";
     public static final String CREATE_IF_MISSING_KEY = "createIfMissing";

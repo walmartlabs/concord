@@ -151,7 +151,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                 return cfg;
             });
 
-            log.info("payload ['{}', '{}'] -> {} processes started", eventId, count);
+            log.info("payload ['{}'] -> {} processes started", eventId, count);
         }
 
         if (unknownRepo) {

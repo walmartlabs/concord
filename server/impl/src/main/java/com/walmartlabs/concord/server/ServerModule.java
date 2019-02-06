@@ -25,7 +25,6 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.server.agent.AgentCommandWebSocketHandler;
 import com.walmartlabs.concord.server.metrics.MetricModule;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueWebSocketHandler;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 
 public class ServerModule extends AbstractModule {

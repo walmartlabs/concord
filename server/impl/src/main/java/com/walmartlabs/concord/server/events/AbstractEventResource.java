@@ -56,7 +56,7 @@ public abstract class AbstractEventResource {
     private static final TriggerDefinitionEnricher AS_IS_ENRICHER = entry -> entry;
 
     private final Logger log;
-    private final ExternalEventsConfiguration cfg;
+    private final ExternalEventsConfiguration eventsCfg;
     private final ProcessManager processManager;
     private final TriggersDao triggersDao;
     private final ProjectDao projectDao;
@@ -65,24 +65,26 @@ public abstract class AbstractEventResource {
     private final UserManager userManager;
     private final LdapManager ldapManager;
 
-    public AbstractEventResource(ExternalEventsConfiguration cfg, ProcessManager processManager,
+    public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
+                                 ProcessManager processManager,
                                  TriggersDao triggersDao,
                                  ProjectDao projectDao,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
                                  LdapManager ldapManager) {
 
-        this(cfg, processManager, triggersDao, projectDao, AS_IS_ENRICHER, triggersCfg, userManager, ldapManager);
+        this(eventsCfg, processManager, triggersDao, projectDao, AS_IS_ENRICHER, triggersCfg, userManager, ldapManager);
     }
 
-    public AbstractEventResource(ExternalEventsConfiguration cfg, ProcessManager processManager,
+    public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
+                                 ProcessManager processManager,
                                  TriggersDao triggersDao, ProjectDao projectDao,
                                  TriggerDefinitionEnricher enricher,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
                                  LdapManager ldapManager) {
 
-        this.cfg = cfg;
+        this.eventsCfg = eventsCfg;
         this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.projectDao = projectDao;
@@ -149,7 +151,7 @@ public abstract class AbstractEventResource {
 
     private void assertRoles(String eventName) {
         // optional feature: require a specific user role to access the external events endpoint
-        Map<String, String> requiredRoles = cfg.getRequiredRoles();
+        Map<String, String> requiredRoles = eventsCfg.getRequiredRoles();
         if (requiredRoles == null || requiredRoles.isEmpty()) {
             return;
         }

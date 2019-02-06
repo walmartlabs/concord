@@ -568,10 +568,6 @@ public class Main {
         OutVariablesParser.write(attachmentsDir, result);
     }
 
-    private void writeError(Throwable e, Path baseDir) {
-
-    }
-
     private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {
 
         private final Class<?> baseClass;
