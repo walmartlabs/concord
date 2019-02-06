@@ -1,5 +1,3 @@
-package com.walmartlabs.concord.sdk;
-
 /*-
  * *****
  * Concord
@@ -9,9 +7,9 @@ package com.walmartlabs.concord.sdk;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,25 +18,22 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+import { Action } from 'redux';
+import { ProcessWaitHistoryEntry } from '../../../../api/process';
+import { RequestState, CollectionById } from '../../common';
+import { ConcordId } from '../../../../api/common';
 
-public enum EventType {
-    /**
-     * Events produced by the Ansible plugin.
-     */
-    ANSIBLE,
+export interface GetProcessWait extends Action {
+    instanceId: ConcordId;
+}
 
-    /**
-     * Flow events: step executions, task calls, etc.
-     */
-    PROCESS_ELEMENT,
+export interface GetProcessWaitResponse extends Action {
+    items: ProcessWaitHistoryEntry[];
+}
 
-    /**
-     * Process status change events.
-     */
-    PROCESS_STATUS,
+export type GetProcessWaitState = RequestState<GetProcessWaitResponse>;
+export type history = CollectionById<ProcessWaitHistoryEntry>;
 
-    /**
-     * Process wait conditions.
-     */
-    PROCESS_WAIT
+export interface State {
+    getWait: GetProcessWaitState;
 }

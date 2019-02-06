@@ -23,4 +23,15 @@
         <dropColumn tableName="ROLES" columnName="GLOBAL_WRITER"/>
         <dropColumn tableName="USERS" columnName="IS_ADMIN"/>
     </changeSet>
+
+    <changeSet id="170100" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="WAIT_CONDITIONS" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+            <column name="IS_EXCLUSIVE" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

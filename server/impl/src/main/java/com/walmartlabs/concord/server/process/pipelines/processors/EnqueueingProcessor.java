@@ -36,6 +36,9 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+/**
+ * Moves the process into ENQUEUED status, filling in the necessary attributed.
+ */
 @Named
 public class EnqueueingProcessor implements PayloadProcessor {
 
@@ -92,10 +95,11 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Instant startAt = getStartAt(payload);
         Long processTimeout = getProcessTimeout(payload);
+        boolean exclusive = isExclusive(payload);
 
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
         Map<String, Object> meta = getMeta(payload);
-        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers, meta);
+        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers, meta, exclusive);
 
         return chain.process(payload);
     }
@@ -107,7 +111,8 @@ public class EnqueueingProcessor implements PayloadProcessor {
             return null;
         }
 
-        Object v = cfg.get(Constants.Request.START_AT_KEY);
+        String k = Constants.Request.START_AT_KEY;
+        Object v = cfg.get(k);
         if (v == null) {
             return null;
         }
@@ -117,17 +122,17 @@ public class EnqueueingProcessor implements PayloadProcessor {
             try {
                 c = DatatypeConverter.parseDateTime((String) v);
             } catch (DateTimeParseException e) {
-                throw new ProcessException(p.getProcessKey(), "Invalid 'startAt' format, expected an ISO-8601 value, got: " + v);
+                throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' format, expected an ISO-8601 value, got: " + v);
             }
 
             if (c.before(Calendar.getInstance())) {
-                throw new ProcessException(p.getProcessKey(), "Invalid 'startAt' value, can't be in the past: " + v);
+                throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, can't be in the past: " + v);
             }
 
             return c.toInstant();
         }
 
-        throw new ProcessException(p.getProcessKey(), "Invalid 'startAt' value, expected an ISO-8601 value, got: " + v);
+        throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, expected an ISO-8601 value, got: " + v);
     }
 
     @SuppressWarnings("unchecked")
@@ -151,7 +156,30 @@ public class EnqueueingProcessor implements PayloadProcessor {
             return ((Number) processTimeout).longValue();
         }
 
-        throw new IllegalArgumentException("Invalid process timeout value type: expected an ISO-8601 value, got: " + processTimeout);
+        throw new IllegalArgumentException("Invalid '" + Constants.Request.PROCESS_TIMEOUT + "' value: expected an ISO-8601 value, got: " + processTimeout);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static boolean isExclusive(Payload p) {
+        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP);
+        if (cfg == null) {
+            return false;
+        }
+
+        Object v = cfg.get(Constants.Request.EXCLUSIVE_EXEC);
+        if (v == null) {
+            return false;
+        }
+
+        if (v instanceof String) {
+            return Boolean.valueOf((String) v);
+        }
+
+        if (v instanceof Boolean) {
+            return (boolean) v;
+        }
+
+        throw new IllegalArgumentException("Invalid '" + Constants.Request.EXCLUSIVE_EXEC + "' value: expected a boolean value, got: " + v);
     }
 
     @SuppressWarnings("unchecked")

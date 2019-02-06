@@ -88,6 +88,23 @@ export interface ProcessHistoryEntry {
     changeDate: string;
 }
 
+export enum WaitType {
+    NONE = 'NONE',
+    PROCESS_COMPLETION = 'PROCESS_COMPLETION'
+}
+
+export interface ProcessWaitPayload {
+    processes?: ConcordId[];
+}
+
+export interface ProcessWaitHistoryEntry {
+    id: ConcordId;
+    eventDate: string;
+    type: WaitType;
+    reason?: string;
+    payload: ProcessWaitPayload;
+}
+
 export interface ProcessEntry {
     instanceId: ConcordId;
     parentInstanceId?: ConcordId;

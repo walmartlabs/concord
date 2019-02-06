@@ -34,10 +34,19 @@ import {
     ProcessHistoryActivity,
     ProcessChildrenActivity,
     ProcessAttachmentsActivity,
-    ProcessEventsActivity
+    ProcessEventsActivity,
+    ProcessWaitActivity
 } from '../index';
 
-export type TabLink = 'status' | 'log' | 'events' | 'history' | 'children' | 'attachments' | null;
+export type TabLink =
+    | 'status'
+    | 'log'
+    | 'events'
+    | 'history'
+    | 'wait'
+    | 'children'
+    | 'attachments'
+    | null;
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -144,6 +153,10 @@ class ProcessActivity extends React.PureComponent<Props> {
                         <Icon name="history" />
                         <Link to={`${baseUrl}/history`}>History</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'wait'}>
+                        <Icon name="wait" />
+                        <Link to={`${baseUrl}/wait`}>Wait Conditions</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'children'}>
                         <Icon name="chain" />
                         <Link to={`${baseUrl}/children`}>Child Processes</Link>
@@ -169,6 +182,9 @@ class ProcessActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/history`} exact={true}>
                         <ProcessHistoryActivity instanceId={instanceId} />
+                    </Route>
+                    <Route path={`${baseUrl}/wait`} exact={true}>
+                        <ProcessWaitActivity instanceId={instanceId} />
                     </Route>
                     <Route path={`${baseUrl}/children`} exact={true}>
                         <ProcessChildrenActivity instanceId={instanceId} />

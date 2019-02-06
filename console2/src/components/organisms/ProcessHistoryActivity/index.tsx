@@ -85,6 +85,8 @@ class ProcessHistoryActivity extends React.Component<Props> {
     };
 
     render() {
+        // TODO error handling
+
         const { instanceId, loading, load, data } = this.props;
 
         if (loading) {

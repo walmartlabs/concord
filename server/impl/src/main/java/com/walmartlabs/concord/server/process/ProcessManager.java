@@ -35,6 +35,7 @@ import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.Roles;
@@ -123,7 +124,7 @@ public class ProcessManager {
         this.forkPipeline = forkPipeline;
     }
 
-    public ProcessQueueDao.ProcessItem nextProcess(Map<String, Object> capabilities) {
+    public ProcessQueueEntry nextProcess(Map<String, Object> capabilities) {
         return queueDao.poll(capabilities);
     }
 

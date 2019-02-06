@@ -90,6 +90,7 @@ public class EventDao extends AbstractDao {
         tx(tx -> insert(tx, processKey, eventType, eventData));
     }
 
+    // TODO shouldn't eventData be Serializable or Object?
     public void insert(DSLContext tx, ProcessKey processKey, String eventType, String eventData) {
         tx.insertInto(PROCESS_EVENTS)
                 .columns(PROCESS_EVENTS.INSTANCE_ID,

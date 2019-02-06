@@ -43,6 +43,10 @@ public final class PgUtils {
         return field("to_char({0}, {1})", String.class, date, inline(format));
     }
 
+    public static Field<String> jsonText(Field<?> field, String name) {
+        return field("{0}::jsonb->>{1}", Object.class, field, inline(name)).cast(String.class);
+    }
+
     private PgUtils() {
     }
 }

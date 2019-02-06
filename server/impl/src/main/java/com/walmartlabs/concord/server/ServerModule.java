@@ -37,7 +37,6 @@ public class ServerModule extends AbstractModule {
 
         Multibinder<BackgroundTask> tasks = Multibinder.newSetBinder(binder(), BackgroundTask.class);
         tasks.addBinding().to(AgentCommandWebSocketHandler.class);
-        tasks.addBinding().to(ProcessQueueWebSocketHandler.class);
         tasks.addBinding().to(TaskScheduler.class);
     }
 }

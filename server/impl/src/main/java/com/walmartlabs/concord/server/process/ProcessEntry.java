@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -154,5 +155,29 @@ public interface ProcessEntry extends Serializable {
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
         Date changeDate();
+    }
+
+    @Value.Immutable
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableProcessWaitHistoryEntry.class)
+    @JsonDeserialize(as = ImmutableProcessWaitHistoryEntry.class)
+    interface ProcessWaitHistoryEntry {
+
+        UUID id();
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+        Date eventDate();
+
+        String type();
+
+        @Nullable
+        String reason();
+
+        @JsonAnyGetter
+        Map<String, Object> payload();
+
+        public static ImmutableProcessWaitHistoryEntry.Builder builder() {
+            return ImmutableProcessWaitHistoryEntry.builder();
+        }
     }
 }

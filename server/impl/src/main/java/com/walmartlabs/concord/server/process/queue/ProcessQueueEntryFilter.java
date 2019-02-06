@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.sdk;
+package com.walmartlabs.concord.server.process.queue;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,25 +20,9 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+import org.jooq.DSLContext;
 
-public enum EventType {
-    /**
-     * Events produced by the Ansible plugin.
-     */
-    ANSIBLE,
+public interface ProcessQueueEntryFilter {
 
-    /**
-     * Flow events: step executions, task calls, etc.
-     */
-    PROCESS_ELEMENT,
-
-    /**
-     * Process status change events.
-     */
-    PROCESS_STATUS,
-
-    /**
-     * Process wait conditions.
-     */
-    PROCESS_WAIT
+    boolean filter(DSLContext tx, ProcessQueueEntry item);
 }

@@ -36,6 +36,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
+import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
@@ -556,6 +557,22 @@ public class ProcessResource implements Resource {
     public List<ProcessStatusHistoryEntry> getStatusHistory(@ApiParam @PathParam("instanceId") UUID instanceId) throws IOException {
         ProcessKey pk = assertKey(instanceId);
         return queueDao.getHistory(pk);
+    }
+
+    /**
+     * Returns a history of the process' wait conditions.
+     *
+     * @param instanceId
+     * @return
+     */
+    @GET
+    @ApiOperation("Get process' wait conditions history")
+    @javax.ws.rs.Path("/{instanceId}/waits")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public List<ProcessWaitHistoryEntry> getWaitHistory(@ApiParam @PathParam("instanceId") UUID instanceId) {
+        ProcessKey pk = assertKey(instanceId);
+        return queueDao.getWaitHistory(pk);
     }
 
     /**

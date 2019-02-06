@@ -36,6 +36,7 @@ import { State as AttachmentState } from './attachments/types';
 import { State as ChildrenState } from './children/types';
 import { State as EventsState } from './events/types';
 import { State as AnsibleState } from './ansible/types';
+import { State as WaitState } from './waits/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
@@ -114,6 +115,7 @@ export interface State {
     log: LogState;
     poll: PollState;
     history: HistoryState;
+    waits: WaitState;
     attachments: AttachmentState;
     children: ChildrenState;
     events: EventsState;

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -29,6 +28,7 @@ import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
+import com.walmartlabs.concord.server.task.ScheduledTask;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 
@@ -36,14 +36,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-@Named
+@Named("process-queue-websocket-handler")
 @Singleton
-public class ProcessQueueWebSocketHandler extends PeriodicTask {
-
-    private static final long POLL_DELAY = TimeUnit.SECONDS.toMillis(1);
-    private static final long ERROR_DELAY = TimeUnit.MINUTES.toMillis(1);
+public class ProcessQueueWebSocketHandler implements ScheduledTask {
 
     private final WebSocketChannelManager channelManager;
     private final ProcessManager processManager;
@@ -54,7 +50,6 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
     @Inject
     public ProcessQueueWebSocketHandler(WebSocketChannelManager channelManager, ProcessManager processManager,
                                         OrganizationDao organizationDao, RepositoryDao repositoryDao, LogManager logManager) {
-        super(POLL_DELAY, ERROR_DELAY);
         this.channelManager = channelManager;
         this.processManager = processManager;
         this.organizationDao = organizationDao;
@@ -63,33 +58,39 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
     }
 
     @Override
-    protected void performTask() {
+    public long getIntervalInSec() {
+        return 1;
+    }
+
+    @Override
+    public void performTask() {
         Map<WebSocketChannel, ProcessRequest> requests = this.channelManager.getRequests(MessageType.PROCESS_REQUEST);
         if (requests.isEmpty()) {
             return;
         }
 
         requests.forEach((channel, req) -> {
-            ProcessQueueDao.ProcessItem item = processManager.nextProcess(req.getCapabilities());
+            ProcessQueueEntry item = processManager.nextProcess(req.getCapabilities());
             if (item == null) {
                 return;
             }
+
             String orgName = null;
             String secret = null;
-            if (item.getRepoId() != null) {
-                RepositoryEntry repository = repositoryDao.get(item.getRepoId());
+            if (item.repoId() != null) {
+                RepositoryEntry repository = repositoryDao.get(item.repoId());
                 if (repository != null) {
                     secret = repository.getSecretName();
                 }
             }
-            if (item.getOrgId() != null) {
-                orgName = organizationDao.get(item.getOrgId()).getName();
+            if (item.orgId() != null) {
+                orgName = organizationDao.get(item.orgId()).getName();
             }
 
             channelManager.sendResponse(channel.getChannelId(),
-                    new ProcessResponse(req.getCorrelationId(), item.getKey().getInstanceId(),
-                            orgName, item.getRepoUrl(), item.getRepoPath(), item.getCommitId(), secret));
-            logManager.info(item.getKey(), "Acquired by: " + channel.getInfo());
+                    new ProcessResponse(req.getCorrelationId(), item.key().getInstanceId(),
+                            orgName, item.repoUrl(), item.repoPath(), item.commitId(), secret));
+            logManager.info(item.key(), "Acquired by: " + channel.getInfo());
         });
     }
 }

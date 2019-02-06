@@ -43,6 +43,7 @@ import { reducers as attachmentReducers, sagas as attachmentSagas } from './atta
 import { reducers as childrenReducers, sagas as childrenSagas } from './children';
 import { reducers as eventsReducers, sagas as eventsSagas } from './events';
 import { reducers as ansibleReducers, sagas as ansibleSagas } from './ansible';
+import { reducers as waitReducers, sagas as waitSagas } from './waits';
 
 import {
     CancelBulkProcessRequest,
@@ -284,7 +285,8 @@ export const reducers = combineReducers<State>({
     history: historyReducers,
     children: childrenReducers,
     attachments: attachmentReducers,
-    events: eventsReducers
+    events: eventsReducers,
+    waits: waitReducers
 });
 
 function* onGetProcess({ instanceId, includes }: GetProcessRequest) {
@@ -381,6 +383,7 @@ export const sagas = function*() {
         fork(childrenSagas),
         fork(attachmentSagas),
         fork(eventsSagas),
-        fork(ansibleSagas)
+        fork(ansibleSagas),
+        fork(waitSagas)
     ]);
 };

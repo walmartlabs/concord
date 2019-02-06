@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKind;
@@ -33,6 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -43,12 +43,10 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     private ProcessQueueDao queueDao;
     private ProjectDao projectDao;
-    private EventDao eventDao;
 
     @Before
-    public void setUp() throws Exception {
-        eventDao = new EventDao(getConfiguration());
-        queueDao = new ProcessQueueDao(getConfiguration(), mock(PolicyDao.class), eventDao);
+    public void setUp() {
+        queueDao = new ProcessQueueDao(getConfiguration(), Collections.emptyList(), mock(EventDao.class));
         projectDao = new ProjectDao(getConfiguration());
     }
 
@@ -72,15 +70,15 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
         // ---
 
-        ProcessQueueDao.ProcessItem e1 = queueDao.poll(null);
-        ProcessQueueDao.ProcessItem e2 = queueDao.poll(null);
-        ProcessQueueDao.ProcessItem e3 = queueDao.poll(null);
+        ProcessQueueEntry e1 = queueDao.poll(null);
+        ProcessQueueEntry e2 = queueDao.poll(null);
+        ProcessQueueEntry e3 = queueDao.poll(null);
 
         assertNotNull(e1);
-        assertEquals(instanceA.getInstanceId(), e1.getKey().getInstanceId());
+        assertEquals(instanceA.getInstanceId(), e1.key().getInstanceId());
 
         assertNotNull(e2);
-        assertEquals(instanceB.getInstanceId(), e2.getKey().getInstanceId());
+        assertEquals(instanceB.getInstanceId(), e2.key().getInstanceId());
 
         assertNull(e3);
     }

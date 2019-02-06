@@ -186,6 +186,11 @@ public class Constants {
          * A specific branch name or a tag to use.
          */
         public static final String REPO_BRANCH_OR_TAG = "repoBranchOrTag";
+
+        /**
+         * Exclusive process.
+         */
+        public static final String EXCLUSIVE_EXEC = "exclusiveExec";
     }
 
     public static class Trigger {
