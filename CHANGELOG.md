@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-console: new "Wait Conditions" tab on the process status
+page;
+- concord-server: new process configuration option `exclusiveExec`:
+restricts the process execution to one process at the time per
+project;
 - http: proxy support via `proxy` parameter;
 - concord-server: option to restrict the external events endpoint
 `/api/v1/events/{eventName}` to users with specific roles.
