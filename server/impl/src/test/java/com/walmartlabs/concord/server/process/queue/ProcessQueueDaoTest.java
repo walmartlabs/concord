@@ -46,7 +46,7 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() {
-        queueDao = new ProcessQueueDao(getConfiguration(), Collections.emptyList(), mock(EventDao.class));
+        queueDao = new ProcessQueueDao(getConfiguration(), Collections.emptyList(), mock(EventDao.class), mock(ProcessQueueLock.class));
         projectDao = new ProjectDao(getConfiguration());
     }
 

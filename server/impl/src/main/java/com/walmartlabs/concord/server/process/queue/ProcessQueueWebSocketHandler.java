@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -28,7 +29,6 @@ import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
-import com.walmartlabs.concord.server.task.ScheduledTask;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 
@@ -36,10 +36,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-@Named("process-queue-websocket-handler")
+@Named
 @Singleton
-public class ProcessQueueWebSocketHandler implements ScheduledTask {
+public class ProcessQueueWebSocketHandler extends PeriodicTask {
+
+    private static final long POLL_DELAY = TimeUnit.SECONDS.toMillis(1);
+    private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(30);
 
     private final WebSocketChannelManager channelManager;
     private final ProcessManager processManager;
@@ -50,6 +54,7 @@ public class ProcessQueueWebSocketHandler implements ScheduledTask {
     @Inject
     public ProcessQueueWebSocketHandler(WebSocketChannelManager channelManager, ProcessManager processManager,
                                         OrganizationDao organizationDao, RepositoryDao repositoryDao, LogManager logManager) {
+        super(POLL_DELAY, ERROR_DELAY);
         this.channelManager = channelManager;
         this.processManager = processManager;
         this.organizationDao = organizationDao;
@@ -58,12 +63,7 @@ public class ProcessQueueWebSocketHandler implements ScheduledTask {
     }
 
     @Override
-    public long getIntervalInSec() {
-        return 1;
-    }
-
-    @Override
-    public void performTask() {
+    protected void performTask() {
         Map<WebSocketChannel, ProcessRequest> requests = this.channelManager.getRequests(MessageType.PROCESS_REQUEST);
         if (requests.isEmpty()) {
             return;
