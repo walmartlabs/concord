@@ -22,8 +22,8 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.agent.Worker.CompletionCallback;
 import com.walmartlabs.concord.agent.Worker.StateFetcher;
-import com.walmartlabs.concord.agent.Worker.StatusCallback;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.DefaultDependencies;
@@ -36,7 +36,6 @@ import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
-import com.walmartlabs.concord.client.ProcessUtils;
 import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -48,11 +47,9 @@ import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +63,7 @@ public class Agent {
 
     private static final long ERROR_DELAY = 5000;
     private static final int API_CALL_MAX_RETRIES = 3;
-    private static final int API_CALL_RETRY_DELAY = 3000;
+    private static final long API_CALL_RETRY_DELAY = 3000;
 
     private final Configuration cfg;
 
@@ -124,7 +121,7 @@ public class Agent {
             // TODO parallel acquire?
             // wait for a free "slot"
             workersAvailable.acquire();
-            log.info("run -> acquired a slot, {} remains", workersAvailable.availablePermits());
+            log.info("run -> acquired a slot, {}/{} remains", workersAvailable.availablePermits(), workersCount);
 
             // fetch the next job
             JobRequest jobRequest;
@@ -209,32 +206,31 @@ public class Agent {
         return activeWorkers.containsKey(instanceId);
     }
 
-    private StatusCallback createStatusCallback(UUID instanceId, Semaphore workersAvailable) {
-        return s -> {
-            if (ProcessUtils.isFinal(s)) {
+    private CompletionCallback createStatusCallback(UUID instanceId, Semaphore workersAvailable) {
+        return new CompletionCallback() {
+
+            // guard agains misuse: the callback must be called only once - when the process reaches its
+            // final status (successful or not)
+            private volatile boolean called = false;
+
+            @Override
+            public void onStatusChange(StatusEnum status) {
+                if (called) {
+                    throw new IllegalStateException("The completion callback already called once");
+                }
+                called = true;
+
                 activeWorkers.remove(instanceId);
                 workersAvailable.release();
-            }
 
-            log.info("start -> {}: {}", instanceId, s);
-            updateStatus(instanceId, s);
+                log.info("onStatusChange -> {}: {}", instanceId, status);
+                updateStatus(instanceId, status);
+            }
         };
     }
 
     private StateFetcher createStateFetcher() {
-        return job -> {
-            File payload = null;
-            try {
-                payload = ClientUtils.withRetry(API_CALL_MAX_RETRIES, API_CALL_RETRY_DELAY,
-                        () -> processApi.downloadState(job.getInstanceId()));
-
-                IOUtils.unzip(payload.toPath(), job.getPayloadDir(), StandardCopyOption.REPLACE_EXISTING);
-            } finally {
-                if (payload != null) {
-                    delete(payload.toPath());
-                }
-            }
-        };
+        return new RemoteStateFetcher(processApi, API_CALL_MAX_RETRIES, API_CALL_RETRY_DELAY);
     }
 
     private JobRequest take(QueueClient queueClient) throws Exception {
@@ -262,11 +258,7 @@ public class Agent {
     }
 
     private void cancel(UUID instanceId) {
-        Worker w;
-        synchronized (activeWorkers) {
-            w = activeWorkers.get(instanceId);
-        }
-
+        Worker w = activeWorkers.get(instanceId);
         if (w == null) {
             return;
         }
@@ -288,18 +280,6 @@ public class Agent {
                 log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
             }
         };
-    }
-
-    private static void delete(Path dir) {
-        if (dir == null) {
-            return;
-        }
-
-        try {
-            IOUtils.deleteRecursively(dir);
-        } catch (Exception e) {
-            log.warn("delete ['{}'] -> error", dir, e);
-        }
     }
 
     private static List<JobPostProcessor> createPostProcessors(ProcessApi processApi) {

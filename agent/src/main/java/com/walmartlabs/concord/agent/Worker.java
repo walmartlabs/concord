@@ -36,7 +36,7 @@ public class Worker implements Runnable {
 
     private final RepositoryManager repositoryManager;
     private final JobExecutor executor;
-    private final StatusCallback statusCallback;
+    private final CompletionCallback completionCallback;
     private final StateFetcher stateFetcher;
     private final JobRequest jobRequest;
 
@@ -44,14 +44,14 @@ public class Worker implements Runnable {
 
     public Worker(RepositoryManager repositoryManager,
                   JobExecutor executor,
-                  StatusCallback statusCallback,
+                  CompletionCallback completionCallback,
                   StateFetcher stateFetcher,
                   JobRequest jobRequest) {
 
         this.repositoryManager = repositoryManager;
         this.executor = executor;
         this.jobRequest = jobRequest;
-        this.statusCallback = statusCallback;
+        this.completionCallback = completionCallback;
         this.stateFetcher = stateFetcher;
     }
 
@@ -74,7 +74,7 @@ public class Worker implements Runnable {
 
             // successful completion
             log.info("run -> done with {}", jobRequest);
-            statusCallback.onStatusChange(StatusEnum.FINISHED);
+            completionCallback.onStatusChange(StatusEnum.FINISHED);
         } catch (Exception e) {
             // unwrap the exception if needed
             Throwable t = unwrap(e);
@@ -110,7 +110,7 @@ public class Worker implements Runnable {
             log.error("handleError ['{}'] -> job failed", instanceId, error);
         }
 
-        statusCallback.onStatusChange(status);
+        completionCallback.onStatusChange(status);
         log.info("handleError ['{}'] -> done", instanceId);
     }
 
@@ -180,7 +180,7 @@ public class Worker implements Runnable {
         void downloadState(JobRequest jobRequest) throws Exception;
     }
 
-    public interface StatusCallback {
+    public interface CompletionCallback {
 
         void onStatusChange(StatusEnum status);
     }

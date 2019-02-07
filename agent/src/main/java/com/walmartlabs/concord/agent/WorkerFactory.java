@@ -34,12 +34,12 @@ public class WorkerFactory {
         this.executors = executors;
     }
 
-    public Worker create(JobRequest jobRequest, Worker.StatusCallback callback, Worker.StateFetcher stateFetcher) throws ExecutionException {
+    public Worker create(JobRequest jobRequest, Worker.CompletionCallback completionCallback, Worker.StateFetcher stateFetcher) throws ExecutionException {
         JobExecutor executor = executors.get(jobRequest.getType());
         if (executor == null) {
             throw new ExecutionException("Unsupported job type: " + jobRequest.getType());
         }
 
-        return new Worker(repositoryManager, executor, callback, stateFetcher, jobRequest);
+        return new Worker(repositoryManager, executor, completionCallback, stateFetcher, jobRequest);
     }
 }

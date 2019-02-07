@@ -187,7 +187,7 @@ public class ServerClient {
                         "got " + l);
             }
 
-            Thread.sleep(2000);
+            Thread.sleep(3000);
         }
     }
 
