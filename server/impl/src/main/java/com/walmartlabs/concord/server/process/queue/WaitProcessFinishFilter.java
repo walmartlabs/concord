@@ -49,7 +49,7 @@ public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter
             return true;
         }
 
-        processQueueDao.updateWait(tx, item.key(), WaitConditions.processCompletion(processes, getReason()));
+        processQueueDao.updateWait(tx, item.key(), new ProcessCompletionCondition(getReason(), processes));
 
         return false;
     }

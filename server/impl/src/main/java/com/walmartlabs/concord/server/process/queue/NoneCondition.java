@@ -20,28 +20,12 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.immutables.value.Value;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
-import javax.annotation.Nullable;
-import java.util.Map;
+public class NoneCondition extends AbstractWaitCondition {
 
-@Value.Immutable
-@JsonSerialize(as = ImmutableWaitCondition.class)
-@JsonDeserialize(as = ImmutableWaitCondition.class)
-public interface WaitCondition {
-
-    WaitType type();
-
-    @Nullable
-    String reason();
-
-    @JsonAnyGetter
-    Map<String, Object> payload();
-
-    static ImmutableWaitCondition.Builder builder() {
-        return ImmutableWaitCondition.builder();
+    @JsonCreator
+    public NoneCondition() {
+        super(WaitType.NONE, null);
     }
 }

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 
 @Named
 @Singleton
-public class WaitProcessFinishHandler implements ProcessWaitHandler {
+public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Dao dao;
@@ -57,10 +57,8 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler {
     }
 
     @Override
-    public WaitCondition process(UUID instanceId, WaitCondition wait) {
-        Payload payload = objectMapper.convertValue(wait.payload(), Payload.class);
-
-        List<UUID> awaitProcesses = payload.processes;
+    public ProcessCompletionCondition process(UUID instanceId, ProcessCompletionCondition wait) {
+        List<UUID> awaitProcesses = wait.getProcesses();
         List<UUID> finishedProcesses = dao.findFinished(awaitProcesses);
         if (finishedProcesses.isEmpty()) {
             return wait;
@@ -72,7 +70,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler {
             return null;
         }
 
-        return WaitConditions.processCompletion(processes, wait.reason());
+        return new ProcessCompletionCondition(wait.getReason(), processes);
     }
 
     private static class Payload {

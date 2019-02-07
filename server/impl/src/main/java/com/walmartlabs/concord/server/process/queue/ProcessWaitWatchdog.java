@@ -83,13 +83,13 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 return;
             }
 
-            WaitType type = p.waits().type();
+            WaitType type = p.waits().getType();
             ProcessWaitHandler handler = processWaitHandlers.get(type);
             if (handler == null) {
                 log.warn("performTask ['{}'] -> handler '{}' not found", p.instanceId(), type);
             } else {
-                WaitCondition originalWaits = p.waits();
-                WaitCondition processedWaits = handler.process(p.instanceId(), originalWaits);
+                AbstractWaitCondition originalWaits = p.waits();
+                AbstractWaitCondition processedWaits = handler.process(p.instanceId(), originalWaits);
                 if (!originalWaits.equals(processedWaits)) {
                     processQueueDao.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
                 }
@@ -107,7 +107,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         Timestamp lastUpdatedAt();
 
-        WaitCondition waits();
+        AbstractWaitCondition waits();
 
         static ImmutableWaitingProcess.Builder builder() {
             return ImmutableWaitingProcess.builder();
@@ -127,7 +127,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
-                SelectConditionStep<Record4<UUID, Timestamp, Timestamp, Object>> s = tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_UPDATED_AT, q.WAIT_CONDITIONS)
+                SelectConditionStep<Record4<UUID, Timestamp, Timestamp, String>> s = tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_UPDATED_AT, q.WAIT_CONDITIONS.cast(String.class))
                         .from(q)
                         .where(q.WAIT_CONDITIONS.isNotNull());
 
@@ -141,19 +141,31 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                 .instanceId(r.value1())
                                 .instanceCreatedAt(r.value2())
                                 .lastUpdatedAt(r.value3())
-                                .waits(deserialize(r.value4(), WaitCondition.class))
+                                .waits(deserializeWaits(r.value4()))
                                 .build());
             });
         }
 
         @SuppressWarnings("unchecked")
-        private <T> T deserialize(Object o, Class<T> type) {
+        private AbstractWaitCondition deserializeWaits(String o) {
             if (o == null) {
                 return null;
             }
 
+            // TODO replace with inheritance
             try {
-                return objectMapper.readValue(String.valueOf(o), type);
+                Map<String, Object> m = objectMapper.readValue(String.valueOf(o), Map.class);
+                WaitType type = WaitType.valueOf((String) m.get("type"));
+                switch (type) {
+                    case NONE: {
+                        return objectMapper.convertValue(m, NoneCondition.class);
+                    }
+                    case PROCESS_COMPLETION: {
+                        return objectMapper.convertValue(m, ProcessCompletionCondition.class);
+                    }
+                    default:
+                        throw new IllegalArgumentException("Unsupported type: " + type);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

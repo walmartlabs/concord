@@ -584,11 +584,11 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public void updateWait(ProcessKey key, WaitCondition waits) {
+    public void updateWait(ProcessKey key, AbstractWaitCondition waits) {
         tx(tx -> updateWait(tx, key, waits));
     }
 
-    public void updateWait(DSLContext tx, ProcessKey key, WaitCondition waits) {
+    public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", String.class, serialize(waits)))
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
@@ -596,7 +596,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
 
         try {
-            String eventData = objectMapper.writeValueAsString(waits != null ? waits : WaitConditions.none());
+            String eventData = objectMapper.writeValueAsString(waits != null ? waits : new NoneCondition());
             eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), eventData);
         } catch (Exception e) {
             throw new RuntimeException(e);

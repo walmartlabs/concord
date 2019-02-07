@@ -22,12 +22,12 @@ package com.walmartlabs.concord.server.process.queue;
 
 import java.util.UUID;
 
-public interface ProcessWaitHandler {
+public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
 
     WaitType getType();
 
     /**
      * @return {@code null} if the specified process doesn't have any wait conditions.
      */
-    WaitCondition process(UUID instanceId, WaitCondition waits);
+    T process(UUID instanceId, T waits);
 }
