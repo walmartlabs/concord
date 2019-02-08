@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -35,13 +36,12 @@ import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
-import org.apache.shiro.subject.SubjectContext;
-import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.util.ThreadContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -100,41 +100,26 @@ public class ProcessSecurityContext {
                 .orElse(null);
     }
 
-    // TODO won't be needed after switching from gRPC to REST
-    public <T> T runAs(PartialProcessKey processKey, Callable<T> c) throws Exception {
-        PrincipalCollection principals = getPrincipals(processKey);
-        if (principals == null) {
-            throw new UnauthorizedException("Process' principal not found");
-        }
-
-        return runAs(principals, c);
-    }
-
-    public <T> T runAs(String realmName, String username, Callable<T> c) throws Exception {
-        UserEntry u = userManager.getByName(username).orElse(null);
+    public <T> T runAs(UUID userID, Callable<T> c) throws Exception {
+        UserEntry u = userManager.get(userID).orElse(null);
         if (u == null) {
-            throw new UnauthorizedException("user '" + username + "'not found");
+            throw new UnauthorizedException("User '" + userID + "'not found");
         }
 
-        UserPrincipal p = new UserPrincipal(realmName, u);
-
-        return runAs(new SimplePrincipalCollection(p, p.getRealm()), c);
-    }
-
-    private <T> T runAs(PrincipalCollection principals, Callable<T> c) throws Exception {
         SecurityManager securityManager = injector.getInstance(SecurityManager.class);
         ThreadContext.bind(securityManager);
 
-        SubjectContext ctx = new DefaultSubjectContext();
-        ctx.setAuthenticated(true);
-        ctx.setPrincipals(principals);
+        SimplePrincipalCollection principals = new SimplePrincipalCollection();
+        principals.add(new UserPrincipal(InternalRealm.REALM_NAME, u), InternalRealm.REALM_NAME);
 
-        try {
-            Subject subject = securityManager.createSubject(ctx);
-            ThreadContext.bind(subject);
-            return c.call();
-        } finally {
-            ThreadContext.unbindSubject();
-        }
+        Subject subject = new Subject.Builder()
+                .sessionCreationEnabled(false)
+                .authenticated(true)
+                .principals(principals)
+                .buildSubject();
+
+        ThreadContext.bind(subject);
+
+        return c.call();
     }
 }

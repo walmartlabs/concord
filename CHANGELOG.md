@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fix authorization of `cron` triggers.
+
+
+
 ## [1.7.0] - 2019-02-07
 
 ### Added

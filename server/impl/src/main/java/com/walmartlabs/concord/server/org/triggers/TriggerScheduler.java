@@ -124,7 +124,7 @@ public class TriggerScheduler implements ScheduledTask {
         }
 
         try {
-            processSecurityContext.runAs(REALM, INITIATOR, () -> processManager.start(payload, false));
+            processSecurityContext.runAs(INITIATOR_ID, () -> processManager.start(payload, false));
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
                     triggerId, orgId, projectId, repoId, flowName, e);

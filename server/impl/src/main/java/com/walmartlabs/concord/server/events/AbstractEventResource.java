@@ -218,6 +218,7 @@ public abstract class AbstractEventResource {
                 .configuration(cfg)
                 .build();
 
+        // TODO consider using ProcessSecurityContext#runAs
         processManager.start(payload, false);
 
         return processKey;

@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.security.ConcordSecurityModule;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
+import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.ldap.LdapRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
 import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
@@ -60,6 +61,7 @@ public class ConcordServer {
                 .module(new ServerModule())
                 .securityModuleProvider(ConcordSecurityModule::new)
                 .packageToScan("com.walmartlabs.concord.server")
+                .realm(InternalRealm.class)
                 .realm(ApiKeyRealm.class)
                 .realm(SessionKeyRealm.class)
                 .realm(LdapRealm.class)

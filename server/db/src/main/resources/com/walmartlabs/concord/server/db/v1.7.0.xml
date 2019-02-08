@@ -18,11 +18,13 @@
         </sql>
     </changeSet>
 
+    <!-- disabled to keep the schema backward compatible
     <changeSet id="170010" author="ibodrov@gmail.com">
         <dropColumn tableName="ROLES" columnName="GLOBAL_READER"/>
         <dropColumn tableName="ROLES" columnName="GLOBAL_WRITER"/>
         <dropColumn tableName="USERS" columnName="IS_ADMIN"/>
     </changeSet>
+    -->
 
     <changeSet id="170100" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
