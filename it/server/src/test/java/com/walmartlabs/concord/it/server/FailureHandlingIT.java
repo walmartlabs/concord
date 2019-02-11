@@ -96,6 +96,38 @@ public class FailureHandlingIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOnFailureDependencies() throws Exception {
+        String msg = "msg_" + randomString();
+        byte[] payload = archive(ProcessIT.class.getResource("onFailureDependencies").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.msg", msg);
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLogAtLeast(".*" + msg + ".*", 1, ab);
+
+        // ---
+
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FAILED, StatusEnum.FINISHED);
+        assertEquals(StatusEnum.FINISHED, child.getStatus());
+
+        // check the logs for the successful message
+
+        ab = getLog(child.getLogFileName());
+        assertLog(".*Hello!", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCancel() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("cancelHandling").toURI());
 

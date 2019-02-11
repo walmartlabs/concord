@@ -20,14 +20,21 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Map;
 
 /**
  * Cleans up the fork's files copied from the parent process.
@@ -36,6 +43,13 @@ import java.nio.file.Path;
 public class ForkCleanupProcessor implements PayloadProcessor {
 
     private static final String[] MARKER_FILES = {InternalConstants.Files.SUSPEND_MARKER_FILE_NAME, InternalConstants.Files.RESUME_MARKER_FILE_NAME};
+
+    private final ObjectMapper objectMapper;
+
+    @Inject
+    public ForkCleanupProcessor(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
@@ -55,13 +69,35 @@ public class ForkCleanupProcessor implements PayloadProcessor {
             // we don't want the original process arguments to overwrite the process variables
             Path stateSnapshot = stateDir.resolve(InternalConstants.Files.LAST_KNOWN_VARIABLES_FILE_NAME);
             if (Files.exists(stateSnapshot)) {
-                Path requestFile = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
-                Files.deleteIfExists(requestFile);
+                clearArguments(workspace);
             }
         } catch (IOException e) {
             throw new ProcessException(payload.getProcessKey(), "Error while preparing the fork's data", e);
         }
 
         return chain.process(payload);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void clearArguments(Path workspace) throws IOException {
+        Path requestFile = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        if (!Files.exists(requestFile)) {
+            return;
+        }
+
+        Map<String, Object> m;
+        try (InputStream in = Files.newInputStream(requestFile)) {
+            m = objectMapper.readValue(in, Map.class);
+        }
+
+        if (m == null || m.isEmpty()) {
+            return;
+        }
+
+        m.remove(Constants.Request.ARGUMENTS_KEY);
+
+        try (OutputStream out = Files.newOutputStream(requestFile, StandardOpenOption.TRUNCATE_EXISTING)) {
+            objectMapper.writeValue(out, m);
+        }
     }
 }

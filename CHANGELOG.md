@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-server: forks should keep the original `_main.json` minus
+the `arguments`. This fixes the issue with forks and
+`onCancel/onFailure` handlers which are using external dependencies;
 - concord-console: fixed the row selection bug in the process list
 component.
 
