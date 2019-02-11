@@ -310,10 +310,6 @@ class ProcessList extends React.Component<Props, State> {
                         <Checkbox
                             key={row.instanceId}
                             checked={row.checked}
-                            onChange={(e, data) => {
-                                this.onRowSelect(row, data.checked);
-                                e.stopPropagation();
-                            }}
                             disabled={!canBeCancelled(row.status)}
                         />
                     </Table.Cell>

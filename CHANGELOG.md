@@ -1,5 +1,14 @@
 # Change log
 
+## [Unrelesed]
+
+### Changed
+
+- concord-console: fixed the row selection bug in the process list
+component.
+
+
+
 ## [1.7.1] - 2019-02-09
 
 ### Changed

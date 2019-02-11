@@ -104,7 +104,8 @@ class ProcessWaitActivity extends React.Component<Props> {
                     {ProcessWaitActivity.renderCondition(row)}
                 </Table.Cell>
                 <Table.Cell>
-                    {row.payload.processes && row.payload.processes.map((p) => ProcessWaitActivity.renderProcessLink(p))}
+                    {row.payload.processes &&
+                        row.payload.processes.map((p) => ProcessWaitActivity.renderProcessLink(p))}
                 </Table.Cell>
             </Table.Row>
         );
