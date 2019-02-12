@@ -1,5 +1,5 @@
 flows:
   default:
-    - log: "aaa"
+    - log: "aaa before"
     - checkpoint: "one"
-    - log: "bbb"
+    - log: "bbb after"

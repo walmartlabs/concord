@@ -20,11 +20,15 @@
         <agent.image>walmartlabs/concord-agent</agent.image>
         <dind.image>docker:stable-dind</dind.image>
         <socat.image>bobrik/socat</socat.image>
+        <base.dir>${basedir}</base.dir>
         <deps.dir>${project.basedir}/target/deps</deps.dir>
+        <deps.dir.src.mount>${project.basedir}/target/deps</deps.dir.src.mount>
         <docker.host.addr>localhost</docker.host.addr>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
+        <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
+        <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
         <network>net-server-it</network>
         <skip.socat>true</skip.socat>
         <it.docker.port>2375</it.docker.port>
@@ -356,6 +360,9 @@
                                                 <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
                                             </bind>
                                         </volumes>
+                                        <labels>
+                                            <concordTxId>${txId}</concordTxId>
+                                        </labels>
                                         <cmd> TCP-LISTEN:${it.docker.port},fork UNIX-CONNECT:/var/run/docker.sock</cmd>
                                     </run>
                                 </image>
@@ -378,6 +385,9 @@
                                             <log>(?s).*ready for start up.*ready to accept connections.*</log>
                                             <time>60000</time>
                                         </wait>
+                                        <labels>
+                                            <concordTxId>${txId}</concordTxId>
+                                        </labels>
                                     </run>
                                 </image>
                                 <image>
@@ -395,11 +405,11 @@
                                         <volumes>
                                             <bind>
                                                 <!-- to share files between tests and the server -->
-                                                <volume>${tmp.dir}:${tmp.dir}</volume>
+                                                <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
                                                 <!-- allows the server to pick up local dependencies -->
-                                                <volume>${deps.dir}:${deps.dir}:ro</volume>
+                                                <volume>${deps.dir.src.mount}:${deps.dir}:ro</volume>
                                                 <!-- provide the server's cfg -->
-                                                <volume>${basedir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
+                                                <volume>${base.dir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -418,6 +428,9 @@
                                             </http>
                                             <time>60000</time>
                                         </wait>
+                                        <labels>
+                                            <concordTxId>${txId}</concordTxId>
+                                        </labels>
                                     </run>
                                 </image>
                                 <!-- TODO start DIND? -->
@@ -431,12 +444,12 @@
                                         <volumes>
                                             <bind>
                                                 <!-- to share files between process containers -->
-                                                <volume>${tmp.dir}:${tmp.dir}</volume>
+                                                <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
                                                 <!-- allows the agent to pick up local dependencies -->
-                                                <volume>${deps.dir}:${deps.dir}:ro</volume>
+                                                <volume>${deps.dir.src.mount}:${deps.dir}:ro</volume>
                                                 <!-- share host artifacts -->
-                                                <volume>${settings.localRepository}:/host/.m2/repository:ro</volume>
-                                                <volume>${basedir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
+                                                <volume>${local.repository.src.mount}:/host/.m2/repository:ro</volume>
+                                                <volume>${base.dir}/src/test/resources/mvn.json:/opt/concord/conf/mvn.json:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
@@ -447,6 +460,9 @@
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
                                             <SERVER_WEBSOCKET_URL>ws://localhost:${it.server.port}/websocket</SERVER_WEBSOCKET_URL>
                                         </env>
+                                        <labels>
+                                            <concordTxId>${txId}</concordTxId>
+                                        </labels>
                                     </run>
                                 </image>
                             </images>

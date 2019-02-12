@@ -97,8 +97,8 @@ public class CheckpointsIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
 
-        assertLog(".*aaa.*", ab);
-        assertLog(".*bbb.*", ab);
+        assertLog(".*aaa before.*", ab);
+        assertLog(".*bbb after.*", ab);
 
         // ---
 
@@ -110,8 +110,8 @@ public class CheckpointsIT extends AbstractServerIT {
         waitForCompletion(processApi, spr.getInstanceId());
 
         ab = getLog(pir.getLogFileName());
-        assertLog(".*aaa.*", ab);
-        assertLog(".*bbb.*", 2, ab);
+        assertLog(".*aaa before.*", ab);
+        assertLog(".*bbb after.*", 2, ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

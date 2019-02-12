@@ -27,8 +27,11 @@ import com.walmartlabs.concord.agent.Worker.StateFetcher;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.DefaultDependencies;
+import com.walmartlabs.concord.agent.executors.runner.DockerRunnerJobExecutor;
+import com.walmartlabs.concord.agent.executors.runner.RunnerJob;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
+import com.walmartlabs.concord.agent.executors.runner.DockerRunnerJobExecutor.DockerRunnerJobExecutorConfiguration;
 import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.postprocessing.JobFileUploadPostProcessor;
@@ -296,19 +299,16 @@ public class Agent {
         );
     }
 
-    private static RunnerJobExecutor createRunnerJobExecutor(Configuration cfg,
-                                                             ProcessApi processApi,
-                                                             ProcessLogFactory processLogFactory,
-                                                             ExecutorService executor) throws IOException {
+    private static JobExecutor createRunnerJobExecutor(Configuration cfg,
+                                                       ProcessApi processApi,
+                                                       ProcessLogFactory processLogFactory,
+                                                       ExecutorService executor) throws IOException {
 
-        RunnerJobExecutorConfiguration executorCfg = new RunnerJobExecutorConfiguration(cfg.getAgentId(),
+        RunnerJobExecutorConfiguration runnerExecutorCfg = new RunnerJobExecutorConfiguration(cfg.getAgentId(),
                 cfg.getServerApiBaseUrl(),
                 cfg.getAgentJavaCmd(),
-                cfg.getDockerHost(),
                 cfg.getDependencyListsDir(),
-                cfg.getDependencyCacheDir(),
                 cfg.getRunnerPath(),
-                cfg.getJavaPath(),
                 cfg.isRunnerSecurityManagerEnabled(),
                 cfg.getMaxPreforkAge(),
                 cfg.getMaxPreforkCount());
@@ -319,6 +319,17 @@ public class Agent {
 
         List<JobPostProcessor> postProcessors = createPostProcessors(processApi);
 
-        return new RunnerJobExecutor(executorCfg, dependencyManager, defaultDependencies, postProcessors, processLogFactory, executor);
+        DockerRunnerJobExecutorConfiguration dockerRunnerCfg = new DockerRunnerJobExecutorConfiguration(cfg.getDockerHost(), cfg.getDependencyCacheDir(), cfg.getJavaPath());
+
+        RunnerJobExecutor runnerJobExecutor = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, executor);
+        DockerRunnerJobExecutor dockerRunnerJobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, executor);
+        return req -> {
+            RunnerJob job = RunnerJob.from(req, processLogFactory);
+            if (job.getCfg().get(InternalConstants.Request.CONTAINER) != null) {
+                return dockerRunnerJobExecutor.exec(req, job);
+            } else {
+                return runnerJobExecutor.exec(req, job);
+            }
+        };
     }
 }

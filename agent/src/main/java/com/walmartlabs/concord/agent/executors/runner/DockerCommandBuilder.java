@@ -42,7 +42,6 @@ public class DockerCommandBuilder {
     private UUID instanceId;
     private Path dependencyListsDir;
     private Path dependencyCacheDir;
-    private Path dependencyDir;
     private Path runnerPath;
     private List<String> args = Collections.emptyList();
 
@@ -96,11 +95,6 @@ public class DockerCommandBuilder {
         return this;
     }
 
-    public DockerCommandBuilder dependencyDir(Path dependencyDir) {
-        this.dependencyDir = dependencyDir;
-        return this;
-    }
-
     public DockerCommandBuilder args(String[] args) {
         this.args = Arrays.asList(args);
         return this;
@@ -125,7 +119,7 @@ public class DockerCommandBuilder {
                 .volume(runnerPath.getParent().toString(), VOLUME_RUNNER_DEST, true)
                 .volume(dependencyListsDir.toString(), VOLUME_DEPS_DEST, true)
                 .volume(dependencyCacheDir.toString(), dependencyCacheDir.toString(), true)
-                .volume(dependencyDir.toString(), dependencyDir.toString(), true)
+                .volume(procDir.toString(), procDir.toString())
                 .env(stringify(combine(env, cfg.getMap("env"))))
                 .forcePull(true)
                 .options(cfg.getList("options"))

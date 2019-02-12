@@ -26,16 +26,14 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.Utils;
-import com.walmartlabs.concord.agent.executors.JobExecutor;
+import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
-import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
-import com.walmartlabs.concord.agent.ExecutionException;
-import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
@@ -64,15 +62,14 @@ import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER
 /**
  * Executes jobs using concord-runner runtime.
  */
-public class RunnerJobExecutor implements JobExecutor {
+public class RunnerJobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerJobExecutor.class);
 
     private final RunnerJobExecutorConfiguration cfg;
-    private final DependencyManager dependencyManager;
+    protected final DependencyManager dependencyManager;
     private final DefaultDependencies defaultDependencies;
     private final List<JobPostProcessor> postProcessors;
-    private final ProcessLogFactory processLogFactory;
     private final ExecutorService executor;
 
     private final ProcessPool pool;
@@ -81,44 +78,30 @@ public class RunnerJobExecutor implements JobExecutor {
                              DependencyManager dependencyManager,
                              DefaultDependencies defaultDependencies,
                              List<JobPostProcessor> postProcessors,
-                             ProcessLogFactory processLogFactory,
                              ExecutorService executor) {
 
         this.cfg = cfg;
         this.dependencyManager = dependencyManager;
         this.defaultDependencies = defaultDependencies;
         this.postProcessors = postProcessors;
-        this.processLogFactory = processLogFactory;
         this.executor = executor;
 
         this.pool = new ProcessPool(cfg.maxPreforkAge, cfg.maxPreforkCount);
     }
 
-    @Override
-    public JobInstance exec(JobRequest req) throws Exception {
-        RunnerJob job = RunnerJob.from(req, processLogFactory);
-        UUID instanceId = job.getInstanceId();
-
+    public JobInstance exec(JobRequest req, RunnerJob job) throws Exception {
         // prepare and start a new JVM of use a pre-forked one
         ProcessEntry pe;
         try {
             // resolve and download the dependencies
             Collection<Path> resolvedDeps = resolveDeps(job);
 
-            if (canUsePrefork(job)) {
-                String[] cmd = createCmd(job, resolvedDeps, null);
-                pe = fork(job, cmd);
-            } else {
-                log.info("start ['{}'] -> can't use pre-forked instances", instanceId);
-                Path procDir = IOUtils.createTempDir("onetime");
-                String[] cmd = createCmd(job, resolvedDeps, procDir);
-                pe = startOneTime(job, cmd, procDir);
-            }
+            pe = buildProcessEntry(job, resolvedDeps);
         } catch (Exception e) {
-            log.warn("exec ['{}'] -> process error: {}", instanceId, e.getMessage());
+            log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
 
             // use the remote log, because the log file streaming is not started yet
-            req.getLog().error("Process startup error: {}", e);
+            req.getLog().error("Process startup error: {}", e.getMessage());
 
             throw e;
         }
@@ -134,6 +117,20 @@ public class RunnerJobExecutor implements JobExecutor {
 
         // return a handle that can be used to cancel the process or wait for its completion
         return new JobInstanceImpl(f, pe.getProcess());
+    }
+
+    protected ProcessEntry buildProcessEntry(RunnerJob job, Collection<Path> resolvedDeps) throws Exception {
+        ProcessEntry pe;
+        if (canUsePrefork(job)) {
+            String[] cmd = createCmd(job, resolvedDeps);
+            pe = fork(job, cmd);
+        } else {
+            log.info("start ['{}'] -> can't use pre-forked instances", job.getInstanceId());
+            String[] cmd = createCmd(job, resolvedDeps);
+            Path procDir = IOUtils.createTempDir("onetime");
+            pe = startOneTime(job, cmd, procDir);
+        }
+        return pe;
     }
 
     private void exec(RunnerJob job, ProcessEntry pe) throws Exception {
@@ -242,12 +239,10 @@ public class RunnerJobExecutor implements JobExecutor {
         processLog.info("Checking the dependency policy...");
 
         CheckResult<DependencyRule, DependencyEntity> result = new PolicyEngine(policyRules).getDependencyPolicy().check(resolvedDepEntities);
-        result.getWarn().forEach(d -> {
-            processLog.info("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity().toString(), d.getRule().toString());
-        });
-        result.getDeny().forEach(d -> {
-            processLog.info("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity().toString(), d.getRule().toString());
-        });
+        result.getWarn().forEach(d ->
+                processLog.info("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity().toString(), d.getRule().toString()));
+        result.getDeny().forEach(d ->
+                processLog.info("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity().toString(), d.getRule().toString()));
 
         if (!result.getDeny().isEmpty()) {
             throw new ExecutionException("Found forbidden dependencies");
@@ -272,45 +267,20 @@ public class RunnerJobExecutor implements JobExecutor {
         job.getLog().info("Dependencies: {}", b);
     }
 
-    private String[] createCmd(RunnerJob job, Collection<Path> deps, Path procDir) throws IOException {
-        Map<String, Object> containerCfg = getContainerCfg(job);
-        boolean withContainer = !containerCfg.isEmpty();
-
-        String javaCmd = withContainer ? DockerCommandBuilder.getJavaCmd() : cfg.agentJavaCmd;
+    private String[] createCmd(RunnerJob job, Collection<Path> deps) throws IOException {
         Path depsFile = storeDeps(deps);
-        if (withContainer) {
-            depsFile = DockerCommandBuilder.getDependencyListsDir().resolve(depsFile.getFileName());
-        }
-        Path runnerPath = withContainer ? DockerCommandBuilder.getRunnerPath(cfg.runnerPath) : cfg.runnerPath.toAbsolutePath();
-        Path runnerDir = withContainer ? DockerCommandBuilder.getWorkspaceDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME) : null;
 
         RunnerCommandBuilder runner = new RunnerCommandBuilder()
-                .javaCmd(javaCmd)
+                .javaCmd(cfg.agentJavaCmd)
                 .workDir(job.getPayloadDir())
-                .procDir(runnerDir)
                 .agentId(cfg.agentId)
                 .serverApiBaseUrl(cfg.serverApiBaseUrl)
                 .securityManagerEnabled(cfg.runnerSecurityManagerEnabled)
                 .dependencies(depsFile)
                 .debug(job.isDebugMode())
-                .runnerPath(runnerPath);
+                .runnerPath(cfg.runnerPath.toAbsolutePath());
 
-        if (!withContainer) {
-            return runner.build();
-        }
-
-        // TODO split into a separate JobExecutor
-        return new DockerCommandBuilder(job.getLog(), cfg.javaPath, containerCfg)
-                .procDir(procDir)
-                .instanceId(job.getInstanceId())
-                .dependencyListsDir(cfg.dependencyListDir)
-                .dependencyCacheDir(cfg.dependencyCacheDir)
-                .dependencyDir(dependencyManager.getLocalCacheDir())
-                .runnerPath(cfg.runnerPath)
-                .args(runner.build())
-                .extraEnv(IOUtils.TMP_DIR_KEY, "/tmp")
-                .extraEnv("DOCKER_HOST", cfg.dockerHost)
-                .build();
+        return runner.build();
     }
 
     private ProcessEntry fork(RunnerJob job, String[] cmd) throws ExecutionException, IOException {
@@ -342,7 +312,7 @@ public class RunnerJobExecutor implements JobExecutor {
         return entry;
     }
 
-    private ProcessEntry startOneTime(RunnerJob job, String[] cmd, Path procDir) throws IOException {
+    protected ProcessEntry startOneTime(RunnerJob job, String[] cmd, Path procDir) throws IOException {
         // the job's payload directory containing all files from the process' state snapshot and/or the repository's data
         Path src = job.getPayloadDir();
         // the VM's payload directory
@@ -384,7 +354,7 @@ public class RunnerJobExecutor implements JobExecutor {
         return new ProcessEntry(p, procDir);
     }
 
-    private Path storeDeps(Collection<Path> dependencies) throws IOException {
+    protected Path storeDeps(Collection<Path> dependencies) throws IOException {
         List<String> deps = dependencies.stream()
                 .map(p -> p.toAbsolutePath().toString())
                 .collect(Collectors.toList());
@@ -415,7 +385,7 @@ public class RunnerJobExecutor implements JobExecutor {
             Collection<String> deps = (Collection<String>) m.get(InternalConstants.Request.DEPENDENCIES_KEY);
             return normalizeUrls(deps);
         } catch (URISyntaxException | IOException e) {
-            throw new ExecutionException("Error while reading the list of dependencies", e);
+            throw new ExecutionException("Error while reading the list of dependencies: " +  e.getMessage());
         }
     }
 
@@ -494,18 +464,7 @@ public class RunnerJobExecutor implements JobExecutor {
         return new ObjectMapper().readValue(policyFile.toFile(), Map.class);
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getContainerCfg(RunnerJob job) {
-        Map<String, Object> cfg = job.getCfg();
-        return (Map<String, Object>) cfg.getOrDefault(InternalConstants.Request.CONTAINER, Collections.emptyMap());
-    }
-
     private static boolean canUsePrefork(RunnerJob job) {
-        if (!getContainerCfg(job).isEmpty()) {
-            // the process will be executed in a separate container, can't use preforking
-            return false;
-        }
-
         Path workDir = job.getPayloadDir();
 
         if (Files.exists(workDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME))) {
@@ -584,11 +543,8 @@ public class RunnerJobExecutor implements JobExecutor {
         private final String agentId;
         private final String serverApiBaseUrl;
         private final String agentJavaCmd;
-        private final String dockerHost;
         private final Path dependencyListDir;
-        private final Path dependencyCacheDir;
         private final Path runnerPath;
-        private final Path javaPath;
         private boolean runnerSecurityManagerEnabled;
         private final long maxPreforkAge;
         private final int maxPreforkCount;
@@ -596,11 +552,8 @@ public class RunnerJobExecutor implements JobExecutor {
         public RunnerJobExecutorConfiguration(String agentId,
                                               String serverApiBaseUrl,
                                               String agentJavaCmd,
-                                              String dockerHost,
                                               Path dependencyListDir,
-                                              Path dependencyCacheDir,
                                               Path runnerPath,
-                                              Path javaPath,
                                               boolean isRunnerSecurityManagerEnabled,
                                               long maxPreforkAge,
                                               int maxPreforkCount) {
@@ -608,14 +561,31 @@ public class RunnerJobExecutor implements JobExecutor {
             this.agentId = agentId;
             this.serverApiBaseUrl = serverApiBaseUrl;
             this.agentJavaCmd = agentJavaCmd;
-            this.dockerHost = dockerHost;
             this.dependencyListDir = dependencyListDir;
-            this.dependencyCacheDir = dependencyCacheDir;
             this.runnerPath = runnerPath;
-            this.javaPath = javaPath;
             this.runnerSecurityManagerEnabled = isRunnerSecurityManagerEnabled;
             this.maxPreforkAge = maxPreforkAge;
             this.maxPreforkCount = maxPreforkCount;
+        }
+
+        public Path getRunnerPath() {
+            return runnerPath;
+        }
+
+        public String getAgentId() {
+            return agentId;
+        }
+
+        public String getServerApiBaseUrl() {
+            return serverApiBaseUrl;
+        }
+
+        public boolean isRunnerSecurityManagerEnabled() {
+            return runnerSecurityManagerEnabled;
+        }
+
+        public Path getDependencyListDir() {
+            return dependencyListDir;
         }
     }
 

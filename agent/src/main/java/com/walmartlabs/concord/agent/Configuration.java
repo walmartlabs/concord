@@ -89,7 +89,6 @@ public class Configuration {
 
     private final String apiKey;
 
-    @SuppressWarnings("unchecked")
     public Configuration() {
         Config cfg = load("concord-agent");
 

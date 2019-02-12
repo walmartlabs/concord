@@ -442,7 +442,6 @@ public class Main {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private static String getSessionToken(Path baseDir) throws ExecutionException {
         Path p = baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
                 .resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME);
@@ -482,6 +481,10 @@ public class Main {
     private static List<URL> parseDeps(Path depsListFile) throws IOException {
         List<URL> result = Files.readAllLines(depsListFile).stream()
                 .map(s -> {
+                    if (!Files.exists(Paths.get(s))) {
+                        throw new RuntimeException("dependency file: " + s + " not found");
+                    }
+
                     try {
                         return new URL("file://" + s);
                     } catch (MalformedURLException e) {
