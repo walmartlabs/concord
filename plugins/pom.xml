@@ -33,5 +33,6 @@
         <module>tasks/throw</module>
         <module>tasks/variables</module>
         <module>templates/ansible</module>
+        <module>tasks/lock</module>
     </modules>
 </project>

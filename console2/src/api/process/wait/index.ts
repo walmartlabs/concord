@@ -18,8 +18,8 @@
  * =====
  */
 
-import { ConcordId, fetchJson } from '../../common';
 import { ProcessWaitHistoryEntry } from '../';
+import { ConcordId, fetchJson } from '../../common';
 
 export const get = (instanceId: ConcordId): Promise<ProcessWaitHistoryEntry[]> =>
     fetchJson(`/api/v1/process/${instanceId}/waits`);

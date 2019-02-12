@@ -23,7 +23,13 @@ import { connect, Dispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Header, Icon, Loader, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
-import { ProcessWaitHistoryEntry, ProcessWaitPayload, WaitType } from '../../../api/process';
+import {
+    ProcessLockPayload,
+    ProcessWaitHistoryEntry,
+    ProcessWaitPayload,
+    WaitPayload,
+    WaitType
+} from '../../../api/process';
 import { actions, selectors } from '../../../state/data/processes/waits';
 import { State } from '../../../state/data/processes/waits/types';
 import { LocalTimestamp } from '../../molecules';
@@ -89,10 +95,40 @@ class ProcessWaitActivity extends React.Component<Props> {
                     </>
                 );
             }
+            case WaitType.PROCESS_LOCK: {
+                const lockPayload = payload as ProcessLockPayload;
+                return (
+                    <>
+                        <Icon name="hourglass half" />
+                        Waiting for the lock ({lockPayload.name})
+                    </>
+                );
+            }
             default:
                 return type;
         }
     }
+
+    renderProcessWaitDetails = (payload: ProcessWaitPayload) => {
+        return payload.processes.map((p) => ProcessWaitActivity.renderProcessLink(p));
+    };
+
+    renderProcessLockDetails = (payload: ProcessLockPayload) => {
+        return ProcessWaitActivity.renderProcessLink(payload.instanceId);
+    };
+
+    renderDependencies = (type: WaitType, payload: WaitPayload) => {
+        switch (type) {
+            case WaitType.PROCESS_COMPLETION: {
+                return this.renderProcessWaitDetails(payload as ProcessWaitPayload);
+            }
+            case WaitType.PROCESS_LOCK: {
+                return this.renderProcessLockDetails(payload as ProcessLockPayload);
+            }
+            default:
+                return '';
+        }
+    };
 
     renderTableRow = (row: ProcessWaitHistoryEntry) => {
         return (
@@ -104,8 +140,7 @@ class ProcessWaitActivity extends React.Component<Props> {
                     {ProcessWaitActivity.renderCondition(row)}
                 </Table.Cell>
                 <Table.Cell>
-                    {row.payload.processes &&
-                        row.payload.processes.map((p) => ProcessWaitActivity.renderProcessLink(p))}
+                    {row.payload && this.renderDependencies(row.type, row.payload)}
                 </Table.Cell>
             </Table.Row>
         );

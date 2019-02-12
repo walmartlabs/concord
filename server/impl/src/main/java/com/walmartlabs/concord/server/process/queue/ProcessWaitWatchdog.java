@@ -24,10 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
-import org.jooq.Record4;
+import org.jooq.Record5;
 import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 
 /**
  * Takes care of processes with wait conditions.
- * E.g. waiting for other processes to finish.
+ * E.g. waiting for other processes to finish, locking, etc.
  */
 @Named("process-wait-watchdog")
 @Singleton
@@ -56,7 +57,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     private final WatchdogDao dao;
     private final ProcessQueueDao processQueueDao;
-    private final Map<WaitType, ProcessWaitHandler> processWaitHandlers;
+    private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
 
     @Inject
     @SuppressWarnings("unchecked")
@@ -83,18 +84,27 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                 return;
             }
 
-            WaitType type = p.waits().getType();
-            ProcessWaitHandler handler = processWaitHandlers.get(type);
-            if (handler == null) {
-                log.warn("performTask ['{}'] -> handler '{}' not found", p.instanceId(), type);
-            } else {
-                AbstractWaitCondition originalWaits = p.waits();
-                AbstractWaitCondition processedWaits = handler.process(p.instanceId(), originalWaits);
-                if (!originalWaits.equals(processedWaits)) {
-                    processQueueDao.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
-                }
-            }
+            WaitType type = p.waits().type();
+            processHandler(type, p);
             lastUpdatedAt = p.lastUpdatedAt();
+        }
+    }
+
+    private void processHandler(WaitType type, WaitingProcess p) {
+        ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(type);
+        if (handler == null) {
+            log.warn("performTask ['{}'] -> handler '{}' not found", p.instanceId(), type);
+            return;
+        }
+
+        try {
+            AbstractWaitCondition originalWaits = p.waits();
+            AbstractWaitCondition processedWaits = handler.process(p.instanceId(), p.status(), originalWaits);
+            if (!originalWaits.equals(processedWaits)) {
+                processQueueDao.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
+            }
+        } catch (Exception e) {
+            log.info("processHandler ['{}', '{}'] -> error", type, p, e);
         }
     }
 
@@ -102,6 +112,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     interface WaitingProcess {
 
         UUID instanceId();
+
+        ProcessStatus status();
 
         Timestamp instanceCreatedAt();
 
@@ -127,7 +139,12 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
-                SelectConditionStep<Record4<UUID, Timestamp, Timestamp, String>> s = tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_UPDATED_AT, q.WAIT_CONDITIONS.cast(String.class))
+                SelectConditionStep<Record5<UUID, String, Timestamp, Timestamp, Object>> s = tx.select(
+                        q.INSTANCE_ID,
+                        q.CURRENT_STATUS,
+                        q.CREATED_AT,
+                        q.LAST_UPDATED_AT,
+                        q.WAIT_CONDITIONS)
                         .from(q)
                         .where(q.WAIT_CONDITIONS.isNotNull());
 
@@ -139,20 +156,20 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                         .limit(1)
                         .fetchOne(r -> WaitingProcess.builder()
                                 .instanceId(r.value1())
-                                .instanceCreatedAt(r.value2())
-                                .lastUpdatedAt(r.value3())
-                                .waits(deserializeWaits(r.value4()))
+                                .status(ProcessStatus.valueOf(r.value2()))
+                                .instanceCreatedAt(r.value3())
+                                .lastUpdatedAt(r.value4())
+                                .waits(deserialize(r.value5()))
                                 .build());
             });
         }
 
         @SuppressWarnings("unchecked")
-        private AbstractWaitCondition deserializeWaits(String o) {
+        private AbstractWaitCondition deserialize(Object o) {
             if (o == null) {
                 return null;
             }
 
-            // TODO replace with inheritance
             try {
                 Map<String, Object> m = objectMapper.readValue(String.valueOf(o), Map.class);
                 WaitType type = WaitType.valueOf((String) m.get("type"));
@@ -162,6 +179,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                     }
                     case PROCESS_COMPLETION: {
                         return objectMapper.convertValue(m, ProcessCompletionCondition.class);
+                    }
+                    case PROCESS_LOCK: {
+                        return objectMapper.convertValue(m, ProcessLockCondition.class);
                     }
                     default:
                         throw new IllegalArgumentException("Unsupported type: " + type);

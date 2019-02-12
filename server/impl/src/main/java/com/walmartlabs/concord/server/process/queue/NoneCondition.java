@@ -20,12 +20,18 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-
+/**
+ * "No wait conditions" condition. Just to use as a history entry.
+ */
 public class NoneCondition extends AbstractWaitCondition {
 
-    @JsonCreator
-    public NoneCondition() {
-        super(WaitType.NONE, null);
+    @Override
+    public WaitType type() {
+        return WaitType.NONE;
+    }
+
+    @Override
+    public String reason() {
+        return null;
     }
 }

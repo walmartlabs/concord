@@ -41,9 +41,7 @@ import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
-import com.walmartlabs.concord.server.process.queue.ProcessFilter;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
 import com.walmartlabs.concord.server.security.Roles;
@@ -530,7 +528,6 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    @SuppressWarnings("unchecked")
     @Deprecated
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);

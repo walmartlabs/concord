@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.locks;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,20 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
-import java.util.UUID;
+@Value.Immutable
+@JsonSerialize(as = ImmutableLockResult.class)
+@JsonDeserialize(as = ImmutableLockResult.class)
+public interface LockResult {
 
-public interface ProcessWaitHandler<T extends AbstractWaitCondition> {
+    LockEntry info();
 
-    WaitType getType();
+    boolean acquired();
 
-    /**
-     * @return {@code null} if the specified process doesn't have any wait conditions.
-     */
-    T process(UUID instanceId, ProcessStatus status, T waits);
+    static ImmutableLockResult.Builder builder() {
+        return ImmutableLockResult.builder();
+    }
 }

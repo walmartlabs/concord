@@ -158,6 +158,11 @@
             <artifactId>throw-tasks</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>lock-tasks</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- JDK9+ compatibility -->
         <dependency>

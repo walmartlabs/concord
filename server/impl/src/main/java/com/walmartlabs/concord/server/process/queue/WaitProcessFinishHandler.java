@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,6 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
@@ -39,11 +36,13 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 
+/**
+ * Handles the processes that are waiting for other processes to finish.
+ */
 @Named
 @Singleton
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Dao dao;
 
     @Inject
@@ -57,8 +56,8 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
-    public ProcessCompletionCondition process(UUID instanceId, ProcessCompletionCondition wait) {
-        List<UUID> awaitProcesses = wait.getProcesses();
+    public ProcessCompletionCondition process(UUID instanceId, ProcessStatus status, ProcessCompletionCondition wait) {
+        List<UUID> awaitProcesses = wait.processes();
         List<UUID> finishedProcesses = dao.findFinished(awaitProcesses);
         if (finishedProcesses.isEmpty()) {
             return wait;
@@ -70,17 +69,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
             return null;
         }
 
-        return new ProcessCompletionCondition(wait.getReason(), processes);
-    }
-
-    private static class Payload {
-
-        private final List<UUID> processes;
-
-        @JsonCreator
-        private Payload(@JsonProperty("processes") List<UUID> processes) {
-            this.processes = processes;
-        }
+        return ProcessCompletionCondition.of(processes, wait.reason());
     }
 
     @Named

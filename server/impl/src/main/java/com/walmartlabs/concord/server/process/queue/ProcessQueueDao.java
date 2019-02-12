@@ -23,8 +23,6 @@ package com.walmartlabs.concord.server.process.queue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.sdk.EventType;
@@ -80,20 +78,20 @@ public class ProcessQueueDao extends AbstractDao {
     private final List<ProcessQueueEntryFilter> filters;
 
     private final EventDao eventDao;
-
+    private final ObjectMapper objectMapper;
     private final ProcessQueueLock queueLock;
-
-    private final ObjectMapper objectMapper = createObjectMapper();
 
     @Inject
     protected ProcessQueueDao(@Named("app") Configuration cfg,
                               List<ProcessQueueEntryFilter> filters,
                               EventDao eventDao,
-                              ProcessQueueLock queueLock) {
+                              ProcessQueueLock queueLock,
+                              ObjectMapper objectMapper) {
         super(cfg);
         this.filters = filters;
         this.eventDao = eventDao;
         this.queueLock = queueLock;
+        this.objectMapper = objectMapper;
     }
 
     public ProcessKey getKey(UUID instanceId) {
@@ -606,7 +604,7 @@ public class ProcessQueueDao extends AbstractDao {
         try {
             String eventData = objectMapper.writeValueAsString(waits != null ? waits : new NoneCondition());
             eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), eventData);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -895,14 +893,6 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         return s.toArray(new String[0]);
-    }
-
-    // TODO replace with a system-wide provider
-    private static ObjectMapper createObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        om.registerModule(new GuavaModule());
-        om.registerModule(new Jdk8Module());
-        return om;
     }
 
     public static class IdAndStatus {

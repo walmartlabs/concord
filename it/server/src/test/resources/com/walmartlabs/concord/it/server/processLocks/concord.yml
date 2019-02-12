@@ -1,0 +1,6 @@
+flows:
+  default:
+  - ${lock.lock("my-lock", "ORG")}
+  - log: "locked!"
+  - ${sleep.ms(10000)}
+  - ${lock.unlock("my-lock", "ORG")}

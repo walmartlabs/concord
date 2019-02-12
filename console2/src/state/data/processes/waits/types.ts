@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'redux';
-import { ProcessWaitHistoryEntry } from '../../../../api/process';
-import { RequestState, CollectionById } from '../../common';
 import { ConcordId } from '../../../../api/common';
+import { ProcessWaitHistoryEntry } from '../../../../api/process';
+import { CollectionById, RequestState } from '../../common';
 
 export interface GetProcessWait extends Action {
     instanceId: ConcordId;

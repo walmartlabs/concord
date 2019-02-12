@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: initial support for in-process locks.
+
+
+
 ## [1.7.2] - 2019-02-11
 
 ### Changed

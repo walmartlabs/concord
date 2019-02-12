@@ -176,7 +176,7 @@ public interface ProcessEntry extends Serializable {
         @JsonAnyGetter
         Map<String, Object> payload();
 
-        public static ImmutableProcessWaitHistoryEntry.Builder builder() {
+        static ImmutableProcessWaitHistoryEntry.Builder builder() {
             return ImmutableProcessWaitHistoryEntry.builder();
         }
     }

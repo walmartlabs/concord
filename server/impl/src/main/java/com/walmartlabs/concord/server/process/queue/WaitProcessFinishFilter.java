@@ -20,12 +20,8 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.immutables.value.Value;
 import org.jooq.DSLContext;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,8 +29,6 @@ import java.util.UUID;
  * Base class for all filters that are implementing process wait conditions.
  */
 public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter {
-
-    public static final String WAIT_TYPE = "processCompleted";
 
     private final ProcessQueueDao processQueueDao;
 
@@ -49,7 +43,7 @@ public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter
             return true;
         }
 
-        processQueueDao.updateWait(tx, item.key(), new ProcessCompletionCondition(getReason(), processes));
+        processQueueDao.updateWait(tx, item.key(), ProcessCompletionCondition.of(processes, getReason()));
 
         return false;
     }
@@ -61,24 +55,4 @@ public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter
      */
     protected abstract String getReason();
 
-    @Value.Immutable
-    @JsonSerialize(as = ImmutableProcessCompletionWait.class)
-    @JsonDeserialize(as = ImmutableProcessCompletionWait.class)
-    public interface ProcessCompletionWait {
-
-        String type();
-
-        @Nullable
-        String reason();
-
-        List<UUID> processes();
-
-        static ProcessCompletionWait of(List<UUID> processes, String reason) {
-            return ImmutableProcessCompletionWait.builder()
-                    .type(WAIT_TYPE)
-                    .processes(processes)
-                    .reason(reason)
-                    .build();
-        }
-    }
 }

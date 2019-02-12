@@ -23,5 +23,14 @@ package com.walmartlabs.concord.server.process.queue;
 public enum WaitType {
 
     NONE,
-    PROCESS_COMPLETION
+
+    /**
+     * Waiting for a specific process to complete.
+      */
+    PROCESS_COMPLETION,
+
+    /**
+     * Waiting for a (named) lock taken by another process.
+     */
+    PROCESS_LOCK
 }

@@ -20,33 +20,25 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
-public class ProcessCompletionCondition extends AbstractWaitCondition {
+@Value.Immutable
+@JsonSerialize(as = ImmutableProcessCompletionCondition.class)
+@JsonDeserialize(as = ImmutableProcessCompletionCondition.class)
+public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
 
-    private final List<UUID> processes;
+    public abstract List<UUID> processes();
 
-    @JsonCreator
-    public ProcessCompletionCondition(@JsonProperty("reason") String reason, @JsonProperty("processes") List<UUID> processes) {
-        super(WaitType.PROCESS_COMPLETION, reason);
-        this.processes = processes;
-    }
-
-    public List<UUID> getProcesses() {
-        return processes;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        ProcessCompletionCondition that = (ProcessCompletionCondition) o;
-        return Objects.equals(processes, that.processes);
+    public static ProcessCompletionCondition of(List<UUID> processes, String reason) {
+        return ImmutableProcessCompletionCondition.builder()
+                .type(WaitType.PROCESS_COMPLETION)
+                .processes(processes)
+                .reason(reason)
+                .build();
     }
 }

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="180000" author="ybrigo@gmail.com">
+        <sql>
+            create type process_lock_scope as enum ('ORG', 'PROJECT')
+        </sql>
+
+        <createTable tableName="PROCESS_LOCKS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ORG_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LOCK_SCOPE" type="process_lock_scope">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LOCK_NAME" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_LOCKS"
+                                 baseColumnNames="INSTANCE_ID"
+                                 constraintName="FK_PROCESS_LOCKS_INSTANCE_ID"
+                                 referencedTableName="PROCESS_QUEUE"
+                                 referencedColumnNames="INSTANCE_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_LOCKS"
+                                 baseColumnNames="ORG_ID"
+                                 constraintName="FK_PROCESS_LOCKS_ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="PROCESS_LOCKS"
+                                 baseColumnNames="PROJECT_ID"
+                                 constraintName="FK_PROCESS_LOCKS_PROJECT_ID"
+                                 referencedTableName="PROJECTS"
+                                 referencedColumnNames="PROJECT_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="180010" author="ybrigo@gmail.com">
+        <createIndex tableName="PROCESS_LOCKS" indexName="IDX_PROCESS_LOCKS_1" unique="true">
+            <column name="ORG_ID"/>
+            <column name="LOCK_NAME"/>
+        </createIndex>
+        <modifySql>
+            <append value="where LOCK_SCOPE = 'ORG'"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="180020" author="ybrigo@gmail.com">
+        <createIndex tableName="PROCESS_LOCKS" indexName="IDX_PROCESS_LOCKS_2" unique="true">
+            <column name="PROJECT_ID"/>
+            <column name="LOCK_NAME"/>
+        </createIndex>
+        <modifySql>
+            <append value="where LOCK_SCOPE = 'PROJECT'"/>
+        </modifySql>
+    </changeSet>
+
+</databaseChangeLog>

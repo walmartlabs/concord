@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -46,7 +47,7 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() {
-        queueDao = new ProcessQueueDao(getConfiguration(), Collections.emptyList(), mock(EventDao.class), mock(ProcessQueueLock.class));
+        queueDao = new ProcessQueueDao(getConfiguration(), Collections.emptyList(), mock(EventDao.class), mock(ProcessQueueLock.class), TestObjectMapper.INSTANCE);
         projectDao = new ProjectDao(getConfiguration());
     }
 

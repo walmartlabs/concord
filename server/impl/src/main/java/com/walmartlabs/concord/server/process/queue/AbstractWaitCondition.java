@@ -21,7 +21,11 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -30,30 +34,20 @@ import java.util.Objects;
  * provide additional fields.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        visible = true,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = NoneCondition.class, name = "NONE"),
+        @JsonSubTypes.Type(value = ImmutableProcessCompletionCondition.class, name = "PROCESS_COMPLETION"),
+        @JsonSubTypes.Type(value = ImmutableProcessLockCondition.class, name = "PROCESS_LOCK")
+})
 public abstract class AbstractWaitCondition implements Serializable {
 
-    private final WaitType type;
-    private final String reason;
+    @JsonProperty("type")
+    public abstract WaitType type();
 
-    protected AbstractWaitCondition(WaitType type, String reason) {
-        this.type = type;
-        this.reason = reason;
-    }
-
-    public WaitType getType() {
-        return type;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AbstractWaitCondition that = (AbstractWaitCondition) o;
-        return type == that.type &&
-                Objects.equals(reason, that.reason);
-    }
+    @Nullable
+    public abstract String reason();
 }
