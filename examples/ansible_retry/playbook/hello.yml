@@ -2,5 +2,9 @@
 - hosts: local
   tasks:
   - debug:
-      msg: "{{ greetings }}"
+      msg: "makeItFail={{ makeItFail }}"
       verbosity: 0
+
+  - fail:
+      msg: "Making it fail"
+    when: makeItFail
