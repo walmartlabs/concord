@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-sdk: new utility methods to work with the process
+variables;
 - concord-server: initial support for in-process locks.
 
 

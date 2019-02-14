@@ -20,8 +20,13 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+import jdk.nashorn.internal.ir.annotations.Immutable;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class ContextUtils {
 
@@ -109,6 +114,65 @@ public final class ContextUtils {
         }
 
         throw new IllegalArgumentException("Mandatory variable '" + name + "' is required");
+    }
+
+    public static ProjectInfo getProjectInfo(Context ctx) {
+        Map<String, Object> pi = getMap(ctx, Constants.Request.PROJECT_INFO_KEY, null);
+        if (pi == null) {
+            return null;
+        }
+
+        UUID projectId = MapUtils.getUUID(pi, "projectId");
+        if (projectId == null) {
+            return null;
+        }
+
+        return ImmutableProjectInfo.builder()
+                .orgId(MapUtils.getUUID(pi, "orgId"))
+                .orgName(MapUtils.getString(pi, "orgName"))
+                .id(projectId)
+                .name(MapUtils.getString(pi, "projectName"))
+                .build();
+    }
+
+    public static RepositoryInfo getRepositoryInfo(Context ctx) {
+        Map<String, Object> pi = getMap(ctx, Constants.Request.PROJECT_INFO_KEY, null);
+        if (pi == null) {
+            return null;
+        }
+
+        UUID repoId = MapUtils.getUUID(pi, "repoId");
+        if (repoId == null) {
+            return null;
+        }
+
+        return ImmutableRepositoryInfo.builder()
+                .id(repoId)
+                .name(MapUtils.getString(pi, "repoName"))
+                .url(MapUtils.getString(pi, "repoUrl"))
+                .build();
+    }
+
+    public static Path getWorkDir(Context ctx) {
+        Object workDir = assertVariable(ctx, Constants.Context.WORK_DIR_KEY, Object.class);
+        if (workDir instanceof Path) {
+            return (Path) workDir;
+        }
+        if (workDir instanceof String) {
+            return Paths.get((String) workDir);
+        }
+        throw new IllegalArgumentException("Invalid variable '" +  Constants.Context.WORK_DIR_KEY + "' type, expected: string/path, got: " + workDir.getClass());
+    }
+
+    public static UUID getTxId(Context ctx) {
+        Object txId = assertVariable(ctx, Constants.Context.TX_ID_KEY, Object.class);
+        if (txId instanceof String) {
+            return UUID.fromString((String)txId);
+        }
+        if (txId instanceof UUID) {
+            return (UUID) txId;
+        }
+        throw new IllegalArgumentException("Invalid variable '" +  Constants.Context.WORK_DIR_KEY + "' type, expected: string/uuid, got: " + txId.getClass());
     }
 
     private ContextUtils() {
