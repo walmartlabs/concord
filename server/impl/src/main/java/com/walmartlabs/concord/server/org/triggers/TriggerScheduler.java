@@ -98,14 +98,22 @@ public class TriggerScheduler implements ScheduledTask {
         }
         args.put("event", makeEvent(t));
 
-        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), args);
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put(Constants.Request.ARGUMENTS_KEY, args);
+
+        if (t.getEntryPoint() != null) {
+            cfg.put(Constants.Request.ENTRY_POINT_KEY, t.getEntryPoint());
+        }
+
+        if (t.getActiveProfiles() != null) {
+            cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
+        }
+
+        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), cfg);
     }
 
-    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String flowName, Map<String, Object> args) {
+    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String entryPoint, Map<String, Object> cfg) {
         PartialProcessKey processKey = PartialProcessKey.create();
-
-        Map<String, Object> request = new HashMap<>();
-        request.put(Constants.Request.ARGUMENTS_KEY, args);
 
         Payload payload;
         try {
@@ -114,12 +122,12 @@ public class TriggerScheduler implements ScheduledTask {
                     .organization(orgId)
                     .project(projectId)
                     .repository(repoId)
-                    .entryPoint(flowName)
-                    .configuration(request)
+                    .entryPoint(entryPoint)
+                    .configuration(cfg)
                     .build();
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error creating a payload",
-                    triggerId, orgId, projectId, repoId, flowName, e);
+                    triggerId, orgId, projectId, repoId, entryPoint, e);
             return;
         }
 
@@ -127,10 +135,10 @@ public class TriggerScheduler implements ScheduledTask {
             processSecurityContext.runAs(INITIATOR_ID, () -> processManager.start(payload, false));
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
-                    triggerId, orgId, projectId, repoId, flowName, e);
+                    triggerId, orgId, projectId, repoId, entryPoint, e);
         }
 
-        log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, flowName, processKey);
+        log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, entryPoint, processKey);
     }
 
     private void sleep(long t) {

@@ -1,0 +1,25 @@
+flows:
+  onCron:
+    - log: "Hello, ${msg}!"
+
+profiles:
+  aaa:
+    configuration:
+      arguments:
+        msg: "AAA"
+  bbb:
+    configuration:
+      arguments:
+        msg: "BBB"
+
+triggers:
+- cron:
+    spec: "* * * * *"
+    entryPoint: onCron
+    activeProfiles:
+      - "aaa"
+- cron:
+    spec: "* * * * *"
+    entryPoint: onCron
+    activeProfiles:
+      - "bbb"

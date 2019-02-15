@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: support for `activeProfiles` in `cron` triggers;
 - concord-server: new endpoint `GET /api/v2/process`. Returns a list
 of processes with optional filtering (including metadata) and
 pagination;

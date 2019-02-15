@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.triggers;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,11 +39,14 @@ public class TriggerSchedulerEntry implements Serializable {
     private final UUID repoId;
     private final String cronSpec;
     private final String timezone;
+    private final List<String> activeProfiles;
     private final Map<String, Object> arguments;
     private final Map<String, Object> cfg;
 
     public TriggerSchedulerEntry(Date fireAt, UUID triggerId, UUID orgId, UUID projectId, UUID repoId,
-                                 String cronSpec, String timezone, Map<String, Object> arguments, Map<String, Object> cfg) {
+                                 String cronSpec, String timezone, List<String> activeProfiles,
+                                 Map<String, Object> arguments, Map<String, Object> cfg) {
+
         this.fireAt = fireAt;
         this.triggerId = triggerId;
         this.orgId = orgId;
@@ -50,6 +54,7 @@ public class TriggerSchedulerEntry implements Serializable {
         this.repoId = repoId;
         this.cronSpec = cronSpec;
         this.timezone = timezone;
+        this.activeProfiles = activeProfiles;
         this.arguments = arguments;
         this.cfg = cfg;
     }
@@ -72,6 +77,10 @@ public class TriggerSchedulerEntry implements Serializable {
 
     public UUID getRepoId() {
         return repoId;
+    }
+
+    public List<String> getActiveProfiles() {
+        return activeProfiles;
     }
 
     public Map<String, Object> getCfg() {
@@ -108,6 +117,7 @@ public class TriggerSchedulerEntry implements Serializable {
                 ", repoId=" + repoId +
                 ", cronSpec='" + cronSpec + '\'' +
                 ", timezone='" + timezone + '\'' +
+                ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
                 ", cfg=" + cfg +
                 '}';

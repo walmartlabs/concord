@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Record9;
+import org.jooq.Record10;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,10 +34,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.TriggerSchedule.TRIGGER_SCHEDULE;
@@ -77,13 +74,14 @@ public class TriggerScheduleDao extends AbstractDao {
             Field<String> specField = field("{0}->>'spec'", String.class, t.CONDITIONS);
             Field<String> timezoneField = field("{0}->>'timezone'", String.class, t.CONDITIONS);
 
-            Record9<UUID, UUID, UUID, UUID, String, String, String, String, Timestamp> r = tx.select(
+            Record10<UUID, UUID, UUID, UUID, String, String, String[], String, String, Timestamp> r = tx.select(
                     t.TRIGGER_ID,
                     orgIdField,
                     t.PROJECT_ID,
                     t.REPO_ID,
                     specField,
                     timezoneField,
+                    t.ACTIVE_PROFILES,
                     t.ARGUMENTS.cast(String.class),
                     t.TRIGGER_CFG.cast(String.class),
                     currentTimestamp())
@@ -103,14 +101,15 @@ public class TriggerScheduleDao extends AbstractDao {
                     r.value4(),
                     r.value5(),
                     r.value6(),
-                    deserialize(r.value7()),
-                    deserialize(r.value8()));
+                    toList(r.value7()),
+                    deserialize(r.value8()),
+                    deserialize(r.value9()));
 
             ZoneId zoneId = null;
             if (result.getTimezone() != null) {
                 zoneId = TimeZone.getTimeZone(result.getTimezone()).toZoneId();
             }
-            Instant now = r.value9().toInstant();
+            Instant now = r.value10().toInstant();
             updateFireAt(tx, id, CronUtils.nextExecution(now, result.getCronSpec(), zoneId));
 
             return result;
@@ -148,5 +147,12 @@ public class TriggerScheduleDao extends AbstractDao {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static <E> List<E> toList(E[] arr) {
+        if (arr == null) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(arr);
     }
 }
