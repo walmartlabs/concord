@@ -203,7 +203,7 @@ public class RunnerJobExecutor {
         long t1 = System.currentTimeMillis();
 
         // combine the default dependencies and the process' dependencies
-        Collection<URI> uris = Stream.concat(defaultDependencies.getDependencies().stream(), getDependencyUris(job).stream())
+        Collection<URI> uris = Stream.concat(defaultDependencies.getDependencies().stream(), JobDependencies.get(job).stream())
                 .collect(Collectors.toList());
 
         Collection<DependencyEntity> deps = dependencyManager.resolve(uris);
@@ -376,78 +376,6 @@ public class RunnerJobExecutor {
     @Override
     public String toString() {
         return "RunnerJobExecutor";
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Collection<URI> getDependencyUris(RunnerJob job) throws ExecutionException {
-        try {
-            Map<String, Object> m = job.getCfg();
-            Collection<String> deps = (Collection<String>) m.get(InternalConstants.Request.DEPENDENCIES_KEY);
-            return normalizeUrls(deps);
-        } catch (URISyntaxException | IOException e) {
-            throw new ExecutionException("Error while reading the list of dependencies: " +  e.getMessage());
-        }
-    }
-
-    private static Collection<URI> normalizeUrls(Collection<String> urls) throws IOException, URISyntaxException {
-        if (urls == null || urls.isEmpty()) {
-            return Collections.emptySet();
-        }
-
-        Collection<URI> result = new HashSet<>();
-
-        for (String s : urls) {
-            URI u = new URI(s);
-            String scheme = u.getScheme();
-
-            if (DependencyManager.MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
-                result.add(u);
-                continue;
-            }
-
-            if (scheme == null || scheme.trim().isEmpty()) {
-                throw new IOException("Invalid dependency URL. Missing URL scheme: " + s);
-            }
-
-            if (s.endsWith(".jar")) {
-                result.add(u);
-                continue;
-            }
-
-            URL url = u.toURL();
-            while (true) {
-                if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
-                    URLConnection conn = url.openConnection();
-                    if (conn instanceof HttpURLConnection) {
-                        HttpURLConnection httpConn = (HttpURLConnection) conn;
-                        httpConn.setInstanceFollowRedirects(false);
-
-                        int code = httpConn.getResponseCode();
-                        if (code == HttpURLConnection.HTTP_MOVED_TEMP ||
-                                code == HttpURLConnection.HTTP_MOVED_PERM ||
-                                code == HttpURLConnection.HTTP_SEE_OTHER ||
-                                code == 307) {
-
-                            String location = httpConn.getHeaderField("Location");
-                            url = new URL(location);
-                            log.info("normalizeUrls -> using: {}", location);
-
-                            continue;
-                        }
-
-                        u = url.toURI();
-                    } else {
-                        log.warn("normalizeUrls -> unexpected connection type: {} (for {})", conn.getClass(), s);
-                    }
-                }
-
-                break;
-            }
-
-            result.add(u);
-        }
-
-        return result;
     }
 
     @SuppressWarnings("unchecked")

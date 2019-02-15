@@ -46,6 +46,7 @@ public class ForkPipeline extends Pipeline {
                 TagsExtractingProcessor.class,
                 OutVariablesSettingProcessor.class,
                 RequestDataStoringProcessor.class,
+                DependencyVersionsExportProcessor.class,
                 StateImportingProcessor.class,
                 ProcessHandlersProcessor.class,
                 ForkRepositoryInfoProcessor.class,

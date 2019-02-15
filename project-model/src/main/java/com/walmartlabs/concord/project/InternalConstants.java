@@ -113,6 +113,11 @@ public final class InternalConstants extends Constants {
          * Policy file.
          */
         public static final String POLICY_FILE_NAME = "policy.json";
+
+        /**
+         * Properties file with a list of default dependency versions.
+         */
+        public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyersions.properties";
     }
 
     public static final class Flows extends Constants.Flows {

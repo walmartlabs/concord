@@ -68,6 +68,7 @@ public class ProcessPipeline extends Pipeline {
                 OutVariablesSettingProcessor.class,
                 RequestDataStoringProcessor.class,
                 PolicyProcessor.class,
+                DependencyVersionsExportProcessor.class,
                 StateImportingProcessor.class,
                 ProcessHandlersProcessor.class,
                 SecuritySubjectProcessor.class,

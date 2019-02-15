@@ -39,6 +39,7 @@ public class ResumePipeline extends Pipeline {
                 FormFilesStoringProcessor.class,
                 ResumeDataMergingProcessor.class,
                 RequestDataStoringProcessor.class,
+                DependencyVersionsExportProcessor.class,
                 StateImportingProcessor.class,
                 EnqueueingProcessor.class);
 

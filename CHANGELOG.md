@@ -8,6 +8,11 @@
 variables;
 - concord-server: initial support for in-process locks.
 
+### Changed
+
+- concord-server, concord-agent: load the dependency version list
+from the server.
+
 
 
 ## [1.7.2] - 2019-02-11
