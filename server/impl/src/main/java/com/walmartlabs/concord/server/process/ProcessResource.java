@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -41,12 +40,13 @@ import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
-import com.walmartlabs.concord.server.process.queue.*;
+import com.walmartlabs.concord.server.process.queue.ProcessFilter;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -71,7 +71,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -90,7 +89,6 @@ public class ProcessResource implements Resource {
     private final ProcessLogsDao logsDao;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
-    private final UserDao userDao;
     private final SecretStoreConfiguration secretStoreCfg;
     private final ProcessStateArchiver stateArchiver;
     private final EncryptedProjectValueManager encryptedValueManager;
@@ -98,19 +96,21 @@ public class ProcessResource implements Resource {
     private final OrganizationManager orgManager;
     private final ProjectDao projectDao;
 
+    private final ProcessResourceV2 v2;
+
     @Inject
     public ProcessResource(ProcessManager processManager,
                            ProcessQueueDao queueDao,
                            ProcessLogsDao logsDao,
                            PayloadManager payloadManager,
                            ProcessStateManager stateManager,
-                           UserDao userDao,
                            SecretStoreConfiguration secretStoreCfg,
                            ProcessStateArchiver stateArchiver,
                            EncryptedProjectValueManager encryptedValueManager,
                            ProcessKeyCache processKeyCache,
                            OrganizationManager orgManager,
-                           ProjectDao projectDao) {
+                           ProjectDao projectDao,
+                           ProcessResourceV2 v2) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
@@ -119,11 +119,12 @@ public class ProcessResource implements Resource {
         this.logsDao = logsDao;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
-        this.userDao = userDao;
         this.secretStoreCfg = secretStoreCfg;
         this.stateArchiver = stateArchiver;
         this.encryptedValueManager = encryptedValueManager;
         this.processKeyCache = processKeyCache;
+
+        this.v2 = v2;
     }
 
     /**
@@ -645,21 +646,23 @@ public class ProcessResource implements Resource {
     /**
      * List processes for all user's organizations
      *
-     * @param requestProjectId
+     * @param projectId
      * @param beforeCreatedAt
      * @param tags
      * @param processStatus
      * @param initiator
      * @param limit
      * @return
+     * @deprecated use {@link ProcessResourceV2#list(String, String, UUID, IsoDateParam, IsoDateParam, Set, ProcessStatus, String, UUID, Set, int, int, UriInfo)}
      */
     @GET
     @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
+    @Deprecated
     public List<ProcessEntry> list(@ApiParam @QueryParam("org") String orgName,
                                    @ApiParam @QueryParam("project") String projectName,
-                                   @ApiParam @QueryParam("projectId") UUID requestProjectId,
+                                   @ApiParam @QueryParam("projectId") UUID projectId,
                                    @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
                                    @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
@@ -670,49 +673,9 @@ public class ProcessResource implements Resource {
                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
                                    @Context UriInfo uriInfo) {
 
-        if (limit <= 0) {
-            throw new ConcordApplicationException("'limit' must be a positive number", Status.BAD_REQUEST);
-        }
-
-        UUID projectId = requestProjectId;
-        Set<UUID> orgIds = null;
-        if (orgName != null) {
-            OrganizationEntry org = orgManager.assertAccess(orgName, false);
-            orgIds = Collections.singleton(org.getId());
-
-            if (projectId == null && projectName != null) {
-                projectId = projectDao.getId(org.getId(), projectName);
-                if (projectId == null) {
-                    throw new ConcordApplicationException("Project not found: " + projectName, Response.Status.NOT_FOUND);
-                }
-            }
-        } else {
-            if (!Roles.isAdmin()) {
-                // non-admin users can see only their org's processes or processes w/o projects
-                orgIds = getCurrentUserOrgIds();
-            }
-        }
-
-        Map<String, String> metaFilters = uriInfo.getQueryParameters().entrySet().stream()
-                .filter(e -> e.getKey().startsWith("meta."))
-                .filter(e -> e.getValue() != null && e.getValue().size() == 1)
-                .collect(Collectors.toMap(e -> e.getKey().substring("meta.".length()), e -> e.getValue().get(0)));
-
-
-        ProcessFilter filter = ProcessFilter.builder()
-                .parentId(parentId)
-                .projectId(projectId)
-                .includeWithoutProjects(orgName == null && projectId == null)
-                .orgIds(orgIds)
-                .afterCreatedAt(toTimestamp(afterCreatedAt))
-                .beforeCreatedAt(toTimestamp(beforeCreatedAt))
-                .tags(tags)
-                .status(processStatus)
-                .initiator(initiator)
-                .metaFilters(metaFilters)
-                .build();
-
-        return queueDao.list(filter, limit, offset);
+        return v2.list(null, orgName, projectId, projectName, afterCreatedAt, beforeCreatedAt, tags,
+                processStatus, initiator, parentId, Collections.singleton(ProcessDataInclude.CHILDREN_IDS),
+                limit, offset, uriInfo);
     }
 
     /**
@@ -731,7 +694,10 @@ public class ProcessResource implements Resource {
                                                @ApiParam @QueryParam("tags") Set<String> tags) {
 
         assertPartialKey(parentInstanceId);
-        return queueDao.list(parentInstanceId, tags);
+        return queueDao.list(ProcessFilter.builder()
+                .parentId(parentInstanceId)
+                .tags(tags)
+                .build());
     }
 
     /**
@@ -1080,20 +1046,6 @@ public class ProcessResource implements Resource {
     private ProcessKey assertKey(UUID id) {
         Optional<ProcessKey> key = processKeyCache.getUncached(id);
         return key.orElseThrow(() -> new ValidationErrorsException("Unknown instance ID: " + id));
-    }
-
-    private Set<UUID> getCurrentUserOrgIds() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        return userDao.getOrgIds(p.getId());
-    }
-
-    private static Timestamp toTimestamp(IsoDateParam p) {
-        if (p == null) {
-            return null;
-        }
-
-        Calendar c = p.getValue();
-        return new Timestamp(c.getTimeInMillis());
     }
 
     private static boolean isEmpty(InputStream in) {

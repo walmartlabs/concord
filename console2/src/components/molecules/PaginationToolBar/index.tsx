@@ -21,15 +21,12 @@
 import * as React from 'react';
 import { Button, Dropdown } from 'semantic-ui-react';
 
-export interface PaginationFilter {
-    limit?: number;
-    offset?: number;
-}
+import { Pagination } from '../../../state/data/processes';
 
 const defaultDropDownValues = [50, 100, 500];
 
 interface Props {
-    filterProps?: PaginationFilter;
+    filterProps?: Pagination;
     handleLimitChange?: (limit: any) => void;
     handleNext: () => void;
     handlePrev: () => void;
@@ -42,14 +39,14 @@ interface Props {
 }
 
 interface State {
-    filterState: PaginationFilter;
+    filterState: Pagination;
 }
 
-const toState = (data?: PaginationFilter): State => {
+const toState = (data?: Pagination): State => {
     return { filterState: data || {} };
 };
 
-class Pagination extends React.Component<Props, State> {
+class PaginationToolBar extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = toState(this.props.filterProps);
@@ -100,4 +97,4 @@ class Pagination extends React.Component<Props, State> {
     }
 }
 
-export default Pagination;
+export default PaginationToolBar;

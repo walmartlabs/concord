@@ -20,11 +20,13 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.ProcessDataInclude;
 import com.walmartlabs.concord.server.process.ProcessStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -38,11 +40,6 @@ public interface ProcessFilter {
     @Nullable
     Timestamp beforeCreatedAt();
 
-    @Value.Default
-    default boolean includeWithoutProjects() {
-        return false;
-    }
-
     @Nullable
     String initiator();
 
@@ -55,11 +52,25 @@ public interface ProcessFilter {
     @Nullable
     UUID projectId();
 
+    /**
+     * Include processes without projects.
+     * Applied only when {@link #orgIds()} and/or {@link #projectId()} are defined.
+     */
+    @Value.Default
+    default boolean includeWithoutProject() {
+        return true;
+    }
+
     @Nullable
     ProcessStatus status();
 
     @Nullable
     Set<String> tags();
+
+    @Value.Default
+    default Set<ProcessDataInclude> includes() {
+        return Collections.emptySet();
+    }
 
     @Nullable
     Map<String, String> metaFilters();

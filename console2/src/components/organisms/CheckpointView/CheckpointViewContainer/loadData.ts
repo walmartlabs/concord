@@ -17,13 +17,14 @@
  * limitations under the License.
  * =====
  */
-import { listProcesses } from '../../../../api/service/console';
+import { ConcordId } from '../../../../api/common';
+import { list as apiList, PaginatedProcessEntries } from '../../../../api/process';
 import { generateCheckpointGroups } from './checkpointUtils';
 import { ProcessEntry } from '../../../../api/process';
 
 export interface FetchProcessArgs {
-    orgId: string;
-    projectId: string;
+    orgId: ConcordId;
+    projectId: ConcordId;
     limit?: number;
     offset?: number;
 }
@@ -38,7 +39,8 @@ export const loadData = (args: FetchProcessArgs) => async ({
 
     setState({ loadingData: true });
 
-    const processes = await listProcesses(args.orgId, args.projectId, args.limit, args.offset);
+    const { items: processes }: PaginatedProcessEntries = await apiList(args);
+
     const checkpointGroups = {};
     processes.forEach((p) => {
         if (p.checkpoints && p.statusHistory) {

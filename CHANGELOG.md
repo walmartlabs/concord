@@ -4,12 +4,17 @@
 
 ### Added
 
+- concord-server: new endpoint `GET /api/v2/process`. Returns a list
+of processes with optional filtering (including metadata) and
+pagination;
 - concord-sdk: new utility methods to work with the process
 variables;
 - concord-server: initial support for in-process locks.
 
 ### Changed
 
+- concord-server: check for permissions when retrieving process
+details via `GET /api/v2/process/{id}`.
 - concord-server, concord-agent: load the dependency version list
 from the server.
 

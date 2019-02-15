@@ -23,11 +23,12 @@ import { Button, Icon, Label, Popup, Table } from 'semantic-ui-react';
 
 import { RequestError, ConcordId } from '../../../api/common';
 import { ProcessEntry } from '../../../api/process';
+import { Pagination } from '../../../state/data/processes';
 import {
     ProcessList,
     RequestErrorMessage,
     BulkProcessActionDropdown,
-    Pagination
+    PaginationToolBar
 } from '../../molecules';
 import { ColumnDefinition } from '../../../api/org';
 
@@ -39,8 +40,7 @@ import {
     PROJECT_COLUMN,
     UPDATED_AT_COLUMN
 } from '../ProcessList';
-import { PaginationFilter } from '../Pagination';
-import { ProcessFilters } from '../../../api/org/process';
+import { ProcessFilters } from '../../../api/process';
 
 const defaultColumns = [
     STATUS_COLUMN,
@@ -65,7 +65,7 @@ interface Props {
     projectName?: string;
 
     processFilters?: ProcessFilters;
-    paginationFilter?: PaginationFilter;
+    paginationFilter?: Pagination;
 
     showInitiatorFilter?: boolean;
 
@@ -79,19 +79,19 @@ interface Props {
 
     usePagination?: boolean;
 
-    refresh: (processFilters?: ProcessFilters, paginationFilters?: PaginationFilter) => void;
+    refresh: (processFilters?: ProcessFilters, paginationFilters?: Pagination) => void;
 }
 
 interface State {
     processFilters: ProcessFilters;
-    paginationFilter: PaginationFilter;
+    paginationFilter: Pagination;
     selectedProcessIds: ConcordId[];
 }
 
 const toState = (
     selectedProcessIds: ConcordId[],
     processFilters?: ProcessFilters,
-    paginationFilter?: PaginationFilter
+    paginationFilter?: Pagination
 ): State => {
     return {
         paginationFilter: paginationFilter || {},
@@ -303,7 +303,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                             </Table.HeaderCell>
                             <Table.HeaderCell collapsing={true} style={{ fontWeight: 'normal' }}>
                                 {usePagination && (
-                                    <Pagination
+                                    <PaginationToolBar
                                         filterProps={paginationFilter}
                                         handleLimitChange={(limit) => this.handleLimitChange(limit)}
                                         handleNext={this.handleNext}

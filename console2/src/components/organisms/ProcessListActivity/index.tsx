@@ -26,7 +26,7 @@ import { replace as pushHistory } from 'react-router-redux';
 
 import { queryParams, RequestError } from '../../../api/common';
 import { ProcessEntry } from '../../../api/process';
-import { actions, PaginatedProcesses, State } from '../../../state/data/processes';
+import { actions, PaginatedProcesses, Pagination, State } from '../../../state/data/processes';
 import { RequestErrorMessage } from '../../molecules';
 import {
     STATUS_COLUMN,
@@ -39,8 +39,7 @@ import {
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
-import { PaginationFilter } from '../../molecules/Pagination';
-import { ProcessFilters } from '../../../api/org/process';
+import { ProcessFilters } from '../../../api/process';
 
 const defaultColumns = [
     STATUS_COLUMN,
@@ -62,7 +61,7 @@ const withoutProjectColumns = [
 
 export interface ProcessSearchFilter {
     filters?: ProcessFilters;
-    pagination?: PaginationFilter;
+    pagination?: Pagination;
 }
 
 interface RouteProps {
@@ -85,7 +84,7 @@ interface DispatchProps {
         orgName?: string,
         projectName?: string,
         filters?: ProcessFilters,
-        pagination?: PaginationFilter
+        pagination?: Pagination
     ) => void;
 }
 

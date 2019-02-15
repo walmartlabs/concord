@@ -58,6 +58,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Set<String> tags = payload.getHeader(Payload.PROCESS_TAGS);
 
+        // TODO replace with getStatus?
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey);

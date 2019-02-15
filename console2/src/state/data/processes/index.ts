@@ -22,11 +22,7 @@ import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
-import {
-    list as apiProcessList,
-    PaginationFilters,
-    ProcessFilters
-} from '../../../api/org/process';
+import { list as apiProcessList, ProcessFilters } from '../../../api/process';
 import {
     get as apiGet,
     kill as apiKill,
@@ -54,6 +50,7 @@ import {
     ListProcessesRequest,
     PaginatedProcessDataResponse,
     PaginatedProcesses,
+    Pagination,
     ProcessDataResponse,
     Processes,
     RestoreProcessRequest,
@@ -101,7 +98,7 @@ export const actions = {
         orgName?: ConcordKey,
         projectName?: ConcordKey,
         filters?: ProcessFilters,
-        pagination?: PaginationFilters
+        pagination?: Pagination
     ): ListProcessesRequest => ({
         type: actionTypes.LIST_PROJECT_PROCESSES_REQUEST,
         orgName,
@@ -303,7 +300,12 @@ function* onGetProcess({ instanceId, includes }: GetProcessRequest) {
 
 function* onProcessList({ orgName, projectName, filters, pagination }: ListProcessesRequest) {
     try {
-        const response = yield call(apiProcessList, orgName, projectName, filters, pagination);
+        const response = yield call(apiProcessList, {
+            orgName,
+            projectName,
+            meta: filters,
+            ...pagination
+        });
         yield put({
             type: actionTypes.PROCESSES_DATA_RESPONSE,
             items: response.items,

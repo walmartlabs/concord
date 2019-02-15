@@ -24,7 +24,7 @@ import { push as pushHistory } from 'react-router-redux';
 import { Button, Dropdown, DropdownItemProps, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import { StartProcessResponse } from '../../../api/org/process';
+import { StartProcessResponse } from '../../../api/process';
 import { actions, State as ProcessState } from '../../../state/data/processes';
 import { GitHubLink, SingleOperationPopup } from '../../molecules';
 

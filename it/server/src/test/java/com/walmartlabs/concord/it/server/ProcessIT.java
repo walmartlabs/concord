@@ -366,7 +366,7 @@ public class ProcessIT extends AbstractServerIT {
         String projectName = "project_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse por1 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setAcceptsRawPayload(true));
 
@@ -389,10 +389,14 @@ public class ProcessIT extends AbstractServerIT {
 
         // ---
 
-        List<ProcessEntry> l = processApi.list(null, null, UUID.randomUUID(), null, null, null, null, null, null, 30, 0);
+        String anotherProjectName = "another_" + randomString();
+        ProjectOperationResponse por2 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(anotherProjectName));
+
+        List<ProcessEntry> l = processApi.list(null, null, por2.getId(), null, null, null, null, null, null, 30, 0);
         assertTrue(l.isEmpty());
 
-        l = processApi.list(null, null, cpr.getId(), null, null, null, null, null, null, 30, 0);
+        l = processApi.list(null, null, por1.getId(), null, null, null, null, null, null, 30, 0);
         assertEquals(1, l.size());
 
         l = processApi.list(null, null, null, null, null, null, null, null, null, 30, 0);
@@ -503,7 +507,7 @@ public class ProcessIT extends AbstractServerIT {
             if (pe.getInstanceId().equals(singleNodeProcess.getInstanceId())) {
                 assertTrue(pe.getChildrenIds() == null || pe.getChildrenIds().isEmpty());
             } else if (pe.getInstanceId().equals(parentSpr.getInstanceId())) {
-                assertEquals(3, pe.getChildrenIds().size());
+                assertEquals(3, pe.getChildrenIds() != null ? pe.getChildrenIds().size() : 0);
             }
         }
     }

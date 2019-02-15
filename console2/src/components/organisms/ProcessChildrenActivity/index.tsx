@@ -36,10 +36,9 @@ import {
 } from '../../molecules/ProcessList';
 import { replace as pushHistory } from 'react-router-redux';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { PaginatedProcesses } from '../../../state/data/processes';
+import { PaginatedProcesses, Pagination } from '../../../state/data/processes';
 import { parseSearchFilter } from '../ProcessListActivity';
-import { PaginationFilter } from '../../molecules/Pagination';
-import { ProcessFilters } from '../../../api/org/process';
+import { ProcessFilters } from '../../../api/process';
 
 const COLUMNS = [
     STATUS_COLUMN,
@@ -67,7 +66,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    load: (instanceId: ConcordId, filters?: ProcessFilters, pagination?: PaginationFilter) => void;
+    load: (instanceId: ConcordId, filters?: ProcessFilters, pagination?: Pagination) => void;
 }
 
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;

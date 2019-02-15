@@ -18,22 +18,18 @@
  * =====
  */
 
+import { addMinutes, isAfter } from 'date-fns';
 import { combineReducers, Reducer } from 'redux';
 import { delay } from 'redux-saga';
 import { all, call, cancel, fork, put, race, select, take, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../../api/common';
-import {
-    get as apiGet,
-    isFinal,
-    list as apiListForms,
-    listEvents as apiListEvents,
-    ProcessEntry
-} from '../../../../api/process';
-import { actions as ansibleActions } from '../ansible/index';
-import { ProcessEventEntry } from '../../../../api/process/event';
-import { FormListEntry } from '../../../../api/process/form';
+import { isFinal, ProcessEntry, get as apiGet } from '../../../../api/process';
+import { listEvents as apiListEvents, ProcessEventEntry } from '../../../../api/process/event';
+import { FormListEntry, list as apiListForms } from '../../../../api/process/form';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
+import { actions as ansibleActions } from '../ansible/index';
+import { State as ProcessState } from '../types';
 import {
     ProcessEventChunk,
     ProcessEvents,
@@ -42,8 +38,6 @@ import {
     StartProcessPolling,
     State
 } from './types';
-import { State as ProcessState } from '../types';
-import { addMinutes, isAfter } from 'date-fns';
 
 const NAMESPACE = 'processes/poll';
 export const MAX_EVENT_COUNT = 5000;

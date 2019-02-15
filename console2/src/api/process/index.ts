@@ -19,13 +19,8 @@
  */
 
 import { SemanticCOLORS } from 'semantic-ui-react';
-import { ConcordId, ConcordKey, fetchJson, managedFetch } from '../common';
-import { StartProcessResponse } from '../org/process';
-
-// https://github.com/facebook/create-react-app/issues/6054
-export * from './form';
-export * from './log';
-export * from './event';
+import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../common';
+import { ColumnDefinition } from '../org';
 
 export enum ProcessStatus {
     PREPARING = 'PREPARING',
@@ -133,6 +128,15 @@ export interface ProcessEntry {
     statusHistory?: ProcessHistoryEntry[];
 }
 
+export interface StartProcessResponse {
+    ok: boolean;
+    instanceId: string;
+}
+
+export interface RestoreProcessResponse {
+    ok: boolean;
+}
+
 export const start = (
     orgName: ConcordKey,
     projectName: ConcordKey,
@@ -180,4 +184,106 @@ export const killBulk = (instanceIds: ConcordId[]): Promise<{}> => {
         body: JSON.stringify(instanceIds)
     };
     return managedFetch('/api/v1/process/bulk', opts);
+};
+
+export interface ColumnFilter {
+    column: ColumnDefinition;
+    filter: string;
+}
+
+export interface ProcessFilters {
+    [source: string]: string;
+}
+
+export interface PaginatedProcessEntries {
+    items: ProcessEntry[];
+    next?: number;
+    prev?: number;
+}
+
+interface ProcessMetadataFilters {
+    [source: string]: string;
+}
+
+export interface ProcessListQuery {
+    orgId?: ConcordId;
+    orgName?: ConcordKey;
+    projectId?: ConcordId;
+    projectName?: ConcordKey;
+    afterCreatedAt?: string;
+    beforeCreatedAt?: string;
+    tags?: string[];
+    status?: ProcessStatus;
+    initiator?: string;
+    parentInstanceId?: ConcordId;
+    meta?: ProcessMetadataFilters;
+    include?: ProcessDataInclude[];
+    limit?: number;
+    offset?: number;
+}
+
+export const list = async (q: ProcessListQuery): Promise<PaginatedProcessEntries> => {
+    const { limit = 50 } = q;
+    const requestLimit = limit + 1;
+
+    const filters = combine(q, { meta: nonEmpty(q.meta), limit: requestLimit });
+    const qp = filters ? '?' + queryParams(filters) : '';
+
+    const data: ProcessEntry[] = await fetchJson(`/api/v2/process${qp}`);
+
+    const hasMoreElements: boolean = !!limit && data.length > limit;
+    const offset: number = q.offset ? q.offset : 0;
+
+    if (hasMoreElements) {
+        data.pop();
+    }
+
+    const nextOffset = offset + limit;
+    const prevOffset = offset - limit;
+    const onFirstPage = offset === 0;
+
+    const nextPage = hasMoreElements ? nextOffset : undefined;
+    const prevPage = !onFirstPage ? prevOffset : undefined;
+
+    return {
+        items: data,
+        next: nextPage,
+        prev: prevPage
+    };
+};
+
+const nonEmpty = (values?: any) => {
+    if (values === undefined) {
+        return undefined;
+    }
+
+    if (Object.keys(values).length === 0) {
+        return undefined;
+    }
+
+    return values;
+};
+
+// TODO refactor as a vararg function?
+const combine = (values?: any, overrides?: any) => {
+    if (values === undefined && overrides === undefined) {
+        return undefined;
+    }
+
+    type Result = { [name: string]: any };
+    const result: Result = {};
+
+    if (values !== undefined) {
+        Object.keys(values)
+            .filter((k) => k !== undefined)
+            .forEach((key) => (result[key] = values[key]));
+    }
+
+    if (overrides !== undefined) {
+        Object.keys(overrides)
+            .filter((k) => k !== undefined)
+            .forEach((key) => (result[key] = overrides[key]));
+    }
+
+    return result;
 };

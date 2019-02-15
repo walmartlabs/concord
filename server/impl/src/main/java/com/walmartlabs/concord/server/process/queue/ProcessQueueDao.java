@@ -377,7 +377,7 @@ public class ProcessQueueDao extends AbstractDao {
                     .map(PartialProcessKey::getInstanceId)
                     .collect(Collectors.toList());
 
-            SelectQuery<Record> query = buildSelect(tx, DEFAULT_INCLUDES);
+            SelectQuery<Record> query = buildSelect(tx, ProcessFilter.builder().build());
 
             query.addConditions(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
             return query.fetch(this::toEntry);
@@ -430,52 +430,13 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public List<ProcessEntry> list(ProcessFilter filter) {
+        return list(filter, -1, -1);
+    }
+
     public List<ProcessEntry> list(ProcessFilter filter, int limit, int offset) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectQuery<Record> query = buildSelect(tx, DEFAULT_INCLUDES);
-
-            Set<UUID> orgIds = filter.orgIds();
-            if (orgIds != null && !orgIds.isEmpty()) {
-                SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
-                        .from(PROJECTS)
-                        .where(PROJECTS.ORG_ID.in(orgIds));
-
-                if (filter.includeWithoutProjects()) {
-                    query.addConditions(PROCESS_QUEUE.PROJECT_ID.in(projectIds)
-                            .or(PROCESS_QUEUE.PROJECT_ID.isNull()));
-                } else {
-                    query.addConditions(PROCESS_QUEUE.PROJECT_ID.in(projectIds));
-                }
-            }
-
-            if (filter.projectId() != null) {
-                query.addConditions(PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()));
-            }
-
-            if (filter.afterCreatedAt() != null) {
-                query.addConditions(PROCESS_QUEUE.CREATED_AT.greaterThan(filter.afterCreatedAt()));
-            }
-
-            if (filter.beforeCreatedAt() != null) {
-                query.addConditions(PROCESS_QUEUE.CREATED_AT.lessThan(filter.beforeCreatedAt()));
-            }
-
-            if (filter.initiator() != null) {
-                query.addConditions(USERS.USERNAME.startsWith(filter.initiator()));
-            }
-
-            ProcessStatus status = filter.status();
-            if (status != null) {
-                query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(status.name()));
-            }
-
-            if (filter.parentId() != null) {
-                query.addConditions(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.parentId()));
-            }
-
-            filterByMetaFilters(query, filter.metaFilters());
-
-            filterByTags(query, filter.tags());
+            SelectQuery<Record> query = buildSelect(tx, filter);
 
             boolean findAdjacentToDateRows = filter.beforeCreatedAt() == null && filter.beforeCreatedAt() != null;
             if (findAdjacentToDateRows) {
@@ -484,8 +445,13 @@ public class ProcessQueueDao extends AbstractDao {
                 query.addOrderBy(PROCESS_QUEUE.CREATED_AT.desc());
             }
 
-            query.addLimit(limit);
-            query.addOffset(offset);
+            if (limit > 0) {
+                query.addLimit(limit);
+            }
+
+            if (offset >= 0) {
+                query.addOffset(offset);
+            }
 
             List<ProcessEntry> processEntries = query.fetch(this::toEntry);
 
@@ -494,18 +460,6 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             return processEntries;
-        }
-    }
-
-    public List<ProcessEntry> list(UUID parentInstanceId, Set<String> tags) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            SelectQuery<Record> query = buildSelect(tx, DEFAULT_INCLUDES);
-            query.addConditions(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(parentInstanceId));
-
-            filterByTags(query, tags);
-
-            query.addOrderBy(PROCESS_QUEUE.CREATED_AT.desc());
-            return query.fetch(this::toEntry);
         }
     }
 
@@ -745,7 +699,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    private SelectQuery<Record> buildSelect(DSLContext tx, Set<ProcessDataInclude> includes) {
+    private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {
         SelectQuery<Record> query = tx.selectQuery();
         query.addSelect(PROCESS_QUEUE.fields());
         query.addFrom(PROCESS_QUEUE);
@@ -767,6 +721,45 @@ public class ProcessQueueDao extends AbstractDao {
         // projects
         query.addSelect(Tables.PROJECTS.PROJECT_NAME, Tables.PROJECTS.ORG_ID);
         query.addJoin(Tables.PROJECTS, JoinType.LEFT_OUTER_JOIN, Tables.PROJECTS.PROJECT_ID.eq(PROCESS_QUEUE.PROJECT_ID));
+
+        Set<UUID> orgIds = filter.orgIds();
+        if (orgIds != null && !orgIds.isEmpty()) {
+            query.addConditions(PROJECTS.ORG_ID.in(filter.orgIds()));
+        }
+
+        if (filter.projectId() != null) {
+            query.addConditions(PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()));
+        }
+
+        if ((orgIds != null && !orgIds.isEmpty()) || filter.projectId() != null && !filter.includeWithoutProject()) {
+            query.addConditions(PROCESS_QUEUE.PROJECT_ID.isNotNull());
+        }
+
+        if (filter.initiator() != null) {
+            query.addConditions(USERS.USERNAME.startsWith(filter.initiator()));
+        }
+
+        if (filter.afterCreatedAt() != null) {
+            query.addConditions(PROCESS_QUEUE.CREATED_AT.greaterThan(filter.afterCreatedAt()));
+        }
+
+        if (filter.beforeCreatedAt() != null) {
+            query.addConditions(PROCESS_QUEUE.CREATED_AT.lessThan(filter.beforeCreatedAt()));
+        }
+
+        if (filter.status() != null) {
+            query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(filter.status().name()));
+        }
+
+        if (filter.parentId() != null) {
+            query.addConditions(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.parentId()));
+        }
+
+        filterByMetaFilters(query, filter.metaFilters());
+
+        filterByTags(query, filter.tags());
+
+        Set<ProcessDataInclude> includes = filter.includes();
 
         if (includes.contains(ProcessDataInclude.CHILDREN_IDS)) {
             ProcessQueue pq = PROCESS_QUEUE.as("pq");
@@ -811,8 +804,12 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     private ProcessEntry get(DSLContext tx, PartialProcessKey key, Set<ProcessDataInclude> includes) {
-        SelectQuery<Record> query = buildSelect(tx, includes);
+        SelectQuery<Record> query = buildSelect(tx, ProcessFilter.builder()
+                .includes(includes)
+                .build());
+
         query.addConditions(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()));
+
         return query.fetchOne(this::toEntry);
     }
 

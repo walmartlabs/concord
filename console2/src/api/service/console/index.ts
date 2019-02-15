@@ -143,11 +143,3 @@ export const validatePassword = throttle(
         return json as boolean;
     }
 );
-
-export const listProcesses = (
-    orgId?: ConcordId,
-    projectId?: ConcordId,
-    limit?: number,
-    offset?: number
-): Promise<ProcessEntry[]> =>
-    fetchJson(`/api/service/console/process?${queryParams({ orgId, projectId, limit, offset })}`);

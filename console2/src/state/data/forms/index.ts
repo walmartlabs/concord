@@ -23,7 +23,8 @@ import { delay } from 'redux-saga';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../api/common';
-import { FormListEntry, get as apiGetProcess, isFinal } from '../../../api/process';
+import { isFinal, get as apiGetProcess } from '../../../api/process';
+import { FormListEntry } from '../../../api/process/form';
 import {
     FormInstanceEntry,
     get as apiGet,

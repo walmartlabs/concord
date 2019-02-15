@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Dropdown, DropdownItemProps, Grid, Input, Modal, Table } from 'semantic-ui-react';
 
 import { AnsibleHost, SearchFilter } from '../../../api/process/ansible';
-import { HumanizedDuration, Pagination } from '../index';
+import { HumanizedDuration, PaginationToolBar } from '../index';
 import { ConcordId } from '../../../api/common';
 import { AnsibleTaskListActivity } from '../../organisms';
 
@@ -169,7 +169,7 @@ class AnsibleHostList extends React.Component<Props, State> {
                         />
                     </Grid.Column>
                     <Grid.Column textAlign={'right'}>
-                        <Pagination
+                        <PaginationToolBar
                             filterProps={{}}
                             handleNext={() => this.handleNext()}
                             handlePrev={() => this.handlePrev()}

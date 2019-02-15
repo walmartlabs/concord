@@ -26,7 +26,7 @@ import { ColumnDefinition, SearchType, SearchValueType } from '../../../api/org'
 import { canBeCancelled, ProcessEntry, ProcessStatus } from '../../../api/process';
 import { LocalTimestamp, ProcessStatusIcon } from '../../molecules';
 import { TableSearchFilter } from '../../atoms';
-import { ProcessFilters } from '../../../api/org/process';
+import { ProcessFilters } from '../../../api/process';
 
 export const STATUS_COLUMN: ColumnDefinition = {
     caption: 'Status',

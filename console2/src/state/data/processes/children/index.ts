@@ -21,13 +21,9 @@ import { ConcordId } from '../../../../api/common';
 import { ListProcessChildrenRequest, State } from './types';
 import { combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
-import {
-    list as apiProcessList,
-    PaginationFilters,
-    ProcessFilters
-} from '../../../../api/org/process';
+import { list as apiProcessList, ProcessFilters } from '../../../../api/process';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
-import { PaginatedProcessDataResponse, PaginatedProcesses } from '../types';
+import { PaginatedProcessDataResponse, PaginatedProcesses, Pagination } from '../types';
 
 const NAMESPACE = 'processes/children';
 
@@ -40,7 +36,7 @@ export const actions = {
     listChildren: (
         parentId: ConcordId,
         filters?: ProcessFilters,
-        pagination?: PaginationFilters
+        pagination?: Pagination
     ): ListProcessChildrenRequest => ({
         type: actionTypes.LIST_PROCESS_CHILDREN_REQUEST,
         parentId,
@@ -96,7 +92,12 @@ function* onList({ parentId, filters, pagination }: ListProcessChildrenRequest) 
         } else {
             filters.parentInstanceId = parentId;
         }
-        const response = yield call(apiProcessList, orgName, projectName, filters, pagination);
+        const response = yield call(apiProcessList, {
+            orgName,
+            projectName,
+            meta: filters,
+            ...pagination
+        });
         yield put({
             type: actionTypes.LIST_PROCESS_CHILDREN_RESPONSE,
             items: response.items,

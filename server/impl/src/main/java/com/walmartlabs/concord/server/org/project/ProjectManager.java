@@ -153,6 +153,7 @@ public class ProjectManager {
             userId = null;
         }
 
+        // TODO replace with queueDao#list?
         return projectDao.list(orgId, userId, PROJECTS.PROJECT_NAME, true);
     }
 

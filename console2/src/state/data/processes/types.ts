@@ -22,20 +22,20 @@ import { Action } from 'redux';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import {
-    PaginationFilters,
+    ProcessDataInclude,
+    ProcessEntry,
     ProcessFilters,
     RestoreProcessResponse,
     StartProcessResponse
-} from '../../../api/org/process';
-import { ProcessDataInclude, ProcessEntry } from '../../../api/process';
+} from '../../../api/process';
 import { RequestState } from '../common';
-import { State as LogState } from './logs/types';
-import { State as PollState } from './poll/types';
-import { State as HistoryState } from './history/types';
+import { State as AnsibleState } from './ansible/types';
 import { State as AttachmentState } from './attachments/types';
 import { State as ChildrenState } from './children/types';
 import { State as EventsState } from './events/types';
-import { State as AnsibleState } from './ansible/types';
+import { State as HistoryState } from './history/types';
+import { State as LogState } from './logs/types';
+import { State as PollState } from './poll/types';
 import { State as WaitState } from './waits/types';
 
 export interface GetProcessRequest extends Action {
@@ -43,11 +43,16 @@ export interface GetProcessRequest extends Action {
     includes: ProcessDataInclude;
 }
 
+export interface Pagination {
+    limit?: number;
+    offset?: number;
+}
+
 export interface ListProcessesRequest extends Action {
     orgName?: ConcordKey;
     projectName?: ConcordKey;
     filters?: ProcessFilters;
-    pagination?: PaginationFilters;
+    pagination?: Pagination;
 }
 
 export interface PaginatedProcessDataResponse extends Action {

@@ -20,7 +20,7 @@
 import * as React from 'react';
 import { FullBar, Item } from './styles';
 import RefreshButton from '../../../atoms/RefreshButton';
-import { Pagination } from '../../../../components/molecules';
+import { PaginationToolBar } from '../../../../components/molecules';
 import CheckpointViewContainer from '../CheckpointViewContainer';
 
 const ActionBar: React.SFC<{}> = () => (
@@ -54,7 +54,7 @@ const ActionBar: React.SFC<{}> = () => (
                 </Item>
                 <Item>{getPaginationAsString()}</Item>
                 <Item style={{ marginLeft: 'auto' }}>
-                    <Pagination
+                    <PaginationToolBar
                         filterProps={{}}
                         handleLimitChange={(limit) => {
                             setPageLimit(limit);

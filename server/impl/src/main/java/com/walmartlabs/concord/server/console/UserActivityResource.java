@@ -85,9 +85,9 @@ public class UserActivityResource implements Resource {
         Map<String, Integer> stats = processStatsDao.getCountByStatuses(orgIds, t, user.getId());
 
         ProcessFilter filter = ProcessFilter.builder()
-                .includeWithoutProjects(true)
                 .initiator(user.getUsername())
                 .orgIds(orgIds)
+                .includeWithoutProject(true)
                 .build();
         List<ProcessEntry> lastProcesses = processDao.list(filter, maxOwnProcesses, 0);
 

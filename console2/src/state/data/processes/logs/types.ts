@@ -20,7 +20,8 @@
 
 import { Action } from 'redux';
 import { ConcordId, RequestError } from '../../../../api/common';
-import { LogChunk, LogRange, ProcessStatus } from '../../../../api/process';
+import { ProcessStatus } from '../../../../api/process';
+import { LogChunk, LogRange } from '../../../../api/process/log';
 import { RequestState } from '../../common';
 
 export interface StartProcessLogPolling extends Action {

@@ -20,13 +20,13 @@
 
 import { Action } from 'redux';
 import { ConcordId, RequestError } from '../../../../api/common';
-import { PaginationFilters, ProcessFilters } from '../../../../api/org/process';
-import { PaginatedProcesses } from '../types';
+import { ProcessFilters } from '../../../../api/process';
+import { PaginatedProcesses, Pagination } from '../types';
 
 export interface ListProcessChildrenRequest extends Action {
     parentId: ConcordId;
     filters?: ProcessFilters;
-    pagination?: PaginationFilters;
+    pagination?: Pagination;
 }
 
 export interface State {

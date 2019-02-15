@@ -39,7 +39,7 @@ export { default as NewAPITokenForm } from './NewAPITokenForm';
 export { default as NewProjectForm } from './NewProjectForm';
 export { default as NewSecretForm } from './NewSecretForm';
 export { default as NewTeamForm } from './NewTeamForm';
-export { default as Pagination } from './Pagination';
+export { default as PaginationToolBar } from './PaginationToolBar';
 export { default as ProcessActionList } from './ProcessActionList';
 export { default as ProcessElementList } from './ProcessElementList';
 export { default as ProcessForm } from './ProcessForm';
