@@ -302,7 +302,11 @@ public class AnsibleEventProcessor implements ScheduledTask {
             return count > 0;
         }
 
-        public void insert(DSLContext tx, List<HostItem> hosts) {
+        public void insert(DSLContext tx, List<HostItem> items) {
+            List<HostItem> hosts = removeInvalidItems(items);
+            if (hosts.isEmpty()) {
+                return;
+            }
             tx.connection(conn -> {
                 int[] updated = update(tx, conn, hosts);
                 List<HostItem> hostsForInsert = new ArrayList<>();
@@ -433,6 +437,14 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     .when(inline(Status.CHANGED.name()), inline(Status.CHANGED.weight))
                     .when(inline(Status.OK.name()), inline(Status.OK.weight))
                     .otherwise(inline(0));
+        }
+
+        private static List<HostItem> removeInvalidItems(List<HostItem> items) {
+            return items.stream()
+                    .filter(i -> i.key().host().length() < ANSIBLE_HOSTS.HOST.getDataType().length())
+                    .filter(i -> i.key().hostGroup().length() < ANSIBLE_HOSTS.HOST_GROUP.getDataType().length())
+                    .collect(Collectors.toList());
+
         }
     }
 

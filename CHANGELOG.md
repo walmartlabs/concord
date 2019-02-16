@@ -16,6 +16,8 @@ variables;
 
 ### Changed
 
+- concord-server: skip invalid host names when processing Ansible
+events;
 - concord-runner: more graceful handling of errors while saving "out"
 variables;
 - concord-server: check for permissions when retrieving process
