@@ -724,15 +724,19 @@ public class ProcessQueueDao extends AbstractDao {
 
         Set<UUID> orgIds = filter.orgIds();
         if (orgIds != null && !orgIds.isEmpty()) {
-            query.addConditions(PROJECTS.ORG_ID.in(filter.orgIds()));
+            if (filter.includeWithoutProject()) {
+                query.addConditions(PROJECTS.ORG_ID.in(filter.orgIds()).or(PROCESS_QUEUE.PROJECT_ID.isNull()));
+            } else {
+                query.addConditions(PROJECTS.ORG_ID.in(filter.orgIds()));
+            }
         }
 
         if (filter.projectId() != null) {
-            query.addConditions(PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()));
-        }
-
-        if ((orgIds != null && !orgIds.isEmpty()) || filter.projectId() != null && !filter.includeWithoutProject()) {
-            query.addConditions(PROCESS_QUEUE.PROJECT_ID.isNotNull());
+            if (filter.includeWithoutProject()) {
+                query.addConditions(PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()).or(PROCESS_QUEUE.PROJECT_ID.isNull()));
+            } else {
+                query.addConditions(PROCESS_QUEUE.PROJECT_ID.eq(filter.projectId()));
+            }
         }
 
         if (filter.initiator() != null) {
