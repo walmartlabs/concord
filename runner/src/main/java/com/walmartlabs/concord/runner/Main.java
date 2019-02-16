@@ -558,17 +558,21 @@ public class Main {
              ObjectOutputStream oos = new ObjectOutputStream(out)) {
 
             oos.writeObject(t);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             log.error("Can't save the last unhandled error: {}", e.getMessage());
         }
 
-        Map<String, Object> error = ProcessErrorProcessor.process(t);
+        try {
+            Map<String, Object> error = ProcessErrorProcessor.process(t);
 
-        Map<String, Object> outVars = OutVariablesParser.read(attachmentsDir);
-        Map<String, Object> result = new HashMap<>(outVars);
-        result.putAll(error);
+            Map<String, Object> outVars = OutVariablesParser.read(attachmentsDir);
+            Map<String, Object> result = new HashMap<>(outVars);
+            result.putAll(error);
 
-        OutVariablesParser.write(attachmentsDir, result);
+            OutVariablesParser.write(attachmentsDir, result);
+        } catch (Throwable e) {
+            log.error("Can't write out variables: {}", e.getMessage());
+        }
     }
 
     private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {

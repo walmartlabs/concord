@@ -16,6 +16,8 @@ variables;
 
 ### Changed
 
+- concord-runner: more graceful handling of errors while saving "out"
+variables;
 - concord-server: check for permissions when retrieving process
 details via `GET /api/v2/process/{id}`.
 - concord-server, concord-agent: load the dependency version list
