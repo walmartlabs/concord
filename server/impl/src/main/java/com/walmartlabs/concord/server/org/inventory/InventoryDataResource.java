@@ -73,12 +73,17 @@ public class InventoryDataResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     public Object get(@ApiParam @PathParam("orgName") String orgName,
                       @ApiParam @PathParam("inventoryName") String inventoryName,
-                      @ApiParam @PathParam("itemPath") String itemPath) {
+                      @ApiParam @PathParam("itemPath") String itemPath,
+                      @ApiParam @QueryParam("singleItem") @DefaultValue("false") boolean singleItem) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
 
-        return build(inventory.getId(), itemPath);
+        if (singleItem) {
+            return inventoryDataDao.getSingleItem(inventory.getId(), itemPath);
+        } else {
+            return build(inventory.getId(), itemPath);
+        }
     }
 
     /**

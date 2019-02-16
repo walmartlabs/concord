@@ -21,13 +21,11 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * The inheriting classes MUST override {@link #equals(Object)}) if they
@@ -36,7 +34,7 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        visible = true,
+        visible = false,
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = NoneCondition.class, name = "NONE"),
@@ -45,7 +43,6 @@ import java.util.Objects;
 })
 public abstract class AbstractWaitCondition implements Serializable {
 
-    @JsonProperty("type")
     public abstract WaitType type();
 
     @Nullable

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
+import com.walmartlabs.concord.server.jooq.tables.InventoryData;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -47,6 +48,16 @@ public class InventoryDataDao extends AbstractDao {
     public InventoryDataDao(@Named("app") Configuration cfg) {
         super(cfg);
         this.objectMapper = new ObjectMapper();
+    }
+
+    public Object getSingleItem(UUID id, String itemPath) {
+        return txResult(tx -> {
+            InventoryData i = INVENTORY_DATA.as("i");
+            return tx.select(i.ITEM_DATA.cast(String.class))
+                    .from(i)
+                    .where(i.INVENTORY_ID.eq(id).and(i.ITEM_PATH.eq(itemPath)))
+                    .fetchOne(Record1::value1);
+        });
     }
 
     public List<InventoryDataItem> get(UUID inventoryId, String path) {

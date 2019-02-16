@@ -194,7 +194,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         AuthenticationToken token;
         if (h.startsWith(BASIC_AUTH_PREFIX)) {
-            token = parseBasicAuth(h, rememberMe);
+            token = parseBasicAuth(h, req, rememberMe);
         } else {
             if (h.startsWith(BEARER_AUTH_PREFIX)) {
                 h = h.substring(BASIC_AUTH_PREFIX.length() + 1);
@@ -215,10 +215,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
         String h = req.getHeader(SESSION_TOKEN_HEADER);
-        AuthenticationToken t = new SessionKey(decryptSessionKey(h));
+        return buildSessionToken(req, h);
+    }
 
+    private AuthenticationToken buildSessionToken(HttpServletRequest req, String key) {
+        AuthenticationToken t = new SessionKey(decryptSessionKey(key));
         req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
-
         return t;
     }
 
@@ -270,11 +272,16 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
     }
 
-    private static UsernamePasswordToken parseBasicAuth(String s, boolean rememberMe) {
+    private AuthenticationToken parseBasicAuth(String s, HttpServletRequest request, boolean rememberMe) {
         s = s.substring(BASIC_AUTH_PREFIX.length());
         s = new String(Base64.getDecoder().decode(s));
 
         int idx = s.indexOf(":");
+        if (s.endsWith(":")) {
+            // empty password -> try user name as session token
+            return buildSessionToken(request, s.substring(0, s.length() - 1));
+        }
+
         if (idx < 0 || idx + 1 >= s.length()) {
             throw new IllegalArgumentException("Invalid basic auth header");
         }

@@ -34,9 +34,13 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
 
     public abstract List<UUID> processes();
 
+    @Override
+    public WaitType type() {
+        return WaitType.PROCESS_COMPLETION;
+    }
+
     public static ProcessCompletionCondition of(List<UUID> processes, String reason) {
         return ImmutableProcessCompletionCondition.builder()
-                .type(WaitType.PROCESS_COMPLETION)
                 .processes(processes)
                 .reason(reason)
                 .build();

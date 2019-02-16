@@ -129,11 +129,13 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Named
     private static final class WatchdogDao extends AbstractDao {
 
-        private final ObjectMapper objectMapper = new ObjectMapper();
+        private final ObjectMapper objectMapper;
 
         @Inject
-        public WatchdogDao(@Named("app") Configuration cfg) {
+        public WatchdogDao(@Named("app") Configuration cfg, ObjectMapper objectMapper) {
             super(cfg);
+
+            this.objectMapper = objectMapper;
         }
 
         public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt) {
@@ -164,28 +166,13 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             });
         }
 
-        @SuppressWarnings("unchecked")
         private AbstractWaitCondition deserialize(Object o) {
             if (o == null) {
                 return null;
             }
 
             try {
-                Map<String, Object> m = objectMapper.readValue(String.valueOf(o), Map.class);
-                WaitType type = WaitType.valueOf((String) m.get("type"));
-                switch (type) {
-                    case NONE: {
-                        return objectMapper.convertValue(m, NoneCondition.class);
-                    }
-                    case PROCESS_COMPLETION: {
-                        return objectMapper.convertValue(m, ProcessCompletionCondition.class);
-                    }
-                    case PROCESS_LOCK: {
-                        return objectMapper.convertValue(m, ProcessLockCondition.class);
-                    }
-                    default:
-                        throw new IllegalArgumentException("Unsupported type: " + type);
-                }
+                return objectMapper.readValue(String.valueOf(o), AbstractWaitCondition.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

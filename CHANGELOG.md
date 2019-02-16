@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: option to retrieve a single item in an inventory;
+- concord-sdk: initial implementation of `LockService`; 
 - concord-server: support for `activeProfiles` in `cron` triggers;
 - concord-server: new endpoint `GET /api/v2/process`. Returns a list
 of processes with optional filtering (including metadata) and

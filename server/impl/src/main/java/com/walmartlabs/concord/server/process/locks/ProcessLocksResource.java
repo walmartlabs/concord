@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessLockCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import io.swagger.annotations.Api;
@@ -66,17 +67,15 @@ public class ProcessLocksResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public LockResult tryLock(@PathParam("processInstanceId") UUID instanceId,
-                           @PathParam("lockName") String lockName,
-                           @QueryParam("scope") @DefaultValue("PROJECT") ProcessLockScope scope) {
-
+                              @PathParam("lockName") String lockName,
+                              @QueryParam("scope") @DefaultValue("PROJECT") ProcessLockScope scope) {
 
         ProcessEntry e = assertProcess(instanceId);
 
         LockEntry lock = dao.tryLock(e.instanceId(), e.orgId(), e.projectId(), scope, lockName);
         boolean acquired = lock.instanceId().equals(instanceId);
-        if (!acquired) {
-            queueDao.updateWait(ProcessKey.from(e), ProcessLockCondition.from(lock));
-        }
+        AbstractWaitCondition waitCondition = acquired ? null : ProcessLockCondition.from(lock);
+        queueDao.updateWait(ProcessKey.from(e), waitCondition);
         return LockResult.builder()
                 .acquired(acquired)
                 .info(lock)

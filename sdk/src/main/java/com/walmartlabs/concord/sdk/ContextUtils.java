@@ -175,6 +175,15 @@ public final class ContextUtils {
         throw new IllegalArgumentException("Invalid variable '" +  Constants.Context.WORK_DIR_KEY + "' type, expected: string/uuid, got: " + txId.getClass());
     }
 
+    public static String getSessionToken(Context ctx) {
+        Map<String, Object> processInfo = assertMap(ctx, Constants.Request.PROCESS_INFO_KEY);
+        String result = (String) processInfo.get("sessionKey");
+        if (result == null) {
+            throw new IllegalArgumentException("Session key not found in the process info: " + processInfo);
+        }
+        return result;
+    }
+
     private ContextUtils() {
     }
 }
