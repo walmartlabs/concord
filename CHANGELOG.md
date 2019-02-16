@@ -16,6 +16,8 @@ variables;
 
 ### Changed
 
+- repository: clean up and reset locally cached repositories on
+checkout;
 - concord-server: skip invalid host names when processing Ansible
 events;
 - concord-runner: more graceful handling of errors while saving "out"

@@ -101,8 +101,12 @@ public class GitClient {
 
         checkoutCommand(rev.name(), dest);
 
+        launchCommand(dest, "clean", "-fdx");
+
         if (hasGitModules(dest)) {
             fetchSubmodules(secret, dest);
+
+            launchCommand(dest, "submodule", "foreach", "git", "reset", "--hard");
         }
     }
 
