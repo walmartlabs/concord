@@ -1,0 +1,16 @@
+configuration:
+  dependencies:
+  - "mvn://com.walmartlabs.concord.plugins:ldap-task:0.85.0"
+
+flows:
+  default:
+  - task: ldap
+    in:
+      action: getUser
+      ldapAdServer: "ldap://ldaphost:port"
+      bindUserDn: "myBindUser"
+      bindPassword: "myBindPwd"
+      searchBase: "DC=MyOrg,DC=com"
+      user: "myUser"
+
+  - log: "${ldapResult}"

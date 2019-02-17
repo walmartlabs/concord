@@ -13,6 +13,7 @@
 * [http](http) - a simple example demonstrating how to call restful endpoints
 * [in_variables](in_variables) - how to use IN-variables when calling a flow;
 * [jira](jira) - how to create an issue in JIRA;
+* [ldap](ldap) - how to query an AD/LDAP server;
 * [long_running](long_running) - a simple example of a long-running process using `sleep` task;
 * [looper](looper) - triggering Looper jobs from Concord;
 * [loops](loops) - how to iterate a collection;
