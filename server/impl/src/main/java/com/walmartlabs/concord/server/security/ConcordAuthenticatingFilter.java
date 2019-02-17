@@ -34,6 +34,7 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
+import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
@@ -101,12 +102,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         this.secretCfg = secretCfg;
         this.successAuths = successAuths;
         this.failedAuths = failedAuths;
-    }
-
-    @Override
-    protected boolean isRememberMe(ServletRequest request) {
-        // enable "remember me"
-        return true;
     }
 
     @Override
@@ -180,6 +175,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
         log.warn("onLoginFailure ['{}'] -> login failed ({}): {}", token, request.getRemoteAddr(), e.getMessage());
         failedAuths.mark();
+
+        Subject s = SecurityUtils.getSubject();
+        if (s.isRemembered()) {
+            s.logout();
+        }
+
         return super.onLoginFailure(token, e, request, response);
     }
 

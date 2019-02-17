@@ -16,6 +16,9 @@ variables;
 
 ### Changed
 
+- concord-server: force logout users on any authentication error.
+Fixes the issue with "remember me" users with passwords changed
+between the server's restarts;
 - repository: clean up and reset locally cached repositories on
 checkout;
 - concord-server: skip invalid host names when processing Ansible
