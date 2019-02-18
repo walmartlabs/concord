@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: fix the dependency resolution for plugins with
+non-default versions;
+
+
+
 ## [1.8.0] - 2019-02-17
 
 ### Added
