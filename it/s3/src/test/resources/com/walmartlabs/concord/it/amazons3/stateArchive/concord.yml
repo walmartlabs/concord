@@ -1,4 +1,0 @@
-flows:
-  default:
-  - log: "Hello!"
-  - log: "Continuing the process ..."

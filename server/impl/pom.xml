@@ -277,18 +277,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- S3 support -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-core</artifactId>
-            <version>${aws.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>${aws.version}</version>
-        </dependency>
-
         <!-- Prometheus integration -->
         <dependency>
             <groupId>io.prometheus</groupId>

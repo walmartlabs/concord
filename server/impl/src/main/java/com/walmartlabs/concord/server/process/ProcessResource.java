@@ -44,13 +44,13 @@ import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.process.state.archive.ProcessStateArchiver;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -75,6 +75,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.zipTo;
 
 @Named
 @Singleton
@@ -90,7 +91,6 @@ public class ProcessResource implements Resource {
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final SecretStoreConfiguration secretStoreCfg;
-    private final ProcessStateArchiver stateArchiver;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final ProcessKeyCache processKeyCache;
     private final OrganizationManager orgManager;
@@ -105,7 +105,6 @@ public class ProcessResource implements Resource {
                            PayloadManager payloadManager,
                            ProcessStateManager stateManager,
                            SecretStoreConfiguration secretStoreCfg,
-                           ProcessStateArchiver stateArchiver,
                            EncryptedProjectValueManager encryptedValueManager,
                            ProcessKeyCache processKeyCache,
                            OrganizationManager orgManager,
@@ -120,7 +119,6 @@ public class ProcessResource implements Resource {
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.secretStoreCfg = secretStoreCfg;
-        this.stateArchiver = stateArchiver;
         this.encryptedValueManager = encryptedValueManager;
         this.processKeyCache = processKeyCache;
 
@@ -811,22 +809,6 @@ public class ProcessResource implements Resource {
     }
 
     /**
-     * Check process state archive status
-     */
-    @GET
-    @ApiOperation(value = "Check process state archive status", response = Boolean.class)
-    @javax.ws.rs.Path("/{id}/state/archived/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Boolean isStateArchived(@ApiParam @PathParam("id") UUID instanceId) {
-        ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
-
-        assertProcessStateAccess(entry);
-        ProcessKey processKey = ProcessKey.from(entry);
-
-        return stateArchiver.isArchived(processKey);
-    }
-
-    /**
      * Downloads the current state snapshot of a process.
      */
     @GET
@@ -839,7 +821,12 @@ public class ProcessResource implements Resource {
 
         assertProcessStateAccess(entry);
 
-        StreamingOutput out = output -> stateArchiver.export(processKey, output);
+        StreamingOutput out = output -> {
+            try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(output)) {
+                stateManager.export(processKey, zipTo(dst));
+            }
+        };
+
         return Response.ok(out, "application/zip")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + instanceId + ".zip\"")
                 .build();

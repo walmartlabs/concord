@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.state.archive.ProcessCheckpointArchiver;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -51,20 +50,17 @@ import static com.walmartlabs.concord.sdk.Constants.Files.CHECKPOINT_META_FILE_N
 @Named
 public class ProcessCheckpointManager {
 
-    private final ProcessCheckpointArchiver archiver;
     private final CheckpointDao checkpointDao;
     private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
     private final ProjectAccessManager projectAccessManager;
 
     @Inject
-    protected ProcessCheckpointManager(ProcessCheckpointArchiver archiver,
-                                       CheckpointDao checkpointDao,
+    protected ProcessCheckpointManager(CheckpointDao checkpointDao,
                                        ProcessQueueDao queueDao,
                                        ProcessStateManager stateManager,
                                        ProjectAccessManager projectAccessManager) {
 
-        this.archiver = archiver;
         this.checkpointDao = checkpointDao;
         this.queueDao = queueDao;
         this.stateManager = stateManager;
@@ -166,10 +162,6 @@ public class ProcessCheckpointManager {
     }
 
     private boolean export(UUID checkpointId, Path dest) throws IOException {
-        if (archiver.isArchived(checkpointId)) {
-            return archiver.export(checkpointId, dest);
-        } else {
-            return checkpointDao.export(checkpointId, dest);
-        }
+        return checkpointDao.export(checkpointId, dest);
     }
 }

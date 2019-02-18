@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-server: removed support for archiving process state and
+checkpoints into an S3 endpoint. The recommended way is to use table
+partitioning or a custom (external) data retention solution;
 - concord-console: fixed the process list filtering.
 
 

@@ -19,6 +19,7 @@
         </insert>
     </changeSet>
 
+    <!-- removed in 1.9.0+
     <changeSet id="80100" author="ibodrov@gmail.com">
         <createTable tableName="PROCESS_STATE_ARCHIVE">
             <column name="INSTANCE_ID" type="uuid">
@@ -43,4 +44,5 @@
             <column name="LAST_UPDATED_AT"/>
         </createIndex>
     </changeSet>
+    -->
 </databaseChangeLog>

@@ -1,6 +1,0 @@
-flows:
-  default:
-  - log: "Hello!"
-  - checkpoint: "first"
-  - log: "Continuing the process ..."
-  - checkpoint: "second"

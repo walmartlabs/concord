@@ -25,6 +25,7 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <!-- removed in 1.9.0+
     <changeSet id="84100" author="ybrigo@gmail.com">
         <createTable tableName="PROCESS_CHECKPOINT_ARCHIVE">
             <column name="CHECKPOINT_ID" type="uuid">
@@ -49,4 +50,5 @@
             <column name="LAST_UPDATED_AT"/>
         </createIndex>
     </changeSet>
+    -->
 </databaseChangeLog>
