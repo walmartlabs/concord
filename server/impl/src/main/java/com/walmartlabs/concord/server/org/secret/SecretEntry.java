@@ -56,7 +56,7 @@ public class SecretEntry implements Serializable {
     private final SecretType type;
 
     @NotNull
-    private final SecretStoreType storeType;
+    private final String storeType;
 
     private final SecretEncryptedByType encryptedBy;
 
@@ -73,7 +73,7 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("projectName") String projectName,
                        @JsonProperty("type") SecretType type,
                        @JsonProperty("encryptedBy") SecretEncryptedByType encryptedBy,
-                       @JsonProperty("storeType") SecretStoreType storeType,
+                       @JsonProperty("storeType") String storeType,
                        @JsonProperty("visibility") SecretVisibility visibility,
                        @JsonProperty("owner") SecretOwner owner) {
 
@@ -122,7 +122,7 @@ public class SecretEntry implements Serializable {
         return encryptedBy;
     }
 
-    public SecretStoreType getStoreType() {
+    public String getStoreType() {
         return storeType;
     }
 

@@ -102,7 +102,7 @@ public class SecretResource implements Resource {
 
         try {
             SecretType type = assertType(input);
-            SecretStoreType storeType = assertStoreType(input);
+            String storeType = assertStoreType(input);
 
             String name = assertName(input);
             assertUnique(org.getId(), name);
@@ -294,7 +294,7 @@ public class SecretResource implements Resource {
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
-    private PublicKeyResponse createKeyPair(UUID orgId, UUID projectId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, SecretStoreType storeType) throws IOException {
+    private PublicKeyResponse createKeyPair(UUID orgId, UUID projectId, String name, String storePassword, SecretVisibility visibility, MultipartInput input, String storeType) throws IOException {
         DecryptedKeyPair k;
 
         InputStream publicKey = MultipartUtils.getStream(input, Constants.Multipart.PUBLIC);
@@ -314,7 +314,7 @@ public class SecretResource implements Resource {
 
     private SecretOperationResponse createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
                                                            SecretVisibility visibility, MultipartInput input,
-                                                           SecretStoreType storeType) {
+                                                           String storeType) {
 
         String username = assertString(input, Constants.Multipart.USERNAME);
         String password = assertString(input, Constants.Multipart.PASSWORD);
@@ -325,7 +325,7 @@ public class SecretResource implements Resource {
 
     private SecretOperationResponse createData(UUID orgId, UUID projectId, String name, String storePassword,
                                                SecretVisibility visibility, MultipartInput input,
-                                               SecretStoreType storeType) throws IOException {
+                                               String storeType) throws IOException {
 
         InputStream data = assertStream(input, Constants.Multipart.DATA);
         DecryptedBinaryData e = secretManager.createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType);
@@ -387,28 +387,21 @@ public class SecretResource implements Resource {
         }
     }
 
-    private SecretStoreType assertStoreType(MultipartInput input) {
+    private String assertStoreType(MultipartInput input) {
         String s = MultipartUtils.getString(input, Constants.Multipart.STORE_TYPE);
         if (s == null) {
             return secretManager.getDefaultSecretStoreType();
         }
 
-        SecretStoreType t;
-        try {
-            t = SecretStoreType.valueOf(s.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ValidationErrorsException("Unsupported secret store type: " + s);
-        }
-
         // check if the given secret source type is enabled or not
         boolean isStoreActive = secretManager.getActiveSecretStores().stream()
-                .anyMatch(store -> store.getType() == t);
+                .anyMatch(store -> store.getType().equalsIgnoreCase(s));
 
         if (!isStoreActive) {
-            throw new ValidationErrorsException("Secret store of type " + t + " is not available!");
+            throw new ValidationErrorsException("Secret store of type " + s + " is not available!");
         }
 
-        return t;
+        return s;
     }
 
     private static String assertString(MultipartInput input, String key) {

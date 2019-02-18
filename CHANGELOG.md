@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: remove keywhiz support. The Concord-Keywhiz
+integration could be implemented as a separate plugin;
 - concord-server: removed support for archiving process state and
 checkpoints into an S3 endpoint. The recommended way is to use table
 partitioning or a custom (external) data retention solution;

@@ -155,7 +155,7 @@ public class SecretManager {
      * Generates and stores a new SSH key pair.
      */
     public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
-                                          SecretVisibility visibility, SecretStoreType secretStoreType) {
+                                          SecretVisibility visibility, String secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
@@ -170,7 +170,7 @@ public class SecretManager {
     public DecryptedKeyPair createKeyPair(UUID orgId, UUID projectId, String name, String storePassword,
                                           InputStream publicKey,
                                           InputStream privateKey, SecretVisibility visibility,
-                                          SecretStoreType secretStoreType) throws IOException {
+                                          String secretStoreType) throws IOException {
 
         orgManager.assertAccess(orgId, true);
 
@@ -186,7 +186,7 @@ public class SecretManager {
      */
     public DecryptedUsernamePassword createUsernamePassword(UUID orgId, UUID projectId, String name, String storePassword,
                                                             String username, char[] password, SecretVisibility visibility,
-                                                            SecretStoreType secretStoreType) {
+                                                            String secretStoreType) {
 
         orgManager.assertAccess(orgId, true);
 
@@ -200,7 +200,7 @@ public class SecretManager {
      */
     public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
                                                 InputStream data, SecretVisibility visibility,
-                                                SecretStoreType storeType) throws IOException {
+                                                String storeType) throws IOException {
 
         orgManager.assertAccess(orgId, true);
 
@@ -326,7 +326,7 @@ public class SecretManager {
         return new DecryptedSecret(e.getId(), s);
     }
 
-    private byte[] decryptData(UUID secretId, SecretStoreType storeType, String password) {
+    private byte[] decryptData(UUID secretId, String storeType, String password) {
         byte[] data = getSecretStore(storeType).get(secretId);
         if (data == null) {
             throw new IllegalStateException("Can't find the secret's data in the store " + storeType + " : " + secretId);
@@ -400,7 +400,7 @@ public class SecretManager {
         secretDao.upsertAccessLevel(secretId, teamId, level);
     }
 
-    private UUID create(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, SecretStoreType storeType) {
+    private UUID create(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, String storeType) {
         byte[] data;
 
         SecretType type;
@@ -422,6 +422,8 @@ public class SecretManager {
 
         byte[] ab = SecretUtils.encrypt(data, pwd, salt);
         SecretEncryptedByType encryptedByType = getEncryptedBy(password);
+
+        storeType = storeType.toLowerCase();
 
         UUID id = secretDao.insert(orgId, projectId, name, getOwnerId(), type, encryptedByType, storeType, visibility);
         try {
@@ -582,11 +584,11 @@ public class SecretManager {
         return p.getId();
     }
 
-    private SecretStore getSecretStore(SecretStoreType type) {
+    private SecretStore getSecretStore(String type) {
         return secretStoreProvider.getSecretStore(type);
     }
 
-    public SecretStoreType getDefaultSecretStoreType() {
+    public String getDefaultSecretStoreType() {
         return secretStoreProvider.getDefaultStoreType();
     }
 

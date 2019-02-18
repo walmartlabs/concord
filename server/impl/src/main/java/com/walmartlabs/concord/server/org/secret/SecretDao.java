@@ -87,14 +87,14 @@ public class SecretDao extends AbstractDao {
     }
 
     public UUID insert(UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
-                       SecretEncryptedByType encryptedBy, SecretStoreType storeType,
+                       SecretEncryptedByType encryptedBy, String storeType,
                        SecretVisibility visibility) {
 
         return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
-                       SecretEncryptedByType encryptedBy, SecretStoreType storeType,
+                       SecretEncryptedByType encryptedBy, String storeType,
                        SecretVisibility visibility) {
 
         return tx.insertInto(SECRETS)
@@ -106,7 +106,7 @@ public class SecretDao extends AbstractDao {
                         SECRETS.ENCRYPTED_BY,
                         SECRETS.STORE_TYPE,
                         SECRETS.VISIBILITY)
-                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType.toString(), visibility.toString())
+                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString())
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
                 .getSecretId();
@@ -335,7 +335,7 @@ public class SecretDao extends AbstractDao {
                 r.value6(),
                 SecretType.valueOf(r.get(SECRETS.SECRET_TYPE)),
                 SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
-                SecretStoreType.valueOf(r.get(SECRETS.STORE_TYPE)),
+                r.get(SECRETS.STORE_TYPE),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
                 toOwner(r.get(SECRETS.OWNER_ID), r.value8()));
     }
@@ -357,7 +357,7 @@ public class SecretDao extends AbstractDao {
         }
 
         public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, SecretType type,
-                               SecretEncryptedByType encryptedByType, SecretStoreType storeType, SecretVisibility visibility,
+                               SecretEncryptedByType encryptedByType, String storeType, SecretVisibility visibility,
                                SecretOwner owner, byte[] data) { // NOSONAR
 
             super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner);

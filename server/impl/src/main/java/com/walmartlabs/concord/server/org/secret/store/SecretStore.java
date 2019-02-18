@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.org.secret.store;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.secret.SecretStoreType;
-
 import java.util.UUID;
 
 public interface SecretStore {
@@ -36,5 +34,5 @@ public interface SecretStore {
 
     String getDescription();
 
-    SecretStoreType getType();
+    String getType();
 }

@@ -34,18 +34,19 @@ public class SecretStoreEntry implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    private final SecretStoreType storeType;
+    private final String storeType;
     @NotNull
     private final String description;
 
     @JsonCreator
-    public SecretStoreEntry(@JsonProperty("storeType") SecretStoreType storeType,
+    public SecretStoreEntry(@JsonProperty("storeType") String storeType,
                             @JsonProperty("description") String description) {
+
         this.storeType = storeType;
         this.description = description;
     }
 
-    public SecretStoreType getStoreType() {
+    public String getStoreType() {
         return storeType;
     }
 

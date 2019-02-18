@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.secret.store.concord;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.org.secret.store.concord;
 
 import com.walmartlabs.concord.server.cfg.ConcordSecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
-import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 
 import javax.inject.Inject;
@@ -34,6 +33,7 @@ import java.util.UUID;
 @Singleton
 public class ConcordSecretStore implements SecretStore {
 
+    private static final String TYPE = "concord";
     private static final String DESCRIPTION = "Concord";
 
     private final boolean enabled;
@@ -56,8 +56,8 @@ public class ConcordSecretStore implements SecretStore {
     }
 
     @Override
-    public SecretStoreType getType() {
-        return SecretStoreType.CONCORD;
+    public String getType() {
+        return TYPE;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ConcordSecretStore implements SecretStore {
 
     @Override
     public void delete(UUID id) {
-        // do nothing
+        // do nothing, the data will be deleted when the secret's entry is removed from the DB table
     }
 
     @Override

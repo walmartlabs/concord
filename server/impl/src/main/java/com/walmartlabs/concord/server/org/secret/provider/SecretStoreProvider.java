@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.secret.provider;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.secret.SecretStoreType;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
 import com.walmartlabs.ollie.config.Config;
 
@@ -34,7 +33,7 @@ public class SecretStoreProvider {
 
     private final Collection<SecretStore> stores;
     private final int maxSecretDataSize;
-    private final SecretStoreType defaultSecretStoreType;
+    private final String defaultSecretStoreType;
 
     @Inject
     public SecretStoreProvider(Collection<SecretStore> stores,
@@ -42,12 +41,12 @@ public class SecretStoreProvider {
                                @Config("secretStore.default") String defaultStore) {
         this.stores = stores;
         this.maxSecretDataSize = maxSecretDataSize;
-        this.defaultSecretStoreType = SecretStoreType.valueOf(defaultStore.toUpperCase());
+        this.defaultSecretStoreType = defaultStore;
     }
 
-    public SecretStore getSecretStore(SecretStoreType secretSourceType) {
+    public SecretStore getSecretStore(String secretSourceType) {
         for (SecretStore secretStore : stores) {
-            if (secretSourceType == secretStore.getType()) {
+            if (secretStore.getType().equalsIgnoreCase(secretSourceType)) {
                 if (secretStore.isEnabled()) {
                     return secretStore;
                 }
@@ -71,7 +70,7 @@ public class SecretStoreProvider {
         return activeStores;
     }
 
-    public SecretStoreType getDefaultStoreType() {
+    public String getDefaultStoreType() {
         return defaultSecretStoreType;
     }
 
