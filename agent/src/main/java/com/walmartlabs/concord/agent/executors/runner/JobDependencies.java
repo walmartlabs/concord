@@ -58,6 +58,8 @@ public class JobDependencies {
                 String id = item.getAuthority();
                 if (withoutVersion(id)) {
                     result.add(URI.create(MAVEN_SCHEME + "://" + id + ":" + assertVersion(id, versions)));
+                } else {
+                    result.add(item);
                 }
             } else {
                 result.add(item);
