@@ -117,7 +117,7 @@ public final class InternalConstants extends Constants {
         /**
          * Properties file with a list of default dependency versions.
          */
-        public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyersions.properties";
+        public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyversions.properties";
     }
 
     public static final class Flows extends Constants.Flows {
