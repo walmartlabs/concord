@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: fixed the process list filtering.
+
+
+
 ## [1.8.1] - 2019-02-18
 
 ### Changed

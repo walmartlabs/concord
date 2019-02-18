@@ -191,6 +191,7 @@ export interface ColumnFilter {
     filter: string;
 }
 
+// TODO remove, use ProcessListQuery everywhere
 export interface ProcessFilters {
     [source: string]: string;
 }

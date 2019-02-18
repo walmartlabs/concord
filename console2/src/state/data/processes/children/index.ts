@@ -95,7 +95,7 @@ function* onList({ parentId, filters, pagination }: ListProcessChildrenRequest) 
         const response = yield call(apiProcessList, {
             orgName,
             projectName,
-            meta: filters,
+            ...filters,
             ...pagination
         });
         yield put({

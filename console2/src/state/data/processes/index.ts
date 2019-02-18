@@ -303,7 +303,7 @@ function* onProcessList({ orgName, projectName, filters, pagination }: ListProce
         const response = yield call(apiProcessList, {
             orgName,
             projectName,
-            meta: filters,
+            ...filters,
             ...pagination
         });
         yield put({
