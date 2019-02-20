@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: option to sign the `initiator` and `currentUser`
+usernames. Signatures can be validated using the configured public
+key.
+
 ### Changed
 
 - concord-agent: when resolving dependencies, use `latest` as the

@@ -21,11 +21,14 @@ package com.walmartlabs.concord.server.cfg;
  */
 
 import com.walmartlabs.ollie.config.Config;
+import org.eclipse.sisu.Nullable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Named
@@ -60,7 +63,21 @@ public class ProcessStateConfiguration implements Serializable {
     @Config("process.secureFiles")
     private List<String> secureFiles;
 
-    public ProcessStateConfiguration() {
+    @Inject
+    @Config("process.signingKeyAlgorithm")
+    @Nullable
+    private String signingKeyAlgorithm;
+
+    @Inject
+    @Config("process.signingAlgorithm")
+    @Nullable
+    private String signingAlgorithm;
+
+    private Path signingKeyPath;
+
+    @Inject
+    public ProcessStateConfiguration(@Config("process.signingKeyPath") @Nullable String signingKeyPath) {
+        this.signingKeyPath = signingKeyPath != null ? Paths.get(signingKeyPath) : null;
     }
 
     public ProcessStateConfiguration(long maxStateAge, List<String> secureFiles) {
@@ -94,5 +111,17 @@ public class ProcessStateConfiguration implements Serializable {
 
     public List<String> getSecureFiles() {
         return secureFiles;
+    }
+
+    public String getSigningAlgorithm() {
+        return signingAlgorithm;
+    }
+
+    public String getSigningKeyAlgorithm() {
+        return signingKeyAlgorithm;
+    }
+
+    public Path getSigningKeyPath() {
+        return signingKeyPath;
     }
 }
