@@ -21,8 +21,8 @@ package com.walmartlabs.concord.agent.executors.runner;
  */
 
 import com.google.common.hash.HashCode;
-import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.ExecutionException;
+import com.walmartlabs.concord.agent.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

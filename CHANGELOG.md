@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-agent: when resolving dependencies, use `latest` as the
+indicator of an automatically selected version;
 - concord-server: remove keywhiz support. The Concord-Keywhiz
 integration could be implemented as a separate plugin;
 - concord-server: removed support for archiving process state and

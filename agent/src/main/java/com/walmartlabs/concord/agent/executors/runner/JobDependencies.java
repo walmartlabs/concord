@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent.executors.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,8 +38,6 @@ public class JobDependencies {
 
     private static final Logger log = LoggerFactory.getLogger(JobDependencies.class);
 
-    private static final String MVN_VERSION_PATTERN = ".*:[\\d]+(?:\\.\\d+)*(?:-\\w*)?$";
-
     public static Collection<URI> get(RunnerJob job) throws ExecutionException {
         Collection<URI> uris = getDependencyUris(job);
         Map<String, String> versions = getDependencyVersions(job);
@@ -47,26 +45,29 @@ public class JobDependencies {
             return uris;
         }
 
-        return updateVersions(uris, versions);
+        return updateVersions(job, uris, versions);
     }
 
-    private static Collection<URI> updateVersions(Collection<URI> uris, Map<String, String> versions) {
+    private static Collection<URI> updateVersions(RunnerJob job, Collection<URI> uris, Map<String, String> versions) {
         List<URI> result = new ArrayList<>();
         for (URI item : uris) {
             String scheme = item.getScheme();
             if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
-                String id = item.getAuthority();
-                if (withoutVersion(id)) {
-                    result.add(URI.create(MAVEN_SCHEME + "://" + id + ":" + assertVersion(id, versions)));
-                } else {
-                    result.add(item);
+                IdAndVersion idv = IdAndVersion.parse(item.getAuthority());
+                if (isLatestVersion(idv.version)) {
+                    String version = versions.get(idv.id);
+                    if (version != null) {
+                        item = URI.create(MAVEN_SCHEME + "://" + idv.id + ":" + assertVersion(idv.id, versions));
+                    } else {
+                        job.getLog().warn("Can't determine the version of {}, using as-is...", item);
+                    }
                 }
-            } else {
-                result.add(item);
             }
-        }
-        return result;
 
+            result.add(item);
+        }
+
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -163,8 +164,8 @@ public class JobDependencies {
         }
     }
 
-    private static boolean withoutVersion(String s) {
-        return !s.matches(MVN_VERSION_PATTERN);
+    private static boolean isLatestVersion(String v) {
+        return v.equalsIgnoreCase("latest");
     }
 
     private static String assertVersion(String dep, Map<String, String> versions) {
@@ -172,6 +173,28 @@ public class JobDependencies {
         if (version != null) {
             return version;
         }
-        throw new IllegalArgumentException("Unofficial plugin '" + dep + "': version is required");
+        throw new IllegalArgumentException("Unofficial dependency '" + dep + "': version is required");
+    }
+
+    private static class IdAndVersion {
+
+        public static IdAndVersion parse(String s) {
+            int i = s.lastIndexOf(':');
+            if (i >= 0 && i + 1 < s.length()) {
+                String id = s.substring(0, i);
+                String v = s.substring(i + 1, s.length());
+                return new IdAndVersion(id, v);
+            }
+
+            throw new IllegalArgumentException("Invalid artifact ID format: " + s);
+        }
+
+        private final String id;
+        private final String version;
+
+        private IdAndVersion(String id, String version) {
+            this.id = id;
+            this.version = version;
+        }
     }
 }

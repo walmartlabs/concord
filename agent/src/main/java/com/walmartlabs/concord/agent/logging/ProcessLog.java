@@ -22,7 +22,6 @@ package com.walmartlabs.concord.agent.logging;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Supplier;
 
 public interface ProcessLog {
 

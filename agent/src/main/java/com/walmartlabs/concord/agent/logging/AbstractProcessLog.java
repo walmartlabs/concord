@@ -22,8 +22,6 @@ package com.walmartlabs.concord.agent.logging;
 
 import com.walmartlabs.concord.common.LogUtils;
 
-import java.util.function.Supplier;
-
 public abstract class AbstractProcessLog implements ProcessLog {
 
     @Override

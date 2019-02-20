@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
+import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
@@ -28,7 +29,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,8 +36,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class JobDependenciesTest {
 
@@ -56,19 +55,30 @@ public class JobDependenciesTest {
 
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.DEPENDENCIES_KEY, Arrays.asList(
+                "file://something.jar",
+                "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2",
                 "mvn://aaa:aaa:1.0",
-                "mvn://bbb:bbb"
+                "mvn://bbb:bbb:latest",
+                "mvn://ccc:ccc:1.0.1-20190214.203609-21",
+                "mvn://ddd:ddd:latest"
         ));
 
         RunnerJob j = mock(RunnerJob.class);
         when(j.getCfg()).thenReturn(cfg);
         when(j.getPayloadDir()).thenReturn(payloadDir);
 
+        RedirectedProcessLog log = mock(RedirectedProcessLog.class);
+        when(j.getLog()).thenReturn(log);
+
         Collection<URI> uris = JobDependencies.get(j);
-        assertEquals(2, uris.size());
+        assertEquals(6, uris.size());
 
         assertContains("mvn://aaa:aaa:1.0", uris);
         assertContains("mvn://bbb:bbb:1.0", uris);
+        assertContains("mvn://ccc:ccc:1.0.1-20190214.203609-21", uris);
+        assertContains("mvn://ddd:ddd:latest", uris);
+
+        verify(log, times(1)).warn(anyString(), any());
     }
 
     private static void assertContains(String s, Collection<URI> uris) {
