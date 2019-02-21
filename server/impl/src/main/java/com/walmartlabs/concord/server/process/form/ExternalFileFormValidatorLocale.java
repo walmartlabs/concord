@@ -20,11 +20,11 @@ package com.walmartlabs.concord.server.process.form;
  * =====
  */
 
+import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
+import com.walmartlabs.concord.common.form.DefaultConcordFormValidatorLocale;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import io.takari.bpm.form.DefaultFormValidatorLocale;
-import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormField;
 
 import java.io.InputStream;
@@ -33,9 +33,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class ExternalFileFormValidatorLocale implements FormValidatorLocale {
+public class ExternalFileFormValidatorLocale implements ConcordFormValidatorLocale {
 
-    private final DefaultFormValidatorLocale defaultLocale = new DefaultFormValidatorLocale();
+    private final ConcordFormValidatorLocale fallback = new DefaultConcordFormValidatorLocale();
 
     private final Map<String, String> messages;
 
@@ -45,70 +45,76 @@ public class ExternalFileFormValidatorLocale implements FormValidatorLocale {
 
     @Override
     public String noFieldsDefined(String formId) {
-        return defaultLocale.noFieldsDefined(formId);
+        return fallback.noFieldsDefined(formId);
     }
 
     @Override
     public String invalidCardinality(String formId, FormField field, Object value) {
         return getMessage("invalidCardinality", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, null), spell(field.getCardinality()), field.getCardinality(), value))
-                .orElse(defaultLocale.invalidCardinality(formId, field, value));
+                .orElse(fallback.invalidCardinality(formId, field, value));
     }
 
     @Override
     public String expectedString(String formId, FormField field, Integer idx, Object value) {
         return getMessage("expectedString", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value))
-                .orElse(defaultLocale.expectedString(formId, field, idx, value));
+                .orElse(fallback.expectedString(formId, field, idx, value));
     }
 
     @Override
     public String expectedInteger(String formId, FormField field, Integer idx, Object value) {
         return getMessage("expectedInteger", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value))
-                .orElse(defaultLocale.expectedInteger(formId, field, idx, value));
+                .orElse(fallback.expectedInteger(formId, field, idx, value));
     }
 
     @Override
     public String expectedDecimal(String formId, FormField field, Integer idx, Object value) {
         return getMessage("expectedDecimal", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value))
-                .orElse(defaultLocale.expectedDecimal(formId, field, idx, value));
+                .orElse(fallback.expectedDecimal(formId, field, idx, value));
     }
 
     @Override
     public String expectedBoolean(String formId, FormField field, Integer idx, Object value) {
         return getMessage("expectedBoolean", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value))
-                .orElse(defaultLocale.expectedBoolean(formId, field, idx, value));
+                .orElse(fallback.expectedBoolean(formId, field, idx, value));
+    }
+
+    public String expectedDate(String formId, FormField field, Integer idx, Object value) {
+        return getMessage("expectedDate", field)
+                .map(m -> MessageFormat.format(m, fieldName(field, idx), value))
+                .orElse(fallback.expectedDate(formId, field, idx, value));
     }
 
     @Override
     public String doesntMatchPattern(String formId, FormField field, Integer idx, String pattern, Object value) {
         return getMessage("doesntMatchPattern", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value, pattern))
-                .orElse(defaultLocale.doesntMatchPattern(formId, field, idx, pattern, value));
+                .orElse(fallback.doesntMatchPattern(formId, field, idx, pattern, value));
     }
 
     @Override
     public String integerRangeError(String formId, FormField field, Integer idx, Long min, Long max, Object value) {
         return getMessage("integerRangeError", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value, bounds(min, max), min, max))
-                .orElse(defaultLocale.integerRangeError(formId, field, idx, min, max, value));
+                .orElse(fallback.integerRangeError(formId, field, idx, min, max, value));
     }
 
     @Override
     public String decimalRangeError(String formId, FormField field, Integer idx, Double min, Double max, Object value) {
         return getMessage("decimalRangeError", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value, bounds(min, max), min, max))
-                .orElse(defaultLocale.decimalRangeError(formId, field, idx, min, max, value));
+                .orElse(fallback.decimalRangeError(formId, field, idx, min, max, value));
     }
 
     @Override
     public String valueNotAllowed(String formId, FormField field, Integer idx, Object allowed, Object value) {
         return getMessage("valueNotAllowed", field)
                 .map(m -> MessageFormat.format(m, fieldName(field, idx), value, allowed))
-                .orElse(defaultLocale.valueNotAllowed(formId, field, idx, allowed, value));
+                .orElse(fallback.valueNotAllowed(formId, field, idx, allowed, value));
     }
 
     private Optional<String> getMessage(String name, FormField field) {

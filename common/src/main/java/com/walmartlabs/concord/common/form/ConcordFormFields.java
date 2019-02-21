@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.project;
+package com.walmartlabs.concord.common.form;
 
 /*-
  * *****
@@ -21,7 +21,6 @@ package com.walmartlabs.concord.project;
  */
 
 
-import io.takari.bpm.model.form.FormField;
 import static io.takari.bpm.model.form.FormField.Option;
 
 public final class ConcordFormFields {
@@ -34,6 +33,28 @@ public final class ConcordFormFields {
         }
     }
 
+    public static final class DateField {
+
+        public static final String TYPE = "date";
+
+        private DateField() {
+        }
+    }
+
+    public static final class DateTimeField {
+
+        public static final String TYPE = "dateTime";
+
+        private DateTimeField() {
+        }
+    }
+
+    public static final class DateFieldOptions {
+        public static final Option<String> POPUP_POSITION = new Option<>("popupPosition", String.class);
+
+        private DateFieldOptions() {
+        }
+    }
     public static final class FieldOptions {
 
         public static final Option<String> INPUT_TYPE = new Option<>("inputType", String.class);

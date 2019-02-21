@@ -63,7 +63,8 @@
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
         <aopalliance.version>1.0</aopalliance.version>
-        <bpm.version>0.52.0</bpm.version>
+        <aws.version>1.11.475</aws.version>
+        <bpm.version>0.52.1</bpm.version>
         <commons.beanutils.version>1.9.3</commons.beanutils.version>
         <commons.compress.version>1.18</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>

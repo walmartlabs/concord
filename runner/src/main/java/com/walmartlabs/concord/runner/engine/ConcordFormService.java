@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner.engine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.common.form.ConcordFormValidator;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.YamlFormConverter;
 import io.takari.bpm.api.ExecutionContextFactory;
@@ -32,7 +33,7 @@ import java.util.Map;
 public class ConcordFormService extends DefaultFormService {
 
     public ConcordFormService(ExecutionContextFactory contextFactory, ResumeHandler resumeHandler, FormStorage formStorage) {
-        super(contextFactory, resumeHandler, formStorage);
+        super(contextFactory, resumeHandler, formStorage, new ConcordFormValidator());
     }
 
     @Override

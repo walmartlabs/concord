@@ -4,6 +4,7 @@
 
 ### Added
 
+- forms: support for `date` and `dateTime` field types;
 - concord-server, concord-console: ability to temporarily disable
 repositories.
 

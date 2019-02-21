@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.yaml;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ package com.walmartlabs.concord.project.yaml;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
-import com.walmartlabs.concord.project.ConcordFormFields;
+import com.walmartlabs.concord.common.form.ConcordFormFields;
 import com.walmartlabs.concord.project.yaml.model.YamlFormDefinition;
 import com.walmartlabs.concord.project.yaml.model.YamlFormField;
 import io.takari.bpm.model.form.DefaultFormFields.BooleanField;
@@ -35,9 +35,12 @@ import io.takari.bpm.model.form.FormField.Option;
 import io.takari.parc.Seq;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static com.walmartlabs.concord.project.ConcordFormFields.FieldOptions.*;
+import static com.walmartlabs.concord.common.form.ConcordFormFields.FieldOptions.*;
 
 public final class YamlFormConverter {
 
@@ -106,6 +109,11 @@ public final class YamlFormConverter {
                 break;
             }
             case ConcordFormFields.FileField.TYPE: {
+                break;
+            }
+            case ConcordFormFields.DateField.TYPE:
+            case ConcordFormFields.DateTimeField.TYPE: {
+                options.put(ConcordFormFields.DateFieldOptions.POPUP_POSITION, opts.remove("popupPosition"));
                 break;
             }
             default:

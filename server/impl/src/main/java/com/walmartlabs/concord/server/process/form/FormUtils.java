@@ -21,11 +21,11 @@ package com.walmartlabs.concord.server.process.form;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.ConcordFormFields;
+import com.walmartlabs.concord.common.form.ConcordFormFields;
+import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import io.takari.bpm.form.Form;
-import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.DefaultFormFields;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
@@ -37,6 +37,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,6 +54,8 @@ public final class FormUtils {
     private static final String RUN_AS_LDAP_GROUP_PATH = InternalConstants.Forms.RUN_AS_KEY + "." +
             InternalConstants.Forms.RUN_AS_LDAP_KEY + "." +
             InternalConstants.Forms.RUN_AS_GROUP_KEY;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
 
     /**
      * Returns the name of the users which can submit the form or {@code null} if no restrictions are specified.
@@ -76,11 +81,11 @@ public final class FormUtils {
     /**
      * Returns a collection of LDAP groups that can submit the form or an empty collection if no restrictions are
      * specified.
-     *
+     * <p>
      * This method takes care of all our different ways to specify the form's LDAP groups.
      * Because form options are evaluated at the runtime, we can't transform all syntax variants into a single one
      * on the YAML parsing phase, we need to coerce the data at the runtime.
-     *
+     * <p>
      * <h2>Supported syntax variants</h2>
      * <p>
      * The original, single value:
@@ -204,7 +209,7 @@ public final class FormUtils {
     }
 
     // TODO this probably should be a part of the bpm engine's FormService
-    public static Map<String, Object> convert(FormValidatorLocale locale, Form form, Map<String, Object> m) throws ValidationException {
+    public static Map<String, Object> convert(ConcordFormValidatorLocale locale, Form form, Map<String, Object> m) throws ValidationException {
         FormDefinition fd = form.getFormDefinition();
 
         Map<String, String> tmpFiles = new HashMap<>();
@@ -242,7 +247,7 @@ public final class FormUtils {
         return m2;
     }
 
-    private static Object convert(FormValidatorLocale locale, String formName, FormField f, Integer idx, Object v) throws ValidationException {
+    private static Object convert(ConcordFormValidatorLocale locale, String formName, FormField f, Integer idx, Object v) throws ValidationException {
         if (v instanceof String) {
             String s = (String) v;
 
@@ -290,6 +295,14 @@ public final class FormUtils {
                     } catch (IOException e) {
                         throw new ConcordApplicationException("Error reading file for form field '" + f.getName() + "'", e);
                     }
+                }
+                case ConcordFormFields.DateField.TYPE:
+                case ConcordFormFields.DateTimeField.TYPE: {
+                    if (s.isEmpty()) {
+                        return null;
+                    }
+
+                    return ZonedDateTime.parse(s).withZoneSameInstant(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
                 }
             }
         } else if (v instanceof List) {

@@ -39,6 +39,9 @@ import {
 } from '../../../api/process/form';
 import { RequestErrorMessage } from '../index';
 import { DropdownWithAddition } from '../../molecules';
+import { format as formatDate, parse as parseDate } from 'date-fns';
+
+import { DateInput, DateTimeInput } from 'semantic-ui-calendar-react';
 
 interface State {
     [name: string]: any;
@@ -93,6 +96,15 @@ class ProcessForm extends React.Component<Props, State> {
             } else if ((t === FormFieldType.INT || t === FormFieldType.DECIMAL) && isNaN(v)) {
                 values[k] = null;
             }
+
+            if (
+                (t === FormFieldType.DATE || t === FormFieldType.DATE_TIME) &&
+                values[k] !== undefined
+            ) {
+                // Append the client zone information for date format consistency
+                const d = parseDate(values[k]);
+                values[k] = formatDate(d, 'YYYY-MM-DDTHH:mm:ss.SSSZ');
+            }
         }
 
         // remove undefined values
@@ -122,6 +134,12 @@ class ProcessForm extends React.Component<Props, State> {
             }
 
             this.setState({ [name]: v });
+        };
+    }
+
+    handleDateInput(name: string): (e: React.SyntheticEvent<HTMLElement>, data: any) => void {
+        return (ev, { value }) => {
+            this.setState({ [name]: value });
         };
     }
 
@@ -316,6 +334,94 @@ class ProcessForm extends React.Component<Props, State> {
         );
     }
 
+    renderDateField({ name, label, cardinality, type, options }: FormField, value: any) {
+        const { errors } = this.props;
+        const error = errors ? errors[name] : undefined;
+        const popupPosition = options ? options.popupPosition : undefined;
+
+        if (value === undefined) {
+            value = '';
+        }
+
+        if (!cardinality) {
+            cardinality = Cardinality.ONE_OR_NONE;
+        }
+
+        const required =
+            cardinality === Cardinality.AT_LEAST_ONE ||
+            cardinality === Cardinality.ONE_AND_ONLY_ONE;
+
+        const date = parseDate(value);
+        return (
+            <Form.Field key={name} error={!!error} required={required}>
+                <label>{label}</label>
+
+                <DateInput
+                    name={name}
+                    placeholder="Date"
+                    value={value !== '' ? formatDate(date, 'YYYY-MM-DD') : value}
+                    iconPosition="left"
+                    closable={true}
+                    popupPosition={popupPosition}
+                    dateFormat={'YYYY-MM-DD'}
+                    autoComplete={'off'}
+                    clearable={!required}
+                    onChange={this.handleDateInput(name)}
+                />
+
+                {error && (
+                    <Label basic={true} color="red" pointing={true}>
+                        {error}
+                    </Label>
+                )}
+            </Form.Field>
+        );
+    }
+
+    renderDateTimeField({ name, label, cardinality, type, options }: FormField, value: any) {
+        const { errors } = this.props;
+        const error = errors ? errors[name] : undefined;
+        const popupPosition = options ? options.popupPosition : undefined;
+
+        if (value === undefined) {
+            value = '';
+        }
+
+        if (!cardinality) {
+            cardinality = Cardinality.ONE_OR_NONE;
+        }
+
+        const required =
+            cardinality === Cardinality.AT_LEAST_ONE ||
+            cardinality === Cardinality.ONE_AND_ONLY_ONE;
+
+        const date = parseDate(value);
+        return (
+            <Form.Field key={name} error={!!error} required={required}>
+                <label>{label}</label>
+
+                <DateTimeInput
+                    name={name}
+                    placeholder="Date Time"
+                    value={value !== '' ? formatDate(date, 'YYYY-MM-DDTHH:mm:ss') : value}
+                    iconPosition="left"
+                    closable={true}
+                    popupPosition={popupPosition}
+                    dateFormat={'YYYY-MM-DD'}
+                    autoComplete={'off'}
+                    clearable={!required}
+                    onChange={this.handleDateInput(name)}
+                />
+
+                {error && (
+                    <Label basic={true} color="red" pointing={true}>
+                        {error}
+                    </Label>
+                )}
+            </Form.Field>
+        );
+    }
+
     renderField(f: FormField) {
         let value = this.state[f.name];
         if (value === undefined) {
@@ -332,6 +438,10 @@ class ProcessForm extends React.Component<Props, State> {
                 return this.renderBooleanField(f, value);
             case FormFieldType.FILE:
                 return this.renderFileField(f);
+            case FormFieldType.DATE:
+                return this.renderDateField(f, value);
+            case FormFieldType.DATE_TIME:
+                return this.renderDateTimeField(f, value);
             default:
                 return <p key={f.name}>Unknown field type: {f.type}</p>;
         }

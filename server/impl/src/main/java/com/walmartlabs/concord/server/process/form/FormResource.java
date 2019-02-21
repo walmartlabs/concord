@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.process.form;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
+import com.walmartlabs.concord.common.form.DefaultConcordFormValidatorLocale;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
@@ -30,10 +32,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import io.takari.bpm.form.DefaultFormValidatorLocale;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
-import io.takari.bpm.form.FormValidatorLocale;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -56,12 +56,12 @@ public class FormResource implements Resource {
     private static final String FORMS_RESOURCES_PATH = "forms";
 
     private final ConcordFormService formService;
-    private final FormValidatorLocale validatorLocale;
+    private final ConcordFormValidatorLocale validatorLocale;
 
     @Inject
     public FormResource(ConcordFormService formService) {
         this.formService = formService;
-        this.validatorLocale = new DefaultFormValidatorLocale();
+        this.validatorLocale = new DefaultConcordFormValidatorLocale();
     }
 
     @GET

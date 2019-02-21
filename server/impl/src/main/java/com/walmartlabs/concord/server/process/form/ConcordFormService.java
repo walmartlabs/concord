@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.form;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.project.ConcordFormFields;
+import com.walmartlabs.concord.common.form.ConcordFormValidator;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
@@ -33,8 +33,6 @@ import io.takari.bpm.form.*;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
 import io.takari.bpm.model.form.FormDefinition;
-import io.takari.bpm.model.form.FormField;
-import org.apache.commons.validator.routines.EmailValidator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -48,7 +46,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.project.ConcordFormFields.FieldOptions.READ_ONLY;
+import static com.walmartlabs.concord.common.form.ConcordFormFields.FieldOptions.READ_ONLY;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
 @Named
@@ -307,13 +305,7 @@ public class ConcordFormService {
 
     private FormValidator createFormValidator(ProcessKey processKey, String formName) {
         FormValidatorLocale locale = new ExternalFileFormValidatorLocale(processKey, formName, stateManager);
-        List<DefaultFormValidator.FieldValidator> vs = new ArrayList<>();
-        vs.add(new StringFieldValidator(locale));
-        vs.add(new DefaultFormValidator.IntegerFieldValidator(locale));
-        vs.add(new DefaultFormValidator.DecimalFieldValidator(locale));
-        vs.add(new DefaultFormValidator.BooleanFieldValidator(locale));
-        vs.add(new FileFieldValidator());
-        return new DefaultFormValidator(vs, locale);
+        return new ConcordFormValidator(locale);
     }
 
     @SuppressWarnings("unchecked")
@@ -360,57 +352,6 @@ public class ConcordFormService {
 
         public boolean isValid() {
             return errors == null || errors.isEmpty();
-        }
-    }
-
-    public static final class FileFieldValidator implements DefaultFormValidator.FieldValidator {
-
-        private static final String[] TYPES = {ConcordFormFields.FileField.TYPE};
-
-        @Override
-        public String[] allowedTypes() {
-            return TYPES;
-        }
-
-        @Override
-        public ValidationError validate(String formId, FormField f, Integer idx, Object v) {
-            String fieldName = f.getName();
-
-            if (!(v instanceof String)) {
-                throw new IllegalArgumentException("Expected a file value: " + fieldName);
-            }
-
-            return null;
-        }
-    }
-
-    public static final class StringFieldValidator implements DefaultFormValidator.FieldValidator {
-
-        private final DefaultFormValidator.StringFieldValidator delegate;
-
-        public StringFieldValidator(FormValidatorLocale locale) {
-            this.delegate = new DefaultFormValidator.StringFieldValidator(locale);
-        }
-
-        @Override
-        public String[] allowedTypes() {
-            return delegate.allowedTypes();
-        }
-
-        @Override
-        public ValidationError validate(String formId, FormField f, Integer idx, Object v) throws ExecutionException {
-            ValidationError error = delegate.validate(formId, f, idx, v);
-            if (error != null) {
-                return error;
-            }
-            String inputType = f.getOption(new FormField.Option<>("inputType", String.class));
-            if ("email".equalsIgnoreCase(inputType)) {
-                boolean valid = EmailValidator.getInstance().isValid((String)v);
-                if (!valid) {
-                    return new ValidationError(f.getName(), "Invalid email address");
-                }
-            }
-            return null;
         }
     }
 }

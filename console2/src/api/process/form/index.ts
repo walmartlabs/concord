@@ -45,7 +45,9 @@ export enum FormFieldType {
     INT = 'int',
     DECIMAL = 'decimal',
     BOOLEAN = 'boolean',
-    FILE = 'file'
+    FILE = 'file',
+    DATE = 'date',
+    DATE_TIME = 'dateTime'
 }
 
 export interface FormField {
@@ -57,6 +59,15 @@ export interface FormField {
     allowedValue?: any;
     options?: {
         inputType?: string;
+        popupPosition?:
+            | 'top left'
+            | 'top right'
+            | 'bottom left'
+            | 'bottom right'
+            | 'right center'
+            | 'left center'
+            | 'top center'
+            | 'bottom center';
     };
 }
 
