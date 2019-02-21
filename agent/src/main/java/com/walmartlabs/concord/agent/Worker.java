@@ -66,7 +66,7 @@ public class Worker implements Runnable {
             // ...and download the saved process state from the server
             downloadState(jobRequest);
 
-            jobRequest.getLog().info("Starting using {}...", executor);
+            jobRequest.getLog().info("Starting...");
 
             // execute the job
             jobInstance = executor.exec(jobRequest);

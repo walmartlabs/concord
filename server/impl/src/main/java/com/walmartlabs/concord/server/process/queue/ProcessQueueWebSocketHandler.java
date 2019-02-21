@@ -52,9 +52,14 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
     private final LogManager logManager;
 
     @Inject
-    public ProcessQueueWebSocketHandler(WebSocketChannelManager channelManager, ProcessManager processManager,
-                                        OrganizationDao organizationDao, RepositoryDao repositoryDao, LogManager logManager) {
+    public ProcessQueueWebSocketHandler(WebSocketChannelManager channelManager,
+                                        ProcessManager processManager,
+                                        OrganizationDao organizationDao,
+                                        RepositoryDao repositoryDao,
+                                        LogManager logManager) {
+
         super(POLL_DELAY, ERROR_DELAY);
+
         this.channelManager = channelManager;
         this.processManager = processManager;
         this.organizationDao = organizationDao;
@@ -68,6 +73,8 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
         if (requests.isEmpty()) {
             return;
         }
+
+        // TODO group by capabilities to reduce the number of queries?
 
         requests.forEach((channel, req) -> {
             ProcessQueueEntry item = processManager.nextProcess(req.getCapabilities());
