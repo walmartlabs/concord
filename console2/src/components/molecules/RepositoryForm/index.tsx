@@ -45,6 +45,7 @@ interface FormValues {
     path?: string;
     withSecret?: boolean;
     secretId?: string;
+    enabled: boolean;
 }
 
 export type RepositoryFormValues = FormValues;
@@ -206,6 +207,15 @@ class RepositoryForm extends React.Component<InjectedFormikProps<Props, FormValu
                             directory.
                         </Popup.Content>
                     </Popup>
+
+                    <Segment>
+                        <FormikCheckbox
+                            name="enabled"
+                            label="Enabled"
+                            toggle={true}
+                            inline={true}
+                        />
+                    </Segment>
 
                     <Divider />
 

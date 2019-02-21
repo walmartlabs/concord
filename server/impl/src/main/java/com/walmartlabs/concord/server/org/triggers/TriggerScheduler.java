@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.slf4j.Logger;
@@ -48,18 +49,21 @@ public class TriggerScheduler implements ScheduledTask {
 
     private final Date startedAt;
     private final TriggerScheduleDao scheduleDao;
+    private final RepositoryDao repositoryDao;
     private final ProcessManager processManager;
     private final ProcessSecurityContext processSecurityContext;
     private final TriggersConfiguration triggerCfg;
 
     @Inject
     public TriggerScheduler(TriggerScheduleDao scheduleDao,
+                            RepositoryDao repositoryDao,
                             ProcessManager processManager,
                             ProcessSecurityContext processSecurityContext,
                             TriggersConfiguration triggerCfg) {
 
         this.startedAt = new Date();
         this.scheduleDao = scheduleDao;
+        this.repositoryDao = repositoryDao;
         this.processManager = processManager;
         this.processSecurityContext = processSecurityContext;
         this.triggerCfg = triggerCfg;
@@ -87,6 +91,11 @@ public class TriggerScheduler implements ScheduledTask {
     private void startProcess(TriggerSchedulerEntry t) {
         if (isDisabled(EVENT_SOURCE)) {
             log.warn("startProcess ['{}'] -> disabled, skipping", t);
+            return;
+        }
+
+        if(isRepositoryDisabled(t)){
+            log.warn("startProcess ['{}'] -> repository is disabled, skipping", t);
             return;
         }
 
@@ -147,6 +156,10 @@ public class TriggerScheduler implements ScheduledTask {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private boolean isRepositoryDisabled(TriggerSchedulerEntry t) {
+        return repositoryDao.get(t.getRepoId()).isDisabled();
     }
 
     private boolean isDisabled(String eventName) {

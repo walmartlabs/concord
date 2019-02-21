@@ -85,7 +85,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         repoProfiles={getProfiles(repoMeta)}
                         repoEntryPoints={getEntryPoints(repoMeta)}
                         trigger={(onClick) => (
-                            <Dropdown.Item onClick={onClick}>
+                            <Dropdown.Item onClick={onClick} disabled={repo.disabled}>
                                 <Icon name="play" color="blue" />
                                 <span className="text">Run</span>
                             </Dropdown.Item>

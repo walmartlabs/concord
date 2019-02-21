@@ -96,7 +96,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                LdapManager ldapManager,
                                GithubConfiguration githubCfg) {
 
-        super(cfg, processManager, triggersDao, projectDao, new GithubTriggerDefinitionEnricher(projectDao, githubCfg), triggersConfiguration, userManager, ldapManager);
+        super(cfg, processManager, triggersDao, projectDao, repositoryDao, new GithubTriggerDefinitionEnricher(projectDao, githubCfg), triggersConfiguration, userManager, ldapManager);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;

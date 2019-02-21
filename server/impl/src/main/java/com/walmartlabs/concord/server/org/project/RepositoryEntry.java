@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,14 +63,16 @@ public class RepositoryEntry implements Serializable {
 
     private final String secretStoreType;
 
+    private final boolean disabled;
+
     private final Map<String, Object> meta;
 
     public RepositoryEntry(String name, String url) {
-        this(null, null, name, url, null, null, null, null, null, null, null);
+        this(null, null, name, url, null, null, null, false, null, null, null, null);
     }
 
     public RepositoryEntry(String name, RepositoryEntry e) {
-        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.getSecretId(), e.secretName, e.secretStoreType, e.meta);
+        this(e.id, e.projectId, name, e.url, e.branch, e.commitId, e.path, e.disabled, e.getSecretId(), e.secretName, e.secretStoreType, e.meta);
     }
 
     public RepositoryEntry(RepositoryEntry e, String branch, String commitId) {
@@ -81,6 +83,7 @@ public class RepositoryEntry implements Serializable {
                 branch,
                 commitId,
                 e.path,
+                e.disabled,
                 e.getSecretId(),
                 e.secretName,
                 e.secretStoreType,
@@ -95,6 +98,7 @@ public class RepositoryEntry implements Serializable {
                            @JsonProperty("branch") String branch,
                            @JsonProperty("commitId") String commitId,
                            @JsonProperty("path") String path,
+                           @JsonProperty("disabled") boolean disabled,
                            @JsonProperty("secretId") UUID secretId,
                            @JsonProperty("secretName") String secretName,
                            @JsonProperty("secretStoreType") String secretStoreType,
@@ -110,6 +114,7 @@ public class RepositoryEntry implements Serializable {
         this.secretId = secretId;
         this.secretName = secretName;
         this.secretStoreType = secretStoreType;
+        this.disabled = disabled;
         this.meta = meta;
     }
 
@@ -153,6 +158,10 @@ public class RepositoryEntry implements Serializable {
         return secretStoreType;
     }
 
+    public boolean isDisabled() {
+        return disabled;
+    }
+
     public Map<String, Object> getMeta() {
         return meta;
     }
@@ -170,6 +179,7 @@ public class RepositoryEntry implements Serializable {
                 ", secretId=" + secretId +
                 ", secretName='" + secretName + '\'' +
                 ", secretStoreType='" + secretStoreType + '\'' +
+                ", disabled=" + disabled +
                 ", meta=" + meta +
                 '}';
     }

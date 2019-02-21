@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
@@ -60,6 +61,7 @@ public abstract class AbstractEventResource {
     private final ProcessManager processManager;
     private final TriggersDao triggersDao;
     private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
     private final TriggerDefinitionEnricher triggerDefinitionEnricher;
     private final TriggersConfiguration triggersCfg;
     private final UserManager userManager;
@@ -69,16 +71,18 @@ public abstract class AbstractEventResource {
                                  ProcessManager processManager,
                                  TriggersDao triggersDao,
                                  ProjectDao projectDao,
+                                 RepositoryDao repositoryDao,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
                                  LdapManager ldapManager) {
 
-        this(eventsCfg, processManager, triggersDao, projectDao, AS_IS_ENRICHER, triggersCfg, userManager, ldapManager);
+        this(eventsCfg, processManager, triggersDao, projectDao, repositoryDao, AS_IS_ENRICHER, triggersCfg, userManager, ldapManager);
     }
 
     public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
                                  ProcessManager processManager,
                                  TriggersDao triggersDao, ProjectDao projectDao,
+                                 RepositoryDao repositoryDao,
                                  TriggerDefinitionEnricher enricher,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
@@ -88,6 +92,7 @@ public abstract class AbstractEventResource {
         this.processManager = processManager;
         this.triggersDao = triggersDao;
         this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
         this.triggerDefinitionEnricher = enricher;
         this.log = LoggerFactory.getLogger(this.getClass());
         this.triggersCfg = triggersCfg;
@@ -111,6 +116,11 @@ public abstract class AbstractEventResource {
         for (TriggerEntry t : triggers) {
             if (isDisabled(eventName)) {
                 log.warn("process ['{}'] - disabled, skipping (triggered by {})", eventId, t);
+                continue;
+            }
+
+            if(isRepositoryDisabled(t)){
+                log.warn("Repository is disabled, skipping -> ['{}'] ", t);
                 continue;
             }
 
@@ -147,6 +157,10 @@ public abstract class AbstractEventResource {
         }
 
         return triggers.size();
+    }
+
+    private boolean isRepositoryDisabled(TriggerEntry t) {
+        return repositoryDao.get(t.getRepositoryId()).isDisabled();
     }
 
     private void assertRoles(String eventName) {

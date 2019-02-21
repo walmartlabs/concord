@@ -26,6 +26,8 @@ import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.form.ConcordFormService;
 import com.walmartlabs.concord.server.process.form.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -69,6 +71,7 @@ public class ProcessManager {
     private final ProjectAccessManager projectAccessManager;
     private final ProcessCheckpointManager checkpointManager;
     private final PayloadManager payloadManager;
+    private final RepositoryDao repositoryDao;
 
     private final Chain processPipeline;
     private final Chain resumePipeline;
@@ -106,6 +109,7 @@ public class ProcessManager {
                           ProjectAccessManager projectAccessManager,
                           ProcessCheckpointManager checkpointManager,
                           PayloadManager payloadManager,
+                          RepositoryDao repositoryDao,
                           ProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
@@ -118,6 +122,7 @@ public class ProcessManager {
         this.projectAccessManager = projectAccessManager;
         this.checkpointManager = checkpointManager;
         this.payloadManager = payloadManager;
+        this.repositoryDao = repositoryDao;
 
         this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
@@ -260,6 +265,8 @@ public class ProcessManager {
     }
 
     private ProcessResult start(Chain pipeline, Payload payload, boolean sync) {
+        assertRepositoryDisabled(payload);
+
         ProcessKey processKey = payload.getProcessKey();
 
         try {
@@ -279,6 +286,17 @@ public class ProcessManager {
 
         UUID instanceId = processKey.getInstanceId();
         return new ProcessResult(instanceId, out);
+    }
+
+    private void assertRepositoryDisabled(Payload payload) {
+        if (payload.getHeader(Payload.REPOSITORY_ID) != null) {
+            UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
+            RepositoryEntry repo = repositoryDao.get(repoId);
+            if (repo.isDisabled()) {
+                throw new ConcordApplicationException("Repository is disabled -> " + repo.getName());
+            }
+
+        }
     }
 
     private Map<String, Object> process(ProcessKey processKey, Map<String, Object> params) {

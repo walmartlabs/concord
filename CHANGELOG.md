@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: ability to temporarily disable
+repositories.
+
+
+
 ## [1.9.0] - 2019-02-20
 
 ### Added

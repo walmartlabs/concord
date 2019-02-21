@@ -371,6 +371,41 @@ public class ProjectIT extends AbstractServerIT {
         repositoriesApi.validateRepository("Default", projectName, repoName);
     }
 
+    @Test(expected = Exception.class)
+    public void testDisabledRepository() throws Exception {
+        Path tmpDir = createTempDir();
+
+        File src = new File(ProjectIT.class.getResource("ProcessDisabledRepo").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+        String orgName = "Default";
+        String projectName = "myProject_" + randomString();
+        String repoName = "myRepo_" + randomString();
+        String repoUrl = gitUrl;
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setName(repoName).setUrl(repoUrl)
+                        .setIsDisabled(true))));
+
+        // ---
+        Map<String, Object> input = new HashMap<>();
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("repo", repoName);
+
+        start(input);
+    }
+
 
     private static boolean hasCondition(String src, String k, Object v, Collection<TriggerEntry> entries) {
         for (TriggerEntry e : entries) {

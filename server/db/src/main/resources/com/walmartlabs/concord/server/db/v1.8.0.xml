@@ -68,5 +68,4 @@
             <append value="where LOCK_SCOPE = 'PROJECT'"/>
         </modifySql>
     </changeSet>
-
 </databaseChangeLog>

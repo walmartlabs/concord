@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
@@ -79,11 +80,12 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
                                ProcessManager processManager,
                                TriggersDao triggersDao,
                                ProjectDao projectDao,
+                               RepositoryDao repositoryDao,
                                TriggersConfiguration triggersCfg,
                                UserManager userManager,
                                LdapManager ldapManager) {
 
-        super(cfg, processManager, triggersDao, projectDao, triggersCfg, userManager, ldapManager);
+        super(cfg, processManager, triggersDao, projectDao, repositoryDao, triggersCfg, userManager, ldapManager);
         this.objectMapper = new ObjectMapper();
     }
 

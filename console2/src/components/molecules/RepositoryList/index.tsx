@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Table } from 'semantic-ui-react';
+import { Icon, Table, Popup } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import { RepositoryEntry } from '../../../api/org/project/repository';
@@ -42,6 +42,17 @@ const getSource = (r: RepositoryEntry) => {
 const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: RepositoryEntry) => {
     return (
         <Table.Row key={row.id}>
+            <Table.Cell>
+                <Popup
+                    trigger={
+                        <Icon
+                            name={row.disabled ? 'power off' : 'power'}
+                            color={row.disabled ? 'grey' : 'green'}
+                        />
+                    }>
+                    {row.disabled ? 'Disabled' : 'Enabled'}
+                </Popup>
+            </Table.Cell>
             <Table.Cell singleLine={true}>
                 <Link to={`/org/${orgName}/project/${projectName}/repository/${row.name}`}>
                     {row.name}
@@ -72,6 +83,7 @@ class RepositoryList extends React.PureComponent<Props> {
             <Table>
                 <Table.Header>
                     <Table.Row>
+                        <Table.HeaderCell collapsing={true} />
                         <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
                         <Table.HeaderCell>Repository URL</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>

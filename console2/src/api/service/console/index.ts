@@ -105,6 +105,7 @@ export interface RepositoryTestRequest {
     withSecret?: boolean;
     secretId?: string;
     secretName?: string;
+    disabled: boolean;
 }
 
 export const testRepository = async (req: RepositoryTestRequest): Promise<void> => {
