@@ -395,7 +395,7 @@ public class ProjectIT extends AbstractServerIT {
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName).setUrl(repoUrl)
-                        .setIsDisabled(true))));
+                        .setDisabled(true))));
 
         // ---
         Map<String, Object> input = new HashMap<>();
