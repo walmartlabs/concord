@@ -276,7 +276,7 @@ public class ConcordTask extends AbstractConcordTask {
         StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
 
         String childId = resp.getInstanceId().toString();
-        log.info(sync ? "Child process completed: {}" : "Started a child process: {}", childId);
+        log.info("Started a child process: {}", childId);
 
         List<String> jobs = Collections.singletonList(childId);
         ctx.setVariable(JOBS_KEY, jobs);
