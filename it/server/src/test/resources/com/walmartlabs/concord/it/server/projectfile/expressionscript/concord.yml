@@ -1,0 +1,9 @@
+configuration:
+  arguments:
+    scriptName: "scripts/test.js"
+
+flows:
+  default:
+  - script: "${scriptName}"
+  - log: bye!
+

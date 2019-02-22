@@ -54,7 +54,7 @@ public class DependencyVersionsExportProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(processKey, "Storing defaukt dependency versions...");
+        logManager.info(processKey, "Storing default dependency versions...");
 
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
 

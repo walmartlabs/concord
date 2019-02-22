@@ -224,6 +224,11 @@ public class ProjectFileIT extends AbstractServerIT {
         assertSame(pir.getStatus(), ProcessEntry.StatusEnum.FINISHED);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExpressionScriptName() throws Exception {
+        simpleTest("projectfile/expressionscript", ".*hello!.*", ".*bye!.*");
+    }
+
     private void simpleTest(String resource, String... logPatterns) throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource(resource).toURI());
 

@@ -8,6 +8,10 @@
 - concord-server, concord-console: ability to temporarily disable
 repositories.
 
+### Changed
+
+- bpm: updated to `0.54.0` to support exporessions in `script` names;
+
 
 
 ## [1.9.0] - 2019-02-20
