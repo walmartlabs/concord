@@ -1,6 +1,7 @@
+ARG docker_namespace=walmartlabs
 ARG concord_version=latest
 
-FROM walmartlabs/concord-base:$concord_version
+FROM $docker_namespace/concord-base:$concord_version
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 EXPOSE 80

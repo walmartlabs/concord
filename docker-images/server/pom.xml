@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <server.image>walmartlabs/concord-server</server.image>
+        <server.image>${docker.namespace}/concord-server</server.image>
         <docker.tagbase>${server.image}</docker.tagbase>
         <docker.file>oss/Dockerfile</docker.file>
     </properties>

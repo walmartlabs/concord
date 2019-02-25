@@ -1,6 +1,7 @@
+ARG docker_namespace=walmartlabs
 ARG concord_version=latest
 
-FROM walmartlabs/concord-ansible:$concord_version
+FROM $docker_namespace/concord-ansible:$concord_version
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 ENV DOCKER_HOST tcp://dind:2375
@@ -8,14 +9,10 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 
 USER root
 
-# requires Git >= 2.3
-RUN yum -y install docker-client git
+RUN yum -y install docker-client && yum clean all
 
-COPY target/deps/ /home/concord/.m2/repository
-RUN chown -R concord:concord /home/concord/.m2
-
-ADD target/dist/agent.tar.gz /opt/concord/agent/
-RUN chown -R concord:concord /opt/concord
+COPY --chown=concord:concord target/deps/ /home/concord/.m2/repository
+ADD --chown=concord:concord target/dist/agent.tar.gz /opt/concord/agent/
 
 USER concord
 CMD ["bash", "/opt/concord/agent/start.sh"]

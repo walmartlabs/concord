@@ -24,6 +24,7 @@
     <properties>
         <docker.skip>true</docker.skip>
         <docker.maintainer>ibodrov@gmail.com</docker.maintainer>
+        <docker.namespace>walmartlabs</docker.namespace>
         <concord.baseDir>/opt/concord</concord.baseDir>
     </properties>
 
@@ -54,6 +55,7 @@
                                     <argument>-f</argument>
                                     <argument>${docker.file}</argument>
 
+                                    <argument>--build-arg=docker_namespace=${docker.namespace}</argument>
                                     <argument>--build-arg=concord_version=${project.version}</argument>
 
                                     <argument>--network</argument>
