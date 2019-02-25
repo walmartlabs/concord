@@ -931,6 +931,10 @@ public class ProcessResource implements Resource {
     @WithTimer
     public Response decrypt(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
+        if (entry.projectId() == null) {
+            throw new ConcordApplicationException("Project is required", Status.BAD_REQUEST);
+        }
+
         ProcessKey processKey = ProcessKey.from(entry);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
