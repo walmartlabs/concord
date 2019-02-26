@@ -60,10 +60,10 @@ public class LockServiceImpl implements LockService {
     public void projectLock(Context ctx, String lockName) throws Exception {
         UUID instanceId = ContextUtils.getTxId(ctx);
         ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ctx));
-        // TODO: timeout??
+        // TODO: timeout
         while (!Thread.currentThread().isInterrupted()) {
             LockResult lock = withRetry(() -> api.tryLock(instanceId, lockName, LockScope.PROJECT.name()));
-            log.info("Locking '{}' with scope '{}' -> {}", lockName, LockScope.PROJECT, lock.isAcquired());
+            log.info("locking '{}' with scope '{}' -> {}", lockName, LockScope.PROJECT, lock.isAcquired());
             if (lock.isAcquired()) {
                 return;
             }
@@ -79,7 +79,7 @@ public class LockServiceImpl implements LockService {
             api.unlock(instanceId, lockName, LockScope.PROJECT.name());
             return null;
         });
-        log.info("Unlocking '{}' with scope '{}' -> done", lockName, LockScope.PROJECT);
+        log.info("unlocking '{}' with scope '{}' -> done", lockName, LockScope.PROJECT);
     }
 
     private static void sleep(long t) {

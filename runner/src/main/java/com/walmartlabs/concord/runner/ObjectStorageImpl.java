@@ -52,13 +52,13 @@ public class ObjectStorageImpl implements ObjectStorage {
     public BucketInfo createBucket(Context ctx, String name) throws Exception {
         ProjectInfo projectInfo = ContextUtils.getProjectInfo(ctx);
         if (projectInfo == null) {
-            throw new IllegalArgumentException("project undefined");
+            throw new IllegalArgumentException("Can't create an Object Storage bucket, a Concord project is required");
         }
 
-        InventoryEntry entry = new InventoryEntry();
-        entry.setName(name);
-        entry.setOrgId(projectInfo.orgId());
-        entry.setVisibility(InventoryEntry.VisibilityEnum.PRIVATE);
+        InventoryEntry entry = new InventoryEntry()
+                .setName(name)
+                .setOrgId(projectInfo.orgId())
+                .setVisibility(InventoryEntry.VisibilityEnum.PRIVATE);
 
         InventoriesApi api = new InventoriesApi(apiClientFactory.create(ctx));
         CreateInventoryResponse resp = withRetry(() -> api.createOrUpdate(projectInfo.orgName(), entry));

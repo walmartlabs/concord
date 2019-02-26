@@ -92,23 +92,27 @@ public class ProcessLocksResource implements Resource {
     public void unlock(@PathParam("processInstanceId") UUID instanceId,
                        @PathParam("lockName") String lockName,
                        @QueryParam("scope") @DefaultValue("PROJECT") ProcessLockScope scope) {
-        ProcessEntry e = assertProcess(instanceId);
 
+        ProcessEntry e = assertProcess(instanceId);
         dao.delete(e.instanceId(), e.orgId(), e.projectId(), scope, lockName);
     }
 
     private ProcessEntry assertProcess(UUID instanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
         ProcessEntry p = queueDao.get(processKey);
+
         if (p == null) {
-            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process not found: " + instanceId, Response.Status.NOT_FOUND);
         }
+
         if (p.orgId() == null) {
-            throw new ConcordApplicationException("Process instance without organization", Response.Status.BAD_REQUEST);
+            throw new ConcordApplicationException("Organization is required", Response.Status.BAD_REQUEST);
         }
+
         if (p.projectId() == null) {
-            throw new ConcordApplicationException("Process instance without project", Response.Status.BAD_REQUEST);
+            throw new ConcordApplicationException("Project is required", Response.Status.BAD_REQUEST);
         }
+
         return p;
     }
 }
