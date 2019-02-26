@@ -220,7 +220,8 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private AuthenticationToken buildSessionToken(HttpServletRequest req, String key) {
         AuthenticationToken t = new SessionKey(decryptSessionKey(key));
-        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.FALSE);
+        // enable sessions, assume the clients handle the session cookie correctly
+        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
         return t;
     }
 
