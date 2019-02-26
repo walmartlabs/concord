@@ -43,7 +43,7 @@ public class LockServiceImpl implements LockService {
 
     private static final int RETRY_COUNT = 3;
     private static final long RETRY_INTERVAL = 5000;
-    private static final long LOCK_RETRY_INTERVAL = 60000;
+    private static final long LOCK_RETRY_INTERVAL = 10000; // TODO custom intervals?
 
     private final ApiClientFactory apiClientFactory;
 
@@ -60,13 +60,16 @@ public class LockServiceImpl implements LockService {
     public void projectLock(Context ctx, String lockName) throws Exception {
         UUID instanceId = ContextUtils.getTxId(ctx);
         ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(ctx));
+
         // TODO: timeout
         while (!Thread.currentThread().isInterrupted()) {
             LockResult lock = withRetry(() -> api.tryLock(instanceId, lockName, LockScope.PROJECT.name()));
-            log.info("locking '{}' with scope '{}' -> {}", lockName, LockScope.PROJECT, lock.isAcquired());
             if (lock.isAcquired()) {
+                log.info("sucessfully aquired lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
                 return;
             }
+
+            log.info("waiting for lock '{}' in '{}' scope...", lockName, LockScope.PROJECT);
             sleep(LOCK_RETRY_INTERVAL);
         }
     }
