@@ -12,7 +12,7 @@ repositories.
 
 - concord-server: return `400 Bad Request` when trying to
 `decryptString` in a process without the project;
-- bpm: updated to `0.54.0` to support exporessions in `script` names;
+- bpm: updated to `0.54.0` to support expressions in `script` names.
 
 
 
