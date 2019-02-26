@@ -9,12 +9,22 @@
   `vagrant plugin install vagrant-vbguest`
 - Docker, up and running on the host machine. Necessary
   to build and export Concord images;
-- locally-built Concord images: `mvn clean install -Pdocker`
-  (or `mvn clean install -Pdocker -Pwalmart`).
+- (optionally) locally-built Concord images:
+  `mvn clean install -Pdocker -DskipTests`
 
 ## Usage
 
-Start the VM with `vagrant up`.
+Start the VM with `vagrant up`. By default it uses
+`walmartlabs/concord-*` images from Docker Hub.
+To use another prefix run:
+```
+IMAGE_PREFIX=myimages vagrant up
+```
+
+To use locally-built images run:
+```
+USE_LOCAL_IMAGES=true vagrant up
+```
 
 The API will be available on port `18001`:
 ```

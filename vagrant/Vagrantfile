@@ -1,6 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+image_prefix = ENV['IMAGE_PREFIX'] || "walmartlabs"
+use_local_images = ENV['USE_LOCAL_IMAGES'] || false
+
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.memory = 3072
@@ -17,5 +20,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "playbook.yml"
+    ansible.extra_vars = {
+        image_prefix: image_prefix,
+        use_local_images: use_local_images,
+    }
   end
 end

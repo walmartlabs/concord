@@ -20,6 +20,7 @@
     delegate_to: localhost
     shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
     register: local_image_ids
+    when: use_local_images
 
   - name: Get target images digests (if exist)
     become: true
@@ -27,34 +28,36 @@
     register: target_image_ids
     no_log: true
     ignore_errors: yes
+    when: use_local_images
     
   - name: Export local Docker images
     delegate_to: localhost
     shell: docker save -o /tmp/images.tar walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
-    when: local_image_ids.stdout != target_image_ids.stdout
+    when: use_local_images and (local_image_ids.stdout != target_image_ids.stdout)
 
   - name: Copy Docker images to the VM
     copy:
       src: /tmp/images.tar
       dest: /tmp/images.tar
-    when: local_image_ids.stdout != target_image_ids.stdout
+    when: use_local_images and (local_image_ids.stdout != target_image_ids.stdout)
 
   - name: Remove the local images archive
     delegate_to: localhost
     file:
       path: /tmp/images.tar
       state: absent
-    when: local_image_ids.stdout != target_image_ids.stdout
+    when: use_local_images and (local_image_ids.stdout != target_image_ids.stdout)
 
   - name: Import Docker images
     become: true
     shell: docker load -i /tmp/images.tar
-    when: local_image_ids.stdout != target_image_ids.stdout
+    when: use_local_images and (local_image_ids.stdout != target_image_ids.stdout)
 
   - name: Remove the images archive
     file:
       path: /tmp/images.tar
       state: absent
+    when: use_local_images
 
   - name: Create the conf directory
     become: true
@@ -100,7 +103,7 @@
     become: true
     docker_container:
       name: server
-      image: walmartlabs/concord-server
+      image: "{{ image_prefix }}/concord-server"
       restart: true
       restart_policy: always
       volumes:
@@ -118,7 +121,7 @@
     become: true
     docker_container:
       name: console
-      image: walmartlabs/concord-console
+      image: "{{ image_prefix }}/concord-console"
       restart: true
       restart_policy: always
       volumes:
@@ -132,7 +135,7 @@
     become: true
     docker_container:
       name: agent
-      image: walmartlabs/concord-agent
+      image: "{{ image_prefix }}/concord-agent"
       restart: true
       restart_policy: always
       links:
