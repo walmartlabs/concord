@@ -25,12 +25,15 @@ import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
+import com.walmartlabs.concord.server.security.github.GithubKey;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;
@@ -48,6 +51,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -84,6 +90,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final GithubConfiguration githubCfg;
+    private final EncryptedProjectValueManager encryptedValueManager;
 
     @Inject
     public GithubEventResource(ExternalEventsConfiguration cfg,
@@ -91,16 +98,20 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                TriggersDao triggersDao,
                                RepositoryDao repositoryDao,
                                ProcessManager processManager,
+                               EncryptedProjectValueManager encryptedValueManager,
                                TriggersConfiguration triggersConfiguration,
                                UserManager userManager,
                                LdapManager ldapManager,
                                GithubConfiguration githubCfg) {
 
-        super(cfg, processManager, triggersDao, projectDao, repositoryDao, new GithubTriggerDefinitionEnricher(projectDao, githubCfg), triggersConfiguration, userManager, ldapManager);
+        super(cfg, processManager, triggersDao, projectDao, repositoryDao,
+                new GithubTriggerDefinitionEnricher(projectDao, githubCfg),
+                triggersConfiguration, userManager, ldapManager);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.githubCfg = githubCfg;
+        this.encryptedValueManager = encryptedValueManager;
     }
 
     @POST
@@ -128,8 +139,13 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             return "ok";
         }
 
+        // support for hooks restricted to a specific repository
+        GithubKey githubKey = GithubKey.getCurrent();
+        UUID hookProjectId = githubKey.getProjectId();
+        String hookRepoHash = githubKey.getRepoToken();
+
         String eventBranch = getBranch(payload, eventName);
-        List<RepositoryItem> repos = findRepos(repoName, eventBranch);
+        List<RepositoryItem> repos = findRepos(repoName, eventBranch, hookProjectId, hookRepoHash);
         boolean unknownRepo = repos.isEmpty();
         if (unknownRepo) {
             repos = Collections.singletonList(UNKNOWN_REPO);
@@ -162,10 +178,11 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         return "ok";
     }
 
-    private List<RepositoryItem> findRepos(String repoName, String branch) {
+    private List<RepositoryItem> findRepos(String repoName, String branch, UUID hookProjectId, String hookRepoToken) {
         return repositoryDao.find(repoName).stream()
                 .filter(r -> GithubUtils.isRepositoryUrl(repoName, r.getUrl(), githubCfg.getGithubDomain()))
                 .filter(r -> isBranchEq(r.getBranch(), branch))
+                .filter(r -> isRepoHashValid(hookProjectId, hookRepoToken, r.getProjectId(), r.getUrl()))
                 .map(r -> {
                     ProjectEntry project = projectDao.get(r.getProjectId());
                     return new RepositoryItem(r.getId(), project, r.getName());
@@ -184,6 +201,43 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         }
 
         return repoBranch.equals(eventBranch);
+    }
+
+    private boolean isRepoHashValid(UUID hookProjectId, String hookRepoToken, UUID projectId, String repoUrl) {
+        if (hookProjectId == null || hookRepoToken == null) {
+            // true for organization level hooks
+            return true;
+        }
+
+        if (!hookProjectId.equals(projectId)) {
+            return false;
+        }
+
+        try {
+            byte[] decodedHash = Base64.getDecoder().decode(hookRepoToken);
+            byte[] decryptedHash = encryptedValueManager.decrypt(projectId, decodedHash);
+            String userHash = new String(decryptedHash, StandardCharsets.UTF_8);
+
+            String repositoryName = GithubUtils.getRepositoryName(repoUrl);
+            String repoHash = hashRepo(repositoryName);
+
+            return repoHash.equals(userHash);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private String hashRepo(String repoName) {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        byte[] ab = md.digest(repoName.getBytes(StandardCharsets.UTF_8));
+
+        return Base64.getEncoder().withoutPadding().encodeToString(ab);
     }
 
     private static class RepositoryItem {
@@ -213,6 +267,10 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
         Map<String, Object> m = new HashMap<>(event);
         qp.keySet().forEach(k -> m.put(k, qp.getFirst(k)));
+
+        m.remove(GithubAuthenticatingFilter.HOOK_PROJECT_ID);
+        m.remove(GithubAuthenticatingFilter.HOOK_REPO_TOKEN);
+
         return m;
     }
 

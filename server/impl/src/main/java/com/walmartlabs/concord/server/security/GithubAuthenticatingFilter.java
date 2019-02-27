@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
@@ -50,6 +51,9 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
     private static final String SIGNATURE_HEADER = "X-Hub-Signature";
+
+    public static final String HOOK_PROJECT_ID = "hookProjectId";
+    public static final String HOOK_REPO_TOKEN = "hookRepoToken";
 
     private final GithubConfiguration cfg;
 
@@ -66,7 +70,14 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
-        CachingRequestWrapper req = (CachingRequestWrapper)request;
+        CachingRequestWrapper req = (CachingRequestWrapper) request;
+
+        // support for hooks restricted to a specific repository
+        UUID projectId = getUUID(req, HOOK_PROJECT_ID);
+        String repoToken = getString(req, HOOK_REPO_TOKEN);
+        if (projectId != null && repoToken != null) {
+            return new GithubKey(null, projectId, repoToken);
+        }
 
         String h = req.getHeader(SIGNATURE_HEADER);
         if (!StringUtils.hasText(h)) {
@@ -75,12 +86,12 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         String[] algDigest = h.split("=");
-        if(algDigest.length != 2) {
+        if (algDigest.length != 2) {
             log.warn("createToken -> invalid format of the authorization header. URI: '{}'", req.getRequestURI());
             return new UsernamePasswordToken();
         }
 
-        if(!"sha1".equals(algDigest[0])) {
+        if (!"sha1".equals(algDigest[0])) {
             log.warn("createToken -> invalid algorithm of the authorization header '{}'. URI: '{}'", algDigest[0], req.getRequestURI());
             return new UsernamePasswordToken();
         }
@@ -93,12 +104,12 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             byte[] digest = mac.doFinal(payload);
             String digestHex = String.valueOf(Hex.encode(digest));
 
-            if(!algDigest[1].equals(digestHex)) {
+            if (!algDigest[1].equals(digestHex)) {
                 log.error("createToken -> invalid auth digest. Expected: '{}', request: '{}'", digestHex, algDigest[1]);
                 return new UsernamePasswordToken();
             }
 
-            return new GithubKey(h);
+            return new GithubKey(h, projectId, repoToken);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             log.error("createToken -> internal error", e);
             throw e;
@@ -115,6 +126,22 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         return loggedId;
+    }
+
+    private static String getString(HttpServletRequest req, String k) {
+        String s = req.getParameter(k);
+        if (StringUtils.hasText(s)) {
+            return s;
+        }
+        return null;
+    }
+
+    private static UUID getUUID(HttpServletRequest req, String k) {
+        String s = getString(req, k);
+        if (s == null) {
+            return null;
+        }
+        return UUID.fromString(s);
     }
 
     static class CachingRequestWrapper extends HttpServletRequestWrapper {

@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support for GitHub webhooks limited to a specific
+repository;
 - forms: support for `date` and `dateTime` field types;
 - concord-server, concord-console: ability to temporarily disable
 repositories.

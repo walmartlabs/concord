@@ -20,20 +20,39 @@ package com.walmartlabs.concord.server.security.github;
  * =====
  */
 
+import com.walmartlabs.concord.server.security.PrincipalUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 
+import java.util.UUID;
+
 public class GithubKey implements AuthenticationToken {
+
+    public static GithubKey getCurrent() {
+        return PrincipalUtils.getCurrent(GithubKey.class);
+    }
 
     private static final long serialVersionUID = 1L;
 
     private final String key;
+    private final UUID projectId;
+    private final String repoToken;
 
-    public GithubKey(String key) {
+    public GithubKey(String key, UUID projectId, String repoToken) {
         this.key = key;
+        this.projectId = projectId;
+        this.repoToken = repoToken;
     }
 
     public String getKey() {
         return key;
+    }
+
+    public UUID getProjectId() {
+        return projectId;
+    }
+
+    public String getRepoToken() {
+        return repoToken;
     }
 
     @Override
@@ -43,13 +62,6 @@ public class GithubKey implements AuthenticationToken {
 
     @Override
     public Object getCredentials() {
-        return getKey();
-    }
-
-    @Override
-    public String toString() {
-        return "GithubKey{" +
-                "key='" + key + '\'' +
-                '}';
+        return key != null ? key : repoToken;
     }
 }
