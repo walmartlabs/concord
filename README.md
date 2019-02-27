@@ -31,7 +31,7 @@ cd ./console2
 npm install # Install dependencies
 ```
 
-Verify that the `proxy` property in [console/package.json](console/package.json)
+Verify that the `proxy` property in [console2/package.json](console2/package.json)
 is set to the Server's API address.
 
 Start the console in dev mode by running:
