@@ -2,13 +2,23 @@
 
 ![](https://img.shields.io/maven-central/v/com.walmartlabs.concord/parent.svg)
 
-## Build Dependencies
+- Website: https://concord.walmartlabs.com
+- [Installation guide](https://concord.walmartlabs.com/docs/getting-started/installation.html)
+- [Core Plugins](./plugins)
+- [Community Plugins](https://github.com/walmartlabs/concord-plugins/)
 
+![](console2/public/images/concord.svg)
+
+
+Concord is a workflow server. It is the orchestration engine that connects
+different systems together using scenarios and plugins created by users.
+
+## Building
+
+Dependencies:
 - [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 - [Docker Community Edition](https://www.docker.com/community-edition)
 - (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 8 or greater)
-
-## Building
 
 ```shell
 git clone ...
