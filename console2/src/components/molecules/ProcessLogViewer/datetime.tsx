@@ -26,7 +26,7 @@ export const formatDateTime = (useLocalTime: boolean, showDate: boolean, s: stri
 
     // we expect the runtime to use "YYYY-MM-dd'T'HH:mm:ss.SSSZ" format for timestamps
     // see also /common/src/main/java/com/walmartlabs/concord/common/LogUtils.java
-    const re = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}.\d{4})\s\[.*/gm;
+    const re = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}.\d{4})\s.*/gm;
 
     const timestamps = [];
     while (true) {

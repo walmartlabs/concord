@@ -118,7 +118,7 @@ public class AnsibleConfig {
         // disable ssl host key checking by default
         m.put("host_key_checking", false);
 
-        //SSH timeout, default is 10 seconds and too slow for stores
+        // SSH timeout, default is 10 seconds and too slow for stores
         m.put("timeout", "120");
 
         // use a shorter path to store temporary files
@@ -159,8 +159,8 @@ public class AnsibleConfig {
     private static Map<String, Object> makeSshConnCfg() {
         Map<String, Object> m = new HashMap<>();
 
-        // Default pipelining to True for better overall performance, compatibility
-        m.put("pipelining", "True");
+        // default pipelining to True for better overall performance, compatibility
+        m.put("pipelining", true);
 
         return m;
     }
