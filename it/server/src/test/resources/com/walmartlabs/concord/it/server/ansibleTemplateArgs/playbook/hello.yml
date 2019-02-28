@@ -1,0 +1,9 @@
+---
+- hosts: local
+  gather_facts: no
+  vars:
+    myVar: 'iddqd'
+  tasks:
+  - debug:
+      msg: "message {{ myVar }}"
+      verbosity: 0

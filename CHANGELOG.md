@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible: `{%raw%}` strings are working again.
+
+
+
 ## [1.10.0] - 2019-02-27
 
 ### Added

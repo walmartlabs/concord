@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,11 +34,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class AnsibleIT extends AbstractServerIT {
 
@@ -354,5 +356,57 @@ public class AnsibleIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*THIS TASK CONTAINS SENSITIVE INFORMATION.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testRawStrings() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleRawStrings").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*" + Pattern.quote("message '{{.lalala}}'") + ".*", ab);
+        assertLog(".*" + Pattern.quote("message {{.unsafe}}") + ".*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @SuppressWarnings("unchecked")
+    public void testTemplateArgs() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleTemplateArgs").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*message iddqd.*", ab);
+
+        // ---
+        ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
+        List<ProcessEventEntry> events = eventsApi.list(pir.getInstanceId(), "ANSIBLE", null, null);
+        assertNotNull(events);
+        assertEquals(1, events.size());
+        Map<String, Object> data = (Map<String, Object>) events.get(0).getData();
+        assertEquals("message iddqd", ((Map<String, Object>) data.get("result")).get("msg"));
     }
 }

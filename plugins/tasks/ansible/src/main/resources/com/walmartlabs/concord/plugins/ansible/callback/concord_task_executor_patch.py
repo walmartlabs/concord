@@ -26,12 +26,14 @@ def _execute(self, variables=None):
 
     templar = Templar(loader=self._loader, shared_loader_obj=self._shared_loader_obj, variables=variables)
 
+    _task = copy.deepcopy(self._task)
+
     context_validation_error = None
     try:
         # apply the given task's information to the connection info,
         # which may override some fields already set by the play or
         # the options specified on the command line
-        self._play_context = self._play_context.set_task_and_variable_override(task=self._task, variables=variables, templar=templar)
+        self._play_context = self._play_context.set_task_and_variable_override(task=_task, variables=variables, templar=templar)
 
         # fields set from the play/task may be based on variables, so we have to
         # do the same kind of post validation step on it here before we use it.
@@ -57,7 +59,7 @@ def _execute(self, variables=None):
     # the fact that the conditional may specify that the task be skipped due to a
     # variable not being present which would otherwise cause validation to fail
     try:
-        if not self._task.evaluate_conditional(templar, variables):
+        if not _task.evaluate_conditional(templar, variables):
             display.debug("when evaluation is False, skipping this task")
             return dict(changed=False, skipped=True, skip_reason='Conditional result was False', _ansible_no_log=self._play_context.no_log)
     except AnsibleError:
@@ -65,7 +67,7 @@ def _execute(self, variables=None):
         if self._loop_eval_error is not None:
             raise self._loop_eval_error  # pylint: disable=raising-bad-type
         # skip conditional exception in the case of includes as the vars needed might not be available except in the included tasks or due to tags
-        if self._task.action not in ['include', 'include_tasks', 'include_role']:
+        if _task.action not in ['include', 'include_tasks', 'include_role']:
             raise
 
     # Not skipping, if we had loop error raised earlier we need to raise it now to halt the execution of this task
@@ -78,8 +80,8 @@ def _execute(self, variables=None):
 
     # if this task is a TaskInclude, we just return now with a success code so the
     # main thread can expand the task list for the given host
-    if self._task.action in ('include', 'include_tasks'):
-        include_variables = self._task.args.copy()
+    if _task.action in ('include', 'include_tasks'):
+        include_variables = _task.args.copy()
         include_file = include_variables.pop('_raw_params', None)
         if not include_file:
             return dict(failed=True, msg="No include file was specified to the include")
@@ -88,21 +90,21 @@ def _execute(self, variables=None):
         return dict(include=include_file, include_variables=include_variables)
 
     # if this task is a IncludeRole, we just return now with a success code so the main thread can expand the task list for the given host
-    elif self._task.action == 'include_role':
-        include_variables = self._task.args.copy()
+    elif _task.action == 'include_role':
+        include_variables = _task.args.copy()
         return dict(include_variables=include_variables)
 
     # Now we do final validation on the task, which sets all fields to their final values.
-    self._task.post_validate(templar=templar)
-    if '_variable_params' in self._task.args:
-        variable_params = self._task.args.pop('_variable_params')
+    _task.post_validate(templar=templar)
+    if '_variable_params' in _task.args:
+        variable_params = _task.args.pop('_variable_params')
         if isinstance(variable_params, dict):
             display.deprecated("Using variables for task params is unsafe, especially if the variables come from an external source like facts",
                                version="2.6")
-            variable_params.update(self._task.args)
-            self._task.args = variable_params
+            variable_params.update(_task.args)
+            _task.args = variable_params
 
-    if taskPolicy.is_deny(self._task):
+    if taskPolicy.is_deny(_task):
         self._task = copy.deepcopy(self._task)
         self._task.action = "fail"
         self._task.args = {"msg": "Found forbidden tasks"}

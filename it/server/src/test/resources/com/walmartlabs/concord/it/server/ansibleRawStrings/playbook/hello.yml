@@ -1,0 +1,9 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "message {%raw%}'{{.lalala}}'{%endraw%}"
+      verbosity: 0
+  - debug:
+      msg: !unsafe "message {{.unsafe}}"
+      verbosity: 0
