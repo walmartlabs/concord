@@ -35,8 +35,9 @@ public class AnsibleCallbacks {
 
     private static final String CALLBACK_LOCATION = "/com/walmartlabs/concord/plugins/ansible/callback";
     private static final String CALLBACK_PLUGINS_DIR = "_callbacks";
-    private static final String[] CALLBACKS = new String[]{"concord_events.py",
-            "concord_trace.py", "concord_protectdata.py", "concord_task_executor_patch.py", "concord_out_vars.py"};
+    private static final String[] CALLBACKS = new String[]{
+            "concord_events.py", "concord_trace.py", "concord_protectdata.py",
+            "concord_strategy_patch.py", "concord_task_executor_patch.py", "concord_out_vars.py"};
 
     private final Path tmpDir;
 
