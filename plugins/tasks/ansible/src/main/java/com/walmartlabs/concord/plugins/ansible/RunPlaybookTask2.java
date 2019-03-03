@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -87,7 +87,7 @@ public class RunPlaybookTask2 implements Task {
         Map<String, Object> args = new HashMap<>();
 
         Stream.of(TaskParams.values()).forEach(c ->
-            addIfPresent(ctx, args, c.getKey())
+                addIfPresent(ctx, args, c.getKey())
         );
 
         String payloadPath = ContextUtils.getString(ctx, Constants.Context.WORK_DIR_KEY);
@@ -145,6 +145,16 @@ public class RunPlaybookTask2 implements Task {
         cfg.write();
         env.write();
 
+        boolean checkMode = getCheck(args, playbook);
+        if (checkMode) {
+            log.warn("Running in the check mode. No changes will be made.");
+        }
+
+        boolean syntaxCheck = getSyntaxCheck(args, playbook);
+        if (syntaxCheck) {
+            log.warn("Running in the syntax check mode. No changes will be made.");
+        }
+
         try {
             PlaybookArgsBuilder b = new PlaybookArgsBuilder(playbook, inventoryPath.toString(), workDir, tmpDir)
                     .withAttachmentsDir(toString(attachmentsPath))
@@ -156,8 +166,8 @@ public class RunPlaybookTask2 implements Task {
                     .withExtraVars(getMap(args, TaskParams.EXTRA_VARS_KEY))
                     .withLimit(getLimit(args, playbook))
                     .withVerboseLevel(getVerboseLevel(args))
-                    .withCheck(getCheck(args, playbook))
-                    .withSyntaxCheck(getSyntaxCheck(args,playbook))
+                    .withCheck(checkMode)
+                    .withSyntaxCheck(syntaxCheck)
                     .withEnv(env.get());
 
             Process p = processBuilder

@@ -4,6 +4,8 @@
 
 ### Changed
 
+- ansible: print a "No changes will be made" warning if `check` or
+`syntaxCheck` modes are used;
 - ansible: the task now correcly records both pre- and post-action
 events;
 - concord-console: fixed the log timestamp pattern, now Ansible log
