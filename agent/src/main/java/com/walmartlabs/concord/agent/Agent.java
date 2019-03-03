@@ -161,7 +161,7 @@ public class Agent {
     }
 
     private QueueClient connectToServer() throws URISyntaxException {
-        QueueClient queueClient = new QueueClient(new QueueClientConfiguration.Builder(cfg.getServerWebsocketUrl())
+        QueueClient queueClient = new QueueClient(new QueueClientConfiguration.Builder(cfg.getServerWebsocketUrls())
                 .apiKey(cfg.getApiKey())
                 .userAgent(cfg.getUserAgent())
                 .connectTimeout(cfg.getConnectTimeout())

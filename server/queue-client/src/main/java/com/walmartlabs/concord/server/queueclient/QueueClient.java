@@ -113,7 +113,7 @@ public class QueueClient {
 
         private final String userAgent;
         private final String apiToken;
-        private final URI destUri;
+        private final URI[] destUris;
         private final Map<Long, RequestEntry> awaitResponses;
         private final List<RequestEntry> requests;
 
@@ -129,7 +129,7 @@ public class QueueClient {
             this.apiToken = cfg.getApiKey();
 
             this.requests = requests;
-            this.destUri = new URI(cfg.getAddress());
+            this.destUris = toURIs(cfg.getAddresses());
             this.awaitResponses = new ConcurrentHashMap<>();
             this.maxInactivity = cfg.getMaxInactivityPeriod();
             this.connectTimeout = cfg.getConnectTimeout();
@@ -138,15 +138,17 @@ public class QueueClient {
         }
 
         private void mainLoop() {
+            int destUriIndex = 0;
+
             Session session = null;
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     switch (state) {
                         case CONNECTING: {
-                            session = connect();
+                            session = connect(destUris[destUriIndex]);
                             state = State.CONNECTED;
                             lastActivity = System.currentTimeMillis();
-                            log.info("connect ['{}'] -> done", destUri);
+                            log.info("connect ['{}'] -> done", destUris[destUriIndex]);
                             break;
                         }
                         case CONNECTED: {
@@ -166,6 +168,10 @@ public class QueueClient {
                 } catch (Exception e) {
                     log.error("mainLoop -> error", e);
                     state = State.DISCONNECTING;
+
+                    if (++destUriIndex >= destUris.length) {
+                        destUriIndex = 0;
+                    }
                 }
             }
 
@@ -218,7 +224,7 @@ public class QueueClient {
             state = State.DISCONNECTING;
         }
 
-        private Session connect() throws Exception {
+        private Session connect(URI destUri) throws Exception {
             this.client = createWebSocketClient(connectTimeout);
             this.client.start();
 
@@ -324,6 +330,14 @@ public class QueueClient {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+
+        private static URI[] toURIs(String[] as) throws URISyntaxException {
+            URI[] result = new URI[as.length];
+            for (int i = 0; i < as.length; i++) {
+                result[i] = new URI(as[i]);
+            }
+            return result;
         }
     }
 

@@ -38,6 +38,8 @@ import com.walmartlabs.ollie.OllieServerBuilder;
 import com.walmartlabs.ollie.SessionCookieOptions;
 import io.prometheus.client.exporter.MetricsServlet;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -53,9 +55,13 @@ import java.util.Set;
 
 public class ConcordServer {
 
+    private static final Logger log = LoggerFactory.getLogger(ConcordServer.class);
+
     public void start() {
+        log.info("Using the API port: {}", ServerConfiguration.port);
+
         OllieServerBuilder builder = OllieServer.builder()
-                .port(8001)
+                .port(ServerConfiguration.port)
                 .apiPatterns("/api/*", "/events/github/*")
                 .name("concord-server")
                 .module(new ServerModule())

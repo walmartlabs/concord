@@ -29,15 +29,22 @@ import java.io.Serializable;
  */
 public class ServerConfiguration implements Serializable {
 
+    private static final String API_PORT_KEY = "API_PORT";
     private static final String SECURE_COOKIES_KEY = "SECURE_COOKIES";
     private static final String SESSION_TIMEOUT_KEY = "SESSION_TIMEOUT";
 
+    public static final int port;
     public static final boolean secureCookies;
     public static final int sessionTimeout;
 
     static {
+        port = Integer.parseInt(getEnv(API_PORT_KEY, "8001"));
         secureCookies = Boolean.parseBoolean(getEnv(SECURE_COOKIES_KEY, "false"));
         sessionTimeout = Integer.parseInt(getEnv(SESSION_TIMEOUT_KEY, "1800")); // 30 min
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public boolean isSecureCookies() {

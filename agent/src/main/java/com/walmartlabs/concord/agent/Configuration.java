@@ -58,7 +58,7 @@ public class Configuration {
     private final int maxPreforkCount;
 
     private final String serverApiBaseUrl;
-    private final String serverWebsocketUrl;
+    private final String[] serverWebsocketUrls;
     private final boolean apiVerifySsl;
     private final long connectTimeout;
     private final long readTimeout;
@@ -121,8 +121,9 @@ public class Configuration {
         this.maxPreforkCount = cfg.getInt("prefork.maxCount");
 
         this.serverApiBaseUrl = cfg.getString("server.apiBaseUrl");
-        this.serverWebsocketUrl = cfg.getString("server.websockerUrl");
-        log.info("Using the API address: {}, {}", serverApiBaseUrl, serverWebsocketUrl);
+        log.info("Using the Server's API address: {}", serverApiBaseUrl);
+        this.serverWebsocketUrls = getCSV(cfg.getString("server.websockerUrl"));
+        log.info("Using the Server's websocket addresses: {}", serverWebsocketUrls);
 
         this.apiVerifySsl = cfg.getBoolean("server.verifySsl");
         this.connectTimeout = cfg.getDuration("server.connectTimeout", TimeUnit.MILLISECONDS);
@@ -169,8 +170,8 @@ public class Configuration {
         return serverApiBaseUrl;
     }
 
-    public String getServerWebsocketUrl() {
-        return serverWebsocketUrl;
+    public String[] getServerWebsocketUrls() {
+        return serverWebsocketUrls;
     }
 
     public Path getLogDir() {
@@ -321,7 +322,7 @@ public class Configuration {
                 ", maxPreforkAge=" + maxPreforkAge +
                 ", maxPreforkCount=" + maxPreforkCount +
                 ", serverApiBaseUrl='" + serverApiBaseUrl + '\'' +
-                ", serverWebsocketUrl='" + serverWebsocketUrl + '\'' +
+                ", serverWebsocketUrls=" + serverWebsocketUrls +
                 ", apiVerifySsl=" + apiVerifySsl +
                 ", connectTimeout=" + connectTimeout +
                 ", readTimeout=" + readTimeout +
@@ -377,5 +378,18 @@ public class Configuration {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String[] getCSV(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        String[] as = s.split(",");
+        for (int i = 0; i < as.length; i++) {
+            as[i] = as[i].trim();
+        }
+
+        return as;
     }
 }

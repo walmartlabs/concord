@@ -24,22 +24,22 @@ import java.io.Serializable;
 
 public class QueueClientConfiguration implements Serializable {
 
-    private final String address;
+    private final String[] addresses;
     private final String apiKey;
     private final String userAgent;
     private final long connectTimeout;
     private final long maxInactivityPeriod;
 
-    private QueueClientConfiguration(String address, String apiKey, String userAgent, long connectTimeout, long maxInactivityPeriod) {
-        this.address = address;
+    private QueueClientConfiguration(String[] addresses, String apiKey, String userAgent, long connectTimeout, long maxInactivityPeriod) {
+        this.addresses = addresses;
         this.apiKey = apiKey;
         this.userAgent = userAgent;
         this.connectTimeout = connectTimeout;
         this.maxInactivityPeriod = maxInactivityPeriod;
     }
 
-    public String getAddress() {
-        return address;
+    public String[] getAddresses() {
+        return addresses;
     }
 
     public String getApiKey() {
@@ -60,15 +60,15 @@ public class QueueClientConfiguration implements Serializable {
 
     public static class Builder {
 
-        private final String address;
+        private final String[] addresses;
 
         private String apiKey;
         private String userAgent;
         private long connectTimeout = 30000;
         private long maxInactivityPeriod = 120000;
 
-        public Builder(String address) {
-            this.address = address;
+        public Builder(String[] addresses) {
+            this.addresses = addresses;
         }
 
         public Builder apiKey(String apiKey) {
@@ -92,7 +92,7 @@ public class QueueClientConfiguration implements Serializable {
         }
 
         public QueueClientConfiguration build() {
-            return new QueueClientConfiguration(address, apiKey, userAgent, connectTimeout, maxInactivityPeriod);
+            return new QueueClientConfiguration(addresses, apiKey, userAgent, connectTimeout, maxInactivityPeriod);
         }
     }
 }
