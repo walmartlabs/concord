@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.11.0] - 2019-03-04
 
 ### Added
 
