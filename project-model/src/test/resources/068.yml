@@ -1,0 +1,16 @@
+main:
+  - task: testErrorTask
+    in:
+      msg: "test"
+    retry:
+      in:
+        msg: "retry"
+      times: 1
+
+  - task: testErrorTask2
+    in:
+      msg: "test2"
+    retry:
+      in:
+        msg: "retry2"
+      times: 1

@@ -114,7 +114,6 @@ public interface StepConverter<T extends YamlStep> {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     static Object getWithItems(Map<String, Object> options) {
         if (options == null) {
             return null;
@@ -305,7 +304,6 @@ public interface StepConverter<T extends YamlStep> {
          * </ul>
          * @param ctx context containing execution variables
          */
-        @SuppressWarnings("unchecked")
         public void nextItem(ExecutionContext ctx) {
             int currentItemIndex = getLastVariable(ctx, CURRENT_INDEX);
 

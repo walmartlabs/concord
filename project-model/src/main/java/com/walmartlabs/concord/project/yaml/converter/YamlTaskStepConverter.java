@@ -85,7 +85,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         // inc retry count
         String incCounterId = ctx.nextId();
         c.addElement(new SequenceFlow(ctx.nextId(), originalTaskEvId, incCounterId));
-        c.addElement(new ServiceTask(incCounterId, ExpressionType.SIMPLE, "${__retryUtils.inc(execution, '__retryCount')}", null, null, true));
+        c.addElement(new ServiceTask(incCounterId, ExpressionType.SIMPLE, "${__retryUtils.inc(execution)}", null, null, true));
 
         // retry count GW
         String retryCountGwId = ctx.nextId();
@@ -94,7 +94,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
 
         // sleep
         String retryDelayId = ctx.nextId();
-        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, retryDelayId, "${__retryCount <= " + retryParams.get("times") + "}"));
+        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, retryDelayId, "${__retryUtils.isRetryCountExceeded(execution, " + retryParams.get("times") + ")}"));
         c.addElement(new ServiceTask(retryDelayId, ExpressionType.SIMPLE, "${__retryUtils.sleep(" + getRetryDelay(retryParams) + ")}", null, null, true));
 
         // retry task
@@ -103,8 +103,13 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         c.addElement(new ServiceTask(retryTaskId, ExpressionType.DELEGATE,
                 "${" + s.getKey() + "}",
                 getInVars(opts, retryParams), getVarMap(opts, "out"), true));
-        c.addOutput(retryTaskId);
         c.addSourceMap(retryTaskId, toSourceMap(s, "Task: " + s.getKey() + " (retry)"));
+
+        // cleanup
+        String cleanupTaskId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), retryTaskId, cleanupTaskId));
+        c.addElement(new ServiceTask(cleanupTaskId, ExpressionType.SIMPLE, "${__retryUtils.cleanup(execution)}", null, null, true));
+        c.addOutput(cleanupTaskId);
 
         String retryTaskEventId = ctx.nextId();
         c.addElement(new BoundaryEvent(retryTaskEventId, retryTaskId, null));
@@ -186,6 +191,9 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
 
         private static final Logger log = LoggerFactory.getLogger(RetryUtilsTask.class);
 
+        private static final String RETRY_COUNTER = "__retryCount";
+        private static final String CURRENT_RETRY_COUNTER = "__currentRetryCount";
+
         public void sleep(long t) {
             try {
                 log.info("retry delay {} sec", t/1000);
@@ -199,19 +207,72 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
             Object lastError = ctx.getVariable(Constants.Context.LAST_ERROR_KEY);
             if (lastError instanceof BpmnError) {
                 BpmnError e = (BpmnError) lastError;
-                throw e.getCause();
+                if (e.getCause() != null) {
+                    throw e.getCause();
+                } else {
+                    throw e;
+                }
             }
 
             throw new RuntimeException("retry count exceeded");
         }
 
-        public void inc(ExecutionContext ctx, String name) {
-            int currentValue = 0;
-            if (ctx.getVariable(name) != null) {
-                currentValue = (int) ctx.getVariable(name);
-            }
+        public void inc(ExecutionContext ctx) {
+            int currentValue = getLastVariable(ctx, RETRY_COUNTER, 0);
             currentValue++;
-            ctx.setVariable(name, currentValue);
+            setLastVariable(ctx, RETRY_COUNTER, currentValue);
+            ctx.setVariable(CURRENT_RETRY_COUNTER, currentValue);
+        }
+
+        public boolean isRetryCountExceeded(ExecutionContext ctx, int maxRetryCount) {
+            return getLastVariable(ctx, RETRY_COUNTER, 0) <= maxRetryCount;
+        }
+
+        public void cleanup(ExecutionContext ctx) {
+            clearLastVariable(ctx, RETRY_COUNTER);
+            ctx.removeVariable(CURRENT_RETRY_COUNTER);
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <E> List<E> getList(ExecutionContext ctx, String name) {
+            Object v = ctx.getVariable(name);
+            if (v == null) {
+                return new ArrayList<>();
+            }
+
+            if (v instanceof List) {
+                return (List<E>) v;
+            }
+
+            throw new IllegalArgumentException("expected list with name '" + name + "', but got: " + v);
+        }
+
+        private static <E> E getLastVariable(ExecutionContext ctx, String name, E defaultValue) {
+            List<E> v = getList(ctx, name);
+            if (v.isEmpty()) {
+                return defaultValue;
+            }
+            return v.get(v.size() - 1);
+        }
+
+        private static void setLastVariable(ExecutionContext ctx, String name, Object value) {
+            List<Object> v = getList(ctx, name);
+            if (v.isEmpty()) {
+                v.add(value);
+            } else {
+                v.set(v.size() - 1, value);
+            }
+            ctx.setVariable(name, v);
+        }
+
+        private static void clearLastVariable(ExecutionContext ctx, String name) {
+            List<Object> v = getList(ctx, name);
+            v.remove(v.size() - 1);
+            if (v.isEmpty()) {
+                ctx.removeVariable(name);
+            } else {
+                ctx.setVariable(name, v);
+            }
         }
     }
 }

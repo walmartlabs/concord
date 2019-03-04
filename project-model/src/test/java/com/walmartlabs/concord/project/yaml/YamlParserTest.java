@@ -1989,6 +1989,54 @@ public class YamlParserTest extends AbstractYamlParserTest {
                         Arrays.asList("C 0", "C 1", "C 2"))));
     }
 
+    @Test
+    public void test068() throws Exception {
+        deploy("068.yml");
+
+        MyLogger logBean = spy(new MyLogger());
+        register("log", logBean);
+
+        JavaDelegate task = mock(JavaDelegate.class);
+        doThrow(new BpmnError("first error"))
+                .doNothing()
+                .when(task).execute(any());
+
+        register("testErrorTask", task);
+
+        JavaDelegate task2 = mock(JavaDelegate.class);
+        doThrow(new BpmnError("first error"))
+                .doNothing()
+                .when(task2).execute(any());
+
+        register("testErrorTask2", task2);
+
+        register("__retryUtils", new YamlTaskStepConverter.RetryUtilsTask());
+
+        // ---
+        String key = UUID.randomUUID().toString();
+        start(key, "main", null);
+
+        // ---
+        ArgumentCaptor<ExecutionContext> ctxCaptor = ArgumentCaptor.forClass(ExecutionContext.class);
+        verify(task, times(2)).execute(ctxCaptor.capture());
+
+        List<ExecutionContext> retryCtx = ctxCaptor.getAllValues();
+        assertEquals("test", retryCtx.get(0).getVariable("msg"));
+        assertEquals("retry", retryCtx.get(1).getVariable("msg"));
+
+        verifyNoMoreInteractions(task);
+
+        // ---
+        ArgumentCaptor<ExecutionContext> ctxCaptor2 = ArgumentCaptor.forClass(ExecutionContext.class);
+        verify(task2, times(2)).execute(ctxCaptor2.capture());
+
+        List<ExecutionContext> retryCtx2 = ctxCaptor2.getAllValues();
+        assertEquals("test2", retryCtx2.get(0).getVariable("msg"));
+        assertEquals("retry2", retryCtx2.get(1).getVariable("msg"));
+
+        verifyNoMoreInteractions(task2);
+    }
+
     // FORMS (100 - 199)
 
     @Test
@@ -2356,6 +2404,10 @@ public class YamlParserTest extends AbstractYamlParserTest {
 
         public void log(Object message) {
             System.out.println(message);
+        }
+
+        public void call(Object message) {
+            log(message);
         }
     }
 

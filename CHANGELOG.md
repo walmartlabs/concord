@@ -10,6 +10,8 @@
 
 ### Changed
 
+- project-model: fixed the behaviour of nested and/or sequential task
+calls with `retry`;
 - ansible: the task now correcly records both pre- and post-action
 events;
 - concord-console: fixed the log timestamp pattern, now Ansible log
