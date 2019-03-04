@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.repository;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.repository.Repository;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -105,6 +106,9 @@ public class RepositoryRefresher extends AbstractDao {
                     l.onRefresh(tx, repositoryEntry, repoPath);
                 }
             });
+        } catch (Exception e) {
+            String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            throw new ConcordApplicationException("Error while refreshing repository: " + errorMessage, e);
         } finally {
             cleanUp(repoPath);
         }
