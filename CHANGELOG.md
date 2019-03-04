@@ -11,6 +11,8 @@
 
 ### Changed
 
+- concord-console: fixed the handling of processes with checkpoints
+but without history;
 - concord-server: when a repository refresh fails show the error
 cause instead of a wrapped exception;
 - project-model: fixed the behaviour of nested and/or sequential task
