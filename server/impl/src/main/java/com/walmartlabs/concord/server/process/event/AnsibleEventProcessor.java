@@ -190,12 +190,17 @@ public class AnsibleEventProcessor implements ScheduledTask {
     private List<HostItem> combineEvents(List<EventItem> events) {
         Map<Key, HostItem> result = new HashMap<>();
         for (EventItem e : events) {
-            result.compute(ImmutableKey.of(e.instanceId(), e.instanceCreatedAt(), e.host(), e.hostGroup()), (k, v) -> (v == null) ? HostItem.from(e) : combine(v, e));
+            result.compute(ImmutableKey.of(e.instanceId(), e.instanceCreatedAt(), e.host(), e.hostGroup()),
+                    (k, v) -> (v == null) ? HostItem.from(e) : combine(v, e));
         }
         return new ArrayList<>(result.values());
     }
 
     private static HostItem combine(HostItem hostItem, EventItem newEvent) {
+        if (hostItem.retryCount() != newEvent.retryCount()) {
+            return HostItem.from(newEvent);
+        }
+
         long duration = hostItem.duration() + newEvent.duration();
 
         String status;
@@ -235,7 +240,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
 
         public List<EventItem> list(DSLContext tx, EventMarker marker, int count) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            SelectConditionStep<Record9<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean>> q = tx.select(
+            SelectConditionStep<Record10<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer>> q = tx.select(
                     pe.INSTANCE_ID,
                     pe.INSTANCE_CREATED_AT,
                     pe.EVENT_SEQ,
@@ -244,7 +249,8 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     coalesce(field("{0}->>'hostGroup'", String.class, pe.EVENT_DATA), value("-")),
                     field("{0}->>'status'", String.class, pe.EVENT_DATA),
                     coalesce(field("{0}->>'duration'", Long.class, pe.EVENT_DATA), value("0")),
-                    coalesce(field("{0}->>'ignore_errors'", Boolean.class, pe.EVENT_DATA), value("false")))
+                    coalesce(field("{0}->>'ignore_errors'", Boolean.class, pe.EVENT_DATA), value("false")),
+                    coalesce(field("{0}->>'currentRetryCount'", Integer.class, pe.EVENT_DATA), value("0")))
                     .from(pe)
                     .where(pe.EVENT_TYPE.eq(EventType.ANSIBLE.name()));
 
@@ -263,7 +269,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     .fetch(AnsibleEventDao::toEntity);
         }
 
-        private static EventItem toEntity(Record9<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean> r) {
+        private static EventItem toEntity(Record10<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer> r) {
             boolean ignoreErrors = Boolean.TRUE.equals(r.value9());
             String status = r.value7();
             if (ignoreErrors && Status.FAILED.name().equals(status)) {
@@ -279,6 +285,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     .hostGroup(r.value6())
                     .status(status)
                     .duration(r.value8())
+                    .retryCount(r.value10())
                     .build();
         }
 
@@ -374,9 +381,10 @@ public class AnsibleEventProcessor implements ScheduledTask {
             Field<Integer> newStatusWeight = decodeStatus(choose(value((String) null)));
 
             String update = tx.update(ANSIBLE_HOSTS)
-                    .set(ANSIBLE_HOSTS.DURATION, ANSIBLE_HOSTS.DURATION.plus(value((Integer) null)))
-                    .set(ANSIBLE_HOSTS.STATUS, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.STATUS).otherwise(value((String) null)))
-                    .set(ANSIBLE_HOSTS.EVENT_SEQ, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.EVENT_SEQ).otherwise(value((Long) null)))
+                    .set(ANSIBLE_HOSTS.DURATION, when(ANSIBLE_HOSTS.RETRY_COUNT.notEqual((Integer)null), value((Long)null)).otherwise(ANSIBLE_HOSTS.DURATION.plus(value((Integer) null))))
+                    .set(ANSIBLE_HOSTS.STATUS, when(ANSIBLE_HOSTS.RETRY_COUNT.notEqual((Integer)null), value((String)null)).otherwise(when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.STATUS).otherwise(value((String) null))))
+                    .set(ANSIBLE_HOSTS.EVENT_SEQ, when(ANSIBLE_HOSTS.RETRY_COUNT.notEqual((Integer)null), value((Long)null)).otherwise(when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.EVENT_SEQ).otherwise(value((Long) null))))
+                    .set(ANSIBLE_HOSTS.RETRY_COUNT, (Integer)null)
                     .where(ANSIBLE_HOSTS.INSTANCE_ID.eq(value((UUID) null))
                             .and(ANSIBLE_HOSTS.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
                                     .and(ANSIBLE_HOSTS.HOST.eq(value((String) null))
@@ -385,15 +393,30 @@ public class AnsibleEventProcessor implements ScheduledTask {
 
             try (PreparedStatement ps = conn.prepareStatement(update)) {
                 for (HostItem h : hosts) {
-                    ps.setLong(1, h.duration());
-                    ps.setString(2, h.status());
-                    ps.setString(3, h.status());
-                    ps.setString(4, h.status());
-                    ps.setLong(5, h.eventSeq());
-                    ps.setObject(6, h.key().instanceId());
-                    ps.setTimestamp(7, h.key().instanceCreatedAt());
-                    ps.setString(8, h.key().host());
-                    ps.setString(9, h.key().hostGroup());
+                    // set duration
+                    ps.setInt(1, h.retryCount());
+                    ps.setLong(2, h.duration());
+                    ps.setLong(3, h.duration());
+
+                    // set status
+                    ps.setInt(4, h.retryCount());
+                    ps.setString(5, h.status());
+                    ps.setString(6, h.status());
+                    ps.setString(7, h.status());
+
+                    // set event seq
+                    ps.setInt(8, h.retryCount());
+                    ps.setLong(9, h.eventSeq());
+                    ps.setString(10, h.status());
+                    ps.setLong(11, h.eventSeq());
+
+                    //set retry count
+                    ps.setInt(12, h.retryCount());
+
+                    ps.setObject(13, h.key().instanceId());
+                    ps.setTimestamp(14, h.key().instanceCreatedAt());
+                    ps.setString(15, h.key().host());
+                    ps.setString(16, h.key().hostGroup());
 
                     ps.addBatch();
                 }
@@ -409,8 +432,9 @@ public class AnsibleEventProcessor implements ScheduledTask {
                             ANSIBLE_HOSTS.HOST_GROUP,
                             ANSIBLE_HOSTS.STATUS,
                             ANSIBLE_HOSTS.DURATION,
-                            ANSIBLE_HOSTS.EVENT_SEQ)
-                    .values(value((UUID) null), null, null, null, null, null, null)
+                            ANSIBLE_HOSTS.EVENT_SEQ,
+                            ANSIBLE_HOSTS.RETRY_COUNT)
+                    .values(value((UUID) null), null, null, null, null, null, null, null)
                     .getSQL();
 
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
@@ -422,6 +446,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     ps.setString(5, h.status());
                     ps.setLong(6, h.duration());
                     ps.setLong(7, h.eventSeq());
+                    ps.setLong(8, h.retryCount());
 
                     ps.addBatch();
                 }
@@ -500,12 +525,15 @@ public class AnsibleEventProcessor implements ScheduledTask {
 
         long eventSeq();
 
+        int retryCount();
+
         static HostItem from(EventItem event) {
             return ImmutableHostItem.builder()
                     .key(ImmutableKey.of(event.instanceId(), event.instanceCreatedAt(), event.host(), event.hostGroup()))
                     .status(event.status())
                     .duration(event.duration())
                     .eventSeq(event.eventSeq())
+                    .retryCount(event.retryCount())
                     .build();
         }
     }
@@ -528,6 +556,8 @@ public class AnsibleEventProcessor implements ScheduledTask {
         String status();
 
         long duration();
+
+        int retryCount();
     }
 
     @Value.Immutable

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,10 +57,17 @@ public class AnsibleEnv {
 
     public AnsibleEnv parse(Map<String, Object> args) {
         env = mergeEnv(defaultEnv(), concordEnv(), args);
+
         UUID eventCorrelationId = context.getEventCorrelationId();
         if (eventCorrelationId != null) {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
         }
+
+        Integer retryCount = (Integer) context.getVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER);
+        if (retryCount != null) {
+            env.put("CONCORD_CURRENT_RETRY_COUNT", Integer.toString(retryCount));
+        }
+
         return this;
     }
 
@@ -78,6 +85,7 @@ public class AnsibleEnv {
 
     /**
      * Overridable environment variables.
+     *
      * @return
      */
     private Map<String, String> defaultEnv() {
@@ -88,6 +96,7 @@ public class AnsibleEnv {
 
     /**
      * Non-overridable environment variables.
+     *
      * @return
      */
     private Map<String, String> concordEnv() {

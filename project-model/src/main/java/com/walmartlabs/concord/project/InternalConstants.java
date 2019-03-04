@@ -56,7 +56,20 @@ public final class InternalConstants extends Constants {
         @Deprecated
         public static final String EXECUTION_CONTEXT_KEY = "execution";
 
+        /**
+         * Correlation ID of process events. Can be used to create "pre-" and "post-action" event records.
+         */
         public static final String EVENT_CORRELATION_KEY = "__eventCorrelationId";
+
+        /**
+         * The maximum number of retries of the current `retry` block.
+         */
+        public static final String RETRY_COUNTER = "__retryCount";
+
+        /**
+         * The current number of retries of the current `retry` block.
+         */
+        public static final String CURRENT_RETRY_COUNTER = "__currentRetryCount";
     }
 
     public static final class Request extends Constants.Request {

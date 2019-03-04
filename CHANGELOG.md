@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server, ansible: track `retry` count per host;
 - concord-agent: failover support for the websocket connections; 
 - ansible: print a "No changes will be made" warning if `check` or
 `syntaxCheck` modes are used.

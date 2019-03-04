@@ -21,6 +21,7 @@ package com.walmartlabs.concord.project.yaml.converter;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlTaskStep;
@@ -191,9 +192,6 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
 
         private static final Logger log = LoggerFactory.getLogger(RetryUtilsTask.class);
 
-        private static final String RETRY_COUNTER = "__retryCount";
-        private static final String CURRENT_RETRY_COUNTER = "__currentRetryCount";
-
         public void sleep(long t) {
             try {
                 log.info("retry delay {} sec", t/1000);
@@ -218,19 +216,19 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         }
 
         public void inc(ExecutionContext ctx) {
-            int currentValue = getLastVariable(ctx, RETRY_COUNTER, 0);
+            int currentValue = getLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, 0);
             currentValue++;
-            setLastVariable(ctx, RETRY_COUNTER, currentValue);
-            ctx.setVariable(CURRENT_RETRY_COUNTER, currentValue);
+            setLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, currentValue);
+            ctx.setVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER, currentValue);
         }
 
         public boolean isRetryCountExceeded(ExecutionContext ctx, int maxRetryCount) {
-            return getLastVariable(ctx, RETRY_COUNTER, 0) <= maxRetryCount;
+            return getLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, 0) <= maxRetryCount;
         }
 
         public void cleanup(ExecutionContext ctx) {
-            clearLastVariable(ctx, RETRY_COUNTER);
-            ctx.removeVariable(CURRENT_RETRY_COUNTER);
+            clearLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER);
+            ctx.removeVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER);
         }
 
         @SuppressWarnings("unchecked")

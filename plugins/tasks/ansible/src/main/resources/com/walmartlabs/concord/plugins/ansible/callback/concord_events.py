@@ -36,6 +36,10 @@ class CallbackModule(CallbackBase):
         if "CONCORD_EVENT_CORRELATION_ID" in os.environ:
             self.eventCorrelationId = os.environ['CONCORD_EVENT_CORRELATION_ID']
 
+        self.currentRetryCount = None
+        if "CONCORD_CURRENT_RETRY_COUNT" in os.environ:
+            self.currentRetryCount = os.environ['CONCORD_CURRENT_RETRY_COUNT']
+
         self.targetUrl = baseUrl + '/api/v1/process/' + instanceId + '/event'
 
         s = requests.Session()
@@ -48,7 +52,8 @@ class CallbackModule(CallbackBase):
     def handle_event(self, event):
         r = self.session.post(self.targetUrl, data=json.dumps({
             'eventType': 'ANSIBLE',
-            'data': dict(event, **{'parentCorrelationId': self.eventCorrelationId})
+            'data': dict(event, **{'parentCorrelationId': self.eventCorrelationId,
+                                   'currentRetryCount': self.currentRetryCount})
         }))
         r.raise_for_status()
 
