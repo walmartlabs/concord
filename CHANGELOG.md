@@ -8,6 +8,11 @@
 variable - `requestInfo`. Contains the request's parameters, headers
 and the user's IP address.
 
+### Changed
+
+- concord-console: fixed a login issue with non-ASCII usernames or
+passwords.
+
 
 
 ## [1.11.0] - 2019-03-04

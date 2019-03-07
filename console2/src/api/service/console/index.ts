@@ -39,7 +39,7 @@ export const whoami = async (
     if (apiKey) {
         h.set('Authorization', apiKey);
     } else if (username && password) {
-        h.set('Authorization', `Basic ${btoa(username + ':' + password)}`);
+        h.set('Authorization', `Basic ${btoa(unescape(encodeURIComponent(username + ':' + password)))}`);
     }
 
     if (rememberMe) {
