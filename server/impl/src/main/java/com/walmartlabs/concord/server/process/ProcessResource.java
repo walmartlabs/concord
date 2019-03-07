@@ -40,6 +40,7 @@ import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
+import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -62,6 +63,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
@@ -132,7 +134,7 @@ public class ProcessResource implements Resource {
      * @param parentInstanceId
      * @param sync
      * @return
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
     @ApiOperation("Start a new process instance using the supplied payload archive")
@@ -169,7 +171,7 @@ public class ProcessResource implements Resource {
      * @param parentInstanceId
      * @param sync
      * @return
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point")
@@ -193,7 +195,7 @@ public class ProcessResource implements Resource {
      * @param parentInstanceId
      * @param sync
      * @return
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point and provided configuration")
@@ -243,11 +245,12 @@ public class ProcessResource implements Resource {
     public StartProcessResponse start(@ApiParam MultipartInput input,
                                       @ApiParam @Deprecated @QueryParam("parentId") UUID parentInstanceId,
                                       @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                      @ApiParam @Deprecated @QueryParam("out") String[] out) {
+                                      @ApiParam @Deprecated @QueryParam("out") String[] out,
+                                      @Context HttpServletRequest request) {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(input);
+            payload = payloadManager.createPayload(input, parseRequestInfo(request));
 
             // TODO remove after deprecating the old endpoints
             payload = PayloadBuilder.basedOn(payload)
@@ -271,7 +274,7 @@ public class ProcessResource implements Resource {
      * @param parentInstanceId
      * @param sync
      * @return
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point and multipart request data")
@@ -313,7 +316,7 @@ public class ProcessResource implements Resource {
      * @param parentInstanceId
      * @param sync
      * @return
-     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[])}
+     * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
     @ApiOperation("Start a new process using the specified entry point and payload archive")
@@ -1045,6 +1048,15 @@ public class ProcessResource implements Resource {
         } catch (IOException e) {
             throw new ConcordApplicationException("Internal error", e);
         }
+    }
+
+    private static Map<String, Object> parseRequestInfo(HttpServletRequest request) {
+        Map<String, Object> requestInfo = new HashMap<>();
+        requestInfo.put(Constants.Request.REQUEST_INFO_KEY, RequestInfoProcessor.getRequestInfo(request));
+
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put(Constants.Request.ARGUMENTS_KEY, requestInfo);
+        return cfg;
     }
 
     private static Optional<Path> copyToTmp(InputStream in) {

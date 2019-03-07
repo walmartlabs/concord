@@ -49,8 +49,12 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -169,14 +173,16 @@ public class ProjectProcessResource implements Resource {
                           @ApiParam @QueryParam("repoCommitId") String repoCommitId,
                           @ApiParam @PathParam("entryPoint") String entryPoint,
                           @ApiParam @QueryParam("activeProfiles") String activeProfiles,
-                          @Context UriInfo uriInfo) {
+                          @Context HttpServletRequest request) {
 
         try {
             UUID orgId = getOrgId(orgName);
             UUID projectId = getProjectId(orgId, projectName);
             UUID repoId = getRepoId(projectId, repoName);
 
-            return doStartProcess(orgId, projectId, repoId, repoBranchOrTag, repoCommitId, entryPoint, activeProfiles, uriInfo);
+            Map<String, Object> requestInfo = parseRequestInfo(request);
+
+            return doStartProcess(orgId, projectId, repoId, repoBranchOrTag, repoCommitId, entryPoint, activeProfiles, requestInfo);
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error",
                     orgName, projectName, repoName, entryPoint, activeProfiles, e);
@@ -191,7 +197,7 @@ public class ProjectProcessResource implements Resource {
                                     String commitId,
                                     String entryPoint,
                                     String activeProfiles,
-                                    UriInfo uriInfo) {
+                                    Map<String, Object> requestInfo) {
 
         Map<String, Object> cfg = new HashMap<>();
 
@@ -208,11 +214,8 @@ public class ProjectProcessResource implements Resource {
             cfg.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
         }
 
-        if (uriInfo != null) {
-            Map<String, Object> args = new HashMap<>();
-            args.put("requestInfo", RequestInfoProcessor.createRequestInfo(uriInfo));
-            args.putAll(parseArguments(uriInfo));
-            cfg.put(InternalConstants.Request.ARGUMENTS_KEY, args);
+        if (requestInfo != null) {
+            cfg.put(InternalConstants.Request.ARGUMENTS_KEY, requestInfo);
         }
 
         PartialProcessKey processKey = PartialProcessKey.create();
@@ -238,6 +241,13 @@ public class ProjectProcessResource implements Resource {
         }
 
         return proceed(processKey);
+    }
+
+    private Map<String, Object> parseRequestInfo(HttpServletRequest request) {
+        Map<String, Object> args = new HashMap<>();
+        args.put("requestInfo", RequestInfoProcessor.getRequestInfo(request));
+        args.putAll(parseArguments(request));
+        return args;
     }
 
     @POST
@@ -311,10 +321,10 @@ public class ProjectProcessResource implements Resource {
         return args;
     }
 
-    private static Map<String, Object> parseArguments(UriInfo uriInfo) {
+    private static Map<String, Object> parseArguments(HttpServletRequest request) {
         Map<String, Object> result = new HashMap<>();
 
-        for (Map.Entry<String, List<String>> e : uriInfo.getQueryParameters(true).entrySet()) {
+        for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
             String k = e.getKey();
             if (!k.startsWith("arguments.")) {
                 continue;
@@ -322,8 +332,8 @@ public class ProjectProcessResource implements Resource {
             k = k.substring("arguments.".length());
 
             Object v = e.getValue();
-            if (e.getValue().size() == 1) {
-                v = e.getValue().get(0);
+            if (e.getValue().length == 1) {
+                v = e.getValue()[0];
             }
 
             Map<String, Object> m = ConfigurationUtils.toNested(k, v);

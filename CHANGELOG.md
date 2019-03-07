@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: new automatically-provided process
+variable - `requestInfo`. Contains the request's parameters, headers
+and the user's IP address.
+
+
+
 ## [1.11.0] - 2019-03-04
 
 ### Added

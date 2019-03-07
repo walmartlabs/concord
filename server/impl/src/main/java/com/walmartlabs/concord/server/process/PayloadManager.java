@@ -73,7 +73,7 @@ public class PayloadManager {
     }
 
     @WithTimer
-    public Payload createPayload(MultipartInput input) throws IOException {
+    public Payload createPayload(MultipartInput input, Map<String, Object> cfg) throws IOException {
         PartialProcessKey processKey = PartialProcessKey.create();
 
         UUID parentInstanceId = MultipartUtils.getUuid(input, Constants.Multipart.PARENT_INSTANCE_ID);
@@ -108,6 +108,7 @@ public class PayloadManager {
                 .outExpressions(out)
                 .initiator(initiator.getId(), initiator.getUsername())
                 .meta(meta)
+                .configuration(cfg)
                 .build();
     }
 
@@ -115,7 +116,7 @@ public class PayloadManager {
      * Creates a payload. It is implied that all necessary resources to start a process are
      * supplied in the multipart data and/or provided by a project's repository or a template.
      *
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
+     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
      */
     @Deprecated
     public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
@@ -133,7 +134,7 @@ public class PayloadManager {
     /**
      * Creates a payload from the supplied map of parameters.
      *
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
+     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
      */
     @Deprecated
     public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
@@ -151,7 +152,7 @@ public class PayloadManager {
     /**
      * Creates a payload from an archive, containing all necessary resources.
      *
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
+     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
      */
     @Deprecated
     public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,
@@ -169,7 +170,7 @@ public class PayloadManager {
     /**
      * Creates a payload from an archive, containing all necessary resources.
      *
-     * @deprecated prefer {@link #createPayload(MultipartInput)}
+     * @deprecated prefer {@link #createPayload(MultipartInput, Map<String, Object>)}
      */
     @Deprecated
     public Payload createPayload(PartialProcessKey processKey, UUID parentInstanceId, UUID initiatorId, String initiator,

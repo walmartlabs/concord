@@ -1,6 +1,6 @@
 flows:
   default:
-  - log: "Hello, ${name}!"
+  - log: "Hello, ${requestInfo}!"
 
 configuration:
   arguments:

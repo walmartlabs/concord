@@ -31,12 +31,12 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +68,7 @@ public class ProcessPortalService implements Resource {
     @Validate
     public Response startProcess(@QueryParam("entryPoint") String entryPoint,
                                  @QueryParam("activeProfiles") String activeProfiles,
-                                 @Context UriInfo uriInfo) {
+                                 @Context HttpServletRequest request) {
 
         if (entryPoint == null || entryPoint.trim().isEmpty()) {
             return badRequest("Entry point is not specified");
@@ -77,7 +77,7 @@ public class ProcessPortalService implements Resource {
         try {
             EntryPoint ep = parseEntryPoint(entryPoint);
 
-            return processPortalResource.start(OrganizationManager.DEFAULT_ORG_NAME, ep.projectName, ep.repoName, null, null, ep.flow, activeProfiles, uriInfo);
+            return processPortalResource.start(OrganizationManager.DEFAULT_ORG_NAME, ep.projectName, ep.repoName, null, null, ep.flow, activeProfiles, request);
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}'] -> error", entryPoint, activeProfiles, e);
             return processError("Process error: " + e.getMessage());
