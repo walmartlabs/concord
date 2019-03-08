@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: user accounts can now be disabled via an API call;
 - concord-server: new automatically-provided process
 variable - `requestInfo`. Contains the request's parameters, headers
 and the user's IP address.

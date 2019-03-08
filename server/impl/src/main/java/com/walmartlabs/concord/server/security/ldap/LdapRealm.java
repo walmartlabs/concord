@@ -132,20 +132,24 @@ public class LdapRealm extends AbstractLdapRealm {
             LdapUtils.closeContext(ctx);
         }
 
-        UserEntry user = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
-        UUID userId = user.getId();
+        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
+        if (u.isDisabled()) {
+            throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+        }
+
+        UUID userId = u.getId();
 
         // update user's email if needed
-        if (user.getEmail() == null && ldapPrincipal.getEmail() != null) {
-            user = userManager.update(userId, ldapPrincipal.getEmail())
+        if (u.getEmail() == null && ldapPrincipal.getEmail() != null) {
+            u = userManager.updateEmail(userId, ldapPrincipal.getEmail())
                     .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
         }
 
-        UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, user);
+        UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(userId)
-                .field("username", user.getName())
+                .field("username", u.getName())
                 .field("realm", REALM_NAME)
                 .log();
 

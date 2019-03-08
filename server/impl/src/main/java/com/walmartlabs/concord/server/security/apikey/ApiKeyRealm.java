@@ -69,6 +69,10 @@ public class ApiKeyRealm extends AuthorizingRealm {
             return null;
         }
 
+        if (u.isDisabled()) {
+            throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+        }
+
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(u.getId())
                 .field("realm", REALM_NAME)

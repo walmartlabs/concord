@@ -63,8 +63,12 @@ public class UserManager {
         return Optional.ofNullable(userDao.getByName(name));
     }
 
-    public Optional<UserEntry> update(UUID userId, String email) {
-        return Optional.ofNullable(userDao.update(userId, email));
+    public void update(UUID userId, UserType userType, boolean isDisabled) {
+        userDao.update(userId, userType, isDisabled);
+    }
+
+    public Optional<UserEntry> updateEmail(UUID userId, String email) {
+        return Optional.ofNullable(userDao.updateEmail(userId, email));
     }
 
     public UserEntry create(String username, UserType type) {

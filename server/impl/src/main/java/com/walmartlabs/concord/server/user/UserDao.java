@@ -67,7 +67,14 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
-    public UserEntry update(UUID id, String email) {
+    public void disable(UUID id) {
+        tx(tx -> tx.update(USERS)
+                .set(USERS.IS_DISABLED, inline(true))
+                .where(USERS.USER_ID.eq(id))
+                .execute());
+    }
+
+    public UserEntry updateEmail(UUID id, String email) {
         return txResult(tx -> {
             UpdateQuery<UsersRecord> q = tx.updateQuery(USERS);
 
@@ -82,10 +89,24 @@ public class UserDao extends AbstractDao {
         });
     }
 
+    public void update(UUID id, UserType userType, boolean isDisabled) {
+        tx(tx -> {
+            UpdateSetMoreStep<UsersRecord> q = tx.update(USERS)
+                    .set(USERS.IS_DISABLED, isDisabled);
+
+            if (userType != null) {
+                q.set(USERS.USER_TYPE, userType.name());
+            }
+
+            q.where(USERS.USER_ID.eq(id))
+                    .execute();
+        });
+    }
+
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record4<UUID, String, String, String> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL)
+            Record5<UUID, String, String, String, Boolean> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
                             .from(USERS)
                             .where(USERS.USER_ID.eq(id))
                             .fetchOne();
@@ -100,8 +121,8 @@ public class UserDao extends AbstractDao {
 
     public UserEntry getByName(String username) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record4<UUID, String, String, String> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL)
+            Record5<UUID, String, String, String, Boolean> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
                             .from(USERS)
                             .where(USERS.USERNAME.eq(username))
                             .fetchOne();
@@ -114,7 +135,7 @@ public class UserDao extends AbstractDao {
         }
     }
 
-    private UserEntry getUserInfo(DSLContext tx, Record4<UUID, String, String, String> r) {
+    private UserEntry getUserInfo(DSLContext tx, Record5<UUID, String, String, String, Boolean> r) {
         // TODO join?
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
@@ -139,7 +160,8 @@ public class UserDao extends AbstractDao {
                 new HashSet<>(orgs),
                 UserType.valueOf(r.get(USERS.USER_TYPE)),
                 r.get(USERS.USER_EMAIL),
-                new HashSet<>(roles));
+                new HashSet<>(roles),
+                r.get(USERS.IS_DISABLED));
     }
 
     public UUID getId(String username) {

@@ -81,7 +81,7 @@ public class UserResource implements Resource {
             UserEntry e = userManager.create(username, req.getType());
             return new CreateUserResponse(e.getId(), OperationResult.CREATED);
         } else {
-            // TODO allow updating of the type?
+            userManager.update(id, req.getType(), req.isDisabled());
             return new CreateUserResponse(id, OperationResult.UPDATED);
         }
     }

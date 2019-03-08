@@ -52,13 +52,16 @@ public class UserEntry implements Serializable {
 
     private final Set<RoleEntry> roles;
 
+    private final boolean disabled;
+
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
                      @JsonProperty("orgs") Set<OrganizationEntry> orgs,
                      @JsonProperty("type") UserType type,
                      @JsonProperty("email") String email,
-                     @JsonProperty("roles") Set<RoleEntry> roles) {
+                     @JsonProperty("roles") Set<RoleEntry> roles,
+                     @JsonProperty("disabled") boolean disabled) {
 
         this.id = id;
         this.name = name;
@@ -66,6 +69,7 @@ public class UserEntry implements Serializable {
         this.type = type;
         this.email = email;
         this.roles = roles;
+        this.disabled = disabled;
     }
 
     public UUID getId() {
@@ -92,6 +96,10 @@ public class UserEntry implements Serializable {
         return roles;
     }
 
+    public boolean isDisabled() {
+        return disabled;
+    }
+
     @Override
     public String toString() {
         return "UserEntry{" +
@@ -101,6 +109,7 @@ public class UserEntry implements Serializable {
                 ", type=" + type +
                 ", email='" + email + '\'' +
                 ", roles=" + roles +
+                ", disabled=" + disabled +
                 '}';
     }
 }

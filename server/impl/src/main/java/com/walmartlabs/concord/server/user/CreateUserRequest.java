@@ -37,12 +37,16 @@ public class CreateUserRequest implements Serializable {
 
     private final UserType type;
 
+    private final boolean disabled;
+
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
-                             @JsonProperty("userType") UserType type) {
+                             @JsonProperty("userType") UserType type,
+                             @JsonProperty("disabled") boolean disabled) {
 
         this.username = username;
         this.type = type;
+        this.disabled = disabled;
     }
 
     public String getUsername() {
@@ -53,11 +57,16 @@ public class CreateUserRequest implements Serializable {
         return type;
     }
 
+    public boolean isDisabled() {
+        return disabled;
+    }
+
     @Override
     public String toString() {
         return "CreateUserRequest{" +
                 "username='" + username + '\'' +
                 ", type=" + type +
+                ", disabled=" + disabled +
                 '}';
     }
 }
