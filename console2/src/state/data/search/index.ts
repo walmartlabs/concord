@@ -21,9 +21,18 @@
 import { Action, combineReducers } from 'redux';
 import { all, call, put, throttle } from 'redux-saga/effects';
 
-import { findUsers as apiFindUsers } from '../../../api/service/console';
+import {
+    findUsers as apiFindUsers,
+    findLdapGroups as apiFindLdapGroups
+} from '../../../api/service/console';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
-import { SearchUsersRequest, SearchUsersState, State } from './types';
+import {
+    SearchLdapGroupsRequest,
+    SearchLdapGroupsState,
+    SearchUsersRequest,
+    SearchUsersState,
+    State
+} from './types';
 
 // https://github.com/facebook/create-react-app/issues/6054
 export * from './types';
@@ -33,7 +42,11 @@ const NAMESPACE = 'search';
 const actionTypes = {
     FIND_USERS_REQUEST: `${NAMESPACE}/users/request`,
     FIND_USERS_RESPONSE: `${NAMESPACE}/users/response`,
-    FIND_USERS_RESET: `${NAMESPACE}/users/reset`
+    FIND_USERS_RESET: `${NAMESPACE}/users/reset`,
+
+    FIND_LDAP_GROUPS_REQUEST: `${NAMESPACE}/ldapGroups/request`,
+    FIND_LDAP_GROUPS_RESPONSE: `${NAMESPACE}/ldapGroups/response`,
+    FIND_LDAP_GROUPS_RESET: `${NAMESPACE}/ldapGroups/reset`
 };
 
 export const actions = {
@@ -44,6 +57,15 @@ export const actions = {
 
     resetUserSearch: (): Action => ({
         type: actionTypes.FIND_USERS_RESET
+    }),
+
+    findLdapGroups: (filter: string): SearchLdapGroupsRequest => ({
+        type: actionTypes.FIND_LDAP_GROUPS_REQUEST,
+        filter
+    }),
+
+    resetLdapGroupSearch: (): Action => ({
+        type: actionTypes.FIND_LDAP_GROUPS_RESET
     })
 };
 
@@ -59,8 +81,24 @@ const usersReducers = combineReducers<SearchUsersState>({
     response: makeResponseReducer(actionTypes.FIND_USERS_RESPONSE, actionTypes.FIND_USERS_RESET)
 });
 
+const ldapGroupsReducers = combineReducers<SearchLdapGroupsState>({
+    running: makeLoadingReducer(
+        [actionTypes.FIND_LDAP_GROUPS_REQUEST],
+        [actionTypes.FIND_LDAP_GROUPS_RESET, actionTypes.FIND_LDAP_GROUPS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.FIND_LDAP_GROUPS_RESET, actionTypes.FIND_LDAP_GROUPS_REQUEST],
+        [actionTypes.FIND_LDAP_GROUPS_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.FIND_LDAP_GROUPS_RESPONSE,
+        actionTypes.FIND_LDAP_GROUPS_RESET
+    )
+});
+
 export const reducers = combineReducers<State>({
-    users: usersReducers
+    users: usersReducers,
+    ldapGroups: ldapGroupsReducers
 });
 
 function* onFindUsers({ filter }: SearchUsersRequest) {
@@ -85,6 +123,31 @@ function* onFindUsers({ filter }: SearchUsersRequest) {
     }
 }
 
+function* onFindLdapGroups({ filter }: SearchLdapGroupsRequest) {
+    if (filter.length < 5) {
+        // ignore short values
+        yield put({
+            type: actionTypes.FIND_LDAP_GROUPS_RESPONSE,
+            items: []
+        });
+
+        return;
+    }
+
+    try {
+        const response = yield call(apiFindLdapGroups, filter);
+        yield put({
+            type: actionTypes.FIND_LDAP_GROUPS_RESPONSE,
+            items: response
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.FIND_LDAP_GROUPS_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
-    yield all([throttle(2000, actionTypes.FIND_USERS_REQUEST, onFindUsers)]);
+    yield all([
+        throttle(2000, actionTypes.FIND_USERS_REQUEST, onFindUsers),
+        throttle(2000, actionTypes.FIND_LDAP_GROUPS_REQUEST, onFindLdapGroups)
+    ]);
 };

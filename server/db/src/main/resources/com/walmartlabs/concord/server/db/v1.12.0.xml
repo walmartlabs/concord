@@ -11,4 +11,54 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="1120010" author="ybrigo@gmail.com">
+        <createTable tableName="USER_LDAP_GROUPS">
+            <column name="USER_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LDAP_GROUP" type="varchar(1024)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UPDATED_AT" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="USER_LDAP_GROUPS"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="FK_USER_LDAP_GROUPS_USER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="1120020" author="ybrigo@gmail.com">
+        <createTable tableName="TEAM_LDAP_GROUPS">
+            <column name="TEAM_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LDAP_GROUP" type="varchar(1024)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TEAM_ROLE" type="varchar(128)" defaultValue="MEMBER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="TEAM_LDAP_GROUPS" columnNames="TEAM_ID, LDAP_GROUP"/>
+    </changeSet>
+
+    <changeSet id="1120030" author="ybrigo@gmail.com">
+        <createView viewName="V_USER_TEAMS" replaceIfExists="true">
+            select USER_ID, TEAM_ID, TEAM_ROLE
+            from USER_TEAMS
+            union
+            select distinct ulg.USER_ID, tlg.TEAM_ID, tlg.TEAM_ROLE
+            from TEAM_LDAP_GROUPS tlg, USER_LDAP_GROUPS ulg
+            where
+              ulg.LDAP_GROUP = tlg.LDAP_GROUP
+              and not exists(select 1 from USER_TEAMS ut where ut.USER_ID = ulg.USER_ID and ut.TEAM_ID = tlg.TEAM_ID)
+        </createView>
+    </changeSet>
 </databaseChangeLog>

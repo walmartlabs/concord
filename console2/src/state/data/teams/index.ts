@@ -29,7 +29,10 @@ import {
     get as apiGet,
     list as apiList,
     listUsers as apiListUsers,
+    listLdapGroups as apiListLdapGroups,
+    addLdapGroups as apiReplaceLdapGroups,
     NewTeamEntry,
+    NewTeamLdapGroupEntry,
     NewTeamUserEntry,
     rename as apiRename
 } from '../../../api/org/team';
@@ -47,12 +50,16 @@ import {
     DeleteTeamState,
     GetTeamRequest,
     GetTeamState,
+    ListTeamLdapGroupsRequest,
+    ListTeamLdapGroupsState,
     ListTeamsRequest,
     ListTeamsState,
     ListTeamUsersRequest,
     ListTeamUsersState,
     RenameTeamRequest,
     RenameTeamState,
+    ReplaceTeamLdapGroupsRequest,
+    ReplaceTeamLdapGroupsState,
     ReplaceTeamUsersRequest,
     ReplaceTeamUsersState,
     State
@@ -80,8 +87,14 @@ const actionTypes = {
     LIST_TEAM_USERS_REQUEST: `${NAMESPACE}/listUsers/request`,
     LIST_TEAM_USERS_RESPONSE: `${NAMESPACE}/listUsers/response`,
 
+    LIST_TEAM_LDAP_GROUPS_REQUEST: `${NAMESPACE}/listLdapGroups/request`,
+    LIST_TEAM_LDAP_GROUPS_RESPONSE: `${NAMESPACE}/listLdapGroups/response`,
+
     REPLACE_TEAM_USERS_REQUEST: `${NAMESPACE}/replace/request`,
     REPLACE_TEAM_USERS_RESPONSE: `${NAMESPACE}/replace/response`,
+
+    REPLACE_TEAM_LDAP_GROUPS_REQUEST: `${NAMESPACE}/replaceLdapGroups/request`,
+    REPLACE_TEAM_LDAP_GROUPS_RESPONSE: `${NAMESPACE}/replaceLdapGroups/response`,
 
     RESET_TEAMS: `${NAMESPACE}/reset`
 };
@@ -127,6 +140,12 @@ export const actions = {
         teamName
     }),
 
+    listTeamLdapGroups: (orgName: ConcordKey, teamName: ConcordKey): ListTeamLdapGroupsRequest => ({
+        type: actionTypes.LIST_TEAM_LDAP_GROUPS_REQUEST,
+        orgName,
+        teamName
+    }),
+
     replaceUsers: (
         orgName: ConcordKey,
         teamName: ConcordKey,
@@ -136,6 +155,17 @@ export const actions = {
         orgName,
         teamName,
         users
+    }),
+
+    replaceLdapGroups: (
+        orgName: ConcordKey,
+        teamName: ConcordKey,
+        groups: NewTeamLdapGroupEntry[]
+    ): ReplaceTeamLdapGroupsRequest => ({
+        type: actionTypes.REPLACE_TEAM_LDAP_GROUPS_REQUEST,
+        orgName,
+        teamName,
+        groups
     }),
 
     reset: () => ({
@@ -200,6 +230,21 @@ const listUsersReducers = combineReducers<ListTeamUsersState>({
     response: makeResponseReducer(actionTypes.LIST_TEAM_USERS_RESPONSE, actionTypes.RESET_TEAMS)
 });
 
+const listLdapGroupsReducers = combineReducers<ListTeamLdapGroupsState>({
+    running: makeLoadingReducer(
+        [actionTypes.LIST_TEAM_LDAP_GROUPS_REQUEST],
+        [actionTypes.LIST_TEAM_LDAP_GROUPS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.LIST_TEAM_LDAP_GROUPS_REQUEST],
+        [actionTypes.LIST_TEAM_LDAP_GROUPS_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.LIST_TEAM_LDAP_GROUPS_RESPONSE,
+        actionTypes.RESET_TEAMS
+    )
+});
+
 const replaceUsersReducers = combineReducers<ReplaceTeamUsersState>({
     running: makeLoadingReducer(
         [actionTypes.REPLACE_TEAM_USERS_REQUEST],
@@ -212,6 +257,21 @@ const replaceUsersReducers = combineReducers<ReplaceTeamUsersState>({
     response: makeResponseReducer(actionTypes.REPLACE_TEAM_USERS_RESPONSE, actionTypes.RESET_TEAMS)
 });
 
+const replaceLdapGroupsReducers = combineReducers<ReplaceTeamLdapGroupsState>({
+    running: makeLoadingReducer(
+        [actionTypes.REPLACE_TEAM_LDAP_GROUPS_REQUEST],
+        [actionTypes.REPLACE_TEAM_LDAP_GROUPS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.RESET_TEAMS, actionTypes.REPLACE_TEAM_LDAP_GROUPS_REQUEST],
+        [actionTypes.REPLACE_TEAM_LDAP_GROUPS_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.REPLACE_TEAM_LDAP_GROUPS_RESPONSE,
+        actionTypes.RESET_TEAMS
+    )
+});
+
 export const reducers = combineReducers<State>({
     teamById: makeEntityByIdReducer(actionTypes.TEAM_DATA_RESPONSE), // TODO append LIST_TEAM_USERS_RESPONSE data?
 
@@ -222,7 +282,9 @@ export const reducers = combineReducers<State>({
     deleteTeam: deleteTeamReducers,
 
     listUsers: listUsersReducers,
-    replaceUsers: replaceUsersReducers
+    listLdapGroups: listLdapGroupsReducers,
+    replaceUsers: replaceUsersReducers,
+    replaceLdapGroups: replaceLdapGroupsReducers
 });
 
 export const selectors = {
@@ -313,6 +375,18 @@ function* onListUsers({ orgName, teamName }: ListTeamUsersRequest) {
     }
 }
 
+function* onListLdapGroups({ orgName, teamName }: ListTeamLdapGroupsRequest) {
+    try {
+        const response = yield call(apiListLdapGroups, orgName, teamName);
+        yield put({
+            type: actionTypes.LIST_TEAM_LDAP_GROUPS_RESPONSE,
+            items: response
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.LIST_TEAM_LDAP_GROUPS_RESPONSE, e);
+    }
+}
+
 function* onReplaceUsers({ orgName, teamName, users }: ReplaceTeamUsersRequest) {
     try {
         yield call(apiAddUsers, orgName, teamName, true, users);
@@ -326,6 +400,19 @@ function* onReplaceUsers({ orgName, teamName, users }: ReplaceTeamUsersRequest) 
     }
 }
 
+function* onReplaceLdapGroups({ orgName, teamName, groups }: ReplaceTeamLdapGroupsRequest) {
+    try {
+        yield call(apiReplaceLdapGroups, orgName, teamName, true, groups);
+        yield put({
+            type: actionTypes.REPLACE_TEAM_LDAP_GROUPS_RESPONSE
+        });
+
+        yield put(actions.listTeamLdapGroups(orgName, teamName));
+    } catch (e) {
+        yield handleErrors(actionTypes.REPLACE_TEAM_LDAP_GROUPS_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_TEAM_REQUEST, onGet),
@@ -334,6 +421,8 @@ export const sagas = function*() {
         takeLatest(actionTypes.RENAME_TEAM_REQUEST, onRename),
         takeLatest(actionTypes.DELETE_TEAM_REQUEST, onDelete),
         takeLatest(actionTypes.LIST_TEAM_USERS_REQUEST, onListUsers),
-        takeLatest(actionTypes.REPLACE_TEAM_USERS_REQUEST, onReplaceUsers)
+        takeLatest(actionTypes.REPLACE_TEAM_USERS_REQUEST, onReplaceUsers),
+        takeLatest(actionTypes.LIST_TEAM_LDAP_GROUPS_REQUEST, onListLdapGroups),
+        takeLatest(actionTypes.REPLACE_TEAM_LDAP_GROUPS_REQUEST, onReplaceLdapGroups)
     ]);
 };

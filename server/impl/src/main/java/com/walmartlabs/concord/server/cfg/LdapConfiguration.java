@@ -29,6 +29,7 @@ import javax.inject.Singleton;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Named
@@ -56,6 +57,18 @@ public class LdapConfiguration implements Serializable {
     private String usernameProperty;
 
     @Inject
+    @Config("ldap.groupSearchFilter")
+    private String groupSearchFilter;
+
+    @Inject
+    @Config("ldap.groupNameProperty")
+    private String groupNameProperty;
+
+    @Inject
+    @Config("ldap.groupDisplayNameProperty")
+    private String groupDisplayNameProperty;
+
+    @Inject
     @Config("ldap.systemUsername")
     private String systemUsername;
 
@@ -67,6 +80,11 @@ public class LdapConfiguration implements Serializable {
     @Inject
     @Config("ldap.mailProperty")
     private String mailProperty;
+
+    @Inject
+    @Nullable
+    @Config("ldap.returningAttributes")
+    private List<String> returningAttributes;
 
     private final Set<String> exposeAttributes;
 
@@ -95,6 +113,18 @@ public class LdapConfiguration implements Serializable {
         return usernameProperty;
     }
 
+    public String getGroupSearchFilter() {
+        return groupSearchFilter;
+    }
+
+    public String getGroupNameProperty() {
+        return groupNameProperty;
+    }
+
+    public String getGroupDisplayNameProperty() {
+        return groupDisplayNameProperty;
+    }
+
     public String getSystemUsername() {
         return systemUsername;
     }
@@ -109,6 +139,10 @@ public class LdapConfiguration implements Serializable {
 
     public Set<String> getExposeAttributes() {
         return exposeAttributes;
+    }
+
+    public List<String> getReturningAttributes() {
+        return returningAttributes;
     }
 
     private static Set<String> split(String s) {

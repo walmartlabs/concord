@@ -56,6 +56,7 @@ export { default as SingleOperationPopup } from './SingleOperationPopup';
 export { default as TeamAccessDropdown } from './TeamAccessDropdown';
 export { default as TeamAccessList } from './TeamAccessList';
 export { default as TeamMemberList } from './TeamMemberList';
+export { default as TeamLdapGroupList } from './TeamLdapGroupList';
 export { default as TeamRoleDropdown } from './TeamRoleDropdown';
 export { default as UserProcessByOrgCards } from './UserProcessByOrgCards';
 export { default as UserProcessStats } from './UserProcessStats';

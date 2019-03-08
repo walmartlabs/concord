@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_KV_STORE;
 import static com.walmartlabs.concord.server.jooq.tables.ProjectTeamAccess.PROJECT_TEAM_ACCESS;
@@ -44,7 +45,6 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
-import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
@@ -302,9 +302,9 @@ public class ProjectDao extends AbstractDao {
                 .from(TEAMS)
                 .where(TEAMS.ORG_ID.eq(orgId));
 
-        Condition filterByTeamMember = exists(selectOne().from(USER_TEAMS)
-                .where(USER_TEAMS.USER_ID.eq(currentUserId)
-                        .and(USER_TEAMS.TEAM_ID.in(teamIds))));
+        Condition filterByTeamMember = exists(selectOne().from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                        .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
         try (DSLContext tx = DSL.using(cfg)) {
             SelectJoinStep<Record9<UUID, String, String, UUID, String, String, UUID, String, Boolean>> q = tx.select(
@@ -357,9 +357,9 @@ public class ProjectDao extends AbstractDao {
     }
 
     public boolean hasAccessLevel(DSLContext tx, UUID projectId, UUID userId, ResourceAccessLevel... levels) {
-        SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
-                .from(USER_TEAMS)
-                .where(USER_TEAMS.USER_ID.eq(userId));
+        SelectConditionStep<Record1<UUID>> teamIds = select(V_USER_TEAMS.TEAM_ID)
+                .from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(userId));
 
         return tx.fetchExists(selectFrom(PROJECT_TEAM_ACCESS)
                 .where(PROJECT_TEAM_ACCESS.PROJECT_ID.eq(projectId)

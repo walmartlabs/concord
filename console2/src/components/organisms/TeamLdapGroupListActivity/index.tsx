@@ -23,14 +23,10 @@ import { connect, Dispatch } from 'react-redux';
 import { Loader } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
-import { NewTeamUserEntry, TeamUserEntry } from '../../../api/org/team';
+import { NewTeamLdapGroupEntry, TeamLdapGroupEntry } from '../../../api/org/team';
 import { actions, State } from '../../../state/data/teams';
 import { comparators } from '../../../utils';
-import { RequestErrorMessage, TeamMemberList } from '../../molecules';
-
-interface OwnState {
-    filter?: string;
-}
+import { RequestErrorMessage, TeamLdapGroupList } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordId;
@@ -38,7 +34,7 @@ interface ExternalProps {
 }
 
 interface StateProps {
-    data: TeamUserEntry[];
+    data: TeamLdapGroupEntry[];
     loading: boolean;
     loadError: RequestError;
     updating: boolean;
@@ -48,21 +44,12 @@ interface StateProps {
 interface DispatchProps {
     reset: () => void;
     load: (orgName: ConcordId, teamName: ConcordId) => void;
-    update: (orgName: ConcordId, teamName: ConcordId, users: NewTeamUserEntry[]) => void;
+    update: (orgName: ConcordId, teamName: ConcordId, users: NewTeamLdapGroupEntry[]) => void;
 }
 
 type Props = ExternalProps & StateProps & DispatchProps;
 
-const filterData = (data: TeamUserEntry[], filter?: string): TeamUserEntry[] => {
-    if (!filter || filter.length === 0) {
-        return data;
-    }
-
-    const f = filter.toLowerCase();
-    return data.filter((d) => d.username.toLowerCase().search(f) >= 0);
-};
-
-class TeamMemberListActivity extends React.PureComponent<Props, OwnState> {
+class TeamLdapGroupListActivity extends React.PureComponent<Props> {
     constructor(props: Props) {
         super(props);
         this.state = {};
@@ -83,12 +70,8 @@ class TeamMemberListActivity extends React.PureComponent<Props, OwnState> {
 
     init() {
         const { reset, load, orgName, teamName } = this.props;
-        reset(); // TODO should it be in sagas?
+        reset();
         load(orgName, teamName);
-    }
-
-    handleFilterChange(value: string) {
-        this.setState({ filter: value });
     }
 
     render() {
@@ -115,8 +98,8 @@ class TeamMemberListActivity extends React.PureComponent<Props, OwnState> {
             <>
                 {updateError && <RequestErrorMessage error={updateError} />}
 
-                <TeamMemberList
-                    data={filterData(data, this.state.filter)}
+                <TeamLdapGroupList
+                    data={data}
                     submitting={updating}
                     submit={(users) => update(orgName, teamName, users)}
                 />
@@ -125,36 +108,37 @@ class TeamMemberListActivity extends React.PureComponent<Props, OwnState> {
     }
 }
 
-const getUsers = ({ listUsers }: State): TeamUserEntry[] => {
-    if (!listUsers.response) {
+const getLdapGroups = ({ listLdapGroups }: State): TeamLdapGroupEntry[] => {
+    if (!listLdapGroups.response) {
         return [];
     }
 
-    if (!listUsers.response.items) {
+    if (!listLdapGroups.response.items) {
         return [];
     }
 
-    const items = listUsers.response.items;
+    const items = listLdapGroups.response.items;
     return items
         .sort(comparators.byProperty((i) => i.role))
-        .sort(comparators.byProperty((i) => i.username));
+        .sort(comparators.byProperty((i) => i.group));
 };
 
 const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
-    data: getUsers(teams),
-    loading: teams.listUsers.running,
-    loadError: teams.listUsers.error,
-    updating: teams.replaceUsers.running,
-    updateError: teams.replaceUsers.error
+    data: getLdapGroups(teams),
+    loading: teams.listLdapGroups.running,
+    loadError: teams.listLdapGroups.error,
+    updating: teams.replaceLdapGroups.running,
+    updateError: teams.replaceLdapGroups.error
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
-    load: (orgName, teamName) => dispatch(actions.listTeamUsers(orgName, teamName)),
-    update: (orgName, teamName, users) => dispatch(actions.replaceUsers(orgName, teamName, users))
+    load: (orgName, teamName) => dispatch(actions.listTeamLdapGroups(orgName, teamName)),
+    update: (orgName, teamName, users) =>
+        dispatch(actions.replaceLdapGroups(orgName, teamName, users))
 });
 
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(TeamMemberListActivity);
+)(TeamLdapGroupListActivity);

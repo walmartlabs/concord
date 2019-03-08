@@ -171,6 +171,35 @@ public class TeamManager {
                 .log();
     }
 
+    public void addLdapGroups(String orgName, String teamName, boolean replace, Collection<TeamLdapGroupEntry> groups) {
+        TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
+
+        teamDao.tx(tx -> {
+            if (replace) {
+                teamDao.removeLdapGroups(tx, t.getId());
+            }
+
+            for (TeamLdapGroupEntry g : groups) {
+                TeamRole role = g.role();
+                if (role == null) {
+                    role = TeamRole.MEMBER;
+                }
+
+                teamDao.upsertLdapGroup(tx, t.getId(), g.group(), role);
+            }
+
+            validateUsers(tx, t.getOrgId());
+        });
+
+        auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
+                .field("id", t.getId())
+                .field("orgId", t.getOrgId())
+                .field("name", t.getName())
+                .field("action", "addLdapGroups")
+                .field("groups", groups)
+                .log();
+    }
+
     private void validateUsers(DSLContext tx, UUID orgId) {
         if (!orgDao.hasRole(tx, orgId, TeamRole.OWNER)) {
             throw new ValidationErrorsException("Organization must have at least one OWNER");

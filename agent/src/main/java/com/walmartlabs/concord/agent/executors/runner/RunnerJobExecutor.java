@@ -306,7 +306,7 @@ public class RunnerJobExecutor {
         long t2 = System.currentTimeMillis();
 
         if (job.isDebugMode()) {
-            job.getLog().info("Forking a VM took %dms", (t2 - t1));
+            job.getLog().info("Forking a VM took {}ms", (t2 - t1));
         }
 
         return entry;

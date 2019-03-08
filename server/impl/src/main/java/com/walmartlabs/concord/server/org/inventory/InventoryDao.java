@@ -33,9 +33,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.INVENTORY_TEAM_ACCESS;
+import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Inventories.INVENTORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
-import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
@@ -166,9 +166,9 @@ public class InventoryDao extends AbstractDao {
     }
 
     private boolean hasAccessLevel(DSLContext tx, UUID inventoryId, UUID userId, ResourceAccessLevel... levels) {
-        SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
-                .from(USER_TEAMS)
-                .where(USER_TEAMS.USER_ID.eq(userId));
+        SelectConditionStep<Record1<UUID>> teamIds = select(V_USER_TEAMS.TEAM_ID)
+                .from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(userId));
 
         return tx.fetchExists(selectFrom(INVENTORY_TEAM_ACCESS)
                 .where(INVENTORY_TEAM_ACCESS.INVENTORY_ID.eq(inventoryId)

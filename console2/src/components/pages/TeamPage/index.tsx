@@ -36,6 +36,8 @@ interface RouteProps {
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/members')) {
         return 'members';
+    } else if (s.endsWith('/ldapGroups')) {
+        return 'ldapGroups';
     } else if (s.endsWith('/settings')) {
         return 'settings';
     }

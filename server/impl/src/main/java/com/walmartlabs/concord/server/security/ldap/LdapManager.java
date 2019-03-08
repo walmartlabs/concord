@@ -41,6 +41,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 import java.util.*;
+import java.util.function.Function;
 
 @Named
 @Singleton
@@ -62,47 +63,59 @@ public class LdapManager {
     }
 
     public List<UserSearchResult> search(String filter) throws NamingException {
+        return search(filter, cfg.getUserSearchFilter(), new String[]{cfg.getUsernameProperty(), DISPLAY_NAME_ATTR},
+                attrs -> new UserSearchResult(attrs.get(cfg.getUsernameProperty()), attrs.get(DISPLAY_NAME_ATTR)));
+    }
+
+    public List<LdapGroupSearchResult> searchGroups(String filter) throws NamingException {
+        return search(filter, cfg.getGroupSearchFilter(), new String[]{cfg.getGroupNameProperty(), cfg.getGroupDisplayNameProperty()},
+                attrs -> LdapGroupSearchResult.builder()
+                        .groupName(attrs.get(cfg.getGroupNameProperty()))
+                        .displayName(attrs.getOrDefault(cfg.getGroupDisplayNameProperty(), "n/a"))
+                        .build());
+    }
+
+    public Set<String> getGroups(String username) throws NamingException {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-
-            SearchControls searchCtls = new SearchControls();
-            searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            searchCtls.setReturningAttributes(new String[]{cfg.getUsernameProperty(), DISPLAY_NAME_ATTR});
-            searchCtls.setCountLimit(10);
-            Object[] args = new Object[]{filter};
-
-            NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getUserSearchFilter(), args, searchCtls);
-            if (!answer.hasMoreElements()) {
-                return Collections.emptyList();
-            }
-
-            List<UserSearchResult> l = new ArrayList<>();
-            while (answer.hasMoreElements()) {
-                SearchResult sr = (SearchResult) answer.next();
-                Attributes attrs = sr.getAttributes();
-                if (attrs != null) {
-                    String username = null;
-                    String displayName = null;
-
-                    NamingEnumeration ae = attrs.getAll();
-                    while (ae.hasMore()) {
-                        Attribute attr = (Attribute) ae.next();
-                        String id = attr.getID();
-                        if (cfg.getUsernameProperty().equals(id)) {
-                            username = attr.get().toString();
-                        } else if (DISPLAY_NAME_ATTR.equals(id)) {
-                            displayName = attr.get().toString();
-                        }
-                    }
-
-                    l.add(new UserSearchResult(username, displayName));
-                }
-            }
-            return l;
+            return getGroups(ctx, username);
+        } catch (Exception e) {
+            log.warn("getGroups ['{}'] -> error while retrieving LDAP data: {}", username, e.getMessage(), e);
+            throw e;
         } finally {
             LdapUtils.closeContext(ctx);
         }
+    }
+
+    public Set<String> getGroups(LdapContext ctx, String username) throws NamingException {
+        SearchControls searchCtls = new SearchControls();
+        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        searchCtls.setReturningAttributes(new String[]{MEMBER_OF_ATTR});
+        Object[] args = new Object[]{username};
+
+        NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, searchCtls);
+        if (!answer.hasMoreElements()) {
+            return null;
+        }
+
+        Set<String> result = new HashSet<>();
+        while (answer.hasMoreElements()) {
+            SearchResult sr = (SearchResult) answer.next();
+
+            Attributes attrs = sr.getAttributes();
+            if (attrs != null) {
+                NamingEnumeration ae = attrs.getAll();
+                while (ae.hasMore()) {
+                    Attribute attr = (Attribute) ae.next();
+                    if (MEMBER_OF_ATTR.equals(attr.getID())) {
+                        result.addAll(LdapUtils.getAllAttributeValues(attr));
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     public LdapPrincipal getPrincipal(String username) throws NamingException {
@@ -121,6 +134,9 @@ public class LdapManager {
     public LdapPrincipal getPrincipal(LdapContext ctx, String username) throws NamingException {
         SearchControls searchCtls = new SearchControls();
         searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        if (cfg.getReturningAttributes() != null && !cfg.getReturningAttributes().isEmpty()) {
+            searchCtls.setReturningAttributes(cfg.getReturningAttributes().toArray(new String[0]));
+        }
         Object[] args = new Object[]{username};
 
         NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, searchCtls);
@@ -166,6 +182,47 @@ public class LdapManager {
         }
 
         return new UserInfo(p.getUsername(), l.getDisplayName(), l.getGroups(), l.getAttributes());
+    }
+
+    private <E> List<E> search(String filter, String searchFilter, String[] returningAttributes, Function<Map<String, String>, E> converter) throws NamingException {
+        LdapContext ctx = null;
+        try {
+            ctx = ctxFactory.getSystemLdapContext();
+
+            SearchControls searchCtls = new SearchControls();
+            searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+            searchCtls.setReturningAttributes(returningAttributes);
+            searchCtls.setCountLimit(10);
+            Object[] args = new Object[]{filter};
+
+            NamingEnumeration answer = ctx.search(cfg.getSearchBase(), searchFilter, args, searchCtls);
+            if (!answer.hasMoreElements()) {
+                return Collections.emptyList();
+            }
+
+            List<E> result = new ArrayList<>();
+            while (answer.hasMoreElements()) {
+                SearchResult sr = (SearchResult) answer.next();
+                Attributes attrs = sr.getAttributes();
+                if (attrs != null) {
+                    NamingEnumeration ae = attrs.getAll();
+                    Map<String, String> attributes = new HashMap<>();
+                    while (ae.hasMore()) {
+                        Attribute attr = (Attribute) ae.next();
+                        String id = attr.getID();
+                        if (attr.size() == 0) {
+                            continue;
+                        }
+                        attributes.put(id, attr.get().toString());
+                    }
+
+                    result.add(converter.apply(attributes));
+                }
+            }
+            return result;
+        } finally {
+            LdapUtils.closeContext(ctx);
+        }
     }
 
     private void processAttribute(LdapPrincipalBuilder b, Attribute attr) throws NamingException {

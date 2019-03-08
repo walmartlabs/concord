@@ -153,6 +153,23 @@ public class TeamResource implements Resource {
     }
 
     /**
+     * List LDAP roles of a team.
+     *
+     * @param teamName
+     * @return
+     */
+    @GET
+    @ApiOperation("List ldap roles of a team")
+    @Path("/{orgName}/team/{teamName}/ldapGroups")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TeamLdapGroupEntry> listLdapGroups(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                  @ApiParam @PathParam("teamName") @ConcordKey String teamName) {
+
+        TeamEntry t = assertTeam(orgName, teamName, TeamRole.MEMBER, true, false);
+        return teamDao.listLdapGroups(t.getId());
+    }
+
+    /**
      * Add users to the specified team.
      *
      * @param teamName
@@ -175,6 +192,32 @@ public class TeamResource implements Resource {
 
         teamManager.addUsers(orgName, teamName, replace, users);
         return new AddTeamUsersResponse();
+    }
+
+    /**
+     * Add LDAP groups to the specified team.
+     *
+     * @param teamName
+     * @param roles
+     * @return
+     */
+    @PUT
+    @ApiOperation("Add users to a team")
+    @Path("/{orgName}/team/{teamName}/ldapGroups")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public AddTeamLdapGroupsResponse addLdapGroups(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                                   @ApiParam @PathParam("teamName") @ConcordKey String teamName,
+                                                   @ApiParam @QueryParam("replace") @DefaultValue("false") boolean replace,
+                                                   @ApiParam @Valid Collection<TeamLdapGroupEntry> roles) {
+
+        boolean isEmptyRoles = roles == null || roles.isEmpty();
+        if (isEmptyRoles && !replace) {
+            throw new ValidationErrorsException("Empty LDAP group list");
+        }
+
+        teamManager.addLdapGroups(orgName, teamName, replace, roles);
+        return new AddTeamLdapGroupsResponse();
     }
 
     /**

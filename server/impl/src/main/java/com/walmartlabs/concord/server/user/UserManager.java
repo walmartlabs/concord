@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Named
@@ -89,5 +90,9 @@ public class UserManager {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
         return userDao.isInOrganization(userId, orgId);
+    }
+
+    public void updateLdapGroups(UUID userId, Set<String> groups) {
+        userDao.updateLdapGroups(userId, groups);
     }
 }

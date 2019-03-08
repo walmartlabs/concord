@@ -107,14 +107,29 @@ export interface TeamUserEntry {
     role: TeamRole;
 }
 
+export interface TeamLdapGroupEntry {
+    group: string;
+    role: TeamRole;
+}
+
 export interface NewTeamUserEntry {
     username: string;
     userType: UserType;
     role: TeamRole;
 }
 
+export interface NewTeamLdapGroupEntry {
+    group: string;
+    role: TeamRole;
+}
+
 export const listUsers = (orgName: ConcordKey, teamName: ConcordKey): Promise<TeamUserEntry[]> =>
     fetchJson(`/api/v1/org/${orgName}/team/${teamName}/users`);
+
+export const listLdapGroups = (
+    orgName: ConcordKey,
+    teamName: ConcordKey
+): Promise<TeamLdapGroupEntry[]> => fetchJson(`/api/v1/org/${orgName}/team/${teamName}/ldapGroups`);
 
 export const addUsers = (
     orgName: ConcordKey,
@@ -150,4 +165,24 @@ export const deleteUsers = (
     };
 
     return fetchJson(`/api/v1/org/${orgName}/team/${teamName}/users`, opts);
+};
+
+export const addLdapGroups = (
+    orgName: ConcordKey,
+    teamName: ConcordKey,
+    replace: boolean,
+    groups: NewTeamLdapGroupEntry[]
+): Promise<{}> => {
+    const opts = {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(groups)
+    };
+
+    return fetchJson(
+        `/api/v1/org/${orgName}/team/${teamName}/ldapGroups?${queryParams({ replace })}`,
+        opts
+    );
 };

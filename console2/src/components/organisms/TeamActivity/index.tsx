@@ -27,9 +27,14 @@ import { TeamEntry } from '../../../api/org/team';
 import { actions, selectors, State } from '../../../state/data/teams';
 import { RequestErrorMessage } from '../../molecules';
 import { NotFoundPage } from '../../pages';
-import { TeamDeleteActivity, TeamMemberListActivity, TeamRenameActivity } from '../index';
+import {
+    TeamDeleteActivity,
+    TeamLdapGroupListActivity,
+    TeamMemberListActivity,
+    TeamRenameActivity
+} from '../index';
 
-export type TabLink = 'members' | 'settings' | null;
+export type TabLink = 'members' | 'ldapGroups' | 'settings' | null;
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -105,6 +110,10 @@ class TeamActivity extends React.PureComponent<Props> {
                         <Icon name="users" />
                         <Link to={`/org/${orgName}/team/${teamName}/members`}>Members</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'ldapGroups'}>
+                        <Icon name="users" />
+                        <Link to={`/org/${orgName}/team/${teamName}/ldapGroups`}>LDAP Groups</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'settings'}>
                         <Icon name="setting" />
                         <Link to={`/org/${orgName}/team/${teamName}/settings`}>Settings</Link>
@@ -118,6 +127,9 @@ class TeamActivity extends React.PureComponent<Props> {
 
                     <Route path={`${baseUrl}/members`} exact={true}>
                         <TeamMemberListActivity orgName={orgName} teamName={teamName} />
+                    </Route>
+                    <Route path={`${baseUrl}/ldapGroups`} exact={true}>
+                        <TeamLdapGroupListActivity orgName={orgName} teamName={teamName} />
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         <h1>{TeamActivity.renderSetting(data)}</h1>

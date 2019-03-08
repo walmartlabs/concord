@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.repository.InvalidRepositoryPathException;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
+import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -255,7 +256,7 @@ public class ConsoleService implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     @WithTimer
-    public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min = 5, max = 128) String filter) {
+    public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min = 5, max = 256) String filter) {
         if (filter == null) {
             return Collections.emptyList();
         }
@@ -268,6 +269,29 @@ public class ConsoleService implements Resource {
 
         try {
             return ldapManager.search(filter);
+        } catch (NamingException e) {
+            throw new ConcordApplicationException("LDAP search error: " + e.getMessage(), e);
+        }
+    }
+
+    @GET
+    @Path("/search/ldapGroups")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    @WithTimer
+    public List<LdapGroupSearchResult> searchLdapGroups(@QueryParam("filter") @Size(min = 5, max = 256) String filter) {
+        if (filter == null) {
+            return Collections.emptyList();
+        }
+
+        filter = filter.trim();
+        if (filter.startsWith("*")) {
+            // disallow "starts-with" filters, they can be too slow
+            return Collections.emptyList();
+        }
+
+        try {
+            return ldapManager.searchGroups(filter);
         } catch (NamingException e) {
             throw new ConcordApplicationException("LDAP search error: " + e.getMessage(), e);
         }

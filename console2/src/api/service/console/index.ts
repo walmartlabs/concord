@@ -39,7 +39,10 @@ export const whoami = async (
     if (apiKey) {
         h.set('Authorization', apiKey);
     } else if (username && password) {
-        h.set('Authorization', `Basic ${btoa(unescape(encodeURIComponent(username + ':' + password)))}`);
+        h.set(
+            'Authorization',
+            `Basic ${btoa(unescape(encodeURIComponent(username + ':' + password)))}`
+        );
     }
 
     if (rememberMe) {
@@ -130,6 +133,14 @@ export interface UserSearchResult {
 
 export const findUsers = (filter: string): Promise<UserSearchResult[]> =>
     fetchJson(`/api/service/console/search/users?${queryParams({ filter })}`);
+
+export interface LdapGroupSearchResult {
+    groupName: string;
+    displayName: string;
+}
+
+export const findLdapGroups = (filter: string): Promise<LdapGroupSearchResult[]> =>
+    fetchJson(`/api/service/console/search/ldapGroups?${queryParams({ filter })}`);
 
 export const validatePassword = throttle(
     async (pwd: string): Promise<boolean> => {

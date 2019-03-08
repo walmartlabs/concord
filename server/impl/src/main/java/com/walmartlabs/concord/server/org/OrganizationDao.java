@@ -34,9 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
-import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -83,7 +83,6 @@ public class OrganizationDao extends AbstractDao {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getConfiguration(UUID orgId) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(ORGANIZATIONS.ORG_CFG.cast(String.class))
@@ -148,9 +147,9 @@ public class OrganizationDao extends AbstractDao {
                     .from(ORGANIZATIONS);
 
             if (userId != null) {
-                SelectConditionStep<Record1<UUID>> teamIds = selectDistinct(USER_TEAMS.TEAM_ID)
-                        .from(USER_TEAMS)
-                        .where(USER_TEAMS.USER_ID.eq(userId));
+                SelectConditionStep<Record1<UUID>> teamIds = selectDistinct(V_USER_TEAMS.TEAM_ID)
+                        .from(V_USER_TEAMS)
+                        .where(V_USER_TEAMS.USER_ID.eq(userId));
 
                 SelectConditionStep<Record1<UUID>> orgIds = selectDistinct(TEAMS.ORG_ID)
                         .from(TEAMS)
@@ -167,10 +166,10 @@ public class OrganizationDao extends AbstractDao {
     public boolean hasRole(DSLContext tx, UUID orgId, TeamRole role) {
         SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID).from(TEAMS).where(TEAMS.ORG_ID.eq(orgId));
 
-        return tx.fetchExists(select(USER_TEAMS.USER_ID)
-                .from(USER_TEAMS)
-                .where(USER_TEAMS.TEAM_ROLE.eq(role.toString())
-                        .and(USER_TEAMS.TEAM_ID.in(teamIds))));
+        return tx.fetchExists(select(V_USER_TEAMS.USER_ID)
+                .from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.TEAM_ROLE.eq(role.toString())
+                        .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
     }
 
     private String serialize(Map<String, Object> m) {

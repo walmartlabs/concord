@@ -33,11 +33,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.Tables.USER_LDAP_GROUPS;
+import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserRoles.USER_ROLES;
-import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
@@ -141,9 +142,9 @@ public class UserDao extends AbstractDao {
                 .from(ORGANIZATIONS)
                 .where(ORGANIZATIONS.ORG_ID.eq(TEAMS.ORG_ID)).asField();
 
-        SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
-                .from(USER_TEAMS)
-                .where(USER_TEAMS.USER_ID.eq(r.get(USERS.USER_ID)));
+        SelectConditionStep<Record1<UUID>> teamIds = select(V_USER_TEAMS.TEAM_ID)
+                .from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(r.get(USERS.USER_ID)));
 
         List<OrganizationEntry> orgs = tx.selectDistinct(TEAMS.ORG_ID, orgNameField)
                 .from(TEAMS)
@@ -197,17 +198,17 @@ public class UserDao extends AbstractDao {
                     .from(TEAMS)
                     .where(TEAMS.ORG_ID.eq(orgId));
 
-            return tx.fetchExists(selectFrom(USER_TEAMS)
-                    .where(USER_TEAMS.USER_ID.eq(userId)
-                            .and(USER_TEAMS.TEAM_ID.in(teamIds))));
+            return tx.fetchExists(selectFrom(V_USER_TEAMS)
+                    .where(V_USER_TEAMS.USER_ID.eq(userId)
+                            .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
         }
     }
 
     public Set<UUID> getOrgIds(UUID userId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectConditionStep<Record1<UUID>> teamIds = select(USER_TEAMS.TEAM_ID)
-                    .from(USER_TEAMS)
-                    .where(USER_TEAMS.USER_ID.eq(userId));
+            SelectConditionStep<Record1<UUID>> teamIds = select(V_USER_TEAMS.TEAM_ID)
+                    .from(V_USER_TEAMS)
+                    .where(V_USER_TEAMS.USER_ID.eq(userId));
 
             return tx.selectDistinct(TEAMS.ORG_ID)
                     .from(TEAMS)
@@ -235,6 +236,26 @@ public class UserDao extends AbstractDao {
                             ROLES.ROLE_ID.as(USER_ROLES.ROLE_ID)
                     ).from(ROLES).where(ROLES.ROLE_NAME.in(roles)))
                     .execute();
+        });
+    }
+
+    public void updateLdapGroups(UUID userId, Set<String> groups) {
+        tx(tx -> {
+            tx.deleteFrom(USER_LDAP_GROUPS).where(USER_LDAP_GROUPS.USER_ID.eq(userId))
+                    .execute();
+
+            if (groups.isEmpty()) {
+                return;
+            }
+
+            BatchBindStep q = tx.batch(tx.insertInto(USER_LDAP_GROUPS, USER_LDAP_GROUPS.USER_ID, USER_LDAP_GROUPS.LDAP_GROUP)
+                    .values((UUID) null, null));
+
+            for (String g : groups) {
+                q.bind(value(userId), value(g));
+            }
+
+            q.execute();
         });
     }
 }

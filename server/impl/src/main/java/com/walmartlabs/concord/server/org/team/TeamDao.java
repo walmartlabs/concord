@@ -22,8 +22,9 @@ package com.walmartlabs.concord.server.org.team;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.jooq.tables.TeamLdapGroups;
 import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
-import com.walmartlabs.concord.server.jooq.tables.records.UserTeamsRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.VUserTeamsRecord;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -34,6 +35,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.Tables.TEAM_LDAP_GROUPS;
+import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
@@ -185,6 +188,18 @@ public class TeamDao extends AbstractDao {
                                 TeamRole.valueOf(r.value4())));
     }
 
+    public List<TeamLdapGroupEntry> listLdapGroups(UUID teamId) {
+        TeamLdapGroups t = TEAM_LDAP_GROUPS.as("t");
+        return txResult(tx -> tx.select(t.LDAP_GROUP, t.TEAM_ROLE)
+                .from(t)
+                .where(t.TEAM_ID.eq(teamId))
+                .orderBy(t.LDAP_GROUP)
+                .fetch(r -> TeamLdapGroupEntry.builder()
+                        .group(r.value1())
+                        .role(TeamRole.valueOf(r.value2()))
+                        .build()));
+    }
+
     public void upsertUser(UUID teamId, UUID userId, TeamRole role) {
         tx(tx -> upsertUser(tx, teamId, userId, role));
     }
@@ -219,6 +234,21 @@ public class TeamDao extends AbstractDao {
                 .execute();
     }
 
+    public void upsertLdapGroup(DSLContext tx, UUID teamId, String ldapGroup, TeamRole role) {
+        tx.insertInto(TEAM_LDAP_GROUPS)
+                .columns(TEAM_LDAP_GROUPS.TEAM_ID, TEAM_LDAP_GROUPS.LDAP_GROUP, TEAM_LDAP_GROUPS.TEAM_ROLE)
+                .values(teamId, ldapGroup, role.toString())
+                .onConflict(TEAM_LDAP_GROUPS.TEAM_ID, TEAM_LDAP_GROUPS.LDAP_GROUP)
+                .doUpdate().set(TEAM_LDAP_GROUPS.TEAM_ROLE, role.toString())
+                .execute();
+    }
+
+    public void removeLdapGroups(DSLContext tx, UUID teamId) {
+        tx.deleteFrom(TEAM_LDAP_GROUPS)
+                .where(TEAM_LDAP_GROUPS.TEAM_ID.eq(teamId))
+                .execute();
+    }
+
     public boolean isInAnyTeam(UUID orgId, UUID userId, TeamRole... roles) {
         try (DSLContext tx = DSL.using(cfg)) {
             return isInAnyTeam(tx, orgId, userId, roles);
@@ -227,10 +257,10 @@ public class TeamDao extends AbstractDao {
 
     public boolean isInAnyTeam(DSLContext tx, UUID orgId, UUID userId, TeamRole... roles) {
         SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID).from(TEAMS).where(TEAMS.ORG_ID.eq(orgId));
-        return tx.fetchExists(selectFrom(USER_TEAMS)
-                .where(USER_TEAMS.USER_ID.eq(userId)
-                        .and(USER_TEAMS.TEAM_ID.in(teamIds))
-                        .and(USER_TEAMS.TEAM_ROLE.in(Utils.toString(roles)))));
+        return tx.fetchExists(selectFrom(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(userId)
+                        .and(V_USER_TEAMS.TEAM_ID.in(teamIds))
+                        .and(V_USER_TEAMS.TEAM_ROLE.in(Utils.toString(roles)))));
     }
 
     public boolean hasUser(UUID teamId, UUID userId, TeamRole... roles) {
@@ -240,12 +270,12 @@ public class TeamDao extends AbstractDao {
     }
 
     public boolean hasUser(DSLContext tx, UUID teamId, UUID userId, TeamRole... roles) {
-        SelectConditionStep<UserTeamsRecord> q = tx.selectFrom(USER_TEAMS)
-                .where(USER_TEAMS.TEAM_ID.eq(teamId)
-                        .and(USER_TEAMS.USER_ID.eq(userId)));
+        SelectConditionStep<VUserTeamsRecord> q = tx.selectFrom(V_USER_TEAMS)
+                .where(V_USER_TEAMS.TEAM_ID.eq(teamId)
+                        .and(V_USER_TEAMS.USER_ID.eq(userId)));
 
         if (roles != null && roles.length != 0) {
-            q.and(USER_TEAMS.TEAM_ROLE.in(Utils.toString(roles)));
+            q.and(V_USER_TEAMS.TEAM_ROLE.in(Utils.toString(roles)));
         }
 
         return tx.fetchExists(q);

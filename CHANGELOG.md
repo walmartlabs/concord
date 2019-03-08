@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: teams can now be associated with
+LDAP groups;
 - concord-server: user accounts can now be disabled via an API call;
 - concord-server: new automatically-provided process
 variable - `requestInfo`. Contains the request's parameters, headers

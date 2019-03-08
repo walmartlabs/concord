@@ -145,6 +145,8 @@ public class LdapRealm extends AbstractLdapRealm {
                     .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
         }
 
+        userManager.updateLdapGroups(userId, ldapPrincipal.getGroups());
+
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)

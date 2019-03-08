@@ -34,12 +34,12 @@ import javax.inject.Named;
 import java.util.List;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.LandingPage.LANDING_PAGE;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
-import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -134,9 +134,9 @@ public class LandingDao extends AbstractDao {
                 .from(TEAMS)
                 .where(TEAMS.ORG_ID.eq(orgId));
 
-        Condition filterByTeamMember = exists(selectOne().from(USER_TEAMS)
-                .where(USER_TEAMS.USER_ID.eq(currentUserId)
-                        .and(USER_TEAMS.TEAM_ID.in(teamIds))));
+        Condition filterByTeamMember = exists(selectOne().from(V_USER_TEAMS)
+                .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                        .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
         SelectJoinStep<Record9<UUID, UUID, String, UUID, String, String, String, String, byte[]>> q =
                 tx.select(lp.LANDING_PAGE_ID,
