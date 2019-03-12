@@ -13,6 +13,8 @@ and the user's IP address.
 
 ### Changed
 
+- concord-agent: fixed the issue preventing the process startup
+errors from being logged correctly;
 - concord-console: fixed a login issue with non-ASCII usernames or
 passwords.
 

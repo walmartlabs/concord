@@ -319,17 +319,16 @@ public class Agent {
 
         List<JobPostProcessor> postProcessors = createPostProcessors(processApi);
 
-        DockerRunnerJobExecutorConfiguration dockerRunnerCfg = new DockerRunnerJobExecutorConfiguration(cfg.getDockerHost(), cfg.getDependencyCacheDir(), cfg.getJavaPath());
-
-        RunnerJobExecutor runnerJobExecutor = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, executor);
-        DockerRunnerJobExecutor dockerRunnerJobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, executor);
         return req -> {
+            RunnerJobExecutor jobExecutor;
             RunnerJob job = RunnerJob.from(req, processLogFactory);
             if (job.getCfg().get(InternalConstants.Request.CONTAINER) != null) {
-                return dockerRunnerJobExecutor.exec(req, job);
+                DockerRunnerJobExecutorConfiguration dockerRunnerCfg = new DockerRunnerJobExecutorConfiguration(cfg.getDockerHost(), cfg.getDependencyCacheDir(), cfg.getJavaPath());
+                jobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, executor);
             } else {
-                return runnerJobExecutor.exec(req, job);
+                jobExecutor = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, executor);
             }
+            return jobExecutor.exec(job);
         };
     }
 }

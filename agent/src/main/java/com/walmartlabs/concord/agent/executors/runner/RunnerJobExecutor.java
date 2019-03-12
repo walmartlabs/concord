@@ -28,7 +28,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobInstance;
-import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
@@ -89,7 +88,7 @@ public class RunnerJobExecutor {
         this.pool = new ProcessPool(cfg.maxPreforkAge, cfg.maxPreforkCount);
     }
 
-    public JobInstance exec(JobRequest req, RunnerJob job) throws Exception {
+    public JobInstance exec(RunnerJob job) throws Exception {
         // prepare and start a new JVM of use a pre-forked one
         ProcessEntry pe;
         try {
@@ -100,8 +99,8 @@ public class RunnerJobExecutor {
         } catch (Exception e) {
             log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
 
-            // use the remote log, because the log file streaming is not started yet
-            req.getLog().error("Process startup error: {}", e.getMessage());
+            job.getLog().error("Process startup error: {}", e.getMessage());
+            job.getLog().flush();
 
             throw e;
         }
@@ -219,7 +218,7 @@ public class RunnerJobExecutor {
         long t2 = System.currentTimeMillis();
 
         if (job.isDebugMode()) {
-            job.getLog().info("Dependency resolution took %dms", (t2 - t1));
+            job.getLog().info("Dependency resolution took {}ms", (t2 - t1));
             logDependencies(job, paths);
         } else {
             logDependencies(job, uris);
