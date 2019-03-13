@@ -57,7 +57,8 @@ public class QueueRuleTest {
 
         Map<String, Object> concurrent = new HashMap<>();
         concurrent.put("msg", "Concurrent message");
-        concurrent.put("max", 4);
+        concurrent.put("maxPerOrg", 4);
+        concurrent.put("maxPerProject", 5);
 
         Map<String, Object> rules = new HashMap<>();
         rules.put("concurrent", concurrent);
@@ -68,7 +69,8 @@ public class QueueRuleTest {
         QueueRule r = objectMapper.convertValue(rules, QueueRule.class);
 
         assertNotNull(r.getConcurrent());
-        assertEquals(4, (int)r.getConcurrent().getMax());
+        assertEquals(4, (int)r.getConcurrent().getMaxPerOrg());
+        assertEquals(5, (int)r.getConcurrent().getMaxPerProject());
         assertEquals("Concurrent message", r.getConcurrent().getMsg());
 
         assertNotNull(r.getProcess());

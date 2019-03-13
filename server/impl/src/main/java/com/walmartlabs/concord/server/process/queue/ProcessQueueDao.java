@@ -418,14 +418,10 @@ public class ProcessQueueDao extends AbstractDao {
 
     @WithTimer
     public ProcessQueueEntry poll(Map<String, Object> capabilities) {
-        Set<UUID> excludeProjects = new HashSet<>();
-
         while (true) {
-            FindResult result = findEntry(capabilities, excludeProjects);
+            FindResult result = findEntry(capabilities);
             if (result.isDone()) {
                 return result.item;
-            } else {
-                excludeProjects.add(result.excludeProject);
             }
         }
     }
@@ -563,22 +559,22 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    private FindResult findEntry(Map<String, Object> capabilities, Set<UUID> excludeProjects) {
+    private FindResult findEntry(Map<String, Object> capabilities) {
         return txResult(tx -> {
-            ProcessQueueEntry entry = nextEntry(tx, capabilities, excludeProjects);
+            ProcessQueueEntry entry = nextEntry(tx, capabilities);
             if (entry == null) {
                 return FindResult.notFound();
             }
 
             if (entry.projectId() != null) {
-                boolean locked = queueLock.tryLock(tx, entry.projectId());
+                boolean locked = queueLock.tryLock(tx);
                 if (!locked) {
-                    return FindResult.findNext(entry.projectId());
+                    return FindResult.findNext();
                 }
 
                 for (ProcessQueueEntryFilter f : filters) {
                     if (!f.filter(tx, entry)) {
-                        return FindResult.findNext(entry.projectId());
+                        return FindResult.findNext();
                     }
                 }
             }
@@ -588,7 +584,7 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    private ProcessQueueEntry nextEntry(DSLContext tx, Map<String, Object> capabilities, Set<UUID> excludeProjects) {
+    private ProcessQueueEntry nextEntry(DSLContext tx, Map<String, Object> capabilities) {
         ProcessQueue q = PROCESS_QUEUE.as("q");
 
         Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
@@ -612,10 +608,6 @@ public class ProcessQueueDao extends AbstractDao {
                 .and(or(q.START_AT.isNull(),
                         q.START_AT.le(currentTimestamp())))
                 .and(q.WAIT_CONDITIONS.isNull()));
-
-        if (!excludeProjects.isEmpty()) {
-            s.where(q.PROJECT_ID.isNull().or(q.PROJECT_ID.notIn(excludeProjects)));
-        }
 
         if (capabilities != null && !capabilities.isEmpty()) {
             Field<Object> agentReqField = field("{0}->'agent'", Object.class, q.REQUIREMENTS);
@@ -924,12 +916,10 @@ public class ProcessQueueDao extends AbstractDao {
 
         private final Status status;
         private final ProcessQueueEntry item;
-        private final UUID excludeProject;
 
-        private FindResult(Status status, ProcessQueueEntry item, UUID excludeProject) {
+        private FindResult(Status status, ProcessQueueEntry item) {
             this.status = status;
             this.item = item;
-            this.excludeProject = excludeProject;
         }
 
         private boolean isDone() {
@@ -937,15 +927,15 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         public static FindResult done(ProcessQueueEntry item) {
-            return new FindResult(Status.DONE, item, null);
+            return new FindResult(Status.DONE, item);
         }
 
         static FindResult notFound() {
             return done(null);
         }
 
-        static FindResult findNext(UUID excludeProject) {
-            return new FindResult(Status.NEXT_ITEM, null, excludeProject);
+        static FindResult findNext() {
+            return new FindResult(Status.NEXT_ITEM, null);
         }
     }
 }

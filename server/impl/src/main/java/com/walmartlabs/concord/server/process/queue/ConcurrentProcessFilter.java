@@ -20,8 +20,11 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.policyengine.CheckResult;
+import com.walmartlabs.concord.policyengine.ConcurrentProcessRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
+import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
 import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.ProcessStatus;
@@ -63,12 +66,15 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
             return Collections.emptyList();
         }
 
-        List<UUID> processes = findProcesses(tx, item.projectId());
-        if (pe.getConcurrentProcessPolicy().check(processes.size()).getDeny().isEmpty()) {
+        CheckResult<ConcurrentProcessRule, List<UUID>> result = pe.getConcurrentProcessPolicy().check(
+                () -> processesPerOrg(tx, item.orgId()),
+                () -> processesPerProject(tx, item.projectId()));
+
+        if (result.getDeny().isEmpty()) {
             return Collections.emptyList();
         }
 
-        return processes;
+        return Collections.singletonList(result.getDeny().get(0).getEntity().get(0));
     }
 
     @Override
@@ -91,11 +97,21 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
         }
 
         // TODO caching? use a global singleton?
-        PolicyEngine pe = new PolicyEngine(policy.rules());
-        return pe.getConcurrentProcessPolicy().hasRule() ? pe : null;
+        return new PolicyEngine(policy.rules());
     }
 
-    private List<UUID> findProcesses(DSLContext tx, UUID projectId) {
+    private List<UUID> processesPerOrg(DSLContext tx, UUID orgId) {
+        ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
+        Projects p = Projects.PROJECTS.as("p");
+        return tx.select(q.INSTANCE_ID)
+                .from(q)
+                .innerJoin(p).on(q.PROJECT_ID.eq(p.PROJECT_ID))
+                .where(p.ORG_ID.eq(orgId)
+                        .and(q.CURRENT_STATUS.in(RUNNING_PROCESS_STATUSES)))
+                .fetch(Record1::value1);
+    }
+
+    private List<UUID> processesPerProject(DSLContext tx, UUID projectId) {
         ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
         return tx.select(q.INSTANCE_ID)
                 .from(q)

@@ -26,19 +26,20 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.CallableStatement;
 import java.sql.Types;
-import java.util.UUID;
 
 @Named
 @Singleton
 public class ProcessQueueLock {
 
-    public boolean tryLock(DSLContext tx, UUID projectId) {
+    private static final long LOCK_KEY = 1552468327245L;
+
+    public boolean tryLock(DSLContext tx) {
         String sql = "{ ? = call pg_try_advisory_xact_lock(?) }";
 
         return tx.connectionResult(conn -> {
             try (CallableStatement cs = conn.prepareCall(sql)) {
                 cs.registerOutParameter(1, Types.BOOLEAN);
-                cs.setLong(2, projectId.getLeastSignificantBits() ^ projectId.getMostSignificantBits());
+                cs.setLong(2, LOCK_KEY);
                 cs.execute();
                 return cs.getBoolean(1);
             }

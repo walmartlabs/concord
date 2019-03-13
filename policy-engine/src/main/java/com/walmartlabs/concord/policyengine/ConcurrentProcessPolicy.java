@@ -21,6 +21,9 @@ package com.walmartlabs.concord.policyengine;
  */
 
 import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
 
 public class ConcurrentProcessPolicy {
 
@@ -30,19 +33,28 @@ public class ConcurrentProcessPolicy {
         this.rule = rule;
     }
 
-    public CheckResult<ConcurrentProcessRule, Integer> check(int processCount) {
-        if (rule == null) {
+    public CheckResult<ConcurrentProcessRule, List<UUID>> check(
+            Supplier<List<UUID>> processPerOrg,
+            Supplier<List<UUID>> processPerProject) {
+
+        if (rule == null || (rule.getMaxPerOrg() == null && rule.getMaxPerProject() == null)) {
             return CheckResult.success();
         }
 
-        if (processCount >= rule.getMax()) {
+        int max;
+        List<UUID> processes;
+        if (rule.getMaxPerOrg() != null) {
+            processes = processPerOrg.get();
+            max = rule.getMaxPerOrg();
+        } else {
+            processes = processPerProject.get();
+            max = rule.getMaxPerProject();
+        }
+
+        if (processes.size() >= max) {
             return new CheckResult<>(Collections.emptyList(),
-                    Collections.singletonList(new CheckResult.Item<>(rule, processCount)));
+                    Collections.singletonList(new CheckResult.Item<>(rule, processes)));
         }
         return CheckResult.success();
-    }
-
-    public boolean hasRule() {
-        return rule != null;
     }
 }

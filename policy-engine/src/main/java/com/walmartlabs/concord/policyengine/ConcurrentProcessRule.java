@@ -20,6 +20,7 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -29,28 +30,37 @@ import java.io.Serializable;
 public class ConcurrentProcessRule implements Serializable {
 
     private final String msg;
-    private final int max;
+    private final Integer maxPerOrg;
+    private final Integer maxPerProject;
 
     @JsonCreator
     public ConcurrentProcessRule(@JsonProperty("msg") String msg,
-                                 @JsonProperty("max") int max) {
+                                 @JsonProperty("maxPerOrg") Integer maxPerOrg,
+                                 @JsonProperty("maxPerProject") @JsonAlias("max") Integer maxPerProject) { // "max" for backward compatibility with existing policies
+
         this.msg = msg;
-        this.max = max;
+        this.maxPerOrg = maxPerOrg;
+        this.maxPerProject = maxPerProject;
     }
 
     public String getMsg() {
         return msg;
     }
 
-    public int getMax() {
-        return max;
+    public Integer getMaxPerOrg() {
+        return maxPerOrg;
+    }
+
+    public Integer getMaxPerProject() {
+        return maxPerProject;
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
                 .append("msg", msg)
-                .append("max", max)
+                .append("maxPerOrg", maxPerOrg)
+                .append("maxPerProject", maxPerProject)
                 .toString();
     }
 }

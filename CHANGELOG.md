@@ -4,6 +4,8 @@
 
 ### Added
 
+- policy-engine, concord-server: support for organization-level max
+concurrent processes limits;
 - concord-console: process metadata filtering for the checkpoint list
 page;
 - concord-server, concord-console: teams can now be associated with
