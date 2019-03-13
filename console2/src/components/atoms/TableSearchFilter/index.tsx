@@ -96,7 +96,7 @@ export default class extends React.Component<Props, State> {
 
     renderSearchField(c: ColumnDefinition) {
         switch (c.searchValueType!) {
-            case SearchValueType.STRING: {
+            case 'string': {
                 return this.renderStringField(c);
             }
             default:

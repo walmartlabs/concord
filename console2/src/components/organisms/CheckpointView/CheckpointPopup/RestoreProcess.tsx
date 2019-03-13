@@ -18,9 +18,11 @@
  * =====
  */
 
-// * This is seemingly a duplicate connection, but it was necessary
-// * for the Checkpoint View feature.  I expose the redux values to
-// * other components via render props
+/**
+ * This is seemingly a duplicate connection, but it was necessary
+ * for the Checkpoint View feature.  I expose the redux values to
+ * other components via render props
+ */
 
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
@@ -50,7 +52,7 @@ interface RestoreProcessExposedProps {
 export const isFinalStatus = (s: ProcessStatus): boolean =>
     isFinal(s) || s === ProcessStatus.SUSPENDED;
 
-// * Exposes Function as children render prop to dispatch redux action
+// Exposes Function as children render prop to dispatch redux action
 class RestoreProcess extends React.PureComponent<Props> {
     render() {
         const { children, render, restoreProcess } = this.props;

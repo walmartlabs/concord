@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,11 @@
  * limitations under the License.
  * =====
  */
-import SidebarContainer from './Sidebar.Container';
-import {
-    SidebarShowComponent,
-    SidebarToggleComponent,
-    SidebarHideComponent
-} from './Sidebar.Toggles';
-import { Sidebar, as } from 'reakit';
+import React from 'react';
+import { render } from 'react-testing-library';
+import Message from '../';
 
-export * from './Sidebar';
-export * from './Sidebar.Container';
-export * from './Sidebar.Toggles';
-
-// tslint:disable-next-line:prefer-object-spread
-export default Object.assign(as(Sidebar)(SidebarContainer), {
-    Toggle: SidebarToggleComponent,
-    Hide: SidebarHideComponent,
-    Show: SidebarShowComponent
+test('Renders a message describing there are no checkpoints', () => {
+    const { container } = render(<Message />);
+    expect(container.innerHTML).toContain('No checkpoints');
 });

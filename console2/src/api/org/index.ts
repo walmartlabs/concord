@@ -25,14 +25,9 @@ export enum OrganizationVisibility {
     PRIVATE = 'PRIVATE'
 }
 
-export enum SearchValueType {
-    STRING = 'string'
-}
+export type SearchType = 'substring' | 'equals';
 
-export enum SearchType {
-    SUBSTRING = 'substring',
-    EQUALS = 'equals'
-}
+export type SearchValueType = 'string';
 
 export interface SearchOption {
     value: string;

@@ -31,8 +31,6 @@ import { State } from '../../../state/data/processes/poll/types';
 import { ProcessActionList, ProcessStatusTable } from '../../molecules';
 import { CancelProcessPopup, AnsibleStatsActivity } from '../../organisms';
 import ProcessCheckpoint from '../CheckpointView/ProcessCheckpoint';
-import LogDrawer from '../CheckpointView/LogDrawer';
-import { Provider as ConstateProvider } from 'constate';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -139,13 +137,11 @@ class ProcessStatusActivity extends React.Component<Props> {
                 )}
 
                 {process && (
-                    <ConstateProvider>
-                        <LogDrawer />
-
+                    <>
                         <Divider content="Checkpoints" horizontal={true} />
 
                         <ProcessCheckpoint process={process} />
-                    </ConstateProvider>
+                    </>
                 )}
 
                 <AnsibleStatsActivity instanceId={instanceId} />

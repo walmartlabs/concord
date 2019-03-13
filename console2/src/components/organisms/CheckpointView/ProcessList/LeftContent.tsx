@@ -18,35 +18,35 @@
  * =====
  */
 import { distanceInWords, distanceInWordsToNow } from 'date-fns';
-import * as React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { Divider } from 'semantic-ui-react';
 import { parse as parseDate } from 'date-fns';
 
 import { ProcessEntry } from '../../../../api/process';
 import { Truncate } from '../../../atoms';
-import { AppDrawer as LogDrawer, ProcessLogs as LogContainer } from '../../../molecules';
 import { Label, Status } from '../shared/Labels';
-import { ListItem } from './ListItem';
-import { LeftWrap } from './styles';
+import { LeftWrap, ListItem } from './styles';
 
 interface Props {
     process: ProcessEntry;
 }
 
-export default ({ process }: Props) => (
-    <LogContainer key={process.instanceId}>
-        {({ setActiveProcess, fetchLog }) => (
-            <LeftWrap maxWidth={245}>
-                <ListItem>
-                    <div>
-                        <Label>
-                            Process:{' '}
-                            <Link to={`/process/${process.instanceId}`}>
-                                <Truncate text={process.instanceId} />
-                            </Link>
-                        </Label>
-                    </div>
+export default ({ process }: Props) => {
+    return (
+        <LeftWrap maxWidth={300}>
+            <ListItem>
+                <div>
+                    <Label>
+                        Process:{' '}
+                        <Link to={`/process/${process.instanceId}`}>
+                            <Truncate text={process.instanceId} />
+                        </Link>
+                    </Label>
+                </div>
+
+                {/* Show repository name if it exists */}
+                {process.repoName && (
                     <div>
                         <Label>Repo: </Label>
                         <Link
@@ -56,37 +56,36 @@ export default ({ process }: Props) => (
                             {process.repoName}
                         </Link>
                     </div>
-                    <div>
-                        <Label>
-                            <a
-                                style={{ cursor: 'pointer' }}
-                                onClick={(ev) => {
-                                    fetchLog(process.instanceId);
-                                    setActiveProcess(process.instanceId);
-                                }}>
-                                <LogDrawer.Show>View Log</LogDrawer.Show>
-                            </a>
-                        </Label>
-                    </div>
-                    <Divider />
-                    <div>
-                        <Label>Current Status: </Label>
-                        <Status>{process.status}</Status>
-                    </div>
-                    <div>
-                        <Label>Last update: </Label>
-                        <Status>{distanceInWordsToNow(parseDate(process.lastUpdatedAt))}</Status>
-                    </div>
-                    <div>
-                        <Label>Run duration: </Label>
-                        {/* TODO: find last runtime start instead created at */}
-                        {distanceInWords(
-                            parseDate(process.lastUpdatedAt),
-                            parseDate(process.createdAt)
-                        )}
-                    </div>
-                </ListItem>
-            </LeftWrap>
-        )}
-    </LogContainer>
-);
+                )}
+                {Object.keys(process.meta!)
+                    .filter((value) => {
+                        // Weed out non-relevant metadata
+                        if (value.includes('_system')) {
+                            return false;
+                        }
+                        // Found real metadata
+                        return true;
+                    })
+                    .map((key) => {
+                        return (
+                            <div key={key}>
+                                <Label>{key}</Label>
+                                {process.meta && `: ${process.meta[key]}`}
+                            </div>
+                        );
+                    })}
+                <Divider />
+                <div>
+                    <Label>Current Status: </Label>
+                    <Status>{process.status}</Status>
+                </div>
+
+                {/* Last update time, tooltip on mouse hover */}
+                <div title={process.lastUpdatedAt}>
+                    <Label>Last update: </Label>
+                    <Status>{distanceInWordsToNow(parseDate(process.lastUpdatedAt))}</Status>
+                </div>
+            </ListItem>
+        </LeftWrap>
+    );
+};

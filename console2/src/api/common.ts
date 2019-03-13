@@ -123,12 +123,60 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
     return response;
 };
 
+/**
+ * Generates a query parameter string from an object of key/value pairs
+ * @param params the key/value object accepted
+ *
+ * @return a query parameter string e.g. "foo=123&bar=abc"
+ */
 export const queryParams = (params: any): string => {
     const esc = encodeURIComponent;
     return Object.keys(params)
         .filter((k) => !!params[k])
         .map((k) => esc(k) + '=' + esc(params[k]))
         .join('&');
+};
+
+/**
+ * Parse url parameters from a url string
+ * @param url a http url string
+ *
+ * @return an object e.g. { "param": "value", ... }
+ */
+export const parseQueryParams = (url: string): { [key: string]: string } => {
+    // Remove all non-valid characters
+    const validString = url.replace(/[^a-z0-9\s-]/, '');
+
+    // Split url and take the right hand side
+    // ! assumption there is only one question mark
+    let queryParams: string;
+    if (validString.includes('?')) {
+        queryParams = validString.split('?')[1];
+    } else {
+        // No Query Params exist in the string
+        return {};
+    }
+
+    // Split find params by splitting on & characters
+    let separateParams: string[] = [];
+    if (queryParams.includes('&')) {
+        separateParams = queryParams.split('&');
+    } else {
+        // There is only one param to return, so return it
+        const splitPair = queryParams.split('=');
+        return { [splitPair[0]]: splitPair[1] };
+    }
+
+    // initialize an object for itteration
+    let result = {};
+
+    // Inject params as key value pairs
+    for (let paramEquality of separateParams) {
+        const splitPair = paramEquality.split('=');
+        result[splitPair[0]] = splitPair[1];
+    }
+
+    return result;
 };
 
 export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> => {

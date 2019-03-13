@@ -38,7 +38,7 @@ import NoCheckpointsMessage from '../NoCheckpointsMessage';
 
 interface Props {
     process: ProcessEntry;
-    checkpointGroups: CheckpointGroup[];
+    checkpointGroups?: CheckpointGroup[];
 }
 
 // TODO a better layout

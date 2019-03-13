@@ -24,3 +24,6 @@ yarn-error.log*
 .xit
 
 /storybook-static
+.docz
+doczrc.js
+*.mdx

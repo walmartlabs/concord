@@ -69,3 +69,19 @@ export const RightWrap = styled(ContentBlock)`
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
 `;
+
+export const ListItem = styled('li')`
+    font-family: lato;
+    text-align: left;
+    list-style-type: none;
+    color: #706f70;
+
+    padding: 16px;
+
+    i {
+        padding: 0px 8px;
+        display: inline;
+        position: relative;
+        bottom: 2px;
+    }
+`;

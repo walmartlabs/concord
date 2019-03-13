@@ -218,7 +218,7 @@ class ProjectActivity extends React.PureComponent<Props> {
                         {ProjectActivity.renderProcesses(data)}
                     </Route>
                     <Route path={`${baseUrl}/checkpoint`} exact={true}>
-                        <CheckpointView orgId={data.orgId} projectId={data.id} />
+                        <CheckpointView project={data} />
                     </Route>
                     <Route path={`${baseUrl}/repository`} exact={true}>
                         {ProjectActivity.renderRepositories(data)}

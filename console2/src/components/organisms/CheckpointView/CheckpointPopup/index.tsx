@@ -17,128 +17,109 @@
  * limitations under the License.
  * =====
  */
-import * as React from 'react';
+import React, { useContext } from 'react';
 import { Button, Popup, Grid } from 'semantic-ui-react';
 
 import ClassIcon from '../../../atoms/ClassIcon';
 import Truncate from '../../../atoms/Truncate';
 
-import LogContainer from '../../../molecules/ProcessLogs';
-import Sidebar from '../../../molecules/AppDrawer';
+import ProcessLogContainer from '../../../molecules/ProcessLogContainer';
 import RestoreProcess from './RestoreProcess';
 import { CheckpointName } from '../shared/Labels';
 import { CustomCheckpoint } from '../shared/types';
-import CheckpointViewContainer from '../CheckpointViewContainer';
+import CheckpointViewContainer from '../Container';
 import { ProcessEntry, isFinal } from '../../../../api/process';
 
 const CheckpointPopup: React.SFC<{
     checkpoint: CustomCheckpoint;
     process: ProcessEntry;
     render: React.ReactNode;
-}> = ({ checkpoint, process, render }) => (
-    <Popup
-        inverted={false}
-        trigger={<div>{render}</div>}
-        on={['click', 'hover']}
-        closeOnTriggerClick={true}
-        hoverable={true}
-        hideOnScroll={true}
-        position="bottom left"
-        flowing={true}
-        style={{ maxWidth: '300px' }}
-        content={
-            <>
-                <Grid divided={true} columns={2}>
-                    <Grid.Row style={{ minWidth: '20em' }}>
-                        <Grid.Column>
-                            <CheckpointName>
-                                <Truncate text={checkpoint.name} />
-                            </CheckpointName>
-                            <br />
-                            <LogContainer>
-                                {({
-                                    setActiveProcess,
-                                    setActiveAnchor,
-                                    fetchLog,
-                                    queueScrollTo
-                                }) => (
-                                    <Sidebar.Show>
-                                        <a
-                                            onClick={() => {
-                                                fetchLog(process.instanceId);
-                                                setActiveAnchor(checkpoint.id);
-                                                setActiveProcess(process.instanceId);
-                                                queueScrollTo(checkpoint.id);
-                                            }}
-                                            style={{
-                                                cursor: 'pointer',
-                                                textAlign: 'right'
-                                            }}>
-                                            Log Entry
-                                        </a>
-                                    </Sidebar.Show>
-                                )}
-                            </LogContainer>
-                        </Grid.Column>
-                        <Grid.Column
-                            style={{
-                                whiteSpace: 'nowrap',
-                                paddingRight: '1em'
-                            }}>
-                            <CheckpointName>
-                                {checkpoint.startTime.toDateString()}
+}> = ({ checkpoint, process, render }) => {
+    const { currentPage, limitPerPage, loadData, orgId, projectId } = useContext(
+        CheckpointViewContainer.Context
+    );
+
+    const { setActiveProcess, setActiveAnchor, fetchLog, queueScrollTo } = useContext(
+        ProcessLogContainer.Context
+    );
+
+    return (
+        <Popup
+            inverted={false}
+            trigger={<div>{render}</div>}
+            on={['click', 'hover']}
+            closeOnTriggerClick={true}
+            hoverable={true}
+            hideOnScroll={true}
+            position="bottom left"
+            flowing={true}
+            style={{ maxWidth: '300px' }}
+            content={
+                <>
+                    <Grid divided={true} columns={2}>
+                        <Grid.Row style={{ minWidth: '20em' }}>
+                            <Grid.Column>
+                                <CheckpointName>
+                                    <Truncate text={checkpoint.name} />
+                                </CheckpointName>
                                 <br />
-                                <span
-                                    style={{
-                                        fontWeight: 300,
-                                        paddingRight: '1em'
-                                    }}>
-                                    {checkpoint.startTime.getHours()}:
-                                    {checkpoint.startTime.getMinutes()}:
-                                    {checkpoint.startTime.getSeconds()}:
-                                    {checkpoint.startTime.getMilliseconds()}
-                                </span>
-                            </CheckpointName>
-                        </Grid.Column>
-                    </Grid.Row>
-                </Grid>
-                <hr />
-                <CheckpointViewContainer>
-                    {({ refreshProcessData, orgId, projectId, limitPerPage, currentPage }) => (
-                        <RestoreProcess>
-                            {({ restoreProcess }) => (
-                                <Button
-                                    primary={true}
-                                    disabled={!isFinal(process.status)}
-                                    loading={process.status === 'ENQUEUED'}
-                                    onClick={() => {
-                                        restoreProcess(process.instanceId, checkpoint.id);
-                                        // TODO: ಠ_ಠ ... hack, needs to be better.
-                                        setTimeout(() => {
-                                            refreshProcessData({
-                                                orgId,
-                                                projectId,
-                                                limit: limitPerPage,
-                                                offset: (currentPage - 1) * limitPerPage
-                                            });
-                                        }, 200);
-                                    }}>
-                                    <ClassIcon
-                                        classes="icon redo white"
+                            </Grid.Column>
+                            <Grid.Column
+                                style={{
+                                    whiteSpace: 'nowrap',
+                                    paddingRight: '1em'
+                                }}>
+                                <CheckpointName>
+                                    {checkpoint.startTime.toDateString()}
+                                    <br />
+                                    <span
                                         style={{
-                                            fontSize: '0.7rem',
-                                            fontWeight: 'bold'
-                                        }}
-                                    />
-                                    Restore this Checkpoint
-                                </Button>
-                            )}
-                        </RestoreProcess>
-                    )}
-                </CheckpointViewContainer>
-            </>
-        }
-    />
-);
+                                            fontWeight: 300,
+                                            paddingRight: '1em'
+                                        }}>
+                                        {checkpoint.startTime.getHours()}:
+                                        {checkpoint.startTime.getMinutes()}:
+                                        {checkpoint.startTime.getSeconds()}:
+                                        {checkpoint.startTime.getMilliseconds()}
+                                    </span>
+                                </CheckpointName>
+                            </Grid.Column>
+                        </Grid.Row>
+                    </Grid>
+                    <hr />
+                    <RestoreProcess>
+                        {({ restoreProcess }) => (
+                            <Button
+                                primary={true}
+                                disabled={!isFinal(process.status)}
+                                loading={process.status === 'ENQUEUED'}
+                                onClick={() => {
+                                    restoreProcess(process.instanceId, checkpoint.id);
+                                    // TODO: ಠ_ಠ ... hack, needs to be better.
+                                    setTimeout(() => {
+                                        loadData({
+                                            orgId,
+                                            projectId,
+                                            limit: limitPerPage,
+                                            offset: (currentPage - 1) * limitPerPage
+                                        });
+                                    }, 200);
+                                }}>
+                                <ClassIcon
+                                    classes="icon redo white"
+                                    style={{
+                                        fontSize: '0.7rem',
+                                        fontWeight: 'bold'
+                                    }}
+                                />
+                                Restore this Checkpoint
+                            </Button>
+                        )}
+                    </RestoreProcess>
+                </>
+            }
+        />
+    );
+};
 
 export default CheckpointPopup;

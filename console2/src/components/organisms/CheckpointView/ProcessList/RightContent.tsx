@@ -19,28 +19,33 @@
  */
 // @ts-nocheck
 
-import * as React from 'react';
+import React, { useContext } from 'react';
 import { RightWrap } from './styles';
 import CheckpointGroup from '../CheckpointGroup';
 import NoCheckpointsMessage from '../NoCheckpointsMessage';
+import Container from '../Container';
+import { ProcessEntry } from '../../../../api/process';
 
 interface Props {
-    process: any;
-    checkpointGroups: any;
+    process: ProcessEntry;
 }
 
-export default ({ process, checkpointGroups }: Props) => (
-    <RightWrap>
-        {process.checkpoints && (
-            <>
-                {process.checkpoints.length && (
-                    <CheckpointGroup
-                        process={process}
-                        checkpointGroups={checkpointGroups[process.instanceId]}
-                    />
-                )}
-            </>
-        )}
-        {!process.checkpoints && <NoCheckpointsMessage />}
-    </RightWrap>
-);
+export default ({ process }: Props) => {
+    const { checkpointGroups } = useContext(Container.Context);
+
+    return (
+        <RightWrap>
+            {process.checkpoints && (
+                <>
+                    {process.checkpoints.length && (
+                        <CheckpointGroup
+                            process={process}
+                            checkpointGroups={checkpointGroups[process.instanceId]}
+                        />
+                    )}
+                </>
+            )}
+            {!process.checkpoints && <NoCheckpointsMessage />}
+        </RightWrap>
+    );
+};

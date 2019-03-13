@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: process metadata filtering for the checkpoint list
+page;
 - concord-server, concord-console: teams can now be associated with
 LDAP groups;
 - concord-server: user accounts can now be disabled via an API call;

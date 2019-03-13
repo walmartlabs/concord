@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Checkbox, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
-import { ColumnDefinition, SearchType, SearchValueType } from '../../../api/org';
+import { ColumnDefinition } from '../../../api/org';
 import { canBeCancelled, ProcessEntry, ProcessStatus } from '../../../api/process';
 import { LocalTimestamp, ProcessStatusIcon } from '../../molecules';
 import { TableSearchFilter } from '../../atoms';
@@ -34,8 +34,8 @@ export const STATUS_COLUMN: ColumnDefinition = {
     render: 'process-status',
     textAlign: 'center',
     collapsing: true,
-    searchValueType: SearchValueType.STRING,
-    searchType: SearchType.EQUALS,
+    searchValueType: 'string',
+    searchType: 'equals',
     searchOptions: Object.keys(ProcessStatus).map((k) => ({
         value: k,
         text: k
@@ -63,8 +63,8 @@ export const REPO_COLUMN: ColumnDefinition = {
 export const INITIATOR_COLUMN: ColumnDefinition = {
     caption: 'Initiator',
     source: 'initiator',
-    searchValueType: SearchValueType.STRING,
-    searchType: SearchType.SUBSTRING
+    searchValueType: 'string',
+    searchType: 'substring'
 };
 
 export const CREATED_AT_COLUMN: ColumnDefinition = {

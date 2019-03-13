@@ -20,20 +20,32 @@
 import { styled } from 'reakit';
 
 export const Row = styled.div`
+    /* display: grid;
+    grid-template-columns: fit-content(300px) 1fr; */
+
+    /* // TODO: Determine a better way to handle long repoMetadata */
+
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+
     width: 100%;
     margin: 24px 0px;
     border-radius: 5px;
     box-shadow: 0 1px 2px 0 rgba(34, 36, 38, 0.15);
 `;
 
-export const Column = styled('div')<{ flex?: number; background?: string; maxWidth?: number }>`
+interface ColumnProps {
+    flex?: number;
+    background?: string;
+    maxWidth?: number;
+}
+
+export const Column = styled('div')<ColumnProps>`
     display: flex;
     flex-direction: column;
     flex-basis: 100%;
-    flex: ${(props) => (props.flex ? props.flex : 1)};
-    background-color: ${(props) => props.background};
-    ${(props) => (props.maxWidth ? `max-width: ${props.maxWidth}px` : null)};
+    flex: ${(props: ColumnProps) => (props.flex ? props.flex : 1)};
+    background-color: ${(props: ColumnProps) => props.background};
+    ${(props: ColumnProps) => (props.maxWidth ? `max-width: ${props.maxWidth}px` : null)};
 `;

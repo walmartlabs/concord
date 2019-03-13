@@ -201,11 +201,6 @@ export interface PaginatedProcessEntries {
     next?: number;
     prev?: number;
 }
-
-interface ProcessMetadataFilters {
-    [source: string]: string;
-}
-
 export interface ProcessListQuery {
     orgId?: ConcordId;
     orgName?: ConcordKey;
@@ -217,20 +212,30 @@ export interface ProcessListQuery {
     status?: ProcessStatus;
     initiator?: string;
     parentInstanceId?: ConcordId;
-    meta?: ProcessMetadataFilters;
+    meta?: ProcessFilters;
     include?: ProcessDataInclude[];
     limit?: number;
     offset?: number;
 }
 
-export const list = async (q: ProcessListQuery): Promise<PaginatedProcessEntries> => {
+export const list = async (
+    q: ProcessListQuery,
+    includes?: ProcessDataInclude
+): Promise<PaginatedProcessEntries> => {
     const { limit = 50 } = q;
     const requestLimit = limit + 1;
 
-    const filters = combine(q, { meta: nonEmpty(q.meta), limit: requestLimit });
-    const qp = filters ? '?' + queryParams(filters) : '';
+    const includeParams = new URLSearchParams();
+    if (includes) {
+        includes.forEach((i) => includeParams.append('include', i));
+    }
 
-    const data: ProcessEntry[] = await fetchJson(`/api/v2/process${qp}`);
+    const filters = combine(q, { meta: nonEmpty(q.meta), limit: requestLimit });
+    const qp = filters ? '&' + queryParams(filters) : '';
+
+    const data: ProcessEntry[] = await fetchJson(
+        `/api/v2/process?${includeParams.toString()}${qp}`
+    );
 
     const hasMoreElements: boolean = !!limit && data.length > limit;
     const offset: number = q.offset ? q.offset : 0;

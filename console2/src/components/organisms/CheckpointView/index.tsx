@@ -17,48 +17,49 @@
  * limitations under the License.
  * =====
  */
-import * as React from 'react';
-import { Provider } from 'constate';
-import CheckpointView from './CheckpointView';
-
-import CPContainer, { initialState } from './CheckpointViewContainer';
+import React, { useContext, FunctionComponent } from 'react';
 import CheckpointErrorBoundary from './CheckpointErrorBoundry';
+import CheckpointContainer from './Container';
+import ActionBar from './ActionBar';
+import LeftContent from './ProcessList/LeftContent';
+import { Row } from './shared/Layout';
+import RightContent from './ProcessList/RightContent';
+import { ProjectEntry } from '../../../api/org/project';
 
-interface Props {
-    orgId: string;
-    projectId: string;
-}
+/**
+ * This View renders the two bigger components that make up the this checkpoint view
+ *
+ * @Component ActionBar contains refresh, filter, and pagination elements
+ * @Component Map over process details to create list of process items and details
+ */
+export const View = () => {
+    const { processes } = useContext(CheckpointContainer.Context);
 
-const dev = process.env.NODE_ENV !== 'production';
-
-export default ({ orgId, projectId }: Props) => {
     return (
-        <Provider devtools={dev}>
-            <CPContainer initialState={{ ...initialState, orgId, projectId }}>
-                {({
-                    checkpointGroups,
-                    refreshProcessData,
-                    limitPerPage,
-                    currentPage,
-                    processes
-                }) => (
-                    <CheckpointErrorBoundary>
-                        <CheckpointView
-                            processes={processes}
-                            checkpointGroups={checkpointGroups}
-                            pollDataFn={() =>
-                                refreshProcessData({
-                                    orgId,
-                                    projectId,
-                                    limit: limitPerPage,
-                                    offset: (currentPage - 1) * limitPerPage
-                                })
-                            }
-                            pollInterval={5000}
-                        />
-                    </CheckpointErrorBoundary>
-                )}
-            </CPContainer>
-        </Provider>
+        <CheckpointErrorBoundary>
+            <ActionBar />
+
+            {processes &&
+                processes.map((process) => {
+                    return (
+                        <Row key={process.instanceId}>
+                            <LeftContent process={process} />
+                            <RightContent process={process} />
+                        </Row>
+                    );
+                })}
+        </CheckpointErrorBoundary>
     );
 };
+
+/**
+ * Renders Context Providers for the Checkpoint View to consume
+ * @param project the Concord Project
+ */
+export const CheckpointView: FunctionComponent<{ project: ProjectEntry }> = ({ project }) => (
+    <CheckpointContainer.Provider project={project} refreshInterval={5000}>
+        <View />
+    </CheckpointContainer.Provider>
+);
+
+export default CheckpointView;

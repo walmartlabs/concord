@@ -21,7 +21,7 @@ import * as React from 'react';
 
 import { ContentBlock } from '../ProcessList/styles';
 import CheckpointGroup from '../CheckpointGroup';
-import { generateCheckpointGroups } from '../CheckpointViewContainer/checkpointUtils';
+import { generateCheckpointGroups } from '../Container/checkpointUtils';
 import { ProcessEntry } from '../../../../api/process';
 import NoCheckpointsMessage from '../NoCheckpointsMessage';
 import CheckpointErrorBoundary from '../CheckpointErrorBoundry';

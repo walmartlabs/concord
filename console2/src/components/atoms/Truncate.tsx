@@ -26,6 +26,7 @@ interface Props {
     endSubstringCount?: number;
 }
 
+// TODO: Handle non existant values
 // * Returns a smaller string than what was originally supplied
 export const Truncate: React.SFC<Props> = ({
     text,

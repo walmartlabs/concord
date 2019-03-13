@@ -29,7 +29,15 @@ import {
 import { comparators } from '../../../../utils';
 import { CheckpointGroup, CustomCheckpoint } from '../shared/types';
 
-// * Generate CustomCheckpoint array between time
+/**
+ * Generate CustomCheckpoint array between time
+ *
+ * @param start Start Date Object
+ * @param end End Date Object
+ * @param checkpoints Concord Process Checkpoint array
+ * @param status Process Status type for this run
+ * */
+
 export const getGroupsBetweenTime = (
     start: Date,
     end: Date,
@@ -72,6 +80,13 @@ export const getGroupsBetweenTime = (
     return resultCheckpoints;
 };
 
+/**
+ * Generates a custom object array of type CheckpointGroup
+ * Correlates checkpoint data with history data to generate said object.
+ *
+ * @param checkpoints Original Process Checkpoint Array
+ * @param historyEntries Original Process History Array
+ */
 export const generateCheckpointGroups = (
     checkpoints: ProcessCheckpointEntry[],
     historyEntries: ProcessHistoryEntry[]

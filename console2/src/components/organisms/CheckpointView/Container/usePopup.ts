@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,23 @@
  * limitations under the License.
  * =====
  */
+import { useState } from 'react';
 
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import App from './App';
+/**
+ * Custom React hook to manage state of a popup externally
+ */
+export const usePopup = () => {
+    const [visible, setVisible] = useState(false);
 
-it('renders without crashing', () => {
-    const div = document.createElement('div');
-    ReactDOM.render(<App />, div);
-});
+    const close = () => {
+        setVisible(false);
+    };
+
+    const open = () => {
+        setVisible(true);
+    };
+
+    return { visible, setVisible, open, close };
+};
+
+export default usePopup;

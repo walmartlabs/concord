@@ -32,7 +32,7 @@ class CheckpointErrorBoundary extends React.Component<{}, { hasError: boolean }>
 
     componentDidCatch(error: any, info: any) {
         // You can also log the error to an error reporting service
-        console.error(error, info);
+        console.debug(error, info);
     }
 
     render() {

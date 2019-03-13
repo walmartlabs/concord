@@ -24,7 +24,6 @@ export const FullBar = styled.div`
     min-height: 2.85714286em;
 
     display: flex;
-    align-items: center;
     vertical-align: middle;
 
     margin-top: 1rem;
@@ -32,6 +31,15 @@ export const FullBar = styled.div`
 
     border: 1px solid #d4d4d5;
     border-radius: 5px;
+
+    @media (min-width: 769px) {
+        align-items: center;
+    }
+
+    @media (max-width: 768px) {
+        align-items: left;
+        flex-direction: column;
+    }
 `;
 
 export const Item = styled.div`
@@ -40,4 +48,11 @@ export const Item = styled.div`
     vertical-align: middle;
     line-height: 1;
     text-decoration: none;
+
+    ${({ pushRight }: { pushRight?: boolean }) => (pushRight ? `margin-left: auto` : ``)}
+    @media (max-width: 768px) {
+        margin-left: initial;
+        align-items: left;
+        flex-direction: column;
+    }
 `;

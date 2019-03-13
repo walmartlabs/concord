@@ -17,90 +17,97 @@
  * limitations under the License.
  * =====
  */
-import * as React from 'react';
+import React, { FunctionComponent } from 'react';
+
 import { FullBar, Item } from './styles';
 import RefreshButton from '../../../atoms/RefreshButton';
 import { PaginationToolBar } from '../../../../components/molecules';
-import CheckpointViewContainer from '../CheckpointViewContainer';
+import CheckpointViewContainer from '../Container';
+import { MetaFilterPopup } from '../MetaFilterForm';
+import ActiveFilters from './ActiveFilters';
 
-const ActionBar: React.SFC<{}> = () => (
-    <CheckpointViewContainer>
-        {({
-            setPageLimit,
-            isFirstPage,
-            refreshProcessData,
-            loadingData,
-            orgId,
-            projectId,
-            getPaginationAsString,
-            currentPage,
-            setCurrentPage,
-            limitPerPage,
-            processes
-        }) => (
-            <FullBar>
-                <Item>
-                    <RefreshButton
-                        loading={loadingData}
-                        clickAction={() => {
-                            refreshProcessData({
-                                orgId,
-                                projectId,
-                                limit: limitPerPage,
-                                offset: (currentPage - 1) * limitPerPage
-                            });
-                        }}
-                    />
-                </Item>
-                <Item>{getPaginationAsString()}</Item>
-                <Item style={{ marginLeft: 'auto' }}>
-                    <PaginationToolBar
-                        filterProps={{}}
-                        handleLimitChange={(limit) => {
-                            setPageLimit(limit);
-                            refreshProcessData({
-                                orgId,
-                                projectId,
-                                limit,
-                                offset: 0
-                            });
-                        }}
-                        handleNext={() => {
-                            setCurrentPage(currentPage + 1);
-                            refreshProcessData({
-                                orgId,
-                                projectId,
-                                limit: limitPerPage,
-                                offset: currentPage * limitPerPage // offset calc e.g. 4 -> 5 (4 * 10 = 40)
-                            });
-                        }}
-                        handlePrev={() => {
-                            setCurrentPage(currentPage - 1);
-                            refreshProcessData({
-                                orgId,
-                                projectId,
-                                limit: limitPerPage,
-                                offset: (currentPage - 1 - 1) * limitPerPage // offset calc e.g. 4 -> 3 (4 - 2 = 2 : 2 * 10 = 20)
-                            });
-                        }}
-                        handleFirst={() => {
-                            setCurrentPage(1);
-                            refreshProcessData({
-                                orgId,
-                                projectId,
-                                limit: limitPerPage,
-                                offset: 0
-                            });
-                        }}
-                        disablePrevious={isFirstPage()}
-                        disableNext={processes ? processes.length < limitPerPage : false}
-                        disableFirst={isFirstPage()}
-                        dropDownValues={[10, 25, 50]}
-                    />
-                </Item>
-            </FullBar>
-        )}
-    </CheckpointViewContainer>
-);
+const ActionBar: FunctionComponent = () => {
+    const {
+        currentPage,
+        limitPerPage,
+        setCurrentPage,
+        loadData,
+        reloadData,
+        loadingData,
+        getPaginationAsString,
+        isFirstPage,
+        orgId,
+        projectId,
+        setPageLimit,
+        processes
+    } = React.useContext(CheckpointViewContainer.Context);
+
+    return (
+        <FullBar>
+            {/* Left side of toolbar */}
+            <Item>
+                <RefreshButton
+                    loading={loadingData}
+                    clickAction={() => {
+                        reloadData();
+                    }}
+                />
+            </Item>
+            <Item>{getPaginationAsString()}</Item>
+
+            <ActiveFilters />
+
+            {/* Right side of Toolbar */}
+            <Item pushRight>
+                <MetaFilterPopup />
+            </Item>
+            <Item>
+                <PaginationToolBar
+                    filterProps={{}}
+                    handleLimitChange={(limit) => {
+                        setPageLimit(limit);
+                        loadData({
+                            orgId,
+                            projectId,
+                            limit,
+                            offset: 0
+                        });
+                    }}
+                    handleNext={() => {
+                        setCurrentPage(currentPage + 1);
+                        loadData({
+                            orgId,
+                            projectId,
+                            limit: limitPerPage,
+                            offset: currentPage * limitPerPage // offset calc e.g. 4 -> 5 (4 * 10 = 40)
+                        });
+                    }}
+                    handlePrev={() => {
+                        setCurrentPage(currentPage - 1);
+                        loadData({
+                            orgId,
+                            projectId,
+                            limit: limitPerPage,
+                            offset: (currentPage - 1 - 1) * limitPerPage // offset calc e.g. 4 -> 3 (4 - 2 = 2 : 2 * 10 = 20)
+                        });
+                    }}
+                    handleFirst={() => {
+                        setCurrentPage(1);
+                        loadData({
+                            orgId,
+                            projectId,
+                            limit: limitPerPage,
+                            offset: 0
+                        });
+                    }}
+                    disablePrevious={isFirstPage()}
+                    disableNext={processes ? processes.length < limitPerPage : false}
+                    disableFirst={isFirstPage()}
+                    dropDownValues={[10, 25, 50]}
+                />
+            </Item>
+        </FullBar>
+    );
+};
 
 export default ActionBar;

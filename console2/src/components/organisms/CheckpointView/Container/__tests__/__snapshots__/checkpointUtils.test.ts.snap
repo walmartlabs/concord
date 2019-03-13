@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generateCheckpointGroups handles empty checkpoints 1`] = `
+Array [
+  Object {
+    "checkpoints": Array [],
+    "end": 2019-02-18T17:23:33.445Z,
+    "name": "#1",
+    "start": 2019-02-18T17:23:29.678Z,
+  },
+]
+`;
+
+exports[`generateCheckpointGroups handles empty history 1`] = `Array []`;
+
+exports[`generateCheckpointGroups handles valid data 1`] = `
+Array [
+  Object {
+    "checkpoints": Array [
+      Object {
+        "createdAt": "2019-02-18T17:23:32.520Z",
+        "endTime": 2019-02-18T17:23:32.790Z,
+        "id": "1",
+        "name": "checkpoint 1",
+        "startTime": 2019-02-18T17:23:32.520Z,
+        "status": "FINISHED",
+      },
+      Object {
+        "createdAt": "2019-02-18T17:23:32.790Z",
+        "endTime": 2019-02-18T17:23:32.950Z,
+        "id": "2",
+        "name": "checkpoint 2",
+        "startTime": 2019-02-18T17:23:32.790Z,
+        "status": "FINISHED",
+      },
+      Object {
+        "createdAt": "2019-02-18T17:23:32.950Z",
+        "endTime": 2019-02-18T17:23:33.445Z,
+        "id": "3",
+        "name": "checkpoint 3",
+        "startTime": 2019-02-18T17:23:32.950Z,
+        "status": "FINISHED",
+      },
+    ],
+    "end": 2019-02-18T17:23:33.445Z,
+    "name": "#1",
+    "start": 2019-02-18T17:23:29.678Z,
+  },
+]
+`;

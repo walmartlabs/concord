@@ -58,8 +58,12 @@ export const getStatusColor = (status: string): string => {
     }
 };
 
-export const TimeBox = styled('div')<{ statusColor?: any }>`
-    background: ${(prop) => (prop.statusColor ? prop.statusColor : 'gray')};
+interface TimeBoxProps {
+    statusColor?: any;
+}
+
+export const TimeBox = styled('div')<TimeBoxProps>`
+    background: ${(prop: TimeBoxProps) => (prop.statusColor ? prop.statusColor : 'gray')};
     padding: 0.7rem 0.7rem;
     text-align: center;
     border-radius: 5px;
