@@ -172,6 +172,12 @@ public class OrganizationDao extends AbstractDao {
                         .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
     }
 
+    public void delete(UUID orgId) {
+        tx(tx -> tx.deleteFrom(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(orgId))
+                .execute());
+    }
+
     private String serialize(Map<String, Object> m) {
         if (m == null) {
             return null;

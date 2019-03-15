@@ -64,13 +64,13 @@ public final class ITUtils {
     }
 
     public static String createGitRepo(Class<?> klass, String resource) throws IOException, GitAPIException, URISyntaxException {
-        File src = new File(klass.getResource(resource).toURI());
+        Path src = Paths.get(klass.getResource(resource).toURI());
         return createGitRepo(src);
     }
 
-    public static String createGitRepo(File src) throws IOException, GitAPIException {
+    public static String createGitRepo(Path src) throws IOException, GitAPIException {
         Path tmpDir = createTempDir();
-        IOUtils.copy(src.toPath(), tmpDir);
+        IOUtils.copy(src, tmpDir);
 
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();

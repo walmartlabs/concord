@@ -140,11 +140,11 @@ public abstract class AbstractServerIT {
         return serverClient.request(uri, input, entityType);
     }
 
-    protected String randomString() {
+    protected static String randomString() {
         return ITUtils.randomString();
     }
 
-    protected String randomPwd() {
+    protected static String randomPwd() {
         return ITUtils.randomPwd();
     }
 

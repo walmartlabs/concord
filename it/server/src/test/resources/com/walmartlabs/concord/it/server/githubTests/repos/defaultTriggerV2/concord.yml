@@ -1,0 +1,7 @@
+flows:
+  onPushV2:
+    - log: "onPush (branch): ${event}"
+
+triggers:
+  - github:
+      entryPoint: "onPushV2"

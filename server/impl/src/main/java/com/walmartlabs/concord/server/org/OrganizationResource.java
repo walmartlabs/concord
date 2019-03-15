@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.org;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -36,6 +38,7 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
@@ -95,5 +98,20 @@ public class OrganizationResource implements Resource {
         }
 
         return orgDao.list(userId);
+    }
+
+    @DELETE
+    @Path("/{orgName}")
+    @ApiOperation("Remove an existing organization")
+    @Produces(MediaType.APPLICATION_JSON)
+    public GenericOperationResult delete(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                         @ApiParam @QueryParam("confirmation") String confirmation) {
+
+        if (!"yes".equalsIgnoreCase(confirmation)) {
+            throw new ConcordApplicationException("Operation must be confirmed", Response.Status.BAD_REQUEST);
+        }
+
+        orgManager.delete(orgName);
+        return new GenericOperationResult(OperationResult.DELETED);
     }
 }

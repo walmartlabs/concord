@@ -1,0 +1,11 @@
+flows:
+  onPush:
+    - log: "onPush (uknown): ${event}"
+
+triggers:
+  - github:
+      org: ".*"
+      project: ".*"
+      repository: ".*"
+      unknownRepo: true
+      entryPoint: "onPush"

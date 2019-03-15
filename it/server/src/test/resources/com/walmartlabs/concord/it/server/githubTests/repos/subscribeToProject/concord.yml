@@ -1,0 +1,10 @@
+flows:
+  onPush:
+    - log: "onPush (project): ${event}"
+
+triggers:
+  - github:
+      org: "_ORG_NAME"
+      project: "_PROJECT_NAME"
+      repository: ".*"
+      entryPoint: "onPush"

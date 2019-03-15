@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1130000" author="ibodrov@gmail.com">
+        <!-- PROJECTS -->
+        <dropForeignKeyConstraint baseTableName="PROJECTS" constraintName="FK_PRJ_ORG_ID"/>
+        <addForeignKeyConstraint constraintName="FK_PRJ_ORG_ID"
+                                 baseTableName="PROJECTS"
+                                 baseColumnNames="ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"
+                                 onDelete="CASCADE"/>
+
+        <!-- INVENTORIES -->
+        <dropForeignKeyConstraint baseTableName="INVENTORIES" constraintName="FK_INV_ORG_ID"/>
+        <addForeignKeyConstraint constraintName="FK_INV_ORG_ID"
+                                 baseTableName="INVENTORIES"
+                                 baseColumnNames="ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"
+                                 onDelete="CASCADE"/>
+
+        <!-- SECRETS -->
+        <dropForeignKeyConstraint baseTableName="SECRETS" constraintName="FK_SECRET_ORG_ID"/>
+        <addForeignKeyConstraint constraintName="FK_SECRET_ORG_ID"
+                                 baseTableName="SECRETS"
+                                 baseColumnNames="ORG_ID"
+                                 referencedTableName="ORGANIZATIONS"
+                                 referencedColumnNames="ORG_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

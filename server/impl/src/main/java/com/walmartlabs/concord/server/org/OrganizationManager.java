@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -36,6 +37,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Named
@@ -94,6 +96,22 @@ public class OrganizationManager {
                 .field("id", orgId)
                 .field("name", entry.getName())
                 .field("meta", entry.getMeta())
+                .log();
+    }
+
+    public void delete(String orgName) {
+        assertAdmin();
+
+        OrganizationEntry org = assertExisting(null, orgName);
+        if (org == null) {
+            throw new ConcordApplicationException("Organization not found: " + orgName, Response.Status.NOT_FOUND);
+        }
+
+        orgDao.delete(org.getId());
+
+        auditLog.add(AuditObject.ORGANIZATION, AuditAction.DELETE)
+                .field("id", org.getId())
+                .field("name", org.getName())
                 .log();
     }
 

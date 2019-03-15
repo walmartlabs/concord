@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: an API method to remove an organization (admin only).
+
+
+
 ## [1.12.0] - 2019-03-13
 
 ### Added

@@ -24,14 +24,12 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.it.common.GitHubUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.Test;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,10 +46,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class GithubEventResourceIT extends AbstractServerIT {
-
-    // from github.secret configuration parameter
-    private static final String GITHUB_WEBHOOK_SECRET = "12345";
-    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void pushUnknownRepo() throws Exception {
@@ -177,24 +171,12 @@ public class GithubEventResourceIT extends AbstractServerIT {
         event = event.replace("org-repo", repoName);
 
         ApiClient client = getApiClient();
-        client.addDefaultHeader("X-Hub-Signature", "sha1=" + sign(event));
+        client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(event));
 
         GitHubEventsApi gitHubEvents = new GitHubEventsApi(client);
 
         String result = gitHubEvents.onEvent(event, "push");
         assertEquals("ok", result);
-    }
-
-    private String sign(String payload) throws Exception {
-        SecretKeySpec signingKey = new SecretKeySpec(GITHUB_WEBHOOK_SECRET.getBytes(), HMAC_SHA1_ALGORITHM);
-        Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
-        mac.init(signingKey);
-        byte[] digest = mac.doFinal(payload.getBytes());
-        return hex(digest);
-    }
-
-    private static String hex(byte[] str){
-        return String.format("%040x", new BigInteger(1, str));
     }
 
     private UUID createProjectAndRepo(String orgName, String projectName, String repoName, String repoUrl) throws Exception {
