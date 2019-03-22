@@ -173,7 +173,7 @@ public class ContextUtilsTest {
         }
 
         @Override
-        public void suspend(String eventName, Object payload) {
+        public void suspend(String eventName, Object payload, boolean restoreFromSameStep) {
             throw new UnsupportedOperationException();
         }
 

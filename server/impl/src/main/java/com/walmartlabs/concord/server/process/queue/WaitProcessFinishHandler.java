@@ -22,13 +22,15 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.process.*;
 import org.jooq.Configuration;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -44,10 +46,14 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
 
     private final Dao dao;
+    private final ProcessManager processManager;
+    private final PayloadManager payloadManager;
 
     @Inject
-    public WaitProcessFinishHandler(Dao dao) {
+    public WaitProcessFinishHandler(Dao dao, ProcessManager processManager, PayloadManager payloadManager) {
         this.dao = dao;
+        this.processManager = processManager;
+        this.payloadManager = payloadManager;
     }
 
     @Override
@@ -66,10 +72,24 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         List<UUID> processes = new ArrayList<>(awaitProcesses);
         processes.removeAll(finishedProcesses);
         if (processes.isEmpty()) {
+            if (wait.resumeEvent() != null) {
+                resumeProcess(instanceId, wait.resumeEvent());
+            }
             return null;
         }
 
         return ProcessCompletionCondition.of(processes, wait.reason());
+    }
+
+    private void resumeProcess(UUID instanceId, String eventName) {
+        Payload payload;
+        try {
+            payload = payloadManager.createResumePayload(PartialProcessKey.from(instanceId), eventName, null);
+        } catch (IOException e) {
+            throw new ConcordApplicationException("Error creating a payload", e);
+        }
+
+        processManager.resume(payload);
     }
 
     @Named

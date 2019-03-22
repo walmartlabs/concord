@@ -117,7 +117,7 @@ public interface Context {
      * Reserved for future use.
      * @see #suspend(String)
      */
-    void suspend(String eventName, Object payload);
+    void suspend(String eventName, Object payload, boolean resumeFromSameStep);
 
     /**
      * Creates a new form and suspends the process.

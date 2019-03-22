@@ -36,6 +36,6 @@ public class CheckpointTask implements Task {
         String checkpoint = ContextUtils.assertString(ctx, "checkpointName");
         UUID checkpointId = UUID.randomUUID();
         ctx.setVariable("checkpointId", checkpointId.toString());
-        ctx.suspend(checkpoint, Collections.singletonMap("checkpointId", checkpointId.toString()));
+        ctx.suspend(checkpoint, Collections.singletonMap("checkpointId", checkpointId.toString()), false);
     }
 }

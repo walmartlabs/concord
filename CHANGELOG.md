@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server, concord-runner, concord-tasks: (optionally) suspend
+the parent process while waiting for a child process (only for
+`start`);
 - project-model: support for arrays in `withItems`;
 - concord-server: an API method to remove an organization (admin only).
 

@@ -123,7 +123,7 @@ public class Configuration {
         this.serverApiBaseUrl = cfg.getString("server.apiBaseUrl");
         log.info("Using the Server's API address: {}", serverApiBaseUrl);
         this.serverWebsocketUrls = getCSV(cfg.getString("server.websockerUrl"));
-        log.info("Using the Server's websocket addresses: {}", serverWebsocketUrls);
+        log.info("Using the Server's websocket addresses: {}", (Object[]) serverWebsocketUrls);
 
         this.apiVerifySsl = cfg.getBoolean("server.verifySsl");
         this.connectTimeout = cfg.getDuration("server.connectTimeout", TimeUnit.MILLISECONDS);

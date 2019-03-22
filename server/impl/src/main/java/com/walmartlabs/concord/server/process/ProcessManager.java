@@ -35,6 +35,7 @@ import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
+import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
@@ -238,6 +239,11 @@ public class ProcessManager {
         log.info("updateStatus [{}, '{}', {}] -> done", processKey, agentId, status);
     }
 
+    public void setWaitCondition(ProcessKey processKey, AbstractWaitCondition condition) {
+        assertUpdateRights(processKey);
+        queueDao.updateWait(processKey, condition);
+    }
+
     public ProcessEntry assertProcess(UUID instanceId) {
         ProcessEntry p = queueDao.get(PartialProcessKey.from(instanceId));
         if (p == null) {
@@ -289,13 +295,14 @@ public class ProcessManager {
     }
 
     private void assertRepositoryDisabled(Payload payload) {
-        if (payload.getHeader(Payload.REPOSITORY_ID) != null) {
-            UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
-            RepositoryEntry repo = repositoryDao.get(repoId);
-            if (repo.isDisabled()) {
-                throw new ConcordApplicationException("Repository is disabled -> " + repo.getName());
-            }
+        UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
+        if (repoId == null) {
+            return;
+        }
 
+        RepositoryEntry repo = repositoryDao.get(repoId);
+        if (repo.isDisabled()) {
+            throw new ConcordApplicationException("Repository is disabled -> " + repo.getName());
         }
     }
 

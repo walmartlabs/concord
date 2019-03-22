@@ -87,7 +87,7 @@ public class MockContext implements Context {
     }
 
     @Override
-    public void suspend(String eventName, Object payload) {
+    public void suspend(String eventName, Object payload, boolean restoreFromSameStep) {
         throw new IllegalStateException("Not supported");
     }
 

@@ -86,6 +86,10 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String START_AT_KEY = "startAt";
     private static final String SYNC_KEY = "sync";
     private static final String TAGS_KEY = "tags";
+    private static final String SUSPEND_KEY = "suspend";
+
+    private static final String SUSPEND_MARKER = "__concordTaskSuspend";
+    private static final String RESUME_EVENT_NAME = "concordTask";
 
     private static final Set<String> FAILED_STATUSES;
 
@@ -107,8 +111,12 @@ public class ConcordTask extends AbstractConcordTask {
         Action action = getAction(ctx);
         switch (action) {
             case START: {
-                String instanceId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
-                start(ctx, instanceId);
+                if (ContextUtils.getBoolean(ctx, SUSPEND_MARKER, false)) {
+                    continueAfterSuspend(ctx);
+                } else {
+                    String instanceId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
+                    start(ctx, instanceId);
+                }
                 break;
             }
             case FORK: {
@@ -282,6 +290,13 @@ public class ConcordTask extends AbstractConcordTask {
         ctx.setVariable(JOBS_KEY, jobs);
 
         if (sync) {
+            boolean suspend = getBoolean(cfg, SUSPEND_KEY);
+            if (suspend) {
+                log.info("Suspending the process until the child process ({}) is completed...", childId);
+                suspend(ctx, jobs);
+                return;
+            }
+
             Map<String, ProcessEntry> result = waitForCompletion(ctx, jobs);
             handleResults(cfg, result);
 
@@ -291,6 +306,41 @@ public class ConcordTask extends AbstractConcordTask {
             }
             ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void continueAfterSuspend(Context ctx) throws Exception {
+        Map<String, Object> cfg = createJobCfg(ctx, defaults);
+        List<String> jobs = (List<String>) ctx.getVariable(JOBS_KEY);
+        String childId = jobs.get(0);
+
+        Map<String, ProcessEntry> result = waitForCompletion(ctx, jobs);
+        handleResults(cfg, result);
+
+        Object out = null;
+        if (cfg.containsKey(OUT_VARS_KEY)) {
+            out = getOutVars(ctx, childId);
+        }
+        ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
+        ctx.removeVariable(SUSPEND_MARKER);
+    }
+
+    private void suspend(Context ctx, List<String> jobs) throws ApiException {
+        Map<String, Object> condition = new HashMap<>();
+        condition.put("type", "PROCESS_COMPLETION");
+        condition.put("reason", "Waiting for a child process to end");
+        condition.put("processes", jobs);
+        condition.put("resumeEvent", RESUME_EVENT_NAME);
+
+        ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
+            ProcessApi api = new ProcessApi(client);
+            api.setWaitCondition(ContextUtils.getTxId(ctx), condition);
+            return null;
+        }));
+
+        ctx.setVariable(SUSPEND_MARKER, true);
+
+        ctx.suspend(RESUME_EVENT_NAME, null, true);
     }
 
     private void handleResults(Map<String, Object> cfg, Map<String, ProcessEntry> m) {
@@ -463,7 +513,8 @@ public class ConcordTask extends AbstractConcordTask {
                 REPOSITORY_KEY,
                 START_AT_KEY,
                 SYNC_KEY,
-                TAGS_KEY);
+                TAGS_KEY,
+                SUSPEND_KEY);
 
         if (job != null) {
             m.putAll(job);

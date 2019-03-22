@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.InternalConstants;
@@ -31,7 +32,6 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
@@ -41,6 +41,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
+import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -95,8 +96,7 @@ public class ProcessResource implements Resource {
     private final SecretStoreConfiguration secretStoreCfg;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final ProcessKeyCache processKeyCache;
-    private final OrganizationManager orgManager;
-    private final ProjectDao projectDao;
+    private final ObjectMapper objectMapper;
 
     private final ProcessResourceV2 v2;
 
@@ -109,12 +109,9 @@ public class ProcessResource implements Resource {
                            SecretStoreConfiguration secretStoreCfg,
                            EncryptedProjectValueManager encryptedValueManager,
                            ProcessKeyCache processKeyCache,
-                           OrganizationManager orgManager,
-                           ProjectDao projectDao,
+                           ObjectMapper objectMapper,
                            ProcessResourceV2 v2) {
 
-        this.orgManager = orgManager;
-        this.projectDao = projectDao;
         this.processManager = processManager;
         this.queueDao = queueDao;
         this.logsDao = logsDao;
@@ -123,6 +120,7 @@ public class ProcessResource implements Resource {
         this.secretStoreCfg = secretStoreCfg;
         this.encryptedValueManager = encryptedValueManager;
         this.processKeyCache = processKeyCache;
+        this.objectMapper = objectMapper;
 
         this.v2 = v2;
     }
@@ -992,6 +990,26 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }
 
+        return Response.ok().build();
+    }
+
+    /**
+     * Set the process' wait condition.
+     *
+     * @param instanceId
+     * @param waitCondition
+     * @return
+     */
+    @POST
+    @ApiOperation(value = "Set the process' wait condition")
+    @javax.ws.rs.Path("{id}/wait")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public Response setWaitCondition(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> waitCondition) {
+        ProcessKey processKey = processKeyCache.get(instanceId);
+        AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
+        processManager.setWaitCondition(processKey, condition);
         return Response.ok().build();
     }
 
