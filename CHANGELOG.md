@@ -4,11 +4,19 @@
 
 ### Added
 
+- concord-server, consord-console: organization owners can now be
+set using the API or in the Console;
 - concord-server, concord-runner, concord-tasks: (optionally) suspend
 the parent process while waiting for a child process (only for
 `start`);
 - project-model: support for arrays in `withItems`;
-- concord-server: an API method to remove an organization (admin only).
+- concord-server: an API method to remove an organization
+(admin only).
+
+### Changed
+
+- concord-console: fixed a bug when team members could not be
+deleted.
 
 
 

@@ -21,9 +21,7 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.ResourceAccessEntry;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -77,13 +75,12 @@ public class ProjectAccessManager {
             throw new ValidationErrorsException("Project not found: " + projectId);
         }
 
-        orgManager.assertAccess(e.getOrgId(), false);
-
-        UserPrincipal p = UserPrincipal.assertCurrent();
         if (Roles.isAdmin()) {
             // an admin can access any project
             return e;
         }
+
+        UserPrincipal p = UserPrincipal.assertCurrent();
 
         if (level == ResourceAccessLevel.READER && (Roles.isGlobalReader() || Roles.isGlobalWriter())) {
             return e;
@@ -101,6 +98,12 @@ public class ProjectAccessManager {
                 && level == ResourceAccessLevel.READER
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
             // organization members can access any public project in the same organization
+            return e;
+        }
+
+        OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
+        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+            // the org owner can do anything with the org's projects
             return e;
         }
 

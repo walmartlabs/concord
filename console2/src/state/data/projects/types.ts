@@ -121,6 +121,11 @@ export interface ProjectTeamAccessResponse extends Action {
     items?: ResourceAccessEntry[];
 }
 
+export interface SetAcceptsRawPayloadResponse extends Action {
+    projectId: ConcordKey;
+    acceptsRawPayload: boolean;
+}
+
 export interface Projects {
     [id: string]: ProjectEntry;
 }

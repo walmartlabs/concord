@@ -18,7 +18,7 @@
  * =====
  */
 
-import { fetchJson, ConcordKey, ConcordId } from '../common';
+import { fetchJson, ConcordKey, ConcordId, OperationResult } from '../common';
 
 export enum OrganizationVisibility {
     PUBLIC = 'PUBLIC',
@@ -54,9 +54,15 @@ export interface OrganizationEntryMeta {
     ui?: OrganizationEntryMetaUI;
 }
 
+export interface OrganizationOwner {
+    id: ConcordId;
+    username: string;
+}
+
 export interface OrganizationEntry {
     id: string;
     name: string;
+    owner?: OrganizationOwner;
     visibility: OrganizationVisibility;
     meta?: OrganizationEntryMeta;
 }
@@ -73,8 +79,32 @@ export interface ResourceAccessEntry {
     level: ResourceAccessLevel;
 }
 
+export interface OrganizationOperationResult {
+    ok: boolean;
+    id: ConcordId;
+    result: OperationResult;
+}
+
 export const list = (onlyCurrent: boolean): Promise<OrganizationEntry[]> =>
     fetchJson(`/api/v1/org?onlyCurrent=${onlyCurrent}`);
 
 export const get = (orgName: ConcordKey): Promise<OrganizationEntry> =>
     fetchJson<OrganizationEntry>(`/api/v1/org/${orgName}`);
+
+export const changeOwner = (
+    orgId: ConcordId,
+    owner: string
+): Promise<OrganizationOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: orgId,
+            owner: { username: owner }
+        })
+    };
+
+    return fetchJson(`/api/v1/org`, opts);
+};

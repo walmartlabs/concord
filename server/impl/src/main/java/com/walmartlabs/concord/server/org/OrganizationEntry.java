@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
@@ -40,6 +41,9 @@ public class OrganizationEntry implements Serializable {
     @ConcordKey
     private final String name;
 
+    @Nullable
+    private final OrganizationOwner owner;
+
     private final OrganizationVisibility visibility;
 
     private final Map<String, Object> meta;
@@ -47,25 +51,27 @@ public class OrganizationEntry implements Serializable {
     private final Map<String, Object> cfg;
 
     public OrganizationEntry(String name) {
-        this(null, name, null, null, null);
+        this(null, name, null, null, null, null);
     }
 
     public OrganizationEntry(String name, OrganizationVisibility visibility) {
-        this(null, name, visibility, null, null);
+        this(null, name, null, visibility, null, null);
     }
 
     public OrganizationEntry(String name, Map<String, Object> meta) {
-        this(null, name, null, meta, null);
+        this(null, name, null, null, meta, null);
     }
 
     @JsonCreator
     public OrganizationEntry(@JsonProperty("id") UUID id,
                              @JsonProperty("name") String name,
+                             @JsonProperty("owner") OrganizationOwner owner,
                              @JsonProperty("visibility") OrganizationVisibility visibility,
                              @JsonProperty("meta") Map<String, Object> meta,
                              @JsonProperty("cfg") Map<String, Object> cfg) {
         this.id = id;
         this.name = name;
+        this.owner = owner;
         this.visibility = visibility;
         this.meta = meta;
         this.cfg = cfg;
@@ -77,6 +83,11 @@ public class OrganizationEntry implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    @Nullable
+    public OrganizationOwner getOwner() {
+        return owner;
     }
 
     public OrganizationVisibility getVisibility() {
@@ -96,6 +107,7 @@ public class OrganizationEntry implements Serializable {
         return "OrganizationEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", owner=" + owner +
                 ", visibility=" + visibility +
                 ", meta=" + meta +
                 ", cfg=" + cfg +

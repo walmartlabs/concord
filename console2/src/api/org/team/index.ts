@@ -145,7 +145,10 @@ export const addUsers = (
         body: JSON.stringify(users)
     };
 
-    return fetchJson(`/api/v1/org/${orgName}/team/${teamName}/users?${queryParams(replace)}`, opts);
+    return fetchJson(
+        `/api/v1/org/${orgName}/team/${teamName}/users?${queryParams({ replace })}`,
+        opts
+    );
 };
 
 export const deleteUsers = (

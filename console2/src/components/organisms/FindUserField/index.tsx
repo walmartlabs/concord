@@ -26,9 +26,15 @@ import { UserSearchResult } from '../../../api/service/console';
 import { actions, State } from '../../../state/data/search';
 
 interface ExternalProps {
+    defaultValue?: string;
+    valueRender?: (value: UserSearchResult) => string;
     onSelect: (value: UserSearchResult) => void;
     onChange?: (value?: string) => void;
     placeholder?: string;
+}
+
+interface InternalState {
+    value: string;
 }
 
 interface StateProps {
@@ -55,9 +61,19 @@ const toResults = (items: UserSearchResult[]) =>
 const resultToItem = (result: SearchResultProps, items: UserSearchResult[]) =>
     items.find((i) => i.username === result.description)!;
 
-class FindUserField extends React.PureComponent<Props> {
+class FindUserField extends React.PureComponent<Props, InternalState> {
+    constructor(props: Props) {
+        super(props);
+
+        const { defaultValue } = this.props;
+        this.state = { value: defaultValue || '' };
+    }
+
     componentDidMount() {
         this.props.reset();
+
+        const { defaultValue } = this.props;
+        this.state = { value: defaultValue || '' };
     }
 
     handleSelect({ result }: SearchResultData) {
@@ -65,10 +81,16 @@ class FindUserField extends React.PureComponent<Props> {
             return;
         }
 
-        const { items } = this.props;
+        const { items, valueRender } = this.props;
         const i = resultToItem(result, items);
         if (!i) {
             return;
+        }
+
+        if (valueRender !== undefined) {
+            this.setState({ value: valueRender(i) });
+        } else {
+            this.setState({ value: i.displayName });
         }
 
         const { onSelect } = this.props;
@@ -76,10 +98,12 @@ class FindUserField extends React.PureComponent<Props> {
     }
 
     render() {
+        const { value } = this.state;
         const { error, loading, onSearch, onChange, items, placeholder } = this.props;
 
         return (
             <Search
+                value={value}
                 input={{
                     fluid: true,
                     placeholder: placeholder ? placeholder : 'Search for a user...',
@@ -90,6 +114,9 @@ class FindUserField extends React.PureComponent<Props> {
                 showNoResults={!loading}
                 onSearchChange={(ev, data) => {
                     const filter = data.value;
+
+                    this.setState({ value: filter || '' });
+
                     if (filter && filter.length >= 5) {
                         onSearch(filter);
                     }

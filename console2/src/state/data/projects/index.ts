@@ -77,7 +77,8 @@ import {
     updateProjectState,
     UpdateProjectRequest,
     UpdateProjectTeamAccessRequest,
-    UpdateProjectTeamAccessState
+    UpdateProjectTeamAccessState,
+    SetAcceptsRawPayloadResponse
 } from './types';
 import { ResourceAccessEntry } from '../../../api/org';
 
@@ -264,19 +265,27 @@ export const actions = {
 
 const projectById: Reducer<Projects> = (
     state = {},
-    { type, error, items }: ProjectDataResponse
+    r: ProjectDataResponse | SetAcceptsRawPayloadResponse
 ) => {
-    switch (type) {
-        case actionTypes.PROJECT_DATA_RESPONSE:
-            if (error || !items) {
+    switch (r.type) {
+        case actionTypes.PROJECT_DATA_RESPONSE: {
+            const a = r as ProjectDataResponse;
+            if (a.error || !a.items) {
                 return {};
             }
 
             const result = {};
-            items.forEach((o) => {
+            a.items.forEach((o) => {
                 result[o.id] = o;
             });
             return result;
+        }
+        case actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE: {
+            const a = r as SetAcceptsRawPayloadResponse;
+
+            state[a.projectId].acceptsRawPayload = a.acceptsRawPayload;
+            return state;
+        }
         default:
             return state;
     }
@@ -571,7 +580,9 @@ function* onSetAcceptsRawPayload({
     try {
         yield call(apiSetAcceptsRawPayload, orgName, projectId, acceptsRawPayload);
         yield put({
-            type: actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE
+            type: actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE,
+            projectId,
+            acceptsRawPayload
         });
     } catch (e) {
         yield handleErrors(actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE, e);

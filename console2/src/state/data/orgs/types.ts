@@ -20,8 +20,9 @@
 
 import { Action } from 'redux';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { OrganizationEntry } from '../../../api/org';
+import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
+import { OrganizationEntry, OrganizationOperationResult } from '../../../api/org';
+import { RequestState } from '../common';
 
 export interface ListOrganizationsRequest extends Action {
     onlyCurrent: boolean;
@@ -36,12 +37,21 @@ export interface GetOrganizationRequest extends Action {
     orgName: ConcordKey;
 }
 
+export interface ChangeOrganizationOwnerRequest extends Action {
+    orgId: ConcordId;
+    orgName: ConcordKey;
+    owner: string;
+}
+
 export interface Organizations {
     [id: string]: OrganizationEntry;
 }
+
+export type ChangeOwnerState = RequestState<OrganizationOperationResult>;
 
 export interface State {
     orgById: Organizations;
     loading: boolean;
     error: RequestError;
+    changeOwner: ChangeOwnerState;
 }

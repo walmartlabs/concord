@@ -24,7 +24,10 @@ import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -40,12 +43,18 @@ public class InventoryManager {
 
     private final InventoryDao inventoryDao;
     private final UserDao userDao;
+    private final OrganizationManager orgManager;
     private final AuditLog auditLog;
 
     @Inject
-    public InventoryManager(InventoryDao inventoryDao, UserDao userDao, AuditLog auditLog) {
+    public InventoryManager(InventoryDao inventoryDao,
+                            UserDao userDao,
+                            OrganizationManager orgManager,
+                            AuditLog auditLog) {
+
         this.inventoryDao = inventoryDao;
         this.userDao = userDao;
+        this.orgManager = orgManager;
         this.auditLog = auditLog;
     }
 
@@ -138,9 +147,14 @@ public class InventoryManager {
 
         // TODO research the case for publicly writable inventories
         if (orgMembersOnly && e.getVisibility() == InventoryVisibility.PUBLIC
-                // && level == ResourceAccessLevel.READER
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
             // organization members can access any public inventory in the same organization
+            return e;
+        }
+
+        OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
+        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+            // the org owner can do anything with the org's inventories
             return e;
         }
 

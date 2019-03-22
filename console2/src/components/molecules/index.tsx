@@ -28,6 +28,7 @@ export { default as ButtonWithConfirmation } from './ButtonWithConfirmation';
 export { default as DonutChart } from './DonutChart';
 export { default as DropdownWithAddition } from './DropdownWithAddition';
 export { default as EditProjectForm } from './EditProjectForm';
+export { default as EntityOwnerChangeForm } from './EntityOwnerChangeForm';
 export { default as EntityRenameForm } from './EntityRenameForm';
 export { default as GitHubLink } from './GitHubLink';
 export { default as GlobalNavMenu } from './GlobalNavMenu';

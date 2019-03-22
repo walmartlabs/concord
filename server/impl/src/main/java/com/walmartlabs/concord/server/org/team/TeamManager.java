@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
@@ -201,6 +202,10 @@ public class TeamManager {
     }
 
     private void validateUsers(DSLContext tx, UUID orgId) {
+        if (orgDao.hasOwner(tx, orgId)) {
+            return;
+        }
+
         if (!orgDao.hasRole(tx, orgId, TeamRole.OWNER)) {
             throw new ValidationErrorsException("Organization must have at least one OWNER");
         }
@@ -251,6 +256,13 @@ public class TeamManager {
         }
 
         UserPrincipal p = UserPrincipal.assertCurrent();
+
+        OrganizationEntry org = orgManager.assertAccess(orgId, false);
+        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+            // the org owner can do anything with the org's teams
+            return;
+        }
+
         if (!teamDao.isInAnyTeam(orgId, p.getId(), TeamRole.atLeast(requiredRole))) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);
         }
@@ -268,6 +280,13 @@ public class TeamManager {
         }
 
         UserPrincipal p = UserPrincipal.assertCurrent();
+
+        OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
+        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+            // the org owner can do anything with the org's inventories
+            return e;
+        }
+
         if (requiredRole != null && teamMembersOnly) {
             if (!teamDao.hasUser(e.getId(), p.getId(), TeamRole.atLeast(requiredRole))) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have the required role: " + requiredRole);

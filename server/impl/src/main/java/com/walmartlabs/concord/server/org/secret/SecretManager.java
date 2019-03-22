@@ -32,10 +32,7 @@ import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.ResourceAccessEntry;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
@@ -136,6 +133,12 @@ public class SecretManager {
                 && level == ResourceAccessLevel.READER
                 && userDao.isInOrganization(p.getId(), e.getOrgId())) {
             // organization members can access any public secret in the same organization
+            return e;
+        }
+
+        OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
+        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+            // the org owner can do anything with the org's secrets
             return e;
         }
 

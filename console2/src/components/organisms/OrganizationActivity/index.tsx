@@ -22,7 +22,7 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { Redirect, Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Header, Icon, Loader, Menu } from 'semantic-ui-react';
+import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { OrganizationEntry } from '../../../api/org';
@@ -30,12 +30,15 @@ import { actions, selectors, State } from '../../../state/data/orgs';
 import { RequestErrorMessage } from '../../molecules';
 import {
     ProcessListActivity,
+    ProjectDeleteActivity,
     ProjectListActivity,
+    ProjectRenameActivity,
     SecretListActivity,
     TeamListActivity
 } from '../../organisms';
 
 import { NotFoundPage } from '../../pages';
+import OrganizationOwnerChangeActivity from '../OrganizationOwnerChangeActivity/OrganizationOwnerChangeActivity';
 
 export type TabLink = 'process' | 'project' | 'secret' | 'team' | 'settings' | null;
 
@@ -89,9 +92,22 @@ class OrganizationActivity extends React.PureComponent<Props> {
 
     static renderSettings(e: OrganizationEntry) {
         return (
-            <Header as="h5" disabled={true}>
-                ID: {e.id}
-            </Header>
+            <>
+                <Header as="h5" disabled={true}>
+                    ID: {e.id}
+                </Header>
+
+                <Divider horizontal={true} content="Danger Zone" />
+
+                <Segment color="red">
+                    <Header as="h4">Organization owner</Header>
+                    <OrganizationOwnerChangeActivity
+                        orgId={e.id}
+                        orgName={e.name}
+                        owner={e.owner && e.owner.username}
+                    />
+                </Segment>
+            </>
         );
     }
 

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,11 @@ package com.walmartlabs.concord.server.org;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.jooq.tables.Organizations;
+import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
 import com.walmartlabs.concord.server.org.team.TeamRole;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -37,16 +40,19 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
+import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
 import static org.jooq.impl.DSL.*;
 
 @Named
 public class OrganizationDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Inject
-    public OrganizationDao(@Named("app") Configuration cfg) {
+    public OrganizationDao(@Named("app") Configuration cfg,
+                           ObjectMapper objectMapper) {
         super(cfg);
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -56,10 +62,14 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY,
-                    ORGANIZATIONS.META.cast(String.class), ORGANIZATIONS.ORG_CFG.cast(String.class))
-                    .from(ORGANIZATIONS)
-                    .where(ORGANIZATIONS.ORG_ID.eq(id))
+            Organizations o = ORGANIZATIONS.as("o");
+            Users u = USERS.as("u");
+
+            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.USER_TYPE, o.VISIBILITY,
+                    o.META.cast(String.class), o.ORG_CFG.cast(String.class))
+                    .from(o)
+                    .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
+                    .where(o.ORG_ID.eq(id))
                     .fetchOne(this::toEntry);
         }
     }
@@ -75,10 +85,14 @@ public class OrganizationDao extends AbstractDao {
 
     public OrganizationEntry getByName(String name) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_ID, ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY,
-                    ORGANIZATIONS.META.cast(String.class), ORGANIZATIONS.ORG_CFG.cast(String.class))
-                    .from(ORGANIZATIONS)
-                    .where(ORGANIZATIONS.ORG_NAME.eq(name))
+            Organizations o = ORGANIZATIONS.as("o");
+            Users u = USERS.as("u");
+
+            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.USER_TYPE, o.VISIBILITY,
+                    o.META.cast(String.class), o.ORG_CFG.cast(String.class))
+                    .from(o)
+                    .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
+                    .where(o.ORG_NAME.eq(name))
                     .fetchOne(this::toEntry);
         }
     }
@@ -92,33 +106,37 @@ public class OrganizationDao extends AbstractDao {
         }
     }
 
-    public UUID insert(String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
-        return txResult(tx -> insert(tx, name, visibility, meta, cfg));
+    public UUID insert(String name, UUID ownerId, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
+        return txResult(tx -> insert(tx, name, ownerId, visibility, meta, cfg));
     }
 
-    public UUID insert(DSLContext tx, String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
+    public UUID insert(DSLContext tx, String name, UUID ownerId, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
         if (visibility == null) {
             visibility = OrganizationVisibility.PUBLIC;
         }
 
         return tx.insertInto(ORGANIZATIONS)
-                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META, ORGANIZATIONS.ORG_CFG)
-                .values(value(name), value(visibility.toString()),
+                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.OWNER_ID, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META, ORGANIZATIONS.ORG_CFG)
+                .values(value(name), value(ownerId), value(visibility.toString()),
                         field("?::jsonb", serialize(meta)), field("?::jsonb", serialize(cfg)))
                 .returning()
                 .fetchOne()
                 .getOrgId();
     }
 
-    public void update(UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
-        tx(tx -> update(tx, id, name, visibility, meta, cfg));
+    public void update(UUID id, String name, UUID ownerId, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
+        tx(tx -> update(tx, id, name, ownerId, visibility, meta, cfg));
     }
 
-    public void update(DSLContext tx, UUID id, String name, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
+    public void update(DSLContext tx, UUID id, String name, UUID ownerId, OrganizationVisibility visibility, Map<String, Object> meta, Map<String, Object> cfg) {
         UpdateQuery<OrganizationsRecord> q = tx.updateQuery(ORGANIZATIONS);
 
         if (name != null) {
             q.addValue(ORGANIZATIONS.ORG_NAME, name);
+        }
+
+        if (ownerId != null) {
+            q.addValue(ORGANIZATIONS.OWNER_ID, ownerId);
         }
 
         if (visibility != null) {
@@ -139,12 +157,19 @@ public class OrganizationDao extends AbstractDao {
 
     public List<OrganizationEntry> list(UUID userId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record5<UUID, String, String, String, String>> q = tx.select(ORGANIZATIONS.ORG_ID,
-                    ORGANIZATIONS.ORG_NAME,
-                    ORGANIZATIONS.VISIBILITY,
-                    ORGANIZATIONS.META.cast(String.class),
-                    ORGANIZATIONS.ORG_CFG.cast(String.class))
-                    .from(ORGANIZATIONS);
+            Organizations o = ORGANIZATIONS.as("o");
+            Users u = USERS.as("u");
+
+            SelectOnConditionStep<Record8<UUID, String, UUID, String, String, String, String, String>> q = tx.select(o.ORG_ID,
+                    o.ORG_NAME,
+                    o.OWNER_ID,
+                    u.USERNAME,
+                    u.USER_TYPE,
+                    o.VISIBILITY,
+                    o.META.cast(String.class),
+                    o.ORG_CFG.cast(String.class))
+                    .from(o)
+                    .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID));
 
             if (userId != null) {
                 SelectConditionStep<Record1<UUID>> teamIds = selectDistinct(V_USER_TEAMS.TEAM_ID)
@@ -155,12 +180,18 @@ public class OrganizationDao extends AbstractDao {
                         .from(TEAMS)
                         .where(TEAMS.TEAM_ID.in(teamIds));
 
-                q.where(ORGANIZATIONS.ORG_ID.in(orgIds));
+                q.where(o.ORG_ID.in(orgIds));
             }
 
-            return q.orderBy(ORGANIZATIONS.ORG_NAME)
+            return q.orderBy(o.ORG_NAME)
                     .fetch(this::toEntry);
         }
+    }
+
+    public boolean hasOwner(DSLContext tx, UUID orgId) {
+        return tx.select(ORGANIZATIONS.OWNER_ID).from(ORGANIZATIONS)
+                .where(ORGANIZATIONS.ORG_ID.eq(orgId))
+                .fetchOne() != null;
     }
 
     public boolean hasRole(DSLContext tx, UUID orgId, TeamRole role) {
@@ -203,9 +234,19 @@ public class OrganizationDao extends AbstractDao {
         }
     }
 
-    private OrganizationEntry toEntry(Record5<UUID, String, String, String, String> r) {
-        Map<String, Object> meta = deserialize(r.value4());
-        Map<String, Object> cfg = deserialize(r.value5());
-        return new OrganizationEntry(r.value1(), r.value2(), OrganizationVisibility.valueOf(r.value3()), meta, cfg);
+    private OrganizationEntry toEntry(Record8<UUID, String, UUID, String, String, String, String, String> r) {
+        Map<String, Object> meta = deserialize(r.value7());
+        Map<String, Object> cfg = deserialize(r.value8());
+        return new OrganizationEntry(r.value1(), r.value2(),
+                toOwner(r.value3(), r.value4(), r.value5()),
+                OrganizationVisibility.valueOf(r.value6()), meta, cfg);
+    }
+
+    private OrganizationOwner toOwner(UUID id, String username, String type) {
+        if (id == null) {
+            return null;
+        }
+
+        return OrganizationOwner.of(id, username, UserType.valueOf(type));
     }
 }

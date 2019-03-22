@@ -20,24 +20,26 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
-import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.core.Response;
+import java.util.Map;
 import java.util.UUID;
 
 @Named
@@ -65,54 +67,57 @@ public class OrganizationManager {
     }
 
     public UUID create(OrganizationEntry entry) {
-        UserPrincipal p = assertAdmin();
+        assertAdmin();
+
+        UUID ownerId = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getId());
 
         UUID id = orgDao.txResult(tx -> {
-            UUID orgId = orgDao.insert(entry.getName(), entry.getVisibility(), entry.getMeta(), entry.getCfg());
+            UUID orgId = orgDao.insert(entry.getName(), ownerId, entry.getVisibility(), entry.getMeta(), entry.getCfg());
 
-            // ...add the current user to the default new as an OWNER
+            // ...add the owner user to the default new as an OWNER
             UUID teamId = teamDao.insert(tx, orgId, TeamManager.DEFAULT_TEAM_NAME, "Default team");
-            teamDao.upsertUser(tx, teamId, p.getId(), TeamRole.OWNER);
+            teamDao.upsertUser(tx, teamId, ownerId, TeamRole.OWNER);
 
             return orgId;
         });
 
-        auditLog.add(AuditObject.ORGANIZATION, AuditAction.CREATE)
-                .field("id", id)
-                .field("name", entry.getName())
-                .field("meta", entry.getMeta())
-                .log();
+        Map<String, Object> changes = DiffUtils.compare(null, entry);
+        addAuditLog(AuditAction.CREATE,
+                id,
+                entry.getName(),
+                changes);
 
         return id;
     }
 
     public void update(UUID orgId, OrganizationEntry entry) {
-        assertAdmin();
+        OrganizationEntry prevEntry = assertUpdateAccess(orgId);
 
-        orgDao.update(orgId, entry.getName(), entry.getVisibility(), entry.getMeta(), entry.getCfg());
+        UUID ownerId = getOwner(entry.getOwner(), null);
+        orgDao.update(orgId, entry.getName(), ownerId, entry.getVisibility(), entry.getMeta(), entry.getCfg());
 
-        // TODO delta?
-        auditLog.add(AuditObject.ORGANIZATION, AuditAction.UPDATE)
-                .field("id", orgId)
-                .field("name", entry.getName())
-                .field("meta", entry.getMeta())
-                .log();
+        OrganizationEntry newEntry = orgDao.get(orgId);
+
+        Map<String, Object> changes = DiffUtils.compare(prevEntry, newEntry);
+        addAuditLog(
+                AuditAction.UPDATE,
+                prevEntry.getId(),
+                prevEntry.getName(),
+                changes);
     }
 
     public void delete(String orgName) {
         assertAdmin();
 
         OrganizationEntry org = assertExisting(null, orgName);
-        if (org == null) {
-            throw new ConcordApplicationException("Organization not found: " + orgName, Response.Status.NOT_FOUND);
-        }
 
         orgDao.delete(org.getId());
 
-        auditLog.add(AuditObject.ORGANIZATION, AuditAction.DELETE)
-                .field("id", org.getId())
-                .field("name", org.getName())
-                .log();
+        addAuditLog(
+                AuditAction.DELETE,
+                org.getId(),
+                org.getName(),
+                null);
     }
 
     public OrganizationEntry assertExisting(UUID orgId, String orgName) {
@@ -157,6 +162,13 @@ public class OrganizationManager {
         }
 
         UserPrincipal p = UserPrincipal.assertCurrent();
+
+        OrganizationOwner owner = e.getOwner();
+        if (ResourceAccessUtils.isSame(p, owner)) {
+            // the owner can do anything with his organization
+            return e;
+        }
+
         if (orgMembersOnly) {
             if (!userManager.isInOrganization(e.getId())) {
                 throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't belong to the specified organization: " + e.getName());
@@ -166,11 +178,53 @@ public class OrganizationManager {
         return e;
     }
 
-    private static UserPrincipal assertAdmin() {
+    private OrganizationEntry assertUpdateAccess(UUID orgId) {
+        OrganizationEntry entry = assertExisting(orgId, null);
+
+        UUID ownerId = getOwner(entry.getOwner(), null);
+        UserPrincipal p = UserPrincipal.assertCurrent();
+        if (p.getId().equals(ownerId)) {
+            return entry;
+        }
+
+        if (!Roles.isAdmin()) {
+            throw new AuthorizationException("Only admins or owners are allowed to update organizations");
+        }
+        return entry;
+    }
+
+    private static void assertAdmin() {
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (!Roles.isAdmin()) {
             throw new AuthorizationException("Only admins are allowed to update organizations");
         }
-        return p;
+    }
+
+    private UUID getOwner(OrganizationOwner owner, UUID defaultOwner) {
+        if (owner == null) {
+            return defaultOwner;
+        }
+
+        if (owner.id() != null) {
+            return userManager.get(owner.id())
+                    .map(UserEntry::getId)
+                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
+        }
+
+        if (owner.username() != null) {
+            UserType t = owner.userType() != null ? owner.userType() : UserPrincipal.assertCurrent().getType();
+            return userManager.getOrCreate(owner.username(), t)
+                    .getId();
+        }
+
+        return defaultOwner;
+    }
+
+    private void addAuditLog(AuditAction auditAction, UUID orgId, String orgName, Map<String, Object> changes) {
+        auditLog.add(AuditObject.ORGANIZATION, auditAction)
+                .field("orgId", orgId)
+                .field("orgName", orgName)
+                .field("changes", changes)
+                .log();
     }
 }

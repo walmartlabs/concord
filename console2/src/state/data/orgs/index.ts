@@ -20,16 +20,18 @@
 
 import { combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
-import { list as apiList, get as apiGet } from '../../../api/org';
-import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../common';
+import { list as apiList, get as apiGet, changeOwner as apiChangeOwner } from '../../../api/org';
+import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import {
+    ChangeOrganizationOwnerRequest,
+    ChangeOwnerState,
     GetOrganizationRequest,
     ListOrganizationsRequest,
     ListOrganizationsResponse,
     Organizations,
     State
 } from './types';
-import { ConcordKey } from '../../../api/common';
+import { ConcordId, ConcordKey } from '../../../api/common';
 
 // https://github.com/facebook/create-react-app/issues/6054
 export * from './types';
@@ -41,7 +43,10 @@ const actionTypes = {
     LIST_ORGANIZATIONS_RESPONSE: `${NAMESPACE}/list/response`,
 
     GET_ORGANIZATION_REQUEST: `${NAMESPACE}/get/request`,
-    GET_ORGANIZATION_RESPONSE: `${NAMESPACE}/get/response`
+    GET_ORGANIZATION_RESPONSE: `${NAMESPACE}/get/response`,
+
+    CHANGE_ORGANIZATION_OWNER_REQUEST: `${NAMESPACE}/changeOwner/request`,
+    CHANGE_ORGANIZATION_OWNER_RESPONSE: `${NAMESPACE}/changeOwner/response`
 };
 
 export const actions = {
@@ -52,6 +57,16 @@ export const actions = {
     getOrg: (orgName: ConcordKey): GetOrganizationRequest => ({
         type: actionTypes.GET_ORGANIZATION_REQUEST,
         orgName
+    }),
+    changeOwner: (
+        orgId: ConcordId,
+        orgName: ConcordKey,
+        owner: string
+    ): ChangeOrganizationOwnerRequest => ({
+        type: actionTypes.CHANGE_ORGANIZATION_OWNER_REQUEST,
+        orgId,
+        orgName,
+        owner
     })
 };
 
@@ -85,10 +100,26 @@ const listError = makeErrorReducer(
     [actionTypes.LIST_ORGANIZATIONS_RESPONSE]
 );
 
+const changeOwnerReducers = combineReducers<ChangeOwnerState>({
+    running: makeLoadingReducer(
+        [actionTypes.CHANGE_ORGANIZATION_OWNER_REQUEST],
+        [actionTypes.CHANGE_ORGANIZATION_OWNER_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.CHANGE_ORGANIZATION_OWNER_REQUEST],
+        [actionTypes.CHANGE_ORGANIZATION_OWNER_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.CHANGE_ORGANIZATION_OWNER_RESPONSE,
+        actionTypes.CHANGE_ORGANIZATION_OWNER_REQUEST
+    )
+});
+
 export const reducers = combineReducers<State>({
     orgById, // TODO use makeEntityByIdReducer
     loading,
-    error: listError
+    error: listError,
+    changeOwner: changeOwnerReducers
 });
 
 export const selectors = {
@@ -128,9 +159,22 @@ function* onGet({ orgName }: GetOrganizationRequest) {
     }
 }
 
+function* onChangeOwner({ orgId, orgName, owner }: ChangeOrganizationOwnerRequest) {
+    try {
+        yield call(apiChangeOwner, orgId, owner);
+        yield put({
+            type: actionTypes.CHANGE_ORGANIZATION_OWNER_RESPONSE
+        });
+        yield put(actions.getOrg(orgName));
+    } catch (e) {
+        yield handleErrors(actionTypes.CHANGE_ORGANIZATION_OWNER_RESPONSE, e);
+    }
+}
+
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_ORGANIZATION_REQUEST, onGet),
-        takeLatest(actionTypes.LIST_ORGANIZATIONS_REQUEST, onList)
+        takeLatest(actionTypes.LIST_ORGANIZATIONS_REQUEST, onList),
+        takeLatest(actionTypes.CHANGE_ORGANIZATION_OWNER_REQUEST, onChangeOwner)
     ]);
 };

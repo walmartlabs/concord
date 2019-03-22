@@ -32,4 +32,19 @@
                                  referencedColumnNames="ORG_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
+
+    <changeSet id="1130100" author="ybrigo@gmail.com">
+        <addColumn tableName="ORGANIZATIONS">
+            <column name="OWNER_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint constraintName="FK_ORG_OWNER_ID"
+                                 baseTableName="ORGANIZATIONS"
+                                 baseColumnNames="OWNER_ID"
+                                 referencedTableName="USERS"
+                                 referencedColumnNames="USER_ID"
+                                 onDelete="SET NULL"/>
+    </changeSet>
 </databaseChangeLog>
