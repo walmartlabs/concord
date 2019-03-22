@@ -375,7 +375,11 @@ public interface StepConverter<T extends YamlStep> {
                 return (List<Object>)result;
             }
 
-            throw new IllegalArgumentException("'withItems' values should be a list, got: " + result.getClass());
+            if (result.getClass().isArray()) {
+                return Arrays.asList((Object[])result);
+            }
+
+            throw new IllegalArgumentException("'withItems' values should be a list or an array, got: " + result.getClass());
         }
 
         @SuppressWarnings("unchecked")
@@ -387,6 +391,10 @@ public interface StepConverter<T extends YamlStep> {
 
             if (v instanceof List) {
                 return (List<E>) v;
+            }
+
+            if (v.getClass().isArray()) {
+                return Arrays.asList((E[])v);
             }
 
             throw new IllegalArgumentException("expected list with name '" + name + "', but got: " + v);

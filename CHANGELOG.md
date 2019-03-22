@@ -4,6 +4,7 @@
 
 ### Added
 
+- project-model: support for arrays in `withItems`;
 - concord-server: an API method to remove an organization (admin only).
 
 

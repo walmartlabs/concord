@@ -2037,6 +2037,28 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verifyNoMoreInteractions(task2);
     }
 
+    @Test
+    public void test069() throws Exception {
+        deploy("069.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("myLogger", task);
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        start(key, "main", new HashMap<>());
+
+        // ---
+
+        verify(task, times(3)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("hello a"));
+        verify(task, times(1)).log(eq("hello b"));
+        verify(task, times(1)).log(eq("hello c"));
+        verifyNoMoreInteractions(task);
+    }
+
     // FORMS (100 - 199)
 
     @Test
