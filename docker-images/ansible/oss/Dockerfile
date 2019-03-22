@@ -7,8 +7,32 @@ MAINTAINER "Yury Brigadirenko" <ybrigadirenko@walmartlabs.com>
 RUN mkdir -p /workspace
 WORKDIR /workspace
 
-RUN yum -y install gcc python-devel python-pip libffi-devel openssl-devel krb5-devel krb5-libs krb5-workstation openssh-clients sshpass util-linux python && yum clean all
+RUN yum -y install \
+    gcc \
+    krb5-devel \
+    krb5-libs \
+    krb5-workstation \
+    libffi-devel \
+    openssh-clients \
+    openssl-devel \
+    python \
+    python-devel \
+    python-pip \
+    sshpass \
+    util-linux \
+    && yum clean all
 
-RUN umask 0022 && pip install --upgrade pip pbr "ansible>=2.6.10,<2.7.0" botocore boto3 pywinrm==0.3.0 kerberos requests_kerberos ujson docker
+RUN umask 0022 && pip install --upgrade \
+    "ansible>=2.6.10,<2.7.0" \
+    boto3 \
+    botocore \
+    docker \
+    kerberos \
+    pbr \
+    pip \
+    pyvmomi \
+    pywinrm==0.3.0 \
+    requests_kerberos \
+    ujson 
 
 USER concord
