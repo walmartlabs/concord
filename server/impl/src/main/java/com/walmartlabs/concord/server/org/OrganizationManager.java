@@ -163,7 +163,7 @@ public class OrganizationManager {
 
         UserPrincipal p = UserPrincipal.assertCurrent();
 
-        OrganizationOwner owner = e.getOwner();
+        EntityOwner owner = e.getOwner();
         if (ResourceAccessUtils.isSame(p, owner)) {
             // the owner can do anything with his organization
             return e;
@@ -200,7 +200,7 @@ public class OrganizationManager {
         }
     }
 
-    private UUID getOwner(OrganizationOwner owner, UUID defaultOwner) {
+    private UUID getOwner(EntityOwner owner, UUID defaultOwner) {
         if (owner == null) {
             return defaultOwner;
         }

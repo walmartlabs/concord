@@ -23,10 +23,15 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,6 +51,7 @@ public class ProjectManager {
     private final SecretManager secretManager;
     private final AuditLog auditLog;
     private final EncryptedProjectValueManager encryptedValueManager;
+    private final UserManager userManager;
 
     @Inject
     public ProjectManager(ProjectDao projectDao,
@@ -54,7 +60,8 @@ public class ProjectManager {
                           ProjectAccessManager accessManager,
                           SecretManager secretManager,
                           AuditLog auditLog,
-                          EncryptedProjectValueManager encryptedValueManager) {
+                          EncryptedProjectValueManager encryptedValueManager,
+                          UserManager userManager) {
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
@@ -63,6 +70,7 @@ public class ProjectManager {
         this.secretManager = secretManager;
         this.auditLog = auditLog;
         this.encryptedValueManager = encryptedValueManager;
+        this.userManager = userManager;
     }
 
     public ProjectEntry get(UUID projectId) {
@@ -74,7 +82,7 @@ public class ProjectManager {
         assertSecrets(orgId, repos);
 
         UserPrincipal p = UserPrincipal.assertCurrent();
-        UUID ownerId = p.getId();
+        UUID ownerId = getOwner(entry.getOwner(), p.getId());
 
         UUID id = projectDao.txResult(tx -> {
             boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : false;
@@ -103,7 +111,19 @@ public class ProjectManager {
     }
 
     public void update(UUID projectId, ProjectEntry entry) {
-        ProjectEntry prevEntry = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        ProjectEntry e = projectDao.get(projectId);
+        if (e == null) {
+            throw new ValidationErrorsException("Project not found: " + projectId);
+        }
+
+        UUID ownerId = getOwner(entry.getOwner(), null);
+
+        ResourceAccessLevel level = ResourceAccessLevel.WRITER;
+        if (ownerId != null && !ownerId.equals(e.getOwner().id())) {
+            level = ResourceAccessLevel.OWNER;
+        }
+
+        ProjectEntry prevEntry = accessManager.assertProjectAccess(projectId, level, true);
         UUID orgId = prevEntry.getOrgId();
 
         Map<String, RepositoryEntry> repos = entry.getRepositories();
@@ -111,7 +131,7 @@ public class ProjectManager {
 
         projectDao.tx(tx -> {
             projectDao.update(tx, orgId, projectId, entry.getVisibility(), entry.getName(),
-                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload(), entry.getMeta());
+                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload(), ownerId, entry.getMeta());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
@@ -155,6 +175,25 @@ public class ProjectManager {
 
         // TODO replace with queueDao#list?
         return projectDao.list(orgId, userId, PROJECTS.PROJECT_NAME, true);
+    }
+
+    private UUID getOwner(EntityOwner owner, UUID defaultOwner) {
+        if (owner == null) {
+            return defaultOwner;
+        }
+
+        if (owner.id() != null) {
+            return userManager.get(owner.id())
+                    .map(UserEntry::getId)
+                    .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
+        }
+
+        if (owner.username() != null) {
+            return userManager.getOrCreate(owner.username(), UserType.LDAP)
+                    .getId();
+        }
+
+        return defaultOwner;
     }
 
     private void assertSecrets(UUID orgId, Map<String, RepositoryEntry> repos) {

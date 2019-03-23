@@ -42,7 +42,7 @@ public class OrganizationEntry implements Serializable {
     private final String name;
 
     @Nullable
-    private final OrganizationOwner owner;
+    private final EntityOwner owner;
 
     private final OrganizationVisibility visibility;
 
@@ -65,7 +65,7 @@ public class OrganizationEntry implements Serializable {
     @JsonCreator
     public OrganizationEntry(@JsonProperty("id") UUID id,
                              @JsonProperty("name") String name,
-                             @JsonProperty("owner") OrganizationOwner owner,
+                             @JsonProperty("owner") EntityOwner owner,
                              @JsonProperty("visibility") OrganizationVisibility visibility,
                              @JsonProperty("meta") Map<String, Object> meta,
                              @JsonProperty("cfg") Map<String, Object> cfg) {
@@ -86,7 +86,7 @@ public class OrganizationEntry implements Serializable {
     }
 
     @Nullable
-    public OrganizationOwner getOwner() {
+    public EntityOwner getOwner() {
         return owner;
     }
 

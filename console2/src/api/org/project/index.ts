@@ -45,9 +45,16 @@ export interface ProjectEntryMeta {
     ui?: ProjectEntryMetaUI;
 }
 
+export interface ProjectOwner {
+    id: ConcordId;
+    username: string;
+}
+
 export interface ProjectEntry {
     id: ConcordId;
     name: ConcordKey;
+
+    owner: ProjectOwner;
 
     orgId: ConcordId;
     orgName: ConcordKey;
@@ -119,6 +126,26 @@ export const rename = (
         body: JSON.stringify({
             id: projectId,
             name: projectName
+        })
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/project`, opts);
+};
+
+// TODO should we just use createOrUpdate instead?
+export const changeOwner = (
+    orgName: ConcordKey,
+    projectId: ConcordId,
+    owner: string
+): Promise<ProjectOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: projectId,
+            owner: { username: owner }
         })
     };
 

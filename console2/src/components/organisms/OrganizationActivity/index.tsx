@@ -29,16 +29,14 @@ import { OrganizationEntry } from '../../../api/org';
 import { actions, selectors, State } from '../../../state/data/orgs';
 import { RequestErrorMessage } from '../../molecules';
 import {
+    OrganizationOwnerChangeActivity,
     ProcessListActivity,
-    ProjectDeleteActivity,
     ProjectListActivity,
-    ProjectRenameActivity,
     SecretListActivity,
     TeamListActivity
 } from '../../organisms';
 
 import { NotFoundPage } from '../../pages';
-import OrganizationOwnerChangeActivity from '../OrganizationOwnerChangeActivity/OrganizationOwnerChangeActivity';
 
 export type TabLink = 'process' | 'project' | 'secret' | 'team' | 'settings' | null;
 

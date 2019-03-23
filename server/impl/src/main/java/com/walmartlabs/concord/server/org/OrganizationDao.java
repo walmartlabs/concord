@@ -242,11 +242,11 @@ public class OrganizationDao extends AbstractDao {
                 OrganizationVisibility.valueOf(r.value6()), meta, cfg);
     }
 
-    private OrganizationOwner toOwner(UUID id, String username, String type) {
+    private EntityOwner toOwner(UUID id, String username, String type) {
         if (id == null) {
             return null;
         }
 
-        return OrganizationOwner.of(id, username, UserType.valueOf(type));
+        return EntityOwner.of(id, username, UserType.valueOf(type));
     }
 }

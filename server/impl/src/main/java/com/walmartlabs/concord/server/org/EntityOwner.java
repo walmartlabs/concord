@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.org;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.user.UserType;
@@ -32,10 +31,10 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Value.Immutable
-@JsonInclude(Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableOrganizationOwner.class)
-@JsonDeserialize(as = ImmutableOrganizationOwner.class)
-public interface OrganizationOwner extends Serializable {
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableEntityOwner.class)
+@JsonDeserialize(as = ImmutableEntityOwner.class)
+public interface EntityOwner extends Serializable {
 
     @Nullable
     UUID id();
@@ -46,8 +45,8 @@ public interface OrganizationOwner extends Serializable {
     @Nullable
     UserType userType();
 
-    static OrganizationOwner of(UUID id, String username, UserType userType) {
-        return ImmutableOrganizationOwner.builder()
+    static EntityOwner of(UUID id, String username, UserType userType) {
+        return ImmutableEntityOwner.builder()
                 .id(id)
                 .username(username)
                 .userType(userType)

@@ -64,6 +64,13 @@ export interface RenameProjectRequest extends Action {
     projectName: ConcordKey;
 }
 
+export interface ChangeProjectOwnerRequest extends Action {
+    orgName: ConcordKey;
+    projectId: ConcordId;
+    projectName: ConcordKey;
+    owner: ConcordId;
+}
+
 export interface SetAcceptsRawPayloadRequest extends Action {
     orgName: ConcordKey;
     projectId: ConcordKey;
@@ -130,6 +137,7 @@ export interface Projects {
     [id: string]: ProjectEntry;
 }
 
+export type ChangeProjectOwnerState = RequestState<ProjectOperationResult>;
 export type RenameProjectState = RequestState<ProjectOperationResult>;
 export type SetAcceptsRawPayloadState = RequestState<ProjectOperationResult>;
 export type DeleteProjectState = RequestState<GenericOperationResult>;
@@ -150,6 +158,7 @@ export interface State {
     error: RequestError;
 
     rename: RenameProjectState;
+    changeOwner: ChangeProjectOwnerState;
     acceptRawPayload: SetAcceptsRawPayloadState;
     deleteProject: DeleteProjectState;
     updateProject: updateProjectState;

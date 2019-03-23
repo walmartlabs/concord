@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.org.EntityOwner;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
@@ -63,7 +64,7 @@ public class ProjectEntry implements Serializable {
 
     private final ProjectVisibility visibility;
 
-    private final ProjectOwner owner;
+    private final EntityOwner owner;
 
     private final Boolean acceptsRawPayload;
 
@@ -94,7 +95,7 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("repositories") Map<String, RepositoryEntry> repositories,
                         @JsonProperty("cfg") Map<String, Object> cfg,
                         @JsonProperty("visibility") ProjectVisibility visibility,
-                        @JsonProperty("owner") ProjectOwner owner,
+                        @JsonProperty("owner") EntityOwner owner,
                         @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload,
                         @JsonProperty("meta") Map<String, Object> meta) {
 
@@ -147,7 +148,7 @@ public class ProjectEntry implements Serializable {
         return visibility;
     }
 
-    public ProjectOwner getOwner() {
+    public EntityOwner getOwner() {
         return owner;
     }
 

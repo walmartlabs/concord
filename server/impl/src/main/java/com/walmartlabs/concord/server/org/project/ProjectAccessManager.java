@@ -88,8 +88,8 @@ public class ProjectAccessManager {
             return e;
         }
 
-        ProjectOwner owner = e.getOwner();
-        if (owner != null && owner.getId().equals(p.getId())) {
+        EntityOwner owner = e.getOwner();
+        if (ResourceAccessUtils.isSame(p, owner)) {
             // the owner can do anything with his projects
             return e;
         }

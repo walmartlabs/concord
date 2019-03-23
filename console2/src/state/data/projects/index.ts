@@ -28,6 +28,7 @@ import {
     get as apiGet,
     list as apiList,
     rename as apiRename,
+    changeOwner as apiChangeOwner,
     deleteProject as apiDeleteProject,
     getProjectAccess,
     setAcceptsRawPayload as apiSetAcceptsRawPayload,
@@ -78,7 +79,9 @@ import {
     UpdateProjectRequest,
     UpdateProjectTeamAccessRequest,
     UpdateProjectTeamAccessState,
-    SetAcceptsRawPayloadResponse
+    SetAcceptsRawPayloadResponse,
+    ChangeProjectOwnerRequest,
+    ChangeProjectOwnerState
 } from './types';
 import { ResourceAccessEntry } from '../../../api/org';
 
@@ -96,6 +99,9 @@ const actionTypes = {
 
     RENAME_PROJECT_REQUEST: `${NAMESPACE}/rename/request`,
     RENAME_PROJECT_RESPONSE: `${NAMESPACE}/rename/response`,
+
+    CHANGE_PROJECT_OWNER_REQUEST: `${NAMESPACE}/changeOwner/request`,
+    CHANGE_PROJECT_OWNER_RESPONSE: `${NAMESPACE}/changeOwner/response`,
 
     SET_ACCEPTS_RAW_PAYLOAD_REQUEST: `${NAMESPACE}/acceptsRawPayload/request`,
     SET_ACCEPTS_RAW_PAYLOAD_RESPONSE: `${NAMESPACE}/acceptsRawPayload/response`,
@@ -164,6 +170,19 @@ export const actions = {
         orgName,
         projectId,
         projectName
+    }),
+
+    changeProjectOwner: (
+        orgName: ConcordKey,
+        projectId: ConcordId,
+        projectName: ConcordKey,
+        owner: ConcordKey
+    ): ChangeProjectOwnerRequest => ({
+        type: actionTypes.CHANGE_PROJECT_OWNER_REQUEST,
+        orgName,
+        projectId,
+        projectName,
+        owner
     }),
 
     setAcceptsRawPayload: (
@@ -339,6 +358,21 @@ const renameReducers = combineReducers<RenameProjectState>({
     )
 });
 
+const changeOwnerReducers = combineReducers<ChangeProjectOwnerState>({
+    running: makeLoadingReducer(
+        [actionTypes.CHANGE_PROJECT_OWNER_REQUEST],
+        [actionTypes.CHANGE_PROJECT_OWNER_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.CHANGE_PROJECT_OWNER_REQUEST],
+        [actionTypes.CHANGE_PROJECT_OWNER_RESPONSE]
+    ),
+    response: makeResponseReducer(
+        actionTypes.CHANGE_PROJECT_OWNER_RESPONSE,
+        actionTypes.CHANGE_PROJECT_OWNER_REQUEST
+    )
+});
+
 const acceptsRawPayloadReducers = combineReducers<SetAcceptsRawPayloadState>({
     running: makeLoadingReducer(
         [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST],
@@ -471,6 +505,7 @@ export const reducers = combineReducers<State>({
     error: errorMsg,
 
     rename: renameReducers,
+    changeOwner: changeOwnerReducers,
     acceptRawPayload: acceptsRawPayloadReducers,
     deleteProject: deleteProjectReducers,
     updateProject: updateProjectReducers,
@@ -556,6 +591,19 @@ function* onRename({ orgName, projectId, projectName }: RenameProjectRequest) {
         yield put(pushHistory(`/org/${orgName}/project/${projectName}`));
     } catch (e) {
         yield handleErrors(actionTypes.RENAME_PROJECT_RESPONSE, e);
+    }
+}
+
+function* onChangeOwner({ orgName, projectId, projectName, owner }: ChangeProjectOwnerRequest) {
+    try {
+        yield call(apiChangeOwner, orgName, projectId, owner);
+        yield put({
+            type: actionTypes.CHANGE_PROJECT_OWNER_RESPONSE
+        });
+
+        yield put(actions.getProject(orgName, projectName));
+    } catch (e) {
+        yield handleErrors(actionTypes.CHANGE_PROJECT_OWNER_RESPONSE, e);
     }
 }
 
@@ -678,6 +726,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.LIST_PROJECTS_REQUEST, onList),
         takeLatest(actionTypes.CREATE_PROJECT_REQUEST, onCreate),
         takeLatest(actionTypes.RENAME_PROJECT_REQUEST, onRename),
+        takeLatest(actionTypes.CHANGE_PROJECT_OWNER_REQUEST, onChangeOwner),
         takeLatest(actionTypes.DELETE_PROJECT_REQUEST, onDelete),
         takeLatest(actionTypes.UPDATE_PROJECT_REQUEST, onUpdateProject),
         throttle(2000, actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST, onSetAcceptsRawPayload),

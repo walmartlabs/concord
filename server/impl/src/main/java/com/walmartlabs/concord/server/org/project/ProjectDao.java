@@ -25,9 +25,12 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
+import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
+import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -108,14 +111,14 @@ public class ProjectDao extends AbstractDao {
 
     public ProjectEntry get(UUID projectId) {
         Projects p = PROJECTS.as("p");
+        Users u = USERS.as("u");
 
         Field<String> cfgField = p.PROJECT_CFG.cast(String.class);
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
-        Field<String> ownerUsernameField = select(USERS.USERNAME).from(USERS).where(USERS.USER_ID.eq(p.OWNER_ID)).asField();
         Field<String> metaField = p.META.cast(String.class);
 
         try (DSLContext tx = DSL.using(cfg)) {
-            Record11<UUID, String, String, UUID, String, String, String, UUID, String, Boolean, String> r = tx.select(
+            Record12<UUID, String, String, UUID, String, String, String, UUID, String, String, Boolean, String> r = tx.select(
                     p.PROJECT_ID,
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
@@ -124,10 +127,12 @@ public class ProjectDao extends AbstractDao {
                     cfgField,
                     p.VISIBILITY,
                     p.OWNER_ID,
-                    ownerUsernameField,
+                    u.USERNAME,
+                    u.USER_TYPE,
                     p.ACCEPTS_RAW_PAYLOAD,
                     metaField)
                     .from(p)
+                    .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
                     .where(p.PROJECT_ID.eq(projectId))
                     .fetchOne();
 
@@ -180,7 +185,7 @@ public class ProjectDao extends AbstractDao {
                     m,
                     cfg,
                     ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
-                    toOwner(r.get(p.OWNER_ID), r.get(ownerUsernameField)),
+                    toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.USER_TYPE)),
                     r.get(p.ACCEPTS_RAW_PAYLOAD),
                     deserialize(r.get(metaField)));
         }
@@ -225,7 +230,7 @@ public class ProjectDao extends AbstractDao {
 
     public void update(DSLContext tx, UUID orgId, UUID id, ProjectVisibility visibility,
                        String name, String description, Map<String, Object> cfg, Boolean acceptsRawPayload,
-                       Map<String, Object> meta) {
+                       UUID ownerId, Map<String, Object> meta) {
         UpdateSetFirstStep<ProjectsRecord> q = tx.update(PROJECTS);
 
         if (name != null) {
@@ -246,6 +251,10 @@ public class ProjectDao extends AbstractDao {
 
         if (acceptsRawPayload != null) {
             q.set(PROJECTS.ACCEPTS_RAW_PAYLOAD, acceptsRawPayload);
+        }
+
+        if (ownerId != null) {
+            q.set(PROJECTS.OWNER_ID, ownerId);
         }
 
         if (meta != null) {
@@ -285,17 +294,13 @@ public class ProjectDao extends AbstractDao {
     public List<ProjectEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc) {
         // TODO simplify
 
+        Users u = USERS.as("u");
         Projects p = PROJECTS.as("p");
         sortField = p.field(sortField);
 
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
                 .where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID))
-                .asField();
-
-        Field<String> ownerUsernameField = select(USERS.USERNAME)
-                .from(USERS)
-                .where(USERS.USER_ID.eq(p.OWNER_ID))
                 .asField();
 
         SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
@@ -307,7 +312,7 @@ public class ProjectDao extends AbstractDao {
                         .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record9<UUID, String, String, UUID, String, String, UUID, String, Boolean>> q = tx.select(
+            SelectOnConditionStep<Record10<UUID, String, String, UUID, String, String, UUID, String, String, Boolean>> q = tx.select(
                     p.PROJECT_ID,
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
@@ -315,9 +320,11 @@ public class ProjectDao extends AbstractDao {
                     orgNameField,
                     p.VISIBILITY,
                     p.OWNER_ID,
-                    ownerUsernameField,
+                    u.USERNAME,
+                    u.USER_TYPE,
                     p.ACCEPTS_RAW_PAYLOAD)
-                    .from(p);
+                    .from(p)
+                    .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID));
 
             if (currentUserId != null) {
                 q.where(or(p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString()), filterByTeamMember));
@@ -335,7 +342,6 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getConfiguration(UUID projectId) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROJECTS.PROJECT_CFG.cast(String.class))
@@ -467,7 +473,7 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    private static ProjectEntry toEntry(Record9<UUID, String, String, UUID, String, String, UUID, String, Boolean> r) {
+    private static ProjectEntry toEntry(Record10<UUID, String, String, UUID, String, String, UUID, String, String, Boolean> r) {
         return new ProjectEntry(r.get(PROJECTS.PROJECT_ID),
                 r.get(PROJECTS.PROJECT_NAME),
                 r.get(PROJECTS.DESCRIPTION),
@@ -476,15 +482,15 @@ public class ProjectDao extends AbstractDao {
                 null,
                 null,
                 ProjectVisibility.valueOf(r.get(PROJECTS.VISIBILITY)),
-                toOwner(r.get(PROJECTS.OWNER_ID), r.value8()),
+                toOwner(r.get(PROJECTS.OWNER_ID), r.get(USERS.USERNAME), r.get(USERS.USER_TYPE)),
                 r.get(PROJECTS.ACCEPTS_RAW_PAYLOAD),
                 null);
     }
 
-    private static ProjectOwner toOwner(UUID id, String username) {
+    private static EntityOwner toOwner(UUID id, String username, String userType) {
         if (id == null) {
             return null;
         }
-        return new ProjectOwner(id, username);
+        return EntityOwner.of(id, username, UserType.valueOf(userType));
     }
 }

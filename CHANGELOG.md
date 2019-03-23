@@ -4,8 +4,10 @@
 
 ### Added
 
+- concord-server, concord-console: project owners can now be updated
+using the API or the Console;
 - concord-server, consord-console: organization owners can now be
-set using the API or in the Console;
+set using the API or the Console;
 - concord-server, concord-runner, concord-tasks: (optionally) suspend
 the parent process while waiting for a child process (only for
 `start`);

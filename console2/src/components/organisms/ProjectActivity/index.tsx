@@ -29,7 +29,11 @@ import { ProjectEntry } from '../../../api/org/project';
 import { actions, selectors, State } from '../../../state/data/projects';
 import { comparators } from '../../../utils';
 import { RepositoryList, RequestErrorMessage } from '../../molecules';
-import { EncryptValueActivity, ProjectTeamAccessActivity } from '../../organisms';
+import {
+    EncryptValueActivity,
+    ProjectOwnerChangeActivity,
+    ProjectTeamAccessActivity
+} from '../../organisms';
 import { NotFoundPage } from '../../pages';
 import {
     ProcessListActivity,
@@ -143,6 +147,14 @@ class ProjectActivity extends React.PureComponent<Props> {
                         orgName={p.orgName}
                         projectId={p.id}
                         projectName={p.name}
+                    />
+
+                    <Header as="h4">Project owner</Header>
+                    <ProjectOwnerChangeActivity
+                        orgName={p.orgName}
+                        projectId={p.id}
+                        projectName={p.name}
+                        owner={p.owner.username}
                     />
 
                     <Header as="h4">Delete project</Header>

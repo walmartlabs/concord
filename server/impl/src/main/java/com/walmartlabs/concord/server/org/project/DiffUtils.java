@@ -45,7 +45,6 @@ public class DiffUtils {
     private static final String KEY_PREVIOUS = "prev";
     private static final String KEY_NEW = "new";
 
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> compare(Object left, Object right) {
         Javers javers = JaversBuilder.javers().build();
 

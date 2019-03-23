@@ -54,7 +54,7 @@ public final class ResourceAccessUtils {
         return teamId;
     }
 
-    public static boolean isSame(UserPrincipal p, OrganizationOwner owner) {
+    public static boolean isSame(UserPrincipal p, EntityOwner owner) {
         if (p == null || owner == null) {
             return false;
         }
