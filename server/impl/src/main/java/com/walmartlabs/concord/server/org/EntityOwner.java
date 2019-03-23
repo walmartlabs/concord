@@ -43,12 +43,16 @@ public interface EntityOwner extends Serializable {
     String username();
 
     @Nullable
+    String displayName();
+
+    @Nullable
     UserType userType();
 
-    static EntityOwner of(UUID id, String username, UserType userType) {
+    static EntityOwner of(UUID id, String username, String displayName, UserType userType) {
         return ImmutableEntityOwner.builder()
                 .id(id)
                 .username(username)
+                .displayName(displayName)
                 .userType(userType)
                 .build();
     }

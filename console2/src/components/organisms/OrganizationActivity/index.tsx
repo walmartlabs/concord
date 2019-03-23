@@ -102,7 +102,7 @@ class OrganizationActivity extends React.PureComponent<Props> {
                     <OrganizationOwnerChangeActivity
                         orgId={e.id}
                         orgName={e.name}
-                        owner={e.owner && e.owner.username}
+                        owner={e.owner}
                     />
                 </Segment>
             </>

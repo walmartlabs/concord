@@ -19,7 +19,13 @@
  */
 
 import { CreateSecretResponse } from '../../../state/data/secrets/types';
-import { ConcordId, ConcordKey, fetchJson, GenericOperationResult, Owner } from '../../common';
+import {
+    ConcordId,
+    ConcordKey,
+    fetchJson,
+    GenericOperationResult,
+    EntityOwner
+} from '../../common';
 import { ResourceAccessEntry } from '../';
 
 export enum SecretVisibility {
@@ -67,7 +73,7 @@ export interface SecretEntry {
 
     storeType: SecretStoreType;
 
-    owner?: Owner;
+    owner?: EntityOwner;
 }
 
 export interface NewSecretEntry {

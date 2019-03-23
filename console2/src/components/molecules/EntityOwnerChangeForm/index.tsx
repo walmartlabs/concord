@@ -23,19 +23,25 @@ import * as React from 'react';
 import { Confirm, Form } from 'semantic-ui-react';
 import { UserSearchResult } from '../../../api/service/console';
 import { FindUserField } from '../../organisms';
+import { EntityOwner } from '../../../api/common';
+
+interface Owner {
+    username: string;
+    displayName?: string;
+}
 
 interface Props {
-    originalOwner: string;
+    originalOwner: Owner;
     confirmationHeader: string;
     confirmationContent: string;
-    onSubmit: (owner: string) => void;
+    onSubmit: (owner: Owner) => void;
     submitting: boolean;
 }
 
 interface State {
     dirty: boolean;
     showConfirm: boolean;
-    value: string;
+    value: Owner;
 }
 
 class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
@@ -47,8 +53,8 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
 
     onSelect(i: UserSearchResult) {
         const { originalOwner } = this.props;
-        const dirty = originalOwner !== i.username;
-        this.setState({ dirty, value: i.username });
+        const dirty = originalOwner.username !== i.username;
+        this.setState({ dirty, value: i });
     }
 
     handleShowConfirm(ev: React.SyntheticEvent<{}>) {
@@ -81,8 +87,12 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
                         <Form.Field>
                             <FindUserField
                                 placeholder="Search for a user..."
-                                defaultValue={originalOwner}
-                                valueRender={(value) => value.username}
+                                defaultUsername={
+                                    originalOwner !== undefined ? originalOwner.username : ''
+                                }
+                                defaultDisplayName={
+                                    originalOwner !== undefined ? originalOwner.displayName : ''
+                                }
                                 onSelect={(u) => this.onSelect(u)}
                             />
                         </Form.Field>

@@ -26,8 +26,8 @@ import { UserSearchResult } from '../../../api/service/console';
 import { actions, State } from '../../../state/data/search';
 
 interface ExternalProps {
-    defaultValue?: string;
-    valueRender?: (value: UserSearchResult) => string;
+    defaultUsername?: string;
+    defaultDisplayName?: string;
     onSelect: (value: UserSearchResult) => void;
     onChange?: (value?: string) => void;
     placeholder?: string;
@@ -61,19 +61,22 @@ const toResults = (items: UserSearchResult[]) =>
 const resultToItem = (result: SearchResultProps, items: UserSearchResult[]) =>
     items.find((i) => i.username === result.description)!;
 
+export const renderUser = (username: string, displayName?: string): string =>
+    displayName !== undefined ? displayName + ' (' + username + ' )' : username;
+
 class FindUserField extends React.PureComponent<Props, InternalState> {
     constructor(props: Props) {
         super(props);
 
-        const { defaultValue } = this.props;
-        this.state = { value: defaultValue || '' };
+        const { defaultUsername, defaultDisplayName } = this.props;
+        this.state = { value: renderUser(defaultUsername || '', defaultDisplayName) };
     }
 
     componentDidMount() {
         this.props.reset();
 
-        const { defaultValue } = this.props;
-        this.state = { value: defaultValue || '' };
+        const { defaultUsername, defaultDisplayName } = this.props;
+        this.state = { value: renderUser(defaultUsername || '', defaultDisplayName) };
     }
 
     handleSelect({ result }: SearchResultData) {
@@ -81,17 +84,13 @@ class FindUserField extends React.PureComponent<Props, InternalState> {
             return;
         }
 
-        const { items, valueRender } = this.props;
+        const { items } = this.props;
         const i = resultToItem(result, items);
         if (!i) {
             return;
         }
 
-        if (valueRender !== undefined) {
-            this.setState({ value: valueRender(i) });
-        } else {
-            this.setState({ value: i.displayName });
-        }
+        this.setState({ value: renderUser(i.username, i.displayName) });
 
         const { onSelect } = this.props;
         onSelect(i);

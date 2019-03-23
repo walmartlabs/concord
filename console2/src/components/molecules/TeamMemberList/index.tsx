@@ -26,6 +26,7 @@ import { UserSearchResult } from '../../../api/service/console';
 import { UserType } from '../../../api/user';
 import { TeamRoleDropdown } from '../../molecules';
 import { FindUserField } from '../../organisms';
+import { renderUser } from '../../organisms/FindUserField';
 
 interface Entry extends NewTeamUserEntry {
     added: boolean;
@@ -46,9 +47,6 @@ interface Props {
 
 const toState = (data: TeamUserEntry[]): Entry[] =>
     data.map((e) => ({ ...e, added: false, deleted: false }));
-
-const renderUserName = (e: Entry): string =>
-    e.displayName !== undefined ? e.displayName + ' (' + e.username + ' )' : e.username;
 
 class EntryList extends React.Component<Props, State> {
     constructor(props: Props) {
@@ -173,7 +171,7 @@ class EntryList extends React.Component<Props, State> {
                         <Table.Body>
                             {data.map((e, idx) => (
                                 <Table.Row key={idx} negative={e.deleted} positive={e.added}>
-                                    <Table.Cell>{renderUserName(e)}</Table.Cell>
+                                    <Table.Cell>{renderUser(e.username, e.displayName)}</Table.Cell>
                                     <Table.Cell>{e.userType}</Table.Cell>
                                     <Table.Cell>
                                         {editMode ? (

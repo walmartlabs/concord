@@ -24,7 +24,8 @@ import {
     ConcordKey,
     fetchJson,
     GenericOperationResult,
-    OperationResult
+    OperationResult,
+    EntityOwner
 } from '../../common';
 import { RepositoryEntry } from './repository';
 
@@ -45,16 +46,11 @@ export interface ProjectEntryMeta {
     ui?: ProjectEntryMetaUI;
 }
 
-export interface ProjectOwner {
-    id: ConcordId;
-    username: string;
-}
-
 export interface ProjectEntry {
     id: ConcordId;
     name: ConcordKey;
 
-    owner: ProjectOwner;
+    owner: EntityOwner;
 
     orgId: ConcordId;
     orgName: ConcordKey;

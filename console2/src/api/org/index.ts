@@ -18,7 +18,7 @@
  * =====
  */
 
-import { fetchJson, ConcordKey, ConcordId, OperationResult } from '../common';
+import { fetchJson, ConcordKey, ConcordId, OperationResult, EntityOwner } from '../common';
 
 export enum OrganizationVisibility {
     PUBLIC = 'PUBLIC',
@@ -54,15 +54,10 @@ export interface OrganizationEntryMeta {
     ui?: OrganizationEntryMetaUI;
 }
 
-export interface OrganizationOwner {
-    id: ConcordId;
-    username: string;
-}
-
 export interface OrganizationEntry {
     id: string;
     name: string;
-    owner?: OrganizationOwner;
+    owner?: EntityOwner;
     visibility: OrganizationVisibility;
     meta?: OrganizationEntryMeta;
 }

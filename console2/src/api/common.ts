@@ -184,9 +184,10 @@ export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> 
     return response.json();
 };
 
-export interface Owner {
+export interface EntityOwner {
     id: ConcordId;
     username: string;
+    displayName?: string;
 }
 
 export enum OperationResult {

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 
-import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
+import { ConcordId, ConcordKey, EntityOwner, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/orgs';
 import { RequestErrorMessage } from '../../molecules';
 import EntityOwnerChangeForm from '../../molecules/EntityOwnerChangeForm';
@@ -29,7 +29,7 @@ import EntityOwnerChangeForm from '../../molecules/EntityOwnerChangeForm';
 interface ExternalProps {
     orgId: ConcordId;
     orgName: ConcordKey;
-    owner?: string;
+    owner?: EntityOwner;
 }
 
 interface StateProps {
@@ -57,10 +57,10 @@ class OrganizationOwnerChangeActivity extends React.PureComponent<Props> {
             <>
                 {error && <RequestErrorMessage error={error} />}
                 <EntityOwnerChangeForm
-                    originalOwner={owner || ''}
+                    originalOwner={owner || { username: '' }}
                     confirmationHeader="Change organization owner?"
                     confirmationContent="Are you sure you want to change the organization's owner?"
-                    onSubmit={(value) => change(orgId, orgName, value)}
+                    onSubmit={(value) => change(orgId, orgName, value.username)}
                     submitting={changing}
                 />
             </>
