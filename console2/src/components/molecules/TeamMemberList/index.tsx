@@ -47,6 +47,9 @@ interface Props {
 const toState = (data: TeamUserEntry[]): Entry[] =>
     data.map((e) => ({ ...e, added: false, deleted: false }));
 
+const renderUserName = (e: Entry): string =>
+    e.displayName !== undefined ? e.displayName + ' (' + e.username + ' )' : e.username;
+
 class EntryList extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
@@ -84,6 +87,7 @@ class EntryList extends React.Component<Props, State> {
         // TODO support for LOCAL users
         const e = {
             username: u.username,
+            displayName: u.displayName,
             userType: UserType.LDAP,
             role: TeamRole.MEMBER,
             added: true,
@@ -169,7 +173,7 @@ class EntryList extends React.Component<Props, State> {
                         <Table.Body>
                             {data.map((e, idx) => (
                                 <Table.Row key={idx} negative={e.deleted} positive={e.added}>
-                                    <Table.Cell>{e.username}</Table.Cell>
+                                    <Table.Cell>{renderUserName(e)}</Table.Cell>
                                     <Table.Cell>{e.userType}</Table.Cell>
                                     <Table.Cell>
                                         {editMode ? (

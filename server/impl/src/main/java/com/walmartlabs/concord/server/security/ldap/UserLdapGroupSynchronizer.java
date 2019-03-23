@@ -53,13 +53,15 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     private final Dao dao;
     private final LdapManager ldapManager;
     private final UserDao userDao;
+    private final LdapGroupsDao ldapGroupsDao;
 
     @Inject
-    public UserLdapGroupSynchronizer(LdapGroupSyncConfiguration cfg, Dao dao, LdapManager ldapManager, UserDao userDao) {
+    public UserLdapGroupSynchronizer(LdapGroupSyncConfiguration cfg, Dao dao, LdapManager ldapManager, UserDao userDao, LdapGroupsDao ldapGroupsDao) {
         this.cfg = cfg;
         this.dao = dao;
         this.ldapManager = ldapManager;
         this.userDao = userDao;
+        this.ldapGroupsDao = ldapGroupsDao;
     }
 
     @Override
@@ -88,7 +90,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
                 userDao.disable(u.userId);
                 log.info("processUser ['{}'] -> not found in LDAP, user is disabled", u.username);
             } else {
-                userDao.updateLdapGroups(u.userId, groups);
+                ldapGroupsDao.update(u.userId, groups);
             }
         } catch (Exception e) {
             log.error("processUser ['{}'] -> error", u.username, e);

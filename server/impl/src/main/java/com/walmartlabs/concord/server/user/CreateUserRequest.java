@@ -35,22 +35,40 @@ public class CreateUserRequest implements Serializable {
     @Size(max = UserEntry.MAX_USERNAME_LENGTH)
     private final String username;
 
+    @Size(max = UserEntry.MAX_DISPLAY_NAME_LENGTH)
+    private final String displayName;
+
+    @Size(max = UserEntry.MAX_EMAIL_LENGTH)
+    private final String email;
+
     private final UserType type;
 
     private final boolean disabled;
 
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
+                             @JsonProperty("displayName") String displayName,
+                             @JsonProperty("email") String email,
                              @JsonProperty("userType") UserType type,
                              @JsonProperty("disabled") boolean disabled) {
 
         this.username = username;
+        this.displayName = displayName;
+        this.email = email;
         this.type = type;
         this.disabled = disabled;
     }
 
     public String getUsername() {
         return username;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public UserType getType() {
@@ -65,6 +83,8 @@ public class CreateUserRequest implements Serializable {
     public String toString() {
         return "CreateUserRequest{" +
                 "username='" + username + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", email='" + email + '\'' +
                 ", type=" + type +
                 ", disabled=" + disabled +
                 '}';

@@ -33,8 +33,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadBuilder;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
@@ -43,7 +41,6 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.naming.NamingException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.HashMap;
@@ -65,7 +62,6 @@ public abstract class AbstractEventResource {
     private final TriggerDefinitionEnricher triggerDefinitionEnricher;
     private final TriggersConfiguration triggersCfg;
     private final UserManager userManager;
-    private final LdapManager ldapManager;
 
     public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
                                  ProcessManager processManager,
@@ -73,10 +69,9 @@ public abstract class AbstractEventResource {
                                  ProjectDao projectDao,
                                  RepositoryDao repositoryDao,
                                  TriggersConfiguration triggersCfg,
-                                 UserManager userManager,
-                                 LdapManager ldapManager) {
+                                 UserManager userManager) {
 
-        this(eventsCfg, processManager, triggersDao, projectDao, repositoryDao, AS_IS_ENRICHER, triggersCfg, userManager, ldapManager);
+        this(eventsCfg, processManager, triggersDao, projectDao, repositoryDao, AS_IS_ENRICHER, triggersCfg, userManager);
     }
 
     public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
@@ -85,8 +80,7 @@ public abstract class AbstractEventResource {
                                  RepositoryDao repositoryDao,
                                  TriggerDefinitionEnricher enricher,
                                  TriggersConfiguration triggersCfg,
-                                 UserManager userManager,
-                                 LdapManager ldapManager) {
+                                 UserManager userManager) {
 
         this.eventsCfg = eventsCfg;
         this.processManager = processManager;
@@ -97,7 +91,6 @@ public abstract class AbstractEventResource {
         this.log = LoggerFactory.getLogger(this.getClass());
         this.triggersCfg = triggersCfg;
         this.userManager = userManager;
-        this.ldapManager = ldapManager;
     }
 
     protected int process(String eventId,
@@ -191,20 +184,7 @@ public abstract class AbstractEventResource {
         }
 
         String author = event.getOrDefault("author", "").toString();
-        return getOrCreateUser(author);
-    }
-
-    private UserEntry getOrCreateUser(String author) {
-        try {
-            LdapPrincipal p = ldapManager.getPrincipal(author);
-            if (p == null) {
-                throw new ConcordApplicationException("User not found: " + author);
-            }
-
-            return userManager.getOrCreate(author, UserType.LDAP);
-        } catch (NamingException e) {
-            throw new ConcordApplicationException("Error while retrieving LDAP data: " + e.getMessage(), e);
-        }
+        return userManager.getOrCreate(author, UserType.LDAP);
     }
 
     private boolean filter(Map<String, Object> conditions, TriggerEntry t) {

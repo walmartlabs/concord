@@ -29,4 +29,12 @@
             </column>
         </createTable>
     </changeSet>
+
+    <changeSet id="13100" author="ybrigo@gmail.com">
+        <addColumn tableName="USERS">
+            <column name="DISPLAY_NAME" type="varchar(1024)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

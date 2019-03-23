@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
+import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
@@ -27,28 +28,32 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+
+import static com.walmartlabs.concord.server.user.UserInfoProducer.UserInfo;
 
 @Named
 public class UserManager {
 
     private final UserDao userDao;
     private final TeamDao teamDao;
+    private final Map<UserType, UserInfoProducer> userInfoProducers;
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao) {
+    public UserManager(UserDao userDao, TeamDao teamDao, List<UserInfoProducer> producers) {
         this.userDao = userDao;
         this.teamDao = teamDao;
+
+        this.userInfoProducers = new HashMap<>();
+        producers.forEach(p -> this.userInfoProducers.put(p.getUserType(), p));
     }
 
     public UserEntry getOrCreate(String username, UserType type) {
-        UUID id = userDao.getId(username);
-        if (id == null) {
-            return create(username, type);
+        UserEntry user = userDao.getByName(username);
+        if (user != null) {
+            return user;
         }
-        return userDao.get(id);
+        return create(username, null, null, type);
     }
 
     public Optional<UserEntry> get(UUID id) {
@@ -60,24 +65,23 @@ public class UserManager {
         return Optional.ofNullable(id);
     }
 
-    public Optional<UserEntry> getByName(String name) {
-        return Optional.ofNullable(userDao.getByName(name));
+    public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled) {
+        return Optional.ofNullable(userDao.update(userId, displayName, email, userType, isDisabled));
     }
 
-    public void update(UUID userId, UserType userType, boolean isDisabled) {
-        userDao.update(userId, userType, isDisabled);
-    }
-
-    public Optional<UserEntry> updateEmail(UUID userId, String email) {
-        return Optional.ofNullable(userDao.updateEmail(userId, email));
-    }
-
-    public UserEntry create(String username, UserType type) {
+    public UserEntry create(String username, String displayName, String email, UserType type) {
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UUID id = userDao.insert(username, type);
+        UserInfo userInfo = getInfo(username, type);
+        if (userInfo == null) {
+            throw new ConcordApplicationException("User not found: " + username);
+        }
+
+        String dn = displayName != null ? displayName : userInfo.displayName();
+        String em = email != null ? email : userInfo.email();
+        UUID id = userDao.insert(username, dn, em, type);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;
@@ -92,7 +96,12 @@ public class UserManager {
         return userDao.isInOrganization(userId, orgId);
     }
 
-    public void updateLdapGroups(UUID userId, Set<String> groups) {
-        userDao.updateLdapGroups(userId, groups);
+    public UserInfo getInfo(String username, UserType type) {
+        UserInfoProducer p = userInfoProducers.get(type);
+        if (p == null) {
+            return UserInfo.EMPTY;
+        }
+
+        return p.getInfo(username);
     }
 }

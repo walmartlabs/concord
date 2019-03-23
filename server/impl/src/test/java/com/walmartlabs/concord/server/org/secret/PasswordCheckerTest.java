@@ -47,7 +47,7 @@ public class PasswordCheckerTest {
         SecurityManager securityManager = new DefaultSecurityManager();
         ThreadContext.bind(securityManager);
 
-        UserPrincipal p = new UserPrincipal("test", new UserEntry(UUID.randomUUID(), USERNAME, null, null, null, null, false));
+        UserPrincipal p = new UserPrincipal("test", new UserEntry(UUID.randomUUID(), USERNAME, null, null, null, null, null, false));
         SubjectContext ctx = new DefaultSubjectContext();
         ctx.setAuthenticated(true);
         ctx.setPrincipals(new SimplePrincipalCollection(p, p.getRealm()));

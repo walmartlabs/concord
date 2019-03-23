@@ -56,17 +56,20 @@ public class LdapRealm extends AbstractLdapRealm {
     private final UserManager userManager;
     private final LdapManager ldapManager;
     private final AuditLog auditLog;
+    private final LdapGroupsDao ldapGroupsDao;
 
     @Inject
     public LdapRealm(LdapConfiguration cfg,
                      UserManager userManager,
                      ConcordLdapContextFactory ctxFactory,
                      LdapManager ldapManager,
-                     AuditLog auditLog) {
+                     AuditLog auditLog,
+                     LdapGroupsDao ldapGroupsDao) {
 
         this.userManager = userManager;
         this.ldapManager = ldapManager;
         this.auditLog = auditLog;
+        this.ldapGroupsDao = ldapGroupsDao;
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
@@ -139,13 +142,11 @@ public class LdapRealm extends AbstractLdapRealm {
 
         UUID userId = u.getId();
 
-        // update user's email if needed
-        if (u.getEmail() == null && ldapPrincipal.getEmail() != null) {
-            u = userManager.updateEmail(userId, ldapPrincipal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
-        }
+        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false)
+                .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
 
-        userManager.updateLdapGroups(userId, ldapPrincipal.getGroups());
+        // update ldap groups
+        ldapGroupsDao.update(userId, ldapPrincipal.getGroups());
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.team;
  * =====
  */
 
-import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -30,9 +29,6 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
-import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
-import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -41,7 +37,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.naming.NamingException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,7 +61,6 @@ public class TeamManager {
     private final OrganizationDao orgDao;
     private final OrganizationManager orgManager;
     private final UserManager userManager;
-    private final LdapManager ldapManager;
     private final AuditLog auditLog;
 
     @Inject
@@ -74,14 +68,12 @@ public class TeamManager {
                        OrganizationDao orgDao,
                        OrganizationManager orgManager,
                        UserManager userManager,
-                       LdapManager ldapManager,
                        AuditLog auditLog) {
 
         this.teamDao = teamDao;
         this.orgDao = orgDao;
         this.orgManager = orgManager;
         this.userManager = userManager;
-        this.ldapManager = ldapManager;
         this.auditLog = auditLog;
     }
 
@@ -304,23 +296,6 @@ public class TeamManager {
     }
 
     private UUID getOrCreateUserId(String username, UserType type) {
-        UserEntry user = userManager.getOrCreate(username, type);
-
-        if (user == null) {
-            // TODO check the type
-            try {
-                // TODO this should be abstracted away
-                LdapPrincipal p = ldapManager.getPrincipal(username);
-                if (p == null) {
-                    throw new ConcordApplicationException("User not found: " + username);
-                }
-            } catch (NamingException e) {
-                throw new ConcordApplicationException("Error while retrieving LDAP data: " + e.getMessage(), e);
-            }
-
-            user = userManager.getOrCreate(username, type);
-        }
-
-        return user.getId();
+        return userManager.getOrCreate(username, type).getId();
     }
 }

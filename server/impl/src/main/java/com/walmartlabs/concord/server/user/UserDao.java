@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.USER_LDAP_GROUPS;
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
@@ -51,13 +50,17 @@ public class UserDao extends AbstractDao {
     }
 
     public UUID insert(String username, UserType type) {
-        return txResult(tx -> insert(tx, username, type));
+        return insert(username, null, null, type);
     }
 
-    public UUID insert(DSLContext tx, String username, UserType type) {
+    public UUID insert(String username, String displayName, String email, UserType type) {
+        return txResult(tx -> insert(tx, username, displayName, email, type));
+    }
+
+    public UUID insert(DSLContext tx, String username, String displayName, String email, UserType type) {
         return tx.insertInto(USERS)
-                .columns(USERS.USERNAME, USERS.USER_TYPE)
-                .values(username, type.toString())
+                .columns(USERS.USERNAME, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
+                .values(username, displayName, email, type.toString())
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
     }
@@ -75,22 +78,7 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
-    public UserEntry updateEmail(UUID id, String email) {
-        return txResult(tx -> {
-            UpdateQuery<UsersRecord> q = tx.updateQuery(USERS);
-
-            if (email != null) {
-                q.addValue(USERS.USER_EMAIL, email);
-            }
-
-            q.addConditions(USERS.USER_ID.eq(id));
-            q.execute();
-
-            return get(id);
-        });
-    }
-
-    public void update(UUID id, UserType userType, boolean isDisabled) {
+    public UserEntry update(UUID id, String displayName, String email, UserType userType, boolean isDisabled) {
         tx(tx -> {
             UpdateSetMoreStep<UsersRecord> q = tx.update(USERS)
                     .set(USERS.IS_DISABLED, isDisabled);
@@ -99,15 +87,25 @@ public class UserDao extends AbstractDao {
                 q.set(USERS.USER_TYPE, userType.name());
             }
 
+            if (displayName != null) {
+                q.set(USERS.DISPLAY_NAME, displayName);
+            }
+
+            if (email != null) {
+                q.set(USERS.USER_EMAIL, email);
+            }
+
             q.where(USERS.USER_ID.eq(id))
                     .execute();
         });
+
+        return get(id);
     }
 
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record5<UUID, String, String, String, Boolean> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+            Record6<UUID, String, String, String, String, Boolean> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
                             .from(USERS)
                             .where(USERS.USER_ID.eq(id))
                             .fetchOne();
@@ -122,8 +120,8 @@ public class UserDao extends AbstractDao {
 
     public UserEntry getByName(String username) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record5<UUID, String, String, String, Boolean> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+            Record6<UUID, String, String, String, String, Boolean> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
                             .from(USERS)
                             .where(USERS.USERNAME.eq(username))
                             .fetchOne();
@@ -136,7 +134,7 @@ public class UserDao extends AbstractDao {
         }
     }
 
-    private UserEntry getUserInfo(DSLContext tx, Record5<UUID, String, String, String, Boolean> r) {
+    private UserEntry getUserInfo(DSLContext tx, Record6<UUID, String, String, String, String, Boolean> r) {
         // TODO join?
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
@@ -158,6 +156,7 @@ public class UserDao extends AbstractDao {
 
         return new UserEntry(r.get(USERS.USER_ID),
                 r.get(USERS.USERNAME),
+                r.get(USERS.DISPLAY_NAME),
                 new HashSet<>(orgs),
                 UserType.valueOf(r.get(USERS.USER_TYPE)),
                 r.get(USERS.USER_EMAIL),
@@ -236,26 +235,6 @@ public class UserDao extends AbstractDao {
                             ROLES.ROLE_ID.as(USER_ROLES.ROLE_ID)
                     ).from(ROLES).where(ROLES.ROLE_NAME.in(roles)))
                     .execute();
-        });
-    }
-
-    public void updateLdapGroups(UUID userId, Set<String> groups) {
-        tx(tx -> {
-            tx.deleteFrom(USER_LDAP_GROUPS).where(USER_LDAP_GROUPS.USER_ID.eq(userId))
-                    .execute();
-
-            if (groups.isEmpty()) {
-                return;
-            }
-
-            BatchBindStep q = tx.batch(tx.insertInto(USER_LDAP_GROUPS, USER_LDAP_GROUPS.USER_ID, USER_LDAP_GROUPS.LDAP_GROUP)
-                    .values((UUID) null, null));
-
-            for (String g : groups) {
-                q.bind(value(userId), value(g));
-            }
-
-            q.execute();
         });
     }
 }

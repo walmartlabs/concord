@@ -20,14 +20,11 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
-import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
-import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.annotations.Api;
@@ -42,7 +39,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.naming.NamingException;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -60,14 +56,12 @@ public class ApiKeyResource implements Resource {
     private final ApiKeyConfiguration cfg;
     private final ApiKeyDao apiKeyDao;
     private final UserManager userManager;
-    private final LdapManager ldapManager;
 
     @Inject
-    public ApiKeyResource(ApiKeyConfiguration cfg, ApiKeyDao apiKeyDao, UserManager userManager, LdapManager ldapManager) {
+    public ApiKeyResource(ApiKeyConfiguration cfg, ApiKeyDao apiKeyDao, UserManager userManager) {
         this.cfg = cfg;
         this.apiKeyDao = apiKeyDao;
         this.userManager = userManager;
-        this.ldapManager = ldapManager;
     }
 
     @GET
@@ -141,23 +135,11 @@ public class ApiKeyResource implements Resource {
             return null;
         }
 
-        if (!userManager.getId(username).isPresent()) {
-            try {
-                // TODO add a simpler "isExists" call
-                if (ldapManager.getPrincipal(username) == null) {
-                    throw new ValidationErrorsException("LDAP user not found: " + username);
-                }
-            } catch (NamingException e) {
-                throw new ConcordApplicationException(e);
-            }
-        }
-
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UserEntry entry = userManager.getOrCreate(username, type);
-        return entry.getId();
+        return userManager.getOrCreate(username, type).getId();
     }
 
     private UUID assertUserId(UUID userId) {

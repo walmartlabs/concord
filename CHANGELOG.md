@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-console: show user display names on the team member list
+page;
+- concord-server: new user attribute - `displayName`. Automatically
+stored for AD/LDAP users. For local users it can be set using
+the API;
 - concord-server, concord-console: project owners can now be updated
 using the API or the Console;
 - concord-server, consord-console: organization owners can now be

@@ -37,17 +37,22 @@ public class UserEntry implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final int MAX_USERNAME_LENGTH = 128;
+    public static final int MAX_DISPLAY_NAME_LENGTH = 1024;
+    public static final int MAX_EMAIL_LENGTH = 512;
 
     private final UUID id;
 
     @Size(max = MAX_USERNAME_LENGTH)
     private final String name;
 
+    @Size(max = MAX_DISPLAY_NAME_LENGTH)
+    private final String displayName;
+
     private final Set<OrganizationEntry> orgs;
 
     private final UserType type;
 
-    @Size(max = 256)
+    @Size(max = MAX_EMAIL_LENGTH)
     private final String email;
 
     private final Set<RoleEntry> roles;
@@ -57,6 +62,7 @@ public class UserEntry implements Serializable {
     @JsonCreator
     public UserEntry(@JsonProperty("id") UUID id,
                      @JsonProperty("name") String name,
+                     @JsonProperty("displayName") String displayName,
                      @JsonProperty("orgs") Set<OrganizationEntry> orgs,
                      @JsonProperty("type") UserType type,
                      @JsonProperty("email") String email,
@@ -65,6 +71,7 @@ public class UserEntry implements Serializable {
 
         this.id = id;
         this.name = name;
+        this.displayName = displayName;
         this.orgs = orgs;
         this.type = type;
         this.email = email;
@@ -78,6 +85,10 @@ public class UserEntry implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public String getDisplayName() {
+        return displayName;
     }
 
     public Set<OrganizationEntry> getOrgs() {
@@ -105,6 +116,7 @@ public class UserEntry implements Serializable {
         return "UserEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", displayName='" + displayName + '\'' +
                 ", orgs=" + orgs +
                 ", type=" + type +
                 ", email='" + email + '\'' +
