@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Users;
@@ -36,7 +36,6 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -54,12 +53,13 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class ProjectDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public ProjectDao(@Named("app") Configuration cfg) {
+    public ProjectDao(@Named("app") Configuration cfg,
+                      ConcordObjectMapper objectMapper) {
         super(cfg);
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -173,10 +173,10 @@ public class ProjectDao extends AbstractDao {
                                 repo.get(SECRETS.SECRET_ID),
                                 repo.get(SECRETS.SECRET_NAME),
                                 repo.get(SECRETS.STORE_TYPE),
-                                deserialize(repo.get(REPOSITORIES.META.cast(String.class)))));
+                                objectMapper.deserialize(repo.get(REPOSITORIES.META.cast(String.class)))));
             }
 
-            Map<String, Object> cfg = deserialize(r.get(cfgField));
+            Map<String, Object> cfg = objectMapper.deserialize(r.get(cfgField));
             return new ProjectEntry(projectId,
                     r.get(p.PROJECT_NAME),
                     r.get(p.DESCRIPTION),
@@ -187,7 +187,7 @@ public class ProjectDao extends AbstractDao {
                     ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
                     toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.USER_TYPE)),
                     r.get(p.ACCEPTS_RAW_PAYLOAD),
-                    deserialize(r.get(metaField)));
+                    objectMapper.deserialize(r.get(metaField)));
         }
     }
 
@@ -217,12 +217,12 @@ public class ProjectDao extends AbstractDao {
                 .values(value(name),
                         value(description),
                         value(orgId),
-                        field("?::jsonb", serialize(cfg)),
+                        field("?::jsonb", objectMapper.serialize(cfg)),
                         value(visibility.toString()),
                         value(ownerId),
                         value(acceptsRawPayload),
                         value(encryptedKey),
-                        field("?::jsonb", serialize(meta)))
+                        field("?::jsonb", objectMapper.serialize(meta)))
                 .returning(PROJECTS.PROJECT_ID)
                 .fetchOne()
                 .getProjectId();
@@ -242,7 +242,7 @@ public class ProjectDao extends AbstractDao {
         }
 
         if (cfg != null) {
-            q.set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, serialize(cfg)));
+            q.set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, objectMapper.serialize(cfg)));
         }
 
         if (visibility != null) {
@@ -258,7 +258,7 @@ public class ProjectDao extends AbstractDao {
         }
 
         if (meta != null) {
-            q.set(PROJECTS.META, field("?::jsonb", String.class, serialize(meta)));
+            q.set(PROJECTS.META, field("?::jsonb", String.class, objectMapper.serialize(meta)));
         }
 
         q.set(PROJECTS.ORG_ID, orgId)
@@ -272,7 +272,7 @@ public class ProjectDao extends AbstractDao {
 
     public void updateCfg(DSLContext tx, UUID id, Map<String, Object> cfg) {
         tx.update(PROJECTS)
-                .set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, serialize(cfg)))
+                .set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, objectMapper.serialize(cfg)))
                 .where(PROJECTS.PROJECT_ID.eq(id))
                 .execute();
     }
@@ -347,7 +347,7 @@ public class ProjectDao extends AbstractDao {
             return tx.select(PROJECTS.PROJECT_CFG.cast(String.class))
                     .from(PROJECTS)
                     .where(PROJECTS.PROJECT_ID.eq(projectId))
-                    .fetchOne(e -> deserialize(e.value1()));
+                    .fetchOne(e -> objectMapper.deserialize(e.value1()));
         }
     }
 
@@ -446,31 +446,6 @@ public class ProjectDao extends AbstractDao {
         tx.deleteFrom(PROJECT_TEAM_ACCESS)
                 .where(PROJECT_TEAM_ACCESS.PROJECT_ID.eq(projectId))
                 .execute();
-    }
-
-    private String serialize(Map<String, Object> m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> deserialize(String ab) {
-        if (ab == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(ab, Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private static ProjectEntry toEntry(Record10<UUID, String, String, UUID, String, String, UUID, String, String, Boolean> r) {

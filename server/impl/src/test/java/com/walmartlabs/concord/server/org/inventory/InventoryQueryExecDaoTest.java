@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.TestObjectMapper;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,7 +45,7 @@ public class InventoryQueryExecDaoTest extends AbstractDaoTest {
         List<String> queries = parseQueries("queries.txt");
 
         InventoryQueryDao qd = mock(InventoryQueryDao.class);
-        InventoryQueryExecDao dao = new InventoryQueryExecDao(getConfiguration(), qd);
+        InventoryQueryExecDao dao = new InventoryQueryExecDao(getConfiguration(), qd, new ConcordObjectMapper(TestObjectMapper.INSTANCE));
 
         for(String sql : queries) {
             UUID queryId = UUID.randomUUID();

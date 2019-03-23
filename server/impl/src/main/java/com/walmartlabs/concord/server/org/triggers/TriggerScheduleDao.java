@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -30,7 +30,6 @@ import org.jooq.Record10;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -44,11 +43,14 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class TriggerScheduleDao extends AbstractDao {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public TriggerScheduleDao(@Named("app") Configuration cfg) {
+    public TriggerScheduleDao(@Named("app") Configuration cfg,
+                              ConcordObjectMapper objectMapper) {
         super(cfg);
+
+        this.objectMapper = objectMapper;
     }
 
     public TriggerSchedulerEntry findNext() {
@@ -102,8 +104,8 @@ public class TriggerScheduleDao extends AbstractDao {
                     r.value5(),
                     r.value6(),
                     toList(r.value7()),
-                    deserialize(r.value8()),
-                    deserialize(r.value9()));
+                    objectMapper.deserialize(r.value8()),
+                    objectMapper.deserialize(r.value9()));
 
             ZoneId zoneId = null;
             if (result.getTimezone() != null) {
@@ -134,19 +136,6 @@ public class TriggerScheduleDao extends AbstractDao {
                 .set(TRIGGER_SCHEDULE.FIRE_AT, Timestamp.from(fireAt))
                 .where(TRIGGER_SCHEDULE.TRIGGER_ID.eq(triggerId))
                 .execute();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> deserialize(String ab) {
-        if (ab == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(ab, Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private static <E> List<E> toList(E[] arr) {

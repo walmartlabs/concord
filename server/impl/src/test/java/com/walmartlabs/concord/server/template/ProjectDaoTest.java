@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.template;
 
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -47,8 +49,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() throws Exception {
-        repositoryDao = new RepositoryDao(getConfiguration());
-        projectDao = new ProjectDao(getConfiguration());
+        repositoryDao = new RepositoryDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
+        projectDao = new ProjectDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
     }
 
     @Test

@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.org.policy;
  */
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.TestObjectMapper;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,7 +36,7 @@ public class PolicyDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() {
-        policyDao = new PolicyDao(getConfiguration());
+        policyDao = new PolicyDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
     }
 
     @Test

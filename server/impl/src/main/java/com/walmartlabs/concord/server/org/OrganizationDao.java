@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.OrganizationsRecord;
@@ -32,7 +32,6 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,11 +45,11 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class OrganizationDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
     public OrganizationDao(@Named("app") Configuration cfg,
-                           ObjectMapper objectMapper) {
+                           ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;
     }
@@ -102,7 +101,7 @@ public class OrganizationDao extends AbstractDao {
             return tx.select(ORGANIZATIONS.ORG_CFG.cast(String.class))
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_ID.eq(orgId))
-                    .fetchOne(e -> deserialize(e.value1()));
+                    .fetchOne(e -> objectMapper.deserialize(e.value1()));
         }
     }
 
@@ -118,7 +117,7 @@ public class OrganizationDao extends AbstractDao {
         return tx.insertInto(ORGANIZATIONS)
                 .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.OWNER_ID, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META, ORGANIZATIONS.ORG_CFG)
                 .values(value(name), value(ownerId), value(visibility.toString()),
-                        field("?::jsonb", serialize(meta)), field("?::jsonb", serialize(cfg)))
+                        field("?::jsonb", objectMapper.serialize(meta)), field("?::jsonb", objectMapper.serialize(cfg)))
                 .returning()
                 .fetchOne()
                 .getOrgId();
@@ -144,11 +143,11 @@ public class OrganizationDao extends AbstractDao {
         }
 
         if (meta != null) {
-            q.addValue(ORGANIZATIONS.META, field("?::jsonb", String.class, serialize(meta)));
+            q.addValue(ORGANIZATIONS.META, field("?::jsonb", String.class, objectMapper.serialize(meta)));
         }
 
         if (cfg != null) {
-            q.addValue(ORGANIZATIONS.ORG_CFG, field("?::jsonb", String.class, serialize(cfg)));
+            q.addValue(ORGANIZATIONS.ORG_CFG, field("?::jsonb", String.class, objectMapper.serialize(cfg)));
         }
 
         q.addConditions(ORGANIZATIONS.ORG_ID.eq(id));
@@ -209,34 +208,9 @@ public class OrganizationDao extends AbstractDao {
                 .execute());
     }
 
-    private String serialize(Map<String, Object> m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> deserialize(String s) {
-        if (s == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(s, Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private OrganizationEntry toEntry(Record8<UUID, String, UUID, String, String, String, String, String> r) {
-        Map<String, Object> meta = deserialize(r.value7());
-        Map<String, Object> cfg = deserialize(r.value8());
+        Map<String, Object> meta = objectMapper.deserialize(r.value7());
+        Map<String, Object> cfg = objectMapper.deserialize(r.value8());
         return new OrganizationEntry(r.value1(), r.value2(),
                 toOwner(r.value3(), r.value4(), r.value5()),
                 OrganizationVisibility.valueOf(r.value6()), meta, cfg);

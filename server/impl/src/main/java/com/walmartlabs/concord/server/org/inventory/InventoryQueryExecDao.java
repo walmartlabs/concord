@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.expression.CastExpression;
@@ -47,7 +47,6 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -58,16 +57,18 @@ import static org.jooq.impl.DSL.val;
 @Named
 public class InventoryQueryExecDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     private final InventoryQueryDao inventoryQueryDao;
 
     @Inject
-    public InventoryQueryExecDao(@Named("inventory") Configuration cfg, InventoryQueryDao inventoryQueryDao) {
+    public InventoryQueryExecDao(@Named("inventory") Configuration cfg,
+                                 InventoryQueryDao inventoryQueryDao,
+                                 ConcordObjectMapper objectMapper) {
         super(cfg);
 
-        this.objectMapper = new ObjectMapper();
         this.inventoryQueryDao = inventoryQueryDao;
+        this.objectMapper = objectMapper;
     }
 
     public List<Object> exec(UUID queryId, Map<String, Object> params) {
@@ -85,7 +86,7 @@ public class InventoryQueryExecDao extends AbstractDao {
             if (params == null) {
                 args = new QueryPart[]{val(q.getInventoryId())};
             } else {
-                args = new QueryPart[]{val(serialize(params)), val(q.getInventoryId())};
+                args = new QueryPart[]{val(objectMapper.serialize(params)), val(q.getInventoryId())};
             }
 
             return tx.resultQuery(sql, args)
@@ -94,32 +95,7 @@ public class InventoryQueryExecDao extends AbstractDao {
     }
 
     private Object toExecResult(Record record) {
-        return deserialize((String) record.getValue(0));
-    }
-
-    private String serialize(Object m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Object deserialize(String ab) {
-        if (ab == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(ab, Object.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return objectMapper.deserialize((String) record.getValue(0));
     }
 
     private static String createQuery(String src) {

@@ -20,14 +20,13 @@ package com.walmartlabs.concord.server.audit;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
@@ -37,11 +36,14 @@ import static org.jooq.impl.DSL.value;
 @Named
 public class AuditDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public AuditDao(@Named("app") Configuration cfg) {
+    public AuditDao(@Named("app") Configuration cfg,
+                    ConcordObjectMapper objectMapper) {
         super(cfg);
+
+        this.objectMapper = objectMapper;
     }
 
     public void insert(UUID userId, AuditObject object, AuditAction action, Object details) {
@@ -57,15 +59,7 @@ public class AuditDao extends AbstractDao {
                 .values(value(userId),
                         value(object.toString()),
                         value(action.toString()),
-                        field("?::jsonb", serialize(details)))
+                        field("?::jsonb", objectMapper.serialize(details)))
                 .execute();
-    }
-
-    private String serialize(Object details) {
-        try {
-            return objectMapper.writeValueAsString(details);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

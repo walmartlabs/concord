@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessStatus;
@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -129,10 +128,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     @Named
     private static final class WatchdogDao extends AbstractDao {
 
-        private final ObjectMapper objectMapper;
+        private final ConcordObjectMapper objectMapper;
 
         @Inject
-        public WatchdogDao(@Named("app") Configuration cfg, ObjectMapper objectMapper) {
+        public WatchdogDao(@Named("app") Configuration cfg, ConcordObjectMapper objectMapper) {
             super(cfg);
 
             this.objectMapper = objectMapper;
@@ -161,21 +160,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                 .status(ProcessStatus.valueOf(r.value2()))
                                 .instanceCreatedAt(r.value3())
                                 .lastUpdatedAt(r.value4())
-                                .waits(deserialize(r.value5()))
+                                .waits(objectMapper.deserialize(r.value5(), AbstractWaitCondition.class))
                                 .build());
             });
-        }
-
-        private AbstractWaitCondition deserialize(Object o) {
-            if (o == null) {
-                return null;
-            }
-
-            try {
-                return objectMapper.readValue(String.valueOf(o), AbstractWaitCondition.class);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 }

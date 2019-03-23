@@ -20,16 +20,15 @@ package com.walmartlabs.concord.server.org.policy;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,13 +41,14 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class PolicyDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public PolicyDao(@Named("app") Configuration cfg) {
+    public PolicyDao(@Named("app") Configuration cfg,
+                     ConcordObjectMapper objectMapper) {
         super(cfg);
 
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     public UUID getId(String name) {
@@ -101,7 +101,7 @@ public class PolicyDao extends AbstractDao {
         Map<String, Object> mergedRules = new HashMap<>();
         for(Record3<String, String, Integer> r : rules) {
             result.addPolicyNames(r.value1());
-            mergedRules = ConfigurationUtils.deepMerge(mergedRules, deserialize(r.value2()));
+            mergedRules = ConfigurationUtils.deepMerge(mergedRules, objectMapper.deserialize(r.value2()));
         }
         return result
                 .rules(mergedRules)
@@ -157,7 +157,7 @@ public class PolicyDao extends AbstractDao {
     public UUID insert(String name, UUID parentId, Map<String, Object> rules) {
         return txResult(tx -> tx.insertInto(POLICIES)
                 .columns(POLICIES.POLICY_NAME, POLICIES.PARENT_POLICY_ID, POLICIES.RULES)
-                .values(value(name), value(parentId), field("?::jsonb", serialize(rules)))
+                .values(value(name), value(parentId), field("?::jsonb", objectMapper.serialize(rules)))
                 .returning(POLICIES.POLICY_ID)
                 .fetchOne()
                 .getPolicyId());
@@ -166,7 +166,7 @@ public class PolicyDao extends AbstractDao {
     public void update(UUID policyId, String name, UUID parentId, Map<String, Object> rules) {
         tx(tx -> tx.update(POLICIES)
                 .set(POLICIES.POLICY_NAME, name)
-                .set(POLICIES.RULES, field("?::jsonb", String.class, serialize(rules)))
+                .set(POLICIES.RULES, field("?::jsonb", String.class, objectMapper.serialize(rules)))
                 .set(POLICIES.PARENT_POLICY_ID, parentId)
                 .where(POLICIES.POLICY_ID.eq(policyId))
                 .execute());
@@ -272,7 +272,7 @@ public class PolicyDao extends AbstractDao {
                 .id(r.get(POLICIES.POLICY_ID))
                 .parentId(r.get(POLICIES.PARENT_POLICY_ID))
                 .name(r.get(POLICIES.POLICY_NAME))
-                .rules(deserialize(r.value4()))
+                .rules(objectMapper.deserialize(r.value4()))
                 .build();
     }
 
@@ -284,32 +284,7 @@ public class PolicyDao extends AbstractDao {
                 r.get(POLICIES.POLICY_ID),
                 r.get(POLICIES.PARENT_POLICY_ID),
                 r.get(POLICIES.POLICY_NAME),
-                deserialize(r.value4()));
-    }
-
-    private String serialize(Map<String, Object> m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> deserialize(String s) {
-        if (s == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(s, Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+                objectMapper.deserialize(r.value4()));
     }
 
     private class PolicyRule {

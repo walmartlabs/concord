@@ -20,12 +20,11 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.sdk.EventType;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
@@ -44,7 +43,6 @@ import org.jooq.util.postgres.PostgresDSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -78,7 +76,7 @@ public class ProcessQueueDao extends AbstractDao {
     private final List<ProcessQueueEntryFilter> filters;
 
     private final EventDao eventDao;
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
     private final ProcessQueueLock queueLock;
 
     @Inject
@@ -86,7 +84,7 @@ public class ProcessQueueDao extends AbstractDao {
                               List<ProcessQueueEntryFilter> filters,
                               EventDao eventDao,
                               ProcessQueueLock queueLock,
-                              ObjectMapper objectMapper) {
+                              ConcordObjectMapper objectMapper) {
         super(cfg);
         this.filters = filters;
         this.eventDao = eventDao;
@@ -130,7 +128,7 @@ public class ProcessQueueDao extends AbstractDao {
                         value(initiatorId),
                         value(ProcessStatus.PREPARING.toString()),
                         currentTimestamp(),
-                        field("?::jsonb", serialize(meta)))
+                        field("?::jsonb", objectMapper.serialize(meta)))
                 .execute();
 
         insertStatusHistory(tx, processKey, ProcessStatus.PREPARING);
@@ -184,7 +182,7 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             if (requirements != null) {
-                q.set(PROCESS_QUEUE.REQUIREMENTS, field("?::jsonb", String.class, serialize(requirements)));
+                q.set(PROCESS_QUEUE.REQUIREMENTS, field("?::jsonb", String.class, objectMapper.serialize(requirements)));
             }
 
             if (repoId != null) {
@@ -216,7 +214,7 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             if (meta != null) {
-                q.set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta)));
+                q.set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, objectMapper.serialize(meta)));
             }
 
 
@@ -282,7 +280,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         return txResult(tx -> {
             int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta)))
+                    .set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, objectMapper.serialize(meta)))
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .execute();
 
@@ -475,7 +473,7 @@ public class ProcessQueueDao extends AbstractDao {
                     .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
                             .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                             .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())))
-                    .fetch(r -> deserialize(r.value1(), STATUS_HISTORY_ENTRY));
+                    .fetch(r -> objectMapper.deserialize(r.value1(), STATUS_HISTORY_ENTRY));
 
         }
     }
@@ -489,7 +487,7 @@ public class ProcessQueueDao extends AbstractDao {
                             .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                             .and(pe.EVENT_TYPE.eq(EventType.PROCESS_WAIT.name())))
                     .orderBy(pe.EVENT_DATE.desc())
-                    .fetch(r -> deserialize(r.value1(), WAIT_HISTORY_ENTRY));
+                    .fetch(r -> objectMapper.deserialize(r.value1(), WAIT_HISTORY_ENTRY));
 
         }
     }
@@ -546,17 +544,13 @@ public class ProcessQueueDao extends AbstractDao {
 
     public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {
         tx.update(PROCESS_QUEUE)
-                .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", String.class, serialize(waits)))
+                .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", String.class, objectMapper.serialize(waits)))
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
                 .execute();
 
-        try {
-            String eventData = objectMapper.writeValueAsString(waits != null ? waits : new NoneCondition());
-            eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), eventData);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        String eventData = objectMapper.serialize(waits != null ? waits : new NoneCondition());
+        eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), eventData);
     }
 
     private FindResult findEntry(Map<String, Object> capabilities) {
@@ -611,7 +605,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         if (capabilities != null && !capabilities.isEmpty()) {
             Field<Object> agentReqField = field("{0}->'agent'", Object.class, q.REQUIREMENTS);
-            Field<Object> capabilitiesField = field("?::jsonb", Object.class, value(serialize(capabilities)));
+            Field<Object> capabilitiesField = field("?::jsonb", Object.class, value(objectMapper.serialize(capabilities)));
             s.where(q.REQUIREMENTS.isNull()
                     .or(field("{0} <@ {1}", Boolean.class, agentReqField, capabilitiesField)));
         }
@@ -644,51 +638,14 @@ public class ProcessQueueDao extends AbstractDao {
         payload.put("status", status.name());
         payload.putAll(statusPayload);
 
-        try {
-            eventDao.insert(tx, processKey, EventType.PROCESS_STATUS.name(), objectMapper.writeValueAsString(payload));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        eventDao.insert(tx, processKey, EventType.PROCESS_STATUS.name(), objectMapper.serialize(payload));
     }
 
     private void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("status", status.name());
 
-        try {
-            eventDao.insert(tx, processKeys, EventType.PROCESS_STATUS.name(), objectMapper.writeValueAsString(payload));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String serialize(Object details) {
-        if (details == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(details);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Map<String, Object> deserialize(Object o) {
-        return deserialize(o, new TypeReference<Map<String, Object>>() {
-        });
-    }
-
-    private <T> T deserialize(Object o, TypeReference valueTypeRef) {
-        if (o == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(String.valueOf(o), valueTypeRef);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        eventDao.insert(tx, processKeys, EventType.PROCESS_STATUS.name(), objectMapper.serialize(payload));
     }
 
     private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {
@@ -855,11 +812,11 @@ public class ProcessQueueDao extends AbstractDao {
                 .lastAgentId(r.get(PROCESS_QUEUE.LAST_AGENT_ID))
                 .tags(tags)
                 .childrenIds(toSet(getOrNull(r, "children_ids")))
-                .meta(deserialize(r.get(PROCESS_QUEUE.META)))
+                .meta(objectMapper.deserialize(r.get(PROCESS_QUEUE.META)))
                 .handlers(toSet(r.get(PROCESS_QUEUE.HANDLERS)))
                 .logFileName(r.get(PROCESS_QUEUE.INSTANCE_ID) + ".log")
-                .checkpoints(deserialize(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
-                .statusHistory(deserialize(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
+                .checkpoints(objectMapper.deserialize(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
+                .statusHistory(objectMapper.deserialize(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .build();
     }
 

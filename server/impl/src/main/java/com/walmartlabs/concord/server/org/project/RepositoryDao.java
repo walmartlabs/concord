@@ -20,15 +20,14 @@ package com.walmartlabs.concord.server.org.project;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -40,12 +39,13 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class RepositoryDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public RepositoryDao(@Named("app") Configuration cfg) {
+    public RepositoryDao(@Named("app") Configuration cfg,
+                         ConcordObjectMapper objectMapper) {
         super(cfg);
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -98,7 +98,7 @@ public class RepositoryDao extends AbstractDao {
                 .columns(REPOSITORIES.PROJECT_ID, REPOSITORIES.REPO_NAME,
                         REPOSITORIES.REPO_URL, REPOSITORIES.REPO_BRANCH, REPOSITORIES.REPO_COMMIT_ID,
                         REPOSITORIES.REPO_PATH, REPOSITORIES.SECRET_ID, REPOSITORIES.META, REPOSITORIES.IS_DISABLED)
-                .values(projectId, repositoryName, url, branch, commitId, path, secretId, field("?::jsonb", serialize(meta)), disabled)
+                .values(projectId, repositoryName, url, branch, commitId, path, secretId, field("?::jsonb", objectMapper.serialize(meta)), disabled)
                 .returning(REPOSITORIES.REPO_ID)
                 .fetchOne()
                 .getRepoId();
@@ -178,7 +178,7 @@ public class RepositoryDao extends AbstractDao {
     }
 
     public void updateMeta(DSLContext tx, UUID id, Map<String, Object> meta) {
-        Field<String> updateJson = field(coalesce(REPOSITORIES.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, serialize(meta));
+        Field<String> updateJson = field(coalesce(REPOSITORIES.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, objectMapper.serialize(meta));
         Field<Object> metaField = function("jsonb_strip_nulls", Object.class, updateJson);
 
         tx.update(REPOSITORIES)
@@ -216,31 +216,6 @@ public class RepositoryDao extends AbstractDao {
                 r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.STORE_TYPE),
-                deserialize(r.get(REPOSITORIES.META.cast(String.class))));
-    }
-
-    private String serialize(Map<String, Object> m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> deserialize(String ab) {
-        if (ab == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(ab, Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+                objectMapper.deserialize(r.get(REPOSITORIES.META.cast(String.class))));
     }
 }

@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
 import com.walmartlabs.concord.server.jooq.tables.InventoryData;
 import org.jooq.*;
@@ -29,7 +29,6 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +41,13 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class InventoryDataDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public InventoryDataDao(@Named("app") Configuration cfg) {
+    public InventoryDataDao(@Named("app") Configuration cfg,
+                            ConcordObjectMapper objectMapper) {
         super(cfg);
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     public Object getSingleItem(UUID id, String itemPath) {
@@ -86,7 +86,7 @@ public class InventoryDataDao extends AbstractDao {
     private Map<String, Object> toListItem(Record2<String, String> r) {
         Map<String, Object> result = new HashMap<>();
         result.put("path", r.value1());
-        result.put("data", deserialize(r.value2()));
+        result.put("data", objectMapper.deserialize(r.value2()));
         return result;
     }
 
@@ -117,9 +117,9 @@ public class InventoryDataDao extends AbstractDao {
     private void merge(DSLContext tx, UUID inventoryId, String itemPath, Object data) {
         tx.insertInto(INVENTORY_DATA)
                 .columns(INVENTORY_DATA.INVENTORY_ID, INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA)
-                .values(value(inventoryId), value(itemPath), field("?::jsonb", serialize(data)))
+                .values(value(inventoryId), value(itemPath), field("?::jsonb", objectMapper.serialize(data)))
                 .onDuplicateKeyUpdate()
-                .set(INVENTORY_DATA.ITEM_DATA, field("?::jsonb", String.class, serialize(data)))
+                .set(INVENTORY_DATA.ITEM_DATA, field("?::jsonb", String.class, objectMapper.serialize(data)))
                 .execute();
     }
 
@@ -130,32 +130,7 @@ public class InventoryDataDao extends AbstractDao {
                 .execute();
     }
 
-    private String serialize(Object m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Object deserialize(String ab) {
-        if (ab == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(ab, Object.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private InventoryDataItem toEntry(Record3<String, String, Integer> r) {
-        return new InventoryDataItem(r.value1(), r.value3(), deserialize(r.value2()));
+        return new InventoryDataItem(r.value1(), r.value3(), objectMapper.deserialize(r.value2()));
     }
 }

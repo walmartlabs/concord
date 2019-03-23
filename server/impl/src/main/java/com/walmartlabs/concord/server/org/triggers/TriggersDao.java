@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
@@ -32,7 +32,6 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +44,14 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class TriggersDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public TriggersDao(@Named("app") Configuration cfg) {
+    public TriggersDao(@Named("app") Configuration cfg,
+                       ConcordObjectMapper objectMapper) {
         super(cfg);
 
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     public TriggerEntry get(UUID id) {
@@ -70,7 +70,7 @@ public class TriggersDao extends AbstractDao {
     public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
         return tx.insertInto(TRIGGERS)
                 .columns(TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_SOURCE, TRIGGERS.ACTIVE_PROFILES, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS, TRIGGERS.TRIGGER_CFG)
-                .values(projectId, repositoryId, eventSource, Utils.toArray(activeProfiles), field("?::jsonb", serialize(args)), field("?::jsonb", serialize(conditions)), field("?::jsonb", serialize(config)))
+                .values(projectId, repositoryId, eventSource, Utils.toArray(activeProfiles), field("?::jsonb", objectMapper.serialize(args)), field("?::jsonb", objectMapper.serialize(conditions)), field("?::jsonb", objectMapper.serialize(config)))
                 .returning(TRIGGERS.TRIGGER_ID)
                 .fetchOne()
                 .getTriggerId();
@@ -86,9 +86,9 @@ public class TriggersDao extends AbstractDao {
                 .set(TRIGGERS.REPO_ID, repositoryId)
                 .set(TRIGGERS.EVENT_SOURCE, eventSource)
                 .set(TRIGGERS.ACTIVE_PROFILES, Utils.toArray(activeProfiles))
-                .set(TRIGGERS.ARGUMENTS, field("?::jsonb", String.class, serialize(args)))
-                .set(TRIGGERS.CONDITIONS, field("?::jsonb", String.class, serialize(conditions)))
-                .set(TRIGGERS.TRIGGER_CFG, field("?::jsonb", String.class, serialize(config)))
+                .set(TRIGGERS.ARGUMENTS, field("?::jsonb", String.class, objectMapper.serialize(args)))
+                .set(TRIGGERS.CONDITIONS, field("?::jsonb", String.class, objectMapper.serialize(conditions)))
+                .set(TRIGGERS.TRIGGER_CFG, field("?::jsonb", String.class, objectMapper.serialize(config)))
                 .where(TRIGGERS.TRIGGER_ID.eq(id))
                 .execute();
     }
@@ -204,31 +204,6 @@ public class TriggersDao extends AbstractDao {
         return field("{0}->>{1}", Object.class, field, inline(name));
     }
 
-    private String serialize(Object m) {
-        if (m == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.writeValueAsString(m);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> deserialize(String ab) {
-        if (ab == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(ab, Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private TriggerEntry toEntity(Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String> item) {
         List<String> activeProfiles = null;
         if (item.value9() != null) {
@@ -237,6 +212,8 @@ public class TriggersDao extends AbstractDao {
 
         return new TriggerEntry(item.value1(), item.value2(), item.value3(), item.value4(), item.value5(), item.value6(),
                 item.value7(), item.value8(), activeProfiles,
-                deserialize(item.value10()), deserialize(item.value11()), deserialize(item.value12()));
+                objectMapper.deserialize(item.value10()),
+                objectMapper.deserialize(item.value11()),
+                objectMapper.deserialize(item.value12()));
     }
 }
