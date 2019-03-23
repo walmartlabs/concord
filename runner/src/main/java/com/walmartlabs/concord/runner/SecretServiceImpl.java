@@ -131,7 +131,13 @@ public class SecretServiceImpl implements SecretService {
 
     @Override
     public String decryptString(Context ctx, String instanceId, String s) throws Exception {
-        byte[] input = DatatypeConverter.parseBase64Binary(s);
+        byte[] input;
+
+        try {
+            input = DatatypeConverter.parseBase64Binary(s);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid encrypted string value, please verify that it was specified/copied correctly: " + e.getMessage());
+        }
 
         ApiClient c = clientFactory.create(ctx);
 

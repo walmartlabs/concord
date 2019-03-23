@@ -22,6 +22,8 @@ the parent process while waiting for a child process (only for
 
 ### Changed
 
+- concord-server: more detailed error messages in case of invalid
+encrypted strings;
 - concord-console: fixed a bug when team members could not be
 deleted.
 

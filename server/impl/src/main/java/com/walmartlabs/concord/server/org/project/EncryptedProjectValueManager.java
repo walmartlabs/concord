@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,8 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.security.SecureRandom;
@@ -64,8 +66,21 @@ public class EncryptedProjectValueManager {
      * @return
      */
     public byte[] decrypt(UUID projectId, byte[] data) {
-        byte[] key = getDecryptedSecretKey(projectId);
-        return SecretUtils.decrypt(data, key, secretCfg.getProjectSecretsSalt());
+        try {
+            byte[] key = getDecryptedSecretKey(projectId);
+            return SecretUtils.decrypt(data, key, secretCfg.getProjectSecretsSalt());
+        } catch (SecurityException e) {
+            String message = e.getMessage();
+
+            Throwable cause = e.getCause();
+            if (cause instanceof IllegalBlockSizeException) {
+                message = "Invalid encrypted value, please verify that the value is a correct encrypted string";
+            } else if (cause instanceof BadPaddingException) {
+                message = "Please verify that the value is correct and is encrypted using the correct project";
+            }
+
+            throw new SecurityException("Decrypt error: " + message);
+        }
     }
 
     private byte[] getDecryptedSecretKey(UUID projectId) {

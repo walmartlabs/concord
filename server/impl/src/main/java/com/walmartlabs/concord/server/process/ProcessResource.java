@@ -32,7 +32,6 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
-import com.walmartlabs.concord.server.org.secret.SecretException;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
@@ -919,7 +918,7 @@ public class ProcessResource implements Resource {
     }
 
     /**
-     * Decrypt string.
+     * Decrypt a base64 string previosly encrypted with the process' project key.
      *
      * @param instanceId
      * @param data
@@ -954,20 +953,16 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Error while reading encrypted data: " + e.getMessage(), e);
         }
 
-        byte[] result;
         try {
             UUID projectId = entry.projectId();
-            result = encryptedValueManager.decrypt(projectId, baos.toByteArray());
+            byte[] result = encryptedValueManager.decrypt(projectId, baos.toByteArray());
+            return Response.ok((StreamingOutput) output -> output.write(result))
+                    .build();
         } catch (SecurityException e) {
-            log.error("decrypt ['{}'] -> error", processKey, e);
-            throw new SecretException("Decrypt error: " + e.getMessage());
+            throw new ConcordApplicationException(e.getMessage(), Status.BAD_REQUEST);
         } catch (Exception e) {
-            log.error("decrypt ['{}'] -> error", processKey, e);
             throw new ConcordApplicationException("Decrypt error: " + e.getMessage());
         }
-
-        return Response.ok((StreamingOutput) output -> output.write(result))
-                .build();
     }
 
     /**

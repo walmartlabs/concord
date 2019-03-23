@@ -57,7 +57,8 @@ public final class SecretUtils {
             InputStream out = decrypt(new ByteArrayInputStream(input), password, salt);
             return IOUtils.toByteArray(out);
         } catch (IOException e) {
-            throw new SecurityException("Error decrypting a secret: " + e.getMessage());
+            Throwable t = e.getCause() == null ? e : e.getCause();
+            throw new SecurityException("Error decrypting a secret: " + e.getMessage(), t);
         }
     }
 
