@@ -70,6 +70,7 @@
 * [approval](approval) - using forms and `runAs` to implement an approval process;
 * [boo_ansible](boo_ansible) - using Boo and Ansible together;
 * [context_injection](context_injection) - how to use automatic variable injection with custom tasks written in Groovy;
+* [custom_task](custom_task) - how to create a custom Concord task (plugin);
 * [dynamic_form_values](dynamic_form_values) - using custom forms with values added/removed dynamically;
 * [dynamic_tasks](dynamic_tasks) - using custom tasks provided with the process;
 * [form_l10n](form_l10n) - how to use custom validation error messages in forms;

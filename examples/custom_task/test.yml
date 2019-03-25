@@ -1,0 +1,11 @@
+flows:
+  default:
+    - task: customTask
+      in:
+        url: "https://jsonplaceholder.typicode.com/todos/1"
+
+    - if: "${!result.ok}"
+      then:
+        - throw: "The request returned ${result.errorCode}"
+
+    - log: "Data: ${result.data}"
