@@ -64,9 +64,9 @@ public interface Context {
     /**
      * Returns the value of a "protected" variable.
      *
-     * @see #setProtectedVariable(String, Object)
      * @param key
      * @return
+     * @see #setProtectedVariable(String, Object)
      */
     Object getProtectedVariable(String key);
 
@@ -115,6 +115,7 @@ public interface Context {
 
     /**
      * Reserved for future use.
+     *
      * @see #suspend(String)
      */
     void suspend(String eventName, Object payload, boolean resumeFromSameStep);
@@ -122,7 +123,7 @@ public interface Context {
     /**
      * Creates a new form and suspends the process.
      *
-     * @param formName the form's name
+     * @param formName    the form's name
      * @param formOptions the form's options. The data structure is the same as the form call's syntax.
      */
     void form(String formName, Map<String, Object> formOptions);

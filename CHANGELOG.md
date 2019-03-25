@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-sdk: additional `MapUtils` methods to retrieve Map, List
+and Integer values;
 - concord-console: show user display names on the team member list
 page;
 - concord-server: new user attribute - `displayName`. Automatically

@@ -20,8 +20,6 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
-import jdk.nashorn.internal.ir.annotations.Immutable;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -31,7 +29,11 @@ import java.util.UUID;
 public final class ContextUtils {
 
     public static int getInt(Context ctx, String name, int defaultValue) {
-        return getVariable(ctx, name, defaultValue, Integer.class);
+        Integer result = getVariable(ctx, name, defaultValue, Integer.class);
+        if (result == null) {
+            return defaultValue;
+        }
+        return result;
     }
 
     public static Number getNumber(Context ctx, String name, Number defaultValue) {
@@ -47,7 +49,11 @@ public final class ContextUtils {
     }
 
     public static boolean getBoolean(Context ctx, String name, boolean defaultValue) {
-        return getVariable(ctx, name, defaultValue, Boolean.class);
+        Boolean result = getVariable(ctx, name, defaultValue, Boolean.class);
+        if (result == null) {
+            return defaultValue;
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -161,18 +167,18 @@ public final class ContextUtils {
         if (workDir instanceof String) {
             return Paths.get((String) workDir);
         }
-        throw new IllegalArgumentException("Invalid variable '" +  Constants.Context.WORK_DIR_KEY + "' type, expected: string/path, got: " + workDir.getClass());
+        throw new IllegalArgumentException("Invalid variable '" + Constants.Context.WORK_DIR_KEY + "' type, expected: string/path, got: " + workDir.getClass());
     }
 
     public static UUID getTxId(Context ctx) {
         Object txId = assertVariable(ctx, Constants.Context.TX_ID_KEY, Object.class);
         if (txId instanceof String) {
-            return UUID.fromString((String)txId);
+            return UUID.fromString((String) txId);
         }
         if (txId instanceof UUID) {
             return (UUID) txId;
         }
-        throw new IllegalArgumentException("Invalid variable '" +  Constants.Context.WORK_DIR_KEY + "' type, expected: string/uuid, got: " + txId.getClass());
+        throw new IllegalArgumentException("Invalid variable '" + Constants.Context.WORK_DIR_KEY + "' type, expected: string/uuid, got: " + txId.getClass());
     }
 
     public static String getSessionToken(Context ctx) {

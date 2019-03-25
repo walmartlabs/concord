@@ -20,6 +20,7 @@ package com.walmartlabs.concord.sdk;
  * =====
  */
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,7 +32,7 @@ public final class MapUtils {
             return null;
         }
         if (o instanceof String) {
-            return UUID.fromString((String)o);
+            return UUID.fromString((String) o);
         }
         if (o instanceof UUID) {
             return (UUID) o;
@@ -45,6 +46,68 @@ public final class MapUtils {
 
     public static String getString(Map<String, Object> m, String name, String defaultValue) {
         return get(m, name, defaultValue, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <K, V> Map<K, V> getMap(Map<String, Object> m, String name, Map<K, V> defaultValue) {
+        return get(m, name, defaultValue, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E> List<E> getList(Map<String, Object> m, String name, List<E> defaultValue) {
+        return get(m, name, defaultValue, List.class);
+    }
+
+    public static boolean getBoolean(Map<String, Object> m, String name, boolean defaultValue) {
+        Boolean result = get(m, name, defaultValue, Boolean.class);
+        if (result == null) {
+            return defaultValue;
+        }
+        return result;
+    }
+
+    public static int getInt(Map<String, Object> m, String name, int defaultValue) {
+        Integer result = get(m, name, defaultValue, Integer.class);
+        if (result == null) {
+            return defaultValue;
+        }
+        return result;
+    }
+
+    public static Number getNumber(Map<String, Object> m, String name, Number defaultValue) {
+        return get(m, name, defaultValue, Number.class);
+    }
+
+    public static int assertInt(Map<String, Object> m, String name) {
+        return assertVariable(m, name, Integer.class);
+    }
+
+    public static Number assertNumber(Map<String, Object> m, String name) {
+        return assertVariable(m, name, Number.class);
+    }
+
+    public static String assertString(Map<String, Object> m, String name) {
+        return assertVariable(m, name, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <K, V> Map<K, V> assertMap(Map<String, Object> m, String name) {
+        return assertVariable(m, name, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E> List<E> assertList(Map<String, Object> m, String name) {
+        return assertVariable(m, name, List.class);
+    }
+
+    public static <T> T assertVariable(Map<String, Object> m, String name, Class<T> type) {
+        T result = get(m, name, null, type);
+
+        if (result != null) {
+            return result;
+        }
+
+        throw new IllegalArgumentException("Mandatory variable '" + name + "' is required");
     }
 
     public static <T> T get(Map<String, Object> m, String name, T defaultValue, Class<T> type) {

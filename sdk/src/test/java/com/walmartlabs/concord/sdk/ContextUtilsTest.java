@@ -9,9 +9,9 @@ package com.walmartlabs.concord.sdk;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ public class ContextUtilsTest {
         // ---
         Integer result = ContextUtils.getVariable(ctx, "k", null, Integer.class);
         assertNotNull(result);
-        assertEquals((Integer)123, result);
+        assertEquals((Integer) 123, result);
 
         // ---
         result = ContextUtils.getVariable(ctx, "not-found", null, Integer.class);
@@ -48,7 +48,7 @@ public class ContextUtilsTest {
         // ---
         result = ContextUtils.getVariable(ctx, "not-found", -1, Integer.class);
         assertNotNull(result);
-        assertEquals((Integer)(-1), result);
+        assertEquals((Integer) (-1), result);
 
         // ---
         int res = ContextUtils.getInt(ctx, "k", -1);
