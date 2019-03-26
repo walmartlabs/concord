@@ -69,23 +69,22 @@ public class RunnerJobExecutor {
     protected final DependencyManager dependencyManager;
     private final DefaultDependencies defaultDependencies;
     private final List<JobPostProcessor> postProcessors;
+    private final ProcessPool processPool;
     private final ExecutorService executor;
-
-    private final ProcessPool pool;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
                              DefaultDependencies defaultDependencies,
                              List<JobPostProcessor> postProcessors,
+                             ProcessPool processPool,
                              ExecutorService executor) {
 
         this.cfg = cfg;
         this.dependencyManager = dependencyManager;
         this.defaultDependencies = defaultDependencies;
         this.postProcessors = postProcessors;
+        this.processPool = processPool;
         this.executor = executor;
-
-        this.pool = new ProcessPool(cfg.maxPreforkAge, cfg.maxPreforkCount);
     }
 
     public JobInstance exec(RunnerJob job) throws Exception {
@@ -288,7 +287,7 @@ public class RunnerJobExecutor {
         HashCode hc = hash(cmd);
 
         // take a "pre-forked" JVM from the pool or start a new one
-        ProcessEntry entry = pool.take(hc, () -> {
+        ProcessEntry entry = processPool.take(hc, () -> {
             Path forkDir = IOUtils.createTempDir("prefork");
             return start(forkDir, cmd);
         });

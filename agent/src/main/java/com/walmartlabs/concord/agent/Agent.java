@@ -26,11 +26,8 @@ import com.walmartlabs.concord.agent.Worker.CompletionCallback;
 import com.walmartlabs.concord.agent.Worker.StateFetcher;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
-import com.walmartlabs.concord.agent.executors.runner.DefaultDependencies;
-import com.walmartlabs.concord.agent.executors.runner.DockerRunnerJobExecutor;
+import com.walmartlabs.concord.agent.executors.runner.*;
 import com.walmartlabs.concord.agent.executors.runner.DockerRunnerJobExecutor.DockerRunnerJobExecutorConfiguration;
-import com.walmartlabs.concord.agent.executors.runner.RunnerJob;
-import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
 import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
@@ -91,7 +88,9 @@ public class Agent {
 
         this.executor = Executors.newCachedThreadPool();
 
-        JobExecutor runnerExec = createRunnerJobExecutor(cfg, processApi, processLogFactory, executor);
+        ProcessPool processPool = new ProcessPool(cfg.getMaxPreforkAge(), cfg.getMaxPreforkCount());
+
+        JobExecutor runnerExec = createRunnerJobExecutor(cfg, processApi, processLogFactory, processPool, executor);
         Map<JobRequest.Type, JobExecutor> executors = Collections.singletonMap(JobRequest.Type.RUNNER, runnerExec);
 
         this.workerFactory = new WorkerFactory(repositoryManager, executors);
@@ -302,6 +301,7 @@ public class Agent {
     private static JobExecutor createRunnerJobExecutor(Configuration cfg,
                                                        ProcessApi processApi,
                                                        ProcessLogFactory processLogFactory,
+                                                       ProcessPool processPool,
                                                        ExecutorService executor) throws IOException {
 
         RunnerJobExecutorConfiguration runnerExecutorCfg = new RunnerJobExecutorConfiguration(cfg.getAgentId(),
@@ -324,9 +324,9 @@ public class Agent {
             RunnerJob job = RunnerJob.from(req, processLogFactory);
             if (job.getCfg().get(InternalConstants.Request.CONTAINER) != null) {
                 DockerRunnerJobExecutorConfiguration dockerRunnerCfg = new DockerRunnerJobExecutorConfiguration(cfg.getDockerHost(), cfg.getDependencyCacheDir(), cfg.getJavaPath());
-                jobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, executor);
+                jobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
             } else {
-                jobExecutor = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, executor);
+                jobExecutor = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
             }
             return jobExecutor.exec(job);
         };

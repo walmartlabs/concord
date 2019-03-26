@@ -24,6 +24,8 @@ the parent process while waiting for a child process (only for
 
 ### Changed
 
+- concord-agent: fix JVM "pre-forking". Now the process poll is
+correctly shared between all workers;
 - concord-server: more detailed error messages in case of invalid
 encrypted strings;
 - concord-console: fixed a bug when team members could not be

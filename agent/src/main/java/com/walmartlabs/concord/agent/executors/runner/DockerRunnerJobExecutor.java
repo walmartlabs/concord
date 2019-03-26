@@ -45,8 +45,10 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
                                    DependencyManager dependencyManager,
                                    DefaultDependencies defaultDependencies,
                                    List<JobPostProcessor> postProcessors,
+                                   ProcessPool processPool,
                                    ExecutorService executor) {
-        super(runnerCfg, dependencyManager, defaultDependencies, postProcessors, executor);
+
+        super(runnerCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
 
         this.runnerCfg = runnerCfg;
         this.dockerRunnerCfg = dockerRunnerCfg;

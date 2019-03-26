@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 public class ProcessPool {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessPool.class);
+
     private static final long CLEANUP_PERIOD = 30000;
 
     private final long maxEntryAge;
@@ -53,13 +54,13 @@ public class ProcessPool {
             log.info("run -> starting cleanup thread, max entry age {}ms, max entry count {}", maxEntryAge, maxEntryCount);
 
             while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Thread.sleep(CLEANUP_PERIOD);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+                Utils.sleep(CLEANUP_PERIOD);
 
-                maintenance();
+                try {
+                    maintenance();
+                } catch (Exception e) {
+                    log.warn("pool -> error while performing maintenance: {}", e.getMessage());
+                }
             }
         }, "process-pool-cleanup");
 
@@ -150,12 +151,12 @@ public class ProcessPool {
             }
         }
 
-        log.debug("maintenance -> removed {} queues", queuesToRemove.size());
+        log.info("maintenance -> removed {} queues", queuesToRemove.size());
 
         for (Process p : processesToKill) {
             Utils.kill(p);
         }
-        log.debug("maintenance -> killed {} processes", processesToKill.size());
+        log.info("maintenance -> killed {} processes", processesToKill.size());
     }
 
     public interface ProcessLauncher {
