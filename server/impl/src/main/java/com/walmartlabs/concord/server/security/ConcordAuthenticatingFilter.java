@@ -278,8 +278,8 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         s = new String(Base64.getDecoder().decode(s));
 
         int idx = s.indexOf(":");
-        if (s.endsWith(":")) {
-            // empty password -> try user name as session token
+        if (idx + 1 == s.length()) {
+            // empty password -> try user name as a session token
             return buildSessionToken(request, s.substring(0, s.length() - 1));
         }
 

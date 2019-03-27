@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed an authentication issue with passwords ending
+with `:`;
+
+
+
 ## [1.13.0] - 2019-03-26
 
 ### Added
