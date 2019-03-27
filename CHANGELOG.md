@@ -1,12 +1,12 @@
 # Change log
 
-## [Unreleased]
+## [1.13.1] - 2019-03-27
 
 ### Changed
 
 - http-task: make `ignoreErrors` work with connection timeouts;
-- concord-server: fixed an authentication issue with passwords ending
-with `:`;
+- concord-server: fixed an authentication issue with passwords that
+end with a `:`;
 
 
 
