@@ -7,6 +7,11 @@ if [[ -z ${VERSION} ]]; then
 fi
 echo "VERSION: ${VERSION}"
 
+if [[ -z ${DOCKER_PREFIX} ]]; then
+    DOCKER_PREFIX="walmartlabs"
+fi
+echo "DOCKER_PREFIX: ${DOCKER_PREFIX}"
+
 if [[ -z ${CONCORD_CFG_FILE} ]]; then
     CONCORD_CFG_FILE=${BASE_DIR}/server.conf
 fi
@@ -28,7 +33,7 @@ docker run -d \
 -e 'PGDATA=/var/lib/postgresql/data/pgdata' \
 --mount source=concordDB,target=/var/lib/postgresql/data \
 -p 5432:5432 \
-library/postgres:10.4-alpine
+"library/postgres:10.4-alpine"
 
 docker run -d \
 --link db \
@@ -38,7 +43,7 @@ docker run -d \
 -v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
 -e "CONCORD_CFG_FILE=${CONCORD_CFG_FILE}" \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
-walmartlabs/concord-server:${VERSION}
+"${DOCKER_PREFIX}/concord-server:${VERSION}"
 
 # wait for the server to start
 echo -n "Waiting for the server to start"
@@ -58,7 +63,7 @@ docker run -d \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 -e 'SERVER_API_BASE_URL=http://server:8001' \
 -e 'SERVER_WEBSOCKET_URL=ws://server:8001/websocket' \
-walmartlabs/concord-agent:${VERSION}
+"${DOCKER_PREFIX}/concord-agent:${VERSION}"
 
 docker run -d \
 --name console \
@@ -66,4 +71,4 @@ docker run -d \
 -p 8080:8080 \
 -v /tmp/concord/console/logs:/opt/concord/logs \
 -v "${BASE_DIR}/console.conf:/opt/concord/console/nginx/app.conf:ro" \
-walmartlabs/concord-console:${VERSION}
+"${DOCKER_PREFIX}/concord-console:${VERSION}"
