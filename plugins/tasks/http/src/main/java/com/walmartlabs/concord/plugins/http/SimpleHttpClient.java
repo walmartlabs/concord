@@ -94,9 +94,11 @@ public class SimpleHttpClient {
      * @throws Exception exception
      */
     public ClientResponse execute() throws Exception {
-        try (CloseableHttpResponse httpResponse = this.client.execute(request)) {
+        CloseableHttpResponse httpResponse = null;
+        try {
+            httpResponse = this.client.execute(request);
 
-            if (!config.isIgnoreErrors() && isUnAuthorized(httpResponse.getStatusLine().getStatusCode())) {
+            if (isUnAuthorized(httpResponse.getStatusLine().getStatusCode())) {
                 throw new UnauthorizedException("Authorization required for " + request.getURI().toURL());
             }
 
@@ -118,6 +120,25 @@ public class SimpleHttpClient {
             response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
 
             return new ClientResponse(response);
+
+        } catch (IOException | UnauthorizedException e) {
+            if (!config.isIgnoreErrors()) {
+                throw e;
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("errorString", e.getMessage());
+            if (httpResponse != null) {
+                response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
+            }
+
+            return new ClientResponse(response);
+
+        } finally {
+            if (httpResponse != null) {
+                httpResponse.close();
+            }
         }
     }
 

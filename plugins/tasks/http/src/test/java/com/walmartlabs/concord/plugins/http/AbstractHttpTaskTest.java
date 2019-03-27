@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.http;
  */
 
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.walmartlabs.concord.sdk.Context;
 import org.junit.After;
@@ -69,6 +70,7 @@ public abstract class AbstractHttpTaskTest {
         stubForUnsuccessfulResponse();
         stubForDeleteRequest();
         stubForPatchRequest();
+        stubForFault();
     }
 
     @After
@@ -77,12 +79,14 @@ public abstract class AbstractHttpTaskTest {
     }
 
     @SuppressWarnings("unchecked")
-    protected void initCxtForRequest(Context ctx, String requestMethod, String requestType, String responseType, String url) {
+    protected void initCxtForRequest(Context ctx, String requestMethod, String requestType, String responseType, String url, boolean ignoreErrors) {
         when(ctx.getVariable("url")).thenReturn(url);
         when(ctx.getVariable("method")).thenReturn(requestMethod);
         when(ctx.getVariable("request")).thenReturn(requestType);
         when(ctx.getVariable("response")).thenReturn(responseType);
         when(ctx.getVariable("out")).thenReturn("rsp");
+        when(ctx.getVariable("ignoreErrors")).thenReturn(ignoreErrors);
+
         doAnswer((Answer<Void>) invocation -> {
             response = (Map<String, Object>) invocation.getArguments()[1];
             return null;
@@ -105,6 +109,15 @@ public abstract class AbstractHttpTaskTest {
                                 "        \"test\": \"1.1\"\n" +
                                 "    }\n" +
                                 "]"))
+        );
+    }
+
+    protected void stubForFault() {
+        rule.stubFor(get(urlEqualTo("/fault"))
+                .willReturn(aResponse()
+                        .withFault(Fault.EMPTY_RESPONSE)
+                        .withHeader("Content-Type", "text/plain")
+                        .withHeader("Accept", "text/plain"))
         );
     }
 

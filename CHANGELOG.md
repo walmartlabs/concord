@@ -4,6 +4,7 @@
 
 ### Changed
 
+- http-task: make `ignoreErrors` work with connection timeouts;
 - concord-server: fixed an authentication issue with passwords ending
 with `:`;
 
