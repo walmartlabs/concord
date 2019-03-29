@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+
+- http-tasks: correctly handle empty (204) responses;
 - concord-server: fixed a potential NPE when setting a new owner for
 projects without owner.
 

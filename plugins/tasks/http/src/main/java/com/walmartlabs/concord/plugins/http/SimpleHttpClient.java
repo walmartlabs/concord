@@ -149,6 +149,9 @@ public class SimpleHttpClient {
         }
 
         HttpEntity e = r.getEntity();
+        if (e == null) {
+            return null;
+        }
 
         switch (t) {
             case FILE:

@@ -1,0 +1,12 @@
+flows:
+  default:
+
+  - task: http
+    in:
+      method: GET
+      url: ${url}
+      response: string
+      out: rsp
+
+  - log: "Response: ${rsp.success}"
+  - log: "Content is NULL: ${rsp.content == null}"

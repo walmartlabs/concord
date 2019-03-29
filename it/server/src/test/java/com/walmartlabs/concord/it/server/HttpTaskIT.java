@@ -59,7 +59,7 @@ public class HttpTaskIT extends AbstractServerIT {
     private static final String mockHttpPathPassword = "/password";
     private static final String mockHttpPathHeaders = "/headers";
     private static final String mockHttpPathUnauthorized = "/unauthorized";
-
+    private static final String mockHttpPathEmpty = "/empty";
 
     private static final String SERVER_URL;
 
@@ -83,6 +83,7 @@ public class HttpTaskIT extends AbstractServerIT {
         stubForPatchSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathPassword);
         stubForHeadersEndpoint(mockHttpPathHeaders);
         stubForUnAuthorizedRequestEndpoint(mockHttpPathUnauthorized);
+        stubForEmptyResponse(mockHttpPathEmpty);
     }
 
     @After
@@ -311,6 +312,27 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Success response: false*", ab);
     }
 
+    @Test(timeout = 60000)
+    public void testGetEmptyResponse() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpGetEmpty").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathEmpty);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Success response: true.*", ab);
+        assertLog(".*Content is NULL: true.*", ab);
+    }
+
     private void stubForGetSecureEndpoint(String user, String password, String url) {
         rule.stubFor(get(urlEqualTo(url))
                 .withBasicAuth(user, password)
@@ -381,6 +403,12 @@ public class HttpTaskIT extends AbstractServerIT {
                                 "  \"Authorized\": \"false\"\n" +
                                 "}"))
         );
+    }
+
+    private void stubForEmptyResponse(String url) {
+        rule.stubFor(get(urlEqualTo(url))
+                .willReturn(aResponse()
+                        .withStatus(204)));
     }
 
     public static class RequestHeaders extends ResponseDefinitionTransformer {
