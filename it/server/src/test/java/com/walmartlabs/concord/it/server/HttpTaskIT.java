@@ -307,7 +307,6 @@ public class HttpTaskIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Success response.*", ab);
         assertLog(".*Response status code: 401*", ab);
         assertLog(".*Success response: false*", ab);
     }
@@ -449,6 +448,4 @@ public class HttpTaskIT extends AbstractServerIT {
             return false;
         }
     }
-
-
 }

@@ -36,25 +36,36 @@ public class ConcordApiClient extends ApiClient {
     }
 
     public ConcordApiClient setSessionToken(String token) {
-        ApiKeyAuth apiKey = (ApiKeyAuth) getAuthentications().get("session_key");
-        if (apiKey == null) {
+        if (token == null) {
+            return this;
+        }
+
+        ApiKeyAuth auth = (ApiKeyAuth) getAuthentications().get("session_key");
+        if (auth == null) {
             throw new RuntimeException("No session token authentication configured!");
         }
-        apiKey.setApiKey(token);
+        auth.setApiKey(token);
         // TODO: remove me when swagger-maven-plugin 3.1.8 is released (in 3.1.7 the param's name always 'session_key')
-        apiKey.setParamName("X-Concord-SessionToken");
+        auth.setParamName("X-Concord-SessionToken");
+
         return this;
     }
 
-    // TODO: remove me when swagger-maven-plugin 3.1.8 is released (in 3.1.7 the param's name always 'api_key')
     @Override
     public ApiClient setApiKey(String key) {
-        ApiKeyAuth apiKey = (ApiKeyAuth) getAuthentications().get("api_key");
-        if (apiKey == null) {
-            throw new RuntimeException("No session token authentication configured!");
+        if (key == null) {
+            return this;
         }
-        apiKey.setApiKey(key);
-        apiKey.setParamName("Authorization");
+
+        ApiKeyAuth auth = (ApiKeyAuth) getAuthentications().get("api_key");
+        if (auth == null) {
+            throw new RuntimeException("No API key authentication configured!");
+        }
+
+        auth.setApiKey(key);
+        // TODO: remove me when swagger-maven-plugin 3.1.8 is released (in 3.1.7 the param's name always 'api_key')
+        auth.setParamName("Authorization");
+
         return this;
     }
 }

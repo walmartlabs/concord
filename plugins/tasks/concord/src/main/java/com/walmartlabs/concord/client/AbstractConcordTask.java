@@ -41,6 +41,8 @@ public abstract class AbstractConcordTask implements Task {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    protected static final String API_KEY = "apiKey";
+
     @Inject
     ApiConfiguration apiCfg;
 
@@ -48,23 +50,34 @@ public abstract class AbstractConcordTask implements Task {
     ApiClientFactory apiClientFactory;
 
     protected <T> T withClient(Context ctx, CheckedFunction<ApiClient, T> f) throws Exception {
-        ApiClient c = overrideBaseUrl(apiClientFactory.create(ctx), ctx);
-        return f.apply(c);
+        ApiClientConfiguration cfg = ApiClientConfiguration.builder()
+                .baseUrl(getBaseUrl(ctx))
+                .apiKey(getApiKey(ctx))
+                .context(ctx)
+                .build();
+
+        return f.apply(apiClientFactory.create(cfg));
     }
 
     protected <T> T request(Context ctx, String uri, Map<String, Object> input, Class<T> entityType) throws Exception {
         return withClient(ctx, client -> {
             RequestBody body = createMultipart(input);
 
-            Request req = new Request.Builder()
+            Request.Builder b = new Request.Builder()
                     .url(client.getBasePath() + uri)
-                    .header("X-Concord-SessionToken", apiCfg.getSessionToken(ctx)) // TODO constants
                     .header("Accept", "*/*")
-                    .post(body)
-                    .build();
+                    .post(body);
+
+            // we're going to use the "raw" OkHttpClient, so we need to set up the auth manually
+            String apiKey = getApiKey(ctx);
+            if (apiKey != null) {
+                b.header("Authorization", apiKey);
+            } else {
+                b.header("X-Concord-SessionToken", apiCfg.getSessionToken(ctx)); // TODO constants
+            }
 
             OkHttpClient ok = client.getHttpClient();
-            Response resp = ok.newCall(req).execute();
+            Response resp = ok.newCall(b.build()).execute();
             assertResponse(resp);
 
             return objectMapper.readValue(resp.body().byteStream(), entityType);
@@ -82,6 +95,10 @@ public abstract class AbstractConcordTask implements Task {
                 throw new IOException("Request error: " + code);
             }
         }
+    }
+
+    private String getApiKey(Context ctx) {
+        return (String) ctx.getVariable(API_KEY);
     }
 
     // TODO move to ClientUtils?
@@ -181,17 +198,17 @@ public abstract class AbstractConcordTask implements Task {
         return contentType.contains("json");
     }
 
-    private static ApiClient overrideBaseUrl(ApiClient client, Context ctx) {
+    private static String getBaseUrl(Context ctx) {
         Object v = ctx.getVariable(Keys.BASE_URL_KEY);
         if (v == null) {
-            return client;
+            return null;
         }
 
         if (!(v instanceof String)) {
             throw new IllegalArgumentException("Expected a string value '" + Keys.BASE_URL_KEY + "', got: " + v);
         }
 
-        return client.setBasePath((String) v);
+        return (String) v;
     }
 
     @FunctionalInterface

@@ -37,14 +37,14 @@ public class SecretsTaskTest {
     public void testUpdate() throws Exception {
         SecretsTask t = new SecretsTask(new ApiClientFactory() {
             @Override
-            public ApiClient create(String sessionToken) {
-                return null;
-            }
-
-            @Override
             public ApiClient create(Context ctx) {
                 return new ConcordApiClient("http://localhost:8001")
                         .setApiKey("auBy4eDWrKWsyhiDp3AQiw");
+            }
+
+            @Override
+            public ApiClient create(ApiClientConfiguration cfg) {
+                return null;
             }
         });
 

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.common.GitUtils;
 import com.walmartlabs.concord.it.common.MockGitSshServer;
-import com.walmartlabs.concord.it.common.ServerClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

@@ -11,3 +11,5 @@ flows:
      response: "json"
      out: rsp
      ignoreErrors: true
+
+  - log: "Response status code: ${rsp.statusCode}"

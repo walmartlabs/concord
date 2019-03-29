@@ -66,6 +66,7 @@ public class ConcordTask extends AbstractConcordTask {
 
     private static final String ACTIVE_PROFILES_KEY = "activeProfiles";
     private static final String ARGUMENTS_KEY = "arguments";
+    private static final String BASE_URL_KEY = "baseUrl";
     private static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
     private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
     private static final String ENTRY_POINT_KEY = "entryPoint";
@@ -114,9 +115,12 @@ public class ConcordTask extends AbstractConcordTask {
                 if (ContextUtils.getBoolean(ctx, SUSPEND_MARKER, false)) {
                     continueAfterSuspend(ctx);
                 } else {
-                    String instanceId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
-                    start(ctx, instanceId);
+                    startChildProcess(ctx);
                 }
+                break;
+            }
+            case STARTEXTERNAL: {
+                startExternalProcess(ctx);
                 break;
             }
             case FORK: {
@@ -227,7 +231,22 @@ public class ConcordTask extends AbstractConcordTask {
         killMany(ctx, cfg, ids);
     }
 
-    private void start(Context ctx, String instanceId) throws Exception {
+    private void startExternalProcess(Context ctx) throws Exception {
+        // just the validation. AbstractConcordTask#withClient will take care of passing the API key into the client
+        String apiKey = (String) ctx.getVariable(API_KEY);
+        if (apiKey == null) {
+            throw new IllegalArgumentException("'" + API_KEY + "' is required to start a process on an external Concord instance");
+        }
+
+        start(ctx, null);
+    }
+
+    private void startChildProcess(Context ctx) throws Exception {
+        String parentInstanceId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
+        start(ctx, parentInstanceId);
+    }
+
+    private void start(Context ctx, String parentInstanceId) throws Exception {
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
 
         String org = (String) cfg.get(ORG_KEY);
@@ -252,8 +271,13 @@ public class ConcordTask extends AbstractConcordTask {
             throw new IllegalArgumentException("'" + PAYLOAD_KEY + "' and/or '" + PROJECT_KEY + "' are required");
         }
 
-        log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
-                project, repo, archive, sync, req);
+        if (parentInstanceId != null) {
+            log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
+                    project, repo, archive, sync, req);
+        } else {
+            log.info("Starting a new process (project={}, repository={}, archive={}, sync={}, req={}), on {}",
+                    project, repo, archive, sync, req, ctx.getVariable(BASE_URL_KEY));
+        }
 
         String targetUri = "/api/v1/process";
 
@@ -279,20 +303,25 @@ public class ConcordTask extends AbstractConcordTask {
         String startAt = getStartAt(cfg);
         addIfNotNull(input, "startAt", startAt);
 
-        input.put("parentInstanceId", instanceId);
+        addIfNotNull(input, "parentInstanceId", parentInstanceId);
 
         StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
 
-        String childId = resp.getInstanceId().toString();
-        log.info("Started a child process: {}", childId);
+        String processInstanceId = resp.getInstanceId().toString();
 
-        List<String> jobs = Collections.singletonList(childId);
+        if (parentInstanceId != null) {
+            log.info("Started a child process: {}", processInstanceId);
+        } else {
+            log.info("Started a process: {} on {}", processInstanceId, ctx.getVariable(BASE_URL_KEY));
+        }
+
+        List<String> jobs = Collections.singletonList(processInstanceId);
         ctx.setVariable(JOBS_KEY, jobs);
 
         if (sync) {
             boolean suspend = getBoolean(cfg, SUSPEND_KEY);
             if (suspend) {
-                log.info("Suspending the process until the child process ({}) is completed...", childId);
+                log.info("Suspending the process until the child process ({}) is completed...", processInstanceId);
                 suspend(ctx, jobs);
                 return;
             }
@@ -302,7 +331,7 @@ public class ConcordTask extends AbstractConcordTask {
 
             Object out = null;
             if (cfg.containsKey(OUT_VARS_KEY)) {
-                out = getOutVars(ctx, childId);
+                out = getOutVars(ctx, processInstanceId);
             }
             ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
         }
@@ -699,6 +728,7 @@ public class ConcordTask extends AbstractConcordTask {
     private enum Action {
 
         START,
+        STARTEXTERNAL,
         FORK,
         KILL
     }

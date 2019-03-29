@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -318,5 +318,36 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*color=RED.*", ab);
         assertLog(".*color=WHITE.*", ab);
         assertLog(".*Done.*\\[\\[.*\\], \\[.*\\]\\] is completed.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalApiToken() throws Exception {
+        String username = "user_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
+                .setUsername(username));
+
+        // ---
+
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskApiKey").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.myApiKey", cakr.getKey());
+
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Hello, Concord!.*", ab);
     }
 }

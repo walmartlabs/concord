@@ -2,8 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-tasks: new action `startExternal`. Can be used to start a
+new process on an external Concord instance.
+
 ### Changed
 
+- concord-client, concord-tasks: fixed a bug preventing `baseUrl`
+and `apiKey` parameters from being correctly applied;
 - http-tasks: correctly handle empty (204) responses;
 - concord-server: fixed a potential NPE when setting a new owner for
 projects without owner.
