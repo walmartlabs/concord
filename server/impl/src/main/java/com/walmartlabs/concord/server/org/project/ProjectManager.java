@@ -116,10 +116,11 @@ public class ProjectManager {
             throw new ValidationErrorsException("Project not found: " + projectId);
         }
 
-        UUID ownerId = getOwner(entry.getOwner(), null);
+        UUID currentOwnerId = e.getOwner() != null ? e.getOwner().id() : null;
+        UUID updatedOwnerId = getOwner(entry.getOwner(), null);
 
         ResourceAccessLevel level = ResourceAccessLevel.WRITER;
-        if (ownerId != null && !ownerId.equals(e.getOwner().id())) {
+        if (updatedOwnerId != null && !updatedOwnerId.equals(currentOwnerId)) {
             level = ResourceAccessLevel.OWNER;
         }
 
@@ -131,7 +132,7 @@ public class ProjectManager {
 
         projectDao.tx(tx -> {
             projectDao.update(tx, orgId, projectId, entry.getVisibility(), entry.getName(),
-                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload(), ownerId, entry.getMeta());
+                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload(), updatedOwnerId, entry.getMeta());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);

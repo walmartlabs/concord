@@ -1,5 +1,12 @@
 # Change log
 
+## [Unreleased]
+
+- concord-server: fixed a potential NPE when setting a new owner for
+projects without owner.
+
+
+
 ## [1.13.1] - 2019-03-27
 
 ### Changed
