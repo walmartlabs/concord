@@ -44,6 +44,7 @@ public class RunnerCommandBuilder {
     private Path dependencies;
     private Path runnerPath;
     private boolean debug;
+    private String logLevel;
 
     public RunnerCommandBuilder() {
         this.objectMapper = new ObjectMapper();
@@ -94,6 +95,11 @@ public class RunnerCommandBuilder {
         return this;
     }
 
+    public RunnerCommandBuilder logLevel(String logLevel) {
+        this.logLevel = logLevel;
+        return this;
+    }
+
     public String[] build() {
         List<String> l = new ArrayList<>();
 
@@ -126,6 +132,10 @@ public class RunnerCommandBuilder {
 
         if (debug) {
             l.add("-Ddebug=true");
+        }
+
+        if (logLevel != null) {
+            l.add("-DlogLevel=" + logLevel);
         }
 
         // Runner's security manager

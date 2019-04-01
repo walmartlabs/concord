@@ -1,0 +1,10 @@
+configuration:
+  runner:
+    logLevel: "WARN"
+
+flows:
+  default:
+    - "${log.debug('I AM A DEBUG MESSAGE')}" # won't show
+    - "${log.info('I AM AN INFO MESSAGE')}" # won't show
+    - "${log.warn('I AM A WARNING')}" # will be printed out
+    - "${log.error('I AM AN ERROR')}" # will be printed out

@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent, concord-runner: support for the configurable
+`logLevel`.
+
+ 
+
 ## [1.14.0] - 2019-03-31
 
 ### Added

@@ -19,6 +19,8 @@
         <appender-ref ref="PROCESS_STDOUT"/>
     </logger>
 
+    <logger name="com.walmartlabs.concord.plugins.log" level="${logLevel:-INFO}"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
