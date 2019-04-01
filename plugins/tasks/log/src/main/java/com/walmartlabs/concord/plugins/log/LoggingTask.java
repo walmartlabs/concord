@@ -32,6 +32,10 @@ public class LoggingTask implements Task {
 
     public static final Logger log = LoggerFactory.getLogger(LoggingTask.class);
 
+    public void debug(String s) {
+        log.debug(s);
+    }
+
     public void info(String s) {
         log.info(s);
     }

@@ -309,9 +309,7 @@ public class Agent {
                 cfg.getAgentJavaCmd(),
                 cfg.getDependencyListsDir(),
                 cfg.getRunnerPath(),
-                cfg.isRunnerSecurityManagerEnabled(),
-                cfg.getMaxPreforkAge(),
-                cfg.getMaxPreforkCount());
+                cfg.isRunnerSecurityManagerEnabled());
 
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
 

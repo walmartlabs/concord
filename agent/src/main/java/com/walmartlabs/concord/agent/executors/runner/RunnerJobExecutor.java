@@ -276,6 +276,7 @@ public class RunnerJobExecutor {
                 .securityManagerEnabled(cfg.runnerSecurityManagerEnabled)
                 .dependencies(depsFile)
                 .debug(job.isDebugMode())
+                .logLevel(getLogLevel(job))
                 .runnerPath(cfg.runnerPath.toAbsolutePath());
 
         return runner.build();
@@ -390,6 +391,20 @@ public class RunnerJobExecutor {
         return new ObjectMapper().readValue(policyFile.toFile(), Map.class);
     }
 
+    @SuppressWarnings("unchecked")
+    private static String getLogLevel(RunnerJob job) {
+        if (job.getCfg() == null) {
+            return null;
+        }
+
+        Map<String, Object> runnerCfg = (Map<String, Object>) job.getCfg().getOrDefault("runner", Collections.emptyMap());
+        String logLevel = (String) runnerCfg.get("logLevel");
+        if (logLevel == null) {
+            return null;
+        }
+        return logLevel.toUpperCase();
+    }
+
     private static boolean canUsePrefork(RunnerJob job) {
         Path workDir = job.getPayloadDir();
 
@@ -472,17 +487,13 @@ public class RunnerJobExecutor {
         private final Path dependencyListDir;
         private final Path runnerPath;
         private boolean runnerSecurityManagerEnabled;
-        private final long maxPreforkAge;
-        private final int maxPreforkCount;
 
         public RunnerJobExecutorConfiguration(String agentId,
                                               String serverApiBaseUrl,
                                               String agentJavaCmd,
                                               Path dependencyListDir,
                                               Path runnerPath,
-                                              boolean isRunnerSecurityManagerEnabled,
-                                              long maxPreforkAge,
-                                              int maxPreforkCount) {
+                                              boolean isRunnerSecurityManagerEnabled) {
 
             this.agentId = agentId;
             this.serverApiBaseUrl = serverApiBaseUrl;
@@ -490,8 +501,6 @@ public class RunnerJobExecutor {
             this.dependencyListDir = dependencyListDir;
             this.runnerPath = runnerPath;
             this.runnerSecurityManagerEnabled = isRunnerSecurityManagerEnabled;
-            this.maxPreforkAge = maxPreforkAge;
-            this.maxPreforkCount = maxPreforkCount;
         }
 
         public Path getRunnerPath() {

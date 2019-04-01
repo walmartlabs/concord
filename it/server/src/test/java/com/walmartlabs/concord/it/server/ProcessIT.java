@@ -645,6 +645,36 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*test from file.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testRunnerLogLevel() throws Exception {
+        // prepare the payload
+
+        byte[] payload = archive(ProcessIT.class.getResource("runnerLogLevel").toURI());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // get the name of the agent's log file
+
+        assertNotNull(pir.getLogFileName());
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertNoLog(".*I AM A DEBUG MESSAGE.*", ab);
+        assertNoLog(".*I AM AN INFO MESSAGE.*", ab);
+        assertLog(".*I AM A WARNING.*", ab);
+        assertLog(".*I AM AN ERROR.*", ab);
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);
