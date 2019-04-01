@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
+import com.walmartlabs.concord.server.user.UserInfoProvider;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,7 +31,7 @@ import javax.inject.Named;
 public class InitiatorUserInfoProcessor extends UserInfoProcessor {
 
     @Inject
-    public InitiatorUserInfoProcessor(LdapManager ldapManager, Signing signing) {
-        super(InternalConstants.Request.INITIATOR_KEY, ldapManager, signing);
+    public InitiatorUserInfoProcessor(UserInfoProvider userInfoProvider, Signing signing) {
+        super(InternalConstants.Request.INITIATOR_KEY, userInfoProvider, signing);
     }
 }

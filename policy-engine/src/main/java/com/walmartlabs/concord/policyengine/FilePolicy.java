@@ -29,7 +29,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
-import static  com.walmartlabs.concord.policyengine.Utils.matchAny;
+import static com.walmartlabs.concord.policyengine.Utils.matchAny;
 
 public class FilePolicy {
 

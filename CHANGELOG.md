@@ -4,6 +4,8 @@
 
 ### Added
 
+- policy-engine, concord-server: support for entity owner-based
+policies;
 - concord-tasks: new action `startExternal`. Can be used to start a
 new process on an external Concord instance.
 

@@ -32,11 +32,8 @@ import java.util.Optional;
 public class TaskRule implements Serializable {
 
     private final String msg;
-
     private final String taskName;
-
     private final String method;
-
     private final List<Param> params;
 
     @JsonCreator
@@ -45,6 +42,7 @@ public class TaskRule implements Serializable {
             @JsonProperty("name") String taskName,
             @JsonProperty("method") String method,
             @JsonProperty("params") List<Param> params) {
+
         this.msg = msg;
         this.taskName = taskName;
         this.method = method;

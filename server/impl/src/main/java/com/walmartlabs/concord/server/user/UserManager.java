@@ -30,22 +30,22 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.user.UserInfoProducer.UserInfo;
+import static com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 
 @Named
 public class UserManager {
 
     private final UserDao userDao;
     private final TeamDao teamDao;
-    private final Map<UserType, UserInfoProducer> userInfoProducers;
+    private final Map<UserType, UserInfoProvider> userInfoProviders;
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao, List<UserInfoProducer> producers) {
+    public UserManager(UserDao userDao, TeamDao teamDao, List<UserInfoProvider> producers) {
         this.userDao = userDao;
         this.teamDao = teamDao;
 
-        this.userInfoProducers = new HashMap<>();
-        producers.forEach(p -> this.userInfoProducers.put(p.getUserType(), p));
+        this.userInfoProviders = new HashMap<>();
+        producers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
     }
 
     public UserEntry getOrCreate(String username, UserType type) {
@@ -74,13 +74,10 @@ public class UserManager {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UserInfo userInfo = getInfo(username, type);
-        if (userInfo == null) {
-            throw new ConcordApplicationException("User not found: " + username);
-        }
+        UserInfo i = getInfo(username, type);
 
-        String dn = displayName != null ? displayName : userInfo.displayName();
-        String em = email != null ? email : userInfo.email();
+        String dn = displayName != null ? displayName : (i != null ? i.displayName() : null);
+        String em = email != null ? email : (i != null ? i.email() : null);
         UUID id = userDao.insert(username, dn, em, type);
 
         // add the new user to the default org/team
@@ -97,11 +94,11 @@ public class UserManager {
     }
 
     public UserInfo getInfo(String username, UserType type) {
-        UserInfoProducer p = userInfoProducers.get(type);
+        UserInfoProvider p = userInfoProviders.get(type);
         if (p == null) {
-            return UserInfo.EMPTY;
+            throw new ConcordApplicationException("Unknown user account type: " + type + " (username: " + username + ")");
         }
 
-        return p.getInfo(username);
+        return p.getInfo(null, username);
     }
 }

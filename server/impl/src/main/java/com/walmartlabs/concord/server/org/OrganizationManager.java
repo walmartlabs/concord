@@ -28,6 +28,10 @@ import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
+import com.walmartlabs.concord.server.policy.EntityAction;
+import com.walmartlabs.concord.server.policy.EntityType;
+import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -49,17 +53,20 @@ public class OrganizationManager {
     public static final UUID DEFAULT_ORG_ID = UUID.fromString("0fac1b18-d179-11e7-b3e7-d7df4543ed4f");
     public static final String DEFAULT_ORG_NAME = "Default";
 
+    private final PolicyManager policyManager;
     private final OrganizationDao orgDao;
     private final TeamDao teamDao;
     private final UserManager userManager;
     private final AuditLog auditLog;
 
     @Inject
-    public OrganizationManager(OrganizationDao orgDao,
+    public OrganizationManager(PolicyManager policyManager,
+                               OrganizationDao orgDao,
                                TeamDao teamDao,
                                UserManager userManager,
                                AuditLog auditLog) {
 
+        this.policyManager = policyManager;
         this.orgDao = orgDao;
         this.teamDao = teamDao;
         this.userManager = userManager;
@@ -69,14 +76,16 @@ public class OrganizationManager {
     public UUID create(OrganizationEntry entry) {
         assertAdmin();
 
-        UUID ownerId = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getId());
+        UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
+
+        policyManager.checkEntity(null, null, EntityType.ORGANIZATION, EntityAction.CREATE, owner, PolicyUtils.toMap(entry));
 
         UUID id = orgDao.txResult(tx -> {
-            UUID orgId = orgDao.insert(entry.getName(), ownerId, entry.getVisibility(), entry.getMeta(), entry.getCfg());
+            UUID orgId = orgDao.insert(entry.getName(), owner.getId(), entry.getVisibility(), entry.getMeta(), entry.getCfg());
 
             // ...add the owner user to the default new as an OWNER
             UUID teamId = teamDao.insert(tx, orgId, TeamManager.DEFAULT_TEAM_NAME, "Default team");
-            teamDao.upsertUser(tx, teamId, ownerId, TeamRole.OWNER);
+            teamDao.upsertUser(tx, teamId, owner.getId(), TeamRole.OWNER);
 
             return orgId;
         });
@@ -93,7 +102,11 @@ public class OrganizationManager {
     public void update(UUID orgId, OrganizationEntry entry) {
         OrganizationEntry prevEntry = assertUpdateAccess(orgId);
 
-        UUID ownerId = getOwner(entry.getOwner(), null);
+        UserEntry owner = getOwner(entry.getOwner(), null);
+
+        policyManager.checkEntity(orgId, null, EntityType.ORGANIZATION, EntityAction.UPDATE, owner, PolicyUtils.toMap(entry));
+
+        UUID ownerId = owner != null ? owner.getId() : null;
         orgDao.update(orgId, entry.getName(), ownerId, entry.getVisibility(), entry.getMeta(), entry.getCfg());
 
         OrganizationEntry newEntry = orgDao.get(orgId);
@@ -181,7 +194,8 @@ public class OrganizationManager {
     private OrganizationEntry assertUpdateAccess(UUID orgId) {
         OrganizationEntry entry = assertExisting(orgId, null);
 
-        UUID ownerId = getOwner(entry.getOwner(), null);
+        UserEntry owner = getOwner(entry.getOwner(), null);
+        UUID ownerId = owner != null ? owner.getId() : null;
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.getId().equals(ownerId)) {
             return entry;
@@ -194,27 +208,24 @@ public class OrganizationManager {
     }
 
     private static void assertAdmin() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
         if (!Roles.isAdmin()) {
             throw new AuthorizationException("Only admins are allowed to update organizations");
         }
     }
 
-    private UUID getOwner(EntityOwner owner, UUID defaultOwner) {
+    private UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
         if (owner == null) {
             return defaultOwner;
         }
 
         if (owner.id() != null) {
             return userManager.get(owner.id())
-                    .map(UserEntry::getId)
                     .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
         }
 
         if (owner.username() != null) {
             UserType t = owner.userType() != null ? owner.userType() : UserPrincipal.assertCurrent().getType();
-            return userManager.getOrCreate(owner.username(), t)
-                    .getId();
+            return userManager.getOrCreate(owner.username(), t);
         }
 
         return defaultOwner;

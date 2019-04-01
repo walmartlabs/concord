@@ -21,24 +21,17 @@ package com.walmartlabs.concord.policyengine;
  */
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRootName;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
 public class PolicyEngineRules {
 
     private final PolicyRules<DependencyRule> dependencyRules;
-
     private final PolicyRules<FileRule> fileRules;
-
     private final PolicyRules<TaskRule> taskRules;
-
     private final WorkspaceRule workspaceRule;
-
     private final ContainerRule containerRules;
-
     private final QueueRule queueRules;
-
     private final ProtectedTasksRule protectedTasksRules;
+    private final PolicyRules<EntityRule> entityRules;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -46,7 +39,8 @@ public class PolicyEngineRules {
                              @JsonProperty("workspace") WorkspaceRule workspaceRule,
                              @JsonProperty("container") ContainerRule containerRules,
                              @JsonProperty("queue") QueueRule queueRules,
-                             @JsonProperty("protectedTask") ProtectedTasksRule protectedTasksRules) {
+                             @JsonProperty("protectedTask") ProtectedTasksRule protectedTasksRules,
+                             @JsonProperty("entity") PolicyRules<EntityRule> entityRules) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -55,6 +49,7 @@ public class PolicyEngineRules {
         this.containerRules = containerRules;
         this.queueRules = queueRules;
         this.protectedTasksRules = protectedTasksRules;
+        this.entityRules = entityRules;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -85,6 +80,10 @@ public class PolicyEngineRules {
         return protectedTasksRules;
     }
 
+    public PolicyRules<EntityRule> getEntityRules() {
+        return entityRules;
+    }
+
     @Override
     public String toString() {
         return "PolicyEngineRules{" +
@@ -95,6 +94,7 @@ public class PolicyEngineRules {
                 ", containerRules=" + containerRules +
                 ", queueRules=" + queueRules +
                 ", protectedTasksRules=" + protectedTasksRules +
+                ", entityRules=" + entityRules +
                 '}';
     }
 }

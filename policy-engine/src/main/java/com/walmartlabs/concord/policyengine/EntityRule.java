@@ -22,36 +22,56 @@ package com.walmartlabs.concord.policyengine;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Map;
 
-public class ProcessTimeoutRule implements Serializable {
+public class EntityRule implements Serializable {
 
     private final String msg;
-    private final String max;
+
+    private final String entity;
+
+    private final String action;
+
+    private final Map<String, Object> conditions;
 
     @JsonCreator
-    public ProcessTimeoutRule(@JsonProperty("msg") String msg,
-                              @JsonProperty("max") String max) {
+    public EntityRule(
+            @JsonProperty("msg") String msg,
+            @JsonProperty("entity") String entity,
+            @JsonProperty("action") String action,
+            @JsonProperty("conditions") Map<String, Object> conditions) {
 
         this.msg = msg;
-        this.max = max;
+        this.entity = entity;
+        this.action = action;
+        this.conditions = conditions;
     }
 
     public String getMsg() {
         return msg;
     }
 
-    public String getMax() {
-        return max;
+    public String getEntity() {
+        return entity;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public Map<String, Object> getConditions() {
+        return conditions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
-                .append("msg", msg)
-                .append("max", max)
-                .toString();
+        return "EntityRule{" +
+                "msg='" + msg + '\'' +
+                ", entity='" + entity + '\'' +
+                ", action='" + action + '\'' +
+                ", conditions=" + conditions +
+                '}';
     }
 }

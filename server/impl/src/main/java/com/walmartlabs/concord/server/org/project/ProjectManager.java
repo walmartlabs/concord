@@ -26,6 +26,10 @@ import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.policy.EntityAction;
+import com.walmartlabs.concord.server.policy.EntityType;
+import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -44,6 +48,7 @@ import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 @Named
 public class ProjectManager {
 
+    private final PolicyManager policyManager;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final ProjectRepositoryManager projectRepositoryManager;
@@ -54,7 +59,8 @@ public class ProjectManager {
     private final UserManager userManager;
 
     @Inject
-    public ProjectManager(ProjectDao projectDao,
+    public ProjectManager(PolicyManager policyManager,
+                          ProjectDao projectDao,
                           RepositoryDao repositoryDao,
                           ProjectRepositoryManager projectRepositoryManager,
                           ProjectAccessManager accessManager,
@@ -63,6 +69,7 @@ public class ProjectManager {
                           EncryptedProjectValueManager encryptedValueManager,
                           UserManager userManager) {
 
+        this.policyManager = policyManager;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.projectRepositoryManager = projectRepositoryManager;
@@ -81,14 +88,15 @@ public class ProjectManager {
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         assertSecrets(orgId, repos);
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        UUID ownerId = getOwner(entry.getOwner(), p.getId());
+        UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
+
+        policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, orgName, entry));
 
         UUID id = projectDao.txResult(tx -> {
             boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : false;
             byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
 
-            UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), ownerId, entry.getCfg(),
+            UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
                     entry.getVisibility(), acceptsRawPayload, encryptedKey, entry.getMeta());
 
             if (repos != null) {
@@ -116,8 +124,11 @@ public class ProjectManager {
             throw new ValidationErrorsException("Project not found: " + projectId);
         }
 
+        UserEntry owner = getOwner(entry.getOwner(), null);
+        policyManager.checkEntity(e.getOrgId(), projectId, EntityType.PROJECT, EntityAction.UPDATE, owner, PolicyUtils.toMap(e.getOrgId(), e.getOrgName(), entry));
+
         UUID currentOwnerId = e.getOwner() != null ? e.getOwner().id() : null;
-        UUID updatedOwnerId = getOwner(entry.getOwner(), null);
+        UUID updatedOwnerId = owner != null ? owner.getId() : null;
 
         ResourceAccessLevel level = ResourceAccessLevel.WRITER;
         if (updatedOwnerId != null && !updatedOwnerId.equals(currentOwnerId)) {
@@ -178,20 +189,18 @@ public class ProjectManager {
         return projectDao.list(orgId, userId, PROJECTS.PROJECT_NAME, true);
     }
 
-    private UUID getOwner(EntityOwner owner, UUID defaultOwner) {
+    private UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
         if (owner == null) {
             return defaultOwner;
         }
 
         if (owner.id() != null) {
             return userManager.get(owner.id())
-                    .map(UserEntry::getId)
                     .orElseThrow(() -> new ValidationErrorsException("User not found: " + owner.id()));
         }
 
         if (owner.username() != null) {
-            return userManager.getOrCreate(owner.username(), UserType.LDAP)
-                    .getId();
+            return userManager.getOrCreate(owner.username(), UserType.LDAP);
         }
 
         return defaultOwner;

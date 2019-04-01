@@ -34,11 +34,8 @@ public class FileRule implements Serializable {
     private final String msg;
 
     private final Long maxSizeInBytes;
-
     private final String maxSize;
-
     private final Type type;
-
     private final List<String> names;
 
     @JsonCreator
@@ -47,6 +44,7 @@ public class FileRule implements Serializable {
             @JsonProperty("maxSize") String maxSize,
             @JsonProperty("type") String type,
             @JsonProperty("names") List<String> names) {
+
         this.msg = msg;
         this.maxSizeInBytes = Utils.parseFileSize(maxSize);
         this.maxSize = maxSize;

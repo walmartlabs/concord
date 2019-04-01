@@ -39,6 +39,7 @@ public class PolicyEngine {
     private final ForkDepthPolicy forkDepthPolicy;
     private final ProcessTimeoutPolicy processTimeoutPolicy;
     private final ProtectedTasksPolicy protectedTasksPolicy;
+    private final EntityPolicy entityPolicy;
 
     public PolicyEngine(Map<String, Object> rules) {
         this(objectMapper.convertValue(rules, PolicyEngineRules.class));
@@ -58,6 +59,7 @@ public class PolicyEngine {
         this.processTimeoutPolicy = new ProcessTimeoutPolicy(qr.getProcessTimeoutRule());
 
         this.protectedTasksPolicy = new ProtectedTasksPolicy(rules.getProtectedTasksRules());
+        this.entityPolicy = new EntityPolicy(rules.getEntityRules());
     }
 
     public DependencyPolicy getDependencyPolicy() {
@@ -98,6 +100,10 @@ public class PolicyEngine {
 
     public ProtectedTasksPolicy getProtectedTasksPolicy() {
         return protectedTasksPolicy;
+    }
+
+    public EntityPolicy getEntityPolicy() {
+        return entityPolicy;
     }
 
     private static QueueRule getQueueRule(PolicyEngineRules rules) {

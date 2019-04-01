@@ -43,6 +43,7 @@ public class DependencyRule implements Serializable {
             @JsonProperty("artifactId") String artifactId,
             @JsonProperty("fromVersion") String fromVersion,
             @JsonProperty("toVersion") String toVersion) {
+
         this.msg = msg;
         this.scheme = scheme;
         this.groupId = groupId;

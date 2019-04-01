@@ -37,12 +37,18 @@ import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
+import com.walmartlabs.concord.server.policy.EntityAction;
+import com.walmartlabs.concord.server.policy.EntityType;
+import com.walmartlabs.concord.server.policy.PolicyManager;
+import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserEntry;
+import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -62,6 +68,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
 @Named
 public class SecretManager {
 
+    private final PolicyManager policyManager;
     private final AuditLog auditLog;
     private final OrganizationManager orgManager;
     private final ProcessQueueDao processQueueDao;
@@ -69,16 +76,20 @@ public class SecretManager {
     private final SecretStoreConfiguration secretCfg;
     private final SecretStoreProvider secretStoreProvider;
     private final UserDao userDao;
+    private final UserManager userManager;
 
     @Inject
-    public SecretManager(AuditLog auditLog,
+    public SecretManager(PolicyManager policyManager,
+                         AuditLog auditLog,
                          OrganizationManager orgManager,
                          ProcessQueueDao processQueueDao,
                          SecretDao secretDao,
                          SecretStoreConfiguration secretCfg,
                          SecretStoreProvider secretStoreProvider,
-                         UserDao userDao) {
+                         UserDao userDao,
+                         UserManager userManager) {
 
+        this.policyManager = policyManager;
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
         this.orgManager = orgManager;
@@ -86,6 +97,7 @@ public class SecretManager {
         this.secretStoreProvider = secretStoreProvider;
         this.auditLog = auditLog;
         this.processQueueDao = processQueueDao;
+        this.userManager = userManager;
     }
 
     @WithTimer
@@ -428,7 +440,11 @@ public class SecretManager {
 
         storeType = storeType.toLowerCase();
 
-        UUID id = secretDao.insert(orgId, projectId, name, getOwnerId(), type, encryptedByType, storeType, visibility);
+        UserEntry owner = UserPrincipal.assertCurrent().getUser();
+        policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
+                PolicyUtils.toMap(orgId, name, type, visibility, storeType));
+
+        UUID id = secretDao.insert(orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility);
         try {
             getSecretStore(storeType).store(id, ab);
         } catch (Exception e) {
@@ -580,11 +596,6 @@ public class SecretManager {
             return SecretEncryptedByType.SERVER_KEY;
         }
         return SecretEncryptedByType.PASSWORD;
-    }
-
-    private static UUID getOwnerId() {
-        UserPrincipal p = UserPrincipal.assertCurrent();
-        return p.getId();
     }
 
     private SecretStore getSecretStore(String type) {

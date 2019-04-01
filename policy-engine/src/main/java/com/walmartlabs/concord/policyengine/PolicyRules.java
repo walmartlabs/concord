@@ -39,6 +39,7 @@ public class PolicyRules<E extends Serializable> implements Serializable {
             @JsonProperty("allow") List<E> allow,
             @JsonProperty("warn") List<E> warn,
             @JsonProperty("deny") List<E> deny) {
+
         this.allow = Optional.ofNullable(allow).orElse(Collections.emptyList());
         this.warn = Optional.ofNullable(warn).orElse(Collections.emptyList());
         this.deny = Optional.ofNullable(deny).orElse(Collections.emptyList());

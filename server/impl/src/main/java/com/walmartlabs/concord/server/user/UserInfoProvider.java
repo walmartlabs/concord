@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,21 +20,32 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-public interface UserInfoProducer {
+public interface UserInfoProvider {
 
     UserType getUserType();
 
-    UserInfo getInfo(String username);
+    UserInfo getCurrentUserInfo();
 
-    @Value.Immutable
-    interface UserInfo {
+    UserInfo getInfo(UUID id, String username);
 
-        UserInfo EMPTY = UserInfo.builder().build();
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    interface BaseUserInfo {
+
+        @Nullable
+        UUID id();
+
+        @Nullable
+        String username();
 
         @Nullable
         String displayName();
@@ -43,7 +54,16 @@ public interface UserInfoProducer {
         String email();
 
         @Nullable
+        Set<String> groups();
+
+        @Nullable
         Map<String, Object> attributes();
+    }
+
+    @Value.Immutable
+    @JsonSerialize(as = ImmutableUserInfo.class)
+    @JsonDeserialize(as = ImmutableUserInfo.class)
+    interface UserInfo extends BaseUserInfo {
 
         static ImmutableUserInfo.Builder builder() {
             return ImmutableUserInfo.builder();

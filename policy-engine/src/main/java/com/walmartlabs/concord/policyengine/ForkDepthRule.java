@@ -34,6 +34,7 @@ public class ForkDepthRule implements Serializable {
     @JsonCreator
     public ForkDepthRule(@JsonProperty("msg") String msg,
                          @JsonProperty("max") int max) {
+
         this.msg = msg;
         this.max = max;
     }

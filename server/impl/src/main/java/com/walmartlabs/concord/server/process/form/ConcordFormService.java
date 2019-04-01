@@ -27,7 +27,9 @@ import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.security.ldap.LdapManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.user.UserInfoProvider.UserInfo;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.DefaultFormService;
 import io.takari.bpm.form.DefaultFormService.ResumeHandler;
@@ -62,7 +64,7 @@ public class ConcordFormService {
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final FormAccessManager formAccessManager;
-    private final LdapManager ldapManager;
+    private final UserInfoProvider userInfoProvider;
     private final Chain resumePipeline;
 
     @Inject
@@ -70,13 +72,13 @@ public class ConcordFormService {
             PayloadManager payloadManager,
             ProcessStateManager stateManager,
             FormAccessManager formAccessManager,
-            LdapManager ldapManager,
+            UserInfoProvider userInfoProvider,
             ResumePipeline resumePipeline) {
 
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.formAccessManager = formAccessManager;
-        this.ldapManager = ldapManager;
+        this.userInfoProvider = userInfoProvider;
         this.resumePipeline = resumePipeline;
     }
 
@@ -188,7 +190,8 @@ public class ConcordFormService {
         // optionally save the user who submitted the form
         boolean saveSubmittedBy = getBoolean(form.getOptions(), InternalConstants.Forms.SAVE_SUBMITTED_BY_KEY, false);
         if (saveSubmittedBy) {
-            merged.put(InternalConstants.Forms.SUBMITTED_BY_KEY, ldapManager.getCurrentUserInfo());
+            UserInfo i = userInfoProvider.getCurrentUserInfo();
+            merged.put(InternalConstants.Forms.SUBMITTED_BY_KEY, i);
         }
 
         try {
