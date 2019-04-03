@@ -25,9 +25,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserInfoProvider.BaseUserInfo;
+import com.walmartlabs.concord.server.user.UserManager;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,18 +42,18 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
     private static final Logger log = LoggerFactory.getLogger(UserInfoProcessor.class);
 
     private final String key;
-    private final UserInfoProvider userInfoProvider;
+    private final UserManager userManager;
     private final Signing signing;
 
-    public UserInfoProcessor(String key, UserInfoProvider userInfoProvider, Signing signing) {
+    public UserInfoProcessor(String key, UserManager userManager, Signing signing) {
         this.key = key;
-        this.userInfoProvider = userInfoProvider;
+        this.userManager = userManager;
         this.signing = signing;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        BaseUserInfo info = userInfoProvider.getCurrentUserInfo();
+        BaseUserInfo info = userManager.getCurrentUserInfo();
 
         if (signing.isEnabled()) {
             info = sign(info);

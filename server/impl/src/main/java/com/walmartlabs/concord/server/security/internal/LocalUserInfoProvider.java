@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.security.internal;
  * =====
  */
 
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
@@ -48,18 +47,13 @@ public class LocalUserInfoProvider implements UserInfoProvider {
     }
 
     @Override
-    public UserInfo getCurrentUserInfo() {
-        UserPrincipal p = UserPrincipal.getCurrent();
-        if (p == null) {
-            return null;
-        }
-        return getInfo(p.getId(), null);
-    }
-
-    @Override
     public UserInfo getInfo(UUID id, String username) {
         if (id == null) {
-            id = userDao.getId(username);
+            id = userDao.getId(username, UserType.LOCAL);
+        }
+
+        if (id == null) {
+            return null;
         }
 
         UserEntry e = userDao.get(id);

@@ -93,12 +93,26 @@ public class UserManager {
         return userDao.isInOrganization(userId, orgId);
     }
 
-    public UserInfo getInfo(String username, UserType type) {
-        UserInfoProvider p = userInfoProviders.get(type);
-        if (p == null) {
-            throw new ConcordApplicationException("Unknown user account type: " + type + " (username: " + username + ")");
+    public UserInfo getCurrentUserInfo() {
+        UserPrincipal u = UserPrincipal.getCurrent();
+        if (u == null) {
+            return null;
         }
 
+        UserInfoProvider p = assertProvider(u.getType());
+        return p.getInfo(u.getId(), u.getUsername());
+    }
+
+    public UserInfo getInfo(String username, UserType type) {
+        UserInfoProvider p = assertProvider(type);
         return p.getInfo(null, username);
+    }
+
+    private UserInfoProvider assertProvider(UserType type) {
+        UserInfoProvider p = userInfoProviders.get(type);
+        if (p == null) {
+            throw new ConcordApplicationException("Unknown user account type: " + type);
+        }
+        return p;
     }
 }
