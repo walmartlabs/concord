@@ -20,6 +20,7 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.KV;
@@ -58,7 +59,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
 
         Map<String, Object> opts = s.getOptions();
         if (opts != null && opts.get("error") != null && opts.get("retry") != null) {
-            throw new YamlConverterException("'error' and 'retry' options are mutually exclusive");
+            throw new YamlConverterException("'error' and 'retry' options are mutually exclusive @ " + s.getLocation());
         }
 
         applyErrorBlock(ctx, c, id, s.getOptions());
@@ -96,7 +97,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         // sleep
         String retryDelayId = ctx.nextId();
         c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, retryDelayId, "${__retryUtils.isRetryCountExceeded(execution, " + retryParams.get("times") + ")}"));
-        c.addElement(new ServiceTask(retryDelayId, ExpressionType.SIMPLE, "${__retryUtils.sleep(" + getRetryDelay(retryParams) + ")}", null, null, true));
+        c.addElement(new ServiceTask(retryDelayId, ExpressionType.SIMPLE, "${__retryUtils.sleep(" + getRetryDelay(retryParams, s.getLocation()) + ")}", null, null, true));
 
         // retry task
         String retryTaskId = ctx.nextId();
@@ -136,14 +137,14 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         return toVarMapping(ConfigurationUtils.deepMerge(originalInVars, retryInVars));
     }
 
-    private static long getRetryDelay(Map<String, Object> params) throws YamlConverterException {
+    private static long getRetryDelay(Map<String, Object> params, JsonLocation loc) throws YamlConverterException {
         Object v = params.get("delay");
         if (v == null) {
             return DEFAULT_DELAY;
         }
 
         if (!(v instanceof Integer)) {
-            throw new YamlConverterException("Invalid 'delay' value. Expected an integer, got: " + v);
+            throw new YamlConverterException("Invalid 'delay' value. Expected an integer, got: " + v + " @ " + loc);
         }
 
         return TimeUnit.SECONDS.toMillis((int) v);
@@ -212,7 +213,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
                 }
             }
 
-            throw new RuntimeException("retry count exceeded");
+            throw new RuntimeException("Retry count exceeded");
         }
 
         public void inc(ExecutionContext ctx) {
@@ -242,7 +243,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
                 return (List<E>) v;
             }
 
-            throw new IllegalArgumentException("expected list with name '" + name + "', but got: " + v);
+            throw new IllegalArgumentException("Expected a list with name '" + name + "', got: " + v);
         }
 
         private static <E> E getLastVariable(ExecutionContext ctx, String name, E defaultValue) {
