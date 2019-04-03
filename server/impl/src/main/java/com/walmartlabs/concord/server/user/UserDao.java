@@ -165,11 +165,28 @@ public class UserDao extends AbstractDao {
     }
 
     public UUID getId(String username) {
+        return getId(username, null);
+    }
+
+    public UUID getId(String username, UserType type) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(USERS.USER_ID)
+            SelectConditionStep<Record1<UUID>> q = tx.select(USERS.USER_ID)
                     .from(USERS)
-                    .where(USERS.USERNAME.eq(username))
-                    .fetchOne(USERS.USER_ID);
+                    .where(USERS.USERNAME.eq(username));
+
+            if (type != null) {
+                q.and(USERS.USER_TYPE.eq(type.toString()));
+            }
+
+            return q.fetchOne(USERS.USER_ID);
+        }
+    }
+
+    public String getUsername(UUID id) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(USERS.USERNAME).from(USERS)
+                    .where(USERS.USER_ID.eq(id))
+                    .fetchOne(USERS.USERNAME);
         }
     }
 

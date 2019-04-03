@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
-import com.walmartlabs.concord.server.user.UserInfoProvider;
+import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,7 +31,7 @@ import javax.inject.Named;
 public class CurrentUserInfoProcessor extends UserInfoProcessor {
 
     @Inject
-    public CurrentUserInfoProcessor(UserInfoProvider userInfoProvider, Signing signing) {
-        super(InternalConstants.Request.CURRENT_USER_KEY, userInfoProvider, signing);
+    public CurrentUserInfoProcessor(UserManager userManager, Signing signing) {
+        super(InternalConstants.Request.CURRENT_USER_KEY, userManager, signing);
     }
 }

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.ConcordApplicationException;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserType;
 import org.slf4j.Logger;
@@ -49,17 +48,6 @@ public class LdapUserInfoProvider implements UserInfoProvider {
     @Override
     public UserType getUserType() {
         return UserType.LDAP;
-    }
-
-    @Override
-    public UserInfo getCurrentUserInfo() {
-        UserPrincipal u = UserPrincipal.getCurrent();
-        if (u == null) {
-            return null;
-        }
-
-        LdapPrincipal p = LdapPrincipal.getCurrent();
-        return getInfo(u.getId(), u.getUsername(), p);
     }
 
     @Override

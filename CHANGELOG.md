@@ -7,7 +7,12 @@
 - concord-agent, concord-runner: support for the configurable
 `logLevel`.
 
- 
+### Changed
+
+- concord-server: fix the `${initiator}` and `${currentUser}` data
+fetching when dealing with multiple account types.
+
+
 
 ## [1.14.0] - 2019-03-31
 

@@ -34,8 +34,12 @@ public interface UserInfoProvider {
 
     UserType getUserType();
 
-    UserInfo getCurrentUserInfo();
-
+    /**
+     * Returns data for the specified user.
+     * @param id user's ID, optional
+     * @param username user's name, mandatory
+     * @return
+     */
     UserInfo getInfo(UUID id, String username);
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
