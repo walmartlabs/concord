@@ -47,4 +47,13 @@
                                  referencedColumnNames="USER_ID"
                                  onDelete="SET NULL"/>
     </changeSet>
+
+    <changeSet id="1130200" author="muhammad.amir@walmart.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="IS_DISABLED" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+    </changeSet>
 </databaseChangeLog>

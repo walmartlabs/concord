@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-console: ability to disable a process to
+prevent restoring it from a checkpoint after completion.
+
+
+
 ## [1.15.0] - 2019-04-03
 
 ### Added

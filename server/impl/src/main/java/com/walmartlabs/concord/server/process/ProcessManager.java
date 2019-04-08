@@ -146,13 +146,28 @@ public class ProcessManager {
         resumePipeline.process(payload);
     }
 
+    public void disable(ProcessKey processKey, boolean disabled) {
+        ProcessEntry e = queueDao.get(processKey);
+        if (e == null) {
+            throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
+        }
+
+        assertKillOrDisableRights(e);
+
+        ProcessStatus s = e.status();
+        if (TERMINATED_PROCESS_STATUSES.contains(s)) {
+            queueDao.disable(processKey, disabled);
+        }
+
+    }
+
     public void kill(ProcessKey processKey) {
         ProcessEntry e = queueDao.get(processKey);
         if (e == null) {
             throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        assertKillRights(e);
+        assertKillOrDisableRights(e);
 
         ProcessStatus s = e.status();
         if (TERMINATED_PROCESS_STATUSES.contains(s)) {
@@ -172,7 +187,7 @@ public class ProcessManager {
             throw new ProcessException(null, "Process not found: " + processKey, Status.NOT_FOUND);
         }
 
-        assertKillRights(e);
+        assertKillOrDisableRights(e);
 
         List<IdAndStatus> l = null;
         boolean updated = false;
@@ -195,6 +210,10 @@ public class ProcessManager {
 
         if (checkpointId == null) {
             throw new ConcordApplicationException("'checkpointId' is mandatory");
+        }
+
+        if (entry.disabled()) {
+            throw new ConcordApplicationException("Checkpoint can not be restored as process is disabled -> " + entry.instanceId());
         }
 
         ProcessStatus s = entry.status();
@@ -374,26 +393,26 @@ public class ProcessManager {
         return o.orElse(Collections.emptyMap());
     }
 
-    private void assertKillRights(ProcessEntry e) {
+    private void assertKillOrDisableRights(ProcessEntry e) {
         if (Roles.isAdmin()) {
             return;
         }
 
         UserPrincipal p = UserPrincipal.assertCurrent();
         if (p.getId().equals(e.initiatorId())) {
-            // process owners can kill their own processes
+            // process owners can kill or disable their own processes
             return;
         }
 
         UUID projectId = e.projectId();
         if (projectId != null) {
-            // only org members with WRITER rights can kill the process
+            // only org members with WRITER rights can kill or disable the process
             projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
             return;
         }
 
         throw new UnauthorizedException("The current user (" + p.getUsername() + ") does not have permissions " +
-                "to kill the process: " + e.instanceId());
+                "to kill or disable the process: " + e.instanceId());
     }
 
     private void assertUpdateRights(PartialProcessKey processKey) {

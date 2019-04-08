@@ -91,7 +91,7 @@ const CheckpointPopup: React.SFC<{
                         {({ restoreProcess }) => (
                             <Button
                                 primary={true}
-                                disabled={!isFinal(process.status)}
+                                disabled={!isFinal(process.status) || process.disabled}
                                 loading={process.status === 'ENQUEUED'}
                                 onClick={() => {
                                     restoreProcess(process.instanceId, checkpoint.id);

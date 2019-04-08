@@ -109,6 +109,8 @@ public interface ProcessEntry extends Serializable {
     @Nullable
     Set<String> handlers();
 
+    boolean disabled();
+
     @Nullable
     List<ProcessCheckpointEntry> checkpoints();
 

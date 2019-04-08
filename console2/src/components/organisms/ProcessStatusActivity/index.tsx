@@ -24,12 +24,12 @@ import { push as pushHistory } from 'react-router-redux';
 import { Button, Divider, Header, Icon } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
+import { canBeCancelled, isFinal, hasState, ProcessEntry } from '../../../api/process';
 import { FormListEntry } from '../../../api/process/form';
 import { actions } from '../../../state/data/processes/poll';
 import { State } from '../../../state/data/processes/poll/types';
 import { ProcessActionList, ProcessStatusTable } from '../../molecules';
-import { CancelProcessPopup, AnsibleStatsActivity } from '../../organisms';
+import { CancelProcessPopup, DisableProcessPopup, AnsibleStatsActivity } from '../../organisms';
 import ProcessCheckpoint from '../CheckpointView/ProcessCheckpoint';
 
 interface ExternalProps {
@@ -74,25 +74,50 @@ class ProcessStatusActivity extends React.Component<Props> {
         }
     }
 
+    disableIcon(disable: boolean) {
+        return <Icon name="power" color={disable ? 'green' : 'grey'} />;
+    }
+
     createAdditionalAction() {
-        const { process, refresh } = this.props;
+        const { process, refresh, startPolling } = this.props;
 
         if (!process) {
             return;
         }
 
-        if (!canBeCancelled(process.status)) {
-            return;
-        }
-
         return (
-            <CancelProcessPopup
-                instanceId={process.instanceId}
-                refresh={refresh}
-                trigger={(onClick) => (
-                    <Button negative={true} icon="delete" content="Cancel" onClick={onClick} />
+            <>
+                {canBeCancelled(process.status) && (
+                    <CancelProcessPopup
+                        instanceId={process.instanceId}
+                        refresh={refresh}
+                        trigger={(onClick) => (
+                            <Button
+                                attached={false}
+                                negative={true}
+                                icon="delete"
+                                content="Cancel"
+                                onClick={onClick}
+                            />
+                        )}
+                    />
                 )}
-            />
+                {isFinal(process.status) && (
+                    <DisableProcessPopup
+                        instanceId={process.instanceId}
+                        disabled={!process.disabled}
+                        refresh={startPolling}
+                        trigger={(onClick) => (
+                            <Button
+                                attached={false}
+                                icon={this.disableIcon(process.disabled)}
+                                content={process.disabled ? 'Enable' : 'Disable'}
+                                onClick={onClick}
+                            />
+                        )}
+                    />
+                )}
+            </>
         );
     }
 

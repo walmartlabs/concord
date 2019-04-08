@@ -330,6 +330,21 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
+    public void disable(ProcessKey processKey, boolean disabled) {
+        tx(tx -> disable(tx, processKey, disabled));
+    }
+
+    private void disable(DSLContext tx, ProcessKey processKey, boolean disabled) {
+        UUID instanceId = processKey.getInstanceId();
+
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.IS_DISABLED, disabled)
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                .execute();
+
+    }
+
     public void removeHandler(PartialProcessKey processKey, String handler) {
         tx(tx -> tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.HANDLERS, PostgresDSL.arrayRemove(PROCESS_QUEUE.HANDLERS, field("{0}::text", String.class, handler)))
@@ -814,6 +829,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .childrenIds(toSet(getOrNull(r, "children_ids")))
                 .meta(objectMapper.deserialize(r.get(PROCESS_QUEUE.META)))
                 .handlers(toSet(r.get(PROCESS_QUEUE.HANDLERS)))
+                .disabled(r.get(PROCESS_QUEUE.IS_DISABLED))
                 .logFileName(r.get(PROCESS_QUEUE.INSTANCE_ID) + ".log")
                 .checkpoints(objectMapper.deserialize(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
                 .statusHistory(objectMapper.deserialize(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))

@@ -126,6 +126,7 @@ export interface ProcessEntry {
     meta?: {};
     checkpoints?: ProcessCheckpointEntry[];
     statusHistory?: ProcessHistoryEntry[];
+    disabled: boolean;
 }
 
 export interface StartProcessResponse {
@@ -171,6 +172,9 @@ export const get = (instanceId: ConcordId, includes: ProcessDataInclude): Promis
     includes.forEach((i) => params.append('include', i));
     return fetchJson(`/api/v2/process/${instanceId}?${params.toString()}`);
 };
+
+export const disable = (instanceId: ConcordId, disabled: boolean): Promise<{}> =>
+    managedFetch(`/api/v1/process/${instanceId}/disable/${disabled}`, { method: 'POST' });
 
 export const kill = (instanceId: ConcordId): Promise<{}> =>
     managedFetch(`/api/v1/process/${instanceId}`, { method: 'DELETE' });
