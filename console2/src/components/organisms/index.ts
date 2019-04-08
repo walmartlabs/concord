@@ -23,6 +23,7 @@ export { default as APITokenDeleteActivity } from './APITokenDeleteActivity';
 export { default as APITokenList } from './APITokenList';
 export { default as BulkCancelProcessPopup } from './BulkCancelProcessPopup';
 export { default as CancelProcessPopup } from './CancelProcessPopup';
+export { default as DisableProcessPopup } from './DisableProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';
 export { default as EditProjectActivity } from './EditProjectActivity';
 export { default as EditRepositoryActivity } from './EditRepositoryActivity';

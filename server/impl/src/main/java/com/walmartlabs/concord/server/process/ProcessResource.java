@@ -475,6 +475,22 @@ public class ProcessResource implements Resource {
     }
 
     /**
+     * Disable a process.
+     *
+     * @param instanceId
+     * @param disabled
+     */
+    @POST
+    @ApiOperation("Disable a process")
+    @javax.ws.rs.Path("/{id}/disable/{disabled}")
+    @WithTimer
+    public void disable(@ApiParam @PathParam("id") UUID instanceId,
+                        @ApiParam @PathParam("disabled") boolean disabled) {
+        ProcessKey processKey = processKeyCache.get(instanceId);
+        processManager.disable(processKey, disabled);
+    }
+
+    /**
      * Forcefully stops a process.
      *
      * @param instanceId

@@ -25,6 +25,7 @@ import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiProcessList, ProcessFilters } from '../../../api/process';
 import {
     get as apiGet,
+    disable as apiDisable,
     kill as apiKill,
     start as apiStart,
     killBulk as apiKillBulk,
@@ -46,6 +47,8 @@ import {
     CancelBullkProcessState,
     CancelProcessRequest,
     CancelProcessState,
+    DisableProcessRequest,
+    DisableProcessState,
     GetProcessRequest,
     ListProcessesRequest,
     PaginatedProcessDataResponse,
@@ -82,6 +85,9 @@ const actionTypes = {
 
     RESTORE_PROCESS_REQUEST: `${NAMESPACE}/restore/request`,
     RESTORE_PROCESS_RESPONSE: `${NAMESPACE}/restore/response`,
+
+    DISABLE_PROCESS_REQUEST: `${NAMESPACE}/disable/request`,
+    DISABLE_PROCESS_RESPONSE: `${NAMESPACE}/disable/response`,
 
     RESET_PROCESS: `${NAMESPACE}/reset`,
     RESET_BULK_PROCESS: `${NAMESPACE}/reset/bulk`
@@ -126,6 +132,12 @@ export const actions = {
         type: actionTypes.RESTORE_PROCESS_REQUEST,
         instanceId,
         checkpointId
+    }),
+
+    disable: (instanceId: ConcordId, disabled: boolean): DisableProcessRequest => ({
+        type: actionTypes.DISABLE_PROCESS_REQUEST,
+        instanceId,
+        disabled
     }),
 
     cancel: (instanceId: ConcordId): CancelProcessRequest => ({
@@ -221,6 +233,27 @@ const restoreProcessReducers = combineReducers<RestoreProcessState>({
     response: makeResponseReducer(actionTypes.RESTORE_PROCESS_RESPONSE, actionTypes.RESET_PROCESS)
 });
 
+const disableProcessReducers = combineReducers<DisableProcessState>({
+    running: makeLoadingReducer(
+        [actionTypes.DISABLE_PROCESS_REQUEST],
+        [actionTypes.RESET_PROCESS, actionTypes.DISABLE_PROCESS_RESPONSE]
+    ),
+    error: makeErrorReducer(
+        [actionTypes.RESET_PROCESS, actionTypes.DISABLE_PROCESS_REQUEST],
+        [actionTypes.DISABLE_PROCESS_RESPONSE]
+    ),
+    response: (state = false, { type, error }: Action & { error?: {} }) => {
+        switch (type) {
+            case actionTypes.RESET_PROCESS:
+                return false;
+            case actionTypes.DISABLE_PROCESS_RESPONSE:
+                return !error;
+            default:
+                return state;
+        }
+    }
+});
+
 const cancelProcessReducers = combineReducers<CancelProcessState>({
     running: makeLoadingReducer(
         [actionTypes.CANCEL_PROCESS_REQUEST],
@@ -272,6 +305,7 @@ export const reducers = combineReducers<State>({
     error: errorMsg,
 
     startProcess: startProcessReducers,
+    disableProcess: disableProcessReducers,
     cancelProcess: cancelProcessReducers,
     restoreProcess: restoreProcessReducers,
     cancelBulkProcess: cancelBulkProcessReducers,
@@ -335,6 +369,17 @@ function* onStartProcess({
     }
 }
 
+function* onDisableProcess({ instanceId, disabled }: DisableProcessRequest) {
+    try {
+        yield call(apiDisable, instanceId, disabled);
+        yield put({
+            type: actionTypes.DISABLE_PROCESS_RESPONSE
+        });
+    } catch (e) {
+        yield handleErrors(actionTypes.DISABLE_PROCESS_RESPONSE, e);
+    }
+}
+
 function* onCancelProcess({ instanceId }: CancelProcessRequest) {
     try {
         yield call(apiKill, instanceId);
@@ -376,6 +421,7 @@ export const sagas = function*() {
         takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
         throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProcessList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
+        takeLatest(actionTypes.DISABLE_PROCESS_REQUEST, onDisableProcess),
         takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),
         takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),

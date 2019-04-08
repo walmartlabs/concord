@@ -675,6 +675,32 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*I AM AN ERROR.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testDisableProcess() throws Exception {
+
+        // prepare the payload
+
+        byte[] payload = archive(ProcessIT.class.getResource("disableProcess").toURI());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        processApi.disable(pir.getInstanceId(), true);
+
+        // avoid using deprecated get method
+        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
+        pir = processV2Api.get(pir.getInstanceId(), null);
+
+        assertTrue(pir.isDisabled());
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);

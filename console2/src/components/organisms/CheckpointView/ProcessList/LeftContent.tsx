@@ -20,7 +20,7 @@
 import { distanceInWords, distanceInWordsToNow } from 'date-fns';
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { Divider } from 'semantic-ui-react';
+import { Divider, Icon } from 'semantic-ui-react';
 import { parse as parseDate } from 'date-fns';
 
 import { ProcessEntry } from '../../../../api/process';
@@ -78,6 +78,11 @@ export default ({ process }: Props) => {
                 <div>
                     <Label>Current Status: </Label>
                     <Status>{process.status}</Status>
+                </div>
+
+                <div>
+                    <Label>Enable: </Label>
+                    <Icon name="power" color={process.disabled ? 'grey' : 'green'} />
                 </div>
 
                 {/* Last update time, tooltip on mouse hover */}
