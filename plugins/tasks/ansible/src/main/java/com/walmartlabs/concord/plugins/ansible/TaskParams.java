@@ -47,6 +47,8 @@ public enum TaskParams {
 
     EXTRA_VARS_KEY("extraVars"),
 
+    EXTRA_VARS_FILES_KEY("extraVarsFiles"),
+
     FORCE_PULL_KEY("forcePull"),
 
     GROUP_VARS_KEY("groupVars"),

@@ -410,4 +410,24 @@ public class AnsibleIT extends AbstractServerIT {
         Map<String, Object> data = (Map<String, Object>) events.get(1).getData();
         assertEquals("message iddqd", ((Map<String, Object>) data.get("result")).get("msg"));
     }
+
+    @Test
+    public void testExtraVarsFiles() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("ansibleExtraVarsFiles").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello from a JSON file!.*", ab);
+        assertLog(".*Hello from a YAML file!.*", ab);
+    }
 }

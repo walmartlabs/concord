@@ -4,6 +4,8 @@
 
 ### Added
 
+- ansible: existing JSON and YAML extra vars files can now be used
+with the new `extraVarsFiles` parameter;
 - resource-tasks: new method `prettyPrintJson` - returns formatted
 JSON as a string;
 - concord-server, concord-console: ability to disable a process to
