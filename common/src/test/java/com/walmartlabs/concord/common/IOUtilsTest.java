@@ -20,6 +20,7 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -32,6 +33,29 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class IOUtilsTest {
+
+    @Test
+    public void testZipUnzip() throws Exception {
+        Path src = Files.createTempDirectory("test-zip");
+        Files.createFile(src.resolve("a.txt"));
+        Files.createFile(src.resolve("b\\c.txt"));
+        Files.createDirectory(src.resolve("b"));
+        Files.createFile(src.resolve("b").resolve("c.txt"));
+
+        Path archive = Files.createTempFile("archive", "zip");
+
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(archive))) {
+            IOUtils.zip(zip, src);
+        }
+
+        IOUtils.deleteRecursively(src);
+
+        Path dst = Files.createTempDirectory("test");
+        IOUtils.unzip(archive, dst);
+        assertTrue(Files.exists(dst.resolve("a.txt")));
+        assertTrue(Files.exists(dst.resolve("b\\c.txt")));
+        assertTrue(Files.exists(dst.resolve("b").resolve("c.txt")));
+    }
 
     @Test
     public void testCopy() throws Exception {
