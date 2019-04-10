@@ -103,6 +103,17 @@ public class ResourceTask implements Task {
         return baseDir.relativize(resourceFile.toAbsolutePath()).toString();
     }
 
+    @SuppressWarnings("unused")
+    public String prettyPrintJson(Object json) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        if (json instanceof String) {
+            // To add line feeds
+            json = mapper.readValue((String) json, Object.class);
+        }
+
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+    }
+
     private Path assertTempDir(Path baseDir) throws IOException {
         Path p = baseDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
         if (!p.toFile().exists()) {
