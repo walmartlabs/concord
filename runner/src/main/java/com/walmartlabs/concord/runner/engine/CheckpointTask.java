@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
@@ -33,9 +34,16 @@ public class CheckpointTask implements Task {
 
     @Override
     public void execute(Context ctx) {
-        String checkpoint = ContextUtils.assertString(ctx, "checkpointName");
+        String checkpointName = ContextUtils.assertString(ctx, "checkpointName");
+        if (!checkpointName.matches(ConcordKey.PATTERN)) {
+            throw new IllegalArgumentException("Invalid checkpoint name: " + checkpointName + ". " +
+                    "If you're using an expression in the checkpoint's name please validate its correctness. " +
+                    "Checkpoint names must start with a digit or a latin letter, the length must be between 2 and 128 characters");
+        }
+
         UUID checkpointId = UUID.randomUUID();
         ctx.setVariable("checkpointId", checkpointId.toString());
-        ctx.suspend(checkpoint, Collections.singletonMap("checkpointId", checkpointId.toString()), false);
+
+        ctx.suspend(checkpointName, Collections.singletonMap("checkpointId", checkpointId.toString()), false);
     }
 }

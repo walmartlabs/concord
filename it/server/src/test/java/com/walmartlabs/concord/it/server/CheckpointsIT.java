@@ -158,7 +158,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*==End.*", ab);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCheckpointWithArgs() throws Exception {
         String orgName = "org_" + randomString();
 
@@ -200,6 +200,27 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*hello, World.*", 2, ab);
         assertLog(".*" + value + ".*", 4, ab);
         assertLog(".*checkpoint pointA.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExpressions() throws Exception {
+        String xValue = "x_" + randomString();
+
+        // ---
+
+        byte[] payload = archive(CheckpointsIT.class.getResource("checkpointExpressions").toURI());
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "arguments.x", xValue,
+                "archive", payload));
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*checkpoint test_" + xValue + ".*", 1, ab);
     }
 
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {

@@ -109,7 +109,10 @@ public interface ProcessEntry extends Serializable {
     @Nullable
     Set<String> handlers();
 
-    boolean disabled();
+    @Value.Default
+    default boolean disabled() {
+        return false;
+    }
 
     @Nullable
     List<ProcessCheckpointEntry> checkpoints();

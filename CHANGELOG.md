@@ -11,6 +11,11 @@ JSON as a string;
 - concord-server, concord-console: ability to disable a process to
 prevent restoring it from a checkpoint after completion.
 
+### Changed
+
+- project-model, concord-runner: support expressions in checkpoint
+names.
+
 
 
 ## [1.15.0] - 2019-04-03

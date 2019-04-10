@@ -29,16 +29,6 @@ import static org.junit.Assert.fail;
 public class YamlValidationTest extends AbstractYamlParserTest {
 
     @Test
-    public void test001() {
-        try {
-            deploy("validator/001.yml");
-            fail("exception expected");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().contains("Invalid checkpoint name"));
-        }
-    }
-
-    @Test
     public void test002() {
         try {
             deploy("validator/002.yml");

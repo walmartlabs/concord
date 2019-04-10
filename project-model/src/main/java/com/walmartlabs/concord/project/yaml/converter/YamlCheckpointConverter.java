@@ -20,7 +20,6 @@ package com.walmartlabs.concord.project.yaml.converter;
  * =====
  */
 
-import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlCheckpoint;
 import io.takari.bpm.model.ExpressionType;
@@ -37,10 +36,10 @@ public class YamlCheckpointConverter implements StepConverter<YamlCheckpoint> {
         Chunk c = new Chunk();
         String id = ctx.nextId();
 
-        String checkpoint = s.getKey();
+        String checkpointName = s.getName();
 
         Set<VariableMapping> inVars = new HashSet<>();
-        inVars.add(new VariableMapping(null, null, checkpoint, "checkpointName", true));
+        inVars.add(new VariableMapping(null, checkpointName, null, "checkpointName", true));
 
         Set<VariableMapping> outVars = new HashSet<>();
         outVars.add(new VariableMapping("checkpointId", null, null, "checkpointId", true));
@@ -48,7 +47,7 @@ public class YamlCheckpointConverter implements StepConverter<YamlCheckpoint> {
 
         c.addElement(new ServiceTask(id, ExpressionType.DELEGATE, "${checkpoint}", inVars, outVars, true));
 
-        c.addSourceMap(id, toSourceMap(s, "Checkpoint: " + s.getKey()));
+        c.addSourceMap(id, toSourceMap(s, "Checkpoint: " + checkpointName));
         c.addOutput(id);
 
         return c;

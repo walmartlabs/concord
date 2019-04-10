@@ -20,16 +20,11 @@ package com.walmartlabs.concord.project.yaml.validator;
  * =====
  */
 
-import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.yaml.model.YamlCheckpoint;
 
 public class YamlCheckpointValidator implements StepValidator<YamlCheckpoint> {
 
     public void validate(ValidatorContext ctx, YamlCheckpoint s) {
-        if (!s.getKey().matches(ConcordKey.PATTERN)) {
-            throw new IllegalArgumentException("Invalid checkpoint name: " + s.getKey() + ". Error in @:" + s.getLocation());
-        }
-
-        ctx.assertUnique("checkpoint", s.getKey(), s.getLocation());
+        ctx.assertUnique("checkpoint", s.getName(), s.getLocation());
     }
 }
