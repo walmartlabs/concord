@@ -94,7 +94,12 @@ public final class IOUtils {
     }
 
     public static void zipFile(ZipArchiveOutputStream zip, Path src, String name) throws IOException {
-        ZipArchiveEntry e = new ZipArchiveEntry(name);
+        ZipArchiveEntry e = new ZipArchiveEntry(name) {
+            @Override
+            public int getPlatform() {
+                return PLATFORM_UNIX;
+            }
+        };
 
         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(src);
         e.setUnixMode(Posix.unixMode(permissions));

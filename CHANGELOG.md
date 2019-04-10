@@ -13,6 +13,8 @@ prevent restoring it from a checkpoint after completion.
 
 ### Changed
 
+- concord-common: do not escape backslashes when creating a ZIP
+achive;
 - project-model, concord-runner: support expressions in checkpoint
 names.
 
