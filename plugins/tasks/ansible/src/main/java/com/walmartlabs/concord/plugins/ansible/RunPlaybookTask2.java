@@ -164,6 +164,7 @@ public class RunPlaybookTask2 implements Task {
                     .withTags(getListAsString(args, TaskParams.TAGS_KEY))
                     .withSkipTags(getListAsString(args, TaskParams.SKIP_TAGS_KEY))
                     .withExtraVars(getMap(args, TaskParams.EXTRA_VARS_KEY))
+                    .withExtraVarsFiles(getList(args, TaskParams.EXTRA_VARS_FILES_KEY))
                     .withLimit(getLimit(args, playbook))
                     .withVerboseLevel(getVerboseLevel(args))
                     .withCheck(checkMode)

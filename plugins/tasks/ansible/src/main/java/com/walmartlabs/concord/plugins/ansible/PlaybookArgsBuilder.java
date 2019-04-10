@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,7 @@ public class PlaybookArgsBuilder {
 
     private String attachmentsDir;
     private Map<String, Object> extraVars;
+    private List<String> extraVarsFiles;
     private String user;
     private String tags;
     private String skipTags;
@@ -55,6 +56,11 @@ public class PlaybookArgsBuilder {
 
     public PlaybookArgsBuilder withExtraVars(Map<String, Object> extraVars) {
         this.extraVars = extraVars;
+        return this;
+    }
+
+    public PlaybookArgsBuilder withExtraVarsFiles(List<String> extraVarsFiles) {
+        this.extraVarsFiles = extraVarsFiles;
         return this;
     }
 
@@ -119,6 +125,13 @@ public class PlaybookArgsBuilder {
         if (extraVars != null && !extraVars.isEmpty()) {
             l.add("--extra-vars");
             l.add("@" + workDir.relativize(writeExtraVars(extraVars, tmpDir)));
+        }
+
+        if (extraVarsFiles != null) {
+            extraVarsFiles.forEach(extraVarsFile -> {
+                l.add("--extra-vars");
+                l.add("@" + extraVarsFile);
+            });
         }
 
         if (user != null) {
