@@ -28,21 +28,21 @@ public class YamlCheckpoint extends YamlStep {
 
     private static final long serialVersionUID = 1L;
 
-    private final String key;
+    private final String name;
 
-    public YamlCheckpoint(JsonLocation location, String key) {
+    public YamlCheckpoint(JsonLocation location, String name) {
         super(location);
-        this.key = key;
+        this.name = name;
     }
 
-    public String getKey() {
-        return key;
+    public String getName() {
+        return name;
     }
 
     @Override
     public String toString() {
         return "YamlCheckpoint{" +
-                "key='" + key + '\'' +
+                "name='" + name + '\'' +
                 '}';
     }
 }

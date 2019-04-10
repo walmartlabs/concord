@@ -1,0 +1,5 @@
+flows:
+  default:
+    - log: "before the checkpoint"
+    - checkpoint: "test_${x}"
+    - log: "after the checkpoint"
