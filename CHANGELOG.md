@@ -4,6 +4,8 @@
 
 ### Added
 
+- resource-tasks: new method `prettyPrintJson` - returns formatted
+JSON as a string;
 - concord-server, concord-console: ability to disable a process to
 prevent restoring it from a checkpoint after completion.
 
