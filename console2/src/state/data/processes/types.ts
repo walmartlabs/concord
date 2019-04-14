@@ -40,7 +40,7 @@ import { State as WaitState } from './waits/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
-    includes: ProcessDataInclude;
+    includes: ProcessDataInclude[];
 }
 
 export interface Pagination {

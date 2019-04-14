@@ -19,7 +19,15 @@
  */
 
 import { SemanticCOLORS } from 'semantic-ui-react';
-import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../common';
+import {
+    ConcordId,
+    ConcordKey,
+    fetchJson,
+    managedFetch,
+    parseNestedQueryParams,
+    QueryParams,
+    queryParams
+} from '../common';
 import { ColumnDefinition } from '../org';
 
 export enum ProcessStatus {
@@ -165,9 +173,12 @@ export const start = (
     return fetchJson('/api/v1/process', opts);
 };
 
-export type ProcessDataInclude = Array<'checkpoints' | 'history' | 'childrenIds'>;
+export type ProcessDataInclude = 'checkpoints' | 'history' | 'childrenIds';
 
-export const get = (instanceId: ConcordId, includes: ProcessDataInclude): Promise<ProcessEntry> => {
+export const get = (
+    instanceId: ConcordId,
+    includes: ProcessDataInclude[]
+): Promise<ProcessEntry> => {
     const params = new URLSearchParams();
     includes.forEach((i) => params.append('include', i));
     return fetchJson(`/api/v2/process/${instanceId}?${params.toString()}`);
@@ -205,7 +216,10 @@ export interface PaginatedProcessEntries {
     next?: number;
     prev?: number;
 }
+
 export interface ProcessListQuery {
+    [meta: string]: any;
+
     orgId?: ConcordId;
     orgName?: ConcordKey;
     projectId?: ConcordId;
@@ -216,30 +230,23 @@ export interface ProcessListQuery {
     status?: ProcessStatus;
     initiator?: string;
     parentInstanceId?: ConcordId;
-    meta?: ProcessFilters;
     include?: ProcessDataInclude[];
     limit?: number;
     offset?: number;
 }
 
-export const list = async (
-    q: ProcessListQuery,
-    includes?: ProcessDataInclude
-): Promise<PaginatedProcessEntries> => {
-    const { limit = 50 } = q;
+export const list = async (q: ProcessListQuery): Promise<PaginatedProcessEntries> => {
+    let { limit = 50 } = q;
+
+    // TODO fix the CheckpointView data instead
+    limit = parseInt(limit.toString());
+
     const requestLimit = limit + 1;
 
-    const includeParams = new URLSearchParams();
-    if (includes) {
-        includes.forEach((i) => includeParams.append('include', i));
-    }
-
-    const filters = combine(q, { meta: nonEmpty(q.meta), limit: requestLimit });
+    const filters = { ...q, limit: requestLimit };
     const qp = filters ? '&' + queryParams(filters) : '';
 
-    const data: ProcessEntry[] = await fetchJson(
-        `/api/v2/process?${includeParams.toString()}${qp}`
-    );
+    const data: ProcessEntry[] = await fetchJson(`/api/v2/process?${qp}`);
 
     const hasMoreElements: boolean = !!limit && data.length > limit;
     const offset: number = q.offset ? q.offset : 0;

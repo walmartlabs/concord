@@ -38,13 +38,19 @@ test('parseQueryParams handles periods in a query parameter', () => {
 });
 
 test('parseQueryParams handles url with no question mark "?"', () => {
-    const actual = parseQueryParams('http://localhost:3000/#/org/param1=123');
+    const actual = parseQueryParams('http://localhost:3000/#/org/param.1=123');
     const expected = {};
     expect(actual).toEqual(expected);
 });
 
 test('parseQueryParams handles url with no params', () => {
-    const result = parseQueryParams('http://localhost:3000/#/org/param1=123');
+    const result = parseQueryParams('http://localhost:3000/#/org/param.1=123');
     const expected = {};
+    expect(result).toEqual(expected);
+});
+
+test('parseQueryParams handles multi-value params', () => {
+    const result = parseQueryParams('http://localhost:3000/#/org/?param.1=123&param.1=234');
+    const expected = { 'param.1': ['123', '234'] };
     expect(result).toEqual(expected);
 });
