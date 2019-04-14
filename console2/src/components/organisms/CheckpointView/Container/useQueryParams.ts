@@ -19,9 +19,7 @@
  */
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 
-import { parseQueryParams } from '../../../../api/common';
-
-type QueryParamObject = { [key: string]: string };
+import { parseQueryParams, QueryParams } from '../../../../api/common';
 
 /**
  * Custom React Hook to provide the current query parameters
@@ -30,7 +28,7 @@ type QueryParamObject = { [key: string]: string };
  * When the event fires query params in state are updated.
  */
 export function useQueryParams() {
-    const [queryParams, setQueryParams] = useState<QueryParamObject>();
+    const [queryParams, setQueryParams] = useState<QueryParams>();
 
     const [currentUrl, setCurrentUrl] = useState<string>('');
     const [oldUrl, setOldUrl] = useState<string>('');
@@ -41,7 +39,7 @@ export function useQueryParams() {
      *
      * @returns QueryParameterObject
      */
-    const getCurrentParams = (): QueryParamObject => {
+    const getCurrentParams = (): QueryParams => {
         // Parse, decode, return
         return decodeAllUriValues(parseQueryParams(window.location.href));
     };
@@ -50,7 +48,7 @@ export function useQueryParams() {
      * Remove empty values from the queryParamObject
      * @param params a query object to check
      */
-    const removeEmptyValues = (params: QueryParamObject): QueryParamObject => {
+    const removeEmptyValues = (params: QueryParams): QueryParams => {
         const newValues = Object.entries(params).reduce((previous, current) => {
             // is the value empty?
             if (current[1] === '') {
@@ -69,7 +67,7 @@ export function useQueryParams() {
      * decode all uri parameters
      * @param params key/value pairs to iterate through
      */
-    const decodeAllUriValues = (params: QueryParamObject): QueryParamObject => {
+    const decodeAllUriValues = (params: QueryParams): QueryParams => {
         let dec = decodeURIComponent;
 
         let decodedResult = {};
@@ -84,9 +82,9 @@ export function useQueryParams() {
      * Replaces all query params in the url with the object provided
      * Store that value in queryParams state
      *
-     * @param params a QueryParamObject e.g. { key: value, ... }
+     * @param params a QueryParams e.g. { key: value, ... }
      */
-    const replaceQueryParams = (params: QueryParamObject = {}) => {
+    const replaceQueryParams = (params: QueryParams = {}) => {
         // Construct URLSearchParams instance
         let UrlParams = new URLSearchParams();
         Object.keys(removeEmptyValues(params)).forEach((i) => UrlParams.append(i, params[i]));

@@ -18,6 +18,8 @@
  * =====
  */
 
+import * as Q from 'q';
+
 export type ConcordId = string;
 export type ConcordKey = string;
 
@@ -131,11 +133,37 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
  */
 export const queryParams = (params: any): string => {
     const esc = encodeURIComponent;
-    return Object.keys(params)
-        .filter((k) => !!params[k])
-        .map((k) => esc(k) + '=' + esc(params[k]))
-        .join('&');
+    const result: string[] = [];
+
+    Object.keys(params)
+        .filter((k) => {
+            const v = params[k];
+
+            if (v === undefined) {
+                return false;
+            }
+
+            if (Array.isArray(v) && v.length === 0) {
+                return false;
+            }
+
+            return true;
+        })
+        .forEach((k) => {
+            const v = params[k];
+            if (Array.isArray(v)) {
+                v.forEach((vv) => {
+                    result.push(esc(k) + '=' + esc(vv));
+                });
+            } else {
+                result.push(esc(k) + '=' + esc(v));
+            }
+        });
+
+    return result.join('&');
 };
+
+export type QueryParams = { [key: string]: string };
 
 /**
  * Parse url parameters from a url string
@@ -143,7 +171,7 @@ export const queryParams = (params: any): string => {
  *
  * @return an object e.g. { "param": "value", ... }
  */
-export const parseQueryParams = (url: string): { [key: string]: string } => {
+export const parseQueryParams = (url: string): QueryParams => {
     // Remove all non-valid characters
     const validString = url.replace(/[^a-z0-9\s-]/, '');
 
@@ -158,23 +186,74 @@ export const parseQueryParams = (url: string): { [key: string]: string } => {
     }
 
     // Split find params by splitting on & characters
-    let separateParams: string[] = [];
+    let kvs: string[] = [];
     if (queryParams.includes('&')) {
-        separateParams = queryParams.split('&');
+        kvs = queryParams.split('&');
     } else {
         // There is only one param to return, so return it
-        const splitPair = queryParams.split('=');
-        return { [splitPair[0]]: splitPair[1] };
+        const [k, v] = queryParams.split('=');
+        return { [k]: v };
     }
 
-    // initialize an object for itteration
+    // initialize an object for iteration
     let result = {};
 
-    // Inject params as key value pairs
-    for (let paramEquality of separateParams) {
-        const splitPair = paramEquality.split('=');
-        result[splitPair[0]] = splitPair[1];
+    // inject params as key value pairs
+    for (const kv of kvs) {
+        const [k, v] = kv.split('=');
+
+        // handle multi-value params
+        const prev = result[k];
+        if (prev) {
+            if (prev instanceof Array) {
+                prev.push(v);
+            } else {
+                result[k] = [prev, v];
+            }
+        } else {
+            result[k] = v;
+        }
     }
+
+    return result;
+};
+
+export const deepMerge = (a: any, b: any): any => {
+    const result = { ...a };
+
+    Object.keys(b).forEach((k) => {
+        const av = a[k];
+        const bv = b[k];
+
+        let o = bv;
+        if (typeof av === 'object' && typeof bv === 'object') {
+            o = deepMerge(av, bv);
+        }
+
+        result[k] = o;
+    });
+
+    return result;
+};
+
+export type QueryMultiParams = { [key: string]: any };
+
+export const parseNestedQueryParams = (params: QueryParams, keys: string[]): QueryMultiParams => {
+    let result: QueryMultiParams = { ...params };
+
+    let x = Object.keys(params)
+        .filter((p) => keys.some((k) => p.startsWith(k) && p.includes('.')))
+        .forEach((p) => {
+            let as = p.split('.').reverse();
+
+            let obj: QueryMultiParams = { [as[0]]: params[p] };
+            for (let i = 1; i < as.length; i++) {
+                obj = { [as[i]]: obj };
+            }
+
+            delete result[p];
+            result = deepMerge(result, obj);
+        });
 
     return result;
 };

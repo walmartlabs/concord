@@ -94,7 +94,7 @@ const actionTypes = {
 };
 
 export const actions = {
-    getProcess: (instanceId: ConcordId, includes: ProcessDataInclude): GetProcessRequest => ({
+    getProcess: (instanceId: ConcordId, includes: ProcessDataInclude[]): GetProcessRequest => ({
         type: actionTypes.GET_PROCESS_REQUEST,
         instanceId,
         includes

@@ -38,8 +38,7 @@ test('queryParams accepts numbers as values', () => {
     expect(actual).toEqual(expected);
 });
 
-// TODO: Not sure why this doesn't work
-test.skip('queryParams handles multiple boolean values', () => {
+test('queryParams handles multiple boolean values', () => {
     const actual = queryParams({ param: true, param2: false });
     const expected = 'param=true&param2=false';
     expect(actual).toEqual(expected);
