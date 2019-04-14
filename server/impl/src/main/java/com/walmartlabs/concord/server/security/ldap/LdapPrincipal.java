@@ -40,7 +40,7 @@ public class LdapPrincipal implements Serializable {
     private final String displayName;
     private final String email;
     private final Set<String> groups;
-    private final Map<String, String> attributes;
+    private final Map<String, Object> attributes;
 
     public LdapPrincipal(String username,
                          String nameInNamespace,
@@ -48,7 +48,7 @@ public class LdapPrincipal implements Serializable {
                          String displayName,
                          String email,
                          Set<String> groups,
-                         Map<String, String> attributes) {
+                         Map<String, Object> attributes) {
 
         this.username = username;
         this.nameInNamespace = nameInNamespace;
@@ -87,7 +87,7 @@ public class LdapPrincipal implements Serializable {
         return groups;
     }
 
-    public Map<String, String> getAttributes() {
+    public Map<String, Object> getAttributes() {
         return attributes;
     }
 

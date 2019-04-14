@@ -234,7 +234,12 @@ public class LdapManager {
             default: {
                 Set<String> exposedAttr = cfg.getExposeAttributes();
                 if (exposedAttr == null || exposedAttr.isEmpty() || exposedAttr.contains(id)) {
-                    b.addAttribute(id, v.toString());
+                    Collection<String> values = LdapUtils.getAllAttributeValues(attr);
+                    if (values.size() == 1) {
+                        b.addAttribute(id, values.iterator().next());
+                    } else {
+                        b.addAttribute(id, values);
+                    }
                 }
             }
         }
@@ -248,7 +253,7 @@ public class LdapManager {
         private String displayName;
         private String email;
         private Set<String> groups;
-        private Map<String, String> attributes;
+        private Map<String, Object> attributes;
 
         public LdapPrincipalBuilder username(String username) {
             this.username = username;
@@ -283,7 +288,7 @@ public class LdapManager {
             return this;
         }
 
-        public LdapPrincipalBuilder addAttribute(String k, String v) {
+        public LdapPrincipalBuilder addAttribute(String k, Object v) {
             if (attributes == null) {
                 attributes = new HashMap<>();
             }

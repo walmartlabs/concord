@@ -13,6 +13,8 @@ prevent restoring it from a checkpoint after completion.
 
 ### Changed
 
+- concord-server: support for multivalue LDAP attributes when
+fetching user details from AD/LDAP;
 - concord-console: fixed the page limit dropdown on the checkpoint
 view page;
 - concord-common: do not escape backslashes when creating a ZIP
