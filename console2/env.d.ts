@@ -2,6 +2,8 @@ export {};
 
 export interface ConcordEnvironment {
     topBar?: TopBarMeta;
+    loginUrl?: string;
+    logoutUrl?: string;
 }
 
 export interface TopBarMeta {

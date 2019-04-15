@@ -84,7 +84,7 @@ function* onLogout() {
     try {
         yield call(apiLogout);
         yield put(actions.setCurrent({}));
-        yield put(pushHistory('/login'));
+        yield put(pushHistory('/logout/done'));
     } catch (error) {
         throw Error(`Logout error: ${error}`);
     }

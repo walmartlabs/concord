@@ -43,6 +43,7 @@ public class ImmutablesTest {
                 .status(ProcessStatus.FINISHED)
                 .createdAt(new Date())
                 .lastUpdatedAt(new Date())
+                .disabled(false)
                 .build();
 
         String s = om.writeValueAsString(e);

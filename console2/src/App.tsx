@@ -42,11 +42,14 @@ import {
     TeamPage,
     AboutPage,
     ProfilePage,
-    UserActivityPage
+    UserActivityPage,
+    LogoutPage,
+    UnauthorizedPage
 } from './components/pages';
 import { Layout } from './components/templates';
 import { actions as session } from './state/session';
 import { history, store } from './store';
+import { Dimmer, Loader } from 'semantic-ui-react';
 
 store.dispatch(session.checkAuth());
 
@@ -61,6 +64,10 @@ class App extends React.Component {
                         </Route>
 
                         <Route path="/login" component={LoginPage} />
+
+                        <Route path="/logout/done" component={LogoutPage} />
+
+                        <Route path="/unauthorized" component={UnauthorizedPage} />
 
                         <Layout>
                             <Switch>

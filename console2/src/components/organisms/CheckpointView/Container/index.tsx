@@ -200,10 +200,10 @@ export const useCheckpoint = (initial: InitialProps) => {
 
         setLoadingData(true);
 
-        const { items: processes }: PaginatedProcessEntries = await apiList({...args, include: [
-            'checkpoints',
-            'history'
-        ]});
+        const { items: processes }: PaginatedProcessEntries = await apiList({
+            ...args,
+            include: ['checkpoints', 'history']
+        });
 
         const checkpointGroups = {};
         processes.forEach((p) => {

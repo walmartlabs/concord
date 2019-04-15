@@ -32,6 +32,10 @@ import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
 import com.walmartlabs.concord.server.security.ldap.LdapRealm;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyRealm;
+import com.walmartlabs.concord.server.security.sso.SsoAuthFilter;
+import com.walmartlabs.concord.server.security.sso.SsoCallbackFilter;
+import com.walmartlabs.concord.server.security.sso.SsoLogoutFilter;
+import com.walmartlabs.concord.server.security.sso.SsoRealm;
 import com.walmartlabs.concord.server.websocket.ConcordWebSocketServlet;
 import com.walmartlabs.ollie.OllieServer;
 import com.walmartlabs.ollie.OllieServerBuilder;
@@ -72,6 +76,10 @@ public class ConcordServer {
                 .realm(SessionKeyRealm.class)
                 .realm(LdapRealm.class)
                 .realm(GithubRealm.class)
+                .realm(SsoRealm.class)
+                .filterChain("/api/service/sso/auth", SsoAuthFilter.class)
+                .filterChain("/api/service/sso/redirect", SsoCallbackFilter.class)
+                .filterChain("/api/service/sso/logout", SsoLogoutFilter.class)
                 .filterChain("/api/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/forms/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/jolokia/**", ConcordAuthenticatingFilter.class)

@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server, concord-console: JWT-based SSO service support;
 - ansible: existing JSON and YAML extra vars files can now be used
 with the new `extraVarsFiles` parameter;
 - resource-tasks: new method `prettyPrintJson` - returns formatted

@@ -27,6 +27,9 @@ import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
+import com.walmartlabs.concord.server.security.sso.SsoCookies;
+import com.walmartlabs.concord.server.security.sso.SsoHandler;
+import com.walmartlabs.concord.server.security.sso.SsoToken;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -42,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
@@ -91,16 +95,20 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     @InjectMeter
     private final Meter failedAuths;
 
+    private final SsoHandler ssoHandler;
+
     @Inject
     public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao,
                                        SecretStoreConfiguration secretCfg,
                                        Meter successAuths,
-                                       Meter failedAuths) {
+                                       Meter failedAuths,
+                                       SsoHandler ssoHandler) {
 
         this.apiKeyDao = apiKeyDao;
         this.secretCfg = secretCfg;
         this.successAuths = successAuths;
         this.failedAuths = failedAuths;
+        this.ssoHandler = ssoHandler;
     }
 
     @Override
@@ -145,6 +153,11 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         if (req.getHeader(AUTHORIZATION_HEADER) != null) {
             return createFromAuthHeader(req);
+        }
+
+        AuthenticationToken token = ssoHandler.createToken(request, response);
+        if (token != null) {
+            return token;
         }
 
         return new UsernamePasswordToken();

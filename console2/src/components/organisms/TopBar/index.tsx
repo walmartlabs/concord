@@ -61,6 +61,14 @@ interface DispatchProps {
 export type TopBarProps = StateProps & DispatchProps & RouteComponentProps<{}>;
 
 class TopBar extends React.PureComponent<TopBarProps> {
+    getLogout() {
+        const { logoutUrl } = window.concord;
+        if (logoutUrl) {
+            return () => (window.location.href = logoutUrl);
+        }
+        return () => this.props.logOut();
+    }
+
     render() {
         const activeTab = pathToTab(this.props.location.pathname);
         return (
@@ -68,6 +76,7 @@ class TopBar extends React.PureComponent<TopBarProps> {
                 activeTab={activeTab}
                 extraSystemLinks={getExtraSystemLinks()}
                 {...this.props}
+                logOut={this.getLogout()}
             />
         );
     }
