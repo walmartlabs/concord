@@ -1,3 +1,5 @@
+package com.walmartlabs.concord.server.security.sso.encryption;
+
 /*-
  * *****
  * Concord
@@ -7,9 +9,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +19,20 @@
  * limitations under the License.
  * =====
  */
-import { deepMerge } from '../common';
 
-test('deepMerge works', () => {
-    const actual = deepMerge({ x: { y: 123 } }, { x: { z: 234 } });
-    const expected = { x: { y: 123, z: 234 } };
-    expect(actual).toEqual(expected);
-});
+import com.nimbusds.jose.*;
+import com.nimbusds.jwt.EncryptedJWT;
+
+public abstract class AbstractEncryptionConfiguration implements EncryptionConfiguration {
+
+    protected JWEAlgorithm algorithm;
+
+    protected EncryptionMethod method;
+
+    @Override
+    public void decrypt(final EncryptedJWT encryptedJWT) throws JOSEException {
+        encryptedJWT.decrypt(buildDecrypter());
+    }
+
+    protected abstract JWEDecrypter buildDecrypter();
+}

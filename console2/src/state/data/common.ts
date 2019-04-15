@@ -22,6 +22,7 @@ import { Action, Reducer } from 'redux';
 import { put } from 'redux-saga/effects';
 
 import { ConcordId, GenericOperationResult, OperationResult, RequestError } from '../../api/common';
+import { actions } from '../session';
 
 export const nullReducer = <T>(): Reducer<T | null> => (state = null, action) => {
     return state;
@@ -133,7 +134,8 @@ export function* handleErrors(responseType: string, error: RequestError) {
 
     if (error && error.status === 401) {
         // TODO we add a visual clue why we are redirecting the user
-        yield put(pushHistory('/login'));
+        yield put(actions.setCurrent({}));
+        yield put(pushHistory('/unauthorized'));
     }
 }
 

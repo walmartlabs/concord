@@ -51,16 +51,30 @@ class ProtectedRoute extends React.PureComponent<ProtectedRouteProps> {
                     }
 
                     if (!loggedIn) {
-                        return (
-                            <Redirect
-                                to={{
-                                    pathname: '/login',
-                                    state: {
-                                        from: props.location
-                                    }
-                                }}
-                            />
-                        );
+                        const { loginUrl } = window.concord;
+                        if (loginUrl) {
+                            // delay the redirect to avoid layout issues
+                            setInterval(() => {
+                                window.location.href = loginUrl + props.location.pathname;
+                            }, 1000);
+
+                            return (
+                                <Dimmer active={true} inverted={true} page={true}>
+                                    <Loader active={true} size="massive" content={'Logging in'} />
+                                </Dimmer>
+                            );
+                        } else {
+                            return (
+                                <Redirect
+                                    to={{
+                                        pathname: '/login',
+                                        state: {
+                                            from: props.location
+                                        }
+                                    }}
+                                />
+                            );
+                        }
                     }
 
                     if (component) {
