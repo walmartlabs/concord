@@ -139,7 +139,7 @@ export const queryParams = (params: any): string => {
         .filter((k) => {
             const v = params[k];
 
-            if (v === undefined) {
+            if (v === undefined || v === null) {
                 return false;
             }
 
