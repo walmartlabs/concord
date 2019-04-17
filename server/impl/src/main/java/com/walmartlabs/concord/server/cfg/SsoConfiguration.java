@@ -27,8 +27,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Named
 @Singleton
@@ -62,9 +60,15 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.clientSecret")
     private String clientSecret;
 
-    private Path tokenSigningKey;
+    @Inject
+    @Nullable
+    @Config("sso.tokenSigningKey")
+    private String tokenSigningKey;
 
-    private Path tokenEncryptionKey;
+    @Inject
+    @Nullable
+    @Config("sso.tokenEncryptionKey")
+    private String tokenEncryptionKey;
 
     @Inject
     @Config("sso.tokenServiceReadTimeout")
@@ -77,13 +81,6 @@ public class SsoConfiguration implements Serializable {
     @Inject
     @Config("sso.validateNonce")
     private boolean validateNonce;
-
-    @Inject
-    public SsoConfiguration(@Config("sso.tokenSigningKey") @Nullable String tokenSigningKeyFile,
-                            @Config("sso.tokenEncryptionKey") @Nullable String tokenEncryptionKeyFile) {
-        this.tokenSigningKey = tokenSigningKeyFile != null ? Paths.get(tokenSigningKeyFile) : null;
-        this.tokenEncryptionKey = tokenEncryptionKeyFile != null ? Paths.get(tokenEncryptionKeyFile) : null;
-    }
 
     public boolean isEnabled() {
         return enabled;
@@ -113,11 +110,11 @@ public class SsoConfiguration implements Serializable {
         return clientSecret;
     }
 
-    public Path getTokenEncryptionKey() {
+    public String getTokenEncryptionKey() {
         return tokenEncryptionKey;
     }
 
-    public Path getTokenSigningKey() {
+    public String getTokenSigningKey() {
         return tokenSigningKey;
     }
 
