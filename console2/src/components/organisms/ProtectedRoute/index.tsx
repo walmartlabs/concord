@@ -54,7 +54,7 @@ class ProtectedRoute extends React.PureComponent<ProtectedRouteProps> {
                         const { loginUrl } = window.concord;
                         if (loginUrl) {
                             // delay the redirect to avoid layout issues
-                            setInterval(() => {
+                            setTimeout(() => {
                                 window.location.href = loginUrl + props.location.pathname;
                             }, 1000);
 
