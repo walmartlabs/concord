@@ -25,7 +25,6 @@ import com.nimbusds.jose.jwk.KeyType;
 import com.walmartlabs.concord.server.security.sso.JwkHelper;
 import net.minidev.json.JSONObject;
 
-import java.nio.file.Path;
 import java.security.KeyPair;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -34,13 +33,13 @@ public class SignatureConfigurationFactory {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static SignatureConfiguration create(Path cfg) {
+    public static SignatureConfiguration create(String cfg) {
         if (cfg == null) {
             return null;
         }
 
         try {
-            JSONObject json = objectMapper.readValue(cfg.toFile(), JSONObject.class);
+            JSONObject json = objectMapper.readValue(cfg, JSONObject.class);
             KeyType kty = KeyType.parse(json.getAsString("kty"));
             if (KeyType.EC.equals(kty)) {
                 KeyPair key = JwkHelper.buildECKeyPairFromJwk(json);

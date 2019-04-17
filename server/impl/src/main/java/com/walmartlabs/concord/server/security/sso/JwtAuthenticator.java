@@ -176,7 +176,7 @@ public class JwtAuthenticator {
         if (expTime != null) {
             Date now = new Date();
             if (expTime.before(now)) {
-                log.debug("createClaims ['{}'] -> JWT expired");
+                log.debug("createClaims ['{}'] -> JWT expired", jwt);
                 return null;
             }
         }

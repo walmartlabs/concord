@@ -46,7 +46,7 @@ public class SsoLogoutFilter implements Filter {
         HttpServletRequest req = WebUtils.toHttp(request);
 
         if (!cfg.isEnabled()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "sso disabled");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "SSO is disabled, the logout URL is not available");
             return;
         }
 
