@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: new configuration parameter
+`ldap.excludeAttributes` - provides a way to exclude specific
+LDAP attributes from being returned in the user's `attributes`;
 - concord-server, concord-console: JWT-based SSO service support;
 - ansible: existing JSON and YAML extra vars files can now be used
 with the new `extraVarsFiles` parameter;
@@ -14,6 +17,7 @@ prevent restoring it from a checkpoint after completion.
 
 ### Changed
 
+- concord-server: filter out all non string LDAP attributes;
 - concord-server: support for multivalue LDAP attributes when
 fetching user details from AD/LDAP;
 - concord-console: fixed the page limit dropdown on the checkpoint

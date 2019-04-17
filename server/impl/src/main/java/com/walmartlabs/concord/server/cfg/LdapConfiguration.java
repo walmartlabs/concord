@@ -88,9 +88,14 @@ public class LdapConfiguration implements Serializable {
 
     private final Set<String> exposeAttributes;
 
+    private final Set<String> excludeAttributes;
+
     @Inject
-    public LdapConfiguration(@Config("ldap.exposeAttributes") @Nullable String exposeAttributes) {
+    public LdapConfiguration(@Config("ldap.exposeAttributes") @Nullable String exposeAttributes,
+                             @Config("ldap.excludeAttributes") @Nullable String excludeAttributes) {
+
         this.exposeAttributes = split(exposeAttributes);
+        this.excludeAttributes = split(excludeAttributes);
     }
 
     public String getUrl() {
@@ -139,6 +144,10 @@ public class LdapConfiguration implements Serializable {
 
     public Set<String> getExposeAttributes() {
         return exposeAttributes;
+    }
+
+    public Set<String> getExcludeAttributes() {
+        return excludeAttributes;
     }
 
     public List<String> getReturningAttributes() {
