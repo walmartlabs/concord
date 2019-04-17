@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.console.UserSearchResult;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
-import org.apache.shiro.realm.ldap.LdapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,6 +231,10 @@ public class LdapManager {
                 break;
             }
             default: {
+                boolean exclude = cfg.getExcludeAttributes().contains(id);
+                if (exclude) {
+                    return;
+                }
                 Set<String> exposedAttr = cfg.getExposeAttributes();
                 if (exposedAttr == null || exposedAttr.isEmpty() || exposedAttr.contains(id)) {
                     Collection<String> values = LdapUtils.getAllAttributeValues(attr);
