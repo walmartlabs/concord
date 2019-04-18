@@ -33,7 +33,7 @@ import { ProjectEntry } from '../../../api/org/project';
  * @Component Map over process details to create list of process items and details
  */
 export const View = () => {
-    const { processes } = useContext(CheckpointContainer.Context);
+    const { project, processes } = useContext(CheckpointContainer.Context);
 
     return (
         <CheckpointErrorBoundary>
@@ -43,7 +43,7 @@ export const View = () => {
                 processes.map((process) => {
                     return (
                         <Row key={process.instanceId}>
-                            <LeftContent process={process} />
+                            <LeftContent project={project} process={process} />
                             <RightContent process={process} />
                         </Row>
                     );
