@@ -1,5 +1,5 @@
 flows:
   default:
     - log: "before the checkpoint"
-    - checkpoint: "test_${x}"
+    - checkpoint: "test ${x}"
     - log: "after the checkpoint"

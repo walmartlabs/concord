@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-runner: allow whitespaces in checkpoint names.
+
+
+
 ## [1.16.0] - 2019-04-17
 
 ### Added

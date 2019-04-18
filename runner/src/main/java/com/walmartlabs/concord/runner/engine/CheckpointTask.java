@@ -28,17 +28,21 @@ import com.walmartlabs.concord.sdk.Task;
 import javax.inject.Named;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Named("checkpoint")
 public class CheckpointTask implements Task {
 
+    private static final Pattern PATTERN = Pattern.compile("^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~ ]{2,128}$");
+
     @Override
     public void execute(Context ctx) {
         String checkpointName = ContextUtils.assertString(ctx, "checkpointName");
-        if (!checkpointName.matches(ConcordKey.PATTERN)) {
+        if (!PATTERN.matcher(checkpointName).matches()) {
             throw new IllegalArgumentException("Invalid checkpoint name: " + checkpointName + ". " +
                     "If you're using an expression in the checkpoint's name please validate its correctness. " +
-                    "Checkpoint names must start with a digit or a latin letter, the length must be between 2 and 128 characters");
+                    "Checkpoint names must start with a digit or a latin letter, the length must be between 2 and 128 characters. " +
+                    "Can contain whitespace, minus (-), tilde (~), dot (.), underscore (_) and @ characters.");
         }
 
         UUID checkpointId = UUID.randomUUID();
