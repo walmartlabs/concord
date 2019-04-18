@@ -220,7 +220,7 @@ public class CheckpointsIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*checkpoint test_" + xValue + ".*", 1, ab);
+        assertLog(".*checkpoint test " + xValue + ".*", 1, ab);
     }
 
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
