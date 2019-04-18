@@ -65,6 +65,9 @@ export const useCheckpoint = (initial: InitialProps) => {
     // projectId comes from iniital, represents a concord project Id
     const [projectId] = useState(initial.project!.id);
 
+    // project comes from iniital, represents a concord project
+    const [project] = useState(initial.project!);
+
     // processes an array of ProcessEntries which we can map over to render components
     const [processes, setProcesses] = useState<ProcessEntry[]>([]);
 
@@ -346,6 +349,7 @@ export const useCheckpoint = (initial: InitialProps) => {
         loadingData,
         orgId,
         projectId,
+        project,
         setPageLimit,
         processes,
         queryParams,

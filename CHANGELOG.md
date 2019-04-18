@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-console: use the configured project metadata to render the
+checkpoints page;
 - concord-runner: allow whitespaces in checkpoint names.
 
 

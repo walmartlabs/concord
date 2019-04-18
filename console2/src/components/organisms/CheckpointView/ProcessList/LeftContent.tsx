@@ -17,11 +17,11 @@
  * limitations under the License.
  * =====
  */
-import { distanceInWords, distanceInWordsToNow } from 'date-fns';
-import React, { useContext } from 'react';
+import { distanceInWordsToNow, parse as parseDate } from 'date-fns';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Divider, Icon } from 'semantic-ui-react';
-import { parse as parseDate } from 'date-fns';
+import { ProjectEntry, ProjectEntryMeta } from '../../../../api/org/project';
 
 import { ProcessEntry } from '../../../../api/process';
 import { Truncate } from '../../../atoms';
@@ -29,10 +29,31 @@ import { Label, Status } from '../shared/Labels';
 import { LeftWrap, ListItem } from './styles';
 
 interface Props {
+    project: ProjectEntry;
     process: ProcessEntry;
 }
 
-export default ({ process }: Props) => {
+const renderMeta = (projectMeta?: ProjectEntryMeta, processMeta?: {}) => {
+    if (!projectMeta || !projectMeta.ui || !projectMeta.ui.processList) {
+        return;
+    }
+
+    // here we're going to render only `meta.` variables
+    return projectMeta.ui.processList
+        .filter((i) => i.source && i.source.startsWith('meta.'))
+        .map((i, idx) => {
+            const k = i.source.substr(5); // cut off the `meta.` prefix
+            const v = processMeta ? (processMeta[k] ? processMeta[k] : 'n/a') : 'n/a';
+
+            return (
+                <div key={idx}>
+                    <Label>{i.caption ? i.caption : i.source}:</Label> {v}
+                </div>
+            );
+        });
+};
+
+export default ({ project, process }: Props) => {
     return (
         <LeftWrap maxWidth={300}>
             <ListItem>
@@ -57,23 +78,9 @@ export default ({ process }: Props) => {
                         </Link>
                     </div>
                 )}
-                {Object.keys(process.meta!)
-                    .filter((value) => {
-                        // Weed out non-relevant metadata
-                        if (value.includes('_system')) {
-                            return false;
-                        }
-                        // Found real metadata
-                        return true;
-                    })
-                    .map((key) => {
-                        return (
-                            <div key={key}>
-                                <Label>{key}</Label>
-                                {process.meta && `: ${process.meta[key]}`}
-                            </div>
-                        );
-                    })}
+
+                {renderMeta(project.meta, process.meta)}
+
                 <Divider />
                 <div>
                     <Label>Current Status: </Label>
