@@ -7,6 +7,10 @@
 - ansible: support for non-root paths when fetching external roles;
 - http-tasks: new parameter `requestTimeout`.
 
+### Changed
+
+- concord-runner: allow 2 letter checkpoint names.
+
 
 
 ## [1.16.1] - 2019-04-18

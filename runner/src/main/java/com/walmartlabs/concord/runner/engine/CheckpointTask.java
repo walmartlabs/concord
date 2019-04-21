@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 @Named("checkpoint")
 public class CheckpointTask implements Task {
 
-    private static final Pattern PATTERN = Pattern.compile("^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~ ]{2,128}$");
+    private static final Pattern PATTERN = Pattern.compile("^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~ ]{1,128}$");
 
     @Override
     public void execute(Context ctx) {
