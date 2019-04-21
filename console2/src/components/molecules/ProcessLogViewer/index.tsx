@@ -19,23 +19,11 @@
  */
 
 import * as React from 'react';
-import {
-    Button,
-    Container,
-    Header,
-    Icon,
-    Menu,
-    Popup,
-    Radio,
-    Sticky,
-    Transition
-} from 'semantic-ui-react';
+import { Button, Header, Icon, Menu, Popup, Radio, Sticky, Transition } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
-import { escapeHtml } from '../../../utils';
-import { Highlighter, RequestErrorMessage } from '../../molecules';
-import { formatDateTime } from './datetime';
+import { RequestErrorMessage } from '../../molecules';
 
 import './styles.css';
 
@@ -55,10 +43,30 @@ interface Props {
     error: RequestError;
     completed: boolean;
 
-    startPolling: () => void;
+    startPolling: (useLocalTime: boolean, showDate: boolean) => void;
     stopPolling: () => void;
-    loadWholeLog: () => void;
+    loadWholeLog: (useLocalTime: boolean, showDate: boolean) => void;
     refresh: () => void;
+}
+
+interface LogContainerProps {
+    data: string[];
+}
+
+class LogContainer extends React.PureComponent<LogContainerProps> {
+    render() {
+        const { data } = this.props;
+
+        return (
+            <>
+                {data.map((value, idx) => (
+                    <pre className="logEntry" key={idx}>
+                        <div dangerouslySetInnerHTML={{ __html: value }} />
+                    </pre>
+                ))}
+            </>
+        );
+    }
 }
 
 class ProcessLogViewer extends React.Component<Props, State> {
@@ -75,10 +83,11 @@ class ProcessLogViewer extends React.Component<Props, State> {
         };
         this.handleScroll = this.handleScroll.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
+        this.renderToolbar = this.renderToolbar.bind(this);
     }
 
     componentDidMount() {
-        this.props.startPolling();
+        this.props.startPolling(true, false);
     }
 
     componentWillUnmount() {
@@ -87,7 +96,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         const { instanceId, startPolling, stopPolling, data } = this.props;
-        const { scrollAnchorRef } = this.state;
+        const { scrollAnchorRef, useLocalTime, showDate } = this.state;
 
         if (prevProps.data !== data && scrollAnchorRef) {
             this.scrollToBottom();
@@ -95,7 +104,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
         if (instanceId !== prevProps.instanceId) {
             stopPolling();
-            startPolling();
+            startPolling(useLocalTime, showDate);
         }
     }
 
@@ -107,6 +116,26 @@ class ProcessLogViewer extends React.Component<Props, State> {
         if (checked === true) {
             this.scrollToBottom();
         }
+    }
+
+    handleUseLocalTimeChange(newValue: boolean) {
+        const { startPolling, stopPolling } = this.props;
+        const { showDate } = this.state;
+
+        stopPolling();
+        startPolling(newValue, showDate);
+
+        this.setState({ useLocalTime: newValue });
+    }
+
+    handleShowDate(newValue: boolean) {
+        const { startPolling, stopPolling } = this.props;
+        const { useLocalTime } = this.state;
+
+        stopPolling();
+        startPolling(useLocalTime, newValue);
+
+        this.setState({ showDate: newValue });
     }
 
     scrollToBottom() {
@@ -150,7 +179,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                                     toggle={true}
                                     checked={useLocalTime}
                                     onChange={(ev, data) =>
-                                        this.setState({ useLocalTime: data.checked as boolean })
+                                        this.handleUseLocalTimeChange(data.checked as boolean)
                                     }
                                 />
                             </div>
@@ -160,13 +189,15 @@ class ProcessLogViewer extends React.Component<Props, State> {
                                     toggle={true}
                                     checked={showDate}
                                     onChange={(ev, data) =>
-                                        this.setState({ showDate: data.checked as boolean })
+                                        this.handleShowDate(data.checked as boolean)
                                     }
                                 />
                             </div>
                         </Popup>
                         {status && !completed && (
-                            <Button disabled={loading} onClick={() => loadWholeLog()}>
+                            <Button
+                                disabled={loading}
+                                onClick={() => loadWholeLog(useLocalTime, showDate)}>
                                 Show the whole log
                             </Button>
                         )}
@@ -184,7 +215,6 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
     render() {
         const { error, data } = this.props;
-        const { useLocalTime, showDate } = this.state;
 
         if (error) {
             return <RequestErrorMessage error={error} />;
@@ -200,20 +230,8 @@ class ProcessLogViewer extends React.Component<Props, State> {
                     {this.renderToolbar()}
                 </Sticky>
 
-                {data.map((value, idx) => (
-                    <pre className="logEntry" key={idx}>
-                        <Highlighter
-                            value={escapeHtml(formatDateTime(useLocalTime, showDate, value))}
-                            config={[
-                                { string: 'INFO ', style: 'color: #00B5F0' },
-                                { string: 'WARN ', style: 'color: #ffae42' },
-                                { string: 'ERROR', style: 'color: #ff0000' },
-                                { string: 'ANSIBLE:', style: 'color: #808080' },
-                                { string: 'DOCKER:', style: 'color: #808080' }
-                            ]}
-                        />
-                    </pre>
-                ))}
+                <LogContainer data={data} />
+
                 <div
                     ref={(scroll) => {
                         this.scrollAnchorRef = scroll;

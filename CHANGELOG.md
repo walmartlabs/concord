@@ -4,11 +4,13 @@
 
 ### Added
 
+- concord-console: make the log viewer URLs clicable;
 - ansible: support for non-root paths when fetching external roles;
 - http-tasks: new parameter `requestTimeout`.
 
 ### Changed
 
+- concord-console: performance optimizations for the log viewer;
 - concord-runner: allow 2 letter checkpoint names.
 
 

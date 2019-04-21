@@ -27,6 +27,7 @@ import { State } from '../../../state/data/processes/logs/types';
 import { ProcessLogViewer } from '../../molecules';
 
 import './styles.css';
+import * as React from 'react';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -41,9 +42,9 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    startPolling: () => void;
+    startPolling: (useLocalTime: boolean, showDate: boolean) => void;
     stopPolling: () => void;
-    loadWholeLog: () => void;
+    loadWholeLog: (useLocalTime: boolean, showDate: boolean) => void;
     refresh: () => void;
 }
 
@@ -65,9 +66,11 @@ const mapDispatchToProps = (
     dispatch: Dispatch<{}>,
     { instanceId }: ExternalProps
 ): DispatchProps => ({
-    startPolling: () => dispatch(actions.startProcessLogPolling(instanceId)),
+    startPolling: (useLocalTime: boolean, showDate: boolean) =>
+        dispatch(actions.startProcessLogPolling(instanceId, useLocalTime, showDate)),
     stopPolling: () => dispatch(actions.stopProcessLogPolling()),
-    loadWholeLog: () => dispatch(actions.loadWholeLog(instanceId)),
+    loadWholeLog: (useLocalTime: boolean, showDate: boolean) =>
+        dispatch(actions.loadWholeLog(instanceId, useLocalTime, showDate)),
     refresh: () => dispatch(actions.forceRefresh())
 });
 

@@ -19,6 +19,7 @@
  */
 
 import { format as formatDate, getTime } from 'date-fns';
+import { default as AnsiUp } from 'ansi_up';
 
 interface HasName {
     name: string;
@@ -144,3 +145,41 @@ export const escapeHtml = (s: string): string =>
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+
+export interface Config {
+    string: string;
+    style: string;
+    divide?: boolean;
+}
+
+export interface HighlighterProps {
+    config: Config[];
+    caseInsensitive?: boolean;
+    global?: boolean;
+}
+
+const ansiUp = new AnsiUp();
+ansiUp.escape_for_html = false;
+
+export const highlight = (value: string, props: HighlighterProps): string => {
+    const { config, caseInsensitive = false, global = true } = props;
+    const regExpCfg = `${caseInsensitive ? 'i' : ''}
+            ${global ? 'g' : ''}`.trim();
+    let txt = value;
+
+    for (const cfg of config) {
+        if (typeof txt === 'string') {
+            txt = txt.replace(
+                RegExp(cfg.string, regExpCfg),
+                () =>
+                    `<span style="${cfg.style}"><b>${cfg.string}</b></span>${
+                        cfg.divide ? '<hr/>' : ''
+                    }`
+            );
+        }
+    }
+
+    txt = ansiUp.ansi_to_html(txt);
+
+    return txt;
+};

@@ -26,12 +26,16 @@ import { RequestState } from '../../common';
 
 export interface StartProcessLogPolling extends Action {
     instanceId: ConcordId;
+    useLocalTime: boolean;
+    showDate: boolean;
     range: LogRange;
     reset: boolean;
 }
 
 export interface LoadWholeProcessLog extends Action {
     instanceId: ConcordId;
+    useLocalTime: boolean;
+    showDate: boolean;
 }
 
 export interface GetProcessLogResponse extends Action {
@@ -39,6 +43,8 @@ export interface GetProcessLogResponse extends Action {
     error?: RequestError;
     chunk?: LogChunk;
     overwrite?: boolean;
+    useLocalTime?: boolean;
+    showDate?: boolean;
 }
 
 export type GetProcessLogState = RequestState<LogChunk>;

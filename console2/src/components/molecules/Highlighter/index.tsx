@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { default as AnsiUp } from 'ansi_up';
+import { highlight } from '../../../utils';
 
 interface HighlighterProps {
     config: Config[];
@@ -33,33 +33,15 @@ interface Config {
     divide?: boolean;
 }
 
-const ansiUp = new AnsiUp();
-ansiUp.escape_for_html = false;
-
 class Highlighter extends React.PureComponent<HighlighterProps> {
     constructor(props: HighlighterProps) {
         super(props);
     }
 
     render() {
-        const { config, value, caseInsensitive = false, global = true } = this.props;
-        const regExpCfg = `${caseInsensitive ? 'i' : ''}
-            ${global ? 'g' : ''}`.trim();
-        let txt = value;
+        const { value } = this.props;
 
-        for (const cfg of config) {
-            if (typeof txt === 'string') {
-                txt = txt.replace(
-                    RegExp(cfg.string, regExpCfg),
-                    () =>
-                        `<span style="${cfg.style}"><b>${cfg.string}</b></span>${
-                            cfg.divide ? '<hr/>' : ''
-                        }`
-                );
-            }
-        }
-
-        txt = ansiUp.ansi_to_html(txt);
+        const txt = highlight(value, this.props);
 
         return <div dangerouslySetInnerHTML={{ __html: txt }} />;
     }
