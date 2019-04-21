@@ -71,6 +71,7 @@ public abstract class AbstractHttpTaskTest {
         stubForDeleteRequest();
         stubForPatchRequest();
         stubForFault();
+        stubForRequestTimeout();
     }
 
     @After
@@ -79,13 +80,15 @@ public abstract class AbstractHttpTaskTest {
     }
 
     @SuppressWarnings("unchecked")
-    protected void initCxtForRequest(Context ctx, String requestMethod, String requestType, String responseType, String url, boolean ignoreErrors) {
+    protected void initCxtForRequest(Context ctx, String requestMethod, String requestType, String responseType,
+                                     String url, boolean ignoreErrors, int requestTimeout) {
         when(ctx.getVariable("url")).thenReturn(url);
         when(ctx.getVariable("method")).thenReturn(requestMethod);
         when(ctx.getVariable("request")).thenReturn(requestType);
         when(ctx.getVariable("response")).thenReturn(responseType);
         when(ctx.getVariable("out")).thenReturn("rsp");
         when(ctx.getVariable("ignoreErrors")).thenReturn(ignoreErrors);
+        when(ctx.getVariable("requestTimeout")).thenReturn(requestTimeout);
 
         doAnswer((Answer<Void>) invocation -> {
             response = (Map<String, Object>) invocation.getArguments()[1];
@@ -237,6 +240,17 @@ public abstract class AbstractHttpTaskTest {
                         .withBody("{\n" +
                                 "  \"message\": \"Success\"\n" +
                                 "}"))
+        );
+    }
+
+    protected void stubForRequestTimeout() {
+        rule.stubFor(get(urlEqualTo("/requestTimeout"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withHeader("Accept", "text/plain")
+                        .withBody("Request timeout")
+                        .withFixedDelay(8000))
         );
     }
 }

@@ -162,6 +162,7 @@ public class HttpTask implements Task {
         static final String PASSWORD_KEY = "password"; // NOSONAR
         static final String PROXY_KEY = "proxy";
         static final String REQUEST_KEY = "request";
+        static final String REQUEST_TIMEOUT_KEY = "requestTimeout";
         static final String REQUEST_POST_KEY = "POST";
         static final String REQUEST_PUT_KEY = "PUT";
         static final String RESPONSE_KEY = "response";

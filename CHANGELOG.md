@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- http-tasks: new parameter `requestTimeout`.
+
+
+
 ## [1.16.1] - 2019-04-18
 
 ### Changed

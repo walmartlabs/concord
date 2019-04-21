@@ -47,6 +47,7 @@ public class Configuration {
     private final Object body;
     private final int connectTimeout;
     private final int socketTimeout;
+    private final int requestTimeout;
     private final boolean ignoreErrors;
     private final String proxy;
 
@@ -60,6 +61,7 @@ public class Configuration {
                           Object body,
                           int connectTimeout,
                           int socketTimeout,
+                          int requestTimeout,
                           boolean ignoreErrors,
                           String proxy) {
 
@@ -73,6 +75,7 @@ public class Configuration {
         this.body = body;
         this.connectTimeout = connectTimeout;
         this.socketTimeout = socketTimeout;
+        this.requestTimeout = requestTimeout;
         this.ignoreErrors = ignoreErrors;
         this.proxy = proxy;
     }
@@ -162,6 +165,10 @@ public class Configuration {
         return socketTimeout;
     }
 
+    public int getRequestTimeout() {
+        return requestTimeout;
+    }
+
     public boolean isIgnoreErrors() {
         return ignoreErrors;
     }
@@ -182,6 +189,7 @@ public class Configuration {
         private Object body;
         private Integer connectTimeout = 30000;
         private Integer socketTimeout = -1;
+        private Integer requestTimeout = 0;
         private boolean ignoreErrors;
         private String proxy;
 
@@ -269,6 +277,7 @@ public class Configuration {
          * A negative value is interpreted as undefined (system default).
          * <p>
          * Default value is {@code 30000}
+         * </p>
          *
          * @param connectTimeout
          * @return instance of this {@link Builder}
@@ -284,12 +293,25 @@ public class Configuration {
          * A negative value is interpreted as undefined (system default).
          * <p>
          * Default value is {@code -1}
+         * </p>
          *
          * @param socketTimeout
          * @return instance of this {@link Builder}
          */
         public Builder withSocketTimeout(int socketTimeout) {
             this.socketTimeout = socketTimeout;
+            return this;
+        }
+
+        /**
+         * Used to specify the request timeout (in ms).
+         * A timeout value of zero is interpreted as an infinite timeout.
+         *
+         * @param requestTimeout
+         * @return instance of this {@link Builder}
+         */
+        public Builder withRequestTimeout(int requestTimeout) {
+            this.requestTimeout = requestTimeout;
             return this;
         }
 
@@ -327,7 +349,8 @@ public class Configuration {
                 throw new IllegalArgumentException("Body is missing for Put method");
             }
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors, proxy);
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy);
         }
 
         /**
@@ -392,9 +415,14 @@ public class Configuration {
                 this.ignoreErrors = (boolean) ctx.getVariable(IGNORE_ERRORS_KEY);
             }
 
+            if (ctx.getVariable(REQUEST_TIMEOUT_KEY) != null) {
+                this.requestTimeout = (Integer) ctx.getVariable(REQUEST_TIMEOUT_KEY);
+            }
+
             this.proxy = (String) ctx.getVariable(PROXY_KEY);
 
-            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir, requestHeaders, body, connectTimeout, socketTimeout, ignoreErrors, proxy);
+            return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy);
         }
 
         /**

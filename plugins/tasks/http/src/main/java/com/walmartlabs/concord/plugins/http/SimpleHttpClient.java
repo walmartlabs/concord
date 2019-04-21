@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.http;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.plugins.http.exception.RequestTimeoutException;
 import com.walmartlabs.concord.plugins.http.exception.UnauthorizedException;
 import com.walmartlabs.concord.plugins.http.request.HttpTaskRequest;
 import org.apache.http.HttpEntity;
@@ -58,6 +59,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.*;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.getHttpEntity;
@@ -70,6 +72,7 @@ public class SimpleHttpClient {
     private final CloseableHttpClient client;
     private final HttpUriRequest request;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private SimpleHttpClient(Configuration config) throws Exception {
         this.config = config;
@@ -96,7 +99,7 @@ public class SimpleHttpClient {
     public ClientResponse execute() throws Exception {
         CloseableHttpResponse httpResponse = null;
         try {
-            httpResponse = this.client.execute(request);
+            httpResponse = callWithTimeout(() -> this.client.execute(request), config.getRequestTimeout());
 
             if (isUnAuthorized(httpResponse.getStatusLine().getStatusCode())) {
                 throw new UnauthorizedException("Authorization required for " + request.getURI().toURL());
@@ -121,7 +124,7 @@ public class SimpleHttpClient {
 
             return new ClientResponse(response);
 
-        } catch (IOException | UnauthorizedException e) {
+        } catch (RequestTimeoutException | IOException | UnauthorizedException e) {
             if (!config.isIgnoreErrors()) {
                 throw e;
             }
@@ -139,6 +142,37 @@ public class SimpleHttpClient {
             if (httpResponse != null) {
                 httpResponse.close();
             }
+
+            this.client.close();
+        }
+    }
+
+    private <T> T callWithTimeout(Callable<T> callable, long timeoutDurationMs) throws Exception {
+        Future<T> future = executorService.submit(callable);
+        try {
+            if (timeoutDurationMs > 0) {
+                return future.get(timeoutDurationMs, TimeUnit.MILLISECONDS);
+            } else {
+                return future.get();
+            }
+        } catch (TimeoutException e) {
+            future.cancel(true);
+
+            if (!request.isAborted()) {
+                request.abort();
+            }
+
+            throw new RequestTimeoutException("Request timeout after " + timeoutDurationMs + "ms");
+        } catch (ExecutionException e) {
+            return unwrapException(e);
+        }
+    }
+
+    private <T> T unwrapException(ExecutionException e) throws Exception {
+        if (e.getCause() instanceof IOException) {
+            throw (IOException) e.getCause();
+        } else {
+            throw new Exception(e.getCause());
         }
     }
 
