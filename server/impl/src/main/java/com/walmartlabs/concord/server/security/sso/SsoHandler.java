@@ -29,12 +29,16 @@ import javax.inject.Named;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Named
 public class SsoHandler {
 
     private final SsoConfiguration cfg;
     private final JwtAuthenticator jwtAuthenticator;
+
+    private static final String FORM_URL_PATTERN = "/forms/.*";
 
     @Inject
     public SsoHandler(SsoConfiguration cfg, JwtAuthenticator jwtAuthenticator) {
@@ -59,5 +63,22 @@ public class SsoHandler {
             return null;
         }
         return new SsoToken(login);
+    }
+
+    public boolean onAccessDenied(ServletRequest request, ServletResponse response) throws IOException {
+        if (!cfg.isEnabled()) {
+            return false;
+        }
+
+        HttpServletRequest req = WebUtils.toHttp(request);
+        HttpServletResponse resp = WebUtils.toHttp(response);
+
+        String p = req.getRequestURI();
+        if (p.matches(FORM_URL_PATTERN)) {
+            resp.sendRedirect(resp.encodeRedirectURL("/api/service/sso/auth?from=" + p));
+            return true;
+        }
+
+        return false;
     }
 }
