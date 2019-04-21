@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: support for non-root paths when fetching external roles;
 - http-tasks: new parameter `requestTimeout`.
 
 
