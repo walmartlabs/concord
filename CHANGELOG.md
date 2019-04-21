@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: SSO support for custom forms;
 - concord-console: make the log viewer URLs clicable;
 - ansible: support for non-root paths when fetching external roles;
 - http-tasks: new parameter `requestTimeout`.

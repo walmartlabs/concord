@@ -226,8 +226,12 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
 }
 
 function* onStartProcessForm({ processInstanceId, formName }: StartProcessForm) {
-    const form: FormInstanceEntry = yield call(apiGet, processInstanceId, formName);
-    yield startProcessForm(form.processInstanceId, form.name, form.custom, form.yield);
+    try {
+        const form: FormInstanceEntry = yield call(apiGet, processInstanceId, formName);
+        yield startProcessForm(form.processInstanceId, form.name, form.custom, form.yield);
+    } catch (e) {
+        yield handleErrors(actionTypes.RESET_PROCESS_FORMS, e);
+    }
 }
 
 function* startProcessForm(

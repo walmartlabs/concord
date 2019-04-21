@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.cfg.ServerConfiguration;
 import com.walmartlabs.concord.server.security.ConcordAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.ConcordSecurityModule;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
+import com.walmartlabs.concord.server.security.LocalRequestFilter;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyRealm;
 import com.walmartlabs.concord.server.security.github.GithubRealm;
 import com.walmartlabs.concord.server.security.internal.InternalRealm;
@@ -41,6 +42,7 @@ import com.walmartlabs.ollie.OllieServer;
 import com.walmartlabs.ollie.OllieServerBuilder;
 import com.walmartlabs.ollie.SessionCookieOptions;
 import io.prometheus.client.exporter.MetricsServlet;
+import org.apache.shiro.web.filter.authc.AnonymousFilter;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +79,10 @@ public class ConcordServer {
                 .realm(LdapRealm.class)
                 .realm(GithubRealm.class)
                 .realm(SsoRealm.class)
+                .filterChain("/api/v1/server/ping", AnonymousFilter.class)
+                .filterChain("/api/v1/server/version", AnonymousFilter.class)
+                .filterChain("/api/service/console/logout", AnonymousFilter.class)
+                .filterChain("/api/v1/server/maintenance-mode", LocalRequestFilter.class)
                 .filterChain("/api/service/sso/auth", SsoAuthFilter.class)
                 .filterChain("/api/service/sso/redirect", SsoCallbackFilter.class)
                 .filterChain("/api/service/sso/logout", SsoLogoutFilter.class)

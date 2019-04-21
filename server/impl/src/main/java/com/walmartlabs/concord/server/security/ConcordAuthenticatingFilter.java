@@ -27,9 +27,7 @@ import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
-import com.walmartlabs.concord.server.security.sso.SsoCookies;
 import com.walmartlabs.concord.server.security.sso.SsoHandler;
-import com.walmartlabs.concord.server.security.sso.SsoToken;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -45,12 +43,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -69,21 +64,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
      */
     private static final String[] DO_NOT_FORCE_BASIC_AUTH_URLS = {
             "/api/service/console/whoami"
-    };
-
-    /**
-     * List of URLs which do not require authentication or authorization.
-     */
-    private static final String[] ANON_URLS = {
-            "/api/v1/server/ping",
-            "/api/v1/server/version",
-            "/api/service/console/logout"};
-
-    /**
-     * List of URLs which allows only local connection without authentication or authorization.
-     */
-    private static final String[] LOCAL_URLS = {
-            "/api/v1/server/maintenance-mode",
     };
 
     private final ApiKeyDao apiKeyDao;
@@ -109,29 +89,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         this.successAuths = successAuths;
         this.failedAuths = failedAuths;
         this.ssoHandler = ssoHandler;
-    }
-
-    @Override
-    public boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-        HttpServletRequest r = WebUtils.toHttp(request);
-        String p = r.getRequestURI();
-        for (String s : ANON_URLS) {
-            if (p.matches(s)) {
-                return true;
-            }
-        }
-
-        for (String s : LOCAL_URLS) {
-            if (p.matches(s)) {
-                if (isLocalRequest(r)) {
-                    return true;
-                } else {
-                    throw new AuthenticationException("Only localhost requests allowed");
-                }
-            }
-        }
-
-        return super.onPreHandle(request, response, mappedValue);
     }
 
     @Override
@@ -168,10 +125,13 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         boolean loggedIn = executeLogin(request, response);
 
         if (!loggedIn) {
-            HttpServletResponse resp = WebUtils.toHttp(response);
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            boolean processed = ssoHandler.onAccessDenied(request, response);
+            if (!processed) {
+                HttpServletResponse resp = WebUtils.toHttp(response);
+                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-            reportAuthSchemes(request, response);
+                reportAuthSchemes(request, response);
+            }
         }
 
         return loggedIn;
@@ -304,10 +264,5 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         String password = s.substring(idx + 1);
 
         return new UsernamePasswordToken(username, password, rememberMe);
-    }
-
-    private static boolean isLocalRequest(HttpServletRequest request) throws UnknownHostException {
-        InetAddress addr = InetAddress.getByName(request.getRemoteAddr());
-        return addr.isAnyLocalAddress() || addr.isLoopbackAddress();
     }
 }
