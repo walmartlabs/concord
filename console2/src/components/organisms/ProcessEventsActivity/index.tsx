@@ -30,7 +30,6 @@ import {
     ProcessEventType
 } from '../../../api/process/event';
 import { AnsibleEvent } from '../../../api/process/ansible';
-import { FormListEntry } from '../../../api/process/form';
 import { actions, MAX_EVENT_COUNT } from '../../../state/data/processes/poll';
 import { ProcessEvents, State } from '../../../state/data/processes/poll/types';
 import { timestampDiffMs } from '../../../utils';
