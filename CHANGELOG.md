@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: return `requirements` when fetching a list of
+processes using `/api/v2/process`;
 - concord-server: SSO support for custom forms;
 - concord-console: make the log viewer URLs clicable;
 - ansible: support for non-root paths when fetching external roles;

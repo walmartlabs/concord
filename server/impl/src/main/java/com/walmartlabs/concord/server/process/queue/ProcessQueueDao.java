@@ -829,6 +829,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .childrenIds(toSet(getOrNull(r, "children_ids")))
                 .meta(objectMapper.deserialize(r.get(PROCESS_QUEUE.META)))
                 .handlers(toSet(r.get(PROCESS_QUEUE.HANDLERS)))
+                .requirements(objectMapper.deserialize(r.get(PROCESS_QUEUE.REQUIREMENTS)))
                 .disabled(r.get(PROCESS_QUEUE.IS_DISABLED))
                 .logFileName(r.get(PROCESS_QUEUE.INSTANCE_ID) + ".log")
                 .checkpoints(objectMapper.deserialize(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))

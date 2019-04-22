@@ -109,6 +109,9 @@ public interface ProcessEntry extends Serializable {
     @Nullable
     Set<String> handlers();
 
+    @Nullable
+    Map<String, Object> requirements();
+
     @Value.Default
     default boolean disabled() {
         return false;
