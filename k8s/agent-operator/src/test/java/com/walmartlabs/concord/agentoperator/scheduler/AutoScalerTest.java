@@ -1,0 +1,140 @@
+package com.walmartlabs.concord.agentoperator.scheduler;
+
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2019 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+import com.walmartlabs.concord.agentoperator.crd.AgentPool;
+import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
+import com.walmartlabs.concord.agentoperator.processqueue.ProcessQueueEntry;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertEquals;
+
+public class AutoScalerTest {
+
+    @Test
+    public void testStill() throws Exception {
+        AtomicInteger podCount = new AtomicInteger(1);
+
+        AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true);
+
+        AgentPoolConfiguration spec = new AgentPoolConfiguration();
+        spec.setSizeIncrement(2);
+        spec.setQueueSelector(Collections.singletonMap("test", 123));
+
+        AgentPool resource = new AgentPool();
+        resource.setSpec(spec);
+
+        AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 1, 0);
+
+        List<ProcessQueueEntry> queue = new ArrayList<>();
+
+        // ---
+
+        pool = as.apply(pool, queue);
+        assertEquals(1, pool.getTargetSize());
+
+        pool = as.apply(pool, queue);
+        assertEquals(1, pool.getTargetSize());
+    }
+
+    @Test
+    public void testZeroStart() throws Exception {
+        AtomicInteger podCount = new AtomicInteger(0);
+
+        AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true);
+
+        AgentPoolConfiguration spec = new AgentPoolConfiguration();
+        spec.setSizeIncrement(2);
+        spec.setQueueSelector(Collections.singletonMap("test", 123));
+
+        AgentPool resource = new AgentPool();
+        resource.setSpec(spec);
+
+        AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 1, 0);
+
+        List<ProcessQueueEntry> queue = new ArrayList<>();
+
+        // ---
+
+        pool = as.apply(pool, queue);
+        assertEquals(2, pool.getTargetSize());
+
+        podCount.set(2);
+
+        pool = as.apply(pool, queue);
+        assertEquals(1, pool.getTargetSize());
+    }
+
+    @Test
+    public void testQueue() throws Exception {
+        AtomicInteger podCount = new AtomicInteger(1);
+
+        AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true);
+
+        AgentPoolConfiguration spec = new AgentPoolConfiguration();
+        spec.setSizeIncrement(2);
+        spec.setQueueSelector(Collections.singletonMap("test", 123));
+
+        AgentPool resource = new AgentPool();
+        resource.setSpec(spec);
+
+        AgentPoolInstance pool = new AgentPoolInstance("test", resource, AgentPoolInstance.Status.ACTIVE, 1, 0);
+
+        List<ProcessQueueEntry> queue = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            queue.add(new ProcessQueueEntry(Collections.singletonMap("test", 123)));
+        }
+
+        // ---
+
+        pool = as.apply(pool, queue);
+        assertEquals(3, pool.getTargetSize());
+
+        podCount.set(3);
+
+        pool = as.apply(pool, queue);
+        assertEquals(5, pool.getTargetSize());
+
+        podCount.set(5);
+
+        pool = as.apply(pool, queue);
+        assertEquals(7, pool.getTargetSize());
+
+        podCount.set(7);
+
+        // ---
+
+        queue.clear();
+
+        pool = as.apply(pool, queue);
+        assertEquals(5, pool.getTargetSize());
+
+        podCount.set(5);
+
+        pool = as.apply(pool, queue);
+        assertEquals(3, pool.getTargetSize());
+    }
+}

@@ -20,9 +20,7 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public final class ConfigurationUtils {
 
@@ -160,6 +158,53 @@ public final class ConfigurationUtils {
         return root;
     }
 
+    public static boolean deepEquals(Object a, Object b) {
+        if (!Objects.deepEquals(a, b)) {
+            return false;
+        }
+
+        if (a instanceof Map && b instanceof Map) {
+            return equals((Map) a, (Map) b);
+        } else if (a instanceof Collection && b instanceof Collection) {
+            return equals((Collection) a, (Collection) b);
+        }
+
+        return true;
+    }
+
+    private static boolean equals(Map<?, ?> a, Map<?, ?> b) {
+        if (a.keySet().size() != b.keySet().size()) {
+            return false;
+        }
+
+        for (Map.Entry<?, ?> aEntry : a.entrySet()) {
+            Object aValue = aEntry.getValue();
+            Object bValue = b.get(aEntry.getKey());
+            if (!deepEquals(aValue, bValue)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean equals(Collection<?> a, Collection<?> b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+
+        Iterator<?> aIterator = a.iterator();
+        Iterator<?> bIterator = b.iterator();
+        while (aIterator.hasNext()) {
+            Object aValue = aIterator.next();
+            Object bValue = bIterator.next();
+            if (!deepEquals(aValue, bValue)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     private ConfigurationUtils() {
     }

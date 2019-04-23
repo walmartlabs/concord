@@ -28,11 +28,12 @@ RUN umask 0022 && pip install --upgrade \
     botocore \
     docker \
     kerberos \
+    openshift \
     pbr \
     pip \
     pyvmomi \
     pywinrm==0.3.0 \
     requests_kerberos \
-    ujson 
+    ujson
 
 USER concord

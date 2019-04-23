@@ -51,6 +51,7 @@
         <module>console2</module>
         <module>docker-images</module>
         <module>it</module>
+        <module>k8s/agent-operator</module>
     </modules>
 
     <properties>

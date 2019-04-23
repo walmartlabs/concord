@@ -22,15 +22,16 @@ package com.walmartlabs.concord.common;
 
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class ConfigurationUtilsTest {
 
     @Test
-    public void a() {
+    public void deepMergeTest() {
         Map<String, Object> m1 = new HashMap<>();
         m1.put("a", "a-value1");
         m1.put("b", "b-value1");
@@ -43,5 +44,16 @@ public class ConfigurationUtilsTest {
         assertEquals("a-value2", result.get("a"));
         assertEquals("b-value1", result.get("b"));
         assertEquals("b-value2", result.get("c"));
+    }
+
+    @Test
+    public void deepEqualsTest() {
+        Object a = Collections.singletonMap("x", Collections.singletonList("test1"));
+        Object b = Collections.singletonMap("x", Collections.singletonList("test2"));
+        assertFalse(ConfigurationUtils.deepEquals(a, b));
+
+        a = Collections.singletonMap("x", Collections.singletonList("test"));
+        b = Collections.singletonMap("x", Collections.singletonList("test"));
+        assertTrue(ConfigurationUtils.deepEquals(a, b));
     }
 }
