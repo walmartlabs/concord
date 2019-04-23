@@ -21,79 +21,67 @@ package com.walmartlabs.concord.server.security.sso;
  */
 
 import com.walmartlabs.concord.server.cfg.SsoConfiguration;
-import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
-import javax.servlet.*;
+import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-public class SsoCallbackFilter implements Filter {
+public class SsoCallbackFilter extends AbstractHttpFilter {
 
     private final SsoConfiguration cfg;
     private final SsoClient ssoClient;
     private final JwtAuthenticator jwtAuthenticator;
+    private final RedirectHelper redirectHelper;
 
     @Inject
-    public SsoCallbackFilter(SsoConfiguration cfg, SsoClient ssoClient, JwtAuthenticator jwtAuthenticator) {
-        this.cfg = cfg;
+    public SsoCallbackFilter(SsoConfiguration cfg, SsoConfiguration cfg1, SsoClient ssoClient,
+                             JwtAuthenticator jwtAuthenticator, RedirectHelper redirectHelper) {
+        this.cfg = cfg1;
         this.ssoClient = ssoClient;
         this.jwtAuthenticator = jwtAuthenticator;
+        this.redirectHelper = redirectHelper;
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
-        HttpServletResponse resp = WebUtils.toHttp(response);
-        HttpServletRequest req = WebUtils.toHttp(request);
-
+    public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
         if (!cfg.isEnabled()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "sso disabled");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "sso disabled");
             return;
         }
 
-        String code = req.getParameter("code");
+        String code = request.getParameter("code");
         if (code == null || code.trim().isEmpty()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "code param missing");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "code param missing");
             return;
         }
 
-        String state = req.getParameter("state");
+        String state = request.getParameter("state");
         if (state == null || state.trim().isEmpty()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "state param missing");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "state param missing");
             return;
         }
 
         SsoClient.Token token = ssoClient.getToken(code, cfg.getRedirectUrl());
 
         if (cfg.isValidateNonce()) {
-            HttpSession session = req.getSession();
+            HttpSession session = request.getSession();
             String nonce = (String) session.getAttribute("ssoNonce");
             boolean isValid = jwtAuthenticator.isTokenValid(token.idToken(), nonce);
             if (!isValid) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid nonce");
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid nonce");
                 return;
             }
         }
 
-        SsoCookies.addTokenCookie(token.idToken(), token.expiresIn(), resp);
+        SsoCookies.addTokenCookie(token.idToken(), token.expiresIn(), response);
 
-
-        String redirectUrl = SsoCookies.getFromCookie(req);
+        String redirectUrl = SsoCookies.getFromCookie(request);
         if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
-            redirectUrl = "";
+            redirectUrl = "/";
         }
-        resp.sendRedirect(resp.encodeRedirectURL(redirectUrl));
-    }
-
-    @Override
-    public void init(FilterConfig filterConfig) {
-        // do nothing
-    }
-
-    @Override
-    public void destroy() {
-        // do nothing
+        redirectHelper.sendRedirect(response, redirectUrl);
     }
 }
