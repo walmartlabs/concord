@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.events;
+package com.walmartlabs.concord.common;
 
 /*-
  * *****
@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.events;
 import java.util.Collection;
 import java.util.Map;
 
-public final class EventMatcher {
+public final class MapMatcher {
 
     public static boolean matches(Map<String, Object> data, Map<String, Object> conditions) {
         if (conditions == null || conditions.isEmpty()) {

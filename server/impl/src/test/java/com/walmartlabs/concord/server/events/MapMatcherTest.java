@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.common.MapMatcher;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -30,7 +31,7 @@ import java.util.Map;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class EventMatcherTest {
+public class MapMatcherTest {
 
     @Test
     public void testAllJsonTypes() {
@@ -50,7 +51,7 @@ public class EventMatcherTest {
         conditions.put("e", true);
         conditions.put("f", Arrays.asList("1", "2"));
 
-        boolean result = EventMatcher.matches(event, conditions);
+        boolean result = MapMatcher.matches(event, conditions);
         assertTrue(result);
     }
 
@@ -66,7 +67,7 @@ public class EventMatcherTest {
 
         Map<String, Object> conditions = new HashMap<>();
 
-        boolean result = EventMatcher.matches(event, conditions);
+        boolean result = MapMatcher.matches(event, conditions);
         assertTrue(result);
     }
 
@@ -83,7 +84,7 @@ public class EventMatcherTest {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("b", "XXXX");
 
-        boolean result = EventMatcher.matches(event, conditions);
+        boolean result = MapMatcher.matches(event, conditions);
         assertFalse(result);
     }
 
@@ -95,7 +96,7 @@ public class EventMatcherTest {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("a", "123");
 
-        boolean result = EventMatcher.matches(event, conditions);
+        boolean result = MapMatcher.matches(event, conditions);
         assertFalse(result);
     }
 
@@ -113,7 +114,7 @@ public class EventMatcherTest {
         conditions.put("a", 100);
         conditions.put("obj", Collections.singletonMap("o1", "o1v1"));
 
-        boolean result = EventMatcher.matches(event, conditions);
+        boolean result = MapMatcher.matches(event, conditions);
         assertTrue(result);
     }
 
@@ -125,7 +126,7 @@ public class EventMatcherTest {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("unknownRepo", Arrays.asList(true, false));
 
-        boolean result = EventMatcher.matches(event, conditions);
+        boolean result = MapMatcher.matches(event, conditions);
         assertTrue(result);
     }
 
@@ -137,7 +138,7 @@ public class EventMatcherTest {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("unknownRepo", Collections.singletonList(false));
 
-        boolean result = EventMatcher.matches(event, conditions);
+        boolean result = MapMatcher.matches(event, conditions);
         assertFalse(result);
     }
 

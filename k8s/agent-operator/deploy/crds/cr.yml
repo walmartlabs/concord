@@ -1,0 +1,136 @@
+## Concord Agent Pool definition
+##
+## "%%var%%" are template variables which will be replaces by the operator
+##
+## %%configMapName%% - name of the ConfigMap resource used by the Agent's pod
+## %%podName%% - Agent's pod name
+## %%app%% - the operator's label
+## %%poolName%% - name of the pool, the operator automatically uses the CR's name as the pool name
+## %%concordCfgHash%% - configuration hash
+
+apiVersion: concord.walmartlabs.com/v1alpha1
+kind: AgentPool
+metadata:
+  name: example-agentpool
+spec:
+  queueSelector:
+    agent:
+      flavor: "k8s-test"
+
+  minSize: 1
+  maxSize: 10
+  size: 1
+
+  configMap:
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: "%%configMapName%%"
+    data:
+      mvn.json: |
+        {
+          "repositories": [
+            {
+              "id": "central",
+              "url": "https://repo.maven.apache.org/maven2/"
+            }
+          ]
+        }
+
+      agent.conf: |
+        concord-agent {
+          capabilities = {
+              flavor = "k8s-test"
+              k8s {
+                  cluster = "minikube"
+                  namespace = "default"
+              }
+          }
+
+          workersCount = 1
+
+          server {
+              apiBaseUrl = "http://192.168.99.1:8001"
+              websockerUrl = "ws://192.168.99.1:8001/websocket"
+              readTimeout = "10 minutes"
+          }
+        }
+
+  pod:
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: "%%podName%%"
+      labels:
+        app: "%%app%%"
+        poolName: "%%poolName%%"
+        concordCfgHash: "%%concordCfgHash%%"
+    spec:
+      hostAliases:
+        - ip: "127.0.0.1"
+          hostnames:
+            - "repo.maven.apache.org"
+      containers:
+        - name: dind
+          image: "docker:dind"
+          args: ["-H tcp://0.0.0.0:6666"]
+          resources:
+            requests:
+              cpu: 1
+              memory: "2G"
+              ephemeral-storage: "2G"
+            limits:
+              cpu: 2
+              memory: "3G"
+              ephemeral-storage: "3G"
+          volumeMounts:
+            - name: "process-tmp"
+              mountPath: "/tmp"
+          securityContext:
+            privileged: true
+
+        - name: agent
+          image: "walmartlabs/concord-agent:latest"
+          volumeMounts:
+            - name: "cfg"
+              mountPath: "/opt/concord/conf"
+            - name: "process-tmp"
+              mountPath: "/tmp"
+          resources:
+            requests:
+              cpu: "1"
+              memory: "1G"
+            limits:
+              cpu: "2"
+              memory: "2G"
+          env:
+            - name: CONCORD_TMP_DIR
+              value: "/tmp/concord"
+            - name: CONCORD_DOCKER_LOCAL_MODE
+              value: "false"
+            - name: DOCKER_HOST
+              value: "tcp://localhost:6666"
+            - name: CONCORD_CFG_FILE
+              value: "/opt/concord/conf/agent.conf"
+            - name: CONCORD_MAVEN_CFG
+              value: "/opt/concord/conf/mvn.json"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: USER_AGENT
+              value: "k8s-agent $(MY_POD_NAMESPACE)/$(MY_POD_NAME) @ $(MY_POD_IP)"
+      volumes:
+        - name: cfg
+          configMap:
+            name: "%%configMapName%%"
+        - name: process-tmp
+          emptyDir: {}

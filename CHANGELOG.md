@@ -4,6 +4,8 @@
 
 ### Added
 
+- docker: install Ansible's `k8s` dependencies;
+- k8s/agent-operator: initial version;
 - concord-server: return `requirements` when fetching a list of
 processes using `/api/v2/process`;
 - concord-server: SSO support for custom forms;

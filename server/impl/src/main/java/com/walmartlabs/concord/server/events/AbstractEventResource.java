@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
@@ -189,7 +190,7 @@ public abstract class AbstractEventResource {
 
     private boolean filter(Map<String, Object> conditions, TriggerEntry t) {
         try {
-            return EventMatcher.matches(conditions, t.getConditions());
+            return MapMatcher.matches(conditions, t.getConditions());
         } catch (Exception e) {
             log.warn("filter [{}, {}] -> error while matching events: {}", conditions, t, e.getMessage());
             return false;
