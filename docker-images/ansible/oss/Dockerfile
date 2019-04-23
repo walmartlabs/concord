@@ -22,7 +22,13 @@ RUN yum -y install \
     util-linux \
     && yum clean all
 
-RUN umask 0022 && pip install --upgrade \
+RUN umask 0022
+
+RUN pip install --upgrade --ignore-installed \
+    pip \
+    setuptools
+
+RUN pip install --upgrade --ignore-installed \
     "ansible>=2.6.10,<2.7.0" \
     boto3 \
     botocore \
@@ -30,7 +36,6 @@ RUN umask 0022 && pip install --upgrade \
     kerberos \
     openshift \
     pbr \
-    pip \
     pyvmomi \
     pywinrm==0.3.0 \
     requests_kerberos \
