@@ -21,12 +21,11 @@ package com.walmartlabs.concord.server.security.sso;
  */
 
 import com.walmartlabs.concord.server.cfg.SsoConfiguration;
-import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.servlet.*;
+import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -34,27 +33,25 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class SsoAuthFilter implements Filter {
+public class SsoAuthFilter extends AbstractHttpFilter {
 
     private static final Logger log = LoggerFactory.getLogger(SsoAuthFilter.class);
 
     private final SsoConfiguration cfg;
-
     private final JwtAuthenticator jwtAuthenticator;
+    private final RedirectHelper redirectHelper;
 
     @Inject
-    public SsoAuthFilter(SsoConfiguration cfg, JwtAuthenticator jwtAuthenticator) {
+    public SsoAuthFilter(SsoConfiguration cfg, JwtAuthenticator jwtAuthenticator, RedirectHelper redirectHelper) {
         this.cfg = cfg;
         this.jwtAuthenticator = jwtAuthenticator;
+        this.redirectHelper = redirectHelper;
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest req = WebUtils.toHttp(request);
-        HttpServletResponse resp = WebUtils.toHttp(response);
-
+    public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
         if (!cfg.isEnabled()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "sso disabled");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "sso disabled");
             return;
         }
 
@@ -63,28 +60,29 @@ public class SsoAuthFilter implements Filter {
             from = "/";
         }
 
-        String token = SsoCookies.getTokenCookie(req);
+        String token = SsoCookies.getTokenCookie(request);
         if (token != null) {
             boolean isValid = jwtAuthenticator.isTokenValid(token);
             if (isValid) {
                 log.info("doFilter -> found valid token in cookies, redirect to '{}'", from);
-                resp.sendRedirect(resp.encodeRedirectURL(from));
+                redirectHelper.sendRedirect(response, from);
                 return;
             } else {
-                SsoCookies.removeTokenCookie(resp);
+                SsoCookies.removeTokenCookie(response);
             }
         }
 
-        SsoCookies.addFromCookie(from, resp);
+        SsoCookies.addFromCookie(from, response);
 
         String nonce = generateNonce();
         String state = generateState();
         if (cfg.isValidateNonce()) {
-            HttpSession session = req.getSession();
+            HttpSession session = request.getSession();
             session.setAttribute("ssoNonce", nonce);
             session.setAttribute("ssoState", state);
         }
-        resp.sendRedirect(resp.encodeRedirectURL(getAuthzUrl(nonce, state)));
+
+        redirectHelper.sendRedirect(response, getAuthzUrl(nonce, state));
     }
 
     private String getAuthzUrl(String nonce, String state) {
@@ -95,16 +93,6 @@ public class SsoAuthFilter implements Filter {
                 "&nonce=%s" +
                 "&state=%s",
                 cfg.getAuthEndPointUrl(), cfg.getClientId(), cfg.getRedirectUrl(), nonce, state);
-    }
-
-    @Override
-    public void init(FilterConfig filterConfig) {
-        // do nothing
-    }
-
-    @Override
-    public void destroy() {
-        // do nothing
     }
 
     private static String generateNonce() {

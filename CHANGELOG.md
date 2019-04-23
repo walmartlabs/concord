@@ -15,6 +15,7 @@ processes using `/api/v2/process`;
 
 ### Changed
 
+- concord-server: fixed the SSO https->http redirect;
 - concord-console: performance optimizations for the log viewer;
 - concord-runner: allow 2 letter checkpoint names.
 

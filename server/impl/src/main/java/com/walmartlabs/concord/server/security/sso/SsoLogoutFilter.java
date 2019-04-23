@@ -23,53 +23,42 @@ package com.walmartlabs.concord.server.security.sso;
 import com.walmartlabs.concord.server.cfg.SsoConfiguration;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.apache.shiro.web.util.WebUtils;
 
 import javax.inject.Inject;
-import javax.servlet.*;
+import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class SsoLogoutFilter implements Filter {
+public class SsoLogoutFilter extends AbstractHttpFilter {
 
     private final SsoConfiguration cfg;
+    private final RedirectHelper redirectHelper;
 
     @Inject
-    public SsoLogoutFilter(SsoConfiguration cfg) {
+    public SsoLogoutFilter(SsoConfiguration cfg, RedirectHelper redirectHelper) {
         this.cfg = cfg;
+        this.redirectHelper = redirectHelper;
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
-        HttpServletResponse resp = WebUtils.toHttp(response);
-        HttpServletRequest req = WebUtils.toHttp(request);
-
+    public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
         if (!cfg.isEnabled()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "SSO is disabled, the logout URL is not available");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "SSO is disabled, the logout URL is not available");
             return;
         }
 
-        String initParam = req.getParameter("init");
+        String initParam = request.getParameter("init");
         boolean isInit = initParam != null && !initParam.trim().isEmpty();
         if (isInit) {
-            resp.sendRedirect(resp.encodeRedirectURL(cfg.getLogoutEndpointUrl()));
+            redirectHelper.sendRedirect(response, cfg.getLogoutEndpointUrl());
             return;
         }
 
-        SsoCookies.clear(resp);
+        SsoCookies.clear(response);
         Subject subject = SecurityUtils.getSubject();
         subject.logout();
-        resp.sendRedirect(resp.encodeRedirectURL("/#/logout/done"));
-    }
 
-    @Override
-    public void init(FilterConfig filterConfig) {
-        // do nothing
-    }
-
-    @Override
-    public void destroy() {
-        // do nothing
+        redirectHelper.sendRedirect(response, "/#/logout/done");
     }
 }

@@ -37,13 +37,15 @@ public class SsoHandler {
 
     private final SsoConfiguration cfg;
     private final JwtAuthenticator jwtAuthenticator;
+    private final RedirectHelper redirectHelper;
 
     private static final String FORM_URL_PATTERN = "/forms/.*";
 
     @Inject
-    public SsoHandler(SsoConfiguration cfg, JwtAuthenticator jwtAuthenticator) {
+    public SsoHandler(SsoConfiguration cfg, JwtAuthenticator jwtAuthenticator, RedirectHelper redirectHelper) {
         this.cfg = cfg;
         this.jwtAuthenticator = jwtAuthenticator;
+        this.redirectHelper = redirectHelper;
     }
 
     public AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
@@ -75,7 +77,7 @@ public class SsoHandler {
 
         String p = req.getRequestURI();
         if (p.matches(FORM_URL_PATTERN)) {
-            resp.sendRedirect(resp.encodeRedirectURL("/api/service/sso/auth?from=" + p));
+            redirectHelper.sendRedirect(resp, "/api/service/sso/auth?from=" + p);
             return true;
         }
 
