@@ -230,6 +230,13 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
+    public void testOptionalResponseType() throws Exception {
+        initCxtForRequest(mockContext, "GET", "string", null, "http://localhost:" + rule.port() + "/string", false, 0);
+        task.execute(mockContext);
+        assertTrue((Boolean) response.get("success"));
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testDelete() throws Exception {
         initCxtForRequest(mockContext, "DELETE", "string", "json",

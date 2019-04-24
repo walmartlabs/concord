@@ -387,10 +387,12 @@ public class Configuration {
                 }
             }
 
-            if (ResponseType.isMember((String) ctx.getVariable(RESPONSE_KEY))) {
-                this.responseType = ResponseType.valueOf(((String) ctx.getVariable(RESPONSE_KEY)).toUpperCase());
-            } else {
-                throw new IllegalArgumentException("'" + RESPONSE_KEY + ": " + ctx.getVariable(RESPONSE_KEY) + "' is not valid");
+            if (ctx.getVariable(RESPONSE_KEY) != null) {
+                if (ResponseType.isMember((String) ctx.getVariable(RESPONSE_KEY))) {
+                    this.responseType = ResponseType.valueOf(((String) ctx.getVariable(RESPONSE_KEY)).toUpperCase());
+                } else {
+                    throw new IllegalArgumentException("'" + RESPONSE_KEY + ": " + ctx.getVariable(RESPONSE_KEY) + "' is not valid");
+                }
             }
 
             this.workDir = (String) ctx.getVariable("workDir");
@@ -435,8 +437,6 @@ public class Configuration {
                 throw new IllegalArgumentException("('" + METHOD_KEY + "') argument is missing");
             } else if (ctx.getVariable(URL_KEY) == null) {
                 throw new IllegalArgumentException("('" + URL_KEY + "') argument is missing");
-            } else if (ctx.getVariable(RESPONSE_KEY) == null) {
-                throw new IllegalArgumentException("('" + RESPONSE_KEY + "') argument is missing");
             } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD_KEY)) && ctx.getVariable(REQUEST_KEY) == null) {
                 throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");
             } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD)) && ctx.getVariable(BODY_KEY) == null) {
