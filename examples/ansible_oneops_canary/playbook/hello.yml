@@ -1,0 +1,6 @@
+---
+- hosts: myHosts
+  tasks:
+  - debug:
+      msg: "Hello!"
+      verbosity: 0

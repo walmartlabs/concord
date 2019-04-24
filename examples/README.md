@@ -64,6 +64,7 @@
 
 * [ansible_gatekeeper](ansible_gatekeeper) - using Gatekeeper to gate an Ansible deployment;
 * [ansible_oneops](ansible_oneops) - how to get IP addresses from OneOps to use with Ansible;
+* [ansible_oneops_canary](ansible_oneops_canary) - "canary" deployments with OneOps and Ansible;
 * [ansible_oneops_replace](ansible_oneops_replace) - how to run a playbook on a OneOps' VM replacement event;
 * [ansible_out_vars](ansible_out_vars) - saving Ansible variables as Concord flow variables;
 * [ansible_roles](#ansible_roles) - how to use external Ansible roles;
