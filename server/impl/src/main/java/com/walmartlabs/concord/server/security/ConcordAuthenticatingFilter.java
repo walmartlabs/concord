@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.codahale.metrics.Meter;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.InjectMeter;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
@@ -46,7 +48,11 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
@@ -122,19 +128,25 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
-        boolean loggedIn = executeLogin(request, response);
+        try {
+            boolean loggedIn = executeLogin(request, response);
 
-        if (!loggedIn) {
-            boolean processed = ssoHandler.onAccessDenied(request, response);
-            if (!processed) {
-                HttpServletResponse resp = WebUtils.toHttp(response);
-                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            if (!loggedIn) {
+                boolean processed = ssoHandler.onAccessDenied(request, response);
+                if (!processed) {
+                    HttpServletResponse resp = WebUtils.toHttp(response);
+                    resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-                reportAuthSchemes(request, response);
+                    reportAuthSchemes(request, response);
+                }
             }
-        }
 
-        return loggedIn;
+            return loggedIn;
+        } catch (Exception e) {
+            HttpServletResponse resp = WebUtils.toHttp(response);
+            writeError(resp, e, HttpServletResponse.SC_UNAUTHORIZED);
+            return false;
+        }
     }
 
     @Override
@@ -204,6 +216,14 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         byte[] ab = SecretUtils.decrypt(Base64.getDecoder().decode(h), pwd, salt);
         return UUID.fromString(new String(ab));
+    }
+
+    private static void writeError(HttpServletResponse resp, Throwable t, int code) throws IOException {
+        resp.setContentType(MediaType.APPLICATION_JSON);
+        resp.setStatus(code);
+
+        Map<String, String> error = Collections.singletonMap("message", t.getMessage());
+        resp.getWriter().write(new ObjectMapper().writeValueAsString(error));
     }
 
     private static void validateApiKey(String s) {
