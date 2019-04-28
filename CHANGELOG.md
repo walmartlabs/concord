@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: improve error messages in case of authentication
+failure due to an invalid input or an internal error.
+
+
+
 ## [1.17.0] - 2019-04-24
 
 ### Added

@@ -92,7 +92,11 @@ public abstract class AbstractConcordTask implements Task {
                 String msg = extractMessage(details);
                 throw new IOException(msg);
             } else {
-                throw new IOException("Request error: " + code);
+                if (code == 401) {
+                    throw new IOException("Request error: " + code + ", please verify the credentials used");
+                } else {
+                    throw new IOException("Request error: " + code);
+                }
             }
         }
     }
