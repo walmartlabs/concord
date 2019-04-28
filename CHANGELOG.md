@@ -8,6 +8,8 @@
 
 ### Changed
 
+- docker: include the Taurus PIP module in the default Ansible
+image;
 - concord-server: improve error messages in case of authentication
 failure due to an invalid input or an internal error.
 
