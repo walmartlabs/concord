@@ -37,7 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.walmartlabs.concord.plugins.ansible.ArgUtils.*;
+import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getListAsString;
+import static com.walmartlabs.concord.sdk.MapUtils.*;
 
 @Named("ansible2")
 public class RunPlaybookTask2 implements Task {
@@ -48,6 +49,8 @@ public class RunPlaybookTask2 implements Task {
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final SecretService secretService;
+
+    private final AnsibleAuthFactory ansibleAuthFactory;
 
     @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context context;
@@ -62,14 +65,15 @@ public class RunPlaybookTask2 implements Task {
     private Map<String, Object> defaults;
 
     @Inject
-    public RunPlaybookTask2(SecretService secretService) {
+    public RunPlaybookTask2(SecretService secretService, AnsibleAuthFactory ansibleAuthFactory) {
         this.secretService = secretService;
+        this.ansibleAuthFactory = ansibleAuthFactory;
     }
 
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Using the docker image: {}", dockerImageName);
 
-        List<Map.Entry<String, String>> dockerOpts = DockerOptionsConverter.convert(getMap(args, TaskParams.DOCKER_OPTS_KEY));
+        List<Map.Entry<String, String>> dockerOpts = DockerOptionsConverter.convert(getMap(args, TaskParams.DOCKER_OPTS_KEY, null));
         log.info("Using the docker options: {}", dockerOpts);
 
         run(args, payloadPath,
@@ -84,16 +88,19 @@ public class RunPlaybookTask2 implements Task {
 
     @Override
     public void execute(Context ctx) throws Exception {
-        Map<String, Object> args = new HashMap<>();
+        Map<String, Object> allArgs = new HashMap<>();
 
         Stream.of(TaskParams.values()).forEach(c ->
-                addIfPresent(ctx, args, c.getKey())
+                addIfPresent(ctx, allArgs, c.getKey())
         );
 
         String payloadPath = ContextUtils.getString(ctx, Constants.Context.WORK_DIR_KEY);
         if (payloadPath == null) {
             payloadPath = ContextUtils.getString(ctx, TaskParams.WORK_DIR_KEY.getKey());
         }
+
+        Path workDir = Paths.get(payloadPath);
+        Map<String, Object> args = DeprecatedArgsProcessor.process(workDir, allArgs);
 
         String dockerImage = ContextUtils.getString(ctx, TaskParams.DOCKER_IMAGE_KEY.getKey());
         if (dockerImage != null) {
@@ -104,35 +111,34 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilder processBuilder) throws Exception {
-        String playbook = getString(args, TaskParams.PLAYBOOK_KEY);
-        if (playbook == null || playbook.trim().isEmpty()) {
-            throw new IllegalArgumentException("Missing '" + TaskParams.PLAYBOOK_KEY + "' parameter");
-        }
+        String playbook = assertString(args, TaskParams.PLAYBOOK_KEY.getKey());
         log.info("Using a playbook: {}", playbook);
 
-        boolean debug = getBoolean(args, TaskParams.DEBUG_KEY, false);
+        boolean debug = getBoolean(args, TaskParams.DEBUG_KEY.getKey(), false);
 
         Path workDir = Paths.get(payloadPath);
         Path tmpDir = createTmpDir(workDir);
+
+        TaskContext taskContext = new TaskContext(context, defaults, workDir, tmpDir, debug, args);
 
         AnsibleEnv env = new AnsibleEnv(context, apiCfg, debug)
                 .parse(args);
 
         AnsibleConfig cfg = new AnsibleConfig(workDir, tmpDir, debug)
                 .parse(args)
-                .enrichEnv(env);
+                .enrich(env);
 
-        AnsibleCallbacks.process(tmpDir, args, cfg);
-        AnsibleLibs.process(workDir, tmpDir, env);
-        AnsibleLookup.process(tmpDir, cfg);
+        AnsibleCallbacks.process(taskContext, cfg);
+        AnsibleLibs.process(taskContext, env);
+        AnsibleLookup.process(taskContext, cfg);
 
-        Path inventoryPath = new AnsibleInventory(workDir, tmpDir, debug).write(args);
+        PlaybookArgsBuilder b = new PlaybookArgsBuilder(playbook, workDir, tmpDir);
 
-        Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
+        AnsibleInventory.process(taskContext, b);
 
-        Path vaultPasswordPath = AnsibleVaultPassword.process(workDir, tmpDir, args);
+        AnsibleVaultPassword.process(taskContext, b);
 
-        Path privateKeyPath = AnsiblePrivateKey.process(secretService, context, workDir, args);
+        AnsibleRoles.process(taskContext, cfg);
 
         GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretService, context);
         groupVarsProcessor.process(txId, args, workDir);
@@ -140,36 +146,39 @@ public class RunPlaybookTask2 implements Task {
         OutVarsProcessor outVarsProcessor = new OutVarsProcessor();
         outVarsProcessor.prepare(args, env.get(), workDir, tmpDir);
 
-        AnsibleRoles.process(workDir, tmpDir, defaults, args, cfg, debug);
+        AnsibleAuth auth = ansibleAuthFactory.create(taskContext)
+                .enrich(env)
+                .enrich(cfg)
+                .enrich(b);
 
         cfg.write();
         env.write();
 
-        boolean checkMode = getCheck(args, playbook);
+        boolean checkMode = getBoolean(args, TaskParams.CHECK_KEY.getKey(), false);
         if (checkMode) {
             log.warn("Running in the check mode. No changes will be made.");
         }
 
-        boolean syntaxCheck = getSyntaxCheck(args, playbook);
+        boolean syntaxCheck = getBoolean(args, TaskParams.SYNTAX_CHECK_KEY.getKey(), false);
         if (syntaxCheck) {
             log.warn("Running in the syntax check mode. No changes will be made.");
         }
 
         try {
-            PlaybookArgsBuilder b = new PlaybookArgsBuilder(playbook, inventoryPath.toString(), workDir, tmpDir)
-                    .withAttachmentsDir(toString(attachmentsPath))
-                    .withPrivateKey(toString(privateKeyPath))
-                    .withVaultPasswordFile(toString(vaultPasswordPath))
-                    .withUser(getString(args, TaskParams.USER_KEY))
+            Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
+
+            b = b.withAttachmentsDir(attachmentsPath.toString())
                     .withTags(getListAsString(args, TaskParams.TAGS_KEY))
                     .withSkipTags(getListAsString(args, TaskParams.SKIP_TAGS_KEY))
-                    .withExtraVars(getMap(args, TaskParams.EXTRA_VARS_KEY))
-                    .withExtraVarsFiles(getList(args, TaskParams.EXTRA_VARS_FILES_KEY))
+                    .withExtraVars(getMap(args, TaskParams.EXTRA_VARS_KEY.getKey(), null))
+                    .withExtraVarsFiles(getList(args, TaskParams.EXTRA_VARS_FILES_KEY.getKey(), null))
                     .withLimit(getLimit(args, playbook))
                     .withVerboseLevel(getVerboseLevel(args))
                     .withCheck(checkMode)
                     .withSyntaxCheck(syntaxCheck)
                     .withEnv(env.get());
+
+            auth.prepare();
 
             Process p = processBuilder
                     .withDebug(debug)
@@ -193,18 +202,19 @@ public class RunPlaybookTask2 implements Task {
                 throw new IllegalStateException("Process finished with exit code " + code);
             }
         } finally {
+            auth.postProcess();
             groupVarsProcessor.postProcess();
             outVarsProcessor.postProcess();
         }
     }
 
     private String getLimit(Map<String, Object> args, String playbook) {
-        boolean retry = ArgUtils.getBoolean(args, TaskParams.RETRY_KEY, false);
+        boolean retry = getBoolean(args, TaskParams.RETRY_KEY.getKey(), false);
         if (retry) {
             return "@" + getNameWithoutExtension(playbook) + ".retry";
         }
 
-        String limit = ArgUtils.getString(args, TaskParams.LIMIT_KEY);
+        String limit = getString(args, TaskParams.LIMIT_KEY.getKey());
         if (limit != null) {
             return limit;
         }
@@ -212,25 +222,10 @@ public class RunPlaybookTask2 implements Task {
         return null;
     }
 
-    private boolean getCheck(Map<String, Object> args, String playbook) {
-        return ArgUtils.getBoolean(args, TaskParams.CHECK_KEY, false);
-    }
-
-    private boolean getSyntaxCheck(Map<String, Object> args, String playbook) {
-        return ArgUtils.getBoolean(args, TaskParams.SYNTAX_CHECK_KEY, false);
-    }
-
     private static Path createTmpDir(Path workDir) throws IOException {
         Path p = workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
         Files.createDirectories(p);
         return Files.createTempDirectory(p, "ansible");
-    }
-
-    private static String toString(Path p) {
-        if (p == null) {
-            return null;
-        }
-        return p.toString();
     }
 
     private static void addIfPresent(Context src, Map<String, Object> dst, String k) {
@@ -241,12 +236,12 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private static void saveRetryFile(Map<String, Object> args, Path workDir) throws IOException {
-        boolean saveRetryFiles = getBoolean(args, TaskParams.SAVE_RETRY_FILE, false);
+        boolean saveRetryFiles = getBoolean(args, TaskParams.SAVE_RETRY_FILE.getKey(), false);
         if (!saveRetryFiles) {
             return;
         }
 
-        String playbookName = getString(args, TaskParams.PLAYBOOK_KEY);
+        String playbookName = getString(args, TaskParams.PLAYBOOK_KEY.getKey());
         String retryFile = getNameWithoutExtension(playbookName + ".retry");
         if (retryFile == null) {
             return;
@@ -265,7 +260,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     private static int getVerboseLevel(Map<String, Object> args) {
-        return getInt(args, TaskParams.VERBOSE_LEVEL_KEY, 0);
+        return getNumber(args, TaskParams.VERBOSE_LEVEL_KEY.getKey(), 0).intValue();
     }
 
     private static String getNameWithoutExtension(String fileName) {

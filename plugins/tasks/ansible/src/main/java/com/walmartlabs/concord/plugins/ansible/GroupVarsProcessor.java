@@ -33,6 +33,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.sdk.MapUtils.assertString;
+import static com.walmartlabs.concord.sdk.MapUtils.getString;
+
 public class GroupVarsProcessor {
 
     private final Logger log = LoggerFactory.getLogger(GroupVarsProcessor.class);
@@ -48,7 +51,6 @@ public class GroupVarsProcessor {
         this.context = context;
     }
 
-    @SuppressWarnings("unchecked")
     public void process(String instanceId, Map<String, Object> args, Path workDir) throws Exception {
         Collection<Ref> refs = toRefs(args);
         if (refs == null) {
@@ -136,36 +138,12 @@ public class GroupVarsProcessor {
         String orgName = getString(params, "orgName", null);
         orgName = getString(params, "org", orgName); // alternative parameter name
 
-        String secretName = assertString(params, "secretName", null);
+        String secretName = assertString(params, "secretName");
 
         String password = getString(params, "password", null);
         String type = getString(params, "type", "yml");
 
         return new Ref(groupName, orgName, secretName, password, type);
-    }
-
-    private static String assertString(Map<String, Object> m, String k, String defaultValue) {
-        String s = getString(m, k, defaultValue);
-
-        if (s == null) {
-            throw new IllegalArgumentException("Value is required: " + k);
-        }
-
-        return s;
-    }
-
-    private static String getString(Map<String, Object> m, String k, String defaultValue) {
-        Object v = m.get(k);
-
-        if (v == null) {
-            return defaultValue;
-        }
-
-        if (!(v instanceof String)) {
-            throw new IllegalArgumentException("Expected a string value in '" + k + "', got: " + v);
-        }
-
-        return (String) v;
     }
 
     private static class Ref {

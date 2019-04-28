@@ -21,7 +21,11 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 
-public enum TaskParams {
+import com.walmartlabs.concord.sdk.HasKey;
+
+public enum TaskParams implements HasKey {
+
+    AUTH("auth"),
 
     CHECK_KEY("check"),
 
@@ -65,11 +69,15 @@ public enum TaskParams {
 
     OUT_VARS_KEY("outVars"),
 
+    PASSWORD("password"),
+
     PLAYBOOK_KEY("playbook"),
 
+    /**
+     * @deprecated use auth param
+     */
+    @Deprecated
     PRIVATE_KEY_FILE_KEY("privateKey"),
-
-    PRIVATE_KEY_FILE_NAME("_privateKey"),
 
     RETRY_KEY("retry"),
 
@@ -85,6 +93,10 @@ public enum TaskParams {
 
     TAGS_KEY("tags"),
 
+    /**
+     * @deprecated use auth param
+     */
+    @Deprecated
     USER_KEY("user"),
 
     VAULT_PASSWORD_FILE_KEY("vaultPasswordFile"),
@@ -108,7 +120,8 @@ public enum TaskParams {
         this.key = key;
     }
 
-    public java.lang.String getKey() {
+    @Override
+    public String getKey() {
         return key;
     }
 }

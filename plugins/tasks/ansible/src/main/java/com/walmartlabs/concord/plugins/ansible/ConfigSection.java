@@ -22,7 +22,7 @@ package com.walmartlabs.concord.plugins.ansible;
 
 import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getString;
+import static com.walmartlabs.concord.sdk.MapUtils.getString;
 
 public class ConfigSection {
 

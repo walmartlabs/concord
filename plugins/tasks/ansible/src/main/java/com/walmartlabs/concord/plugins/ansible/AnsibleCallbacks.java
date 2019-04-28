@@ -27,9 +27,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getBoolean;
+import static com.walmartlabs.concord.sdk.MapUtils.getBoolean;
 
 public class AnsibleCallbacks {
+
+    public static void process(TaskContext ctx, AnsibleConfig config) {
+        new AnsibleCallbacks(ctx.getTmpDir())
+                .parse(ctx.getArgs())
+                .enrich(config)
+                .write();
+    }
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleCallbacks.class);
 
@@ -45,10 +52,6 @@ public class AnsibleCallbacks {
 
     public AnsibleCallbacks(Path tmpDir) {
         this.tmpDir = tmpDir;
-    }
-
-    public static void process(Path tmpDir, Map<String, Object> args, AnsibleConfig config) {
-        new AnsibleCallbacks(tmpDir).parse(args).enrich(config).write();
     }
 
     public AnsibleCallbacks parse(Map<String, Object> args) {

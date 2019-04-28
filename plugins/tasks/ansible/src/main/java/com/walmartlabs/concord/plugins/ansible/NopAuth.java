@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,33 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
-import java.util.Set;
+public class NopAuth implements AnsibleAuth {
 
-public final class Utils {
-
-    public static void updateScriptPermissions(Path p) throws IOException {
-        // ensure that the file has the executable bit set
-        Set<PosixFilePermission> perms = new HashSet<>();
-        perms.add(PosixFilePermission.OWNER_READ);
-        perms.add(PosixFilePermission.OWNER_EXECUTE);
-        perms.add(PosixFilePermission.OWNER_WRITE);
-        Files.setPosixFilePermissions(p, perms);
+    @Override
+    public void prepare() {
+        // do nothing
     }
 
-    private Utils() {
+    @Override
+    public AnsibleAuth enrich(AnsibleEnv env) {
+        // do nothing
+        return this;
+    }
+
+    @Override
+    public AnsibleAuth enrich(AnsibleConfig cfg) {
+        // do nothing
+        return this;
+    }
+
+    @Override
+    public AnsibleAuth enrich(PlaybookArgsBuilder p) {
+        // do nothing
+        return this;
+    }
+
+    @Override
+    public void postProcess() {
+        // do nothing
     }
 }

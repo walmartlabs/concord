@@ -29,13 +29,14 @@ import java.util.*;
 public class PlaybookArgsBuilder {
 
     private final String playbook;
-    private final String inventory;
+    private String inventory;
     private final Path workDir;
     private final Path tmpDir;
 
     private String attachmentsDir;
     private Map<String, Object> extraVars;
     private List<String> extraVarsFiles;
+    private String extraSshArgs;
     private String user;
     private String tags;
     private String skipTags;
@@ -47,15 +48,24 @@ public class PlaybookArgsBuilder {
     private boolean syntaxCheck;
     private int verboseLevel = 0;
 
-    public PlaybookArgsBuilder(String playbook, String inventory, Path workDir, Path tmpDir) {
+    public PlaybookArgsBuilder(String playbook, Path workDir, Path tmpDir) {
         this.playbook = playbook;
-        this.inventory = inventory;
         this.workDir = workDir;
         this.tmpDir = tmpDir;
     }
 
+    public PlaybookArgsBuilder withInventory(String inventory) {
+        this.inventory = inventory;
+        return this;
+    }
+
     public PlaybookArgsBuilder withExtraVars(Map<String, Object> extraVars) {
         this.extraVars = extraVars;
+        return this;
+    }
+
+    public PlaybookArgsBuilder withExtraSshArgs(String extraSshArgs) {
+        this.extraSshArgs = extraSshArgs;
         return this;
     }
 
@@ -170,6 +180,11 @@ public class PlaybookArgsBuilder {
 
         if (syntaxCheck) {
             l.add("--syntax-check");
+        }
+
+        if (extraSshArgs != null) {
+            l.add("--ssh-extra-args");
+            l.add(extraSshArgs);
         }
 
         if (verboseLevel > 0) {

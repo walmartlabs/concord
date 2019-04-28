@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,15 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.SecretService;
+public interface AnsibleAuth {
 
-import javax.inject.Inject;
-import javax.inject.Named;
+    void prepare() throws Exception;
 
-@Named("ansible")
-public class AnsibleTask extends RunPlaybookTask2 {
+    AnsibleAuth enrich(AnsibleEnv env);
 
-    @Inject
-    public AnsibleTask(SecretService secretService, AnsibleAuthFactory ansibleAuthFactory) {
-        super(secretService, ansibleAuthFactory);
-    }
+    AnsibleAuth enrich(AnsibleConfig cfg);
+
+    AnsibleAuth enrich(PlaybookArgsBuilder p);
+
+    void postProcess();
 }

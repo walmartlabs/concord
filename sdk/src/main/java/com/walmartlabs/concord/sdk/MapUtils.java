@@ -40,12 +40,24 @@ public final class MapUtils {
         throw new IllegalArgumentException("Invalid variable '" + name + "' type, expected: string/uuid, got: " + o.getClass());
     }
 
+    public static String getString(Map<String, Object> m, HasKey k) {
+        return getString(m, k.getKey());
+    }
+
     public static String getString(Map<String, Object> m, String name) {
         return getString(m, name, null);
     }
 
+    public static String getString(Map<String, Object> m, HasKey k, String defaultValue) {
+        return getString(m, k.getKey(), defaultValue);
+    }
+
     public static String getString(Map<String, Object> m, String name, String defaultValue) {
         return get(m, name, defaultValue, String.class);
+    }
+
+    public static <K, V> Map<K, V> getMap(Map<String, Object> m, HasKey k, Map<K, V> defaultValue) {
+        return getMap(m, k.getKey(), defaultValue);
     }
 
     @SuppressWarnings("unchecked")
@@ -53,9 +65,17 @@ public final class MapUtils {
         return get(m, name, defaultValue, Map.class);
     }
 
+    public static <E> List<E> getList(Map<String, Object> m, HasKey k, List<E> defaultValue) {
+        return getList(m, k.getKey(), defaultValue);
+    }
+
     @SuppressWarnings("unchecked")
     public static <E> List<E> getList(Map<String, Object> m, String name, List<E> defaultValue) {
         return get(m, name, defaultValue, List.class);
+    }
+
+    public static boolean getBoolean(Map<String, Object> m, HasKey k, boolean defaultValue) {
+        return getBoolean(m, k.getKey(), defaultValue);
     }
 
     public static boolean getBoolean(Map<String, Object> m, String name, boolean defaultValue) {

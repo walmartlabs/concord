@@ -36,14 +36,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.plugins.ansible.ArgUtils.*;
+import static com.walmartlabs.concord.plugins.ansible.ArgUtils.assertString;
+import static com.walmartlabs.concord.sdk.MapUtils.getList;
+import static com.walmartlabs.concord.sdk.MapUtils.getString;
 
 public class AnsibleRoles {
 
-    public static void process(Path workDir, Path tmpDir, Map<String, Object> defaults,
-                               Map<String, Object> args, AnsibleConfig cfg, boolean debug) throws Exception {
-
-        new AnsibleRoles(workDir, tmpDir, defaults, debug).parse(args)
+    public static void process(TaskContext ctx, AnsibleConfig cfg) throws Exception {
+        new AnsibleRoles(ctx.getWorkDir(), ctx.getTmpDir(), ctx.getDefaults(), ctx.isDebug())
+                .parse(ctx.getArgs())
                 .enrich(cfg)
                 .downloadRoles()
                 .validate();
@@ -74,8 +75,8 @@ public class AnsibleRoles {
     }
 
     private AnsibleRoles parse(Map<String, Object> args) {
-        List<Map<String, Object>> in = getList(args, TaskParams.ROLES_KEY);
-        if (in == null || in.isEmpty()) {
+        List<Map<String, Object>> in = getList(args, TaskParams.ROLES_KEY, Collections.emptyList());
+        if (in.isEmpty()) {
             return this;
         }
 
@@ -144,8 +145,6 @@ public class AnsibleRoles {
     private void validate() {
         Path roleDir = workDir.resolve(tmpDir.resolve(ROLE_DIR));
         for (Map<String, String> e : roles) {
-            String src = e.get(ROLE_SRC_KEY);
-
             String rolePath = e.get(ROLE_PATH_KEY);
             if (rolePath == null) {
                 continue;

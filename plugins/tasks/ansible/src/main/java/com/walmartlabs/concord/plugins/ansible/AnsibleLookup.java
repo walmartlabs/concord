@@ -28,6 +28,12 @@ import java.nio.file.Path;
 
 public class AnsibleLookup {
 
+    public static void process(TaskContext ctx, AnsibleConfig cfg) {
+        new AnsibleLookup(ctx.getTmpDir())
+                .enrich(cfg)
+                .write();
+    }
+
     private static final Logger log = LoggerFactory.getLogger(AnsibleLookup.class);
 
     private static final String LOOKUP_LOCATION = "/com/walmartlabs/concord/plugins/ansible/lookup";
@@ -40,10 +46,6 @@ public class AnsibleLookup {
 
     public AnsibleLookup(Path tmpDir) {
         this.tmpDir = tmpDir;
-    }
-
-    public static void process(Path tmpDir, AnsibleConfig cfg) {
-        new AnsibleLookup(tmpDir).enrich(cfg).write();
     }
 
     public AnsibleLookup write() {

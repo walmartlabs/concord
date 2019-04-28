@@ -31,6 +31,16 @@ import java.util.Map;
 
 public class AnsibleVaultPassword {
 
+    public static void process(TaskContext ctx, PlaybookArgsBuilder playbook) {
+        Path vault = new AnsibleVaultPassword(ctx.getWorkDir(), ctx.getTmpDir())
+                .parse(ctx.getArgs())
+                .getVaultPassword();
+
+        if (vault != null) {
+            playbook.withVaultPasswordFile(vault.toString());
+        }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(AnsibleVaultPassword.class);
 
     private final Path workDir;
@@ -43,11 +53,7 @@ public class AnsibleVaultPassword {
         this.tmpDir = tmpDir;
     }
 
-    public static Path process(Path workDir, Path tmpDir, Map<String, Object> args) {
-        return new AnsibleVaultPassword(workDir, tmpDir).load(args).getVaultPassword();
-    }
-
-    public AnsibleVaultPassword load(Map<String, Object> args) {
+    public AnsibleVaultPassword parse(Map<String, Object> args) {
         try {
             vaultPassword = getVaultPasswordFilePath(args);
             return this;
