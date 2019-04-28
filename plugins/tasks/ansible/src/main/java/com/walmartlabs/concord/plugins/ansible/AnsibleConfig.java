@@ -31,11 +31,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getMap;
-import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getString;
+import static com.walmartlabs.concord.sdk.MapUtils.getMap;
+import static com.walmartlabs.concord.sdk.MapUtils.getString;
 
 public class AnsibleConfig {
 
@@ -66,7 +67,7 @@ public class AnsibleConfig {
             }
         }
 
-        Map<String, Object> userCfg = getMap(args, TaskParams.CONFIG_KEY);
+        Map<String, Object> userCfg = getMap(args, TaskParams.CONFIG_KEY, Collections.emptyMap());
 
         this.cfg = makeAnsibleCfg(userCfg);
 
@@ -94,13 +95,17 @@ public class AnsibleConfig {
         return workDir.relativize(cfgPath);
     }
 
-    public AnsibleConfig enrichEnv(AnsibleEnv env) {
-        env.get().put("ANSIBLE_CONFIG", workDir.relativize(getConfigPath()).toString());
+    public AnsibleConfig enrich(AnsibleEnv env) {
+        env.put("ANSIBLE_CONFIG", workDir.relativize(getConfigPath()).toString());
         return this;
     }
 
     public ConfigSection getDefaults() {
-        Map<String, Object> defaults = cfg.computeIfAbsent("defaults", s -> new HashMap<>());
+        return getSection("defaults");
+    }
+
+    public ConfigSection getSection(String section) {
+        Map<String, Object> defaults = cfg.computeIfAbsent(section, s -> new HashMap<>());
         return new ConfigSection(defaults);
     }
 
@@ -132,16 +137,14 @@ public class AnsibleConfig {
         m.put("defaults", makeDefaults());
         m.put("ssh_connection", makeSshConnCfg());
 
-        if (userCfg != null) {
-            m = ConfigurationUtils.deepMerge(m, userCfg);
-        }
+        m = ConfigurationUtils.deepMerge(m, userCfg);
 
         return assertCfg(m);
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Map<String,Object>> assertCfg(Map<String, Object> cfg) {
-        Map<String, Map<String,Object>> result = new HashMap<>();
+    private static Map<String, Map<String, Object>> assertCfg(Map<String, Object> cfg) {
+        Map<String, Map<String, Object>> result = new HashMap<>();
 
         for (Map.Entry<String, Object> c : cfg.entrySet()) {
             String k = c.getKey();
@@ -182,7 +185,7 @@ public class AnsibleConfig {
         return b;
     }
 
-    private Map<String, Map<String,Object>> loadFromFile(Path file) {
+    private Map<String, Map<String, Object>> loadFromFile(Path file) {
         try {
             Ini ini = new Ini();
             ini.load(file.toFile());

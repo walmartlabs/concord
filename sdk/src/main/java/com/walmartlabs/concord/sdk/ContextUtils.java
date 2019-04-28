@@ -56,6 +56,10 @@ public final class ContextUtils {
         return result;
     }
 
+    public static <K, V> Map<K, V> getMap(Context ctx, HasKey k, Map<K, V> defaultValue) {
+        return getMap(ctx, k.getKey(), defaultValue);
+    }
+
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> getMap(Context ctx, String name, Map<K, V> defaultValue) {
         return getVariable(ctx, name, defaultValue, Map.class);

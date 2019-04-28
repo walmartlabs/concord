@@ -4,14 +4,14 @@ package com.walmartlabs.concord.plugins.ansible;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,24 +20,29 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import java.io.IOException;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-public final class Utils {
+@Ignore
+public class KerberosTest {
 
-    public static void updateScriptPermissions(Path p) throws IOException {
-        // ensure that the file has the executable bit set
-        Set<PosixFilePermission> perms = new HashSet<>();
-        perms.add(PosixFilePermission.OWNER_READ);
-        perms.add(PosixFilePermission.OWNER_EXECUTE);
-        perms.add(PosixFilePermission.OWNER_WRITE);
-        Files.setPosixFilePermissions(p, perms);
-    }
+    @Test
+    public void a() throws Exception {
+        Path tmpPath = Files.createTempDirectory("krb-test");
+        System.out.println(">>" + tmpPath);
 
-    private Utils() {
+        String username = "USER";
+        String password = "PASSWORD";
+        KerberosAuth kerberos = new KerberosAuth(username, password, tmpPath, false);
+
+        kerberos.prepare();
+
+        Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+
+        kerberos.postProcess();
     }
 }

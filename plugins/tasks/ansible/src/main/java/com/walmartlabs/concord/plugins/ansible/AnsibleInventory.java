@@ -33,6 +33,12 @@ import java.util.Map;
 
 public class AnsibleInventory {
 
+    public static void process(TaskContext ctx, PlaybookArgsBuilder playbook) throws IOException {
+        Path inventoryFile = new AnsibleInventory(ctx.getWorkDir(), ctx.getTmpDir(), ctx.isDebug())
+                .write(ctx.getArgs());
+        playbook.withInventory(inventoryFile.toString());
+    }
+
     private static final Logger log = LoggerFactory.getLogger(AnsibleInventory.class);
 
     private final Path workDir;

@@ -28,6 +28,12 @@ import java.nio.file.Path;
 
 public class AnsibleLibs {
 
+    public static void process(TaskContext ctx, AnsibleEnv env) {
+        new AnsibleLibs(ctx.getWorkDir(), ctx.getTmpDir())
+                .enrichEnv(env)
+                .write();
+    }
+
     private static final Logger log = LoggerFactory.getLogger(AnsibleLibs.class);
 
     private static final String PYTHON_LIB_DIR = "_python_lib";
@@ -43,10 +49,6 @@ public class AnsibleLibs {
         this.tmpDir = tmpDir;
     }
 
-    public static void process(Path workDir, Path tmpDir, AnsibleEnv env) {
-        new AnsibleLibs(workDir, tmpDir).enrichEnv(env).write();
-    }
-
     public AnsibleLibs write() {
         try {
             Resources.copy(LIB_LOCATION, LIBS, tmpDir.resolve(PYTHON_LIB_DIR));
@@ -59,7 +61,7 @@ public class AnsibleLibs {
     }
 
     public AnsibleLibs enrichEnv(AnsibleEnv env) {
-        env.get().put("PYTHONPATH", workDir.relativize(tmpDir.resolve(PYTHON_LIB_DIR)).toString());
+        env.put("PYTHONPATH", workDir.relativize(tmpDir.resolve(PYTHON_LIB_DIR)).toString());
         return this;
     }
 }

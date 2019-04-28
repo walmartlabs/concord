@@ -24,6 +24,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,10 +84,13 @@ public class AnsibleEnv {
         return env;
     }
 
+    public AnsibleEnv put(String key, String value) {
+        env.put(key, value);
+        return this;
+    }
+
     /**
      * Overridable environment variables.
-     *
-     * @return
      */
     private Map<String, String> defaultEnv() {
         Map<String, String> env = new HashMap<>();
@@ -96,8 +100,6 @@ public class AnsibleEnv {
 
     /**
      * Non-overridable environment variables.
-     *
-     * @return
      */
     private Map<String, String> concordEnv() {
         Map<String, String> env = new HashMap<>();
@@ -119,17 +121,12 @@ public class AnsibleEnv {
     }
 
     private static Map<String, String> mergeEnv(Map<String, String> defaultEnv, Map<String, String> concordEnv, Map<String, Object> args) {
-        Map<String, Object> extraEnv = ArgUtils.getMap(args, TaskParams.EXTRA_ENV_KEY);
-        if (extraEnv == null) {
-            extraEnv = Collections.emptyMap();
-        }
+        Map<String, Object> extraEnv = MapUtils.getMap(args, TaskParams.EXTRA_ENV_KEY, Collections.emptyMap());
 
         Map<String, String> result = new HashMap<>(defaultEnv.size() + concordEnv.size() + extraEnv.size());
         result.putAll(defaultEnv);
 
-        extraEnv.forEach((k, v) -> {
-            result.put(k, v.toString());
-        });
+        extraEnv.forEach((k, v) -> result.put(k, v.toString()));
 
         result.putAll(concordEnv);
         return result;

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- ansible: initial Kerberos authentication support.
+
 ### Changed
 
 - concord-server: improve error messages in case of authentication

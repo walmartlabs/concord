@@ -1,0 +1,17 @@
+configuration:
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.17.1-SNAPSHOT"
+
+flows:
+  default:
+  - task: ansible
+    in:
+      playbook: playbook/hello.yml
+      auth:
+        krb5:
+          username: "testid"
+          password: "PASSWORD"
+      inventory:
+        myHosts:
+          hosts:
+            - "testhost"
