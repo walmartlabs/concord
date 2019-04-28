@@ -64,7 +64,7 @@ public class VariablesSnapshotListener implements EngineListener {
                 oos.writeObject(vars);
             }
         } catch (IOException e) {
-            log.error("Can't save a snapshot of the process variables. Process forks (including onError, onCancel and" +
+            log.error("Can't save a snapshot of the process variables. Process forks (including onError, onCancel and " +
                     "other handlers) may not receive the updated variables. Error: {}", e.getMessage());
         }
 
