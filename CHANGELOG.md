@@ -8,6 +8,7 @@
 
 ### Changed
 
+- concord-console: stop the form wizard when the user navigates away;
 - docker: include the Taurus PIP module in the default Ansible
 image;
 - concord-server: improve error messages in case of authentication

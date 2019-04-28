@@ -201,6 +201,10 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
         let forms: FormListEntry[];
 
         while (true) {
+            if (!window.location.href.includes('wizard?fullScreen=true')) {
+                return;
+            }
+
             forms = yield call(apiList, processInstanceId);
             if (forms && forms.length > 0) {
                 break;
