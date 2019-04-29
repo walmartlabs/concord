@@ -63,7 +63,8 @@ Prerequisites:
 or a system package manager;
 - `requests` python module is required. It can be installed using `pip install requests`
 or a system package manager;
-- Java must be available in `$PATH` as `java`.
+- Java must be available in `$PATH` as `java`;
+- [Chrome WebDriver](http://chromedriver.chromium.org/) available in `$PATH`.
 
 #### Running tests
 

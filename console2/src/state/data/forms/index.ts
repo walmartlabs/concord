@@ -201,7 +201,7 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
         let forms: FormListEntry[];
 
         while (true) {
-            if (!window.location.href.includes('wizard?fullScreen=true')) {
+            if (!window.location.href.includes('/wizard')) {
                 return;
             }
 
