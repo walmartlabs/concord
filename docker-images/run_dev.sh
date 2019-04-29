@@ -3,7 +3,7 @@
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ -z ${VERSION} ]]; then
-    VERSION="0.99.1"
+    VERSION="latest"
 fi
 echo "VERSION: ${VERSION}"
 
@@ -18,9 +18,7 @@ fi
 echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
 
 if grep 'AD_' "${CONCORD_CFG_FILE}"; then
-    echo "To start, enter your AD credentials into ${CONCORD_CFG_FILE}"
-    echo "If you cannot login after AD creds, change the LDAP config"
-    echo "from ldaps://172.29.104.102:3269 to ldap://172.29.104.102:389"
+    echo "To start, enter your AD/LDAP credentials into ${CONCORD_CFG_FILE}"
     exit 1
 fi
 
