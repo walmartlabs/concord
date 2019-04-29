@@ -1,8 +1,8 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.16.1"
-  - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:1.10.0"
-  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.18.0"
+    - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:1.10.0"
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
 
   arguments:
     oneopsCfg:
@@ -50,11 +50,18 @@ flows:
   deployment:
   - task: ansible
     in:
+      # location of the playbook
       playbook: "playbook/hello.yml"
-      user: "myRemoteUser"
-      privateKey:
-        org: "myOrg"
-        secretName: "mySshKey"
+      # remote server auth
+      auth:
+        privateKey:
+          # remote user
+          username: "myRemoteUser"
+          # export the secret using the provided org name and secret name
+          secret:
+            org: "myOrg"
+            name: "mySshKey"
+
       inventory:
         myHosts:
           hosts: "${ips}"
