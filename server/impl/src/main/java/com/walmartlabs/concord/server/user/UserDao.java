@@ -28,12 +28,9 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Roles.ROLES;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
@@ -149,10 +146,20 @@ public class UserDao extends AbstractDao {
                 .where(TEAMS.TEAM_ID.in(teamIds))
                 .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null, null, null));
 
-        List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME)
+        SelectConditionStep<Record1<String>> permissions = select(PERMISSIONS.PERMISSION_NAME).from(PERMISSIONS)
+                .where(PERMISSIONS.PERMISSION_ID.in(
+                        select(ROLE_PERMISSIONS.PERMISSION_ID).from(ROLE_PERMISSIONS)
+                                .where(ROLE_PERMISSIONS.ROLE_ID.in(ROLES.ROLE_ID))));
+
+        SelectConditionStep<Record1<UUID>> roleIds = select(USER_ROLES.ROLE_ID).from(USER_ROLES)
+                .where(USER_ROLES.USER_ID
+                        .eq(r.get(USERS.USER_ID)));
+
+        List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME,
+                array(permissions.asField()))
                 .from(ROLES)
-                .where(ROLES.ROLE_ID.in(select(USER_ROLES.ROLE_ID).from(USER_ROLES).where(USER_ROLES.USER_ID.eq(r.get(USERS.USER_ID)))))
-                .fetch(e -> new RoleEntry(e.value1(), e.value2()));
+                .where(ROLES.ROLE_ID.in(roleIds))
+                .fetch(e -> new RoleEntry(e.value1(), e.value2(), new HashSet<>(Arrays.asList((String[]) e.value3()))));
 
         return new UserEntry(r.get(USERS.USER_ID),
                 r.get(USERS.USERNAME),

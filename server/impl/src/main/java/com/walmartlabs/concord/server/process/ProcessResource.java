@@ -154,7 +154,7 @@ public class ProcessResource implements Resource {
         try {
             payload = payloadManager.createPayload(processKey, parentInstanceId, userPrincipal.getId(), userPrincipal.getUsername(), in, out);
         } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e);
+            log.error("start -> error creating a payload: {}", e.getMessage());
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
@@ -255,7 +255,7 @@ public class ProcessResource implements Resource {
                     .mergeOutExpressions(out)
                     .build();
         } catch (IOException e) {
-            log.error("start -> error creating a payload: {}", e);
+            log.error("start -> error creating a payload: {}", e.getMessage());
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 

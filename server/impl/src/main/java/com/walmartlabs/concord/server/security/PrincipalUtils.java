@@ -91,7 +91,14 @@ public final class PrincipalUtils {
         UserEntry u = p.getUser();
         Set<RoleEntry> roles = u.getRoles();
         if (roles != null) {
-            roles.forEach(r -> i.addRole(r.getName()));
+            roles.forEach(r -> {
+                i.addRole(r.getName());
+
+                Set<String> permissions = r.getPermissions();
+                if (permissions != null) {
+                    permissions.forEach(s -> i.addStringPermission(s));
+                }
+            });
         }
 
         return i;
