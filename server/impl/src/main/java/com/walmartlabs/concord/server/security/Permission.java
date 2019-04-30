@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,38 +23,23 @@ package com.walmartlabs.concord.server.security;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
-public final class Roles {
+public enum Permission {
 
     /**
-     * Admins can access any resource and perform any action.
+     * Read-only access to the process queue for all organizations.
+     * <p>
+     * As in {@code com/walmartlabs/concord/server/db/v1.18.0.xml}
      */
-    public static final String ADMIN = "concordAdmin";
+    GET_PROCESS_QUEUE_ALL_ORGS("getProcessQueueAllOrgs");
 
-    /**
-     * System readers can access any resource.
-     */
-    public static final String SYSTEM_READER = "concordSystemReader";
+    private final String key;
 
-    /**
-     * System readers can modify any resource.
-     */
-    public static final String SYSTEM_WRITER = "concordSystemWriter";
-
-    public static boolean isAdmin() {
-        Subject s = SecurityUtils.getSubject();
-        return s.hasRole(ADMIN);
+    private Permission(String key) {
+        this.key = key;
     }
 
-    public static boolean isGlobalReader() {
+    public static boolean isPermitted(Permission p) {
         Subject s = SecurityUtils.getSubject();
-        return s.hasRole(SYSTEM_READER);
-    }
-
-    public static boolean isGlobalWriter() {
-        Subject s = SecurityUtils.getSubject();
-        return s.hasRole(SYSTEM_WRITER);
-    }
-
-    private Roles() {
+        return s.isPermitted(p.key);
     }
 }

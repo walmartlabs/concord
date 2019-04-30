@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -139,14 +140,19 @@ public class ProcessResourceV2 implements Resource {
 
         Set<UUID> orgIds = null;
         if (orgId != null) {
+            // we got an org ID, use it as it is
             effectiveOrgId = orgId;
             orgIds = Collections.singleton(effectiveOrgId);
         } if (orgName != null) {
+            // we got an org name, validate it first by resolving its ID
             OrganizationEntry org = orgManager.assertExisting(null, orgName);
             effectiveOrgId = org.getId();
             orgIds = Collections.singleton(effectiveOrgId);
         } else {
-            if (!Roles.isAdmin()) {
+            // we got a query that is not limited to any specific org
+            // let's check if we can return all processes from all orgs or if we should limit it to the user's orgs
+            boolean canSeeAllOrgs = Roles.isAdmin() || Permission.isPermitted(Permission.GET_PROCESS_QUEUE_ALL_ORGS);
+            if (!canSeeAllOrgs) {
                 // non-admin users can only see their org's processes or processes w/o projects
                 orgIds = getCurrentUserOrgIds();
             }

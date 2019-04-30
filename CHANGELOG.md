@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: initial support for RBAC permissions;
 - ansible: initial Kerberos authentication support.
 
 ### Changed

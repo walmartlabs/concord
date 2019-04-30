@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import java.io.Serializable;
+import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -38,12 +39,16 @@ public class RoleEntry implements Serializable {
     @ConcordKey
     private final String name;
 
+    private final Set<String> permissions;
+
     @JsonCreator
     public RoleEntry(@JsonProperty("id") UUID id,
-                     @JsonProperty("name") String name) {
+                     @JsonProperty("name") String name,
+                     @JsonProperty("permissions") Set<String> permissions) {
 
         this.id = id;
         this.name = name;
+        this.permissions = permissions;
     }
 
     public UUID getId() {
@@ -54,11 +59,16 @@ public class RoleEntry implements Serializable {
         return name;
     }
 
+    public Set<String> getPermissions() {
+        return permissions;
+    }
+
     @Override
     public String toString() {
         return "RoleEntry{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", permissions=" + permissions +
                 '}';
     }
 }
