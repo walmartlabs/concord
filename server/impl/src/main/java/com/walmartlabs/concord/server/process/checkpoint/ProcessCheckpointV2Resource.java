@@ -87,7 +87,7 @@ public class ProcessCheckpointV2Resource implements Resource {
     private GenericCheckpointResponse restore(ProcessKey processKey, String checkpointName) {
         log.info("Restoring process from checkpoint: {}", checkpointName);
 
-        UUID checkpointId = checkpointManager.getRecentCheckpointId(processKey.getInstanceId(), checkpointName);
+        UUID checkpointId = checkpointManager.getRecentCheckpointId(processKey, checkpointName);
         processManager.restoreFromCheckpoint(processKey, checkpointId);
 
         return new GenericCheckpointResponse();

@@ -20,7 +20,10 @@ package com.walmartlabs.concord.server.security.sso.encryption;
  * =====
  */
 
-import com.nimbusds.jose.*;
+import com.nimbusds.jose.EncryptionMethod;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 
 public abstract class AbstractEncryptionConfiguration implements EncryptionConfiguration {

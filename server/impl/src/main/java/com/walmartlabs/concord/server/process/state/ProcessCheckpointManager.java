@@ -26,7 +26,6 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.OutVariablesUtils;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -50,13 +49,13 @@ import static com.walmartlabs.concord.sdk.Constants.Files.CHECKPOINT_META_FILE_N
 @Named
 public class ProcessCheckpointManager {
 
-    private final CheckpointDao checkpointDao;
+    private final ProcessCheckpointDao checkpointDao;
     private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
     private final ProjectAccessManager projectAccessManager;
 
     @Inject
-    protected ProcessCheckpointManager(CheckpointDao checkpointDao,
+    protected ProcessCheckpointManager(ProcessCheckpointDao checkpointDao,
                                        ProcessQueueDao queueDao,
                                        ProcessStateManager stateManager,
                                        ProjectAccessManager projectAccessManager) {
@@ -67,24 +66,20 @@ public class ProcessCheckpointManager {
         this.projectAccessManager = projectAccessManager;
     }
 
-    public UUID getRecentCheckpointId(UUID instanceId, String checkpointName) {
-        return checkpointDao.getRecentId(instanceId, checkpointName);
-    }
-
-    public void importCheckpoint(PartialProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
-        importCheckpoint(processKey.getInstanceId(), checkpointId, checkpointName, data);
+    public UUID getRecentCheckpointId(ProcessKey processKey, String checkpointName) {
+        return checkpointDao.getRecentId(processKey, checkpointName);
     }
 
     /**
      * Import checkpoints data from the specified directory or a file.
      *
-     * @param instanceId     process instance ID
+     * @param processKey     process key
      * @param checkpointId   process checkpoint ID
      * @param checkpointName process checkpoint name
      * @param data           checkpoint data file
      */
-    public void importCheckpoint(UUID instanceId, UUID checkpointId, String checkpointName, Path data) {
-        checkpointDao.importCheckpoint(instanceId, checkpointId, checkpointName, data);
+    public void importCheckpoint(ProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
+        checkpointDao.importCheckpoint(processKey, checkpointId, checkpointName, data);
     }
 
     /**
@@ -93,7 +88,7 @@ public class ProcessCheckpointManager {
     public String restoreCheckpoint(ProcessKey processKey, UUID checkpointId) {
         try (TemporaryPath checkpointArchive = IOUtils.tempFile("checkpoint", ".zip")) {
 
-            boolean hasCheckpoint = export(checkpointId, checkpointArchive.path());
+            boolean hasCheckpoint = export(processKey, checkpointId, checkpointArchive.path());
             if (!hasCheckpoint) {
                 return null;
             }
@@ -124,7 +119,7 @@ public class ProcessCheckpointManager {
     /**
      * List checkpoints of a given instanceId
      */
-    public List<ProcessCheckpointEntry> list(PartialProcessKey processKey) {
+    public List<ProcessCheckpointEntry> list(ProcessKey processKey) {
         return checkpointDao.list(processKey);
     }
 
@@ -161,7 +156,7 @@ public class ProcessCheckpointManager {
         return checkpointName;
     }
 
-    private boolean export(UUID checkpointId, Path dest) throws IOException {
-        return checkpointDao.export(checkpointId, dest);
+    private boolean export(ProcessKey processKey, UUID checkpointId, Path dest) throws IOException {
+        return checkpointDao.export(processKey, checkpointId, dest);
     }
 }
