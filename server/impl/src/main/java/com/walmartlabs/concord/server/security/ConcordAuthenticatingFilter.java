@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.security;
  */
 
 import com.codahale.metrics.Meter;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.InjectMeter;

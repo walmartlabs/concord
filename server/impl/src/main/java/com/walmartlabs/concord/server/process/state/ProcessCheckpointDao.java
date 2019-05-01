@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.process.ImmutableProcessCheckpointEntry;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
+import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.Record;
 
@@ -43,49 +43,53 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 
 @Named
-public class CheckpointDao extends AbstractDao {
+public class ProcessCheckpointDao extends AbstractDao {
 
     @Inject
-    public CheckpointDao(@Named("app") Configuration cfg) {
+    public ProcessCheckpointDao(@Named("app") Configuration cfg) {
         super(cfg);
     }
 
-    public List<ProcessCheckpointEntry> list(PartialProcessKey processKey) {
-        UUID instanceId = processKey.getInstanceId();
+    public List<ProcessCheckpointEntry> list(ProcessKey processKey) {
         return txResult(tx -> tx.select()
                 .from(PROCESS_CHECKPOINTS)
-                .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(instanceId))
-                .fetch(CheckpointDao::toEntry));
+                .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                .fetch(ProcessCheckpointDao::toEntry));
     }
 
-    public UUID getRecentId(UUID instanceId, String checkpointName) {
+    public UUID getRecentId(ProcessKey processKey, String checkpointName) {
         return txResult(tx -> tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_ID)
                 .from(PROCESS_CHECKPOINTS)
-                .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(instanceId).and(PROCESS_CHECKPOINTS.CHECKPOINT_NAME.eq(checkpointName)))
+                .where(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(PROCESS_CHECKPOINTS.CHECKPOINT_NAME.eq(checkpointName)))
                 .orderBy(PROCESS_CHECKPOINTS.CHECKPOINT_DATE.desc())
                 .limit(1)
                 .fetchOne(PROCESS_CHECKPOINTS.CHECKPOINT_ID));
     }
 
-    public void importCheckpoint(UUID instanceId, UUID checkpointId, String checkpointName, Path data) {
+    public void importCheckpoint(ProcessKey processKey, UUID checkpointId, String checkpointName, Path data) {
         tx(tx -> {
             String sql = tx.insertInto(PROCESS_CHECKPOINTS)
                     .columns(PROCESS_CHECKPOINTS.INSTANCE_ID,
+                            PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT,
                             PROCESS_CHECKPOINTS.CHECKPOINT_ID,
                             PROCESS_CHECKPOINTS.CHECKPOINT_NAME,
                             PROCESS_CHECKPOINTS.CHECKPOINT_DATE,
                             PROCESS_CHECKPOINTS.CHECKPOINT_DATA)
-                    .values((UUID) null, null, null, null, null)
+                    .values((UUID) null, null, null, null, null, null)
                     .getSQL();
 
             tx.connection(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setObject(1, instanceId);
-                    ps.setObject(2, checkpointId);
-                    ps.setObject(3, checkpointName);
-                    ps.setObject(4, new Timestamp(new Date().getTime()));
+                    ps.setObject(1, processKey.getInstanceId());
+                    ps.setTimestamp(2, processKey.getCreatedAt());
+                    ps.setObject(3, checkpointId);
+                    ps.setString(4, checkpointName);
+                    ps.setTimestamp(5, new Timestamp(new Date().getTime()));
                     try (InputStream in = Files.newInputStream(data)) {
-                        ps.setBinaryStream(5, in);
+                        ps.setBinaryStream(6, in);
                     }
 
                     ps.execute();
@@ -94,16 +98,20 @@ public class CheckpointDao extends AbstractDao {
         });
     }
 
-    public boolean export(UUID checkpointId, Path dest) {
+    public boolean export(ProcessKey processKey, UUID checkpointId, Path dest) {
         return txResult(tx -> {
             String sql = tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_DATA)
                     .from(PROCESS_CHECKPOINTS)
-                    .where(PROCESS_CHECKPOINTS.CHECKPOINT_ID.eq(checkpointId))
+                    .where(PROCESS_CHECKPOINTS.CHECKPOINT_ID.eq(checkpointId)
+                            .and(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setObject(1, checkpointId);
+                    ps.setObject(2, processKey.getInstanceId());
+                    ps.setTimestamp(3, processKey.getCreatedAt());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) {
@@ -118,14 +126,6 @@ public class CheckpointDao extends AbstractDao {
                 }
             });
         });
-    }
-
-    public void delete(UUID checkpointId) {
-        tx(tx ->
-                tx.deleteFrom(PROCESS_CHECKPOINTS)
-                        .where(PROCESS_CHECKPOINTS.CHECKPOINT_ID.eq(checkpointId))
-                        .execute()
-        );
     }
 
     private static ProcessCheckpointEntry toEntry(Record r) {
