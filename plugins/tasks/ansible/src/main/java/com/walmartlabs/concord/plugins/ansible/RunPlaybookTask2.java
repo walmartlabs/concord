@@ -148,7 +148,6 @@ public class RunPlaybookTask2 implements Task {
 
         AnsibleAuth auth = ansibleAuthFactory.create(taskContext)
                 .enrich(env)
-                .enrich(cfg)
                 .enrich(b);
 
         cfg.write();

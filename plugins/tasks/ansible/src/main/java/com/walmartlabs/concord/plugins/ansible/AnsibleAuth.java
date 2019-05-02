@@ -26,8 +26,6 @@ public interface AnsibleAuth {
 
     AnsibleAuth enrich(AnsibleEnv env);
 
-    AnsibleAuth enrich(AnsibleConfig cfg);
-
     AnsibleAuth enrich(PlaybookArgsBuilder p);
 
     void postProcess();
