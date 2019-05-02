@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { DropdownItemProps } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
@@ -72,7 +73,10 @@ const mapStateToProps = (
     options: makeOptions(selectors.projectNames(projects, orgName))
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { orgName }: ExternalProps
+): DispatchProps => ({
     load: () => dispatch(actions.listProjects(orgName))
 });
 

@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Divider, Header, Icon, Loader, Menu, Segment, Table, Grid } from 'semantic-ui-react';
 
@@ -251,7 +252,7 @@ const mapStateToProps = (
     error: secrets.listSecrets.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName: ConcordKey, secretName: ConcordKey) =>
         dispatch(actions.getSecret(orgName, secretName))
 });

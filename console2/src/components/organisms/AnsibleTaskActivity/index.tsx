@@ -26,7 +26,8 @@ import { ProcessEventEntry } from '../../../api/process/event';
 import { AnsibleTaskList, RequestErrorMessage } from '../../molecules';
 import { ConcordId, RequestError } from '../../../api/common';
 import { actions, State, AnsibleEvents } from '../../../state/data/processes/events';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { combinePrePostEvents } from '../ProcessEventsActivity';
 
 interface ExternalProps {
@@ -102,7 +103,7 @@ export const mapStateToProps = ({ processes: { events } }: StateType): StateProp
     error: events.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (instanceId, host, hostGroup, status) =>
         dispatch(actions.listAnsibleEvents(instanceId, host, hostGroup, status))
 });

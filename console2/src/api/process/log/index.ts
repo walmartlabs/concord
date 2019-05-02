@@ -71,7 +71,7 @@ export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<Lo
 
     const headers = resp.headers.get('Content-Range');
     if (!headers) {
-        throw new Object({ error: true, message: `Range header is missing: ${instanceId}` });
+        return Promise.reject({ error: true, message: `Range header is missing: ${instanceId}` });
     }
 
     const data = await resp.text();

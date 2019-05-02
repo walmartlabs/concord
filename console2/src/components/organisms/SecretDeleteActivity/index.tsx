@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/secrets';
 import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
@@ -66,7 +67,7 @@ const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
     error: secrets.deleteSecret.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     deleteSecret: (orgName, secretName) => dispatch(actions.deleteSecret(orgName, secretName))
 });
 

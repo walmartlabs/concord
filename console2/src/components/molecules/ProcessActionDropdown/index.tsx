@@ -41,7 +41,7 @@ class ProcessActionDropdown extends React.PureComponent<ExternalProps> {
                     <CancelProcessPopup
                         instanceId={instanceId}
                         refresh={refresh}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Dropdown.Item onClick={onClick} disabled={!canBeCancelled(status)}>
                                 <Icon name="delete" color="red" />
                                 <span className="text">Cancel</span>

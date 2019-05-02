@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/processes';
@@ -72,7 +73,10 @@ const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
     error: processes.cancelBulkProcess.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { data }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { data }: ExternalProps
+): DispatchProps => ({
     reset: () => dispatch(actions.resetBulk()),
     onConfirm: () => dispatch(actions.cancelBulk(data))
 });

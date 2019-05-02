@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { DropdownItemProps } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import { actions, State } from '../../../state/data/secrets';
-import { Secrets } from '../../../state/data/secrets/types';
+import { Secrets } from '../../../state/data/secrets';
 import { comparators } from '../../../utils';
 import { FormikDropdown } from '../../atoms';
 
@@ -52,7 +53,7 @@ class SecretDropdown extends React.PureComponent<ExternalProps & StateProps & Di
     }
 
     render() {
-        const { orgName, load, ...rest } = this.props;
+        const { ...rest } = this.props;
 
         return <FormikDropdown selection={true} search={true} {...rest} />;
     }
@@ -89,7 +90,10 @@ const mapStateToProps = (
     options: makeOptions(secrets.secretById, required)
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { orgName }: ExternalProps
+): DispatchProps => ({
     load: () => dispatch(actions.listSecrets(orgName))
 });
 

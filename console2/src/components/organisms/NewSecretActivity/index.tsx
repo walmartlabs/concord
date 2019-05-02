@@ -20,8 +20,9 @@
 
 import * as copyToClipboard from 'copy-to-clipboard';
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
-import { push as pushHistory } from 'react-router-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
+import { push as pushHistory } from 'connected-react-router';
 import { Button, Message, Modal, TextArea } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
@@ -33,7 +34,7 @@ import {
 } from '../../../api/org/secret';
 import { validatePassword } from '../../../api/service/console';
 import { actions, State } from '../../../state/data/secrets';
-import { CreateSecretResponse } from '../../../state/data/secrets/types';
+import { CreateSecretResponse } from '../../../state/data/secrets';
 import { passwordTooWeakError } from '../../../validation';
 import { NewSecretForm, NewSecretFormValues, RequestErrorMessage } from '../../molecules';
 
@@ -191,7 +192,10 @@ const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
     response: secrets.createSecret.response as CreateSecretResponse
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { orgName }: ExternalProps
+): DispatchProps => ({
     submit: (entry: NewSecretEntry) => {
         dispatch(actions.createSecret(orgName, entry));
     },

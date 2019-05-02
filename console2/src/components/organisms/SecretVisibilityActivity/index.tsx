@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Form } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { SecretVisibility } from '../../../api/org/secret';
@@ -90,7 +91,7 @@ const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
     error: secrets.updateSecretVisibility.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     update: (orgName, secretId, visibility) =>
         dispatch(actions.updateSecretVisibility(orgName, secretId, visibility))
 });

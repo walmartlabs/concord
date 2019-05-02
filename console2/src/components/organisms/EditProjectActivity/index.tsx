@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State, selectors } from '../../../state/data/projects';
@@ -79,7 +80,7 @@ const mapStateToProps = (
     initial: selectors.projectByName(projects, orgName, projectName)
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     update: (orgName, projectEntity) => dispatch(actions.updateProject(orgName, projectEntity))
 });
 

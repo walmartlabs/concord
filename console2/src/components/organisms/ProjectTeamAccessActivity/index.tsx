@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Loader } from 'semantic-ui-react';
 import { ConcordKey, RequestError } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
@@ -87,7 +88,7 @@ const mapStateToProps = (
     loading: projects.projectTeamAccess.running
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName, projectName) => {
         dispatch(actions.getTeamAccess(orgName, projectName));
     },

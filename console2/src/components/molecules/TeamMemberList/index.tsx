@@ -116,7 +116,9 @@ class EntryList extends React.Component<Props, State> {
                                     <Form.Field>
                                         <FindUserField
                                             placeholder="Add a team member"
-                                            onSelect={(u) => this.handleAddUser(u)}
+                                            onSelect={(u: UserSearchResult) =>
+                                                this.handleAddUser(u)
+                                            }
                                         />
                                     </Form.Field>
                                 </Form>

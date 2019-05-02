@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Loader } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
@@ -148,7 +149,7 @@ const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
     updateError: teams.replaceUsers.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
     load: (orgName, teamName) => dispatch(actions.listTeamUsers(orgName, teamName)),
     update: (orgName, teamName, users) => dispatch(actions.replaceUsers(orgName, teamName, users))

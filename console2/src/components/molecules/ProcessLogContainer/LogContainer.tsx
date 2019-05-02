@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import createContainer from 'constate';
 import fetchLogData from '../../../api/process/log/fetchLogAsBlobURL';
 

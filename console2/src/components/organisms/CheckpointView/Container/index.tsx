@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import createContainer from 'constate';
 import {
     ProcessEntry,
@@ -133,7 +133,7 @@ export const useCheckpoint = (initial: InitialProps) => {
 
     /**
      * Add Active filter
-     * @param source is the unique key these configs are known by
+     * @param sourceName is the unique key these configs are known by
      * @param value the filter input for the source field
      */
     const addActiveFilter = (sourceName: string, value: string) => {
@@ -150,7 +150,7 @@ export const useCheckpoint = (initial: InitialProps) => {
     /**
      * Remove a specific filter from the list
      * Updates the url query params to new values
-     * @param source the unique key of the meta filter to remove
+     * @param sourceName the unique key of the meta filter to remove
      */
     const removeFilter = (sourceName: string) => {
         // find out if the property exist on the object
@@ -278,9 +278,9 @@ export const useCheckpoint = (initial: InitialProps) => {
         refreshProcessData({ ...args, ...activeFilters });
     };
 
-    if (initial.refreshInterval !== undefined) {
-        useEffect(
-            () => {
+    useEffect(
+        () => {
+            if (initial.refreshInterval !== undefined) {
                 // Load initial dataset
                 reloadData(getCurrentParams());
 
@@ -292,10 +292,10 @@ export const useCheckpoint = (initial: InitialProps) => {
                 return () => {
                     clearInterval(onPollInterval);
                 };
-            },
-            [activeFilters, currentPage]
-        );
-    }
+            }
+        },
+        [activeFilters, currentPage]
+    );
 
     // If activefilters change
     useEffect(

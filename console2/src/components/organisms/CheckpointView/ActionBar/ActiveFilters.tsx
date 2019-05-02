@@ -17,13 +17,11 @@
  * limitations under the License.
  * =====
  */
-import React, { SFC, useContext, FunctionComponent } from 'react';
+import React, { useContext, FunctionComponent } from 'react';
 import { Label, Icon } from 'semantic-ui-react';
 import { CancelButton } from './CancelButton';
 import CheckpointContainer from '../Container';
 import { Item } from './styles';
-
-type FilterType = { [key: string]: string };
 
 export interface FilterLabelProps {
     caption: string;

@@ -19,8 +19,9 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
-import { push as pushHistory } from 'react-router-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
+import { push as pushHistory } from 'connected-react-router';
 import { Button, Dropdown, DropdownItemProps, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
@@ -214,7 +215,7 @@ const mapStateToProps = ({ processes }: { processes: ProcessState }): StateProps
 });
 
 const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
+    dispatch: Dispatch<AnyAction>,
     { orgName, projectName, repoName }: ExternalProps
 ): DispatchProps => ({
     reset: () => dispatch(actions.reset()),

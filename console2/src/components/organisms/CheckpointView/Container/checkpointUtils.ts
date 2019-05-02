@@ -93,7 +93,7 @@ export const generateCheckpointGroups = (
 ): CheckpointGroup[] => {
     // make sure that the history is sorted
     const history = historyEntries.sort(comparators.byProperty((i) => i.changeDate));
-    if (history.length == 0) {
+    if (history.length === 0) {
         return [];
     }
 

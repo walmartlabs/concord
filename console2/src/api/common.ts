@@ -18,8 +18,6 @@
  * =====
  */
 
-import * as Q from 'q';
-
 export type ConcordId = string;
 export type ConcordKey = string;
 
@@ -115,7 +113,7 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
             response,
             err
         );
-        throw { message: 'Error while performing a request', cause: err };
+        return Promise.reject({ message: 'Error while performing a request', cause: err });
     }
 
     if (!response.ok) {
@@ -241,7 +239,7 @@ export type QueryMultiParams = { [key: string]: any };
 export const parseNestedQueryParams = (params: QueryParams, keys: string[]): QueryMultiParams => {
     let result: QueryMultiParams = { ...params };
 
-    let x = Object.keys(params)
+    Object.keys(params)
         .filter((p) => keys.some((k) => p.startsWith(k) && p.includes('.')))
         .forEach((p) => {
             let as = p.split('.').reverse();

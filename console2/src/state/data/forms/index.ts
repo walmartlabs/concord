@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { push as pushHistory, replace as replaceHistory } from 'react-router-redux';
+import { push as pushHistory, replace as replaceHistory } from 'connected-react-router';
 import { combineReducers } from 'redux';
 import { delay } from 'redux-saga';
 import { all, call, put, takeLatest } from 'redux-saga/effects';

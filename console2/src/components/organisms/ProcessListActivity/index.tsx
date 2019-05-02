@@ -20,9 +20,10 @@
 
 import { parse as parseQueryString } from 'query-string';
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { replace as pushHistory } from 'react-router-redux';
+import { replace as pushHistory } from 'connected-react-router';
 
 import { queryParams, RequestError } from '../../../api/common';
 import { ProcessEntry } from '../../../api/process';
@@ -138,10 +139,6 @@ const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | u
 };
 
 class ProcessListActivity extends React.Component<Props> {
-    constructor(props: Props) {
-        super(props);
-    }
-
     componentWillMount() {
         const { orgName, projectName, load, location } = this.props;
         const f = parseSearchFilter(location.search);
@@ -216,7 +213,7 @@ const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
     prev: processes.paginatedProcessesById.prev
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName?, projectName?, filters?, paginationFilters?) => {
         if (filters || paginationFilters) {
             const f = {};

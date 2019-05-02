@@ -21,7 +21,6 @@
 import * as React from 'react';
 import { Provider } from 'react-redux';
 import { Redirect, Route, Switch } from 'react-router';
-import { ConnectedRouter } from 'react-router-redux';
 import { ProtectedRoute } from './components/organisms';
 import {
     AddRepositoryPage,
@@ -49,7 +48,7 @@ import {
 import { Layout } from './components/templates';
 import { actions as session } from './state/session';
 import { history, store } from './store';
-import { Dimmer, Loader } from 'semantic-ui-react';
+import { ConnectedRouter } from 'connected-react-router';
 
 store.dispatch(session.checkAuth());
 

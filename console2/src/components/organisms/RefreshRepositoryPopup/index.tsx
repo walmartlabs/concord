@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
@@ -77,7 +78,7 @@ const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
 });
 
 const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
+    dispatch: Dispatch<AnyAction>,
     { orgName, projectName, repoName }: ExternalProps
 ): DispatchProps => ({
     reset: () => dispatch(actions.resetRepository()),

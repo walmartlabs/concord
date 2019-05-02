@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import {
     Card,
@@ -159,7 +160,7 @@ const mapStateToProps = ({ login }: AppState): StateProps => ({
     apiError: selectors.getError(login)
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     onSubmit: ({ username, password, rememberMe, apiKey }: LoginData) =>
         dispatch(actions.doLogin(username, password, rememberMe, apiKey))
 });

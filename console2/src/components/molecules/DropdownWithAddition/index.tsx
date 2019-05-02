@@ -25,6 +25,7 @@ interface State {
 }
 
 interface Props {
+    name: string;
     required: boolean;
     value?: any;
     options: any[];
@@ -55,6 +56,7 @@ class DropdownWithAddition extends React.Component<Props, State> {
 
     render() {
         const {
+            name,
             multiple,
             allowAdditions,
             value,

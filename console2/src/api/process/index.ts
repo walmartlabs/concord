@@ -19,15 +19,7 @@
  */
 
 import { SemanticCOLORS } from 'semantic-ui-react';
-import {
-    ConcordId,
-    ConcordKey,
-    fetchJson,
-    managedFetch,
-    parseNestedQueryParams,
-    QueryParams,
-    queryParams
-} from '../common';
+import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../common';
 import { ColumnDefinition } from '../org';
 
 export enum ProcessStatus {
@@ -267,40 +259,4 @@ export const list = async (q: ProcessListQuery): Promise<PaginatedProcessEntries
         next: nextPage,
         prev: prevPage
     };
-};
-
-const nonEmpty = (values?: any) => {
-    if (values === undefined) {
-        return undefined;
-    }
-
-    if (Object.keys(values).length === 0) {
-        return undefined;
-    }
-
-    return values;
-};
-
-// TODO refactor as a vararg function?
-const combine = (values?: any, overrides?: any) => {
-    if (values === undefined && overrides === undefined) {
-        return undefined;
-    }
-
-    type Result = { [name: string]: any };
-    const result: Result = {};
-
-    if (values !== undefined) {
-        Object.keys(values)
-            .filter((k) => k !== undefined)
-            .forEach((key) => (result[key] = values[key]));
-    }
-
-    if (overrides !== undefined) {
-        Object.keys(overrides)
-            .filter((k) => k !== undefined)
-            .forEach((key) => (result[key] = overrides[key]));
-    }
-
-    return result;
 };

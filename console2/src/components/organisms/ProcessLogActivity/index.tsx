@@ -18,7 +18,8 @@
  * =====
  */
 
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
@@ -27,7 +28,6 @@ import { State } from '../../../state/data/processes/logs/types';
 import { ProcessLogViewer } from '../../molecules';
 
 import './styles.css';
-import * as React from 'react';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -63,7 +63,7 @@ const mapStateToProps = ({ processes: { log } }: StateType): StateProps => ({
 });
 
 const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
+    dispatch: Dispatch<AnyAction>,
     { instanceId }: ExternalProps
 ): DispatchProps => ({
     startPolling: (useLocalTime: boolean, showDate: boolean) =>

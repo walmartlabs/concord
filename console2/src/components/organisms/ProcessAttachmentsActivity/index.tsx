@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Table, Loader } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
@@ -108,7 +109,7 @@ export const mapStateToProps = ({ processes: { attachments } }: StateType): Stat
     data: selectors.processAttachments(attachments)
 });
 
-export const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+export const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (instanceId: ConcordId) => {
         dispatch(actions.listProcessAttachments(instanceId));
     }

@@ -198,7 +198,7 @@ const getLogReducers = combineReducers<GetProcessLogState>({
         [actionTypes.GET_PROCESS_LOG_REQUEST],
         [actionTypes.GET_PROCESS_LOG_RESPONSE]
     ),
-    response: (state = { data: '', range: {} }, {}) => state
+    response: (state = { data: '', range: {} }, {}) => state // eslint-disable-line no-empty-pattern
 });
 
 export const reducers = combineReducers<State>({

@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Search, SearchResultData, SearchResultProps } from 'semantic-ui-react';
 
 import { LdapGroupSearchResult } from '../../../api/service/console';
@@ -115,7 +116,7 @@ const mapStateToProps = ({ search }: { search: State }): StateProps => ({
         : []
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     reset: () => dispatch(actions.resetLdapGroupSearch()),
     onSearch: (filter: string) => dispatch(actions.findLdapGroups(filter))
 });

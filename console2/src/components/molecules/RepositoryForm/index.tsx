@@ -269,32 +269,32 @@ const validator = async (values: FormValues, props: Props) => {
 
     e = validation.name(values.name);
     if (e) {
-        throw { name: e };
+        return Promise.reject({ name: e });
     }
 
     if (values.name !== props.initial.name) {
         const exists = await isRepositoryExists(props.orgName, props.projectName, values.name);
         if (exists) {
-            throw { name: repositoryAlreadyExistsError(values.name) };
+            return Promise.reject({ name: repositoryAlreadyExistsError(values.name) });
         }
     }
 
     e = validation.url(values.url);
     if (e) {
-        throw { url: e };
+        return Promise.reject({ url: e });
     }
 
     switch (values.sourceType) {
         case RepositorySourceType.BRANCH_OR_TAG:
             e = validation.branch(values.branch);
             if (e) {
-                throw { branch: e };
+                return Promise.reject({ branch: e });
             }
             break;
         case RepositorySourceType.COMMIT_ID:
             e = validation.commitId(values.commitId);
             if (e) {
-                throw { commitId: e };
+                return Promise.reject({ commitId: e });
             }
             break;
         default:
@@ -303,20 +303,20 @@ const validator = async (values: FormValues, props: Props) => {
 
     e = validation.path(values.path);
     if (e) {
-        throw { path: e };
+        return Promise.reject({ path: e });
     }
 
     if (!values.withSecret) {
         if (!values.url.startsWith('https://')) {
-            throw {
+            return Promise.reject({
                 url:
                     "Invalid repository URL: must begin with 'https://'. SSH repository URLs require additional credentials to be specified."
-            };
+            });
         }
     } else {
         e = validation.secretId(values.secretId);
         if (e) {
-            throw { secret: e };
+            return Promise.reject({ secret: e });
         }
     }
 

@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/processes';
 import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
@@ -85,7 +86,7 @@ const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
     error: processes.restoreProcess.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     restoreProcess: (instanceId, checkpointId) =>
         dispatch(actions.restoreProcess(instanceId, checkpointId))
 });

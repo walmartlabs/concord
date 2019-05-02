@@ -19,15 +19,16 @@
  */
 
 import { createHashHistory } from 'history';
-import { routerMiddleware } from 'react-router-redux';
+import { routerMiddleware } from 'connected-react-router';
 import { applyMiddleware, createStore } from 'redux';
 import { createLogger } from 'redux-logger';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import createSagaMiddleware from 'redux-saga';
 import reducers from '../reducers';
 import sagas from '../sagas';
+import { History } from 'history';
 
-const history = createHashHistory();
+const history: History = createHashHistory();
 const sagaMiddleware = createSagaMiddleware();
 
 const middleware = [sagaMiddleware, routerMiddleware(history)];
@@ -35,7 +36,7 @@ if (process.env.NODE_ENV !== 'production') {
     middleware.push(createLogger());
 }
 
-const store = createStore(reducers, composeWithDevTools(applyMiddleware(...middleware)));
+const store = createStore(reducers(history), composeWithDevTools(applyMiddleware(...middleware)));
 
 sagaMiddleware.run(sagas);
 

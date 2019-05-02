@@ -33,10 +33,6 @@ interface Props {
 }
 
 class AnsibleTaskList extends React.Component<Props> {
-    constructor(props: Props) {
-        super(props);
-    }
-
     render() {
         const { title, tasks, showHosts } = this.props;
 

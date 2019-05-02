@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/teams';
@@ -72,7 +73,7 @@ const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
     error: teams.deleteTeam.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
     deleteTeam: (orgName, teamName) => dispatch(actions.deleteTeam(orgName, teamName))
 });

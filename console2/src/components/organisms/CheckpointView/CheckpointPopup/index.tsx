@@ -39,9 +39,7 @@ const CheckpointPopup: React.SFC<{
         CheckpointViewContainer.Context
     );
 
-    const { setActiveProcess, setActiveAnchor, fetchLog, queueScrollTo } = useContext(
-        ProcessLogContainer.Context
-    );
+    useContext(ProcessLogContainer.Context);
 
     return (
         <Popup
@@ -88,7 +86,7 @@ const CheckpointPopup: React.SFC<{
                     </Grid>
                     <hr />
                     <RestoreProcess>
-                        {({ restoreProcess }) => (
+                        {({ restoreProcess }: any) => (
                             <Button
                                 primary={true}
                                 disabled={!isFinal(process.status) || process.disabled}

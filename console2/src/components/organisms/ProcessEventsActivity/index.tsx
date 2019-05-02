@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Button, Divider, Header, Icon, Message } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { canBeCancelled, hasState, ProcessEntry } from '../../../api/process';
+import { canBeCancelled, ProcessEntry } from '../../../api/process';
 import {
     ProcessElementEvent,
     ProcessEventEntry,
@@ -93,7 +94,7 @@ class ProcessEventsActivity extends React.Component<Props> {
             <CancelProcessPopup
                 instanceId={process.instanceId}
                 refresh={refresh}
-                trigger={(onClick) => (
+                trigger={(onClick: any) => (
                     <Button negative={true} icon="delete" content="Cancel" onClick={onClick} />
                 )}
             />
@@ -124,7 +125,7 @@ class ProcessEventsActivity extends React.Component<Props> {
                 {tooMuchData && (
                     <Message warning={true}>
                         Looks like there's a lot of data. Only the first {MAX_EVENT_COUNT} events
-                        were loaded. Click{' '}
+                        were loaded. Click {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                         <a href="#" onClick={(ev) => this.handleForceLoadAll(ev)}>
                             here
                         </a>{' '}
@@ -230,7 +231,7 @@ export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps 
 });
 
 export const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
+    dispatch: Dispatch<AnyAction>,
     { instanceId }: ExternalProps
 ): DispatchProps => ({
     startPolling: (forceLoadAll?: boolean) =>

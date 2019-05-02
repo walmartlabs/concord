@@ -20,13 +20,14 @@
 
 import * as React from 'react';
 import ReactJson from 'react-json-view';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Loader, Modal, Table } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { TriggerEntry } from '../../../api/org/project/repository';
 import { actions } from '../../../state/data/triggers';
-import { ListTriggersResponse, State } from '../../../state/data/triggers/types';
+import { ListTriggersResponse, State } from '../../../state/data/triggers';
 import { comparators } from '../../../utils';
 import { RequestErrorMessage } from '../../molecules';
 
@@ -149,7 +150,7 @@ const mapStateToProps = ({ triggers }: { triggers: State }): StateProps => ({
     data: prepareData(triggers.listTriggers.response)
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName, projectName, repoName) =>
         dispatch(actions.listTriggers(orgName, projectName, repoName))
 });

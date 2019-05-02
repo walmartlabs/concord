@@ -19,8 +19,9 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
-import { push as pushHistory } from 'react-router-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
+import { push as pushHistory } from 'connected-react-router';
 import { Button, Divider, Header, Icon } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
@@ -91,7 +92,7 @@ class ProcessStatusActivity extends React.Component<Props> {
                     <CancelProcessPopup
                         instanceId={process.instanceId}
                         refresh={refresh}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Button
                                 attached={false}
                                 negative={true}
@@ -107,7 +108,7 @@ class ProcessStatusActivity extends React.Component<Props> {
                         instanceId={process.instanceId}
                         disabled={!process.disabled}
                         refresh={startPolling}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Button
                                 attached={false}
                                 icon={this.disableIcon(process.disabled)}
@@ -188,7 +189,7 @@ export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps 
 });
 
 export const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
+    dispatch: Dispatch<AnyAction>,
     { instanceId }: ExternalProps
 ): DispatchProps => ({
     startPolling: (forceLoadAll?: boolean) =>

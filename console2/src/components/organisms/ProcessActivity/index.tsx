@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Icon, Loader, Menu, Breadcrumb } from 'semantic-ui-react';
 
@@ -209,7 +210,7 @@ const mapStateToProps = (
     error: processes.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (instanceId) => dispatch(actions.getProcess(instanceId, ['history', 'checkpoints']))
 });
 

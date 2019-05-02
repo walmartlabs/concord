@@ -36,10 +36,6 @@ interface Props {
 }
 
 class NewTeamForm extends React.Component<InjectedFormikProps<Props, NewTeamEntry>> {
-    constructor(props: InjectedFormikProps<Props, NewTeamEntry>) {
-        super(props);
-    }
-
     render() {
         const { submitting, handleSubmit, errors, dirty } = this.props;
 
@@ -70,17 +66,17 @@ const validator = async (values: NewTeamEntry, { orgName }: Props): Promise<{}> 
 
     e = validation.name(values.name);
     if (e) {
-        throw { name: e };
+        return Promise.reject({ name: e });
     }
 
     const exists = await isTeamExists(orgName, values.name);
     if (exists) {
-        throw { name: teamAlreadyExistsError(values.name) };
+        return Promise.reject({ name: teamAlreadyExistsError(values.name) });
     }
 
     e = validation.description(values.description);
     if (e) {
-        throw { description: e };
+        return Promise.reject({ description: e });
     }
 
     return {};

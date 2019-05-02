@@ -18,8 +18,9 @@
  * =====
  */
 
-import { routerReducer, RouterState } from 'react-router-redux';
-import { combineReducers, Reducer } from 'redux';
+import { RouterState, connectRouter } from 'connected-react-router';
+import { combineReducers } from 'redux';
+import { History } from 'history';
 
 import { reducers as formsReducers, State as FormsState } from '../state/data/forms';
 import { reducers as loginReducers, State as LoginState } from '../components/organisms/Login';
@@ -53,20 +54,21 @@ export interface State {
     userActivity: UserActivityState;
 }
 
-const reducers: Reducer<State> = combineReducers({
-    forms: formsReducers,
-    login: loginReducers,
-    orgs: orgsReducer,
-    processes: processesReducers,
-    projects: projectsReducer,
-    router: routerReducer,
-    search: searchReducers,
-    secrets: secretsReducer,
-    session: sessionReducers,
-    teams: teamReducers,
-    tokens: tokensReducers,
-    triggers: triggersReducer,
-    userActivity: userActivityReducer
-});
+const reducers = (history: History) =>
+    combineReducers({
+        forms: formsReducers,
+        login: loginReducers,
+        orgs: orgsReducer,
+        processes: processesReducers,
+        projects: projectsReducer,
+        router: connectRouter(history),
+        search: searchReducers,
+        secrets: secretsReducer,
+        session: sessionReducers,
+        teams: teamReducers,
+        tokens: tokensReducers,
+        triggers: triggersReducer,
+        userActivity: userActivityReducer
+    });
 
 export default reducers;

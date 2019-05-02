@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Button, Dropdown, Grid, Header, Input, Popup } from 'semantic-ui-react';
-import { ColumnDefinition, SearchValueType } from '../../../api/org';
+import { ColumnDefinition } from '../../../api/org';
 
 import './styles.css';
 
@@ -59,11 +59,11 @@ export default class extends React.Component<Props, State> {
         }
     }
 
-    renderInput() {
+    renderInput(c: ColumnDefinition) {
         return (
             <Input
                 fluid={true}
-                name={name}
+                name={c.source}
                 value={this.state.inputValue}
                 onChange={(event, data) => this.setState({ inputValue: data.value })}
                 autoFocus={true}
@@ -78,7 +78,7 @@ export default class extends React.Component<Props, State> {
                 placeholder={'Choose ' + c.caption}
                 clearable={true}
                 selection={true}
-                name={name}
+                name={c.source}
                 value={this.state.inputValue}
                 options={c.searchOptions}
                 onChange={(event, data) => this.setState({ inputValue: data.value as string })}
@@ -90,7 +90,7 @@ export default class extends React.Component<Props, State> {
         if (c.searchOptions !== undefined) {
             return this.renderDropDown(c);
         } else {
-            return this.renderInput();
+            return this.renderInput(c);
         }
     }
 

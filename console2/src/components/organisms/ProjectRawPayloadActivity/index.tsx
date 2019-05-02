@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Form } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
@@ -74,7 +75,7 @@ const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
     error: projects.acceptRawPayload.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     update: (orgName, projectId, acceptsRawPayload) =>
         dispatch(actions.setAcceptsRawPayload(orgName, projectId, acceptsRawPayload))
 });

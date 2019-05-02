@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/apiTokens';
 import { SingleOperationPopup, RequestErrorMessage } from '../../molecules';
@@ -82,7 +83,10 @@ const mapStateToProps = ({ tokens }: { tokens: State }): StateProps => ({
     error: tokens.deleteToken.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { id }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { id }: ExternalProps
+): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
     onConfirm: () => dispatch(actions.deleteToken(id)),
     onDone: () => dispatch(actions.listTokens())

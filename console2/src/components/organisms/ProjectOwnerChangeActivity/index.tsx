@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, ConcordKey, EntityOwner, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
@@ -78,7 +79,7 @@ const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
     error: projects.changeOwner.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     change: (orgName, projectId, projectName, owner) =>
         dispatch(actions.changeProjectOwner(orgName, projectId, projectName, owner))
 });
