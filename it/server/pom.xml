@@ -459,6 +459,7 @@
                                             <DOCKER_HOST>${docker.daemon.addr}</DOCKER_HOST>
                                             <SERVER_API_BASE_URL>http://localhost:${it.server.port}</SERVER_API_BASE_URL>
                                             <SERVER_WEBSOCKET_URL>ws://localhost:${it.server.port}/websocket</SERVER_WEBSOCKET_URL>
+                                            <WORKERS_COUNT>3</WORKERS_COUNT>
                                         </env>
                                         <labels>
                                             <concordTxId>${txId}</concordTxId>
