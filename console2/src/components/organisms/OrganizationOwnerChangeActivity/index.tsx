@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, ConcordKey, EntityOwner, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/orgs';
@@ -73,7 +74,7 @@ const mapStateToProps = ({ orgs }: { orgs: State }): StateProps => ({
     error: orgs && orgs.changeOwner.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     change: (orgId, orgName, owner) => dispatch(actions.changeOwner(orgId, orgName, owner))
 });
 export default connect(

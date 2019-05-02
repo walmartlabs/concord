@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 
 import { parseQueryParams, QueryParams } from '../../../../api/common';
 
@@ -106,7 +106,7 @@ export function useQueryParams() {
         if (UrlParams.toString().length > 0) newUrl += `?${UrlParams.toString()}`;
 
         // Set the query params in the URL
-        location.assign(newUrl);
+        window.location.assign(newUrl);
 
         // Save new url to current
         setCurrentUrl(newUrl);

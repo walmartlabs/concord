@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Divider } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
@@ -92,7 +93,7 @@ export const mapStateToProps = ({ processes: { ansible } }: StateType): StatePro
     prev: selectors.ansibleHostsPrev(ansible)
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     refreshHosts: (instanceId, filter) => {
         dispatch(actions.listAnsibleHosts(instanceId, filter));
     }

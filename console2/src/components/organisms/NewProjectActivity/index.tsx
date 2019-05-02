@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { ProjectVisibility } from '../../../api/org/project';
@@ -69,7 +70,10 @@ const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
     error: projects.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { orgName }: ExternalProps
+): DispatchProps => ({
     submit: (values: NewProjectFormValues) => dispatch(actions.createProject(orgName, values))
 });
 

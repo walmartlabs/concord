@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Loader } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
@@ -59,7 +60,7 @@ const mapStateToProps = ({ forms }: { forms: State }): StateProps => ({
     error: forms.wizard.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     start: (processInstanceId: ConcordId) => dispatch(actions.startWizard(processInstanceId))
 });
 

@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { isTeamExists } from '../../../api/service/console';
@@ -76,7 +77,7 @@ const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
     error: teams.rename.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
     rename: (orgName, teamId, teamName) => dispatch(actions.renameTeam(orgName, teamId, teamName))
 });

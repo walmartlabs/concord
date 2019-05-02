@@ -38,7 +38,7 @@ class BulkProcessActionDropdown extends React.PureComponent<ExternalProps> {
                     <BulkCancelProcessPopup
                         data={data}
                         refresh={refresh}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="delete" color="red" />
                                 <span className="text">Cancel</span>

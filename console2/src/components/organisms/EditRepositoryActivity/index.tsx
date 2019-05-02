@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Loader, Dimmer } from 'semantic-ui-react';
 import { ConcordKey, RequestError } from '../../../api/common';
 import { ProjectEntry } from '../../../api/org/project';
@@ -147,7 +148,7 @@ const mapStateToProps = (
 });
 
 const mapDispatchToProps = (
-    dispatch: Dispatch<{}>,
+    dispatch: Dispatch<AnyAction>,
     { orgName, projectName, repoName }: ExternalProps
 ): DispatchProps => ({
     load: () => {

@@ -47,7 +47,7 @@ export default (processId: string) =>
                     }
                 });
             } else {
-                throw `Process: ${processId} body missing`;
+                throw new Error(`Process: ${processId} body missing`);
             }
         })
         // Create a new response out of the stream

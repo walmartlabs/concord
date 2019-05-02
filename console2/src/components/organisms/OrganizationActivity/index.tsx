@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Redirect, Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
@@ -200,7 +201,7 @@ const mapStateToProps = ({ orgs }: { orgs: State }, { orgName }: ExternalProps):
     error: orgs.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName) => dispatch(actions.getOrg(orgName))
 });
 

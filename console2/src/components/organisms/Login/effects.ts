@@ -18,11 +18,11 @@
  * =====
  */
 
-import { push as pushHistory } from 'react-router-redux';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, select, takeLatest } from 'redux-saga/effects';
 import { whoami as apiWhoami } from '../../../api/service/console';
 import { actions as session } from '../../../state/session';
+import { push as pushHistory } from 'connected-react-router';
 
 const NAMESPACE = 'login';
 

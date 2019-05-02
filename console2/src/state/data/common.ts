@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { LOCATION_CHANGE, push as pushHistory } from 'react-router-redux';
+import { LOCATION_CHANGE, push as pushHistory } from 'connected-react-router';
 import { Action, Reducer } from 'redux';
 import { put } from 'redux-saga/effects';
 

@@ -78,7 +78,7 @@ class GitHubLink extends React.PureComponent<Props> {
         }
 
         return (
-            <a href={s} target="_blank">
+            <a href={s} target="_blank" rel="noopener noreferrer">
                 {text ? text : s} <Icon name="external" />
             </a>
         );

@@ -42,10 +42,6 @@ interface Props {
 }
 
 class NewAPITokenForm extends React.Component<InjectedFormikProps<Props, FormValues>> {
-    constructor(props: InjectedFormikProps<Props, FormValues>) {
-        super(props);
-    }
-
     render() {
         const { submitting, handleSubmit, errors, dirty } = this.props;
 
@@ -63,17 +59,17 @@ class NewAPITokenForm extends React.Component<InjectedFormikProps<Props, FormVal
     }
 }
 
-const validator = async (values: FormValues, props: Props) => {
+const validator = async (values: FormValues) => {
     let e;
 
     e = validation.name(values.name);
     if (e) {
-        throw { name: e };
+        return Promise.reject({ name: e });
     }
 
     const exists = await isApiTokenExists(values.name);
     if (exists) {
-        throw { name: apiTokenAlreadyExistsError(values.name) };
+        return Promise.reject({ name: apiTokenAlreadyExistsError(values.name) });
     }
 
     return {};

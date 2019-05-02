@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
 import { Icon, List, Loader } from 'semantic-ui-react';
 
@@ -124,7 +125,10 @@ const mapStateToProps = (
     error: projects.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { orgName }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { orgName }: ExternalProps
+): DispatchProps => ({
     load: () => dispatch(actions.listProjects(orgName))
 });
 

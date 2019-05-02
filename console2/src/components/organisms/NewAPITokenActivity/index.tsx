@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Button, Message, Icon } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
-import { CreateTokenResponse } from '../../../state/data/apiTokens/types';
-import { push as pushHistory } from 'react-router-redux';
+import { CreateTokenResponse } from '../../../state/data/apiTokens';
+import { push as pushHistory } from 'connected-react-router';
 import { actions, State } from '../../../state/data/apiTokens';
 import { NewAPITokenForm, NewAPITokenFormValues, RequestErrorMessage } from '../../molecules';
 import { NewTokenEntry } from '../../../api/profile/api_token';
@@ -111,7 +112,7 @@ const mapStateToProps = ({ tokens }: { tokens: State }): StateProps => ({
     response: tokens.createToken.response as CreateTokenResponse
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     submit: (entry: NewTokenEntry) => {
         dispatch(actions.createToken(entry));
     },

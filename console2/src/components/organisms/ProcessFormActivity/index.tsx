@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
-import { push as pushHistory } from 'react-router-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
+import { push as pushHistory } from 'connected-react-router';
 import { Loader, Segment } from 'semantic-ui-react';
 import { ConcordId, RequestError } from '../../../api/common';
 import { FormInstanceEntry, FormSubmitErrors } from '../../../api/process/form';
 import { actions } from '../../../state/data/forms';
-import { FormDataType, State } from '../../../state/data/forms/types';
+import { FormDataType, State } from '../../../state/data/forms';
 import { ProcessForm, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
@@ -109,7 +110,7 @@ class ProcessFormActivity extends React.PureComponent<Props> {
             <>
                 {form.custom && (
                     <Segment>
-                        This form has a{' '}
+                        This form has a {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                         <a href="#" onClick={() => onStartForm(processInstanceId, formName)}>
                             custom view
                         </a>
@@ -141,7 +142,10 @@ const mapStateToProps = ({ forms }: { forms: State }): StateProps => ({
     completed: forms.submit.response ? forms.submit.response.ok : false
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>, { wizard }: ExternalProps): DispatchProps => ({
+const mapDispatchToProps = (
+    dispatch: Dispatch<AnyAction>,
+    { wizard }: ExternalProps
+): DispatchProps => ({
     load: (processInstanceId, formName) => {
         dispatch(actions.reset());
         dispatch(actions.getProcessForm(processInstanceId, formName));

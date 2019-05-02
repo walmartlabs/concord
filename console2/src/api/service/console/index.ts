@@ -20,8 +20,7 @@
 
 import { throttle } from 'lodash';
 import { Organizations } from '../../../state/data/orgs';
-import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
-import { ProcessEntry } from '../../process';
+import { ConcordKey, fetchJson, managedFetch, queryParams } from '../../common';
 
 export interface UserResponse {
     username: string;
@@ -122,7 +121,7 @@ export const testRepository = async (req: RepositoryTestRequest): Promise<void> 
 
     const success = await fetchJson('/api/service/console/repository/test', opts);
     if (!success) {
-        throw `Unknown error`;
+        throw new Error('Unknown error');
     }
 };
 

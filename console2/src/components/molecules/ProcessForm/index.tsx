@@ -200,6 +200,7 @@ class ProcessForm extends React.Component<Props, State> {
 
         return (
             <DropdownWithAddition
+                name={name}
                 options={options}
                 value={value}
                 required={required}

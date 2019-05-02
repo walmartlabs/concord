@@ -23,7 +23,6 @@ import * as React from 'react';
 import { Confirm, Form } from 'semantic-ui-react';
 import { UserSearchResult } from '../../../api/service/console';
 import { FindUserField } from '../../organisms';
-import { EntityOwner } from '../../../api/common';
 
 interface Owner {
     username: string;
@@ -93,7 +92,7 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
                                 defaultDisplayName={
                                     originalOwner !== undefined ? originalOwner.displayName : ''
                                 }
-                                onSelect={(u) => this.onSelect(u)}
+                                onSelect={(u: any) => this.onSelect(u)}
                             />
                         </Form.Field>
 

@@ -111,13 +111,13 @@ const validator = async (
 
     e = validation.name(values.name);
     if (e) {
-        throw { name: e };
+        return Promise.reject({ name: e });
     }
 
     if (values.name !== originalName) {
         const exists = await isExists(values.name);
         if (exists) {
-            throw { name: alreadyExistsTemplate(values.name) };
+            return Promise.reject({ name: alreadyExistsTemplate(values.name) });
         }
     }
 

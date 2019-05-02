@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { ConcordId, queryParams, RequestError } from '../../../api/common';
 import { actions } from '../../../state/data/processes/children';
 import { State } from '../../../state/data/processes/children/types';
@@ -34,7 +35,7 @@ import {
     STATUS_COLUMN,
     UPDATED_AT_COLUMN
 } from '../../molecules/ProcessList';
-import { replace as pushHistory } from 'react-router-redux';
+import { replace as pushHistory } from 'connected-react-router';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { PaginatedProcesses, Pagination } from '../../../state/data/processes';
 import { parseSearchFilter } from '../ProcessListActivity';
@@ -72,10 +73,6 @@ interface DispatchProps {
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
 
 class ProcessChildrenActivity extends React.Component<Props> {
-    constructor(props: Props) {
-        super(props);
-    }
-
     componentDidMount() {
         const { instanceId, load, location } = this.props;
         const f = parseSearchFilter(location.search);
@@ -137,7 +134,7 @@ export const mapStateToProps = ({ processes: { children } }: StateType): StatePr
     prev: children.listChildren.prev
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (instanceId, filters?, paginationFilters?) => {
         if (filters) {
             dispatch(pushHistory({ search: queryParams(filters) }));

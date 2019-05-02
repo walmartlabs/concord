@@ -19,14 +19,15 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
 import { Icon, List, Loader } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
 import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
 import { actions, State } from '../../../state/data/orgs';
-import { Organizations } from '../../../state/data/orgs/types';
+import { Organizations } from '../../../state/data/orgs';
 import { comparators } from '../../../utils';
 import { RequestErrorMessage } from '../../molecules';
 
@@ -115,7 +116,7 @@ const mapStateToProps = ({ orgs }: { orgs: State }, { filter }: ExternalProps): 
     error: orgs.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (onlyCurrent: boolean) => dispatch(actions.listOrgs(onlyCurrent))
 });
 

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Button, Container, Form, Input, Menu, Table } from 'semantic-ui-react';
+import { Button, Container, Form, Menu, Table } from 'semantic-ui-react';
 
 import { NewTeamLdapGroupEntry, TeamLdapGroupEntry, TeamRole } from '../../../api/org/team';
 import { TeamRoleDropdown } from '../../molecules';
@@ -111,7 +111,9 @@ class EntryList extends React.Component<Props, State> {
                                     <Form.Field>
                                         <FindLdapGroupField
                                             placeholder="Add a team LDAP group"
-                                            onSelect={(r) => this.handleAdd(r)}
+                                            onSelect={(r: LdapGroupSearchResult) =>
+                                                this.handleAdd(r)
+                                            }
                                         />
                                     </Form.Field>
                                 </Form>

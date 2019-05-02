@@ -84,7 +84,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         repoPath={repoPathOrDefault}
                         repoProfiles={getProfiles(repoMeta)}
                         repoEntryPoints={getEntryPoints(repoMeta)}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Dropdown.Item onClick={onClick} disabled={repo.disabled}>
                                 <Icon name="play" color="blue" />
                                 <span className="text">Run</span>
@@ -95,7 +95,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         orgName={orgName}
                         projectName={projectName}
                         repoName={repoName}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="check" />
                                 <span className="text">Validate</span>
@@ -107,7 +107,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         orgName={orgName}
                         projectName={projectName}
                         repoName={repoName}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="lightning" />
                                 <span className="text">Triggers</span>
@@ -119,7 +119,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         orgName={orgName}
                         projectName={projectName}
                         repoName={repoName}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="refresh" />
                                 <span className="text">Refresh</span>
@@ -131,7 +131,7 @@ class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
                         orgName={orgName}
                         projectName={projectName}
                         repoName={repoName}
-                        trigger={(onClick) => (
+                        trigger={(onClick: any) => (
                             <Dropdown.Item onClick={onClick}>
                                 <Icon name="delete" color="red" />
                                 <span className="text">Delete</span>

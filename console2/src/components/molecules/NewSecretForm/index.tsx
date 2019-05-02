@@ -99,10 +99,6 @@ const pwdTypeOptions = [
 ];
 
 class NewSecretForm extends React.Component<InjectedFormikProps<Props, FormValues>> {
-    constructor(props: InjectedFormikProps<Props, FormValues>) {
-        super(props);
-    }
-
     render() {
         const { submitting, handleSubmit, errors, dirty, values, orgName } = this.props;
 
@@ -213,24 +209,24 @@ const validator = async (values: FormValues, props: Props): Promise<{}> => {
 
     e = validation.name(values.name);
     if (e) {
-        throw { name: e };
+        return Promise.reject({ name: e });
     }
 
     const exists = await isSecretExists(props.orgName, values.name);
     if (exists) {
-        throw { name: secretAlreadyExistsError(values.name) };
+        return Promise.reject({ name: secretAlreadyExistsError(values.name) });
     }
 
     switch (values.type) {
         case SecretTypeExt.EXISTING_KEY_PAIR: {
             e = validation.publicFile(values.publicFile);
             if (e) {
-                throw { publicFile: e };
+                return Promise.reject({ publicFile: e });
             }
 
             e = validation.privateFile(values.privateFile);
             if (e) {
-                throw { privateFile: e };
+                return Promise.reject({ privateFile: e });
             }
 
             break;
@@ -238,12 +234,12 @@ const validator = async (values: FormValues, props: Props): Promise<{}> => {
         case SecretTypeExt.USERNAME_PASSWORD: {
             e = validation.username(values.username);
             if (e) {
-                throw { username: e };
+                return Promise.reject({ username: e });
             }
 
             e = validation.password(values.password);
             if (e) {
-                throw { password: e };
+                return Promise.reject({ password: e });
             }
 
             break;
@@ -251,7 +247,7 @@ const validator = async (values: FormValues, props: Props): Promise<{}> => {
         case SecretTypeExt.VALUE_STRING: {
             e = validation.valueString(values.valueString);
             if (e) {
-                throw { valueString: e };
+                return Promise.reject({ valueString: e });
             }
 
             break;
@@ -259,7 +255,7 @@ const validator = async (values: FormValues, props: Props): Promise<{}> => {
         case SecretTypeExt.VALUE_FILE: {
             e = validation.valueFile(values.valueFile);
             if (e) {
-                throw { valueFile: e };
+                return Promise.reject({ valueFile: e });
             }
 
             break;
@@ -271,7 +267,7 @@ const validator = async (values: FormValues, props: Props): Promise<{}> => {
     if (values.storePasswordType === StorePasswordType.SPECIFY) {
         e = validation.storePassword(values.storePassword);
         if (e) {
-            throw { storePassword: e };
+            return Promise.reject({ storePassword: e });
         }
     }
 

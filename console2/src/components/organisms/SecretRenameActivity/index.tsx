@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { isSecretExists } from '../../../api/service/console';
@@ -71,7 +72,7 @@ const mapStateToProps = ({ secrets }: { secrets: State }): StateProps => ({
     error: secrets.renameSecret.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     rename: (orgName, secretId, secretName) =>
         dispatch(actions.renameSecret(orgName, secretId, secretName))
 });

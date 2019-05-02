@@ -113,7 +113,7 @@ class TeamAccessList extends React.Component<Props, State> {
                                 <Form>
                                     <Form.Field>
                                         <FindTeamDropdown
-                                            onSelect={(u) => this.handleAddTeam(u)}
+                                            onSelect={(u: TeamEntry) => this.handleAddTeam(u)}
                                             orgName={orgName}
                                             name="teams"
                                         />

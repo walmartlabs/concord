@@ -19,9 +19,10 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router';
-import { push as pushHistory } from 'react-router-redux';
+import { push as pushHistory } from 'connected-react-router';
 import { LinkMeta } from '../../../../env';
 
 import { actions, State as SessionState } from '../../../state/session';
@@ -86,7 +87,7 @@ const mapStateToProps = ({ session }: { session: SessionState }): StateProps => 
     userDisplayName: session.user.displayName
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     openUrl: (url: string) => window.open(url, '_blank'),
     openAbout: () => dispatch(pushHistory('/about')),
     openProfile: () => dispatch(pushHistory('/profile')),

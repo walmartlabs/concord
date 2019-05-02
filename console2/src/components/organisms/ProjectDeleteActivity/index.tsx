@@ -19,7 +19,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
 import { ButtonWithConfirmation, RequestErrorMessage } from '../../molecules';
@@ -66,7 +67,7 @@ const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
     error: projects.deleteProject.error
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     deleteProject: (orgName, projectName) => dispatch(actions.deleteProject(orgName, projectName))
 });
 

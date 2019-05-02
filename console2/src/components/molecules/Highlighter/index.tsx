@@ -34,10 +34,6 @@ interface Config {
 }
 
 class Highlighter extends React.PureComponent<HighlighterProps> {
-    constructor(props: HighlighterProps) {
-        super(props);
-    }
-
     render() {
         const { value } = this.props;
 

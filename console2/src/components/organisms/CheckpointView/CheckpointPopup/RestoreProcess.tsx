@@ -25,7 +25,8 @@
  */
 
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from 'redux';
 import { ConcordKey } from '../../../../api/common';
 import { actions } from '../../../../state/data/processes';
 import { isFinal, ProcessStatus } from '../../../../api/process';
@@ -73,7 +74,7 @@ class RestoreProcess extends React.PureComponent<Props> {
     }
 }
 
-const mapDispatchToProps = (dispatch: Dispatch<{}>): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     restoreProcess: (instanceId, checkpointId) =>
         dispatch(actions.restoreProcess(instanceId, checkpointId))
 });

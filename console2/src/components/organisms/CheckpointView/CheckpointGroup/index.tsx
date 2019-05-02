@@ -50,7 +50,7 @@ export default ({ process, checkpointGroups }: Props) => {
                     <GroupWrapper key={indexA}>
                         <CheckpointGroupName>Run {name}</CheckpointGroupName>
                         <GroupItems>
-                            {checkpoints.length == 0 && (
+                            {checkpoints.length === 0 && (
                                 <div>
                                     <CheckpointName>...</CheckpointName>
                                     <EmptyBox>No checkpoints</EmptyBox>
