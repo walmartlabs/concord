@@ -56,11 +56,7 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     }
 
     @Override
-    public ProcessLockCondition process(UUID instanceId, ProcessStatus status, ProcessLockCondition wait) {
-        if (status != ProcessStatus.SUSPENDED) {
-            return wait;
-        }
-
+    public ProcessLockCondition process(UUID instanceId, ProcessLockCondition wait) {
         LockEntry lock = locksDao.tryLock(instanceId, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
         if (lock.instanceId().equals(instanceId)) {
             resumeProcess(instanceId, wait.name());

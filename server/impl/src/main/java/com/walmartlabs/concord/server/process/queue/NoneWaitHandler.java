@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.ProcessStatus;
-
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.UUID;
@@ -36,7 +34,7 @@ public class NoneWaitHandler implements ProcessWaitHandler<NoneCondition> {
     }
 
     @Override
-    public NoneCondition process(UUID instanceId, ProcessStatus status, NoneCondition waits) {
+    public NoneCondition process(UUID instanceId, NoneCondition waits) {
         return null;
     }
 }

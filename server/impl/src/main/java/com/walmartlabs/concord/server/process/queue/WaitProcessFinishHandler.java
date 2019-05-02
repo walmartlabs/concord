@@ -62,7 +62,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
-    public ProcessCompletionCondition process(UUID instanceId, ProcessStatus status, ProcessCompletionCondition wait) {
+    public ProcessCompletionCondition process(UUID instanceId, ProcessCompletionCondition wait) {
         List<UUID> awaitProcesses = wait.processes();
         List<UUID> finishedProcesses = dao.findFinished(awaitProcesses);
         if (finishedProcesses.isEmpty()) {
