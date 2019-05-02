@@ -1,0 +1,17 @@
+configuration:
+  arguments:
+    name: "Concord"
+  runner:
+    logLevel: "DEBUG"
+
+flows:
+  default:
+    - ${log.debug("This is a debug log")}
+    - ${log.info("This is a info log")}
+    - ${log.warn("This is a warn log")}
+    - ${log.error("This is a error log")}
+
+    - logDebug: "Hello, ${name}. This is a debug log"
+    - log: "Hello, ${name}. This is a normal log"
+    - logWarn: "Hello, ${name}. This is a warn log"
+    - logError: "Hello, ${name}. This is a error log"
