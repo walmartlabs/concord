@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.task.ScheduledTask;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
-import org.jooq.Record5;
+import org.jooq.Record4;
 import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +98,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         try {
             AbstractWaitCondition originalWaits = p.waits();
-            AbstractWaitCondition processedWaits = handler.process(p.instanceId(), p.status(), originalWaits);
+            AbstractWaitCondition processedWaits = handler.process(p.instanceId(), originalWaits);
             if (!originalWaits.equals(processedWaits)) {
                 processQueueDao.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
             }
@@ -111,8 +111,6 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     interface WaitingProcess {
 
         UUID instanceId();
-
-        ProcessStatus status();
 
         Timestamp instanceCreatedAt();
 
@@ -140,14 +138,13 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
-                SelectConditionStep<Record5<UUID, String, Timestamp, Timestamp, Object>> s = tx.select(
+                SelectConditionStep<Record4<UUID, Timestamp, Timestamp, Object>> s = tx.select(
                         q.INSTANCE_ID,
-                        q.CURRENT_STATUS,
                         q.CREATED_AT,
                         q.LAST_UPDATED_AT,
                         q.WAIT_CONDITIONS)
                         .from(q)
-                        .where(q.WAIT_CONDITIONS.isNotNull());
+                        .where(q.WAIT_CONDITIONS.isNotNull().and(q.CURRENT_STATUS.eq(ProcessStatus.SUSPENDED.name())));
 
                 if (lastUpdatedAt != null) {
                     s.and(q.LAST_UPDATED_AT.greaterThan(lastUpdatedAt));
@@ -157,10 +154,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                         .limit(1)
                         .fetchOne(r -> WaitingProcess.builder()
                                 .instanceId(r.value1())
-                                .status(ProcessStatus.valueOf(r.value2()))
-                                .instanceCreatedAt(r.value3())
-                                .lastUpdatedAt(r.value4())
-                                .waits(objectMapper.deserialize(r.value5(), AbstractWaitCondition.class))
+                                .instanceCreatedAt(r.value2())
+                                .lastUpdatedAt(r.value3())
+                                .waits(objectMapper.deserialize(r.value4(), AbstractWaitCondition.class))
                                 .build());
             });
         }
