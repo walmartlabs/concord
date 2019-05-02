@@ -52,12 +52,6 @@ public class PrivateKeyAuth implements AnsibleAuth {
     }
 
     @Override
-    public AnsibleAuth enrich(AnsibleConfig cfg) {
-        // do nothing
-        return this;
-    }
-
-    @Override
     public AnsibleAuth enrich(PlaybookArgsBuilder p) {
         p.withUser(username)
                 .withPrivateKey(workDir.relativize(keyPath).toString());

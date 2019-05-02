@@ -79,13 +79,6 @@ public class KerberosAuth implements AnsibleAuth {
     }
 
     @Override
-    public KerberosAuth enrich(AnsibleConfig cfg) {
-        cfg.getSection("privilege_escalation")
-                .put("become_method", "dzdo");
-        return this;
-    }
-
-    @Override
     public void prepare() throws Exception {
         long expiredAt = storeTgt(tgtCacheFile);
         log.info("TGT obtained, expired at '{}'", new Date(expiredAt));

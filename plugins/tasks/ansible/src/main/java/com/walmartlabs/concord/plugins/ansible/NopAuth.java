@@ -34,12 +34,6 @@ public class NopAuth implements AnsibleAuth {
     }
 
     @Override
-    public AnsibleAuth enrich(AnsibleConfig cfg) {
-        // do nothing
-        return this;
-    }
-
-    @Override
     public AnsibleAuth enrich(PlaybookArgsBuilder p) {
         // do nothing
         return this;
