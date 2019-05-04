@@ -2,7 +2,7 @@
 
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-MAIN_CLASS="com.walmartlabs.concord.server.Main"
+MAIN_CLASS="com.walmartlabs.concord.server.dist.Main"
 if [[ "${CONCORD_COMMAND}" = "migrateDb" ]]; then
     MAIN_CLASS="com.walmartlabs.concord.server.MigrateDB"
 fi
