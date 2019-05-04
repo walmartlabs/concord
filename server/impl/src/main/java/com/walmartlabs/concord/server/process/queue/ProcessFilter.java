@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.server.process.ProcessDataInclude;
-import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;

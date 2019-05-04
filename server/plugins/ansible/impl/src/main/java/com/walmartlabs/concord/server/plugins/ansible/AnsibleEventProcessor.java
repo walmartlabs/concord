@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.event;
+package com.walmartlabs.concord.server.plugins.ansible;
 
 /*-
  * *****
@@ -21,12 +21,10 @@ package com.walmartlabs.concord.server.process.event;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.sdk.EventType;
-import com.walmartlabs.concord.server.cfg.AnsibleEventsConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.EventProcessorMarker;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
-import com.walmartlabs.concord.server.process.ProcessStatus;
-import com.walmartlabs.concord.server.task.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.immutables.value.Value;
 import org.jooq.*;
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.*;
-import static com.walmartlabs.concord.server.jooq.tables.AnsibleHosts.ANSIBLE_HOSTS;
+import static com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleHosts.ANSIBLE_HOSTS;
 import static org.jooq.impl.DSL.*;
 
 @Named("ansible-event-processor")
@@ -252,7 +250,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
                     coalesce(field("{0}->>'ignore_errors'", Boolean.class, pe.EVENT_DATA), value("false")),
                     coalesce(field("{0}->>'currentRetryCount'", Integer.class, pe.EVENT_DATA), value("0")))
                     .from(pe)
-                    .where(pe.EVENT_TYPE.eq(EventType.ANSIBLE.name()));
+                    .where(pe.EVENT_TYPE.eq(Constants.EVENT_TYPE));
 
             if (marker != null) {
                 q.and(pe.EVENT_DATE.greaterOrEqual(marker.eventDate()))

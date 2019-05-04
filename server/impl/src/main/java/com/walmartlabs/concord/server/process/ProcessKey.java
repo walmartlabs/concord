@@ -27,7 +27,7 @@ import java.util.UUID;
 /**
  * Composite key of a process. Identifies process resources in partitioned tables.
  */
-public class ProcessKey extends PartialProcessKey {
+public class ProcessKey extends PartialProcessKey implements com.walmartlabs.concord.server.sdk.ProcessKey {
 
     private static final long serialVersionUID = 1L;
 

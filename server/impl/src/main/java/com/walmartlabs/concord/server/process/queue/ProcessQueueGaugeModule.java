@@ -27,7 +27,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.metrics.GaugeProvider;
-import com.walmartlabs.concord.server.process.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Named;
 import java.util.Map;

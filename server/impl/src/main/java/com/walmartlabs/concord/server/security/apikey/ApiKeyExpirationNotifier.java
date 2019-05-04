@@ -25,7 +25,7 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
-import com.walmartlabs.concord.server.task.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.Configuration;
 import org.jooq.Record4;

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.server.plugins.ansible.db;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,38 +20,32 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.server.sdk.DatabaseChangeLogProvider;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.Serializable;
 
 @Named
 @Singleton
-public class AnsibleEventsConfiguration implements Serializable {
+public class AnsibleDatabaseChangeLogProvider implements DatabaseChangeLogProvider {
 
-    @Inject
-    @Config("ansibleEvents.period")
-    private int period;
-
-    @Inject
-    @Config("ansibleEvents.fetchLimit")
-    private int fetchLimit;
-
-    public AnsibleEventsConfiguration() {
+    @Override
+    public String getChangeLogPath() {
+        return "com/walmartlabs/concord/server/plugins/ansible/db/liquibase.xml";
     }
 
-    public AnsibleEventsConfiguration(int period, int fetchLimit) {
-        this.period = period;
-        this.fetchLimit = fetchLimit;
+    @Override
+    public String getChangeLogTable() {
+        return "ANSIBLE_DB_LOG";
     }
 
-    public int getPeriod() {
-        return period;
+    @Override
+    public String getLockTable() {
+        return "ANSIBLE_DB_LOCK";
     }
 
-    public int getFetchLimit() {
-        return fetchLimit;
+    @Override
+    public String toString() {
+        return "ansible-db";
     }
 }

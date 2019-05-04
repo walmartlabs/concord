@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.task;
+package com.walmartlabs.concord.server.sdk;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,11 @@ package com.walmartlabs.concord.server.task;
  * =====
  */
 
-public interface ScheduledTask {
+public interface DatabaseChangeLogProvider {
 
-    long getIntervalInSec();
+    String getChangeLogPath();
 
-    void performTask() throws Exception;
+    String getChangeLogTable();
+
+    String getLockTable();
 }

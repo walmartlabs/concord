@@ -23,9 +23,9 @@ package com.walmartlabs.concord.server.console;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import org.jooq.*;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.console.UserActivityResponse.ProjectProcesses;
 import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
-import static com.walmartlabs.concord.server.process.ProcessStatus.*;
+import static com.walmartlabs.concord.server.sdk.ProcessStatus.*;
 import static org.jooq.impl.DSL.*;
 
 @Named

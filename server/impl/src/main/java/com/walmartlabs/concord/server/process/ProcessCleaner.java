@@ -22,7 +22,8 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
-import com.walmartlabs.concord.server.task.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.Record1;
 import org.jooq.SelectConditionStep;

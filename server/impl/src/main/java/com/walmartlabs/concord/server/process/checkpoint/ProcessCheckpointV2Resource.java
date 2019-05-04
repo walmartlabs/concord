@@ -20,12 +20,12 @@ package com.walmartlabs.concord.server.process.checkpoint;
  * =====
  */
 
-import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutionException;
 
 @Named
 @Singleton
-public class ProcessKeyCache {
+public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.ProcessKeyCache {
 
     private final ProcessQueueDao queueDao;
     private final LoadingCache<UUID, ProcessKey> cache;
@@ -53,6 +53,7 @@ public class ProcessKeyCache {
                 });
     }
 
+    @Override
     public ProcessKey get(UUID instanceId) {
         try {
             return cache.get(instanceId);

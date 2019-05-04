@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- moved into server plugins
     <changeSet id="1110000" author="ybrigo@gmail.com">
         <addColumn tableName="ANSIBLE_HOSTS">
             <column name="RETRY_COUNT" type="int" defaultValue="0">
@@ -11,4 +12,5 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 </databaseChangeLog>

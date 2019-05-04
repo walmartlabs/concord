@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserType;
 import org.slf4j.Logger;

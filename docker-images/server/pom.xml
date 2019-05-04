@@ -38,8 +38,8 @@
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
                                     <classifier>dist</classifier>
-                                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
-                                    <destFileName>server.tar.gz</destFileName>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                    <destFileName>dist.tar.gz</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

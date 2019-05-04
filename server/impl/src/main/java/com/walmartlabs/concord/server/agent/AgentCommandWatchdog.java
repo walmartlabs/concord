@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.agent;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
-import com.walmartlabs.concord.server.task.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.Field;
 import org.slf4j.Logger;
