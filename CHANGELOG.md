@@ -12,6 +12,8 @@ entries;
 
 ### Changed
 
+- project: initial support for server-side plugins. Ansible-related
+endpoints are moved into `server/plugins/ansible`;
 - concord-console: stop the form wizard when the user navigates away;
 - docker: include the Taurus PIP module in the default Ansible
 image;
