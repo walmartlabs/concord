@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.ansible;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,14 +29,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AnsibleInventory {
 
     public static void process(TaskContext ctx, PlaybookArgsBuilder playbook) throws IOException {
-        Path inventoryFile = new AnsibleInventory(ctx.getWorkDir(), ctx.getTmpDir(), ctx.isDebug())
+        List<String> inventories = new AnsibleInventory(ctx.getWorkDir(), ctx.getTmpDir(), ctx.isDebug())
                 .write(ctx.getArgs());
-        playbook.withInventory(inventoryFile.toString());
+
+        playbook.withInventories(inventories);
     }
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleInventory.class);
@@ -51,41 +53,73 @@ public class AnsibleInventory {
         this.debug = debug;
     }
 
-    public Path write(Map<String, Object> args) throws IOException {
-        Path i = writeInventory(args);
+    public List<String> write(Map<String, Object> args) throws IOException {
+        List<Path> paths = writeInventory(args);
+
         if (debug) {
-            log.info("INVENTORY: {}", new String(Files.readAllBytes(i)));
+            for (Path p : paths) {
+                log.info("INVENTORY: {}\n{}", p, new String(Files.readAllBytes(p)));
+            }
         }
-        return workDir.relativize(i);
+
+        return paths.stream()
+                .map(workDir::relativize)
+                .map(Path::toString)
+                .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
-    private Path writeInventory(Map<String, Object> args) throws IOException {
+    private List<Path> writeInventory(Map<String, Object> args) throws IOException {
         // try an "inline" inventory
         Object v = args.get(TaskParams.INVENTORY_KEY.getKey());
-        if (v instanceof Map) {
-            Path p = createInventoryFile(tmpDir, (Map<String, Object>) v);
-            Utils.updateScriptPermissions(p);
-            log.info("Using an inline inventory");
-            return p;
+
+        // check if there are multiple entries
+        if (v instanceof Collection) {
+            List<Path> l = new ArrayList<>();
+            for (Object vv : (Collection) v) {
+                if (vv instanceof Map) {
+                    l.add(processInventoryObject((Map<String, Object>) vv));
+                } else {
+                    throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY + "' entry. Expected a map (YAML/JSON object), got: (" + vv.getClass() + ") " + vv);
+                }
+            }
+            return l;
+        } else if (v instanceof Map) {
+            Path p = processInventoryObject((Map<String, Object>) v);
+            return Collections.singletonList(p);
+        } else if (v != null) {
+            throw new IllegalArgumentException("Unsupported '" + TaskParams.INVENTORY_KEY + "' value. Expected an inventory object or a list of inventory objects, got: (" + v.getClass() + ") " + v);
         }
 
         // try a static inventory file
         v = args.get(TaskParams.INVENTORY_FILE_KEY.getKey());
-        if (v != null) {
+        if (v instanceof Collection) {
+            List<Path> l = new ArrayList<>();
+            for (Object vv : (Collection) v) {
+                if (vv instanceof String) {
+                    l.add(processInventoryFile((String) vv));
+                } else {
+                    throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_FILE_KEY + "' entry. Expected a path to a file, got: (" + vv.getClass() + ") " + vv);
+                }
+            }
+            return l;
+        } else if (v instanceof String) {
             Path p = workDir.resolve(v.toString());
             if (!Files.exists(p) || !Files.isRegularFile(p)) {
                 throw new IllegalArgumentException("File not found: " + v);
             }
-            log.info("Using a static inventory file: {}", p);
-            return p;
+
+            return Collections.singletonList(p);
+        } else if (v != null) {
+            throw new IllegalArgumentException("Unsupported '" + TaskParams.INVENTORY_FILE_KEY + "' value. Expected a path to an inventory file or a list of paths, got: (" + v.getClass() + ") " + v);
         }
 
         // try an "old school" inventory file
         Path p = workDir.resolve(TaskParams.INVENTORY_FILE_NAME.getKey());
         if (Files.exists(p)) {
-            log.info("Using a static inventory file uploaded separately: {}", p);
-            return p;
+            log.warn("{} is deprecated: use '{}' parameter if you want to specify an existing inventory file",
+                    TaskParams.INVENTORY_FILE_NAME, TaskParams.INVENTORY_FILE_KEY);
+            return Collections.singletonList(p);
         }
 
         // try a dynamic inventory script
@@ -94,7 +128,7 @@ public class AnsibleInventory {
             p = workDir.resolve(v.toString());
             Utils.updateScriptPermissions(p);
             log.info("Using a dynamic inventory script: {}", p);
-            return p;
+            return Collections.singletonList(p);
         }
 
         // try an "old school" dynamic inventory script
@@ -102,15 +136,29 @@ public class AnsibleInventory {
         if (Files.exists(p)) {
             Utils.updateScriptPermissions(p);
             log.info("Using a dynamic inventory script uploaded separately: {}", p);
-            return p;
+            return Collections.singletonList(p);
         }
 
         // we can't continue without an inventory
         throw new IOException("Inventory is not defined");
     }
 
+    private Path processInventoryObject(Map<String, Object> m) throws IOException {
+        Path p = createInventoryFile(tmpDir, m);
+        Utils.updateScriptPermissions(p);
+        return p;
+    }
+
+    private Path processInventoryFile(String s) {
+        Path p = workDir.resolve(s);
+        if (!Files.exists(p) || !Files.isRegularFile(p)) {
+            throw new IllegalArgumentException("Inventory file not found: " + s);
+        }
+        return p;
+    }
+
     private Path createInventoryFile(Path tmpDir, Map<String, Object> m) throws IOException {
-        Path p = tmpDir.resolve("inventory.sh");
+        Path p = Files.createTempFile(tmpDir, "inventory", ".sh");
 
         try (BufferedWriter w = Files.newBufferedWriter(p, StandardOpenOption.CREATE)) {
             w.write("#!/bin/sh");

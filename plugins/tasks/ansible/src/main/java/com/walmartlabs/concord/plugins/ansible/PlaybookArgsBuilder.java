@@ -29,7 +29,7 @@ import java.util.*;
 public class PlaybookArgsBuilder {
 
     private final String playbook;
-    private String inventory;
+    private List<String> inventories;
     private final Path workDir;
     private final Path tmpDir;
 
@@ -54,8 +54,8 @@ public class PlaybookArgsBuilder {
         this.tmpDir = tmpDir;
     }
 
-    public PlaybookArgsBuilder withInventory(String inventory) {
-        this.inventory = inventory;
+    public PlaybookArgsBuilder withInventories(List<String> inventories) {
+        this.inventories = inventories;
         return this;
     }
 
@@ -130,7 +130,12 @@ public class PlaybookArgsBuilder {
     }
 
     public List<String> buildArgs() throws IOException {
-        List<String> l = new ArrayList<>(Arrays.asList("ansible-playbook", "-i", inventory, playbook));
+        List<String> l = new ArrayList<>(Collections.singletonList("ansible-playbook"));
+        for (String i : inventories) {
+            l.add("-i");
+            l.add(i);
+        }
+        l.add(playbook);
 
         if (extraVars != null && !extraVars.isEmpty()) {
             l.add("--extra-vars");

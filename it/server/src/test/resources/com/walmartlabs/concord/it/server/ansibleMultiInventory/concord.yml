@@ -1,0 +1,18 @@
+flows:
+  default:
+    - task: ansible
+      in:
+        playbook: playbook/hello.yml
+        inventory:
+          - aaa:
+              hosts:
+                - "127.0.0.1"
+              vars:
+                ansible_connection: "local"
+                msg: "Hello aaa"
+          - bbb:
+              hosts:
+                - "127.0.0.2"
+              vars:
+                ansible_connection: "local"
+                msg: "Hello bbb"

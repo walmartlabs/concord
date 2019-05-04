@@ -1,0 +1,12 @@
+---
+- hosts: aaa
+  tasks:
+    - debug:
+        msg: "{{ msg }}"
+        verbosity: 0
+
+- hosts: bbb
+  tasks:
+    - debug:
+        msg: "{{ msg }}"
+        verbosity: 0
