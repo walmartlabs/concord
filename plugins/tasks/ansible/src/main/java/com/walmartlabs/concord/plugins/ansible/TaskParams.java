@@ -59,6 +59,7 @@ public enum TaskParams implements HasKey {
 
     INVENTORY_FILE_KEY("inventoryFile"),
 
+    @Deprecated
     INVENTORY_FILE_NAME("_inventory"),
 
     INVENTORY_KEY("inventory"),

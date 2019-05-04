@@ -413,7 +413,7 @@ public class AnsibleIT extends AbstractServerIT {
 
     @Test
     public void testExtraVarsFiles() throws Exception {
-        URI dir = HttpTaskIT.class.getResource("ansibleExtraVarsFiles").toURI();
+        URI dir = AnsibleIT.class.getResource("ansibleExtraVarsFiles").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
 
         // ---
@@ -429,5 +429,45 @@ public class AnsibleIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello from a JSON file!.*", ab);
         assertLog(".*Hello from a YAML file!.*", ab);
+    }
+
+    @Test
+    public void testMultiInventories() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleMultiInventory").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello aaa.*", ab);
+        assertLog(".*Hello bbb.*", ab);
+    }
+
+    @Test
+    public void testMultiInventoryFiles() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleMultiInventoryFile").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello aaa.*", ab);
+        assertLog(".*Hello bbb.*", ab);
     }
 }

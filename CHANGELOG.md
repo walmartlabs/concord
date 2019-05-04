@@ -4,6 +4,8 @@
 
 ### Added
 
+- ansible: support for multiple `inventory` and `inventoryFile`
+entries;
 - log-tasks: `logDebug`, `logWarn` and `logError` tasks;
 - concord-server: initial support for RBAC permissions;
 - ansible: initial Kerberos authentication support.
