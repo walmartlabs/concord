@@ -35,16 +35,6 @@ public class AnsibleDatabaseChangeLogProvider implements DatabaseChangeLogProvid
     }
 
     @Override
-    public String getChangeLogTable() {
-        return "ANSIBLE_DB_LOG";
-    }
-
-    @Override
-    public String getLockTable() {
-        return "ANSIBLE_DB_LOCK";
-    }
-
-    @Override
     public String toString() {
         return "ansible-db";
     }

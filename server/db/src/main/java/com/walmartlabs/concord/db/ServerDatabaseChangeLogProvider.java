@@ -30,16 +30,6 @@ public class ServerDatabaseChangeLogProvider implements DatabaseChangeLogProvide
     }
 
     @Override
-    public String getChangeLogTable() {
-        return "SERVER_DB_LOG";
-    }
-
-    @Override
-    public String getLockTable() {
-        return "SERVER_DB_LOCK";
-    }
-
-    @Override
     public String toString() {
         return "server-db";
     }

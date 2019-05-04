@@ -4,6 +4,41 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <include file="v0.0.1.xml" relativeToChangelogFile="true"/>
-
+    <changeSet id="ansible-10000" author="ybrigo@gmail.com">
+        <!-- migration from pre-1.18.0 -->
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <and>
+                    <changeSetExecuted id="99100" author="ybrigo@gmail.com" changeLogFile="com/walmartlabs/concord/server/db/v0.99.0.xml"/>
+                    <changeSetExecuted id="1110000" author="ybrigo@gmail.com" changeLogFile="com/walmartlabs/concord/server/db/v1.11.0.xml"/>
+                </and>
+            </not>
+        </preConditions>
+        <createTable tableName="ANSIBLE_HOSTS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="HOST" type="varchar(1024)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="HOST_GROUP" type="varchar(1024)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="EVENT_SEQ" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STATUS" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DURATION" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="RETRY_COUNT" type="int" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>
