@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.org.secret;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.OperationResult;
@@ -34,6 +33,7 @@ import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedBinaryDa
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedKeyPair;
 import com.walmartlabs.concord.server.org.secret.SecretManager.DecryptedUsernamePassword;
 import com.walmartlabs.concord.server.org.team.TeamDao;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.swagger.annotations.*;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;

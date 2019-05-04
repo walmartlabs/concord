@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.form;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.form.ConcordFormValidator;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
@@ -102,7 +103,6 @@ public class ConcordFormService {
         return list(new ProcessKey(processKey, createdAt));
     }
 
-    @SuppressWarnings("unchecked")
     public List<FormListEntry> list(ProcessKey processKey) {
         String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 InternalConstants.Files.JOB_STATE_DIR_NAME,
@@ -116,8 +116,8 @@ public class ConcordFormService {
             boolean branding = stateManager.exists(processKey, s);
 
             Map<String, Object> opts = f.getOptions();
-            boolean yield = getBoolean(opts, "yield", false);
-            Map<String, Object> runAs = getMap(opts, InternalConstants.Forms.RUN_AS_KEY, null);
+            boolean yield = MapUtils.getBoolean(opts, "yield", false);
+            Map<String, Object> runAs = MapUtils.getMap(opts, InternalConstants.Forms.RUN_AS_KEY, null);
 
             return new FormListEntry(name, branding, yield, runAs);
         }).collect(Collectors.toList());
@@ -186,7 +186,7 @@ public class ConcordFormService {
         Map<String, Object> merged = merge(form, data);
 
         // optionally save the user who submitted the form
-        boolean saveSubmittedBy = getBoolean(form.getOptions(), InternalConstants.Forms.SAVE_SUBMITTED_BY_KEY, false);
+        boolean saveSubmittedBy = MapUtils.getBoolean(form.getOptions(), InternalConstants.Forms.SAVE_SUBMITTED_BY_KEY, false);
         if (saveSubmittedBy) {
             UserInfo i = userManager.getCurrentUserInfo();
             merged.put(InternalConstants.Forms.SUBMITTED_BY_KEY, i);
@@ -290,44 +290,9 @@ public class ConcordFormService {
         resumePipeline.process(payload);
     }
 
-    private static boolean getBoolean(Map<String, Object> m, String key, boolean defaultValue) {
-        if (m == null) {
-            return defaultValue;
-        }
-
-        Object v = m.get(key);
-        if (v == null) {
-            return defaultValue;
-        }
-
-        if (!(v instanceof Boolean)) {
-            throw new IllegalArgumentException("Expected a boolean value '" + key + "', got: " + v);
-        }
-
-        return (Boolean) v;
-    }
-
     private FormValidator createFormValidator(ProcessKey processKey, String formName) {
         FormValidatorLocale locale = new ExternalFileFormValidatorLocale(processKey, formName, stateManager);
         return new ConcordFormValidator(locale);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getMap(Map<String, Object> m, String key, Map<String, Object> defaultValue) {
-        if (m == null) {
-            return defaultValue;
-        }
-
-        Object v = m.get(key);
-        if (v == null) {
-            return defaultValue;
-        }
-
-        if (!(v instanceof Map)) {
-            throw new IllegalArgumentException("Expected a map value '" + key + "', got: " + v);
-        }
-
-        return (Map<String, Object>) v;
     }
 
     public static final class FormSubmitResult implements Serializable {

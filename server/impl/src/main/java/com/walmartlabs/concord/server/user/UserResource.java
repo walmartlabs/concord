@@ -21,9 +21,9 @@ package com.walmartlabs.concord.server.user;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordUsername;
-import com.walmartlabs.concord.server.ConcordApplicationException;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

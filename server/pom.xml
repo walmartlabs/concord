@@ -16,7 +16,10 @@
 
     <modules>
         <module>db</module>
+        <module>sdk</module>
         <module>impl</module>
         <module>queue-client</module>
+        <module>plugins</module>
+        <module>dist</module>
     </modules>
 </project>

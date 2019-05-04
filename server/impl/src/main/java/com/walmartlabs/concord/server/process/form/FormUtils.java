@@ -24,7 +24,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.form.ConcordFormFields;
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.DefaultFormFields;
 import io.takari.bpm.model.form.FormDefinition;

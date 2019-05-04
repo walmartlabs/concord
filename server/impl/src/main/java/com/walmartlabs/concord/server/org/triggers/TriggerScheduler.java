@@ -24,7 +24,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.task.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

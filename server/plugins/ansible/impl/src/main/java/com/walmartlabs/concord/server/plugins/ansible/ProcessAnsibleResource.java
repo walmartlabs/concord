@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process;
+package com.walmartlabs.concord.server.plugins.ansible;
 
 /*-
  * *****
@@ -24,14 +24,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.sdk.EventType;
-import com.walmartlabs.concord.server.ConcordApplicationException;
-import com.walmartlabs.concord.server.jooq.tables.AnsibleHosts;
-import com.walmartlabs.concord.server.jooq.tables.records.AnsibleHostsRecord;
-import com.walmartlabs.concord.server.metrics.WithTimer;
-import com.walmartlabs.concord.server.process.event.EventDao;
-import com.walmartlabs.concord.server.process.event.ProcessEventEntry;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
+import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleHosts;
+import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.records.AnsibleHostsRecord;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -51,8 +48,8 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.Tables.ANSIBLE_HOSTS;
-import static com.walmartlabs.concord.server.process.ProcessAnsibleResource.AnsibleHostStatus.*;
+import static com.walmartlabs.concord.server.plugins.ansible.ProcessAnsibleResource.AnsibleHostStatus.*;
+import static com.walmartlabs.concord.server.plugins.ansible.jooq.Tables.ANSIBLE_HOSTS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -79,7 +76,7 @@ public class ProcessAnsibleResource implements Resource {
     @ApiOperation("List Ansible hosts of a specific process")
     @Path("/{processInstanceId}/ansible/hosts")
     @Produces(MediaType.APPLICATION_JSON)
-    @WithTimer
+//    @WithTimer
     public List<AnsibleHostEntry> list(@PathParam("processInstanceId") UUID processInstanceId,
                                        @QueryParam("host") String host,
                                        @QueryParam("hostGroup") String hostGroup,
@@ -102,7 +99,7 @@ public class ProcessAnsibleResource implements Resource {
     @ApiOperation("Returns Ansible statistics of a specific process")
     @Path("/{processInstanceId}/ansible/stats")
     @Produces(MediaType.APPLICATION_JSON)
-    @WithTimer
+//    @WithTimer
     public AnsibleStatsEntry stats(@PathParam("processInstanceId") UUID processInstanceId) {
         ProcessKey key = processKeyCache.get(processInstanceId);
         if (key == null) {
@@ -119,7 +116,7 @@ public class ProcessAnsibleResource implements Resource {
     @ApiOperation("List Ansible events of a specific process")
     @Path("/{processInstanceId}/ansible/events")
     @Produces(MediaType.APPLICATION_JSON)
-    @WithTimer
+//    @WithTimer
     public List<ProcessEventEntry> listEvents(@PathParam("processInstanceId") UUID processInstanceId,
                                               @QueryParam("host") String host,
                                               @QueryParam("hostGroup") String hostGroup,
@@ -141,7 +138,7 @@ public class ProcessAnsibleResource implements Resource {
             eventFilter.put("status", status);
         }
 
-        return eventDao.list(key, null, EventType.ANSIBLE.name(), eventFilter, -1);
+        return eventDao.list(key, eventFilter);
     }
 
     @Named

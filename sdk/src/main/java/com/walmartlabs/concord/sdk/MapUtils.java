@@ -145,6 +145,10 @@ public final class MapUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> T get(Map<String, Object> m, String name, T defaultValue) {
+        if (m == null) {
+            return defaultValue;
+        }
+
         return (T) m.getOrDefault(name, defaultValue);
     }
 

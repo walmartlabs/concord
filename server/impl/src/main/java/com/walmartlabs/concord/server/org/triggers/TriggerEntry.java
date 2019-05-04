@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -140,12 +141,12 @@ public class TriggerEntry implements Serializable {
 
     @JsonIgnore
     public boolean isUseInitiator() {
-        return getBoolean(cfg, Constants.Trigger.USE_INITIATOR);
+        return MapUtils.getBoolean(cfg, Constants.Trigger.USE_INITIATOR, false);
     }
 
     @JsonIgnore
     public boolean isUseEventCommitId() {
-        return getBoolean(cfg, Constants.Trigger.USE_EVENT_COMMIT_ID);
+        return MapUtils.getBoolean(cfg, Constants.Trigger.USE_EVENT_COMMIT_ID, false);
     }
 
     public List<String> getActiveProfiles() {
@@ -180,18 +181,5 @@ public class TriggerEntry implements Serializable {
                 ", conditions=" + conditions +
                 ", cfg=" + cfg +
                 '}';
-    }
-
-    private static boolean getBoolean(Map<String, Object> cfg, String k) {
-        if (cfg == null) {
-            return false;
-        }
-
-        Boolean v = (Boolean) cfg.get(k);
-        if (v == null) {
-            return false;
-        }
-
-        return v;
     }
 }

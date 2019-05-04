@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.process;
+package com.walmartlabs.concord.server.sdk;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,12 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import java.sql.Timestamp;
+import java.util.UUID;
 
-public enum ProcessStatus {
+public interface ProcessKey {
+    
+    UUID getInstanceId();
 
-    PREPARING,
-    ENQUEUED,
-    STARTING,
-    RUNNING,
-    SUSPENDED,
-    RESUMING,
-    FINISHED,
-    FAILED,
-    CANCELLED,
-    TIMED_OUT
+    Timestamp getCreatedAt();
 }

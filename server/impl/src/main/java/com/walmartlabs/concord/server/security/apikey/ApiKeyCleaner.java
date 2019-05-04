@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.security.apikey;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
-import com.walmartlabs.concord.server.task.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

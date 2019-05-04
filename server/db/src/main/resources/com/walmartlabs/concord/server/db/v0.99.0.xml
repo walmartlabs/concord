@@ -25,6 +25,7 @@
         </createIndex>
     </changeSet>
 
+    <!-- moved into server plugins
     <changeSet id="99100" author="ybrigo@gmail.com">
         <createTable tableName="ANSIBLE_HOSTS">
             <column name="INSTANCE_ID" type="uuid">
@@ -50,6 +51,7 @@
             </column>
         </createTable>
     </changeSet>
+    -->
 
     <!-- removed in 1.0.0+
     <changeSet id="99200" author="ybrigo@gmail.com">

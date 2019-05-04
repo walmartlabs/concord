@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
-import com.walmartlabs.concord.server.task.ScheduledTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.Configuration;

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.db;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.walmartlabs.concord.server.sdk.DatabaseChangeLogProvider;
 import com.zaxxer.hikari.HikariDataSource;
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -43,6 +44,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseModule extends AbstractModule {
 
@@ -51,42 +54,27 @@ public class DatabaseModule extends AbstractModule {
     private static final int MIGRATION_MAX_RETRIES = 10;
     private static final int MIGRATION_RETRY_DELAY = 10000;
 
-    private static final String DB_CHANGELOG_PATH = "com/walmartlabs/concord/server/db/liquibase.xml";
-    private static final String DB_CHANGELOG_LOG_TABLE = "SERVER_DB_LOG";
-    private static final String DB_CHANGELOG_LOCK_TABLE = "SERVER_DB_LOCK";
-
     @Override
     protected void configure() {
     }
 
     @Provides
+    @Named("providers")
+    public List<DatabaseChangeLogProvider> changeLogProviders(List<DatabaseChangeLogProvider> customProviders) {
+        List<DatabaseChangeLogProvider> result = new ArrayList<>();
+        result.add(new ServerDatabaseChangeLogProvider()); // run the server's db module first
+        result.addAll(customProviders);
+        return result;
+    }
+
+    @Provides
     @Named("app")
     @Singleton
-    public DataSource appDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
+    public DataSource appDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry,
+                                    @Named("providers") List<DatabaseChangeLogProvider> changeLogProviders) {
+
         DataSource ds = createDataSource(cfg, "app", cfg.getAppUsername(), cfg.getAppPassword(), metricRegistry);
-
-        int retries = MIGRATION_MAX_RETRIES;
-        for (int i = 0; i < retries; i++) {
-            try (Connection c = ds.getConnection()) {
-                log.info("get -> performing DB migration...");
-                migrateDb(c, DB_CHANGELOG_PATH, DB_CHANGELOG_LOG_TABLE, DB_CHANGELOG_LOCK_TABLE);
-                log.info("get -> done");
-                break;
-            } catch (Exception e) {
-                if (i + 1 >= retries) {
-                    log.error("get -> db migration error, giving up", e);
-                    throw new RuntimeException(e);
-                }
-
-                log.warn("get -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
-                try {
-                    Thread.sleep(MIGRATION_RETRY_DELAY);
-                } catch (InterruptedException ee) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-
+        changeLogProviders.forEach(p -> migrateDb(ds, p));
         return ds;
     }
 
@@ -130,6 +118,30 @@ public class DatabaseModule extends AbstractModule {
         ds.setLeakDetectionThreshold(10000);
         ds.setMetricRegistry(metricRegistry);
         return ds;
+    }
+
+    private static void migrateDb(DataSource ds, DatabaseChangeLogProvider p) {
+        int retries = MIGRATION_MAX_RETRIES;
+        for (int i = 0; i < retries; i++) {
+            try (Connection c = ds.getConnection()) {
+                log.info("get -> performing '{}' migration...", p);
+                migrateDb(c, p.getChangeLogPath(), p.getChangeLogTable(), p.getLockTable());
+                log.info("get -> done");
+                break;
+            } catch (Exception e) {
+                if (i + 1 >= retries) {
+                    log.error("get -> db migration error, giving up", e);
+                    throw new RuntimeException(e);
+                }
+
+                log.warn("get -> db migration error, retrying in {}ms: {}", MIGRATION_RETRY_DELAY, e.getMessage());
+                try {
+                    Thread.sleep(MIGRATION_RETRY_DELAY);
+                } catch (InterruptedException ee) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
     }
 
     private static void migrateDb(Connection conn, String logPath, String logTable, String lockTable) throws Exception {

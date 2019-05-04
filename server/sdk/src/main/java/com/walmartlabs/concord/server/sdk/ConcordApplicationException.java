@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server;
+package com.walmartlabs.concord.server.sdk;
 
 /*-
  * *****

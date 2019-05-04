@@ -23,8 +23,8 @@ package com.walmartlabs.concord.server.agent;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.ProcessStatus;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

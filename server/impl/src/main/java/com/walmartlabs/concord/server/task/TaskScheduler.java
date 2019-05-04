@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.task;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Field;
