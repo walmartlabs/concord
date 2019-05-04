@@ -54,6 +54,11 @@ public class ResourceIT extends AbstractServerIT {
         test("resourceWriteAsString", ".*Hello Concord!");
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testWriteAsYaml() throws Exception {
+        test("resourceWriteAsYaml", ".*Hello Concord!");
+    }
+
     private void test(String resource, String pattern) throws Exception {
         URI dir = ResourceIT.class.getResource(resource).toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);

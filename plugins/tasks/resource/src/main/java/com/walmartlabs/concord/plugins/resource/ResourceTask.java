@@ -34,6 +34,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 @Named("resource")
 @SuppressWarnings("unused")
@@ -81,26 +83,27 @@ public class ResourceTask implements Task {
 
     @SuppressWarnings("unused")
     public String writeAsJson(Object content, @InjectVariable("workDir") String workDir) throws IOException {
-        Path baseDir = Paths.get(workDir);
-        Path tempDir = assertTempDir(baseDir);
-
-        Path tmpFile = Files.createTempFile(tempDir, "resource_", ".json");
-        try (OutputStream out = Files.newOutputStream(tmpFile)) {
-            new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
-        }
-
-        return baseDir.relativize(tmpFile.toAbsolutePath()).toString();
+        return withTempFile(workDir, ".json", p -> {
+            try (OutputStream out = Files.newOutputStream(p)) {
+                new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
+            }
+        });
     }
 
     @SuppressWarnings("unused")
     public String writeAsString(String content, @InjectVariable("workDir") String workDir) throws IOException {
-        Path baseDir = Paths.get(workDir);
-        Path tempDir = assertTempDir(baseDir);
+        return withTempFile(workDir, ".txt", p -> {
+            Files.write(p, content.getBytes());
+        });
+    }
 
-        Path resourceFile = Files.createTempFile(tempDir, "resource_", ".txt");
-        Files.write(resourceFile, content.getBytes());
-
-        return baseDir.relativize(resourceFile.toAbsolutePath()).toString();
+    public String writeAsYaml(Object content, @InjectVariable("workDir") String workDir) throws IOException {
+        return withTempFile(workDir, ".yaml", p -> {
+            try (OutputStream out = Files.newOutputStream(p)) {
+                new ObjectMapper(new YAMLFactory()).writerWithDefaultPrettyPrinter()
+                        .writeValue(out, content);
+            }
+        });
     }
 
     @SuppressWarnings("unused")
@@ -114,6 +117,16 @@ public class ResourceTask implements Task {
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
     }
 
+    private String withTempFile(String workDir, String suffix, PathHander h) throws IOException {
+        Path baseDir = Paths.get(workDir);
+        Path tempDir = assertTempDir(baseDir);
+
+        Path tmpFile = Files.createTempFile(tempDir, "resource_", suffix);
+        h.handle(tmpFile);
+
+        return baseDir.relativize(tmpFile.toAbsolutePath()).toString();
+    }
+
     private Path assertTempDir(Path baseDir) throws IOException {
         Path p = baseDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
         if (!p.toFile().exists()) {
@@ -121,5 +134,10 @@ public class ResourceTask implements Task {
         }
 
         return p;
+    }
+
+    private interface PathHander {
+
+        void handle(Path path) throws IOException;
     }
 }
