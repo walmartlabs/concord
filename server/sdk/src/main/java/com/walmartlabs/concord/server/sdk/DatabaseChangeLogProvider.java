@@ -24,7 +24,11 @@ public interface DatabaseChangeLogProvider {
 
     String getChangeLogPath();
 
-    String getChangeLogTable();
+    default String getChangeLogTable() {
+        return "SERVER_DB_LOG";
+    }
 
-    String getLockTable();
+    default String getLockTable() {
+        return "SERVER_DB_LOCK";
+    }
 }
