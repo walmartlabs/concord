@@ -6,7 +6,7 @@ Agents based on the current Process Queue usage.
 ## Building the Image
 
 ```
-$ ./mvnw clean compile jib:dockerBuild
+$ ../../mvnw clean compile jib:dockerBuild
 ```
 
 ## Running in Dev Mode
@@ -41,6 +41,14 @@ $ ./mvnw clean compile jib:dockerBuild
   ```
 4. Check the operator's pod logs;
 5. Deploy one or more CRs using `deploy/crds/cr.yml` as a template.
+
+## How To Release New Versions
+
+- build the image;
+- push the image to Docker Hub:
+  ```
+  $ docker push walmartlabs/concord-agent-operator:latest
+  ```
 
 ## TODO
 

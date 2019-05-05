@@ -85,3 +85,21 @@ To automatically start and stop the server and the agent using docker, use the
 ## Examples
 
 See the [examples](examples) directory.
+
+## How To Release New Versions
+
+- perform the regular Maven release:
+  ```
+  $ ./mvnw release:prepare release:perform
+  ```
+- push the tags:
+  ```
+  $ git push --tags
+  ```
+- sync to Central;
+- build and push the Docker images:
+  ```
+  $ git checkout RELEASE_TAG
+  $ ./mvnw -f docker-images clean package -Pdocker
+  $ ./docker-images/push.sh RELEASE_TAG
+  ```
