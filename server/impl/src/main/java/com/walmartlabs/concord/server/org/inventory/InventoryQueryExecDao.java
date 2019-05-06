@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.InventoryDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
@@ -62,7 +63,7 @@ public class InventoryQueryExecDao extends AbstractDao {
     private final InventoryQueryDao inventoryQueryDao;
 
     @Inject
-    public InventoryQueryExecDao(@Named("inventory") Configuration cfg,
+    public InventoryQueryExecDao(@InventoryDB Configuration cfg,
                                  InventoryQueryDao inventoryQueryDao,
                                  ConcordObjectMapper objectMapper) {
         super(cfg);

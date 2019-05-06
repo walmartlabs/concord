@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
 import com.walmartlabs.concord.server.jooq.tables.InventoryData;
@@ -43,8 +44,9 @@ public class InventoryDataDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
 
+    // TODO shouldn't it be @InventoryDB?
     @Inject
-    public InventoryDataDao(@Named("app") Configuration cfg,
+    public InventoryDataDao(@MainDB Configuration cfg,
                             ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;

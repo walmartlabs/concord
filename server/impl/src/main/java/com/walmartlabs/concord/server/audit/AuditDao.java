@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.audit;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -39,7 +40,7 @@ public class AuditDao extends AbstractDao {
     private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public AuditDao(@Named("app") Configuration cfg,
+    public AuditDao(@MainDB Configuration cfg,
                     ConcordObjectMapper objectMapper) {
         super(cfg);
 

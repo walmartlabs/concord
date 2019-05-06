@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Inventories;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -43,7 +44,7 @@ import static org.jooq.impl.DSL.*;
 public class InventoryDao extends AbstractDao {
 
     @Inject
-    public InventoryDao(@Named("app") Configuration cfg) {
+    public InventoryDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

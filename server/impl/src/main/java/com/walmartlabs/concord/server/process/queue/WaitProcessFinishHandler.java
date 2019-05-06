@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
@@ -106,7 +107,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
                 ProcessStatus.TIMED_OUT);
 
         @Inject
-        public Dao(@Named("app") Configuration cfg) {
+        public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

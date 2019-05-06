@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -42,7 +43,7 @@ public class RepositoryDao extends AbstractDao {
     private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public RepositoryDao(@Named("app") Configuration cfg,
+    public RepositoryDao(@MainDB Configuration cfg,
                          ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;

@@ -24,6 +24,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -138,7 +139,7 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
     private static class ExpiredKeysDao extends AbstractDao {
 
         @Inject
-        public ExpiredKeysDao(@Named("app") Configuration cfg) {
+        public ExpiredKeysDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record4;
@@ -39,7 +40,7 @@ import static org.jooq.impl.DSL.value;
 public class InventoryQueryDao extends AbstractDao {
 
     @Inject
-    public InventoryQueryDao(@Named("app") Configuration cfg) {
+    public InventoryQueryDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

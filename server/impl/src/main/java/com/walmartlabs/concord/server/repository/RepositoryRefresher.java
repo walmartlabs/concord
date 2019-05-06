@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.repository;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
@@ -59,7 +60,7 @@ public class RepositoryRefresher extends AbstractDao {
     private final ExternalEventResource externalEventResource;
 
     @Inject
-    public RepositoryRefresher(@Named("app") Configuration cfg,
+    public RepositoryRefresher(@MainDB Configuration cfg,
                                Set<RepositoryRefreshListener> listeners,
                                OrganizationManager orgManager,
                                ProjectAccessManager projectAccessManager,

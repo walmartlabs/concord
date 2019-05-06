@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.apikey;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record3;
@@ -48,7 +49,7 @@ public class ApiKeyDao extends AbstractDao {
     private final SecureRandom rnd;
 
     @Inject
-    public ApiKeyDao(@Named("app") Configuration cfg, SecureRandom rnd) {
+    public ApiKeyDao(@MainDB Configuration cfg, SecureRandom rnd) {
         super(cfg);
         this.rnd = rnd;
     }

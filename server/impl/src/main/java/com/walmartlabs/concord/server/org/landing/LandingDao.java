@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.landing;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.LandingPage;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Repositories;
@@ -46,7 +47,7 @@ import static org.jooq.impl.DSL.*;
 public class LandingDao extends AbstractDao {
 
     @Inject
-    public LandingDao(@Named("app") Configuration cfg) {
+    public LandingDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

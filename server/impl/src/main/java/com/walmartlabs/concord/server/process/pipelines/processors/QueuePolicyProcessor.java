@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.ExtraStatus;
@@ -108,7 +109,7 @@ public class QueuePolicyProcessor implements PayloadProcessor {
     private static class QueueMetricsDao extends AbstractDao {
 
         @Inject
-        public QueueMetricsDao(@Named("app") Configuration cfg) {
+        public QueueMetricsDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

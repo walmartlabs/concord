@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.landing;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
@@ -70,14 +71,13 @@ public class LandingPageResource extends AbstractDao implements Resource {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final LandingDao landingDao;
-    private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryManager repositoryManager;
     private final OrganizationManager orgManager;
 
     @Inject
-    public LandingPageResource(@Named("app") Configuration cfg,
+    public LandingPageResource(@MainDB Configuration cfg,
                                LandingDao landingDao,
                                ProjectDao projectDao,
                                RepositoryDao repositoryDao,
@@ -88,7 +88,6 @@ public class LandingPageResource extends AbstractDao implements Resource {
         super(cfg);
 
         this.landingDao = landingDao;
-        this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.projectAccessManager = projectAccessManager;
         this.repositoryManager = repositoryManager;

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.EventProcessorMarker;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -227,7 +228,7 @@ public class AnsibleEventProcessor implements ScheduledTask {
     public static class AnsibleEventDao extends AbstractDao {
 
         @Inject
-        public AnsibleEventDao(@Named("app") Configuration cfg) {
+        public AnsibleEventDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

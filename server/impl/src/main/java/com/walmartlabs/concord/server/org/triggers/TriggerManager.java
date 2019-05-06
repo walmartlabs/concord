@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ public class TriggerManager extends AbstractDao {
     private final TriggersDao triggersDao;
 
     @Inject
-    public TriggerManager(@Named("app") Configuration cfg,
+    public TriggerManager(@MainDB Configuration cfg,
                           Map<String, TriggerProcessor> triggerProcessors,
                           TriggersDao triggersDao) {
 

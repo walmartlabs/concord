@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.locks;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
 import com.walmartlabs.concord.server.jooq.tables.ProcessLocks;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLocksRecord;
@@ -38,7 +39,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOCKS;
 public class ProcessLocksDao extends AbstractDao {
 
     @Inject
-    protected ProcessLocksDao(@Named("app") Configuration cfg) {
+    protected ProcessLocksDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

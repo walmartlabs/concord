@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.task;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -138,7 +139,7 @@ public class TaskScheduler extends PeriodicTask {
     private static final class SchedulerDao extends AbstractDao {
 
         @Inject
-        public SchedulerDao(@Named("app") Configuration cfg) {
+        public SchedulerDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

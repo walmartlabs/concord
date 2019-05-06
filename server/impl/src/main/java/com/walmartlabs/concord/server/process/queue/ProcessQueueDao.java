@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -81,7 +82,7 @@ public class ProcessQueueDao extends AbstractDao {
     private final ProcessQueueLock queueLock;
 
     @Inject
-    protected ProcessQueueDao(@Named("app") Configuration cfg,
+    protected ProcessQueueDao(@MainDB Configuration cfg,
                               List<ProcessQueueEntryFilter> filters,
                               EventDao eventDao,
                               ProcessQueueLock queueLock,

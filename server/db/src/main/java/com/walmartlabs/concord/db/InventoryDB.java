@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.sdk;
+package com.walmartlabs.concord.db;
 
 /*-
  * *****
@@ -20,19 +20,11 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
-public interface DatabaseChangeLogProvider {
+import javax.inject.Qualifier;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-    String getChangeLogPath();
-
-    default String getChangeLogTable() {
-        return "SERVER_DB_LOG";
-    }
-
-    default String getLockTable() {
-        return "SERVER_DB_LOCK";
-    }
-
-    default int order() {
-        return 1;
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier
+public @interface InventoryDB {
 }

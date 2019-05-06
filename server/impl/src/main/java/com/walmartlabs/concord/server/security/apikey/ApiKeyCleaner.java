@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.apikey;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
@@ -66,7 +67,7 @@ public class ApiKeyCleaner implements ScheduledTask {
     private static class CleanerDao extends AbstractDao {
 
         @Inject
-        protected CleanerDao(@Named("app") Configuration cfg) {
+        protected CleanerDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.state;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
@@ -66,7 +67,7 @@ public class ProcessStateManager extends AbstractDao {
     private final Set<String> secureFiles = new HashSet<>();
 
     @Inject
-    protected ProcessStateManager(@Named("app") Configuration cfg,
+    protected ProcessStateManager(@MainDB Configuration cfg,
                                   SecretStoreConfiguration secretCfg,
                                   ProcessStateConfiguration stateCfg) {
         super(cfg);
