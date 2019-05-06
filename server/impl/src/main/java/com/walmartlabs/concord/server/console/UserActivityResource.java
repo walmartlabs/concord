@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.console;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
@@ -104,7 +105,7 @@ public class UserActivityResource implements Resource {
     private static class ProcessStatsDao extends AbstractDao {
 
         @Inject
-        protected ProcessStatsDao(@Named("app") Configuration cfg) {
+        protected ProcessStatsDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

@@ -24,6 +24,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.typesafe.config.Config;
 import com.walmartlabs.concord.db.DatabaseModule;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.ollie.config.ConfigurationProcessor;
 import com.walmartlabs.ollie.config.EnvironmentSelector;
 import com.walmartlabs.ollie.config.OllieConfigurationModule;
@@ -33,7 +34,6 @@ import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -41,7 +41,7 @@ import java.sql.Statement;
 public class MigrateDB {
 
     @Inject
-    @Named("app")
+    @MainDB
     private DataSource dataSource;
 
     public static void main(String[] args) throws Exception {

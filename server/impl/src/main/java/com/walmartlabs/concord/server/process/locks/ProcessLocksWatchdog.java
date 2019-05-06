@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.locks;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.ProcessLocks;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
@@ -80,7 +81,7 @@ public class ProcessLocksWatchdog implements ScheduledTask {
         };
 
         @Inject
-        public WatchdogDao(@Named("app") Configuration cfg) {
+        public WatchdogDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

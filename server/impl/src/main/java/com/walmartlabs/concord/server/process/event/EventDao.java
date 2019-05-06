@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.event;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -43,7 +44,7 @@ import static org.jooq.impl.DSL.*;
 public class EventDao extends AbstractDao {
 
     @Inject
-    public EventDao(@Named("app") Configuration cfg) {
+    public EventDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

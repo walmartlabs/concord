@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
@@ -79,7 +80,7 @@ public class ProcessCleaner implements ScheduledTask {
     private static class CleanerDao extends AbstractDao {
 
         @Inject
-        protected CleanerDao(@Named("app") Configuration cfg) {
+        protected CleanerDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -43,7 +44,7 @@ import static org.jooq.impl.DSL.inline;
 public class EventDao extends AbstractDao {
 
     @Inject
-    public EventDao(@Named("app") Configuration cfg) {
+    public EventDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

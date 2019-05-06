@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.template;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
@@ -37,7 +38,7 @@ import static com.walmartlabs.concord.server.jooq.tables.TemplateAliases.TEMPLAT
 public class TemplateAliasDao extends AbstractDao {
 
     @Inject
-    public TemplateAliasDao(@Named("app") Configuration cfg) {
+    public TemplateAliasDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

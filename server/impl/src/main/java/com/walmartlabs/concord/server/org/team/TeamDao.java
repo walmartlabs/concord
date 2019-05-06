@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.team;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.TeamLdapGroups;
 import com.walmartlabs.concord.server.jooq.tables.records.TeamsRecord;
@@ -48,7 +49,7 @@ import static org.jooq.impl.DSL.selectFrom;
 public class TeamDao extends AbstractDao {
 
     @Inject
-    public TeamDao(@Named("app") Configuration cfg) {
+    public TeamDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

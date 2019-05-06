@@ -45,6 +45,7 @@ import javax.inject.Singleton;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class DatabaseModule extends AbstractModule {
@@ -59,43 +60,37 @@ public class DatabaseModule extends AbstractModule {
     }
 
     @Provides
-    @Named("providers")
-    public List<DatabaseChangeLogProvider> changeLogProviders(List<DatabaseChangeLogProvider> customProviders) {
-        List<DatabaseChangeLogProvider> result = new ArrayList<>();
-        result.add(new ServerDatabaseChangeLogProvider()); // run the server's db module first
-        result.addAll(customProviders);
-        return result;
-    }
-
-    @Provides
-    @Named("app")
+    @MainDB
     @Singleton
     public DataSource appDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry,
-                                    @Named("providers") List<DatabaseChangeLogProvider> changeLogProviders) {
+                                    List<DatabaseChangeLogProvider> changeLogProviders) {
 
         DataSource ds = createDataSource(cfg, "app", cfg.getAppUsername(), cfg.getAppPassword(), metricRegistry);
-        changeLogProviders.forEach(p -> migrateDb(ds, p));
+        changeLogProviders.stream()
+                .sorted(Comparator.comparingInt(DatabaseChangeLogProvider::order))
+                .forEach(p -> migrateDb(ds, p));
+
         return ds;
     }
 
     @Provides
-    @Named("inventory")
+    @InventoryDB
     @Singleton
     public DataSource inventoryDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
         return createDataSource(cfg, "inventory", cfg.getInventoryUsername(), cfg.getInventoryPassword(), metricRegistry);
     }
 
     @Provides
-    @Named("app")
+    @MainDB
     @Singleton
-    public Configuration appJooqConfiguration(@Named("app") DataSource ds) {
+    public Configuration appJooqConfiguration(@MainDB DataSource ds) {
         return createJooqConfiguration(ds);
     }
 
     @Provides
-    @Named("inventory")
+    @InventoryDB
     @Singleton
-    public Configuration inventoryJooqConfiguration(@Named("inventory") DataSource ds) {
+    public Configuration inventoryJooqConfiguration(@InventoryDB DataSource ds) {
         return createJooqConfiguration(ds);
     }
 

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.secret;
 
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
@@ -49,7 +50,7 @@ import static org.jooq.impl.DSL.*;
 public class SecretDao extends AbstractDao {
 
     @Inject
-    public SecretDao(@Named("app") Configuration cfg) {
+    public SecretDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.audit;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
@@ -64,7 +65,7 @@ public class AuditLogCleaner implements ScheduledTask {
     private static class CleanerDao extends AbstractDao {
 
         @Inject
-        protected CleanerDao(@Named("app") Configuration cfg) {
+        protected CleanerDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

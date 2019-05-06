@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.logs;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -44,7 +45,7 @@ import static org.jooq.impl.DSL.*;
 public class ProcessLogsDao extends AbstractDao {
 
     @Inject
-    public ProcessLogsDao(@Named("app") Configuration cfg) {
+    public ProcessLogsDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

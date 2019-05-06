@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.user;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import org.jooq.*;
@@ -42,7 +43,7 @@ import static org.jooq.impl.DSL.*;
 public class UserDao extends AbstractDao {
 
     @Inject
-    public UserDao(@Named("app") Configuration cfg) {
+    public UserDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

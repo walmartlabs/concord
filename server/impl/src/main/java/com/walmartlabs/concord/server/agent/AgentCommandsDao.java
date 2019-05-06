@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
 import com.walmartlabs.concord.server.jooq.tables.records.AgentCommandsRecord;
 import org.jooq.BatchBindStep;
@@ -43,7 +44,7 @@ public class AgentCommandsDao extends AbstractDao {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public AgentCommandsDao(@Named("app") Configuration cfg) {
+    public AgentCommandsDao(@MainDB Configuration cfg) {
         super(cfg);
         this.objectMapper = new ObjectMapper();
     }

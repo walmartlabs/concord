@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -101,7 +102,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     private static final class Dao extends AbstractDao {
 
         @Inject
-        public Dao(@Named("app") Configuration cfg) {
+        public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

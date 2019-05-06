@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.template;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -48,7 +49,7 @@ public class TemplateAliasResource extends AbstractDao implements Resource {
     private final TemplateAliasDao aliasDao;
 
     @Inject
-    public TemplateAliasResource(@Named("app") Configuration cfg, TemplateAliasDao aliasDao) {
+    public TemplateAliasResource(@MainDB Configuration cfg, TemplateAliasDao aliasDao) {
         super(cfg);
         this.aliasDao = aliasDao;
     }

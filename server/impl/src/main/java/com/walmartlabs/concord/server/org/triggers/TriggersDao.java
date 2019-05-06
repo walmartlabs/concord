@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
@@ -47,7 +48,7 @@ public class TriggersDao extends AbstractDao {
     private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public TriggersDao(@Named("app") Configuration cfg,
+    public TriggersDao(@MainDB Configuration cfg,
                        ConcordObjectMapper objectMapper) {
         super(cfg);
 

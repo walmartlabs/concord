@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org.project;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProjectKvStore;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -38,7 +39,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_
 public class KvDao extends AbstractDao {
 
     @Inject
-    public KvDao(@Named("app") Configuration cfg) {
+    public KvDao(@MainDB Configuration cfg) {
         super(cfg);
 
         switch (cfg.dialect()) {

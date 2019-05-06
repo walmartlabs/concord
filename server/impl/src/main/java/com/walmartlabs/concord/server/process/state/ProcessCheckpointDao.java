@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.state;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.process.ImmutableProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -46,7 +47,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROC
 public class ProcessCheckpointDao extends AbstractDao {
 
     @Inject
-    public ProcessCheckpointDao(@Named("app") Configuration cfg) {
+    public ProcessCheckpointDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.org;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Users;
@@ -48,7 +49,7 @@ public class OrganizationDao extends AbstractDao {
     private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public OrganizationDao(@Named("app") Configuration cfg,
+    public OrganizationDao(@MainDB Configuration cfg,
                            ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -39,7 +40,7 @@ import static org.jooq.impl.DSL.value;
 public class LdapGroupsDao extends AbstractDao {
 
     @Inject
-    public LdapGroupsDao(@Named("app") Configuration cfg) {
+    public LdapGroupsDao(@MainDB Configuration cfg) {
         super(cfg);
     }
 

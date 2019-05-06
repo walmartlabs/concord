@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
@@ -254,7 +255,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private static final class WatchdogDao extends AbstractDao {
 
         @Inject
-        public WatchdogDao(@Named("app") Configuration cfg) {
+        public WatchdogDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

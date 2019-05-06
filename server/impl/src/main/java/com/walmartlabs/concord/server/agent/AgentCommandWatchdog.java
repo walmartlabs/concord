@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
@@ -67,7 +68,7 @@ public class AgentCommandWatchdog implements ScheduledTask {
     private static final class WatchdogDao extends AbstractDao {
 
         @Inject
-        public WatchdogDao(@Named("app") Configuration cfg) {
+        public WatchdogDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

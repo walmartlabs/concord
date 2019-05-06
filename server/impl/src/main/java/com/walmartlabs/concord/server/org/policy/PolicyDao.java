@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.policy;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.records.PolicyLinksRecord;
 import org.jooq.*;
@@ -44,7 +45,7 @@ public class PolicyDao extends AbstractDao {
     private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public PolicyDao(@Named("app") Configuration cfg,
+    public PolicyDao(@MainDB Configuration cfg,
                      ConcordObjectMapper objectMapper) {
         super(cfg);
 
