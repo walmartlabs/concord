@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed the handling of processes with wait
+conditions.
+
+
+
 ## [1.18.0] - 2019-05-05
 
 ### Added
