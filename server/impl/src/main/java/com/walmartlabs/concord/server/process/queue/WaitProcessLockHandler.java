@@ -27,11 +27,14 @@ import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.locks.LockEntry;
 import com.walmartlabs.concord.server.process.locks.ProcessLocksDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -41,6 +44,8 @@ import java.util.UUID;
 @Named
 @Singleton
 public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCondition> {
+
+    private static final Set<ProcessStatus> STATUSES = Collections.singleton(ProcessStatus.SUSPENDED);
 
     private final ProcessLocksDao locksDao;
     private final ProcessManager processManager;
@@ -59,7 +64,12 @@ public class WaitProcessLockHandler implements ProcessWaitHandler<ProcessLockCon
     }
 
     @Override
-    public ProcessLockCondition process(UUID instanceId, ProcessLockCondition wait) {
+    public Set<ProcessStatus> getProcessStatuses() {
+        return STATUSES;
+    }
+
+    @Override
+    public ProcessLockCondition process(UUID instanceId, ProcessStatus status, ProcessLockCondition wait) {
         LockEntry lock = locksDao.tryLock(instanceId, wait.orgId(), wait.projectId(), wait.scope(), wait.name());
         if (lock.instanceId().equals(instanceId)) {
             resumeProcess(instanceId, wait.name());

@@ -36,10 +36,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 
@@ -49,6 +46,8 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 @Named
 @Singleton
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
+
+    private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
 
     private final Dao dao;
     private final ProcessManager processManager;
@@ -67,7 +66,12 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     }
 
     @Override
-    public ProcessCompletionCondition process(UUID instanceId, ProcessCompletionCondition wait) {
+    public Set<ProcessStatus> getProcessStatuses() {
+        return STATUSES;
+    }
+
+    @Override
+    public ProcessCompletionCondition process(UUID instanceId, ProcessStatus processStatus, ProcessCompletionCondition wait) {
         List<UUID> awaitProcesses = wait.processes();
         List<UUID> finishedProcesses = dao.findFinished(awaitProcesses);
         if (finishedProcesses.isEmpty()) {
