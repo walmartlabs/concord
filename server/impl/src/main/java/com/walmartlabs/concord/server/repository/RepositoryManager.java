@@ -107,6 +107,10 @@ public class RepositoryManager {
         }
     }
 
+    public Repository fetch(String url, String branch, String commitId, String path, Secret secret) {
+        return providers.fetch(url, branch, commitId, path, secret, repoCfg.getCacheDir());
+    }
+
     public Repository fetch(UUID projectId, RepositoryEntry repository) {
         UUID orgId = getOrgId(projectId);
         Secret secret = getSecret(orgId, projectId, repository.getSecretName());

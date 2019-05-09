@@ -1,0 +1,3 @@
+flows:
+  flowFromTemplate:
+    - log: "Hello from Template, ${name}!"
