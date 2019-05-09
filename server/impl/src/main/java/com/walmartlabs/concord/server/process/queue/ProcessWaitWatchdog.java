@@ -52,6 +52,12 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessWaitWatchdog.class);
 
+    private static final Set<ProcessStatus> FINAL_STATUSES = new HashSet<>(Arrays.asList(
+            ProcessStatus.FINISHED,
+            ProcessStatus.FAILED,
+            ProcessStatus.CANCELLED,
+            ProcessStatus.TIMED_OUT));
+
     private final WatchdogDao dao;
     private final ProcessQueueDao processQueueDao;
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
@@ -95,6 +101,10 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         }
 
         if (!handler.getProcessStatuses().contains(p.status())) {
+            // clear wait conditions for finished processes
+            if (FINAL_STATUSES.contains(p.status())) {
+                processQueueDao.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), null);
+            }
             return;
         }
 
