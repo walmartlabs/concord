@@ -59,7 +59,7 @@ public class AnsibleAuthFactory {
         }
 
         if (authParams.size() != 1) {
-            throw new RuntimeException("Invalid auth configuration. More that one auth type: " + args.keySet());
+            throw new RuntimeException("Invalid auth configuration. More that one auth type (expected one of 'krb5' or 'privateKey'): " + authParams.keySet());
         }
 
         Map.Entry<String, Map<String, Object>> auth = authParams.entrySet().iterator().next();
@@ -67,7 +67,7 @@ public class AnsibleAuthFactory {
             case "krb5":
                 try {
                     Map<String, String> cred = parseKerberosAuth(secretService, ctx.getContext(), ctx.getWorkDir(), auth.getValue());
-                    String username = cred.get("username");
+                    String username = cred.get("user");
                     String password = cred.get("password");
                     log.info("Using the kerberos username: {}", username);
                     return new KerberosAuth(username, password, ctx.getTmpDir(), ctx.isDebug());
@@ -78,7 +78,7 @@ public class AnsibleAuthFactory {
             case "privatekey":
                 try {
                     Map<String, Object> cred = parsePrivateKeyAuth(secretService, ctx.getContext(), ctx.getWorkDir(), auth.getValue());
-                    String username = getString(cred, "username");
+                    String username = getString(cred, "user");
                     Path privateKeyPath = assertPath(cred, "keyPath");
                     log.info("Using the private key: {}", privateKeyPath);
                     return new PrivateKeyAuth(ctx.getWorkDir(), username, privateKeyPath);
@@ -102,7 +102,7 @@ public class AnsibleAuthFactory {
         }
 
         Map<String, String> basic = new HashMap<>();
-        basic.put("username", assertString(auth, "username"));
+        basic.put("user", assertString(auth, "user"));
         basic.put("password", assertString(auth, "password"));
         return basic;
     }
@@ -133,7 +133,7 @@ public class AnsibleAuthFactory {
         Files.setPosixFilePermissions(p, perms);
 
         Map<String, Object> result = new HashMap<>();
-        result.put("username", getString(auth, "username"));
+        result.put("user", getString(auth, "user"));
         result.put("keyPath", p.toAbsolutePath());
         return result;
     }

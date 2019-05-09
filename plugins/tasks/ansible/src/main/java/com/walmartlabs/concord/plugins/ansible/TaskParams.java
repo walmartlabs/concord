@@ -74,6 +74,18 @@ public enum TaskParams implements HasKey {
 
     PLAYBOOK_KEY("playbook"),
 
+    /**
+     * @deprecated use {@link #AUTH}
+     */
+    @Deprecated
+    PRIVATE_KEY_FILE_KEY("privateKey"),
+
+    /**
+     * @deprecated use {@link #AUTH}
+     */
+    @Deprecated
+    PRIVATE_KEY_FILE_NAME("_privateKey"),
+
     RETRY_KEY("retry"),
 
     ROLES_KEY("roles"),
@@ -87,6 +99,12 @@ public enum TaskParams implements HasKey {
     SYNTAX_CHECK_KEY("syntaxCheck"),
 
     TAGS_KEY("tags"),
+
+    /**
+     * @deprecated use {@link #AUTH}
+     */
+    @Deprecated
+    USER_KEY("user"),
 
     VAULT_PASSWORD_FILE_KEY("vaultPasswordFile"),
 
