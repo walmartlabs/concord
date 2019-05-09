@@ -21,6 +21,7 @@ package com.walmartlabs.concord.repository;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.SensitiveData;
 import com.walmartlabs.concord.sdk.Secret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,12 +61,12 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         try {
             client.fetch(uri, branch, commitId, secret, dst);
         } catch (RepositoryException e) {
-            log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...", uri, branch, commitId, dst, e.getMessage());
+            log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...", SensitiveData.hide(uri), branch, commitId, dst, e.getMessage());
 
             try {
                 IOUtils.deleteRecursively(dst);
             } catch (IOException ee) {
-                log.warn("fetch ['{}', '{}', '{}', '{}'] -> cleanup error: {}", uri, branch, commitId, dst, e.getMessage());
+                log.warn("fetch ['{}', '{}', '{}', '{}'] -> cleanup error: {}", SensitiveData.hide(uri), branch, commitId, dst, e.getMessage());
             }
 
             // retry

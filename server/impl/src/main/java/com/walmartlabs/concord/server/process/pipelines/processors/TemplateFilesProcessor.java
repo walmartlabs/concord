@@ -48,6 +48,7 @@ import java.util.Optional;
  */
 @Named
 @Singleton
+@Deprecated
 public class TemplateFilesProcessor implements PayloadProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(TemplateFilesProcessor.class);
@@ -72,13 +73,13 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
-        String s = (String) req.get(InternalConstants.Request.TEMPLATE_KEY);
-        if (s == null) {
+        Object s = req.get(InternalConstants.Request.TEMPLATE_KEY);
+        if (!(s instanceof String)) {
             return chain.process(payload);
         }
 
         try {
-            URI uri = getUri(processKey, s);
+            URI uri = getUri(processKey, (String)s);
             Path template = dependencyManager.resolveSingle(uri).getPath();
             extract(payload, template);
 

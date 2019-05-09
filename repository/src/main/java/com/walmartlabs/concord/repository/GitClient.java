@@ -23,6 +23,7 @@ package com.walmartlabs.concord.repository;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.SensitiveData;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
@@ -111,7 +112,7 @@ public class GitClient {
     }
 
     private void fetchCommand(String url, List<RefSpec> refspecs, Secret secret, boolean shallow, Path dest) {
-        log.info("Fetching upstream changes from '{}'", url);
+        log.info("Fetching upstream changes from '{}'", hideSensitiveData(url));
 
         List<String> args = new ArrayList<>();
         args.add("fetch");
@@ -293,7 +294,7 @@ public class GitClient {
     }
 
     private void cloneCommand(String url, Secret secret, boolean shallow, Path dest) {
-        log.info("Cloning repository '{}' into '{}'", url, dest.toString());
+        log.info("Cloning repository '{}' into '{}'", hideSensitiveData(url), dest.toString());
 
         try {
             if (Files.notExists(dest)) {
@@ -436,13 +437,13 @@ public class GitClient {
             int code = p.waitFor();
             if (code != SUCCESS_EXIT_CODE) {
                 String msg = "code: " + code + ", " + hideSensitiveData(error.get().toString());
-                log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'", cmd, code, msg);
+                log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'", hideSensitiveData(String.join(" ", cmd)), code, msg);
                 throw new RepositoryException(msg);
             }
 
             return out.get().toString();
         } catch (ExecutionException | IOException | InterruptedException e) { // NOSONAR
-            log.error("launchCommand ['{}'] -> error", cmd, e);
+            log.error("launchCommand ['{}'] -> error", hideSensitiveData(String.join(" ", cmd)), e);
             throw new RepositoryException("git operation error: " + e.getMessage());
         }
     }
@@ -512,6 +513,6 @@ public class GitClient {
         for (String p : sensitiveData) {
             s = s.replaceAll(p, "***");
         }
-        return s;
+        return SensitiveData.hide(s);
     }
 }

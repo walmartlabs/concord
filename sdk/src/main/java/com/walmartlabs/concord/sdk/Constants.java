@@ -90,7 +90,13 @@ public class Constants {
         /**
          * Template name.
          */
+        @Deprecated
         public static final String TEMPLATE_KEY = "template";
+
+        /**
+         * External git templates/imports configuration.
+         */
+        public static final String IMPORTS_KEY = "imports";
 
         /**
          * Process initiator's info.

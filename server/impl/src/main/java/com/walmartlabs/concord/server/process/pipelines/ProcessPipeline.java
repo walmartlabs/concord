@@ -59,6 +59,7 @@ public class ProcessPipeline extends Pipeline {
                 RequirementsProcessor.class,
                 PrivateKeyProcessor.class,
                 TemplateFilesProcessor.class,
+                ImportsProcessor.class,
                 TemplateScriptProcessor.class,
                 RequestInfoProcessor.class,
                 ProjectInfoProcessor.class,
