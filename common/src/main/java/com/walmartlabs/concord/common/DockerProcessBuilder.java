@@ -9,9 +9,9 @@ package com.walmartlabs.concord.common;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,9 @@ package com.walmartlabs.concord.common;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.DockerContainerSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +34,41 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class DockerProcessBuilder {
+
+    public static DockerProcessBuilder from(Context ctx, DockerContainerSpec spec) {
+        DockerProcessBuilder b = new DockerProcessBuilder(spec.image())
+                .name(spec.name())
+                .user(Optional.ofNullable(spec.user()).orElse(DEFAULT_USER))
+                .workdir(spec.workdir())
+                .entryPoint(spec.entryPoint())
+                .cpu(spec.cpu())
+                .memory(spec.memory())
+                .args(spec.args())
+                .env(spec.env())
+                .envFile(spec.envFile())
+                .labels(spec.labels())
+                .debug(spec.debug())
+                .forcePull(spec.forcePull())
+                .redirectErrorStream(spec.redirectErrorStream());
+
+        DockerContainerSpec.Options options = spec.options();
+        if (options != null) {
+            DockerOptionsBuilder ob = new DockerOptionsBuilder();
+
+            List<String> hosts = options.hosts();
+            if (hosts != null) {
+                hosts.forEach(ob::etcHost);
+            }
+
+            b.options(ob.build());
+        }
+
+        // system stuff
+        String txId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
+        b.addLabel(CONCORD_TX_ID_LABEL, txId);
+
+        return b;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(DockerProcessBuilder.class);
 
@@ -51,7 +89,7 @@ public class DockerProcessBuilder {
     private Map<String, String> env;
     private String envFile;
     private Map<String, String> labels;
-    private List<Map.Entry<String, String>> volumes = new ArrayList<>();
+    private Collection<String> volumes = new ArrayList<>();
     private List<Map.Entry<String, String>> options = new ArrayList<>();
 
     private boolean cleanup = true;
@@ -118,7 +156,7 @@ public class DockerProcessBuilder {
         if (volumes != null) {
             volumes.forEach(v -> {
                 c.add("-v");
-                c.add(q(v.getKey() + ":" + v.getValue()));
+                c.add(q(v));
             });
         }
         if (env != null) {
@@ -212,6 +250,11 @@ public class DockerProcessBuilder {
         return this;
     }
 
+    public DockerProcessBuilder labels(Map<String, String> labels) {
+        this.labels = labels;
+        return this;
+    }
+
     public DockerProcessBuilder addLabel(String k, String v) {
         if (labels == null) {
             labels = new HashMap<>();
@@ -230,13 +273,23 @@ public class DockerProcessBuilder {
         return this;
     }
 
+    public DockerProcessBuilder volumes(Collection<String> volumes) {
+        this.volumes = volumes;
+        return this;
+    }
+
+    public DockerProcessBuilder volume(String spec) {
+        volumes.add(spec);
+        return this;
+    }
+
     public DockerProcessBuilder volume(String hostSrc, String containerDest) {
-        volumes.add(new AbstractMap.SimpleEntry<>(hostSrc, containerDest));
+        volumes.add(hostSrc + ":" + containerDest);
         return this;
     }
 
     public DockerProcessBuilder volume(String hostSrc, String containerDest, boolean readOnly) {
-        volumes.add(new AbstractMap.SimpleEntry<>(hostSrc, containerDest + ":ro"));
+        volumes.add(hostSrc + ":" + containerDest + (readOnly ? ":ro" : ":rw"));
         return this;
     }
 
@@ -246,6 +299,10 @@ public class DockerProcessBuilder {
     }
 
     public DockerProcessBuilder args(List<String> args) {
+        if (args == null) {
+            return this;
+        }
+
         this.args.addAll(args);
         return this;
     }
@@ -287,7 +344,12 @@ public class DockerProcessBuilder {
     }
 
     public DockerProcessBuilder options(List<Map.Entry<String, String>> options) {
-        this.options.addAll(options);
+        this.options = options;
+        return this;
+    }
+
+    public DockerProcessBuilder option(String k, String v) {
+        this.options.add(new AbstractMap.SimpleEntry<>(k, v));
         return this;
     }
 

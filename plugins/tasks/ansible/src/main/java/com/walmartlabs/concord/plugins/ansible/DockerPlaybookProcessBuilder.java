@@ -20,30 +20,29 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.common.DockerProcessBuilder;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.DockerContainerSpec;
+import com.walmartlabs.concord.sdk.DockerService;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
 
-    private static final String VOLUME_CONTAINER_DEST = "/workspace";
+    private final DockerService dockerService;
+    private final Context ctx;
+    private final String image;
 
-    private final String txId;
-    private final String imageName;
-    private final String workdir;
-
-    private List<Map.Entry<String, String>> dockerOpts = Collections.emptyList();
-
+    private Collection<String> hosts;
     private boolean debug = false;
     private boolean forcePull = true;
 
-    public DockerPlaybookProcessBuilder(String txId, String imageName, String workdir) {
-        this.txId = txId;
-        this.imageName = imageName;
-        this.workdir = workdir;
+    public DockerPlaybookProcessBuilder(DockerService dockerService, Context ctx, String image) {
+        this.dockerService = dockerService;
+        this.ctx = ctx;
+        this.image = image;
     }
 
     @Override
@@ -57,23 +56,20 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
         return this;
     }
 
-    public DockerPlaybookProcessBuilder withDockerOptions(List<Map.Entry<String, String>> dockerOpts) {
-        this.dockerOpts = dockerOpts;
+    public DockerPlaybookProcessBuilder withHosts(Collection<String> hosts) {
+        this.hosts = hosts;
         return this;
     }
 
     @Override
     public Process build(List<String> args, Map<String, String> extraEnv) throws IOException {
-        return new DockerProcessBuilder(imageName)
-                .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, txId)
-                .cleanup(true)
-                .env(extraEnv)
-                .volume(workdir, VOLUME_CONTAINER_DEST)
-                .workdir(VOLUME_CONTAINER_DEST)
+        return dockerService.start(ctx, DockerContainerSpec.builder()
+                .image(image)
                 .args(args)
-                .options(dockerOpts)
+                .env(extraEnv)
                 .debug(debug)
                 .forcePull(forcePull)
-                .build();
+                .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
+                .build());
     }
 }

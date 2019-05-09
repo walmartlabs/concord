@@ -23,8 +23,15 @@ package com.walmartlabs.concord.project.yaml.converter;
 import com.walmartlabs.concord.common.DockerProcessBuilder;
 import io.takari.parc.Seq;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * Keeping it for backward compatibility with older version of ansible-plugin.
+ */
+@Deprecated
 public class DockerOptionsConverter {
 
     public static List<Map.Entry<String, String>> convert(Map<String, Object> options) {

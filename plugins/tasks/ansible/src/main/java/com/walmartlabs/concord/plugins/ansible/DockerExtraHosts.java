@@ -20,20 +20,27 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.DockerService;
-import com.walmartlabs.concord.sdk.SecretService;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+public class DockerExtraHosts {
 
-@Named("ansible")
-public class AnsibleTask extends RunPlaybookTask2 {
+    @SuppressWarnings("unchecked")
+    public static Collection<String> getHosts(Map<String, Object> options) {
+        if (options == null) {
+            return Collections.emptyList();
+        }
 
-    @Inject
-    public AnsibleTask(SecretService secretService,
-                       AnsibleAuthFactory ansibleAuthFactory,
-                       DockerService dockerService) {
+        Object o = options.get("hosts");
+        if (o == null) {
+            return Collections.emptyList();
+        }
 
-        super(secretService, ansibleAuthFactory, dockerService);
+        if (o instanceof Collection) {
+            return (Collection<String>) o;
+        }
+
+        throw new IllegalArgumentException("Unexpected 'hosts' type: " + o);
     }
 }

@@ -1166,11 +1166,10 @@ public class YamlParserTest extends AbstractYamlParserTest {
         assertEquals(123, env.get("x"));
         assertEquals(txId, env.get("y"));
 
-        List<Map.Entry<String, String>> opts = (List<Map.Entry<String, String>>) m.get("options");
+        List<String> opts = (List<String>) m.get("hosts");
         assertNotNull(opts);
         assertEquals(2, opts.size());
-        assertEquals("--add-host", opts.get(0).getKey());
-        assertEquals("foo:10.0.0.3", opts.get(0).getValue());
+        assertEquals("foo:10.0.0.3", opts.get(0));
     }
 
     @Test

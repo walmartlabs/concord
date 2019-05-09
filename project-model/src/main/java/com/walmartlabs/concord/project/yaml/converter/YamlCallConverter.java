@@ -22,13 +22,10 @@ package com.walmartlabs.concord.project.yaml.converter;
 
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlCall;
-import com.walmartlabs.concord.sdk.Task;
-import io.takari.bpm.api.ExecutionContext;
-import io.takari.bpm.model.*;
-import io.takari.parc.Seq;
+import io.takari.bpm.model.CallActivity;
+import io.takari.bpm.model.VariableMapping;
 
-import javax.inject.Named;
-import java.util.*;
+import java.util.Set;
 
 public class YamlCallConverter implements StepConverter<YamlCall> {
 

@@ -20,12 +20,8 @@ package com.walmartlabs.concord.plugins.docker;
  * =====
  */
 
-import com.walmartlabs.concord.common.DockerProcessBuilder;
 import com.walmartlabs.concord.common.TruncBufferedReader;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.*;
 import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +51,7 @@ public class DockerTask implements Task {
     public static final String IMAGE_KEY = "image";
     public static final String ENV_KEY = "env";
     public static final String ENV_FILE_KEY = "envFile";
-    public static final String OPTIONS_KEY = "options";
+    public static final String HOSTS_KEY = "hosts";
     public static final String FORCE_PULL_KEY = "forcePull";
     public static final String DEBUG_KEY = "debug";
     public static final String STDOUT_KEY = "stdout";
@@ -63,8 +59,8 @@ public class DockerTask implements Task {
     @Inject
     ExecutorService executor;
 
-    @InjectVariable(Constants.Context.TX_ID_KEY)
-    String txId;
+    @Inject
+    DockerService dockerService;
 
     @InjectVariable(Constants.Context.WORK_DIR_KEY)
     String workDir;
@@ -74,11 +70,13 @@ public class DockerTask implements Task {
 
     @SuppressWarnings("unchecked")
     public void call(Map<String, Object> args) {
+        // TODO validation
+
         String image = assertString(args, IMAGE_KEY);
         String cmd = assertString(args, CMD_KEY);
         Map<String, Object> env = (Map<String, Object>) args.get(ENV_KEY);
         String envFile = (String) args.get(ENV_FILE_KEY);
-        List<Map.Entry<String, String>> options = (List<Map.Entry<String, String>>) args.get(OPTIONS_KEY);
+        List<String> hosts = (List<String>) args.get(HOSTS_KEY);
         boolean forcePull = (boolean) args.getOrDefault(FORCE_PULL_KEY, true);
         boolean debug = (boolean) args.getOrDefault(DEBUG_KEY, false);
         String stdOutVar = getString(args, STDOUT_KEY);
@@ -97,18 +95,16 @@ public class DockerTask implements Task {
         try {
             Path entryPoint = containerDir.resolve(baseDir.relativize(createRunScript(baseDir, cmd)));
 
-            Process p = new DockerProcessBuilder(image)
-                    .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, txId)
-                    .cleanup(true)
-                    .volume(workDir, VOLUME_CONTAINER_DEST)
+            Process p = dockerService.start(ctx, DockerContainerSpec.builder()
+                    .image(image)
                     .env(stringify(env))
                     .envFile(envFile)
                     .entryPoint(entryPoint.toAbsolutePath().toString())
                     .forcePull(forcePull)
-                    .options(options)
+                    .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
                     .debug(debug)
                     .redirectErrorStream(stdOutVar == null)
-                    .build();
+                    .build());
 
             // if stdout is being stored into a var, then stderr must be streamed into the log...
             InputStream in = stdOutVar == null ? p.getInputStream() : p.getErrorStream();
@@ -142,11 +138,11 @@ public class DockerTask implements Task {
                 ctx.setVariable(stdOutVar, s);
             }
 
-            log.info("call ['{}', '{}', '{}', '{}'] -> done", image, cmd, workDir, options);
+            log.info("call ['{}', '{}', '{}', '{}'] -> done", image, cmd, workDir, hosts);
         } catch (BpmnError e) {
             throw e;
         } catch (Exception e) {
-            log.error("call ['{}', '{}', '{}', '{}'] -> error", image, cmd, workDir, options, e);
+            log.error("call ['{}', '{}', '{}', '{}'] -> error", image, cmd, workDir, hosts, e);
             throw new BpmnError("dockerError", e);
         }
     }

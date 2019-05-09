@@ -23,7 +23,6 @@ package com.walmartlabs.concord.plugins.ansible;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.walmartlabs.concord.common.TruncBufferedReader;
-import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
 import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +31,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
 import java.nio.file.*;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -49,8 +48,8 @@ public class RunPlaybookTask2 implements Task {
     private static final int SUCCESS_EXIT_CODE = 0;
 
     private final SecretService secretService;
-
     private final AnsibleAuthFactory ansibleAuthFactory;
+    private final DockerService dockerService;
 
     @InjectVariable(Constants.Context.CONTEXT_KEY)
     Context context;
@@ -65,21 +64,25 @@ public class RunPlaybookTask2 implements Task {
     private Map<String, Object> defaults;
 
     @Inject
-    public RunPlaybookTask2(SecretService secretService, AnsibleAuthFactory ansibleAuthFactory) {
+    public RunPlaybookTask2(SecretService secretService,
+                            AnsibleAuthFactory ansibleAuthFactory,
+                            DockerService dockerService) {
+
         this.secretService = secretService;
         this.ansibleAuthFactory = ansibleAuthFactory;
+        this.dockerService = dockerService;
     }
 
     public void run(String dockerImageName, Map<String, Object> args, String payloadPath) throws Exception {
         log.info("Using the docker image: {}", dockerImageName);
 
-        List<Map.Entry<String, String>> dockerOpts = DockerOptionsConverter.convert(getMap(args, TaskParams.DOCKER_OPTS_KEY, null));
-        log.info("Using the docker options: {}", dockerOpts);
+        Collection<String> extraHosts = DockerExtraHosts.getHosts(getMap(args, TaskParams.DOCKER_OPTS_KEY, null));
+        log.info("Using extra /etc/hosts records: {}", extraHosts);
 
         run(args, payloadPath,
-                new DockerPlaybookProcessBuilder(txId, dockerImageName, payloadPath)
+                new DockerPlaybookProcessBuilder(dockerService, context, dockerImageName)
                         .withForcePull(getBoolean(args, TaskParams.FORCE_PULL_KEY, true))
-                        .withDockerOptions(dockerOpts));
+                        .withHosts(extraHosts));
     }
 
     public void run(Map<String, Object> args, String payloadPath) throws Exception {

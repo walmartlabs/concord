@@ -277,6 +277,7 @@ public class RunnerJobExecutor {
                 .dependencies(depsFile)
                 .debug(job.isDebugMode())
                 .logLevel(getLogLevel(job))
+                .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
                 .runnerPath(cfg.runnerPath.toAbsolutePath());
 
         return runner.build();
@@ -375,6 +376,18 @@ public class RunnerJobExecutor {
     @Override
     public String toString() {
         return "RunnerJobExecutor";
+    }
+
+    private Path createExtraDockerVolumesFile(RunnerJob job) throws IOException {
+        List<String> l = cfg.extraDockerVolumes;
+        if (l == null || l.isEmpty()) {
+            return null;
+        }
+
+        Path workDir = job.getPayloadDir();
+        Path p = workDir.resolve(".extraDockerVolumes");
+        Files.write(p, l, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        return workDir.relativize(p);
     }
 
     @SuppressWarnings("unchecked")
@@ -486,14 +499,15 @@ public class RunnerJobExecutor {
         private final String agentJavaCmd;
         private final Path dependencyListDir;
         private final Path runnerPath;
-        private boolean runnerSecurityManagerEnabled;
+        private final boolean runnerSecurityManagerEnabled;
+        private final List<String> extraDockerVolumes;
 
         public RunnerJobExecutorConfiguration(String agentId,
                                               String serverApiBaseUrl,
                                               String agentJavaCmd,
                                               Path dependencyListDir,
                                               Path runnerPath,
-                                              boolean isRunnerSecurityManagerEnabled) {
+                                              boolean isRunnerSecurityManagerEnabled, List<String> extraDockerVolumes) {
 
             this.agentId = agentId;
             this.serverApiBaseUrl = serverApiBaseUrl;
@@ -501,6 +515,7 @@ public class RunnerJobExecutor {
             this.dependencyListDir = dependencyListDir;
             this.runnerPath = runnerPath;
             this.runnerSecurityManagerEnabled = isRunnerSecurityManagerEnabled;
+            this.extraDockerVolumes = extraDockerVolumes;
         }
 
         public Path getRunnerPath() {
@@ -521,6 +536,10 @@ public class RunnerJobExecutor {
 
         public Path getDependencyListDir() {
             return dependencyListDir;
+        }
+
+        public List<String> getExtraDockerVolumes() {
+            return extraDockerVolumes;
         }
     }
 

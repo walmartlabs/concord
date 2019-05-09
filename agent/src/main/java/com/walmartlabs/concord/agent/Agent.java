@@ -309,7 +309,8 @@ public class Agent {
                 cfg.getAgentJavaCmd(),
                 cfg.getDependencyListsDir(),
                 cfg.getRunnerPath(),
-                cfg.isRunnerSecurityManagerEnabled());
+                cfg.isRunnerSecurityManagerEnabled(),
+                cfg.getExtraDockerVolumes());
 
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
 

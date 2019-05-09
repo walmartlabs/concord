@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.plugins.ansible;
+package com.walmartlabs.concord.sdk;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,20 +20,12 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.DockerService;
-import com.walmartlabs.concord.sdk.SecretService;
+import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+public interface DockerService {
 
-@Named("ansible")
-public class AnsibleTask extends RunPlaybookTask2 {
-
-    @Inject
-    public AnsibleTask(SecretService secretService,
-                       AnsibleAuthFactory ansibleAuthFactory,
-                       DockerService dockerService) {
-
-        super(secretService, ansibleAuthFactory, dockerService);
-    }
+    /**
+     * Start a new Docker container using the provided specification.
+     */
+    Process start(Context ctx, DockerContainerSpec spec) throws IOException;
 }

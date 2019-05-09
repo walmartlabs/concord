@@ -107,6 +107,7 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
                 .extraEnv("DOCKER_HOST", dockerRunnerCfg.dockerHost)
                 .extraEnv("HOST_PROC_DIR", procDir)
                 .extraEnv("CONCORD_TX_ID", job.getInstanceId())
+                .extraVolumes(runnerCfg.getExtraDockerVolumes())
                 .build();
     }
 

@@ -43,7 +43,7 @@ public class YamlDockerStepConverter implements StepConverter<YamlDockerStep> {
         args.put("cmd", s.getCmd());
         args.put("env", s.getEnv());
         args.put("envFile", s.getEnvFile());
-        args.put("options", s.getOptions());
+        args.put("hosts", s.getHosts());
         args.put("stdout", s.getStdout());
 
         ELCall call = createELCall("docker", args);

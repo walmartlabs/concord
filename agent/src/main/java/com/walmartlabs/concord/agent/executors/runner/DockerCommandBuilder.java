@@ -44,6 +44,7 @@ public class DockerCommandBuilder {
     private Path dependencyCacheDir;
     private Path runnerPath;
     private List<String> args = Collections.emptyList();
+    private Collection<String> extraVolumes = Collections.emptyList();
 
     private final Cfg cfg;
     private final Map<String, Object> env = new HashMap<>();
@@ -105,10 +106,15 @@ public class DockerCommandBuilder {
         return this;
     }
 
+    public DockerCommandBuilder extraVolumes(Collection<String> extraVolumes) {
+        this.extraVolumes = extraVolumes;
+        return this;
+    }
+
     public String[] build() throws IOException {
         boolean debug = cfg.getBoolean("debug", false);
 
-        String[] cmd = new DockerProcessBuilder(cfg.getString("image"))
+        DockerProcessBuilder b = new DockerProcessBuilder(cfg.getString("image"))
                 .addLabel(DockerProcessBuilder.CONCORD_TX_ID_LABEL, instanceId.toString())
                 .cleanup(true)
                 .useHostNetwork(true)
@@ -124,8 +130,13 @@ public class DockerCommandBuilder {
                 .forcePull(true)
                 .options(cfg.getList("options"))
                 .debug(debug)
-                .args(args)
-                .buildCmd();
+                .args(this.args);
+
+        if (extraVolumes != null) {
+            extraVolumes.forEach(b::volume);
+        }
+
+        String[] cmd = b.buildCmd();
 
         if (debug) {
             log.info("CMD: {}", (Object) cmd);
