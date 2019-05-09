@@ -34,24 +34,6 @@ public class DeprecatedArgsProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(DeprecatedArgsProcessor.class);
 
-    /**
-     * @deprecated use {@link TaskParams#AUTH}
-     */
-    @Deprecated
-    private static final String PRIVATE_KEY_FILE_NAME = "_privateKey";
-
-    /**
-     * @deprecated use {@link TaskParams#AUTH}
-     */
-    @Deprecated
-    private static final String PRIVATE_KEY_FILE_KEY = "privateKey";
-
-    /**
-     * @deprecated use {@link TaskParams#AUTH}
-     */
-    @Deprecated
-    private static final String USER_KEY = "user";
-
     public static Map<String, Object> process(Path workDir, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>(args);
 
@@ -62,16 +44,20 @@ public class DeprecatedArgsProcessor {
 
     @SuppressWarnings("unchecked")
     private static void processPrivateKey(Path workDir, Map<String, Object> args) {
-        Object o = args.get(PRIVATE_KEY_FILE_KEY);
+        Object privateKey = args.get(TaskParams.PRIVATE_KEY_FILE_KEY.getKey());
+        if (privateKey != null) {
+            log.warn("'{}' is deprecated, please use '{}.{}' parameter", TaskParams.PRIVATE_KEY_FILE_KEY.getKey(), TaskParams.AUTH.getKey(), "privateKey");
+        }
 
-        if (o != null) {
-            log.warn("'{}' is deprecated, please use '{}.{}' parameter", PRIVATE_KEY_FILE_KEY, TaskParams.AUTH.getKey(), "privateKey");
+        Object user = args.get(TaskParams.USER_KEY.getKey());
+        if (user != null) {
+            log.warn("'{}' is deprecated, please use '{}.{}' parameter", TaskParams.USER_KEY.getKey(), TaskParams.AUTH.getKey(), "user");
         }
 
         Map<String, Object> privateKeyParams = new HashMap<>();
-        if (o instanceof Map) {
+        if (privateKey instanceof Map) {
 
-            Map<String, Object> m = (Map<String, Object>) o;
+            Map<String, Object> m = (Map<String, Object>) privateKey;
             String name = (String) m.get("secretName");
             String password = (String) m.get("password");
             String orgName = (String) m.get("org");
@@ -82,20 +68,20 @@ public class DeprecatedArgsProcessor {
             secretParams.put("password", password);
 
             privateKeyParams.put("secret", secretParams);
-            privateKeyParams.put("username", args.get(USER_KEY));
+            privateKeyParams.put("user", user);
         } else {
-            String path = (String) o;
+            String path = (String) privateKey;
             if (path == null) {
-                path = PRIVATE_KEY_FILE_NAME;
+                path = TaskParams.PRIVATE_KEY_FILE_NAME.getKey();
                 if (!Files.exists(workDir.resolve(path))) {
                     path = null;
                 } else {
-                    log.warn("'{}' is deprecated, please use '{}.{}' parameter", PRIVATE_KEY_FILE_NAME, TaskParams.AUTH.getKey(), "privateKey");
+                    log.warn("'{}' is deprecated, please use '{}.{}' parameter", TaskParams.PRIVATE_KEY_FILE_NAME.getKey(), TaskParams.AUTH.getKey(), "privateKey");
                 }
             }
             if (path != null) {
                 privateKeyParams.put("path", path);
-                privateKeyParams.put("username", args.get(USER_KEY));
+                privateKeyParams.put("user", user);
             }
         }
 

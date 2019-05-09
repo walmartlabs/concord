@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.18.0"
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.19.0"
     - "mvn://com.walmartlabs.concord.plugins:oneops-tasks:1.10.0"
     - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
 
@@ -56,7 +56,7 @@ flows:
       auth:
         privateKey:
           # remote user
-          username: "myRemoteUser"
+          user: "myRemoteUser"
           # export the secret using the provided org name and secret name
           secret:
             org: "myOrg"
