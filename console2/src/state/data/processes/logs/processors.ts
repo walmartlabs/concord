@@ -22,12 +22,10 @@ import { escapeHtml } from '../../../../utils';
 import { highlight } from '../../../../utils';
 
 export const process = (value: string, useLocalTime: boolean, showDate: boolean): string => {
-    console.log('process: ' + useLocalTime + ', ' + showDate);
-
-    return processLinks(colorize(escapeHtml(processDate(value, useLocalTime, showDate))));
+    return colorize(processLinks(escapeHtml(processDate(value, useLocalTime, showDate))));
 };
 
-const URL_PATTERN = /(\b(https?|http):\/\/\S+)/;
+const URL_PATTERN = /(\b(https?):\/\/([-A-Z0-9+@#/%?=~_|!:,.;]|&amp;)*)/;
 
 const processLinks = (value: string): string => {
     return value.replace(

@@ -7,6 +7,11 @@
 - concord-agent, concord-runner: support for a configurable list of
 volumes to mount into Docker containers created by plugins.
 
+### Changed
+
+- concord-console: the URL parsing in the log viewer is updated to
+better handle URLs in quotes.
+
 
 
 ## [1.18.1] - 2019-05-07
