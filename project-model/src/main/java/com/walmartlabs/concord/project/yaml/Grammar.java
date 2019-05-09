@@ -20,8 +20,8 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonToken;
-import com.walmartlabs.concord.project.yaml.converter.DockerOptionsConverter;
 import com.walmartlabs.concord.project.yaml.model.*;
 import io.takari.bpm.model.ScriptTask;
 import io.takari.parc.Parser;
@@ -29,6 +29,7 @@ import io.takari.parc.Seq;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -325,7 +326,7 @@ public class Grammar {
                                     (boolean) options.getOrDefault("debug", false),
                                     (Map<String, Object>) options.get("env"),
                                     (String) options.get("envFile"),
-                                    DockerOptionsConverter.convert(options),
+                                    toListOfStrings(a.location, options.get("hosts")),
                                     (String) options.get("stdout")))));
 
     // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | checkpoint | event | script | taskShort | vars END_OBJECT
@@ -374,6 +375,24 @@ public class Grammar {
     private static final Parser<Atom, Seq<YamlDefinition>> defs = label("Process and form definitions",
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     many1(choice(formDef, procDef))));
+
+    @SuppressWarnings("unchecked")
+    private static List<String> toListOfStrings(JsonLocation loc, Object v) {
+        if (v == null) {
+            return null;
+        }
+
+        if (v instanceof List) {
+            return (List<String>) v;
+        }
+
+        if (v instanceof Seq) {
+            Seq<String> s = (Seq<String>) v;
+            return s.toList();
+        }
+
+        throw new IllegalArgumentException("@ " + loc + ": expected a list of strings, got " + v);
+    }
 
     public static Parser<Atom, YamlStep> getProcessStep() {
         return step;

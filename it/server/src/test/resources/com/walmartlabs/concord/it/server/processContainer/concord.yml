@@ -1,0 +1,7 @@
+configuration:
+  container:
+    image: "%%image%%"
+
+flows:
+  default:
+    - log: "Hello from Docker!"

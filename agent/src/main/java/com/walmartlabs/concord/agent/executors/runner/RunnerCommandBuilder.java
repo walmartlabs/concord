@@ -45,6 +45,7 @@ public class RunnerCommandBuilder {
     private Path runnerPath;
     private boolean debug;
     private String logLevel;
+    private Path extraDockerVolumesFile;
 
     public RunnerCommandBuilder() {
         this.objectMapper = new ObjectMapper();
@@ -100,6 +101,11 @@ public class RunnerCommandBuilder {
         return this;
     }
 
+    public RunnerCommandBuilder extraDockerVolumesFile(Path extraDockerVolumesFile) {
+        this.extraDockerVolumesFile = extraDockerVolumesFile;
+        return this;
+    }
+
     public String[] build() {
         List<String> l = new ArrayList<>();
 
@@ -136,6 +142,11 @@ public class RunnerCommandBuilder {
 
         if (logLevel != null) {
             l.add("-DlogLevel=" + logLevel);
+        }
+
+        if (extraDockerVolumesFile != null) {
+            // TODO move into the constants in something like a runner-api module?
+            l.add("-Dconcord.dockerExtraVolumes=" + extraDockerVolumesFile);
         }
 
         // Runner's security manager

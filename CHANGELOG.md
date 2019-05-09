@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent, concord-runner: support for a configurable list of
+volumes to mount into Docker containers created by plugins.
+
+
+
 ## [1.18.1] - 2019-05-07
 
 ### Changed

@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -70,6 +71,7 @@ public class Configuration {
     private final String dockerHost;
     private final boolean dockerOrphanSweeperEnabled;
     private final long dockerOrphanSweeperPeriod;
+    private final List<String> extraDockerVolumes;
 
     private final Path repositoryCacheDir;
     private final long repositoryLockTimeout;
@@ -137,6 +139,7 @@ public class Configuration {
         this.dockerHost = cfg.getString("docker.host");
         this.dockerOrphanSweeperEnabled = cfg.getBoolean("docker.orphanSweeperEnabled");
         this.dockerOrphanSweeperPeriod = cfg.getDuration("docker.orphanSweeperPeriod", TimeUnit.MILLISECONDS);
+        this.extraDockerVolumes = cfg.getStringList("docker.extraVolumes");
 
         this.repositoryCacheDir = getDir(cfg, "repositoryCache.cacheDir");
         this.repositoryLockTimeout = cfg.getDuration("repositoryCache.lockTimeout", TimeUnit.MILLISECONDS);
@@ -220,6 +223,10 @@ public class Configuration {
 
     public long getDockerOrphanSweeperPeriod() {
         return dockerOrphanSweeperPeriod;
+    }
+
+    public List<String> getExtraDockerVolumes() {
+        return extraDockerVolumes;
     }
 
     public boolean isRunnerSecurityManagerEnabled() {

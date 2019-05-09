@@ -35,7 +35,7 @@ public class YamlDockerStep extends YamlStep {
     private final boolean debug;
     private final Map<String, Object> env;
     private final String envFile;
-    private final List<Map.Entry<String, String>> options;
+    private final List<String> hosts;
     private final String stdout;
 
     public YamlDockerStep(JsonLocation location,
@@ -44,7 +44,8 @@ public class YamlDockerStep extends YamlStep {
                           boolean forcePull,
                           boolean debug,
                           Map<String, Object> env,
-                          String envFile, List<Map.Entry<String, String>> options,
+                          String envFile,
+                          List<String> hosts,
                           String stdout) {
 
         super(location);
@@ -55,7 +56,7 @@ public class YamlDockerStep extends YamlStep {
         this.debug = debug;
         this.env = env;
         this.envFile = envFile;
-        this.options = options;
+        this.hosts = hosts;
         this.stdout = stdout;
     }
 
@@ -83,8 +84,8 @@ public class YamlDockerStep extends YamlStep {
         return envFile;
     }
 
-    public List<Map.Entry<String, String>> getOptions() {
-        return options;
+    public List<String> getHosts() {
+        return hosts;
     }
 
     public String getStdout() {
@@ -100,7 +101,7 @@ public class YamlDockerStep extends YamlStep {
                 ", debug=" + debug +
                 ", env=" + env +
                 ", envFile='" + envFile + '\'' +
-                ", options=" + options +
+                ", hosts=" + hosts +
                 ", stdout='" + stdout + '\'' +
                 "} " + super.toString();
     }
