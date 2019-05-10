@@ -4,6 +4,7 @@
 
 ### Added
 
+- slack: support for creating and replying to threads;
 - concord-agent, concord-runner: support for a configurable list of
 volumes to mount into Docker containers created by plugins.
 
