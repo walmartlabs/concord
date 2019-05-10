@@ -91,12 +91,16 @@ public class SlackClient implements AutoCloseable {
         connManager.close();
     }
 
-    public Response message(String channelId, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
+    public Response message(String channelId, String ts, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
         Map<String, Object> params = new HashMap<>();
         params.put("channel", channelId);
         params.put("as_user", true);
 
         params.put("text", text);
+
+        if (ts != null) {
+            params.put("thread_ts", ts);
+        }
 
         if (iconEmoji != null) {
             params.put("icon_emoji", iconEmoji);
@@ -144,7 +148,7 @@ public class SlackClient implements AutoCloseable {
                 } else {
                     if (response.getEntity() == null) {
                         log.error("exec ['{}', '{}'] -> empty response", command, params);
-                        return new Response(false, "empty response");
+                        return new Response(false, null, "empty response");
                     }
 
                     String s = EntityUtils.toString(response.getEntity());
@@ -155,7 +159,7 @@ public class SlackClient implements AutoCloseable {
             }
         }
 
-        return new Response(false, "too many requests");
+        return new Response(false, null, "too many requests");
     }
 
     private static int getRetryAfter(HttpResponse response) {
@@ -223,14 +227,17 @@ public class SlackClient implements AutoCloseable {
     public static class Response {
 
         private final boolean ok;
+        private final String ts;
         private final String error;
         private final Map<String, Object> params = new HashMap<>();
 
         @JsonCreator
         public Response(@JsonProperty("ok") boolean ok,
+                        @JsonProperty("ts") String ts,
                         @JsonProperty("error") String error) {
 
             this.ok = ok;
+            this.ts = ts;
             this.error = error;
         }
 
@@ -240,6 +247,10 @@ public class SlackClient implements AutoCloseable {
 
         public String getError() {
             return error;
+        }
+
+        public String getTs() {
+            return ts;
         }
 
         @JsonAnyGetter
@@ -256,6 +267,7 @@ public class SlackClient implements AutoCloseable {
         public String toString() {
             return "Response{" +
                     "ok=" + ok +
+                    ", ts=" + ts +
                     ", error='" + error + '\'' +
                     '}';
         }
