@@ -82,6 +82,10 @@ public final class ContextUtils {
         return assertVariable(ctx, name, String.class);
     }
 
+    public static String assertString(String message, Context ctx, String name) {
+        return assertVariable(message, ctx, name, String.class);
+    }
+
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> assertMap(Context ctx, String name) {
         return assertVariable(ctx, name, Map.class);
@@ -117,13 +121,17 @@ public final class ContextUtils {
     }
 
     public static <T> T assertVariable(Context ctx, String name, Class<T> type) {
+        return assertVariable(null, ctx, name, type);
+    }
+
+    public static <T> T assertVariable(String message, Context ctx, String name, Class<T> type) {
         T result = getVariable(ctx, name, null, type);
 
         if (result != null) {
             return result;
         }
 
-        throw new IllegalArgumentException("Mandatory variable '" + name + "' is required");
+        throw new IllegalArgumentException(message != null ? message : "Mandatory variable '" + name + "' is required");
     }
 
     public static ProjectInfo getProjectInfo(Context ctx) {
@@ -138,7 +146,7 @@ public final class ContextUtils {
         }
 
         return ImmutableProjectInfo.builder()
-                .orgId(MapUtils.getUUID(pi, "orgId"))
+                .orgId(MapUtils.assertUUID(pi, "orgId"))
                 .orgName(MapUtils.getString(pi, "orgName"))
                 .id(projectId)
                 .name(MapUtils.getString(pi, "projectName"))
@@ -182,7 +190,7 @@ public final class ContextUtils {
         if (txId instanceof UUID) {
             return (UUID) txId;
         }
-        throw new IllegalArgumentException("Invalid variable '" + Constants.Context.WORK_DIR_KEY + "' type, expected: string/uuid, got: " + txId.getClass());
+        throw new IllegalArgumentException("Invalid variable '" + Constants.Context.TX_ID_KEY + "' type, expected: string/uuid, got: " + txId.getClass());
     }
 
     public static String getSessionToken(Context ctx) {

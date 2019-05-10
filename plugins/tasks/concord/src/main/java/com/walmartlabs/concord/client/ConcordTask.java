@@ -23,10 +23,7 @@ package com.walmartlabs.concord.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
-import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.*;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +34,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.Keys.ACTION_KEY;
+import static com.walmartlabs.concord.sdk.MapUtils.*;
 
 @Named("concord")
 public class ConcordTask extends AbstractConcordTask {
@@ -104,9 +101,6 @@ public class ConcordTask extends AbstractConcordTask {
     @InjectVariable("concord")
     Map<String, Object> defaults;
 
-    @InjectVariable("projectInfo")
-    Map<String, Object> projectInfo;
-
     @Override
     public void execute(Context ctx) throws Exception {
         Action action = getAction(ctx);
@@ -146,7 +140,7 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     public List<String> listSubprocesses(@InjectVariable("context") Context ctx, Map<String, Object> cfg) throws Exception {
-        UUID instanceId = UUID.fromString(get(cfg, INSTANCE_ID_KEY));
+        UUID instanceId = getUUID(cfg, INSTANCE_ID_KEY);
         Set<String> tags = getSet(cfg, TAGS_KEY);
 
         return withClient(ctx, client -> {
@@ -166,7 +160,7 @@ public class ConcordTask extends AbstractConcordTask {
         return waitForCompletion(ctx, ids, -1);
     }
 
-    public Map<String, ProcessEntry> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) throws Exception {
+    public Map<String, ProcessEntry> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) {
         Map<String, ProcessEntry> result = new HashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
@@ -233,50 +227,28 @@ public class ConcordTask extends AbstractConcordTask {
 
     private void startExternalProcess(Context ctx) throws Exception {
         // just the validation. AbstractConcordTask#withClient will take care of passing the API key into the client
-        String apiKey = (String) ctx.getVariable(API_KEY);
-        if (apiKey == null) {
-            throw new IllegalArgumentException("'" + API_KEY + "' is required to start a process on an external Concord instance");
-        }
+        ContextUtils.assertString("'" + API_KEY + "' is required to start a process on an external Concord instance",
+                ctx, API_KEY);
 
         start(ctx, null);
     }
 
     private void startChildProcess(Context ctx) throws Exception {
-        String parentInstanceId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
+        UUID parentInstanceId = ContextUtils.getTxId(ctx);
         start(ctx, parentInstanceId);
     }
 
-    private void start(Context ctx, String parentInstanceId) throws Exception {
+    private void start(Context ctx, UUID parentInstanceId) throws Exception {
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
 
-        String org = (String) cfg.get(ORG_KEY);
-        if (org == null) {
-            org = (String) projectInfo.get("orgName");
-        }
-
-        String project = (String) cfg.get(PROJECT_KEY);
-
-        String repo = (String) cfg.get(REPO_KEY);
-        if (repo == null) {
-            repo = (String) cfg.get(REPOSITORY_KEY);
-        }
-
         Map<String, Object> req = createRequest(cfg);
-        boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
 
-        Path workDir = Paths.get((String) ctx.getVariable(Constants.Context.WORK_DIR_KEY));
+        Path workDir = ContextUtils.getWorkDir(ctx);
+
         Path archive = archivePayload(workDir, cfg);
-
+        String project = getString(cfg, PROJECT_KEY);
         if (project == null && archive == null) {
             throw new IllegalArgumentException("'" + PAYLOAD_KEY + "' and/or '" + PROJECT_KEY + "' are required");
-        }
-
-        if (parentInstanceId != null) {
-            log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
-                    project, repo, archive, sync, req);
-        } else {
-            log.info("Starting a new process (project={}, repository={}, archive={}, sync={}, req={}), on {}",
-                    project, repo, archive, sync, req, ctx.getVariable(BASE_URL_KEY));
         }
 
         String targetUri = "/api/v1/process";
@@ -290,8 +262,11 @@ public class ConcordTask extends AbstractConcordTask {
         ObjectMapper om = new ObjectMapper();
         input.put("request", om.writeValueAsBytes(req));
 
+        String org = getOrg(ctx, cfg);
         addIfNotNull(input, "org", org);
         addIfNotNull(input, "project", project);
+
+        String repo = getRepo(cfg);
         addIfNotNull(input, "repo", repo);
 
         String repoBranchOrTag = getString(cfg, REPO_BRANCH_OR_TAG_KEY);
@@ -304,6 +279,15 @@ public class ConcordTask extends AbstractConcordTask {
         addIfNotNull(input, "startAt", startAt);
 
         addIfNotNull(input, "parentInstanceId", parentInstanceId);
+
+        boolean sync = getBoolean(cfg, SYNC_KEY, false);
+        if (parentInstanceId != null) {
+            log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
+                    project, repo, archive, sync, req);
+        } else {
+            log.info("Starting a new process (project={}, repository={}, archive={}, sync={}, req={}), on {}",
+                    project, repo, archive, sync, req, ctx.getVariable(BASE_URL_KEY));
+        }
 
         StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
 
@@ -319,7 +303,7 @@ public class ConcordTask extends AbstractConcordTask {
         ctx.setVariable(JOBS_KEY, jobs);
 
         if (sync) {
-            boolean suspend = getBoolean(cfg, SUSPEND_KEY);
+            boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
             if (suspend) {
                 log.info("Suspending the process until the child process ({}) is completed...", processInstanceId);
                 suspend(ctx, jobs);
@@ -372,10 +356,10 @@ public class ConcordTask extends AbstractConcordTask {
         ctx.suspend(RESUME_EVENT_NAME, null, true);
     }
 
-    private void handleResults(Map<String, Object> cfg, Map<String, ProcessEntry> m) {
+    private static void handleResults(Map<String, Object> cfg, Map<String, ProcessEntry> m) {
         StringBuilder errors = new StringBuilder();
         boolean hasErrors = false;
-        boolean ignoreFailures = (boolean) cfg.getOrDefault(IGNORE_FAILURES_KEY, false);
+        boolean ignoreFailures = getBoolean(cfg, IGNORE_FAILURES_KEY, false);
         for (Map.Entry<String, ProcessEntry> e : m.entrySet()) {
             String id = e.getKey();
             String status = e.getValue().getStatus().getValue();
@@ -403,7 +387,7 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getError(ProcessEntry p) {
+    private static Map<String, Object> getError(ProcessEntry p) {
         Map<String, Object> meta = p.getMeta();
         if (meta == null) {
             return Collections.emptyMap();
@@ -478,10 +462,10 @@ public class ConcordTask extends AbstractConcordTask {
             throw new IllegalArgumentException("'" + ENTRY_POINT_KEY + "' is required");
         }
 
-        UUID instanceId = UUID.fromString(get(cfg, INSTANCE_ID_KEY));
-        boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
-
         Map<String, Object> req = createRequest(cfg);
+
+        UUID instanceId = assertUUID(cfg, INSTANCE_ID_KEY);
+        boolean sync = getBoolean(cfg, SYNC_KEY, false);
 
         log.info("Forking the current instance (sync={}, req={})...", sync, req);
 
@@ -515,7 +499,7 @@ public class ConcordTask extends AbstractConcordTask {
             return null;
         });
 
-        boolean sync = (boolean) cfg.getOrDefault(SYNC_KEY, false);
+        boolean sync = getBoolean(cfg, SYNC_KEY, false);
         if (sync) {
             waitForCompletion(ctx, Collections.singletonList(instanceId), DEFAULT_KILL_TIMEOUT);
         }
@@ -560,9 +544,12 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private static Path archivePayload(Path workDir, Map<String, Object> cfg) throws IOException {
-        String s = (String) cfg.get(PAYLOAD_KEY);
+        String s = getString(cfg, PAYLOAD_KEY);
         if (s == null) {
-            s = (String) cfg.get(ARCHIVE_KEY);
+            s = getString(cfg, ARCHIVE_KEY);
+            if (s != null) {
+                log.warn("'{}' is deprecated, please use '{}' parameter", ARCHIVE_KEY, PAYLOAD_KEY);
+            }
         }
 
         if (s == null) {
@@ -594,13 +581,13 @@ public class ConcordTask extends AbstractConcordTask {
             req.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
         }
 
-        String entryPoint = (String) cfg.get(ENTRY_POINT_KEY);
+        String entryPoint = getString(cfg, ENTRY_POINT_KEY);
         if (entryPoint != null) {
             req.put(Constants.Request.ENTRY_POINT_KEY, entryPoint);
         }
 
-        Boolean exclusiveExec = (Boolean) cfg.get(EXCLUSIVE_EXEC_KEY);
-        if (exclusiveExec != null) {
+        if (cfg.get(EXCLUSIVE_EXEC_KEY) != null) {
+            boolean exclusiveExec = getBoolean(cfg, EXCLUSIVE_EXEC_KEY, false);
             req.put(Constants.Request.EXCLUSIVE_EXEC, exclusiveExec);
         }
 
@@ -609,16 +596,16 @@ public class ConcordTask extends AbstractConcordTask {
             req.put(Constants.Request.TAGS_KEY, tags);
         }
 
-        Map<String, Object> args = (Map<String, Object>) cfg.get(ARGUMENTS_KEY);
-        if (args != null) {
+        Map<String, Object> args = getMap(cfg, ARGUMENTS_KEY, Collections.emptyMap());
+        if (!args.isEmpty()) {
             req.put(Constants.Request.ARGUMENTS_KEY, new HashMap<>(args));
         }
 
-        if (getBoolean(cfg, DISABLE_ON_CANCEL_KEY)) {
+        if (getBoolean(cfg, DISABLE_ON_CANCEL_KEY, false)) {
             req.put(Constants.Request.DISABLE_ON_CANCEL_KEY, true);
         }
 
-        if (getBoolean(cfg, DISABLE_ON_FAILURE_KEY)) {
+        if (getBoolean(cfg, DISABLE_ON_FAILURE_KEY, false)) {
             req.put(Constants.Request.DISABLE_ON_FAILURE_KEY, true);
         }
 
@@ -628,19 +615,6 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         return req;
-    }
-
-    private static String getString(Map<String, Object> cfg, String k) {
-        Object v = cfg.get(k);
-        if (v == null) {
-            return null;
-        }
-
-        if (!(v instanceof String)) {
-            throw new IllegalArgumentException("Expected a string value '" + k + "', got: " + v);
-        }
-
-        return (String) v;
     }
 
     @SuppressWarnings("unchecked")
@@ -668,23 +642,34 @@ public class ConcordTask extends AbstractConcordTask {
         }
     }
 
-    private static boolean getBoolean(Map<String, Object> m, String k) {
-        Object v = m.get(k);
-        if (v instanceof Boolean) {
-            return (Boolean) v;
-        } else if (v instanceof String) {
-            return Boolean.parseBoolean((String) v);
+    private static String getOrg(Context ctx, Map<String, Object> cfg) {
+        String org = getString(cfg, ORG_KEY);
+        if (org != null) {
+            return org;
         }
-        return false;
+
+        ProjectInfo pi = ContextUtils.getProjectInfo(ctx);
+        if (pi != null) {
+            return pi.orgName();
+        }
+        return null;
+    }
+
+    private static String getRepo(Map<String, Object> cfg) {
+        String repo = getString(cfg, REPO_KEY);
+        if (repo != null) {
+            return repo;
+        }
+        repo = getString(cfg, REPOSITORY_KEY);
+        if (repo != null) {
+            log.warn("'{}' is deprecated, please use '{}' parameter", REPOSITORY_KEY, REPO_KEY);
+        }
+        return repo;
     }
 
     private static Action getAction(Context ctx) {
-        Object v = ctx.getVariable(ACTION_KEY);
-        if (v instanceof String) {
-            String s = (String) v;
-            return Action.valueOf(s.trim().toUpperCase());
-        }
-        throw new IllegalArgumentException("'" + ACTION_KEY + "' must be a string");
+        String action = ContextUtils.assertString(ctx, ACTION_KEY);
+        return Action.valueOf(action.trim().toUpperCase());
     }
 
     private static int getInstances(Map<String, Object> cfg) {
