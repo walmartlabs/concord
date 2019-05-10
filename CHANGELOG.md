@@ -10,6 +10,7 @@ volumes to mount into Docker containers created by plugins.
 
 ### Changed
 
+- concord-tasks: improved validation of input parameters;
 - ansible: fixed handling of `auth` parameters. The deprecated `user`
 and `privateKey` parameters are working now again;
 - concord-console: the URL parsing in the log viewer is updated to

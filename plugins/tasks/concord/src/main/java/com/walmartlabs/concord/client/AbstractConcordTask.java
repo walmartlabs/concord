@@ -183,15 +183,6 @@ public abstract class AbstractConcordTask implements Task {
         return m;
     }
 
-    @SuppressWarnings("unchecked")
-    protected static <T> T get(Map<String, Object> m, String k) {
-        Object v = m.get(k);
-        if (v == null) {
-            throw new IllegalArgumentException("'" + k + "' is required");
-        }
-        return (T) v;
-    }
-
     private static boolean isJson(Response resp) {
         String contentType = resp.header("Content-Type");
         if (contentType == null) {

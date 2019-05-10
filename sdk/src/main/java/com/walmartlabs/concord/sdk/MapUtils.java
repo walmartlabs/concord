@@ -98,6 +98,14 @@ public final class MapUtils {
         return get(m, name, defaultValue, Number.class);
     }
 
+    public static UUID assertUUID(Map<String, Object> m, String name) {
+        UUID uuid = getUUID(m, name);
+        if (uuid != null) {
+            return uuid;
+        }
+        throw new IllegalArgumentException("Mandatory variable '" + name + "' is required");
+    }
+
     public static int assertInt(Map<String, Object> m, String name) {
         return assertVariable(m, name, Integer.class);
     }
