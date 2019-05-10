@@ -34,6 +34,7 @@
         <it.docker.port>2375</it.docker.port>
         <it.server.network.mode>custom</it.server.network.mode>
         <it.db.addr>db-node:5432</it.db.addr>
+        <it.ldap.addr>ldap-node:389</it.ldap.addr>
     </properties>
 
     <dependencies>
@@ -189,6 +190,7 @@
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
                         <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
+                        <IT_LDAP_URL>ldap://localhost:${it.ldap.port}</IT_LDAP_URL>
                     </environmentVariables>
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
@@ -319,6 +321,7 @@
                 <it.server.network.mode>host</it.server.network.mode>
                 <it.server.port>8001</it.server.port>
                 <it.db.addr>localhost:${it.db.port}</it.db.addr>
+                <it.ldap.addr>localhost:${it.ldap.port}</it.ldap.addr>
             </properties>
         </profile>
         <profile>
@@ -370,6 +373,24 @@
                                             <concordTxId>${txId}</concordTxId>
                                         </labels>
                                         <cmd> TCP-LISTEN:${it.docker.port},fork UNIX-CONNECT:/var/run/docker.sock</cmd>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>osixia/openldap</name>
+                                    <alias>openldap</alias>
+                                    <run>
+                                        <ports>
+                                            <port>${it.ldap.port}:389</port>
+                                        </ports>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>${network}</name>
+                                            <alias>ldap-node</alias>
+                                        </network>
+                                        <wait>
+                                            <log>(?s).*slapd starting*</log>
+                                            <time>60000</time>
+                                        </wait>
                                     </run>
                                 </image>
                                 <image>
@@ -426,6 +447,7 @@
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
                                             <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
+                                            <LDAP_URL>ldap://${it.ldap.addr}</LDAP_URL>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->
