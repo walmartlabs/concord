@@ -45,20 +45,29 @@ public class SlackTask implements Task {
         String username = (String) ctx.getVariable("username");
         Collection<Object> attachments = (Collection) ctx.getVariable("attachments");
 
-        call(ctx, channelId, text, iconEmoji, username, attachments);
+        // Optional and should be parent thread Id (ts)
+        String ts = (String) ctx.getVariable("ts");
+
+        call(ctx, channelId, ts, text, iconEmoji, username, attachments);
     }
 
     public void call(@InjectVariable("context") Context ctx, String channelId, String text) {
-        call(ctx, channelId, text, null, null, null);
+        call(ctx, channelId, null, text, null, null, null);
     }
 
     public void call(@InjectVariable("context") Context ctx,
                      String channelId, String text,
                      String iconEmoji, String username, Collection<Object> attachments) {
+        call(ctx, channelId, null, text, null, null, null);
+    }
+
+    public void call(@InjectVariable("context") Context ctx,
+                     String channelId, String ts, String text,
+                     String iconEmoji, String username, Collection<Object> attachments) {
 
         SlackConfiguration cfg = SlackConfiguration.from(ctx);
         try (SlackClient client = new SlackClient(cfg)) {
-            SlackClient.Response r = client.message(channelId, text, iconEmoji, username, attachments);
+            SlackClient.Response r = client.message(channelId, ts, text, iconEmoji, username, attachments);
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());
             } else {
@@ -68,10 +77,11 @@ public class SlackTask implements Task {
             Map<String, Object> result = new HashMap<>();
             result.put("ok", r.isOk());
             result.put("error", r.getError());
+            result.put("ts", r.getTs());
             ctx.setVariable("result", result);
         } catch (Exception e) {
-            log.error("call ['{}', '{}', '{}', '{}', '{}'] -> error",
-                    channelId, text, iconEmoji, username, attachments, e);
+            log.error("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error",
+                    channelId, ts, text, iconEmoji, username, attachments, e);
             throw new RuntimeException("slack task error: ", e);
         }
     }
