@@ -4,7 +4,13 @@ flows:
     in:
       action: start
       payload: myPayload
+      attachments:
+        - "${workDir}/someDir/subFile.txt"
+        - src: rootFile.txt
+          dest: someFile.txt
       sync: true
       outVars:
         - msg
-  - log: "Done! ${jobOut.msg}"
+        - file1
+        - file2
+  - log: "Done! ${jobOut.msg} ${jobOut.file1} ${jobOut.file2}"

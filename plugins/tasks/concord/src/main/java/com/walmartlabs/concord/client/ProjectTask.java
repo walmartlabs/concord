@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.client.Keys.ACTION_KEY;
+import static com.walmartlabs.concord.sdk.MapUtils.getString;
 
 @Named("project")
 public class ProjectTask extends AbstractConcordTask {
@@ -69,7 +70,7 @@ public class ProjectTask extends AbstractConcordTask {
         Map<String, RepositoryEntry> repositories = toRepositories(cfg);
 
         ProjectEntry entry = new ProjectEntry();
-        entry.setName(get(cfg, NAME_KEY));
+        entry.setName(getString(cfg, NAME_KEY));
         entry.setRepositories(repositories);
 
         withClient(ctx, client -> {

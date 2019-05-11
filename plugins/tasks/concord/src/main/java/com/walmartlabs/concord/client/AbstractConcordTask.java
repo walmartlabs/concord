@@ -21,16 +21,23 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.*;
+import com.squareup.okhttp.internal.Util;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
+import okio.BufferedSink;
+import okio.Okio;
+import okio.Source;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,6 +155,8 @@ public abstract class AbstractConcordTask implements Task {
                 b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_OCTET_STREAM, (byte[]) v));
             } else if (v instanceof String) {
                 b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_TEXT_PLAIN, (String) v));
+            } else if (v instanceof Path) {
+                b.addFormDataPart(k, null, new PathRequestBody((Path) v));
             } else if (v instanceof Map) {
                 String s = objectMapper.writeValueAsString(v);
                 b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_JSON, s));
@@ -209,5 +218,30 @@ public abstract class AbstractConcordTask implements Task {
     @FunctionalInterface
     protected interface CheckedFunction<T, R> {
         R apply(T t) throws Exception;
+    }
+
+    private class PathRequestBody extends RequestBody {
+        Path p;
+        public PathRequestBody(Path path) {
+            p = path;
+        }
+
+        @Override public MediaType contentType() {
+            return MEDIA_TYPE_APPLICATION_OCTET_STREAM;
+        }
+
+        @Override public long contentLength() throws IOException {
+            return (Files.size(p));
+        }
+
+        @Override public void writeTo(BufferedSink sink) throws IOException {
+            Source source = null;
+            try {
+                source = Okio.source(p);
+                sink.writeAll(source);
+            } finally {
+                Util.closeQuietly(source);
+            }
+        }
     }
 }

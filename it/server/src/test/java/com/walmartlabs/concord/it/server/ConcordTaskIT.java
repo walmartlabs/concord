@@ -118,7 +118,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         // ---
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Done! Hello!.*", ab);
+        assertLog(".*Done! Hello! Good Bye.*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

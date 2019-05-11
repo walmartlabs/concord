@@ -2,3 +2,5 @@ flows:
   default:
   - set:
       msg: "Hello!"
+      file1: ${resource.asString("subFile.txt")}
+      file2: ${resource.asString("someFile.txt")}
