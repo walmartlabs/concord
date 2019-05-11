@@ -26,6 +26,8 @@ import com.walmartlabs.concord.sdk.Task;
 import javax.inject.Named;
 import java.util.Map;
 
+import static com.walmartlabs.concord.sdk.MapUtils.getString;
+
 @Named("repositoryRefresh")
 public class RepositoryRefreshTask extends AbstractConcordTask implements Task {
 
@@ -36,9 +38,9 @@ public class RepositoryRefreshTask extends AbstractConcordTask implements Task {
     @Override
     public void execute(Context ctx) throws Exception {
         Map<String, Object> cfg = createCfg(ctx, ORG_KEY, REPOSITORY_KEY, PROJECT_KEY);
-        String orgName = get(cfg, ORG_KEY);
-        String projectName = get(cfg, PROJECT_KEY);
-        String repositoryName = get(cfg, REPOSITORY_KEY);
+        String orgName = getString(cfg, ORG_KEY);
+        String projectName = getString(cfg, PROJECT_KEY);
+        String repositoryName = getString(cfg, REPOSITORY_KEY);
 
         withClient(ctx, client -> {
             RepositoriesApi api = new RepositoriesApi(client);

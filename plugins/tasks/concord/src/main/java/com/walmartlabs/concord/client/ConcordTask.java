@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -77,6 +78,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String ORG_KEY = "org";
     private static final String OUT_VARS_KEY = "outVars";
     private static final String PAYLOAD_KEY = "payload";
+    private static final String ATTACHMENTS_KEY = "attachments";
     private static final String PROJECT_KEY = "project";
     private static final String REPO_BRANCH_OR_TAG_KEY = "repoBranchOrTag";
     private static final String REPO_COMMIT_ID_KEY = "repoCommitId";
@@ -268,6 +270,9 @@ public class ConcordTask extends AbstractConcordTask {
 
         String repo = getRepo(cfg);
         addIfNotNull(input, "repo", repo);
+
+        List<Object> attachments = getList(cfg, ATTACHMENTS_KEY, Collections.emptyList());
+        processAttachments(attachments).forEach((d, p) -> addIfNotNull(input, d, p));
 
         String repoBranchOrTag = getString(cfg, REPO_BRANCH_OR_TAG_KEY);
         addIfNotNull(input, "repoBranchOrTag", repoBranchOrTag);
@@ -519,6 +524,7 @@ public class ConcordTask extends AbstractConcordTask {
                 ORG_KEY,
                 OUT_VARS_KEY,
                 PAYLOAD_KEY,
+                ATTACHMENTS_KEY,
                 PROJECT_KEY,
                 REPO_BRANCH_OR_TAG_KEY,
                 REPO_COMMIT_ID_KEY,
@@ -541,6 +547,34 @@ public class ConcordTask extends AbstractConcordTask {
             return;
         }
         m.put(k, v);
+    }
+
+    /**
+     * Processes a list of attachment parameters. An attachment may be a string which represents
+     * the path to a file or a Map which specifies the destination filename (key) and current filename (value)
+     * @param attachments List of attachments
+     * @return Map of attachments. Key is the destination filename. Value is path to the local file.
+     */
+    private static Map<String, Path> processAttachments(List<Object> attachments) {
+        if (attachments.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Path> result = new HashMap<>(attachments.size());
+        for (Object o : attachments) {
+            if (o instanceof String) {
+                String key = ((String) o).replaceFirst("^.*/", "");
+
+                result.put(key, Paths.get((String) o));
+            } else if (o instanceof Map) {
+                Map m = (Map) o;
+                result.put((String)m.get("dest"), Paths.get((String)m.get("src")));
+            } else {
+                throw new IllegalArgumentException("Unsupported attachment formatting provided. Must be a string or map. Received " + o.getClass());
+            }
+        }
+
+        return result;
     }
 
     private static Path archivePayload(Path workDir, Map<String, Object> cfg) throws IOException {
