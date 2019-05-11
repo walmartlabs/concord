@@ -21,23 +21,17 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.*;
-import com.squareup.okhttp.internal.Util;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
-import okio.BufferedSink;
-import okio.Okio;
-import okio.Source;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +62,7 @@ public abstract class AbstractConcordTask implements Task {
 
     protected <T> T request(Context ctx, String uri, Map<String, Object> input, Class<T> entityType) throws Exception {
         return withClient(ctx, client -> {
-            RequestBody body = createMultipart(input);
+            RequestBody body = ClientUtils.createMultipartBody(input).build();
 
             Request.Builder b = new Request.Builder()
                     .url(client.getBasePath() + uri)
@@ -136,40 +130,6 @@ public abstract class AbstractConcordTask implements Task {
         return details.toString();
     }
 
-    private static final com.squareup.okhttp.MediaType MEDIA_TYPE_APPLICATION_OCTET_STREAM = com.squareup.okhttp.MediaType.parse("application/octet-stream");
-    private static final com.squareup.okhttp.MediaType MEDIA_TYPE_APPLICATION_JSON = com.squareup.okhttp.MediaType.parse("application/json");
-    private static final com.squareup.okhttp.MediaType MEDIA_TYPE_TEXT_PLAIN = com.squareup.okhttp.MediaType.parse("text/plain");
-
-    private RequestBody createMultipart(Map<String, Object> input) throws IOException {
-        MultipartBuilder b = new MultipartBuilder()
-                .type(MultipartBuilder.FORM);
-
-        for (Map.Entry<String, Object> e : input.entrySet()) {
-            String k = e.getKey();
-            Object v = e.getValue();
-
-            if (v instanceof InputStream) {
-                byte[] ab = IOUtils.toByteArray((InputStream) v);
-                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_OCTET_STREAM, ab));
-            } else if (v instanceof byte[]) {
-                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_OCTET_STREAM, (byte[]) v));
-            } else if (v instanceof String) {
-                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_TEXT_PLAIN, (String) v));
-            } else if (v instanceof Path) {
-                b.addFormDataPart(k, null, new PathRequestBody((Path) v));
-            } else if (v instanceof Map) {
-                String s = objectMapper.writeValueAsString(v);
-                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_APPLICATION_JSON, s));
-            } else if (v instanceof Boolean) {
-                b.addFormDataPart(k, null, RequestBody.create(MEDIA_TYPE_TEXT_PLAIN, v.toString()));
-            } else {
-                throw new IllegalArgumentException("Unknown input type: " + v);
-            }
-        }
-
-        return b.build();
-    }
-
     protected Map<String, Object> createCfg(Context ctx) {
         return createCfg(ctx, (String[]) null);
     }
@@ -218,30 +178,5 @@ public abstract class AbstractConcordTask implements Task {
     @FunctionalInterface
     protected interface CheckedFunction<T, R> {
         R apply(T t) throws Exception;
-    }
-
-    private class PathRequestBody extends RequestBody {
-        Path p;
-        public PathRequestBody(Path path) {
-            p = path;
-        }
-
-        @Override public MediaType contentType() {
-            return MEDIA_TYPE_APPLICATION_OCTET_STREAM;
-        }
-
-        @Override public long contentLength() throws IOException {
-            return (Files.size(p));
-        }
-
-        @Override public void writeTo(BufferedSink sink) throws IOException {
-            Source source = null;
-            try {
-                source = Okio.source(p);
-                sink.writeAll(source);
-            } finally {
-                Util.closeQuietly(source);
-            }
-        }
     }
 }

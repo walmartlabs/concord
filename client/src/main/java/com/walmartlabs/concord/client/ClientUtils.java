@@ -23,6 +23,7 @@ package com.walmartlabs.concord.client;
 import com.google.gson.Gson;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.*;
+import com.squareup.okhttp.internal.Util;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
@@ -30,12 +31,15 @@ import com.walmartlabs.concord.Pair;
 import com.walmartlabs.concord.auth.Authentication;
 import okio.BufferedSink;
 import okio.Okio;
+import okio.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -46,6 +50,7 @@ public final class ClientUtils {
     private static final MediaType APPLICATION_OCTET_STREAM_TYPE = MediaType.parse("application/octet-stream");
     private static final MediaType APPLICATION_JSON_TYPE = MediaType.parse("application/json");
     private static final MediaType TEXT_PLAIN_TYPE = MediaType.parse("text/plain");
+
     private static final Gson gson = new Gson();
 
     public static <T> T withRetry(int retryCount, long retryInterval, Callable<T> c) throws ApiException {
@@ -116,37 +121,42 @@ public final class ClientUtils {
         Request.Builder b = new Request.Builder().url(url);
         client.processHeaderParams(headerParams, b);
 
-        MultipartBuilder mpb = new MultipartBuilder().type(MultipartBuilder.FORM);
-        for (Map.Entry<String, Object> e : data.entrySet()) {
-            String k = e.getKey();
-            Object v = e.getValue();
-            if (v instanceof InputStream) {
-                mpb.addFormDataPart(k, null, new InputStreamRequestBody((InputStream) v));
-            } else if (v instanceof byte[]) {
-                mpb.addFormDataPart(k, null, RequestBody.create(APPLICATION_OCTET_STREAM_TYPE, (byte[]) v));
-            } else if (v instanceof String) {
-                mpb.addFormDataPart(k, (String) v);
-            } else if (v instanceof Map) {
-                String json = gson.toJson(v);
-                mpb.addFormDataPart(k, null, RequestBody.create(APPLICATION_JSON_TYPE, json));
-            } else if (v instanceof Boolean) {
-                mpb.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, v.toString()));
-            } else if (v instanceof String[]) {
-                mpb.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, String.join(",", (String[]) v)));
-            } else if (v instanceof UUID) {
-                mpb.addFormDataPart(k, v.toString());
-            } else {
-                throw new IllegalArgumentException("Unknown input type: " + k + "=" + v);
-            }
-        }
-
-        RequestBody body = mpb.build();
+        RequestBody body = createMultipartBody(data).build();
         Request request = b.method("POST", body).build();
 
         OkHttpClient ok = client.getHttpClient();
         Call c = ok.newCall(request);
 
         return client.execute(c, returnType);
+    }
+
+    public static MultipartBuilder createMultipartBody(Map<String, Object> data) {
+        MultipartBuilder b = new MultipartBuilder().type(MultipartBuilder.FORM);
+        for (Map.Entry<String, Object> e : data.entrySet()) {
+            String k = e.getKey();
+            Object v = e.getValue();
+            if (v instanceof InputStream) {
+                b.addFormDataPart(k, null, new InputStreamRequestBody((InputStream) v));
+            } else if (v instanceof byte[]) {
+                b.addFormDataPart(k, null, RequestBody.create(APPLICATION_OCTET_STREAM_TYPE, (byte[]) v));
+            } else if (v instanceof String) {
+                b.addFormDataPart(k, (String) v);
+            } else if (v instanceof Path) {
+                b.addFormDataPart(k, null, new PathRequestBody((Path) v));
+            } else if (v instanceof Map) {
+                String json = gson.toJson(v);
+                b.addFormDataPart(k, null, RequestBody.create(APPLICATION_JSON_TYPE, json));
+            } else if (v instanceof Boolean) {
+                b.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, v.toString()));
+            } else if (v instanceof String[]) {
+                b.addFormDataPart(k, null, RequestBody.create(TEXT_PLAIN_TYPE, String.join(",", (String[]) v)));
+            } else if (v instanceof UUID) {
+                b.addFormDataPart(k, v.toString());
+            } else {
+                throw new IllegalArgumentException("Unknown input type: " + k + "=" + v + (v != null ? " (" + v.getClass() + ")" : ""));
+            }
+        }
+        return b;
     }
 
     private static void sleep(long t) {
@@ -166,6 +176,7 @@ public final class ClientUtils {
     }
 
     public static final class InputStreamRequestBody extends RequestBody {
+
         private final InputStream in;
 
         public InputStreamRequestBody(InputStream in) {
@@ -180,6 +191,36 @@ public final class ClientUtils {
         @Override
         public void writeTo(BufferedSink sink) throws IOException {
             sink.writeAll(Okio.source(in));
+        }
+    }
+
+    public static class PathRequestBody extends RequestBody {
+
+        private final Path path;
+
+        public PathRequestBody(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public MediaType contentType() {
+            return APPLICATION_OCTET_STREAM_TYPE;
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return Files.size(path);
+        }
+
+        @Override
+        public void writeTo(BufferedSink sink) throws IOException {
+            Source source = null;
+            try {
+                source = Okio.source(path);
+                sink.writeAll(source);
+            } finally {
+                Util.closeQuietly(source);
+            }
         }
     }
 
