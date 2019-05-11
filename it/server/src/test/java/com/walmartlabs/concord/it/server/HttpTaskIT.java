@@ -94,7 +94,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetAsString() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetAsString").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
 
@@ -114,7 +114,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGet() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGet").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
 
@@ -136,7 +136,7 @@ public class HttpTaskIT extends AbstractServerIT {
     public void testGetWithAuthUsingPassword() throws Exception {
 
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingPassword").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -158,7 +158,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithAuthUsingToken").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -179,7 +179,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPost() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPost").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -201,7 +201,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPatch() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPatch").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -223,7 +223,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPostWithAuthUsingToken() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithAuthUsingToken").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -244,7 +244,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetWithInvalidUrl() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithInvalidUrl").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
@@ -260,7 +260,7 @@ public class HttpTaskIT extends AbstractServerIT {
     public void testGetWithHeaders() throws Exception {
 
         URI dir = HttpTaskIT.class.getResource("httpGetWithHeaders").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -292,7 +292,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = 60000)
     public void testGetWithIgnoreErrors() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithIgnoreErrors").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -314,7 +314,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = 60000)
     public void testGetEmptyResponse() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetEmpty").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
 
