@@ -90,12 +90,16 @@ public final class ClientUtils {
         Map<String, String> headerParams = new HashMap<>();
         headerParams.put("Content-Type", "application/octet-stream");
 
+        return postData(client, path, data, headerParams, returnType);
+    }
+
+    public static <T> ApiResponse<T> postData(ApiClient client, String path, Object data, Map<String, String> headerParams, Type returnType) throws ApiException {
         Set<String> auths = client.getAuthentications().keySet();
         String[] authNames = auths.toArray(new String[0]);
 
-        Call c = client.buildCall(path, "POST", new ArrayList<>(), new ArrayList<>(),
+        Call call = client.buildCall(path, "POST", new ArrayList<>(), new ArrayList<>(),
                 data, headerParams, new HashMap<>(), authNames, null);
-        return client.execute(c, returnType);
+        return client.execute(call, returnType);
     }
 
     public static <T> ApiResponse<T> postData(ApiClient client, String path, Map<String, Object> data, Class<T> returnType) throws ApiException {

@@ -26,6 +26,8 @@ import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
+import java.util.regex.Pattern;
+
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.assertEquals;
@@ -149,6 +151,48 @@ public class CryptoIT extends AbstractServerIT {
 
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*We got " + secretValue + ".*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testEncryptString() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        // ---
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
+
+        // ---
+
+        String value = "value_" + randomString();
+
+        EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, value);
+        assertTrue(evr.isOk());
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("encryptString").toURI());
+
+        StartProcessResponse spr = start(ImmutableMap.of(
+                "org", orgName,
+                "project", projectName,
+                "archive", payload,
+                "arguments.decryptedValue", value));
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*We got " + Pattern.quote(evr.getData()) + ".*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

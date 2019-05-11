@@ -22,11 +22,9 @@ package com.walmartlabs.concord.runner;
 
 import com.google.gson.reflect.TypeToken;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.SecretClient;
-import com.walmartlabs.concord.client.SecretEntry;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
@@ -128,6 +126,26 @@ public class SecretServiceImpl implements SecretService {
         Files.write(p, bds.getData());
 
         return baseDir.relativize(p).toString();
+    }
+
+    @Override
+    public String encryptString(Context ctx, String instanceId, String orgName, String projectName, String value) throws Exception {
+        ApiClientConfiguration cfg = ApiClientConfiguration.builder()
+                .sessionToken(ContextUtils.getSessionToken(ctx))
+                .build();
+
+        ApiClient c = clientFactory.create(cfg);
+
+        String path = "/api/v1/org/" + orgName + "/project/" + projectName + "/encrypt";
+        Map<String, String> headerParams = new HashMap<>();
+        headerParams.put("Content-Type", "text/plain;charset=UTF-8");
+        ApiResponse<EncryptValueResponse> r = ClientUtils.postData(c, path, value, headerParams, EncryptValueResponse.class);
+
+        if (r.getStatusCode() == 200 && r.getData().isOk()) {
+            return r.getData().getData();
+        }
+
+        throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
     }
 
     @Override

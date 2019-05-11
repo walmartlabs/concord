@@ -75,4 +75,10 @@ public interface SecretService {
                         String password) throws Exception;
 
     String decryptString(Context ctx, String instanceId, String s) throws Exception;
+
+    String encryptString(Context ctx,
+                         String instanceId,
+                         String orgName,
+                         String projectName,
+                         String value) throws Exception;
 }
