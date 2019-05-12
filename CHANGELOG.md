@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- k8s/agent-operator: simultaneously handle pool size and
+configuration changes.
+
+
+
 ## [1.19.0] - 2019-05-12
 
 ### Added

@@ -45,6 +45,7 @@ public class Planner {
 
         List<Change> changes = new ArrayList<>();
 
+        // process pods marked for removal first
         client.pods()
                 .withLabel(AgentPod.TAGGED_FOR_REMOVAL_LABEL)
                 .withLabel(AgentPod.POOL_NAME_LABEL, resourceName)
@@ -53,11 +54,6 @@ public class Planner {
                 .stream()
                 .map(p -> p.getMetadata().getName())
                 .forEach(n -> changes.add(new TryToDeletePodChange(n)));
-
-        // process pods marked for removal first
-        if (!changes.isEmpty()) {
-            return changes;
-        }
 
         List<Pod> pods = AgentPod.list(client, resourceName);
         int currentSize = pods.size();
@@ -96,24 +92,17 @@ public class Planner {
 
         // check all pods for cfg changes
 
-        boolean hasConfigurationChanges = false;
         for (Pod p : pods) {
             String currentHash = p.getMetadata().getLabels().get(AgentPod.CONFIG_HASH_LABEL);
             if (!newHash.equals(currentHash)) {
                 changes.add(new TagForRemovalChange(p.getMetadata().getName()));
-                hasConfigurationChanges = true;
             }
-        }
-
-        if (hasConfigurationChanges) {
-            return changes;
         }
 
         // recreate all pods if the configmap changed
 
         if (recreateAllPods) {
             pods.forEach(p -> changes.add(new TagForRemovalChange(p.getMetadata().getName())));
-            return changes;
         }
 
         // create or remove pods according to the configured pool size
@@ -121,7 +110,7 @@ public class Planner {
         for (int i = 0; i < targetSize; i++) {
             String podName = podName(resourceName, i);
 
-            boolean exists = pods.stream().anyMatch(p -> podName.equals(p.getMetadata().getName()));
+            boolean exists = hasPod(pods, podName);
             if (exists) {
                 continue;
             }
@@ -133,7 +122,7 @@ public class Planner {
             for (int i = targetSize; i < currentSize; i++) {
                 String podName = podName(resourceName, i);
 
-                boolean exists = pods.contains(podName);
+                boolean exists = hasPod(pods, podName);
                 if (!exists) {
                     continue;
                 }
@@ -144,6 +133,10 @@ public class Planner {
         }
 
         return changes;
+    }
+
+    private static boolean hasPod(List<Pod> pods, String podName) {
+        return pods.stream().anyMatch(p -> p.getMetadata().getName().equals(podName));
     }
 
     private static String configMapName(String resourceName) {
