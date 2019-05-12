@@ -92,7 +92,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
 
     private void tag(String phase, String taskName) throws ExecutionException {
         try {
-            System.out.print("_tag:");
+            System.out.print("__logTag:");
             System.out.println(objectMapper.writeValueAsString(new TaskTag(phase, taskName)));
         } catch (IOException e) {
             throw new ExecutionException("Error while writing the task's tag: (" + phase + ", " + taskName + ")", e);
