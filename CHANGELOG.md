@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-console: better handling of log tag parsing errors;
+- concord-runner, concord-console: use a less common log tag name;
 - k8s/agent-operator: simultaneously handle pool size and
 configuration changes.
 

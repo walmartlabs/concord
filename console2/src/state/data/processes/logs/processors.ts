@@ -21,7 +21,7 @@ import { format as formatDate, parse as parseDate } from 'date-fns';
 import { escapeHtml, highlight } from '../../../../utils';
 import { LogSegment, LogSegmentType, TagData } from './types';
 
-const TAG = '_tag:';
+const TAG = '__logTag:';
 
 export interface LogProcessorOptions {
     separateTasks?: boolean;
@@ -65,7 +65,11 @@ const split = (s: LogSegment, opts: LogProcessorOptions): LogSegment[] => {
         if (opts.separateTasks) {
             // grab the tag's data
             const tag = data.substring(tagStart + TAG.length, tagEnd);
-            result.push({ type: LogSegmentType.TAG, data: JSON.parse(tag) as TagData });
+            try {
+                result.push({type: LogSegmentType.TAG, data: JSON.parse(tag) as TagData});
+            } catch (e) {
+                console.warn("Error while parsing a log tag: ", tag, e);
+            }
         }
 
         // next segment
