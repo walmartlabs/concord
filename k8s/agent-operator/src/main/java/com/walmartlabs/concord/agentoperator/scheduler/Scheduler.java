@@ -106,13 +106,12 @@ public class Scheduler {
         }
 
         // fetch the process queue status
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query();
 
         todo.parallelStream().forEach(i -> {
             try {
                 switch (i.getStatus()) {
                     case ACTIVE: {
-                        updateTargetSize(i, queueEntries);
+                        updateTargetSize(i);
                         processActive(i);
                         break;
                     }
@@ -147,7 +146,13 @@ public class Scheduler {
         }
     }
 
-    private void updateTargetSize(AgentPoolInstance i, List<ProcessQueueEntry> queueEntries) {
+    private void updateTargetSize(AgentPoolInstance i) throws IOException {
+        if (!i.getResource().getSpec().isAutoScale()) {
+            return;
+        }
+
+        List<ProcessQueueEntry> queueEntries = processQueueClient.query();
+
         AgentPoolConfiguration spec = i.getResource().getSpec();
         if (!spec.isAutoScale()) {
             return;

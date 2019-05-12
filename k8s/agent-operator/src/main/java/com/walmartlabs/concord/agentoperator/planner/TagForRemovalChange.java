@@ -23,8 +23,11 @@ package com.walmartlabs.concord.agentoperator.planner;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 public class TagForRemovalChange implements Change {
 
@@ -48,8 +51,19 @@ public class TagForRemovalChange implements Change {
             return;
         }
 
-        pod.getMetadata().getLabels().put(AgentPod.TAGGED_FOR_REMOVAL_LABEL, "true");
-        client.pods().withName(podName).patch(pod);
-        log.info("apply ['{}'] -> done", podName);
+        Map<String, String> labels = pod.getMetadata().getLabels();
+        if (labels.containsKey(AgentPod.TAGGED_FOR_REMOVAL_LABEL)) {
+            return;
+        }
+
+        try {
+            labels.put(AgentPod.TAGGED_FOR_REMOVAL_LABEL, "true");
+            client.pods().withName(podName).patch(pod);
+            log.info("apply ['{}'] -> done", podName);
+        } catch (KubernetesClientException e) {
+            if (e.getCode() == 404) {
+                log.warn("apply ['{}'] -> pod doesn't exist, nothing to do", podName);
+            }
+        }
     }
 }

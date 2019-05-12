@@ -52,7 +52,6 @@ public class AutoScaler {
     public AgentPoolInstance apply(AgentPoolInstance i, List<ProcessQueueEntry> queueEntries) {
         AgentPoolConfiguration cfg = i.getResource().getSpec();
 
-        long t = System.currentTimeMillis();
         if (!canBeUpdated.apply(i)) {
             // was updated recently, skipping
             return i;
@@ -60,7 +59,7 @@ public class AutoScaler {
 
         // the number of processes waiting for an agent in the current pool
         int enqueuedCount = (int) queueEntries.stream()
-                .map(e -> e.getRequirements())
+                .map(ProcessQueueEntry::getRequirements)
                 .filter(Objects::nonNull)
                 .filter(a -> MapMatcher.matches(a, cfg.getQueueSelector()))
                 .count();
