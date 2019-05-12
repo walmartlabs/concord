@@ -26,14 +26,16 @@ import { ConcordId } from '../../../../api/common';
 import { get as apiGet, isFinal, ProcessStatus } from '../../../../api/process';
 import { getLog as apiGetLog, LogChunk, LogRange } from '../../../../api/process/log';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
+import { LogProcessorOptions, process } from './processors';
 import {
     GetProcessLogResponse,
     GetProcessLogState,
     LoadWholeProcessLog,
+    LogSegment,
+    LogSegmentType,
     StartProcessLogPolling,
     State
 } from './types';
-import { process } from './processors';
 
 const NAMESPACE = 'processes/logs';
 
@@ -55,15 +57,13 @@ const defaultRange: LogRange = { low: undefined, high: 2048 };
 export const actions = {
     startProcessLogPolling: (
         instanceId: ConcordId,
-        useLocalTime: boolean,
-        showDate: boolean,
+        opts: LogProcessorOptions,
         range: LogRange = defaultRange,
         reset: boolean = true
     ): StartProcessLogPolling => ({
         type: actionTypes.START_PROCESS_LOG_POLLING,
         instanceId,
-        useLocalTime,
-        showDate,
+        opts,
         range,
         reset
     }),
@@ -72,30 +72,23 @@ export const actions = {
         type: actionTypes.STOP_PROCESS_LOG_POLLING
     }),
 
-    loadWholeLog: (
-        instanceId: ConcordId,
-        useLocalTime: boolean,
-        showDate: boolean
-    ): LoadWholeProcessLog => ({
+    loadWholeLog: (instanceId: ConcordId, opts: LogProcessorOptions): LoadWholeProcessLog => ({
         type: actionTypes.LOAD_WHOLE_PROCESS_LOG,
         instanceId,
-        useLocalTime,
-        showDate
+        opts
     }),
 
     logResponce: (
         chunk: LogChunk,
         overwrite: boolean,
-        useLocalTime: boolean,
-        showDate: boolean,
+        opts: LogProcessorOptions,
         status?: ProcessStatus
     ): GetProcessLogResponse => ({
         type: actionTypes.GET_PROCESS_LOG_RESPONSE,
         status,
         chunk,
         overwrite,
-        useLocalTime,
-        showDate
+        opts
     }),
 
     forceRefresh: () => ({
@@ -124,9 +117,9 @@ const statusReducer: Reducer<ProcessStatus | null> = (
     }
 };
 
-const dataReducer: Reducer<string[]> = (
-    state: string[] = [],
-    { type, error, chunk, overwrite, useLocalTime, showDate }: GetProcessLogResponse
+const dataReducer: Reducer<LogSegment[]> = (
+    state: LogSegment[] = [],
+    { type, error, chunk, overwrite, opts }: GetProcessLogResponse
 ) => {
     switch (type) {
         case actionTypes.RESET_PROCESS_LOG:
@@ -136,15 +129,17 @@ const dataReducer: Reducer<string[]> = (
                 return state;
             }
 
+            const segment: LogSegment = { data: chunk.data, type: LogSegmentType.DATA };
+
             if (overwrite) {
-                return [process(chunk.data, !!useLocalTime, !!showDate)];
+                return [...process(segment, opts ? opts : {})];
             }
 
             if (chunk.data.length <= 0) {
                 return state;
             }
 
-            return [...state, process(chunk.data, !!useLocalTime, !!showDate)];
+            return [...state, ...process(segment, opts ? opts : {})];
         default:
             return state;
     }
@@ -209,7 +204,7 @@ export const reducers = combineReducers<State>({
     getLog: getLogReducers
 });
 
-function* doPoll(instanceId: ConcordId, useLocalTime: boolean, showDate: boolean, range: LogRange) {
+function* doPoll(instanceId: ConcordId, opts: LogProcessorOptions, range: LogRange) {
     // copy the value
     const r = { ...range };
 
@@ -224,7 +219,7 @@ function* doPoll(instanceId: ConcordId, useLocalTime: boolean, showDate: boolean
                 call(apiGetLog, instanceId, r)
             ]);
 
-            yield put(actions.logResponce(chunk, false, useLocalTime, showDate, proc.status));
+            yield put(actions.logResponce(chunk, false, opts, proc.status));
 
             // adjust the range
             r.low = chunk.range.high;
@@ -245,24 +240,18 @@ function* doPoll(instanceId: ConcordId, useLocalTime: boolean, showDate: boolean
     }
 }
 
-function* onStartPolling({
-    instanceId,
-    useLocalTime,
-    showDate,
-    range,
-    reset
-}: StartProcessLogPolling) {
+function* onStartPolling({ instanceId, opts, range, reset }: StartProcessLogPolling) {
     if (reset) {
         yield put(actions.reset());
     }
 
-    const task = yield fork(doPoll, instanceId, useLocalTime, showDate, range);
+    const task = yield fork(doPoll, instanceId, opts, range);
 
     yield take(actionTypes.STOP_PROCESS_LOG_POLLING);
     yield cancel(task);
 }
 
-function* onLoadWholeLog({ instanceId, useLocalTime, showDate }: LoadWholeProcessLog) {
+function* onLoadWholeLog({ instanceId, opts }: LoadWholeProcessLog) {
     try {
         // stop the polling, so it won't get in our way
         yield put(actions.stopProcessLogPolling());
@@ -275,11 +264,11 @@ function* onLoadWholeLog({ instanceId, useLocalTime, showDate }: LoadWholeProces
         const { data, range } = yield call(apiGetLog, instanceId, { low: 0 });
 
         // store the data
-        yield put(actions.logResponce({ data, range }, true, useLocalTime, showDate));
+        yield put(actions.logResponce({ data, range }, true, opts));
 
         // adjust the range and continue the polling
         range.low = range.high;
-        yield put(actions.startProcessLogPolling(instanceId, useLocalTime, showDate, range, false));
+        yield put(actions.startProcessLogPolling(instanceId, opts, range, false));
     } catch (e) {
         yield handleErrors(actionTypes.GET_PROCESS_LOG_RESPONSE, e);
     }

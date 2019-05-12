@@ -23,19 +23,18 @@ import { ConcordId, RequestError } from '../../../../api/common';
 import { ProcessStatus } from '../../../../api/process';
 import { LogChunk, LogRange } from '../../../../api/process/log';
 import { RequestState } from '../../common';
+import { LogProcessorOptions } from './processors';
 
 export interface StartProcessLogPolling extends Action {
     instanceId: ConcordId;
-    useLocalTime: boolean;
-    showDate: boolean;
+    opts: LogProcessorOptions;
     range: LogRange;
     reset: boolean;
 }
 
 export interface LoadWholeProcessLog extends Action {
     instanceId: ConcordId;
-    useLocalTime: boolean;
-    showDate: boolean;
+    opts: LogProcessorOptions;
 }
 
 export interface GetProcessLogResponse extends Action {
@@ -43,15 +42,29 @@ export interface GetProcessLogResponse extends Action {
     error?: RequestError;
     chunk?: LogChunk;
     overwrite?: boolean;
-    useLocalTime?: boolean;
-    showDate?: boolean;
+    opts?: LogProcessorOptions;
 }
 
 export type GetProcessLogState = RequestState<LogChunk>;
 
+export enum LogSegmentType {
+    DATA,
+    TAG
+}
+
+export interface TagData {
+    phase: 'pre' | 'post';
+    taskName: string;
+}
+
+export interface LogSegment {
+    data: string | TagData;
+    type: LogSegmentType;
+}
+
 export interface State {
     status: ProcessStatus | null;
-    data: string[];
+    data: LogSegment[];
     length: number;
     completed: boolean;
 

@@ -24,7 +24,8 @@ import { AnyAction, Dispatch } from 'redux';
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
 import { actions } from '../../../state/data/processes/logs';
-import { State } from '../../../state/data/processes/logs/types';
+import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
+import { LogSegment, State } from '../../../state/data/processes/logs/types';
 import { ProcessLogViewer } from '../../molecules';
 
 import './styles.css';
@@ -36,15 +37,15 @@ interface ExternalProps {
 interface StateProps {
     status: ProcessStatus | null;
     loading: boolean;
-    data: string[];
+    data: LogSegment[];
     error: RequestError;
     completed: boolean;
 }
 
 interface DispatchProps {
-    startPolling: (useLocalTime: boolean, showDate: boolean) => void;
+    startPolling: (opts: LogProcessorOptions) => void;
     stopPolling: () => void;
-    loadWholeLog: (useLocalTime: boolean, showDate: boolean) => void;
+    loadWholeLog: (opts: LogProcessorOptions) => void;
     refresh: () => void;
 }
 
@@ -66,11 +67,10 @@ const mapDispatchToProps = (
     dispatch: Dispatch<AnyAction>,
     { instanceId }: ExternalProps
 ): DispatchProps => ({
-    startPolling: (useLocalTime: boolean, showDate: boolean) =>
-        dispatch(actions.startProcessLogPolling(instanceId, useLocalTime, showDate)),
+    startPolling: (opts: LogProcessorOptions) =>
+        dispatch(actions.startProcessLogPolling(instanceId, opts)),
     stopPolling: () => dispatch(actions.stopProcessLogPolling()),
-    loadWholeLog: (useLocalTime: boolean, showDate: boolean) =>
-        dispatch(actions.loadWholeLog(instanceId, useLocalTime, showDate)),
+    loadWholeLog: (opts: LogProcessorOptions) => dispatch(actions.loadWholeLog(instanceId, opts)),
     refresh: () => dispatch(actions.forceRefresh())
 });
 

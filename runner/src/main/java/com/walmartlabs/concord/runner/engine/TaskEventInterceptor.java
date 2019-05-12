@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runner.engine;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runner.ContextUtils;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
@@ -30,6 +31,7 @@ import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.model.AbstractElement;
 import io.takari.bpm.model.ServiceTask;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,13 +41,17 @@ import static com.walmartlabs.concord.project.InternalConstants.Context.EVENT_CO
 public class TaskEventInterceptor implements TaskInterceptor {
 
     private final ElementEventProcessor eventProcessor;
+    private final ObjectMapper objectMapper;
 
     public TaskEventInterceptor(ElementEventProcessor eventProcessor) {
         this.eventProcessor = eventProcessor;
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
     public void preTask(String taskName, Context ctx) throws ExecutionException {
+        tag("pre", taskName);
+
         UUID correlationId = UUID.randomUUID();
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
@@ -65,6 +71,8 @@ public class TaskEventInterceptor implements TaskInterceptor {
 
     @Override
     public void postTask(String taskName, Context ctx) throws ExecutionException {
+        tag("post", taskName);
+
         UUID correlationId = (UUID) ctx.getVariable(EVENT_CORRELATION_KEY);
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
@@ -82,14 +90,23 @@ public class TaskEventInterceptor implements TaskInterceptor {
         ctx.removeVariable(EVENT_CORRELATION_KEY);
     }
 
-    private ElementEventProcessor.ElementEvent buildEvent(Context ctx) {
+    private void tag(String phase, String taskName) throws ExecutionException {
+        try {
+            System.out.print("_tag:");
+            System.out.println(objectMapper.writeValueAsString(new TaskTag(phase, taskName)));
+        } catch (IOException e) {
+            throw new ExecutionException("Error while writing the task's tag: (" + phase + ", " + taskName + ")", e);
+        }
+    }
+
+    private static ElementEventProcessor.ElementEvent buildEvent(Context ctx) {
         String instanceId = (String) ctx.getVariable(ExecutionContext.PROCESS_BUSINESS_KEY);
 
         return new ElementEventProcessor.ElementEvent(instanceId,
                 ctx.getProcessDefinitionId(), ctx.getElementId(), ContextUtils.getSessionToken(ctx));
     }
 
-    private List<VariableMapping> getInParams(Context ctx, AbstractElement element) {
+    private static List<VariableMapping> getInParams(Context ctx, AbstractElement element) {
         if (!(element instanceof ServiceTask)) {
             return null;
         }
@@ -102,7 +119,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
         return convertParams(ctx, t.getIn());
     }
 
-    private List<VariableMapping> getOutParams(Context ctx, AbstractElement element) {
+    private static List<VariableMapping> getOutParams(Context ctx, AbstractElement element) {
         if (!(element instanceof ServiceTask)) {
             return null;
         }
@@ -115,7 +132,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
         return convertParams(ctx, t.getOut());
     }
 
-    private List<VariableMapping> convertParams(Context ctx, Collection<io.takari.bpm.model.VariableMapping> m) {
+    private static List<VariableMapping> convertParams(Context ctx, Collection<io.takari.bpm.model.VariableMapping> m) {
         if (m == null) {
             return null;
         }
@@ -138,6 +155,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class VariableMapping implements Serializable {
+
         private final String source;
         private final String sourceExpression;
         private final Object sourceValue;
@@ -151,6 +169,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
                 @JsonProperty("sourceValue") Object sourceValue,
                 @JsonProperty("target") String target,
                 @JsonProperty("resolved") Serializable resolved) {
+
             this.source = source;
             this.sourceExpression = sourceExpression;
             this.sourceValue = sourceValue;
@@ -176,6 +195,26 @@ public class TaskEventInterceptor implements TaskInterceptor {
 
         public Serializable getResolved() {
             return resolved;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private static final class TaskTag implements Serializable {
+
+        private final String phase;
+        private final String taskName;
+
+        private TaskTag(String phase, String taskName) {
+            this.phase = phase;
+            this.taskName = taskName;
+        }
+
+        public String getPhase() {
+            return phase;
+        }
+
+        public String getTaskName() {
+            return taskName;
         }
     }
 }
