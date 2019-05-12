@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: option to split process logs by task calls;
 - concord-tasks: support for file attachments when starting new
 processes;
 - concord-sdk, crypto-tasks: expose `encryptString` method to flows;

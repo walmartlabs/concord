@@ -19,10 +19,22 @@
  */
 
 import * as React from 'react';
-import { Button, Header, Icon, Menu, Popup, Radio, Sticky, Transition } from 'semantic-ui-react';
+import {
+    Button,
+    Divider,
+    Header,
+    Icon,
+    Menu,
+    Popup,
+    Radio,
+    Sticky,
+    Transition
+} from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
+import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
+import { LogSegment, LogSegmentType, TagData } from '../../../state/data/processes/logs/types';
 import { RequestErrorMessage } from '../../molecules';
 
 import './styles.css';
@@ -30,8 +42,7 @@ import './styles.css';
 interface State {
     refreshStuck: boolean;
     scrollAnchorRef: boolean;
-    useLocalTime: boolean;
-    showDate: boolean;
+    opts: LogProcessorOptions;
 }
 
 interface Props {
@@ -39,19 +50,31 @@ interface Props {
 
     loading: boolean;
     status: ProcessStatus | null;
-    data: string[];
+    data: LogSegment[];
     error: RequestError;
     completed: boolean;
 
-    startPolling: (useLocalTime: boolean, showDate: boolean) => void;
+    startPolling: (opts: LogProcessorOptions) => void;
     stopPolling: () => void;
-    loadWholeLog: (useLocalTime: boolean, showDate: boolean) => void;
+    loadWholeLog: (opts: LogProcessorOptions) => void;
     refresh: () => void;
 }
 
 interface LogContainerProps {
-    data: string[];
+    data: LogSegment[];
 }
+
+const renderTag = (tag: TagData, idx: number) => {
+    if (tag.phase === 'post') {
+        return <Divider key={idx} />;
+    }
+
+    return (
+        <Divider horizontal={true} key={idx}>
+            {tag.taskName}
+        </Divider>
+    );
+};
 
 class LogContainer extends React.PureComponent<LogContainerProps> {
     render() {
@@ -59,15 +82,33 @@ class LogContainer extends React.PureComponent<LogContainerProps> {
 
         return (
             <>
-                {data.map((value, idx) => (
-                    <pre className="logEntry" key={idx}>
-                        <div dangerouslySetInnerHTML={{ __html: value }} />
-                    </pre>
-                ))}
+                {data.map(({ data, type }, idx) => {
+                    switch (type) {
+                        case LogSegmentType.DATA: {
+                            return (
+                                <pre className="logEntry" key={idx}>
+                                    <div dangerouslySetInnerHTML={{ __html: data as string }} />
+                                </pre>
+                            );
+                        }
+                        case LogSegmentType.TAG: {
+                            return renderTag(data as TagData, idx);
+                        }
+                        default: {
+                            return `Unknown log segment type: ${type}`;
+                        }
+                    }
+                })}
             </>
         );
     }
 }
+
+const DEFAULT_OPTS: LogProcessorOptions = {
+    useLocalTime: true,
+    showDate: false,
+    separateTasks: true
+};
 
 class ProcessLogViewer extends React.Component<Props, State> {
     private stickyRef: any;
@@ -78,16 +119,16 @@ class ProcessLogViewer extends React.Component<Props, State> {
         this.state = {
             refreshStuck: false,
             scrollAnchorRef: false,
-            useLocalTime: true,
-            showDate: false
+            opts: { ...DEFAULT_OPTS }
         };
+
         this.handleScroll = this.handleScroll.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.renderToolbar = this.renderToolbar.bind(this);
     }
 
     componentDidMount() {
-        this.props.startPolling(true, false);
+        this.props.startPolling({ ...DEFAULT_OPTS });
     }
 
     componentWillUnmount() {
@@ -96,7 +137,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         const { instanceId, startPolling, stopPolling, data } = this.props;
-        const { scrollAnchorRef, useLocalTime, showDate } = this.state;
+        const { scrollAnchorRef, opts } = this.state;
 
         if (prevProps.data !== data && scrollAnchorRef) {
             this.scrollToBottom();
@@ -104,7 +145,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
         if (instanceId !== prevProps.instanceId) {
             stopPolling();
-            startPolling(useLocalTime, showDate);
+            startPolling(opts);
         }
     }
 
@@ -118,33 +159,70 @@ class ProcessLogViewer extends React.Component<Props, State> {
         }
     }
 
-    handleUseLocalTimeChange(newValue: boolean) {
+    handleOptionsChange(k: keyof LogProcessorOptions, v: boolean) {
         const { startPolling, stopPolling } = this.props;
-        const { showDate } = this.state;
+        const { opts } = this.state;
+
+        const newOpts = { ...opts, [k]: v };
 
         stopPolling();
-        startPolling(newValue, showDate);
+        startPolling(newOpts);
 
-        this.setState({ useLocalTime: newValue });
-    }
-
-    handleShowDate(newValue: boolean) {
-        const { startPolling, stopPolling } = this.props;
-        const { useLocalTime } = this.state;
-
-        stopPolling();
-        startPolling(useLocalTime, newValue);
-
-        this.setState({ showDate: newValue });
+        this.setState({ opts: newOpts });
     }
 
     scrollToBottom() {
         this.scrollAnchorRef.scrollIntoView({ behavior: 'instant' });
     }
 
+    renderSettingsMenu(opts: LogProcessorOptions) {
+        return (
+            <Popup
+                size="huge"
+                position="bottom left"
+                trigger={<Button basic={true} icon="setting" style={{ marginRight: 20 }} />}
+                on="click">
+                <div>
+                    <Radio
+                        label="Separate tasks"
+                        toggle={true}
+                        checked={opts.separateTasks}
+                        onChange={(ev, data) =>
+                            this.handleOptionsChange('separateTasks', data.checked as boolean)
+                        }
+                    />
+                </div>
+
+                <Divider horizontal={true}>Timestamps</Divider>
+
+                <div>
+                    <Radio
+                        label="Use local time"
+                        toggle={true}
+                        checked={opts.useLocalTime}
+                        onChange={(ev, data) =>
+                            this.handleOptionsChange('useLocalTime', data.checked as boolean)
+                        }
+                    />
+                </div>
+
+                <div>
+                    <Radio
+                        label="Show date"
+                        toggle={true}
+                        checked={opts.showDate}
+                        onChange={(ev, data) =>
+                            this.handleOptionsChange('showDate', data.checked as boolean)
+                        }
+                    />
+                </div>
+            </Popup>
+        );
+    }
+
     renderToolbar() {
         const { loading, refresh, status, completed, loadWholeLog, instanceId } = this.props;
-        const { useLocalTime, showDate, scrollAnchorRef } = this.state;
+        const { opts, scrollAnchorRef } = this.state;
 
         return (
             <Menu borderless={true} secondary={!this.state.refreshStuck}>
@@ -165,39 +243,14 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         toggle={true}
                         checked={scrollAnchorRef}
                         onChange={this.handleScroll}
-                        style={{ paddingLeft: 20, paddingRight: 20 }}
+                        style={{ paddingRight: 20 }}
                     />
+
+                    {this.renderSettingsMenu(opts)}
+
                     <Button.Group>
-                        <Popup
-                            trigger={<Button>Time Format</Button>}
-                            flowing={true}
-                            hoverable={true}
-                            position={'bottom center'}>
-                            <div>
-                                <Radio
-                                    label="Use local time"
-                                    toggle={true}
-                                    checked={useLocalTime}
-                                    onChange={(ev, data) =>
-                                        this.handleUseLocalTimeChange(data.checked as boolean)
-                                    }
-                                />
-                            </div>
-                            <div style={{ marginTop: 10 }}>
-                                <Radio
-                                    label="Show date"
-                                    toggle={true}
-                                    checked={showDate}
-                                    onChange={(ev, data) =>
-                                        this.handleShowDate(data.checked as boolean)
-                                    }
-                                />
-                            </div>
-                        </Popup>
                         {status && !completed && (
-                            <Button
-                                disabled={loading}
-                                onClick={() => loadWholeLog(useLocalTime, showDate)}>
+                            <Button disabled={loading} onClick={() => loadWholeLog(opts)}>
                                 Show the whole log
                             </Button>
                         )}

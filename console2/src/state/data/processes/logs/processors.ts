@@ -18,11 +18,70 @@
  * =====
  */
 import { format as formatDate, parse as parseDate } from 'date-fns';
-import { escapeHtml } from '../../../../utils';
-import { highlight } from '../../../../utils';
+import { escapeHtml, highlight } from '../../../../utils';
+import { LogSegment, LogSegmentType, TagData } from './types';
 
-export const process = (value: string, useLocalTime: boolean, showDate: boolean): string => {
-    return colorize(processLinks(escapeHtml(processDate(value, useLocalTime, showDate))));
+const TAG = '_tag:';
+
+export interface LogProcessorOptions {
+    separateTasks?: boolean;
+    useLocalTime?: boolean;
+    showDate?: boolean;
+}
+
+export const process = (s: LogSegment, opts: LogProcessorOptions): LogSegment[] => {
+    return split(s, opts).map((s) => {
+        if (s.type === LogSegmentType.DATA) {
+            return { ...s, data: processText(s.data as string, opts) };
+        }
+        return s;
+    });
+};
+
+const split = (s: LogSegment, opts: LogProcessorOptions): LogSegment[] => {
+    if (s.type !== LogSegmentType.DATA) {
+        return [s];
+    }
+
+    const result: LogSegment[] = [];
+
+    let data = s.data as string;
+    while (true) {
+        const tagStart = data.indexOf(TAG);
+        if (tagStart < 0) {
+            result.push({ type: LogSegmentType.DATA, data });
+            break;
+        }
+
+        const tagEnd = data.indexOf('\n', tagStart);
+        if (tagEnd < 0) {
+            break;
+        }
+
+        // grab the log segment before the tag
+        const prev = data.substring(0, tagStart);
+        result.push({ type: LogSegmentType.DATA, data: prev });
+
+        if (opts.separateTasks) {
+            // grab the tag's data
+            const tag = data.substring(tagStart + TAG.length, tagEnd);
+            result.push({ type: LogSegmentType.TAG, data: JSON.parse(tag) as TagData });
+        }
+
+        // next segment
+        data = data.substring(tagEnd + 1);
+    }
+
+    return result;
+};
+
+const processText = (s: string, { useLocalTime, showDate }: LogProcessorOptions): string => {
+    s = processDate(s, useLocalTime, showDate);
+    s = escapeHtml(s);
+    s = processLinks(s);
+    s = colorize(s);
+
+    return s;
 };
 
 const URL_PATTERN = /(\b(https?):\/\/([-A-Z0-9+@#/%?=~_|!:,.;]|&amp;)*)/;
@@ -53,7 +112,7 @@ const colorize = (value: string): string => {
 const DATE_PATTERN = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}.\d{4})/;
 const DATE_LENGTH = '2019-04-11T19:41:24.839+0000'.length;
 
-const processDate = (value: string, useLocalTime: boolean, showDate: boolean): string => {
+const processDate = (value: string, useLocalTime?: boolean, showDate?: boolean): string => {
     if (!useLocalTime) {
         return value;
     }
