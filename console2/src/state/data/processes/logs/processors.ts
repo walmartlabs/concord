@@ -66,9 +66,9 @@ const split = (s: LogSegment, opts: LogProcessorOptions): LogSegment[] => {
             // grab the tag's data
             const tag = data.substring(tagStart + TAG.length, tagEnd);
             try {
-                result.push({type: LogSegmentType.TAG, data: JSON.parse(tag) as TagData});
+                result.push({ type: LogSegmentType.TAG, data: JSON.parse(tag) as TagData });
             } catch (e) {
-                console.warn("Error while parsing a log tag: ", tag, e);
+                console.warn('Error while parsing a log tag: ', tag, e);
             }
         }
 

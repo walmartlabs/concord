@@ -76,38 +76,46 @@ const renderTag = (tag: TagData, idx: number) => {
     );
 };
 
-class LogContainer extends React.PureComponent<LogContainerProps> {
-    render() {
-        const { data } = this.props;
-
-        return (
-            <>
-                {data.map(({ data, type }, idx) => {
-                    switch (type) {
-                        case LogSegmentType.DATA: {
-                            return (
-                                <pre className="logEntry" key={idx}>
-                                    <div dangerouslySetInnerHTML={{ __html: data as string }} />
-                                </pre>
-                            );
-                        }
-                        case LogSegmentType.TAG: {
-                            return renderTag(data as TagData, idx);
-                        }
-                        default: {
-                            return `Unknown log segment type: ${type}`;
-                        }
-                    }
-                })}
-            </>
-        );
-    }
-}
+const LogContainer = ({ data }: LogContainerProps) => (
+    <>
+        {data.map(({ data, type }, idx) => {
+            switch (type) {
+                case LogSegmentType.DATA: {
+                    return (
+                        <pre className="logEntry" key={idx}>
+                            <div dangerouslySetInnerHTML={{ __html: data as string }} />
+                        </pre>
+                    );
+                }
+                case LogSegmentType.TAG: {
+                    return renderTag(data as TagData, idx);
+                }
+                default: {
+                    return `Unknown log segment type: ${type}`;
+                }
+            }
+        })}
+    </>
+);
 
 const DEFAULT_OPTS: LogProcessorOptions = {
     useLocalTime: true,
     showDate: false,
     separateTasks: true
+};
+
+const getStoredOpts = (): LogProcessorOptions => {
+    const data = localStorage.getItem('logViewerOpts');
+    if (!data) {
+        return DEFAULT_OPTS;
+    }
+
+    return JSON.parse(data);
+};
+
+const storeOpts = (opts: LogProcessorOptions) => {
+    const data = JSON.stringify(opts);
+    localStorage.setItem('logViewerOpts', data);
 };
 
 class ProcessLogViewer extends React.Component<Props, State> {
@@ -116,10 +124,11 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props);
+
         this.state = {
             refreshStuck: false,
             scrollAnchorRef: false,
-            opts: { ...DEFAULT_OPTS }
+            opts: getStoredOpts()
         };
 
         this.handleScroll = this.handleScroll.bind(this);
@@ -128,7 +137,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        this.props.startPolling({ ...DEFAULT_OPTS });
+        this.props.startPolling(getStoredOpts());
     }
 
     componentWillUnmount() {
@@ -169,6 +178,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
         startPolling(newOpts);
 
         this.setState({ opts: newOpts });
+        storeOpts(newOpts);
     }
 
     scrollToBottom() {
