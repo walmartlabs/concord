@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: the process log viewer's options are not persisted
+using the browser's Local Storage.
+
+
+
 ## [1.19.1] - 2019-05-12
 
 ### Changed
