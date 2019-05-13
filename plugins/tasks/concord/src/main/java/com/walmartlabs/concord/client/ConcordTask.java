@@ -301,7 +301,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         String processInstanceId = resp.getInstanceId().toString();
 
-        log.info("Started a process: {} url: {}", processInstanceId, getProcessUrl(ctx, processInstanceId));
+        log.info("Started a process: {}, URL: {}", processInstanceId, getProcessUrl(ctx, processInstanceId));
 
         List<String> jobs = Collections.singletonList(processInstanceId);
         ctx.setVariable(JOBS_KEY, jobs);
