@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-tasks: log the job's URLs when starting new processes;
 - concord-console: the process log viewer's options are not persisted
 using the browser's Local Storage.
 
