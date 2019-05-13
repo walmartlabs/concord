@@ -100,6 +100,9 @@ public class ConcordTask extends AbstractConcordTask {
         FAILED_STATUSES.add(ProcessEntry.StatusEnum.TIMED_OUT.toString());
     }
 
+    @InjectVariable("uiLinks")
+    Map<String, Object> uiLinks;
+
     @InjectVariable("concord")
     Map<String, Object> defaults;
 
@@ -178,7 +181,7 @@ public class ConcordTask extends AbstractConcordTask {
 
                     ProcessEntry.StatusEnum s = e.getStatus();
 
-                    if (s == ProcessEntry.StatusEnum.FAILED || s == ProcessEntry.StatusEnum.FINISHED || s == ProcessEntry.StatusEnum.CANCELLED) {
+                    if (isFinalStatus(s)) {
                         result.put(id.toString(), e);
                         break;
                     } else {
@@ -298,11 +301,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         String processInstanceId = resp.getInstanceId().toString();
 
-        if (parentInstanceId != null) {
-            log.info("Started a child process: {}", processInstanceId);
-        } else {
-            log.info("Started a process: {} on {}", processInstanceId, ctx.getVariable(BASE_URL_KEY));
-        }
+        log.info("Started a process: {} url: {}", processInstanceId, getProcessUrl(ctx, processInstanceId));
 
         List<String> jobs = Collections.singletonList(processInstanceId);
         ctx.setVariable(JOBS_KEY, jobs);
@@ -332,7 +331,17 @@ public class ConcordTask extends AbstractConcordTask {
         List<String> jobs = (List<String>) ctx.getVariable(JOBS_KEY);
         String childId = jobs.get(0);
 
-        Map<String, ProcessEntry> result = waitForCompletion(ctx, jobs);
+        ProcessEntry e = ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
+            ProcessApi api = new ProcessApi(client);
+            return api.get(UUID.fromString(childId));
+        }));
+
+        ProcessEntry.StatusEnum s = e.getStatus();
+        if (!isFinalStatus(s)) {
+            throw new IllegalStateException("Process '" + childId + "' not finished");
+        }
+
+        Map<String, ProcessEntry> result = Collections.singletonMap(childId, e);
         handleResults(cfg, result);
 
         Object out = null;
@@ -477,7 +486,7 @@ public class ConcordTask extends AbstractConcordTask {
         return withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
             StartProcessResponse resp = api.fork(instanceId, req, sync, null);
-            log.info("Forked a child process: {}", resp.getInstanceId());
+            log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId().toString()));
             return resp.getInstanceId();
         });
     }
@@ -540,6 +549,19 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         return m;
+    }
+
+    private String getProcessUrl(Context ctx, String processInstanceId) {
+        Action action = getAction(ctx);
+        if (action == Action.STARTEXTERNAL || uiLinks == null) {
+            return "n/a";
+        }
+
+        String processLinkTemplate = getString(uiLinks, "process");
+        if (processLinkTemplate == null) {
+            return "n/a";
+        }
+        return String.format(processLinkTemplate, processInstanceId);
     }
 
     private static void addIfNotNull(Map<String, Object> m, String k, Object v) {
@@ -743,6 +765,14 @@ public class ConcordTask extends AbstractConcordTask {
             throw new IllegalArgumentException("'" + START_AT_KEY + "' must be a string, java.util.Date or java.util.Calendar value. Got: " + v);
         }
     }
+
+    private static boolean isFinalStatus(ProcessEntry.StatusEnum s) {
+        return s == ProcessEntry.StatusEnum.FAILED
+                || s == ProcessEntry.StatusEnum.FINISHED
+                || s == ProcessEntry.StatusEnum.CANCELLED
+                || s == ProcessEntry.StatusEnum.TIMED_OUT;
+    }
+
 
     private enum Action {
 
