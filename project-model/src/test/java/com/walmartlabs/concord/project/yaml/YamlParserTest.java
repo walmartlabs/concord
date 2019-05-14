@@ -37,13 +37,11 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.*;
 
 public class YamlParserTest extends AbstractYamlParserTest {
 
@@ -557,7 +555,11 @@ public class YamlParserTest extends AbstractYamlParserTest {
         Map<String, Object> args = Collections.singletonMap("input", 10);
         start(key, "main", args);
 
-        verify(testBean, times(1)).toString(eq(20.0));
+        ArgumentCaptor<Object> ac = ArgumentCaptor.forClass(Object.class);
+        verify(testBean, times(1)).toString(ac.capture());
+
+        Object v = ac.getValue();
+        assertTrue(v.equals(20) || v.equals(20.0)); // Oracle OpenJDK8 vs "post-Oracle" OpenJDKs quirks
     }
 
     @Test
