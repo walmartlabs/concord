@@ -52,6 +52,7 @@ public class QueueClient {
 
     private final Worker worker;
     private Thread workerThread;
+    private boolean onMaintenanceMode;
 
     public QueueClient(QueueClientConfiguration cfg) throws URISyntaxException {
         this.ignoreRequests = new HashSet<>();
@@ -80,8 +81,12 @@ public class QueueClient {
         }
 
         synchronized (requests) {
+            if (onMaintenanceMode) {
+                return;
+            }
             ignoreRequests.add(MessageType.PROCESS_REQUEST);
             worker.disconnect();
+            onMaintenanceMode = true;
         }
     }
 
