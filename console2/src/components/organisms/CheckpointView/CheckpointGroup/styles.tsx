@@ -58,12 +58,12 @@ export const getStatusColor = (status: string): string => {
     }
 };
 
-interface TimeBoxProps {
+interface CheckpointBoxProps {
     statusColor?: any;
 }
 
-export const TimeBox = styled('div')<TimeBoxProps>`
-    background: ${(prop: TimeBoxProps) => (prop.statusColor ? prop.statusColor : 'gray')};
+export const CheckpointBox = styled('div')<CheckpointBoxProps>`
+    background: ${(prop: CheckpointBoxProps) => (prop.statusColor ? prop.statusColor : 'gray')};
     padding: 0.7rem 0.7rem;
     text-align: center;
     border-radius: 5px;

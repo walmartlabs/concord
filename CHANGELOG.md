@@ -8,6 +8,11 @@
 - concord-console: the process log viewer's options are not persisted
 using the browser's Local Storage.
 
+### Changed
+
+- concord-console: fixed an issue preventing checkpoints from being
+rendered correctly in some cases.
+
 
 
 ## [1.19.1] - 2019-05-12
