@@ -10,6 +10,8 @@ using the browser's Local Storage.
 
 ### Changed
 
+- concord-agent: ignore subsequent attempts to enable the maintenance
+mode;
 - concord-server: `SUSPENDED` processes are now ignored when
 calculating the concurrent processes limit;
 - concord-console: fixed an issue preventing checkpoints from being
