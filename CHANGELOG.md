@@ -10,6 +10,8 @@ using the browser's Local Storage.
 
 ### Changed
 
+- concord-console: fixed an issue preventing the UI from working
+correctly in MS Edge (missing `URLSearchParams` polyfill);
 - concord-agent: ignore subsequent attempts to enable the maintenance
 mode;
 - concord-server: `SUSPENDED` processes are now ignored when

@@ -21,6 +21,7 @@
 import { SemanticCOLORS } from 'semantic-ui-react';
 import { ConcordId, ConcordKey, fetchJson, managedFetch, queryParams } from '../common';
 import { ColumnDefinition } from '../org';
+import 'url-search-params-polyfill';
 
 export enum ProcessStatus {
     PREPARING = 'PREPARING',
