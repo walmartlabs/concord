@@ -20,6 +20,7 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
 
 import { parseQueryParams, QueryParams } from '../../../../api/common';
+import 'url-search-params-polyfill';
 
 /**
  * Custom React Hook to provide the current query parameters

@@ -15,7 +15,6 @@
         "@types/react-redux": "7.0.8",
         "@types/react-router": "4.4.5",
         "@types/react-router-dom": "4.3.2",
-        "connected-react-router": "6.4.0",
         "@types/redux-logger": "3.0.7",
         "@types/styled-components": "4.1.14",
         "@types/webpack-env": "1.13.9",
@@ -63,7 +62,8 @@
         "semantic-ui-css": "2.4.1",
         "semantic-ui-react": "0.84.0",
         "styled-tools": "1.7.1",
-        "typeface-lato": "0.0.54"
+        "typeface-lato": "0.0.54",
+        "url-search-params-polyfill": "6.0.0"
     },
     "scripts": {
         "start": "react-scripts start",
