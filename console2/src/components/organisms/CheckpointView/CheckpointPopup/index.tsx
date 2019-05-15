@@ -29,6 +29,7 @@ import { CheckpointName } from '../shared/Labels';
 import { CustomCheckpoint } from '../shared/types';
 import CheckpointViewContainer from '../Container';
 import { ProcessEntry, isFinal } from '../../../../api/process';
+import { format as formatDate } from 'date-fns';
 
 const CheckpointPopup: React.SFC<{
     checkpoint: CustomCheckpoint;
@@ -38,7 +39,6 @@ const CheckpointPopup: React.SFC<{
     const { currentPage, limitPerPage, loadData, orgId, projectId } = useContext(
         CheckpointViewContainer.Context
     );
-
     useContext(ProcessLogContainer.Context);
 
     return (
@@ -75,10 +75,7 @@ const CheckpointPopup: React.SFC<{
                                             fontWeight: 300,
                                             paddingRight: '1em'
                                         }}>
-                                        {checkpoint.startTime.getHours()}:
-                                        {checkpoint.startTime.getMinutes()}:
-                                        {checkpoint.startTime.getSeconds()}:
-                                        {checkpoint.startTime.getMilliseconds()}
+                                        {formatDate(checkpoint.startTime, 'HH:mm:ss')}
                                     </span>
                                 </CheckpointName>
                             </Grid.Column>

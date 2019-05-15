@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 
-import { CheckpointGroupName, CheckpointName } from '../shared/Labels';
+import { CheckpointGroupName } from '../shared/Labels';
 import { ProcessEntry } from '../../../../api/process';
 import { CheckpointGroup } from '../shared/types';
 
@@ -28,12 +28,11 @@ import {
     GroupWrapper,
     GroupItems,
     CheckpointNode,
-    TimeBox,
+    CheckpointBox,
     getStatusColor,
     EmptyBox
 } from './styles';
 import CheckpointPopup from '../CheckpointPopup';
-import { formatDuration, timestampDiffMs } from '../../../../utils';
 import NoCheckpointsMessage from '../NoCheckpointsMessage';
 
 interface Props {
@@ -52,27 +51,20 @@ export default ({ process, checkpointGroups }: Props) => {
                         <GroupItems>
                             {checkpoints.length === 0 && (
                                 <div>
-                                    <CheckpointName>...</CheckpointName>
                                     <EmptyBox>No checkpoints</EmptyBox>
                                 </div>
                             )}
                             {checkpoints.length > 0 &&
                                 checkpoints.map((checkpoint, indexB) => (
                                     <CheckpointNode key={indexB}>
-                                        <CheckpointName>{checkpoint.name}</CheckpointName>
                                         <CheckpointPopup
                                             checkpoint={checkpoint}
                                             process={process}
                                             render={
-                                                <TimeBox
+                                                <CheckpointBox
                                                     statusColor={getStatusColor(checkpoint.status)}>
-                                                    {formatDuration(
-                                                        timestampDiffMs(
-                                                            checkpoint.endTime,
-                                                            checkpoint.startTime
-                                                        )
-                                                    )}
-                                                </TimeBox>
+                                                    {checkpoint.name}
+                                                </CheckpointBox>
                                             }
                                         />
                                     </CheckpointNode>

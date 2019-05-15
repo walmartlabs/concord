@@ -26,10 +26,10 @@ export interface CheckpointGroup {
     checkpoints: CustomCheckpoint[];
     start?: Date;
     end?: Date;
+    status?: ProcessStatus;
 }
 
 export interface CustomCheckpoint extends ProcessCheckpointEntry {
     startTime: Date;
-    endTime: Date;
     status: ProcessStatus;
 }
