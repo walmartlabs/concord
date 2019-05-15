@@ -22,10 +22,11 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Value.Immutable
@@ -36,17 +37,30 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
     @Nullable
     public abstract String resumeEvent();
 
-    public abstract List<UUID> processes();
+    public abstract Set<UUID> processes();
+
+    // TODO: remove @Nullable when all conditions migrated to the new format
+    @Nullable
+    public abstract Set<ProcessStatus> finalStatuses();
+
+    @Value.Default
+    public CompleteCondition completeCondition() {
+        return CompleteCondition.ALL;
+    }
 
     @Override
     public WaitType type() {
         return WaitType.PROCESS_COMPLETION;
     }
 
-    public static ProcessCompletionCondition of(List<UUID> processes, String reason) {
-        return ImmutableProcessCompletionCondition.builder()
-                .processes(processes)
-                .reason(reason)
-                .build();
+    public static ImmutableProcessCompletionCondition.Builder builder() {
+        return ImmutableProcessCompletionCondition.builder();
+    }
+
+    public enum CompleteCondition {
+        // all processes are finished
+        ALL,
+        // one of the processes is finished
+        ONE_OF
     }
 }

@@ -1,0 +1,9 @@
+flows:
+  default:
+    - ${sleep.ms(delayValue)}
+    - form: myForm
+    - log: "${myForm.name}"
+
+forms:
+  myForm:
+    - name: {type: "string"}

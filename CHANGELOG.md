@@ -10,6 +10,8 @@ using the browser's Local Storage.
 
 ### Changed
 
+- concord-server: `SUSPENDED` processes are now ignored when
+calculating the concurrent processes limit;
 - concord-console: fixed an issue preventing checkpoints from being
 rendered correctly in some cases.
 

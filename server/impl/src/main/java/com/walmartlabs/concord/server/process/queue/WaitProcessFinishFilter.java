@@ -20,15 +20,24 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.google.common.collect.ImmutableSet;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
  * Base class for all filters that are implementing process wait conditions.
  */
 public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter {
+
+    private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
+            ProcessStatus.FINISHED,
+            ProcessStatus.FAILED,
+            ProcessStatus.CANCELLED,
+            ProcessStatus.TIMED_OUT);
 
     private final ProcessQueueDao processQueueDao;
 
@@ -43,12 +52,25 @@ public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter
             return true;
         }
 
-        processQueueDao.updateWait(tx, item.key(), ProcessCompletionCondition.of(processes, getReason()));
+        processQueueDao.updateWait(tx, item.key(), ProcessCompletionCondition.builder()
+                .processes(processes)
+                .reason(getReason())
+                .finalStatuses(getFinalStatuses())
+                .completeCondition(getCompleteCondition())
+                .build());
 
         return false;
     }
 
     protected abstract List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item);
+
+    protected Set<ProcessStatus> getFinalStatuses() {
+        return FINAL_STATUSES;
+    }
+
+    protected ProcessCompletionCondition.CompleteCondition getCompleteCondition() {
+        return ProcessCompletionCondition.CompleteCondition.ALL;
+    }
 
     /**
      * @return the "reason" string, explaining why this particular wait condition was added.

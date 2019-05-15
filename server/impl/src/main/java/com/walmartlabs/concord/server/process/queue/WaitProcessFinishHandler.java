@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition.CompleteCondition;
 
 /**
  * Handles the processes that are waiting for other processes to finish.
@@ -48,6 +49,13 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompletionCondition> {
 
     private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
+
+    // TODO: remove me when all conditions migrated to new format
+    private static final Set<ProcessStatus> DEFAULT_FINISHED_STATUSES = ImmutableSet.of(
+            ProcessStatus.FINISHED,
+            ProcessStatus.FAILED,
+            ProcessStatus.CANCELLED,
+            ProcessStatus.TIMED_OUT);
 
     private final Dao dao;
     private final ProcessManager processManager;
@@ -72,22 +80,33 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
 
     @Override
     public ProcessCompletionCondition process(UUID instanceId, ProcessStatus processStatus, ProcessCompletionCondition wait) {
-        List<UUID> awaitProcesses = wait.processes();
-        List<UUID> finishedProcesses = dao.findFinished(awaitProcesses);
+        Set<ProcessStatus> finishedStatuses = DEFAULT_FINISHED_STATUSES;
+        if (wait.finalStatuses() != null && !wait.finalStatuses().isEmpty()) {
+            finishedStatuses = wait.finalStatuses();
+        }
+
+        Set<UUID> awaitProcesses = wait.processes();
+
+        Set<UUID> finishedProcesses = dao.findFinished(awaitProcesses, finishedStatuses);
         if (finishedProcesses.isEmpty()) {
             return wait;
         }
 
-        List<UUID> processes = new ArrayList<>(awaitProcesses);
-        processes.removeAll(finishedProcesses);
-        if (processes.isEmpty()) {
+        boolean completed = isCompleted(wait.completeCondition(), awaitProcesses, finishedProcesses);
+        if (completed) {
             if (wait.resumeEvent() != null) {
                 resumeProcess(instanceId, wait.resumeEvent());
             }
             return null;
         }
 
-        return ProcessCompletionCondition.of(processes, wait.reason());
+        List<UUID> processes = new ArrayList<>(awaitProcesses);
+        processes.removeAll(finishedProcesses);
+
+        return ProcessCompletionCondition.builder().from(wait)
+                .processes(processes)
+                .reason(wait.reason())
+                .build();
     }
 
     private void resumeProcess(UUID instanceId, String eventName) {
@@ -101,28 +120,35 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
         processManager.resume(payload);
     }
 
+    private static boolean isCompleted(CompleteCondition condition, Set<UUID> awaitProcesses, Set<UUID> finishedProcesses) {
+        switch (condition) {
+            case ALL: {
+                return awaitProcesses.size() == finishedProcesses.size();
+            }
+            case ONE_OF: {
+                return !finishedProcesses.isEmpty();
+            }
+            default:
+                throw new IllegalArgumentException("Unknown condition type: " + condition);
+        }
+    }
+
     @Named
     private static final class Dao extends AbstractDao {
-
-        private static final Set<ProcessStatus> FINISHED_STATUSES = ImmutableSet.of(
-                ProcessStatus.FINISHED,
-                ProcessStatus.FAILED,
-                ProcessStatus.CANCELLED,
-                ProcessStatus.TIMED_OUT);
 
         @Inject
         public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
-        public List<UUID> findFinished(List<UUID> awaitProcesses) {
+        public Set<UUID> findFinished(Set<UUID> awaitProcesses, Set<ProcessStatus> finishedStatuses) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
                 return tx.select(q.INSTANCE_ID)
                         .from(q)
                         .where(q.INSTANCE_ID.in(awaitProcesses)
-                                .and(q.CURRENT_STATUS.in(FINISHED_STATUSES)))
-                        .fetch(q.INSTANCE_ID);
+                                .and(q.CURRENT_STATUS.in(finishedStatuses)))
+                        .fetchSet(q.INSTANCE_ID);
             });
         }
     }

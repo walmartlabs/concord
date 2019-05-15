@@ -65,9 +65,10 @@ public class WaitConditionSerializeTest {
 
     @Test
     public void testProcessCompletionCondition() throws Exception {
-        ProcessCompletionCondition c = ProcessCompletionCondition.of(
-                Collections.singletonList(UUID.fromString("0c443946-0f2c-4685-a9f0-2bc0b735b7ae")),
-                "test-reason");
+        ProcessCompletionCondition c = ProcessCompletionCondition.builder()
+                .processes(Collections.singletonList(UUID.fromString("0c443946-0f2c-4685-a9f0-2bc0b735b7ae")))
+                .reason("test-reason")
+                .build();
 
         String json = objectMapper.writeValueAsString(c);
         System.out.println(json);
