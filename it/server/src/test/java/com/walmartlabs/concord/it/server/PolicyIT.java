@@ -242,6 +242,63 @@ public class PolicyIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testConcurrentWithSuspendedProcess() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setAcceptsRawPayload(true));
+
+        String policyName = "policy_" + randomString();
+        PolicyApi policyApi = new PolicyApi(getApiClient());
+        Map<String, Object> queueRules = new HashMap<>();
+        queueRules.put("concurrent", singletonMap("max", 1));
+
+        Map<String, Object> rules = singletonMap("queue", queueRules);
+        policyApi.createOrUpdate(new PolicyEntry()
+                .setName(policyName)
+                .setRules(rules));
+
+        policyApi.link(policyName, new PolicyLinkEntry()
+                .setOrgName(orgName)
+                .setProjectName(projectName));
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("withForm").toURI());
+
+        Map<String, Object> input1 = new HashMap<>();
+        input1.put("archive", payload);
+        input1.put("org", orgName);
+        input1.put("project", projectName);
+        input1.put("request", singletonMap("arguments", singletonMap("delayValue", 10000)));
+
+        StartProcessResponse spr1 = start(input1);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr1.getInstanceId(), StatusEnum.RUNNING);
+
+        // --- start the second process
+
+        byte[] payload2 = archive(ProcessIT.class.getResource("withDelay").toURI());
+        Map<String, Object> input2 = new HashMap<>();
+        input2.put("archive", payload2);
+        input2.put("org", orgName);
+        input2.put("project", projectName);
+        input2.put("request", singletonMap("arguments", singletonMap("delayValue", 0)));
+
+        StartProcessResponse spr2 = start(input2);
+
+        // ---
+
+        waitForCompletion(processApi, spr2.getInstanceId());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMaxProcessTimeout() throws Exception {
         String orgName = createOrg();
         String projectName = createProject(orgName);

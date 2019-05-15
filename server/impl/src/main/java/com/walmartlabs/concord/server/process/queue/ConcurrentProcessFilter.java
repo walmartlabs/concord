@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.ConcurrentProcessRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
@@ -33,10 +34,7 @@ import org.jooq.Record1;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Handles "max concurrent processes" policy.
@@ -50,6 +48,13 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
             ProcessStatus.STARTING,
             ProcessStatus.RUNNING,
             ProcessStatus.RESUMING);
+
+    private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
+            ProcessStatus.SUSPENDED,
+            ProcessStatus.FINISHED,
+            ProcessStatus.FAILED,
+            ProcessStatus.CANCELLED,
+            ProcessStatus.TIMED_OUT);
 
     private final PolicyDao policyDao;
 
@@ -80,6 +85,16 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
     @Override
     protected String getReason() {
         return "max concurrent process limit exceeded";
+    }
+
+    @Override
+    protected Set<ProcessStatus> getFinalStatuses() {
+        return FINAL_STATUSES;
+    }
+
+    @Override
+    protected ProcessCompletionCondition.CompleteCondition getCompleteCondition() {
+        return ProcessCompletionCondition.CompleteCondition.ONE_OF;
     }
 
     private PolicyEngine getPolicyEngine(DSLContext tx, UUID orgId, UUID prjId, UUID userId, UUID parentInstanceId) {
