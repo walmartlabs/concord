@@ -318,8 +318,10 @@ public class ProcessStateManager extends AbstractDao {
                     }
 
                     // can't import directories or symlinks
+                    // the caller shouldn't attempt to import anything but regular files
                     if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
-                        throw new IllegalStateException("Can't import non-regular files into the process state: " + p);
+                        throw new IllegalStateException("Can't import non-regular files into the process state: " + p +
+                                " This is most likely a bug.");
                     }
 
                     String n = p.toString();
