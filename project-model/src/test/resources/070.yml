@@ -1,0 +1,29 @@
+default:
+  - call: reproduceBug
+
+reproduceBug:
+  - call: doSomething
+    withItems:
+      - id: 0
+        words:
+          - "apple"
+          - "orange"
+          - "bannana"
+      - id: 1
+        words:
+          - "dog"
+          - "cat"
+          - "mouse"
+      - id: 2
+        words:
+          - "one"
+          - "two"
+          - "three"
+
+doSomething:
+  - log: "Something: ${item.words}, ${item.id}"
+  - call: doSomethingElse
+    withItems: ${item.words}
+
+doSomethingElse:
+  - log: "Something else: ${item}"

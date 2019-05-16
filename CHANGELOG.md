@@ -10,6 +10,8 @@ using the browser's Local Storage.
 
 ### Changed
 
+- project-model: fixed an issue with nested objects used in
+`withItems`;
 - concord-server: fixed an issue with circular symlinks in GIT repos;
 - concord-console: fixed an issue preventing the UI from working
 correctly in MS Edge (missing `URLSearchParams` polyfill);
