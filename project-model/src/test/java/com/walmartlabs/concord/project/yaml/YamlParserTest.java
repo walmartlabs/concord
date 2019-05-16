@@ -2060,6 +2060,41 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verifyNoMoreInteractions(task);
     }
 
+    @Test
+    public void test070() throws Exception {
+        deploy("070.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("log", task);
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default", null);
+
+        // ---
+
+        verify(task, times(12)).call(any());
+
+        verify(task, times(1)).log(eq("Something: [apple, orange, bannana], 0"));
+        verify(task, times(1)).log(eq("Something else: apple"));
+        verify(task, times(1)).log(eq("Something else: orange"));
+        verify(task, times(1)).log(eq("Something else: bannana"));
+
+        verify(task, times(1)).log(eq("Something: [dog, cat, mouse], 1"));
+        verify(task, times(1)).log(eq("Something else: dog"));
+        verify(task, times(1)).log(eq("Something else: cat"));
+        verify(task, times(1)).log(eq("Something else: mouse"));
+
+        verify(task, times(1)).log(eq("Something: [one, two, three], 2"));
+        verify(task, times(1)).log(eq("Something else: one"));
+        verify(task, times(1)).log(eq("Something else: two"));
+        verify(task, times(1)).log(eq("Something else: three"));
+
+        verifyNoMoreInteractions(task);
+    }
+
     // FORMS (100 - 199)
 
     @Test

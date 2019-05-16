@@ -66,7 +66,6 @@ public interface StepConverter<T extends YamlStep> {
         c.addSourceMaps(err.getSourceMap());
     }
 
-    @SuppressWarnings("unchecked")
     default Chunk applyWithItems(ConverterContext ctx, Chunk c, Map<String, Object> opts) throws YamlConverterException {
         Object withItems = getWithItems(opts);
         if (withItems == null) {
@@ -124,11 +123,7 @@ public interface StepConverter<T extends YamlStep> {
             return null;
         }
 
-        if (withItems instanceof String) {
-            return withItems;
-        }
-
-        return ((Seq)withItems).toList();
+        return deepConvert(withItems);
     }
 
     default SourceMap toSourceMap(YamlStep step, String description) {
@@ -283,6 +278,7 @@ public interface StepConverter<T extends YamlStep> {
         private static final String CURRENT_INDEX = "__currentWithItemIndex";
         private static final String HAS_NEXT = "__withItemsHasNext";
         private static final String ITEM = "item";
+        private static final String ITEM_HISTORY = "__withItemsItem";
 
         public void init(ExecutionContext ctx) {
             List<Integer> currentIndex = getList(ctx, CURRENT_INDEX);
@@ -294,6 +290,11 @@ public interface StepConverter<T extends YamlStep> {
             ctx.setVariable(HAS_NEXT, hasNext);
 
             ctx.setVariable("__withItems_keysBeforeTask", new HashSet<>(ctx.toMap().keySet()));
+
+            // store current item variable
+            List<Object> item = getList(ctx, ITEM_HISTORY);
+            item.add(ctx.getVariable(ITEM));
+            ctx.setVariable(ITEM_HISTORY, item);
         }
 
         /**
@@ -323,6 +324,9 @@ public interface StepConverter<T extends YamlStep> {
         }
 
         public void processOutVars(ExecutionContext ctx, Set<String> taskOutVars) {
+            // restore current item variable
+            ctx.setVariable(ITEM, getLastVariable(ctx, ITEM_HISTORY));
+
             Set<String> taskVariables = taskOutVars;
             if (taskVariables.isEmpty()) {
                 taskVariables = collectOutVars(ctx);
@@ -347,6 +351,8 @@ public interface StepConverter<T extends YamlStep> {
             }
             ctx.removeVariable("__withItems_keysBeforeTask");
 
+            clearLastVariable(ctx, ITEM_HISTORY);
+
             taskVariables.forEach(v -> {
                 String tmpVarName = "__withItems_" + v;
                 Object var = ctx.getVariable(tmpVarName);
@@ -360,6 +366,7 @@ public interface StepConverter<T extends YamlStep> {
             Set<String> before = (Set<String>)ctx.getVariable("__withItems_keysBeforeTask");
             return ctx.toMap().keySet().stream()
                     .filter(v -> !v.startsWith("__"))
+                    .filter(v -> !v.equals(ITEM))
                     .filter(v -> !before.contains(v))
                     .collect(Collectors.toSet());
         }
