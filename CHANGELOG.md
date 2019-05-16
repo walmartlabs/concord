@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: another fix for the issue with symlinks in GIT
+repositories.
+
+
+
 ## [1.20.0] - 2019-05-16
 
 ### Added
@@ -14,7 +23,8 @@ using the browser's Local Storage.
 
 - project-model: fixed an issue with nested objects used in
 `withItems`;
-- concord-server: fixed an issue with circular symlinks in GIT repos;
+- concord-server: fixed an issue with circular symlinks in GIT
+repositories;
 - concord-console: fixed an issue preventing the UI from working
 correctly in MS Edge (missing `URLSearchParams` polyfill);
 - concord-agent: ignore subsequent attempts to enable the maintenance

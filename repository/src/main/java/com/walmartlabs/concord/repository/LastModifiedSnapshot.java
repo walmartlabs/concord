@@ -47,13 +47,13 @@ public class LastModifiedSnapshot implements Snapshot, FileVisitor {
 
     @Override
     public boolean isModified(Path path, BasicFileAttributes attrs) {
+        if (!Files.isRegularFile(basePath.resolve(path), LinkOption.NOFOLLOW_LINKS)) {
+            return false;
+        }
+
         FileTime prev = files.get(path);
         if (prev == null) {
             return true;
-        }
-
-        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
-            return false;
         }
 
         return !prev.equals(attrs.lastModifiedTime());
