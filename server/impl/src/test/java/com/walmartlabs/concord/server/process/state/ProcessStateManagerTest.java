@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
@@ -56,7 +57,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         writeTempFile(baseDir.resolve("file-2"), "456".getBytes());
 
         //
-        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(processKey, null, baseDir);
 
@@ -101,13 +102,13 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
             }
         }
 
-        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Arrays.asList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(processKey, "/", baseDir);
     }
 
     private static void assertFileContent(String expected, Path f) throws IOException {
-        String str = com.google.common.io.Files.toString(f.toFile(), Charsets.UTF_8);
+        String str = com.google.common.io.Files.asCharSource(f.toFile(), Charsets.UTF_8).read();
         assertEquals(expected, str);
     }
 
