@@ -21,13 +21,11 @@ package com.walmartlabs.concord.plugins.http;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.exception.RequestTimeoutException;
 import com.walmartlabs.concord.plugins.http.exception.UnauthorizedException;
 import com.walmartlabs.concord.plugins.http.request.HttpTaskRequest;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
+import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -57,9 +55,11 @@ import java.nio.file.attribute.FileAttribute;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.getHttpEntity;
@@ -98,7 +98,12 @@ public class SimpleHttpClient {
      */
     public ClientResponse execute() throws Exception {
         CloseableHttpResponse httpResponse = null;
+        Object content = "";
         try {
+            if (config.isDebug()) {
+                logRequest(request);
+            }
+
             httpResponse = callWithTimeout(() -> this.client.execute(request), config.getRequestTimeout());
 
             if (isUnAuthorized(httpResponse.getStatusLine().getStatusCode())) {
@@ -109,17 +114,19 @@ public class SimpleHttpClient {
 
             Map<String, Object> response = new HashMap<>();
 
-            Object content = "";
             boolean isSuccess = false;
             if (Response.Status.Family.SUCCESSFUL == Response.Status.Family.familyOf(httpResponse.getStatusLine().getStatusCode())) {
                 content = processResponse(httpResponse, config);
+                response.put("content", content);
                 isSuccess = true;
             } else {
-                response.put("errorString", EntityUtils.toString(httpResponse.getEntity()));
+                content = EntityUtils.toString(httpResponse.getEntity());
+                // for backward compatibility
+                response.put("content", "");
+                response.put("errorString", content);
             }
 
             response.put("success", isSuccess);
-            response.put("content", content);
             response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
 
             return new ClientResponse(response);
@@ -140,6 +147,10 @@ public class SimpleHttpClient {
 
         } finally {
             if (httpResponse != null) {
+                if (config.isDebug()) {
+                    logResponse(httpResponse, content);
+                }
+
                 httpResponse.close();
             }
 
@@ -195,6 +206,24 @@ public class SimpleHttpClient {
             default:
                 return EntityUtils.toString(e);
         }
+    }
+
+    private void logRequest(HttpUriRequest request) throws IOException {
+        Map<String, Object> debugInfo = new HashMap<>();
+
+        Map<String, Object> requestInfo = buildRequestInfo(request);
+        debugInfo.put("requestInfo", requestInfo);
+
+        log.info(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(debugInfo));
+    }
+
+    private void logResponse(CloseableHttpResponse httpResponse, Object content) throws IOException {
+        Map<String, Object> debugInfo = new HashMap<>();
+
+        Map<String, Object> responseInfo = buildResponseInfo(httpResponse, content);
+        debugInfo.put("responseInfo", responseInfo);
+
+        log.info(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(debugInfo));
     }
 
     /**
@@ -347,7 +376,7 @@ public class SimpleHttpClient {
      *
      * @param cfg {@link Configuration}
      * @return HttpUriRequest
-     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, HttpTask.RequestType)} method
+     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, RequestType)} method
      */
     private HttpUriRequest buildPostRequest(Configuration cfg) throws Exception {
         return HttpTaskRequest.post(cfg.getUrl())
@@ -379,7 +408,7 @@ public class SimpleHttpClient {
      *
      * @param cfg {@link Configuration}
      * @return HttpUriRequest
-     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, HttpTask.RequestType)} method
+     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, RequestType)} method
      */
     private HttpUriRequest buildPatchRequest(Configuration cfg) throws Exception {
         return HttpTaskRequest.patch(cfg.getUrl())
@@ -396,7 +425,7 @@ public class SimpleHttpClient {
      *
      * @param cfg {@link Configuration}
      * @return HttpUriRequest
-     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, HttpTask.RequestType)} method
+     * @throws Exception thrown by {@link HttpTaskUtils#getHttpEntity(Object, RequestType)} method
      */
     private HttpUriRequest buildPutRequest(Configuration cfg) throws Exception {
         return HttpTaskRequest.put(cfg.getUrl())
@@ -406,6 +435,35 @@ public class SimpleHttpClient {
                 .withHeaders(cfg.getRequestHeaders())
                 .withBody(getHttpEntity(cfg.getBody(), cfg.getRequestType()))
                 .get();
+    }
+
+    private Map<String, Object> buildRequestInfo(HttpUriRequest request) throws IOException {
+        Map<String, Object> requestInfo = new HashMap<>();
+        requestInfo.put("headers", getHeaders(request.getAllHeaders()));
+        requestInfo.put("method", request.getMethod());
+        requestInfo.put("url", request.getURI().toString());
+
+        if ((config.getRequestType() != RequestType.FILE) && (request instanceof HttpEntityEnclosingRequest)) {
+            String rsp = EntityUtils.toString(((HttpEntityEnclosingRequest) request).getEntity());
+            requestInfo.put("body", rsp);
+        }
+
+        return requestInfo;
+    }
+
+    private Map<String, Object> buildResponseInfo(CloseableHttpResponse httpResponse, Object content) {
+        Map<String, Object> responseInfo = new HashMap<>();
+        responseInfo.put("headers", getHeaders(httpResponse.getAllHeaders()));
+        responseInfo.put("status", httpResponse.getStatusLine().getStatusCode());
+        responseInfo.put("response", content);
+
+        return responseInfo;
+    }
+
+    private Map<String, String> getHeaders(Header[] headers) {
+        return Arrays.stream(headers)
+                .filter(h -> !"Authorization".equalsIgnoreCase(h.getName()))
+                .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
     }
 
     /**

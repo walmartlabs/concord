@@ -199,6 +199,28 @@ public class HttpTaskIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testPostWithDebug() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpPostWithDebug").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.user", mockHttpAuthUser);
+        input.put("arguments.password", mockHttpAuthPassword);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathPassword);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*requestInfo.*", ab);
+        assertLog(".*responseInfo.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPatch() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPatch").toURI();
         byte[] payload = archive(dir);
@@ -279,17 +301,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Response content: request headers:.*h2=v2.*", ab);
     }
 
-    private void stubForGetAsStringEndpoint(String url) {
-        rule.stubFor(get(urlEqualTo(url))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withBody("{\n" +
-                                "  \"Success\": \"true\"\n" +
-                                "}"))
-        );
-    }
-
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetWithIgnoreErrors() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetWithIgnoreErrors").toURI();
         byte[] payload = archive(dir);
@@ -311,7 +323,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Success response: false*", ab);
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetEmptyResponse() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpGetEmpty").toURI();
         byte[] payload = archive(dir);
@@ -330,6 +342,16 @@ public class HttpTaskIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response: true.*", ab);
         assertLog(".*Content is NULL: true.*", ab);
+    }
+
+    private void stubForGetAsStringEndpoint(String url) {
+        rule.stubFor(get(urlEqualTo(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("{\n" +
+                                "  \"Success\": \"true\"\n" +
+                                "}"))
+        );
     }
 
     private void stubForGetSecureEndpoint(String user, String password, String url) {

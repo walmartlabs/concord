@@ -4,6 +4,8 @@
 
 ### Added
 
+- http-tasks: new `debug` parameter. Enables additional logging of
+request and response data;
 - concord-tasks: log the job's URLs when starting new processes;
 - concord-console: the process log viewer's options are now persisted
 using the browser's Local Storage.
