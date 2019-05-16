@@ -50,6 +50,7 @@ public class Configuration {
     private final int requestTimeout;
     private final boolean ignoreErrors;
     private final String proxy;
+    private final boolean debug;
 
     private Configuration(RequestMethodType methodType,
                           String url,
@@ -63,7 +64,8 @@ public class Configuration {
                           int socketTimeout,
                           int requestTimeout,
                           boolean ignoreErrors,
-                          String proxy) {
+                          String proxy,
+                          boolean debug) {
 
         this.methodType = methodType;
         this.url = url;
@@ -78,6 +80,7 @@ public class Configuration {
         this.requestTimeout = requestTimeout;
         this.ignoreErrors = ignoreErrors;
         this.proxy = proxy;
+        this.debug = debug;
     }
 
     /**
@@ -177,6 +180,10 @@ public class Configuration {
         return proxy;
     }
 
+    public boolean isDebug() {
+        return debug;
+    }
+
     public static class Builder {
 
         private String url;
@@ -192,6 +199,7 @@ public class Configuration {
         private Integer requestTimeout = 0;
         private boolean ignoreErrors;
         private String proxy;
+        private boolean debug;
 
         /**
          * Used to specify the url which will later use to create {@link org.apache.http.client.methods.HttpUriRequest}
@@ -331,6 +339,11 @@ public class Configuration {
             return this;
         }
 
+        public Builder withDebug(boolean debug) {
+            this.debug = debug;
+            return this;
+        }
+
         /**
          * Invoking this method will result in a new configuration
          *
@@ -350,7 +363,7 @@ public class Configuration {
             }
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
-                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy);
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug);
         }
 
         /**
@@ -423,8 +436,12 @@ public class Configuration {
 
             this.proxy = (String) ctx.getVariable(PROXY_KEY);
 
+            if (ctx.getVariable(DEBUG_KEY) != null) {
+                this.debug = (boolean) ctx.getVariable(DEBUG_KEY);
+            }
+
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
-                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy);
+                    requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug);
         }
 
         /**

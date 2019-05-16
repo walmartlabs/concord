@@ -155,6 +155,7 @@ public class HttpTask implements Task {
         static final String BODY_KEY = "body";
         static final String CONNECT_TIMEOUT_KEY = "connectTimeout";
         static final String CONTENT_KEY = "content";
+        static final String DEBUG_KEY = "debug";
         static final String HEADERS_KEY = "headers";
         static final String IGNORE_ERRORS_KEY = "ignoreErrors";
         static final String METHOD_KEY = "method";
