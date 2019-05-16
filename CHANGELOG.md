@@ -5,11 +5,12 @@
 ### Added
 
 - concord-tasks: log the job's URLs when starting new processes;
-- concord-console: the process log viewer's options are not persisted
+- concord-console: the process log viewer's options are now persisted
 using the browser's Local Storage.
 
 ### Changed
 
+- concord-server: fixed an issue with circular symlinks in GIT repos;
 - concord-console: fixed an issue preventing the UI from working
 correctly in MS Edge (missing `URLSearchParams` polyfill);
 - concord-agent: ignore subsequent attempts to enable the maintenance

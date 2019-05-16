@@ -317,6 +317,11 @@ public class ProcessStateManager extends AbstractDao {
                         return FileVisitResult.CONTINUE;
                     }
 
+                    // can't import directories or symlinks
+                    if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
+                        throw new IllegalStateException("Can't import non-regular files into the process state: " + p);
+                    }
+
                     String n = p.toString();
                     if (prefix != null) {
                         n = prefix + n;
