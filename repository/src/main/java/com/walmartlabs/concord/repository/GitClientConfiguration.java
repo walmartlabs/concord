@@ -30,15 +30,30 @@ public interface GitClientConfiguration {
     @Nullable
     String oauthToken();
 
-    boolean shallowClone();
+    @Value.Default
+    default boolean shallowClone() {
+        return true;
+    }
 
-    int httpLowSpeedLimit();
+    @Value.Default
+    default int httpLowSpeedLimit() {
+        return 0;
+    }
 
-    int httpLowSpeedTime();
+    @Value.Default
+    default int httpLowSpeedTime() {
+        return 0;
+    }
 
-    int sshTimeout();
+    @Value.Default
+    default int sshTimeout() {
+        return 600;
+    }
 
-    int sshTimeoutRetryCount();
+    @Value.Default
+    default int sshTimeoutRetryCount() {
+        return 1;
+    }
 
     static ImmutableGitClientConfiguration.Builder builder() {
         return ImmutableGitClientConfiguration.builder();

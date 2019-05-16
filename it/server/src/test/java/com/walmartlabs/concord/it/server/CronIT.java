@@ -96,7 +96,7 @@ public class CronIT extends AbstractServerIT {
             Set<String> patterns = new HashSet<>(expectedPatterns);
             for (String p : patterns) {
                 for (ProcessEntry e : processes) {
-                    if (hasLogEntry(processApi, e, p)) {
+                    if (hasLogEntry(e, p)) {
                         expectedPatterns.remove(p);
                     }
                 }
@@ -124,7 +124,7 @@ public class CronIT extends AbstractServerIT {
         }
     }
 
-    private boolean hasLogEntry(ProcessApi processApi, ProcessEntry e, String pattern) throws Exception {
+    private boolean hasLogEntry(ProcessEntry e, String pattern) throws Exception {
         byte[] ab = getLog(e.getLogFileName());
         List<String> l = grep(pattern, ab);
         return !l.isEmpty();

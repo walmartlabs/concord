@@ -24,10 +24,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -99,8 +96,8 @@ public class IOUtilsTest {
 
         // ---
 
-        Path tst = dst.resolve("x").resolve("b");
-        assertTrue(Files.isRegularFile(tst));
+        assertTrue(Files.isSymbolicLink(dst.resolve("x").resolve("b")));
+        assertTrue(Files.isRegularFile(dst.resolve("x").resolve("b")));
     }
 
     @Test

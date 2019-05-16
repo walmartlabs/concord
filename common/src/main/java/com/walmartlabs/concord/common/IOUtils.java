@@ -210,15 +210,15 @@ public final class IOUtils {
         copy(src, dst, null, null, options);
     }
 
-    public static void copy(Path src, Path dst, String skipContents, CopyOption... options) throws IOException {
-        _copy(1, src, src, dst, skipContents, null, options);
+    public static void copy(Path src, Path dst, String ignorePattern, CopyOption... options) throws IOException {
+        _copy(1, src, src, dst, ignorePattern, null, options);
     }
 
     public static void copy(Path src, Path dst, String skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
         _copy(1, src, src, dst, skipContents, visitor, options);
     }
 
-    private static void _copy(int depth, Path root, Path src, Path dst, String skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
+    private static void _copy(int depth, Path root, Path src, Path dst, String ignorePattern, FileVisitor visitor, CopyOption... options) throws IOException {
         if (depth >= MAX_COPY_DEPTH) {
             throw new IOException("Too deep: " + src);
         }
@@ -226,7 +226,7 @@ public final class IOUtils {
         Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (skipContents != null && dir.getFileName().toString().matches(skipContents)) {
+                if (ignorePattern != null && dir.getFileName().toString().matches(ignorePattern)) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
 
@@ -235,35 +235,33 @@ public final class IOUtils {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (skipContents != null && file.getFileName().toString().matches(skipContents)) {
+                if (ignorePattern != null && file.getFileName().toString().matches(ignorePattern)) {
                     return FileVisitResult.CONTINUE;
                 }
 
                 Path a = file;
                 Path b = dst.resolve(src.relativize(file));
 
+                Path parent = b.getParent();
+                if (!Files.exists(parent)) {
+                    Files.createDirectories(parent);
+                }
+
                 if (Files.isSymbolicLink(file)) {
                     Path link = Files.readSymbolicLink(file);
-                    a = file.getParent().resolve(link).normalize();
+                    Path target = file.getParent().resolve(link).normalize();
 
-                    if (!a.startsWith(root)) {
-                        throw new IOException("External symlinks are not supported: " + file + " -> " + a);
+                    if (!target.startsWith(root)) {
+                        throw new IOException("Symlinks outside the base directory are not supported: " + file + " -> " + target);
                     }
 
-                    if (Files.notExists(a)) {
+                    if (Files.notExists(target)) {
                         // missing target
                         return FileVisitResult.CONTINUE;
                     }
 
-                    if (Files.isDirectory(a)) {
-                        _copy(depth + 1, root, a, b, skipContents, visitor, options);
-                        return FileVisitResult.CONTINUE;
-                    }
-                }
-
-                Path parent = b.getParent();
-                if (!Files.exists(parent)) {
-                    Files.createDirectories(parent);
+                    Files.createSymbolicLink(b, link);
+                    return FileVisitResult.CONTINUE;
                 }
 
                 Files.copy(a, b, options);

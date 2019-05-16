@@ -8,6 +8,8 @@ flows:
         local:
           hosts:
             - "127.0.0.1"
+          vars:
+            ansible_connection: "garbage" # to make it fail
       saveRetryFile: true
       extraVars:
         msg: "Hi there!"
