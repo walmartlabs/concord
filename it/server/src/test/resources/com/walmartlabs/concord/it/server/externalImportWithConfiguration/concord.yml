@@ -1,0 +1,7 @@
+flows:
+  flowFromTemplate:
+    - log: "Hello from Template, ${nameInExternalImport}!"
+
+configuration:
+  arguments:
+    nameInExternalImport: "Concord"

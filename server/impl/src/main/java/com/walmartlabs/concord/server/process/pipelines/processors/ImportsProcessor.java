@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.SensitiveData;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Secret;
@@ -48,13 +50,15 @@ import java.util.Map;
 import static com.walmartlabs.concord.sdk.MapUtils.getString;
 
 /**
- * Extracts templates/imports into the workspace.
+ * Import external resources into the workspace.
  */
 @Named
 @Singleton
 public class ImportsProcessor implements PayloadProcessor {
 
-    private static final Secret INLINE_URL_SECRET = new Secret() {};
+    private static final Secret INLINE_URL_SECRET = new Secret() {
+        private static final long serialVersionUID = 1L;
+    };
 
     private final LogManager logManager;
     private final RepositoryManager repositoryManager;
@@ -68,26 +72,21 @@ public class ImportsProcessor implements PayloadProcessor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
 
+        Map<String, Object> req = getConfiguration(payload);
         Object imports = req.get(InternalConstants.Request.IMPORTS_KEY);
-        if (!(imports instanceof List)) {
-            return chain.process(payload);
-        }
+        List<ImportItem> items = convert(processKey, imports);
 
-        List<ImportItem> importItems = convert(processKey, (List<Object>) imports);
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
-
-        for (ImportItem t : importItems) {
+        for (ImportItem t : items) {
             try {
-                Snapshot s = SensitiveData.withSensitiveData(getSensitiveData(t), () -> processImportItem(t, workDir));
-                logManager.info(processKey, "Import {} processed", t);
+                SensitiveData.withSensitiveData(getSensitiveData(t), () -> processImportItem(t, workDir));
+                logManager.info(processKey, "Import {}", t);
             } catch (Exception e) {
-                logManager.error(processKey, "Process import {} error: {}", t, e.getMessage());
-                throw new ProcessException(processKey, "Process import " + t + " error", e);
+                logManager.error(processKey, "Error while importing external resource {}: {}", t, e.getMessage());
+                throw new ProcessException(processKey, "External resource " + t + " import error: " + e.getMessage(), e);
             }
         }
 
@@ -106,9 +105,17 @@ public class ImportsProcessor implements PayloadProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private List<ImportItem> convert(ProcessKey processKey, List<Object> importItems) {
+    private List<ImportItem> convert(ProcessKey processKey, Object items) {
+        if (items == null) {
+            return Collections.emptyList();
+        }
+
+        if (!(items instanceof List)) {
+            throw new ProcessException(processKey, "Invalid '" + InternalConstants.Request.IMPORTS_KEY + "' specification, expected a list, got: " + items);
+        }
+
         List<ImportItem> result = new ArrayList<>();
-        for (Object o : importItems) {
+        for (Object o : (List<Object>) items) {
             if (!(o instanceof Map)) {
                 throw new ProcessException(processKey, "Invalid imports definition type, expected map, got: " + o.getClass());
             }
@@ -131,6 +138,16 @@ public class ImportsProcessor implements PayloadProcessor {
                     .build());
         }
         return result;
+    }
+
+    private static Map<String, Object> getConfiguration(Payload payload) {
+        ProjectDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
+        if (pd == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Object> m = ProjectDefinitionUtils.getVariables(pd, RequestDataMergingProcessor.DEFAULT_PROFILES);
+        return m != null ? m : Collections.emptyMap();
     }
 
     private static String normalizeUrl(String u) {

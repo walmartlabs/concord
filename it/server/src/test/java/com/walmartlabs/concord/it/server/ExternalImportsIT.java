@@ -103,6 +103,36 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template DIR, Concord!.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithConfigurationInImport() throws Exception {
+        String repoUrl = initRepo("externalImportWithConfiguration");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMain", repoUrl);
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // get the name of the agent's log file
+
+        assertNotNull(pir.getLogFileName());
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+        assertLog(".*Hello from Template, Concord!.*", ab);
+    }
+
     private static String initRepo(String resourceName) throws Exception {
         Path tmpDir = createTempDir();
 

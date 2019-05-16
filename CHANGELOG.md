@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: fix the `imports` processing - `configuration`
+objects from the imported resources are now loaded correctly;
 - concord-server: another fix for the issue with symlinks in GIT
 repositories.
 
