@@ -73,6 +73,11 @@ public final class InternalConstants extends Constants {
     }
 
     public static final class Request extends Constants.Request {
+
+        /**
+         * The runner's configuration section.
+         */
+        public static final String RUNNER_KEY = "runner";
     }
 
     /**

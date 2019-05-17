@@ -309,6 +309,7 @@ public class Agent {
                 cfg.getAgentJavaCmd(),
                 cfg.getDependencyListsDir(),
                 cfg.getRunnerPath(),
+                cfg.getRunnerCfgDir(),
                 cfg.isRunnerSecurityManagerEnabled(),
                 cfg.getExtraDockerVolumes());
 
@@ -320,8 +321,10 @@ public class Agent {
 
         return req -> {
             RunnerJobExecutor jobExecutor;
-            RunnerJob job = RunnerJob.from(req, processLogFactory);
-            if (job.getCfg().get(InternalConstants.Request.CONTAINER) != null) {
+            RunnerJob job = RunnerJob.from(runnerExecutorCfg, req, processLogFactory);
+
+            // TODO looks a bit messy, refactor to use proper configuration objects
+            if (job.getProcessCfg().get(InternalConstants.Request.CONTAINER) != null) {
                 DockerRunnerJobExecutorConfiguration dockerRunnerCfg = new DockerRunnerJobExecutorConfiguration(cfg.getDockerHost(), cfg.getDependencyCacheDir(), cfg.getJavaPath());
                 jobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
             } else {

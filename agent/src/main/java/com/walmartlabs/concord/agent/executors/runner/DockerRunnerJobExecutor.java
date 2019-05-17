@@ -24,12 +24,14 @@ import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -55,46 +57,31 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
     }
 
     @Override
-    protected ProcessPool.ProcessEntry buildProcessEntry(RunnerJob job, Collection<Path> resolvedDeps) throws Exception {
+    protected ProcessPool.ProcessEntry buildProcessEntry(RunnerJob job) throws Exception {
         Path procDir = IOUtils.createTempDir("onetime");
-        String[] cmd = createCmd(job, resolvedDeps, procDir);
+        String[] cmd = createCmd(job, procDir);
         return startOneTime(job, cmd, procDir);
     }
 
-    private String[] createCmd(RunnerJob job, Collection<Path> deps, Path procDir) throws IOException {
+    private String[] createCmd(RunnerJob job, Path procDir) throws IOException {
+        job = job.withDependencies(collectDeps(job, procDir));
+
         Map<String, Object> containerCfg = getContainerCfg(job);
 
         String javaCmd = DockerCommandBuilder.getJavaCmd();
 
-        Files.createDirectories(procDir.resolve(".deps"));
-
-        // copy deps into workspace
-        for (Path src : deps) {
-            Path dst = Paths.get(src.toString().replace(dependencyManager.getLocalCacheDir().toString(), procDir.resolve(".deps").toString()));
-            IOUtils.copy(src, dst);
-        }
-
-        deps = deps.stream()
-                .map(d -> d.toString().replace(dependencyManager.getLocalCacheDir().toString(), DockerCommandBuilder.getWorkspaceDir() + "/" + ".deps"))
-                .map(d -> Paths.get(d))
-                .collect(Collectors.toList());
-
-        Path depsFile = storeDeps(deps);
-        depsFile = DockerCommandBuilder.getDependencyListsDir().resolve(depsFile.getFileName());
-
         Path runnerPath = DockerCommandBuilder.getRunnerPath(runnerCfg.getRunnerPath());
         Path runnerDir = DockerCommandBuilder.getWorkspaceDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
+
+        // we can't use "preforks" anyway, so let's store the runner's cfg directly in the payload dir
+        Path runnerCfgPath = runnerDir.resolve(storeRunnerCfg(job.getPayloadDir(), job.getRunnerCfg()).getFileName());
 
         RunnerCommandBuilder runner = new RunnerCommandBuilder()
                 .javaCmd(javaCmd)
                 .workDir(job.getPayloadDir())
                 .procDir(runnerDir)
-                .agentId(runnerCfg.getAgentId())
-                .serverApiBaseUrl(runnerCfg.getServerApiBaseUrl())
-                .securityManagerEnabled(runnerCfg.isRunnerSecurityManagerEnabled())
-                .dependencies(depsFile)
-                .debug(job.isDebugMode())
-                .runnerPath(runnerPath);
+                .runnerPath(runnerPath)
+                .runnerCfgPath(runnerCfgPath);
 
         return new DockerCommandBuilder(job.getLog(), dockerRunnerCfg.javaPath, containerCfg)
                 .procDir(procDir)
@@ -111,9 +98,29 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
                 .build();
     }
 
+    private Collection<String> collectDeps(RunnerJob job, Path procDir) throws IOException {
+        RunnerConfiguration runnerCfg = job.getRunnerCfg();
+        if (runnerCfg == null || runnerCfg.dependencies() == null) {
+            return Collections.emptyList();
+        }
+
+        // copy deps into workspace
+        Files.createDirectories(procDir.resolve(".deps"));
+
+        Collection<String> deps = runnerCfg.dependencies();
+        for (String src : deps) {
+            Path dst = Paths.get(src.replace(dependencyManager.getLocalCacheDir().toString(), procDir.resolve(".deps").toString()));
+            IOUtils.copy(Paths.get(src), dst);
+        }
+
+        return deps.stream()
+                .map(d -> d.replace(dependencyManager.getLocalCacheDir().toString(), DockerCommandBuilder.getWorkspaceDir() + "/" + ".deps"))
+                .collect(Collectors.toList());
+    }
+
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getContainerCfg(RunnerJob job) {
-        Map<String, Object> cfg = job.getCfg();
+        Map<String, Object> cfg = job.getProcessCfg();
         Map<String, Object> result = (Map<String, Object>) cfg.get(InternalConstants.Request.CONTAINER);
         if (result == null) {
             throw new IllegalArgumentException("Docker runner without container configuration");

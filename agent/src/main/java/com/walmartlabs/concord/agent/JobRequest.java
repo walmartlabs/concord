@@ -100,7 +100,7 @@ public class JobRequest {
 
     @Override
     public String toString() {
-        return "Job{" +
+        return "JobRequest{" +
                 "type=" + type +
                 ", instanceId=" + instanceId +
                 ", payloadDir=" + payloadDir +
@@ -109,6 +109,7 @@ public class JobRequest {
                 ", repoPath='" + repoPath + '\'' +
                 ", commitId='" + commitId + '\'' +
                 ", secretName='" + secretName + '\'' +
+                ", log=" + log +
                 '}';
     }
 

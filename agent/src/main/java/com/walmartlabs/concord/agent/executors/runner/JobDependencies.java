@@ -73,7 +73,7 @@ public class JobDependencies {
     @SuppressWarnings("unchecked")
     private static Collection<URI> getDependencyUris(RunnerJob job) throws ExecutionException {
         try {
-            Map<String, Object> m = job.getCfg();
+            Map<String, Object> m = job.getProcessCfg();
             Collection<String> deps = (Collection<String>) m.get(InternalConstants.Request.DEPENDENCIES_KEY);
             return normalizeUrls(deps);
         } catch (URISyntaxException | IOException e) {
