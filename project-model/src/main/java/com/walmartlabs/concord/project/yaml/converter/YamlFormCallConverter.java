@@ -50,7 +50,15 @@ public class YamlFormCallConverter implements StepConverter<YamlFormCall> {
 
         validate(opts, s.getLocation());
 
-        c.addElement(new UserTask(id, new FormExtension(s.getKey(), opts)));
+        String formId = null;
+        String formIdExpression = null;
+        if (StepConverter.isExpression(s.getKey())) {
+            formIdExpression = s.getKey();
+        } else {
+            formId = s.getKey();
+        }
+
+        c.addElement(new UserTask(id, new FormExtension(formId, formIdExpression, opts)));
         c.addOutput(id);
         c.addSourceMap(id, toSourceMap(s, "Form: " + s.getKey()));
 
