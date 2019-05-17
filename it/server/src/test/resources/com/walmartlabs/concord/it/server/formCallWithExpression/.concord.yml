@@ -1,0 +1,11 @@
+flows:
+  default:
+  - set:
+      formNameVar: "myForm"
+  - form: ${formNameVar}
+  - log: "Hello, ${myForm.name}"
+
+forms:
+  myForm:
+  - name: {type: "string"}
+
