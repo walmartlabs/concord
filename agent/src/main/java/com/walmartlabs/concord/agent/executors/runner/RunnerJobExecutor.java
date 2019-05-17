@@ -21,6 +21,7 @@ package com.walmartlabs.concord.agent.executors.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -40,6 +41,7 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,12 +67,14 @@ public class RunnerJobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerJobExecutor.class);
 
-    private final RunnerJobExecutorConfiguration cfg;
     protected final DependencyManager dependencyManager;
+
+    private final RunnerJobExecutorConfiguration cfg;
     private final DefaultDependencies defaultDependencies;
     private final List<JobPostProcessor> postProcessors;
     private final ProcessPool processPool;
     private final ExecutorService executor;
+    private final ObjectMapper objectMapper;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
                              DependencyManager dependencyManager,
@@ -85,6 +89,10 @@ public class RunnerJobExecutor {
         this.postProcessors = postProcessors;
         this.processPool = processPool;
         this.executor = executor;
+
+        // sort JSON keys for consistency
+        this.objectMapper = new ObjectMapper()
+                .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
     }
 
     public JobInstance exec(RunnerJob job) throws Exception {
@@ -92,9 +100,10 @@ public class RunnerJobExecutor {
         ProcessEntry pe;
         try {
             // resolve and download the dependencies
-            Collection<Path> resolvedDeps = resolveDeps(job);
+            Collection<String> resolvedDeps = resolveDeps(job);
+            job = job.withDependencies(resolvedDeps);
 
-            pe = buildProcessEntry(job, resolvedDeps);
+            pe = buildProcessEntry(job);
         } catch (Exception e) {
             log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
 
@@ -105,9 +114,10 @@ public class RunnerJobExecutor {
         }
 
         // continue the execution in a separate thread to make the process cancellable
+        RunnerJob _job = job;
         Future<?> f = executor.submit(() -> {
             try {
-                exec(job, pe);
+                exec(_job, pe);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -117,14 +127,14 @@ public class RunnerJobExecutor {
         return new JobInstanceImpl(f, pe.getProcess());
     }
 
-    protected ProcessEntry buildProcessEntry(RunnerJob job, Collection<Path> resolvedDeps) throws Exception {
+    protected ProcessEntry buildProcessEntry(RunnerJob job) throws Exception {
         ProcessEntry pe;
         if (canUsePrefork(job)) {
-            String[] cmd = createCmd(job, resolvedDeps);
+            String[] cmd = createCmd(job);
             pe = fork(job, cmd);
         } else {
             log.info("start ['{}'] -> can't use pre-forked instances", job.getInstanceId());
-            String[] cmd = createCmd(job, resolvedDeps);
+            String[] cmd = createCmd(job);
             Path procDir = IOUtils.createTempDir("onetime");
             pe = startOneTime(job, cmd, procDir);
         }
@@ -197,7 +207,7 @@ public class RunnerJobExecutor {
         }
     }
 
-    private Collection<Path> resolveDeps(RunnerJob job) throws IOException, ExecutionException {
+    private Collection<String> resolveDeps(RunnerJob job) throws IOException, ExecutionException {
         long t1 = System.currentTimeMillis();
 
         // combine the default dependencies and the process' dependencies
@@ -209,8 +219,10 @@ public class RunnerJobExecutor {
         // check the resolved dependencies against the current policy
         validateDependencies(job, deps);
 
-        Collection<Path> paths = deps.stream()
+        // sort dependencies to maintain consistency in runner configurations
+        Collection<String> paths = deps.stream()
                 .map(DependencyEntity::getPath)
+                .map(p -> p.toAbsolutePath().toString())
                 .sorted()
                 .collect(Collectors.toList());
 
@@ -265,20 +277,16 @@ public class RunnerJobExecutor {
         job.getLog().info("Dependencies: {}", b);
     }
 
-    private String[] createCmd(RunnerJob job, Collection<Path> deps) throws IOException {
-        Path depsFile = storeDeps(deps);
+    private String[] createCmd(RunnerJob job) throws IOException {
+        Path runnerCfgFile = storeRunnerCfg(cfg.getRunnerCfgDir(), job.getRunnerCfg());
 
         RunnerCommandBuilder runner = new RunnerCommandBuilder()
                 .javaCmd(cfg.agentJavaCmd)
                 .workDir(job.getPayloadDir())
-                .agentId(cfg.agentId)
-                .serverApiBaseUrl(cfg.serverApiBaseUrl)
-                .securityManagerEnabled(cfg.runnerSecurityManagerEnabled)
-                .dependencies(depsFile)
-                .debug(job.isDebugMode())
                 .logLevel(getLogLevel(job))
                 .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
-                .runnerPath(cfg.runnerPath.toAbsolutePath());
+                .runnerPath(cfg.runnerPath.toAbsolutePath())
+                .runnerCfgPath(runnerCfgFile.toAbsolutePath());
 
         return runner.build();
     }
@@ -354,23 +362,20 @@ public class RunnerJobExecutor {
         return new ProcessEntry(p, procDir);
     }
 
-    protected Path storeDeps(Collection<Path> dependencies) throws IOException {
-        List<String> deps = dependencies.stream()
-                .map(p -> p.toAbsolutePath().toString())
-                .collect(Collectors.toList());
-
-        HashCode depsHash = hash(deps.toArray(new String[0]));
-
-        Path result = cfg.dependencyListDir.resolve(depsHash.toString() + ".deps");
-        if (Files.exists(result)) {
-            return result;
+    protected Path storeRunnerCfg(Path baseDir, RunnerConfiguration runnerCfg) throws IOException {
+        if (!Files.exists(baseDir)) {
+            Files.createDirectories(baseDir);
         }
 
-        Files.write(result,
-                (Iterable<String>) deps.stream()::iterator,
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        byte[] data = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(runnerCfg);
+        HashCode hc = Hashing.sha256().hashBytes(data);
 
-        return result;
+        Path cfgFile = baseDir.resolve(hc + ".json");
+        if (!Files.exists(cfgFile)) {
+            Files.write(cfgFile, data);
+        }
+
+        return cfgFile;
     }
 
     @Override
@@ -404,17 +409,17 @@ public class RunnerJobExecutor {
         return new ObjectMapper().readValue(policyFile.toFile(), Map.class);
     }
 
-    @SuppressWarnings("unchecked")
     private static String getLogLevel(RunnerJob job) {
-        if (job.getCfg() == null) {
+        RunnerConfiguration cfg = job.getRunnerCfg();
+        if (cfg == null) {
             return null;
         }
 
-        Map<String, Object> runnerCfg = (Map<String, Object>) job.getCfg().getOrDefault("runner", Collections.emptyMap());
-        String logLevel = (String) runnerCfg.get("logLevel");
+        String logLevel = cfg.logLevel();
         if (logLevel == null) {
             return null;
         }
+
         return logLevel.toUpperCase();
     }
 
@@ -499,6 +504,7 @@ public class RunnerJobExecutor {
         private final String agentJavaCmd;
         private final Path dependencyListDir;
         private final Path runnerPath;
+        private final Path runnerCfgDir;
         private final boolean runnerSecurityManagerEnabled;
         private final List<String> extraDockerVolumes;
 
@@ -507,19 +513,26 @@ public class RunnerJobExecutor {
                                               String agentJavaCmd,
                                               Path dependencyListDir,
                                               Path runnerPath,
-                                              boolean isRunnerSecurityManagerEnabled, List<String> extraDockerVolumes) {
+                                              Path runnerCfgDir,
+                                              boolean isRunnerSecurityManagerEnabled,
+                                              List<String> extraDockerVolumes) {
 
             this.agentId = agentId;
             this.serverApiBaseUrl = serverApiBaseUrl;
             this.agentJavaCmd = agentJavaCmd;
             this.dependencyListDir = dependencyListDir;
             this.runnerPath = runnerPath;
+            this.runnerCfgDir = runnerCfgDir;
             this.runnerSecurityManagerEnabled = isRunnerSecurityManagerEnabled;
             this.extraDockerVolumes = extraDockerVolumes;
         }
 
         public Path getRunnerPath() {
             return runnerPath;
+        }
+
+        public Path getRunnerCfgDir() {
+            return runnerCfgDir;
         }
 
         public String getAgentId() {
@@ -530,6 +543,7 @@ public class RunnerJobExecutor {
             return serverApiBaseUrl;
         }
 
+        // TODO actually pass the parameter into the runner cfg
         public boolean isRunnerSecurityManagerEnabled() {
             return runnerSecurityManagerEnabled;
         }

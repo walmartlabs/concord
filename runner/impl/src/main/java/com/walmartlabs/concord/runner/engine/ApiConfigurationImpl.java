@@ -21,26 +21,39 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.runner.ContextUtils;
+import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 
+import javax.inject.Inject;
 import javax.inject.Named;
-
-import static com.walmartlabs.concord.runner.ConfigurationUtils.getSystemProperty;
 
 @Named
 public class ApiConfigurationImpl implements ApiConfiguration {
 
-    private static final String BASE_URL_KEY = "api.baseUrl";
-    private static final String BASE_URL = getSystemProperty(BASE_URL_KEY, "http://localhost:8001");
+    private final RunnerConfiguration runnerCfg;
+
+    @Inject
+    public ApiConfigurationImpl(RunnerConfiguration runnerCfg) {
+        this.runnerCfg = runnerCfg;
+    }
 
     @Override
     public String getBaseUrl() {
-        return BASE_URL;
+        return runnerCfg.api().baseUrl();
     }
 
-     @SuppressWarnings("unchecked")
-     public String getSessionToken(Context ctx) {
+    @Override
+    public int connectTimeout() {
+        return runnerCfg.api().connectTimeout();
+    }
+
+    @Override
+    public int readTimeout() {
+        return runnerCfg.api().readTimeout();
+    }
+
+    public String getSessionToken(Context ctx) {
         return ContextUtils.getSessionToken(ctx);
-     }
+    }
 }

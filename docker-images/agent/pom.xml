@@ -61,8 +61,8 @@
                                     <destFileName>agent.tar.gz</destFileName>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord</groupId>
-                                    <artifactId>concord-runner</artifactId>
+                                    <groupId>com.walmartlabs.concord.runner</groupId>
+                                    <artifactId>concord-runner-impl</artifactId>
                                     <version>${project.version}</version>
                                     <classifier>jar-with-dependencies</classifier>
                                     <outputDirectory>${project.build.directory}/dist</outputDirectory>

@@ -32,6 +32,16 @@ public interface ApiConfiguration {
     String getBaseUrl();
 
     /**
+     * @return connection timeout (ms)
+     */
+    int connectTimeout();
+
+    /**
+     * @return socket read timeout (ms)
+     */
+    int readTimeout();
+
+    /**
      * @return the current session token that can be used to talk to the API.
      */
     String getSessionToken(Context ctx);

@@ -64,7 +64,7 @@ public class JobDependenciesTest {
         ));
 
         RunnerJob j = mock(RunnerJob.class);
-        when(j.getCfg()).thenReturn(cfg);
+        when(j.getProcessCfg()).thenReturn(cfg);
         when(j.getPayloadDir()).thenReturn(payloadDir);
 
         RedirectedProcessLog log = mock(RedirectedProcessLog.class);

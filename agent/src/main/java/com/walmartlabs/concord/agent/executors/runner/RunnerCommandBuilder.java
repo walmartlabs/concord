@@ -38,12 +38,8 @@ public class RunnerCommandBuilder {
     private String javaCmd;
     private Path workDir;
     private Path procDir;
-    private String agentId;
-    private String serverApiBaseUrl;
-    private boolean securityManagerEnabled;
-    private Path dependencies;
     private Path runnerPath;
-    private boolean debug;
+    private Path runnerCfgPath;
     private String logLevel;
     private Path extraDockerVolumesFile;
 
@@ -66,33 +62,13 @@ public class RunnerCommandBuilder {
         return this;
     }
 
-    public RunnerCommandBuilder agentId(String agentId) {
-        this.agentId = agentId;
-        return this;
-    }
-
-    public RunnerCommandBuilder serverApiBaseUrl(String serverApiBaseUrl) {
-        this.serverApiBaseUrl = serverApiBaseUrl;
-        return this;
-    }
-
-    public RunnerCommandBuilder securityManagerEnabled(boolean securityManagerEnabled) {
-        this.securityManagerEnabled = securityManagerEnabled;
-        return this;
-    }
-
-    public RunnerCommandBuilder dependencies(Path dependencies) {
-        this.dependencies = dependencies;
-        return this;
-    }
-
     public RunnerCommandBuilder runnerPath(Path runnerPath) {
         this.runnerPath = runnerPath;
         return this;
     }
 
-    public RunnerCommandBuilder debug(boolean debug) {
-        this.debug = debug;
+    public RunnerCommandBuilder runnerCfgPath(Path runnerCfgPath) {
+        this.runnerCfgPath = runnerCfgPath;
         return this;
     }
 
@@ -128,29 +104,19 @@ public class RunnerCommandBuilder {
             l.add("-Dsun.zip.disableMemoryMapping=true");
         }
 
-        // Concord properties
-        l.add("-DagentId=" + agentId);
-        l.add("-Dapi.baseUrl=" + serverApiBaseUrl);
-
         if (procDir != null) {
             l.add("-Duser.dir=" + procDir.toString());
         }
 
-        if (debug) {
-            l.add("-Ddebug=true");
-        }
-
+        // logback configuration looks for logLevel in JVM properties
         if (logLevel != null) {
             l.add("-DlogLevel=" + logLevel);
         }
 
         if (extraDockerVolumesFile != null) {
-            // TODO move into the constants in something like a runner-api module?
+            // TODO move into RunnerConfiguration
             l.add("-Dconcord.dockerExtraVolumes=" + extraDockerVolumesFile);
         }
-
-        // Runner's security manager
-        l.add("-Dconcord.securityManager.enabled=" + securityManagerEnabled);
 
         // classpath
         l.add("-cp");
@@ -162,7 +128,7 @@ public class RunnerCommandBuilder {
         // main class
         l.add("com.walmartlabs.concord.runner.Main");
 
-        l.add(dependencies.toString());
+        l.add(runnerCfgPath.toString());
 
         return l.toArray(new String[0]);
     }

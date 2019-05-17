@@ -21,10 +21,13 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
@@ -34,6 +37,7 @@ import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.ProcessErrorProcessor;
+import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
@@ -79,7 +83,7 @@ public class Main {
         this.apiClientFactory = apiClientFactory;
     }
 
-    public void run(Path baseDir, boolean debug) throws Exception {
+    public void run(RunnerConfiguration runnerCfg, Path baseDir) throws Exception {
         log.info("run -> working directory: {}", baseDir.toAbsolutePath());
 
         long t1 = System.currentTimeMillis();
@@ -91,7 +95,7 @@ public class Main {
         }
 
         long t2 = System.currentTimeMillis();
-        if (debug) {
+        if (runnerCfg.debug()) {
             log.info("Spent {}ms waiting for the payload", (t2 - t1));
         }
 
@@ -107,15 +111,17 @@ public class Main {
         String sessionToken = getSessionToken(baseDir);
         heartbeat.start(instanceId, sessionToken);
 
-        String agentId = ConfigurationUtils.getSystemProperty("agentId", "n/a");
+        ProcessApiClient processApiClient = new ProcessApiClient(runnerCfg,
+                apiClientFactory.create(ApiClientConfiguration.builder()
+                        .sessionToken(sessionToken)
+                        .build()));
 
-        ProcessApiClient processApiClient = new ProcessApiClient(apiClientFactory.create(sessionToken));
-        processApiClient.updateStatus(instanceId, agentId, ProcessEntry.StatusEnum.RUNNING);
+        processApiClient.updateStatus(instanceId, runnerCfg.agentId(), ProcessEntry.StatusEnum.RUNNING);
 
         CheckpointManager checkpointManager = new CheckpointManager(instanceId, processApiClient);
 
         long t3 = System.currentTimeMillis();
-        if (debug) {
+        if (runnerCfg.debug()) {
             log.info("Ready to start in {}ms", (t3 - t2));
         }
 
@@ -408,30 +414,31 @@ public class Main {
         // determine current working directory, it should contain the payload
         Path baseDir = Paths.get(System.getProperty("user.dir"));
 
-        boolean debug = Boolean.parseBoolean(System.getProperty("debug"));
-
         try {
             long t1 = System.currentTimeMillis();
 
-            List<URL> deps = Collections.emptyList();
-            if (args.length > 0) {
-                deps = parseDeps(Paths.get(args[0]));
-            }
+            // load the config
+            RunnerConfiguration runnerCfg = validate(loadRunnerCfg(args));
+            // TODO enable security manager
 
+            // load dependencies
+            List<URL> deps = loadDependencyList(runnerCfg);
             URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[0]), Main.class.getClassLoader()); // NOSONAR
             Thread.currentThread().setContextClassLoader(depsClassLoader);
 
-            Injector injector = createInjector(depsClassLoader);
+            // create the injector to wire up and initialize all dependencies
+            Injector injector = createInjector(runnerCfg, depsClassLoader);
+
             Main main = injector.getInstance(Main.class);
 
             long t2 = System.currentTimeMillis();
-            if (debug) {
+            if (runnerCfg.debug()) {
                 log.info("Runtime loaded in {}ms", (t2 - t1));
             }
 
-            main.run(baseDir, debug);
+            main.run(runnerCfg, baseDir);
 
-            // force exit
+            // force exit (helps with runaway threads)
             System.exit(0);
         } catch (Throwable e) { // catch both errors and exceptions
             // try to unroll nested exceptions to get a meaningful one
@@ -440,6 +447,45 @@ public class Main {
             saveLastError(baseDir, t);
             System.exit(1);
         }
+    }
+
+    private static RunnerConfiguration loadRunnerCfg(String[] args) throws IOException {
+        if (args.length < 1) {
+            return RunnerConfiguration.builder().build();
+        }
+
+        Path cfgFile = Paths.get(args[0]);
+        try (InputStream in = Files.newInputStream(cfgFile)) {
+            return createObjectMapper().readValue(in, RunnerConfiguration.class);
+        }
+    }
+
+    // TODO bind the same ObjectMapper instance into the injector?
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new GuavaModule());
+        om.registerModule(new Jdk8Module());
+        return om;
+    }
+
+    private static RunnerConfiguration validate(RunnerConfiguration cfg) {
+        if (cfg.agentId() == null) {
+            throw new IllegalArgumentException("Configuration parameter 'agentId' is required");
+        }
+
+        if (cfg.api() == null || cfg.api().baseUrl() == null) {
+            throw new IllegalArgumentException("Configuration parameter 'api.baseUrl' is required");
+        }
+
+        return cfg;
+    }
+
+    private static List<URL> loadDependencyList(RunnerConfiguration cfg) throws Exception {
+        if (cfg.dependencies() == null) {
+            return Collections.emptyList();
+        }
+
+        return parseDeps(cfg.dependencies());
     }
 
     private static String getSessionToken(Path baseDir) throws ExecutionException {
@@ -451,15 +497,6 @@ public class Main {
         } catch (IOException e) {
             throw new ExecutionException("Error while reading sesison token data", e);
         }
-    }
-
-    private static void installSecurityManager() {
-        String s = System.getProperty("concord.securityManager.enable");
-        if (!"true".equals(s)) {
-            return;
-        }
-
-        System.setSecurityManager(new ConcordSecurityManager());
     }
 
     private static Throwable unroll(Throwable e) {
@@ -478,17 +515,17 @@ public class Main {
         return e;
     }
 
-    private static List<URL> parseDeps(Path depsListFile) throws IOException {
-        List<URL> result = Files.readAllLines(depsListFile).stream()
+    private static List<URL> parseDeps(Collection<String> deps) throws IOException {
+        List<URL> result = deps.stream()
                 .map(s -> {
                     if (!Files.exists(Paths.get(s))) {
-                        throw new RuntimeException("dependency file: " + s + " not found");
+                        throw new RuntimeException("Dependency file: " + s + " not found");
                     }
 
                     try {
                         return new URL("file://" + s);
                     } catch (MalformedURLException e) {
-                        throw new RuntimeException("invalid deps file: " + depsListFile + ", error:" + e.getMessage());
+                        throw new RuntimeException("Invalid dependency path " + s + ":" + e.getMessage());
                     }
                 }).collect(Collectors.toList());
 
@@ -512,8 +549,15 @@ public class Main {
         return result;
     }
 
-    private static Injector createInjector(ClassLoader depsClassLoader) {
+    private static Injector createInjector(RunnerConfiguration runnerCfg, ClassLoader depsClassLoader) {
         ClassLoader cl = Main.class.getClassLoader();
+
+        Module cfg = new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(RunnerConfiguration.class).toInstance(runnerCfg);
+            }
+        };
 
         Module tasks = new AbstractModule() {
             @Override
@@ -540,6 +584,7 @@ public class Main {
         };
 
         Module m = new WireModule(
+                cfg,
                 tasks,
                 taskCallModule,
                 new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE),

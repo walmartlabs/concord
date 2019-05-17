@@ -85,6 +85,7 @@ public class Configuration {
 
 
     private final Path runnerPath;
+    private final Path runnerCfgDir;
     private final String agentJavaCmd;
 
     private final boolean runnerSecurityManagerEnabled;
@@ -162,6 +163,7 @@ public class Configuration {
         });
         this.runnerPath = Paths.get(path);
         this.runnerSecurityManagerEnabled = cfg.getBoolean("runner.securityManagerEnabled");
+        this.runnerCfgDir = getDir(cfg, "runner.cfgDir");
         this.agentJavaCmd = cfg.getString("runner.javaCmd");
     }
 
@@ -199,6 +201,10 @@ public class Configuration {
 
     public Path getRunnerPath() {
         return runnerPath;
+    }
+
+    public Path getRunnerCfgDir() {
+        return runnerCfgDir;
     }
 
     public int getWorkersCount() {

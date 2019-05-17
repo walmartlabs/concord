@@ -25,14 +25,12 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 
 import java.util.Map;
 import java.util.UUID;
 
 public class ProcessApiClient {
-
-    private static final String RETRY_COUNT_KEY = "api.retry.count";
-    private static final String RETRY_INTERVAL_KEY = "api.retry.interval";
 
     private final ApiClient apiClient;
     private final ProcessApi processApi;
@@ -40,12 +38,12 @@ public class ProcessApiClient {
     private final int retryCount;
     private final long retryInterval;
 
-    public ProcessApiClient(ApiClient apiClient) {
+    public ProcessApiClient(RunnerConfiguration runnerCfg, ApiClient apiClient) {
         this.apiClient = apiClient;
         this.processApi = new ProcessApi(apiClient);
 
-        this.retryCount = Integer.parseInt(getEnv(RETRY_COUNT_KEY, "3"));
-        this.retryInterval = Integer.parseInt(getEnv(RETRY_INTERVAL_KEY, "5000"));
+        this.retryCount = runnerCfg.api().retryCount();
+        this.retryInterval = runnerCfg.api().retryInterval();
     }
 
     public void uploadCheckpoint(UUID instanceId, Map<String, Object> data) throws ApiException {
@@ -62,16 +60,5 @@ public class ProcessApiClient {
             processApi.updateStatus(instanceId, agentId, status.name());
             return null;
         });
-    }
-
-    private static String getEnv(String key, String def) {
-        String value = System.getProperty(key);
-        if (value != null) {
-            return value;
-        }
-        if (def != null) {
-            return def;
-        }
-        throw new IllegalArgumentException(key + " must be specified");
     }
 }

@@ -43,9 +43,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ApiClientFactoryImpl implements ApiClientFactory {
 
-    private static final String CONNECT_TIMEOUT_KEY = "api.connect.timeout";
-    private static final String READ_TIMEOUT_KEY = "api.read.timeout";
-
     private final ApiConfiguration cfg;
     private final Path tmpDir;
     private final OkHttpClient httpClient;
@@ -60,11 +57,8 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
         // init the SSL socket factory early to save time on the first request
         client = withSslSocketFactory(client);
 
-        int connectTimeout = Integer.parseInt(getProperty(CONNECT_TIMEOUT_KEY, "10000"));
-        int readTimeout = Integer.parseInt(getProperty(READ_TIMEOUT_KEY, "60000"));
-
-        client.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
-        client.setReadTimeout(readTimeout, TimeUnit.MILLISECONDS);
+        client.setConnectTimeout(cfg.connectTimeout(), TimeUnit.MILLISECONDS);
+        client.setReadTimeout(cfg.readTimeout(), TimeUnit.MILLISECONDS);
         client.setWriteTimeout(30, TimeUnit.SECONDS);
 
         this.httpClient = client;
@@ -98,17 +92,6 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
                 .setApiKey(apiKey)
                 .addDefaultHeader("Accept", "*/*")
                 .setTempFolderPath(tmpDir.toString());
-    }
-
-    private static String getProperty(String key, String def) {
-        String value = System.getProperty(key);
-        if (value != null) {
-            return value;
-        }
-        if (def != null) {
-            return def;
-        }
-        throw new IllegalArgumentException(key + " must be specified");
     }
 
     private static OkHttpClient withSslSocketFactory(OkHttpClient client) throws NoSuchAlgorithmException, KeyManagementException {
