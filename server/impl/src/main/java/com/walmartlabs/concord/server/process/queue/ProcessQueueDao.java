@@ -482,6 +482,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    // TODO move to EventDao?
     public List<ProcessStatusHistoryEntry> getHistory(ProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
@@ -495,6 +496,7 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    // TODO move to EventDao?
     public List<ProcessWaitHistoryEntry> getWaitHistory(ProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
@@ -506,6 +508,22 @@ public class ProcessQueueDao extends AbstractDao {
                     .orderBy(pe.EVENT_DATE.desc())
                     .fetch(r -> objectMapper.deserialize(r.value1(), WAIT_HISTORY_ENTRY));
 
+        }
+    }
+
+    public UUID getInitiatorId(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.INITIATOR_ID).from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(PROCESS_QUEUE.INITIATOR_ID);
+        }
+    }
+
+    public UUID getProjectId(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.PROJECT_ID).from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(PROCESS_QUEUE.PROJECT_ID);
         }
     }
 

@@ -36,6 +36,7 @@ import { ProcessStatus } from '../../../api/process';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
 import { LogSegment, LogSegmentType, TagData } from '../../../state/data/processes/logs/types';
 import { RequestErrorMessage } from '../../molecules';
+import { TaskCallDetails } from '../../organisms';
 
 import './styles.css';
 
@@ -43,6 +44,7 @@ interface State {
     refreshStuck: boolean;
     scrollAnchorRef: boolean;
     opts: LogProcessorOptions;
+    expandedItems: ConcordId[];
 }
 
 interface Props {
@@ -61,22 +63,54 @@ interface Props {
 }
 
 interface LogContainerProps {
+    instanceId: ConcordId;
     data: LogSegment[];
+    onClick: (correlationId: ConcordId) => void;
+    expandedItems: ConcordId[];
 }
 
-const renderTag = (tag: TagData, idx: number) => {
+const renderTagHeader = (
+    taskName: string,
+    idx: number,
+    expanded?: boolean,
+    onClick?: () => void
+) => (
+    <Divider
+        horizontal={true}
+        key={idx}
+        className={onClick ? 'clickableTagHeader' : undefined}
+        onClick={onClick}>
+        {taskName}
+        {onClick && <Icon name={expanded ? 'chevron up' : 'chevron down'} />}
+    </Divider>
+);
+
+const renderTag = (
+    instanceId: ConcordId,
+    tag: TagData,
+    onClick: () => void,
+    expanded: boolean,
+    idx: number
+) => {
     if (tag.phase === 'post') {
         return <Divider key={idx} />;
     }
 
+    if (!tag.correlationId) {
+        return renderTagHeader(tag.taskName, idx);
+    }
+
     return (
-        <Divider horizontal={true} key={idx}>
-            {tag.taskName}
-        </Divider>
+        <div key={idx} className="logTagDetails">
+            {renderTagHeader(tag.taskName, idx, expanded, onClick)}
+            {expanded && (
+                <TaskCallDetails instanceId={instanceId} correlationId={tag.correlationId} />
+            )}
+        </div>
     );
 };
 
-const LogContainer = ({ data }: LogContainerProps) => (
+const LogContainer = ({ instanceId, data, onClick, expandedItems }: LogContainerProps) => (
     <>
         {data.map(({ data, type }, idx) => {
             switch (type) {
@@ -88,7 +122,15 @@ const LogContainer = ({ data }: LogContainerProps) => (
                     );
                 }
                 case LogSegmentType.TAG: {
-                    return renderTag(data as TagData, idx);
+                    const tag = data as TagData;
+                    const expanded = !!expandedItems.find((i) => i === tag.correlationId);
+                    return renderTag(
+                        instanceId,
+                        tag,
+                        () => onClick(tag.correlationId),
+                        expanded,
+                        idx
+                    );
                 }
                 default: {
                     return `Unknown log segment type: ${type}`;
@@ -128,12 +170,14 @@ class ProcessLogViewer extends React.Component<Props, State> {
         this.state = {
             refreshStuck: false,
             scrollAnchorRef: false,
-            opts: getStoredOpts()
+            opts: getStoredOpts(),
+            expandedItems: []
         };
 
         this.handleScroll = this.handleScroll.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.renderToolbar = this.renderToolbar.bind(this);
+        this.handleTagClick = this.handleTagClick.bind(this);
     }
 
     componentDidMount() {
@@ -179,6 +223,19 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
         this.setState({ opts: newOpts });
         storeOpts(newOpts);
+    }
+
+    handleTagClick(correlationId: ConcordId) {
+        let { expandedItems } = this.state;
+
+        const i = expandedItems.findIndex((i) => i === correlationId);
+        if (i < 0) {
+            expandedItems.push(correlationId);
+        } else {
+            expandedItems.splice(i, 1);
+        }
+
+        this.setState({ expandedItems });
     }
 
     scrollToBottom() {
@@ -277,11 +334,13 @@ class ProcessLogViewer extends React.Component<Props, State> {
     }
 
     render() {
-        const { error, data } = this.props;
+        const { error, instanceId, data } = this.props;
 
         if (error) {
             return <RequestErrorMessage error={error} />;
         }
+
+        const { expandedItems } = this.state;
 
         return (
             <div ref={(r) => (this.stickyRef = r)}>
@@ -293,7 +352,12 @@ class ProcessLogViewer extends React.Component<Props, State> {
                     {this.renderToolbar()}
                 </Sticky>
 
-                <LogContainer data={data} />
+                <LogContainer
+                    instanceId={instanceId}
+                    data={data}
+                    expandedItems={expandedItems}
+                    onClick={this.handleTagClick}
+                />
 
                 <div
                     ref={(scroll) => {

@@ -32,3 +32,12 @@
     opacity: 1;
     color: #2185D0;
 }
+
+.clickableTagHeader:hover {
+    color: gray;
+    cursor: zoom-in;
+}
+
+.logTagDetails {
+    margin-bottom: 20px;
+}

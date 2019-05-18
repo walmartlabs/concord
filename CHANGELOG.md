@@ -4,6 +4,11 @@
 
 ### Added
 
+- concord-runner: new options to enable or disable recording of task
+`in` and `out` variables. Including the option to blacklist specific
+variable names;
+- concord-console: display task call details in the process log
+viewer;
 - project-model: support for expressions in form calls.
 
 

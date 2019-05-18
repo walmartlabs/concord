@@ -403,7 +403,7 @@ public class AnsibleIT extends AbstractServerIT {
 
         // ---
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> events = eventsApi.list(pir.getInstanceId(), "ANSIBLE", null, null);
+        List<ProcessEventEntry> events = eventsApi.list(pir.getInstanceId(), "ANSIBLE", null, null, null, null, null);
         assertNotNull(events);
         // one pre and one post event
         assertEquals(2, events.size());

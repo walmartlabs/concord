@@ -20,8 +20,10 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -31,6 +33,7 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.List;
@@ -43,47 +46,55 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class EventDao extends AbstractDao {
 
+    private final ObjectMapper objectMapper;
+
     @Inject
-    public EventDao(@MainDB Configuration cfg) {
+    public EventDao(@MainDB Configuration cfg, ObjectMapper objectMapper) {
         super(cfg);
+        this.objectMapper = objectMapper;
     }
 
-    public List<ProcessEventEntry> list(ProcessKey processKey, Timestamp geTimestamp, String eventType, int limit) {
-        return list(processKey, geTimestamp, eventType, null, limit);
-    }
-
-    public List<ProcessEventEntry> list(ProcessKey processKey, Timestamp geTimestamp, String eventType, Map<String, Object> dataFilter, int limit) {
+    public List<ProcessEventEntry> list(ProcessEventFilter filter) {
         try (DSLContext tx = DSL.using(cfg)) {
+
+            ProcessKey processKey = filter.processKey();
 
             SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
                     .select(PROCESS_EVENTS.EVENT_ID,
                             PROCESS_EVENTS.EVENT_TYPE,
                             PROCESS_EVENTS.EVENT_DATE,
-                            PROCESS_EVENTS.EVENT_DATA.cast(String.class))
+                            function("jsonb_strip_nulls", Object.class, PROCESS_EVENTS.EVENT_DATA).cast(String.class))
                     .from(PROCESS_EVENTS)
                     .where(PROCESS_EVENTS.INSTANCE_ID.eq(processKey.getInstanceId())
                             .and(PROCESS_EVENTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())));
 
-            if (geTimestamp != null) {
-                q.and(PROCESS_EVENTS.EVENT_DATE.ge(geTimestamp));
+            Timestamp after = filter.after();
+            if (after != null) {
+                q.and(PROCESS_EVENTS.EVENT_DATE.ge(after));
             }
 
+            String eventType = filter.eventType();
             if (eventType != null) {
                 q.and(PROCESS_EVENTS.EVENT_TYPE.eq(eventType));
             }
 
-            if (dataFilter != null) {
-                dataFilter.forEach((k, v) -> {
-                    q.and(field("{0}->>{1}", Object.class, PROCESS_EVENTS.EVENT_DATA, inline(k)).eq(v));
-                });
+            UUID eventCorrelationId = filter.eventCorrelationId();
+            if (eventCorrelationId != null) {
+                q.and(PgUtils.jsonText(PROCESS_EVENTS.EVENT_DATA, "correlationId").eq(eventCorrelationId.toString()));
             }
 
+            EventPhase eventPhase = filter.eventPhase();
+            if (eventPhase != null) {
+                q.and(PgUtils.jsonText(PROCESS_EVENTS.EVENT_DATA, "phase").eq(eventPhase.getKey()));
+            }
+
+            int limit = filter.limit();
             if (limit > 0) {
                 q.limit(limit);
             }
 
             return q.orderBy(PROCESS_EVENTS.EVENT_DATE)
-                    .fetch(EventDao::toEntry);
+                    .fetch(this::toEntry);
         }
     }
 
@@ -131,12 +142,25 @@ public class EventDao extends AbstractDao {
         });
     }
 
-    private static ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
+    private ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
         return ImmutableProcessEventEntry.builder()
                 .id(r.value1())
                 .eventType(r.value2())
                 .eventDate(r.value3())
-                .data(r.value4())
+                .data(parse(r.value4()))
                 .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parse(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(s, Map.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

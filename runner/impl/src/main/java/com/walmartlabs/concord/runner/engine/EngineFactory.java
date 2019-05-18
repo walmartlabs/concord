@@ -29,6 +29,7 @@ import com.walmartlabs.concord.runner.PolicyEngineHolder;
 import com.walmartlabs.concord.runner.VariablesSnapshotListener;
 import com.walmartlabs.concord.runner.engine.el.InjectVariableELResolver;
 import com.walmartlabs.concord.runner.engine.el.TaskResolver;
+import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.Configuration;
@@ -74,11 +75,16 @@ public class EngineFactory {
 
     private final ApiClientFactory apiClientFactory;
     private final ServiceTaskRegistry taskRegistry;
+    private final RunnerConfiguration runnerCfg;
 
     @Inject
-    public EngineFactory(ApiClientFactory apiClientFactory, ServiceTaskRegistry taskRegistry) {
+    public EngineFactory(ApiClientFactory apiClientFactory,
+                         ServiceTaskRegistry taskRegistry,
+                         RunnerConfiguration runnerCfg) {
+
         this.apiClientFactory = apiClientFactory;
         this.taskRegistry = taskRegistry;
+        this.runnerCfg = runnerCfg;
     }
 
     @SuppressWarnings("deprecation")
@@ -146,7 +152,7 @@ public class EngineFactory {
 
         List<TaskInterceptor> taskInterceptors = new ArrayList<>();
         taskInterceptors.add(protectedVarContext);
-        taskInterceptors.add(new TaskEventInterceptor(eventProcessor));
+        taskInterceptors.add(new TaskEventInterceptor(runnerCfg.events(), eventProcessor));
         taskInterceptors.add(new PolicyPreprocessor(baseDir));
 
         Engine engine = new EngineBuilder()

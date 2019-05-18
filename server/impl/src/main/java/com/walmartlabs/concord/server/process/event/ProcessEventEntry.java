@@ -30,6 +30,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
@@ -43,12 +44,15 @@ public interface ProcessEventEntry extends Serializable {
     String eventType();
 
     @Nullable
-    @JsonRawValue
-    Object data();
+    Map<String, Object> data();
 
     /**
      * should match the format in {@link com.walmartlabs.concord.server.IsoDateParam}
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     Date eventDate();
+
+    static ImmutableProcessEventEntry.Builder from(ProcessEventEntry e) {
+        return ImmutableProcessEventEntry.builder().from(e);
+    }
 }
