@@ -55,6 +55,7 @@ export enum LogSegmentType {
 export interface TagData {
     phase: 'pre' | 'post';
     taskName: string;
+    correlationId: ConcordId;
 }
 
 export interface LogSegment {

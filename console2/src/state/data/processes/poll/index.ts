@@ -165,13 +165,12 @@ function* loadAll(process: ProcessEntry, forceLoadAll?: boolean) {
 
     const [forms, events]: BatchData = yield all([
         call(apiListForms, instanceId),
-        call(
-            apiListEvents as any,
+        call(apiListEvents as any, {
             instanceId,
-            'ELEMENT',
-            process.createdAt,
-            forceLoadAll ? null : MAX_EVENT_COUNT + 1
-        )
+            type: 'ELEMENT',
+            after: process.createdAt,
+            limit: forceLoadAll ? null : MAX_EVENT_COUNT + 1
+        })
     ]);
 
     yield put(ansibleActions.getAnsibleStats(instanceId));
@@ -210,7 +209,12 @@ function* doPoll(instanceId: ConcordId, forceLoadAll?: boolean) {
             // the process is still running, load the next chunk of data
             const [forms, events]: BatchData = yield all([
                 call(apiListForms, instanceId),
-                call(apiListEvents as any, instanceId, 'ELEMENT', lastEventTimestamp, 100) // TODO constants
+                call(apiListEvents as any, {
+                    instanceId,
+                    type: 'ELEMENT',
+                    after: lastEventTimestamp,
+                    limit: 100
+                }) // TODO constants
             ]);
 
             // get the last timestamp of the received events, it will be used to fetch the next data

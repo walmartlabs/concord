@@ -94,11 +94,11 @@ public class ProcessResourceV2 implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId,
-                            @ApiParam @QueryParam("include") Set<ProcessDataInclude> processData) {
+                            @ApiParam @QueryParam("include") Set<ProcessDataInclude> includes) {
 
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
-        ProcessEntry e = queueDao.get(processKey, processData);
+        ProcessEntry e = queueDao.get(processKey, includes);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);

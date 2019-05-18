@@ -1,8 +1,10 @@
+package com.walmartlabs.concord.server.process.event;
+
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,32 +20,18 @@
  * =====
  */
 
-html {
-  height: 100% !important;
-  min-height: 100% !important;
-}
+public enum EventPhase {
 
-body {
-  min-height: 100% !important;
-}
+    PRE("pre"),
+    POST("post");
 
-#root {
-  height: 100% !important;
-  min-height: 100% !important;
-  margin-top: 5px;
-}
+    private final String key;
 
-.maxHeight {
-  height: 100% !important;
-  min-height: 100% !important;
-}
+    EventPhase(String key) {
+        this.key = key;
+    }
 
-.ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ui.fullscreen.modal {
-  left: auto !important;
+    public String getKey() {
+        return key;
+    }
 }

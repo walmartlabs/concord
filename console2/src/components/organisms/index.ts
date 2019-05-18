@@ -76,6 +76,7 @@ export { default as SecretStoreDropdown } from './SecretStoreDropdown';
 export { default as SecretVisibilityActivity } from './SecretVisibilityActivity';
 export { default as ServerVersion } from './ServerVersion';
 export { default as StartRepositoryPopup } from './StartRepositoryPopup';
+export { default as TaskCallDetails } from './TaskCallDetails';
 export { default as TeamActivity } from './TeamActivity';
 export { default as TeamDeleteActivity } from './TeamDeleteActivity';
 export { default as TeamList } from './TeamList';

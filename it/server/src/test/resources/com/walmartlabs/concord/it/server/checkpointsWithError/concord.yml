@@ -1,3 +1,8 @@
+configuration:
+  runner:
+    events:
+      recordTaskOutVars: true # test uses out vars to verify checkpoints
+
 flows:
   default:
   - log: "==Start"

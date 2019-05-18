@@ -226,7 +226,7 @@ public class CheckpointsIT extends AbstractServerIT {
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
         CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
         ProcessEventsApi processEventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> processEvents = processEventsApi.list(instanceId, null, null,null);
+        List<ProcessEventEntry> processEvents = processEventsApi.list(instanceId, null, null, null, null, true, null);
         assertNotNull(processEvents);
 
         // restore from ONE checkpoint
@@ -254,7 +254,7 @@ public class CheckpointsIT extends AbstractServerIT {
         String checkpointDescription = "Checkpoint: " + name;
 
         for (ProcessEventEntry e : processEvents) {
-            Map<String, Object> data = (Map<String, Object>) e.getData();
+            Map<String, Object> data = e.getData();
             if (data == null) {
                 continue;
             }
@@ -271,6 +271,7 @@ public class CheckpointsIT extends AbstractServerIT {
                 }
             }
         }
+
         throw new IllegalStateException("can't find " + name + " checkpoint");
     }
 

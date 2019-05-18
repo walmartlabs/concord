@@ -89,6 +89,14 @@ public interface RunnerConfiguration {
         return DockerConfiguration.builder().build();
     }
 
+    /**
+     * Event recording configuration.
+     */
+    @Value.Default
+    default EventConfiguration events() {
+        return EventConfiguration.builder().build();
+    }
+
     static ImmutableRunnerConfiguration.Builder builder() {
         return ImmutableRunnerConfiguration.builder();
     }

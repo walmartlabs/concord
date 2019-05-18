@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runner.ContextUtils;
+import com.walmartlabs.concord.runner.model.EventConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
@@ -40,19 +41,21 @@ import static com.walmartlabs.concord.project.InternalConstants.Context.EVENT_CO
 
 public class TaskEventInterceptor implements TaskInterceptor {
 
-    private final ElementEventProcessor eventProcessor;
-    private final ObjectMapper objectMapper;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TaskEventInterceptor(ElementEventProcessor eventProcessor) {
+    private final EventConfiguration cfg;
+    private final ElementEventProcessor eventProcessor;
+
+    public TaskEventInterceptor(EventConfiguration cfg, ElementEventProcessor eventProcessor) {
+        this.cfg = cfg;
         this.eventProcessor = eventProcessor;
-        this.objectMapper = new ObjectMapper();
     }
 
     @Override
     public void preTask(String taskName, Context ctx) throws ExecutionException {
-        tag("pre", taskName);
-
         UUID correlationId = UUID.randomUUID();
+
+        TaskTag.pre(taskName, correlationId).log();
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
@@ -71,9 +74,9 @@ public class TaskEventInterceptor implements TaskInterceptor {
 
     @Override
     public void postTask(String taskName, Context ctx) throws ExecutionException {
-        tag("post", taskName);
-
         UUID correlationId = (UUID) ctx.getVariable(EVENT_CORRELATION_KEY);
+
+        TaskTag.post(taskName, correlationId).log();
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
@@ -90,13 +93,38 @@ public class TaskEventInterceptor implements TaskInterceptor {
         ctx.removeVariable(EVENT_CORRELATION_KEY);
     }
 
-    private void tag(String phase, String taskName) throws ExecutionException {
-        try {
-            System.out.print("__logTag:");
-            System.out.println(objectMapper.writeValueAsString(new TaskTag(phase, taskName)));
-        } catch (IOException e) {
-            throw new ExecutionException("Error while writing the task's tag: (" + phase + ", " + taskName + ")", e);
+    private List<VariableMapping> getInParams(Context ctx, AbstractElement element) {
+        if (!cfg.recordTaskInVars()) {
+            return Collections.emptyList();
         }
+
+        if (!(element instanceof ServiceTask)) {
+            return null;
+        }
+
+        ServiceTask t = (ServiceTask) element;
+        if (t.getIn() == null) {
+            return null;
+        }
+
+        return convertParams(ctx, t.getIn(), cfg.inVarsBlacklist());
+    }
+
+    private List<VariableMapping> getOutParams(Context ctx, AbstractElement element) {
+        if (!cfg.recordTaskOutVars()) {
+            return Collections.emptyList();
+        }
+
+        if (!(element instanceof ServiceTask)) {
+            return null;
+        }
+
+        ServiceTask t = (ServiceTask) element;
+        if (t.getOut() == null) {
+            return null;
+        }
+
+        return convertParams(ctx, t.getOut(), cfg.outVarsBlacklist());
     }
 
     private static ElementEventProcessor.ElementEvent buildEvent(Context ctx) {
@@ -106,47 +134,21 @@ public class TaskEventInterceptor implements TaskInterceptor {
                 ctx.getProcessDefinitionId(), ctx.getElementId(), ContextUtils.getSessionToken(ctx));
     }
 
-    private static List<VariableMapping> getInParams(Context ctx, AbstractElement element) {
-        if (!(element instanceof ServiceTask)) {
-            return null;
-        }
-
-        ServiceTask t = (ServiceTask) element;
-        if (t.getIn() == null) {
-            return null;
-        }
-
-        return convertParams(ctx, t.getIn());
-    }
-
-    private static List<VariableMapping> getOutParams(Context ctx, AbstractElement element) {
-        if (!(element instanceof ServiceTask)) {
-            return null;
-        }
-
-        ServiceTask t = (ServiceTask) element;
-        if (t.getIn() == null) {
-            return null;
-        }
-
-        return convertParams(ctx, t.getOut());
-    }
-
-    private static List<VariableMapping> convertParams(Context ctx, Collection<io.takari.bpm.model.VariableMapping> m) {
+    private static List<VariableMapping> convertParams(Context ctx, Collection<io.takari.bpm.model.VariableMapping> m, Collection<String> blacklist) {
         if (m == null) {
             return null;
         }
 
         return m.stream()
-                .map(v -> toMapping(ctx, v))
+                .map(v -> toMapping(ctx, v, blacklist.contains(v.getTarget())))
                 .collect(Collectors.toList());
     }
 
-    private static VariableMapping toMapping(Context ctx, io.takari.bpm.model.VariableMapping v) {
-        Serializable resolved = null;
+    private static VariableMapping toMapping(Context ctx, io.takari.bpm.model.VariableMapping v, boolean blacklisted) {
+        Serializable resolved = "n/a";
 
         Object o = ctx.getVariable(v.getTarget());
-        if (o instanceof Serializable) {
+        if (!blacklisted && o instanceof Serializable) {
             resolved = (Serializable) o;
         }
 
@@ -201,12 +203,22 @@ public class TaskEventInterceptor implements TaskInterceptor {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private static final class TaskTag implements Serializable {
 
+        public static TaskTag pre(String taskName, UUID correlationId) {
+            return new TaskTag("pre", taskName, correlationId);
+        }
+
+        public static TaskTag post(String taskName, UUID correlationId) {
+            return new TaskTag("post", taskName, correlationId);
+        }
+
         private final String phase;
         private final String taskName;
+        private final UUID correlationId;
 
-        private TaskTag(String phase, String taskName) {
+        private TaskTag(String phase, String taskName, UUID correlationId) {
             this.phase = phase;
             this.taskName = taskName;
+            this.correlationId = correlationId;
         }
 
         public String getPhase() {
@@ -215,6 +227,19 @@ public class TaskEventInterceptor implements TaskInterceptor {
 
         public String getTaskName() {
             return taskName;
+        }
+
+        public UUID getCorrelationId() {
+            return correlationId;
+        }
+
+        private void log() throws ExecutionException {
+            try {
+                System.out.print("__logTag:");
+                System.out.println(objectMapper.writeValueAsString(new TaskTag(phase, taskName, correlationId)));
+            } catch (IOException e) {
+                throw new ExecutionException("Error while writing the task's tag: (" + phase + ", " + taskName + ")", e);
+            }
         }
     }
 }

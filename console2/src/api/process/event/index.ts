@@ -26,8 +26,15 @@ export enum ProcessEventType {
     ANSIBLE = 'ANSIBLE'
 }
 
-// TODO find which properties are always defined
+export interface VariableMapping {
+    source?: string;
+    sourceExpression?: string;
+    sourceValue: any;
+    target: string;
+    resolved: any;
+}
 
+// TODO find which properties are always defined
 export interface ProcessElementEvent {
     processDefinitionId: string;
     elementId: string;
@@ -35,11 +42,22 @@ export interface ProcessElementEvent {
     column: number;
     description?: string;
     phase?: 'pre' | 'post';
-    out?: {};
+    in?: VariableMapping[];
+    out?: VariableMapping[];
     correlationId?: string;
 }
 
 export type ProcessEventData = ProcessElementEvent | AnsibleEvent | {};
+
+export interface ProcessEventFilter {
+    instanceId: ConcordId;
+    type?: string;
+    after?: string;
+    eventCorrelationId?: string;
+    eventPhase?: 'PRE' | 'POST';
+    includeAll?: boolean;
+    limit?: number;
+}
 
 export interface ProcessEventEntry<T extends ProcessEventData> {
     id: ConcordId;
@@ -49,16 +67,5 @@ export interface ProcessEventEntry<T extends ProcessEventData> {
     data: T;
 }
 
-export const listEvents = (
-    instanceId: ConcordId,
-    type?: string,
-    after?: string,
-    limit?: number
-): Promise<ProcessEventEntry<{}>> =>
-    fetchJson(
-        `/api/v1/process/${instanceId}/event?${queryParams({
-            type,
-            after,
-            limit
-        })}`
-    );
+export const listEvents = (filter: ProcessEventFilter): Promise<ProcessEventEntry<{}>[]> =>
+    fetchJson(`/api/v1/process/${filter.instanceId}/event?${queryParams({ ...filter })}`);
