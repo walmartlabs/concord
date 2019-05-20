@@ -11,6 +11,10 @@ variable names;
 viewer;
 - project-model: support for expressions in form calls.
 
+## Changed
+
+- concord-console: fixed the log toolbar's flickering issue.
+
 
 
 ## [1.20.1] - 2019-05-16

@@ -60,7 +60,7 @@
         "redux-saga": "0.16.2",
         "semantic-ui-calendar-react": "0.14.1",
         "semantic-ui-css": "2.4.1",
-        "semantic-ui-react": "0.84.0",
+        "semantic-ui-react": "0.87.1",
         "styled-tools": "1.7.1",
         "typeface-lato": "0.0.54",
         "url-search-params-polyfill": "6.0.0"
