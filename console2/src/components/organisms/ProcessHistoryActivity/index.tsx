@@ -23,7 +23,7 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { Header, Icon, Table, Loader } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
-import { ProcessHistoryEntry } from '../../../api/process';
+import { ProcessHistoryEntry, isFinal } from '../../../api/process';
 import { actions, selectors } from '../../../state/data/processes/history';
 import { State } from '../../../state/data/processes/history/types';
 import { LocalTimestamp } from '../../molecules';
@@ -67,7 +67,12 @@ class ProcessHistoryActivity extends React.Component<Props> {
         const { data } = this.props;
         let elapsedTime: string | undefined;
 
-        if (idx > 0) {
+        if (idx === 0 && !isFinal(row.status)) {
+            const startTime: Date = new Date(data[idx].changeDate);
+            const currentTime: Date = new Date();
+            const duration = currentTime.getTime() - startTime.getTime();
+            elapsedTime = formatDuration(duration) + ' (so far)';
+        } else if (idx > 0) {
             const endTime: Date = new Date(row.changeDate);
             const startTime: Date = new Date(data[idx - 1].changeDate);
             const duration = startTime.getTime() - endTime.getTime();
