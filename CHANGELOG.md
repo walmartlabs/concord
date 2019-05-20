@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: show the "so far" duration of active statuses on
+the process status history page;
 - concord-runner: new options to enable or disable recording of task
 `in` and `out` variables. Including the option to blacklist specific
 variable names;
