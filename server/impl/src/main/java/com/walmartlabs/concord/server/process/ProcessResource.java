@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
@@ -28,6 +29,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.metrics.InjectCounter;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
@@ -98,6 +100,9 @@ public class ProcessResource implements Resource {
     private final ProcessKeyCache processKeyCache;
     private final ObjectMapper objectMapper;
 
+    @InjectCounter
+    private final Counter logBytesAppended;
+
     private final ProcessResourceV2 v2;
 
     @Inject
@@ -110,6 +115,7 @@ public class ProcessResource implements Resource {
                            EncryptedProjectValueManager encryptedValueManager,
                            ProcessKeyCache processKeyCache,
                            ObjectMapper objectMapper,
+                           Counter logBytesAppended,
                            ProcessResourceV2 v2) {
 
         this.processManager = processManager;
@@ -121,6 +127,7 @@ public class ProcessResource implements Resource {
         this.encryptedValueManager = encryptedValueManager;
         this.processKeyCache = processKeyCache;
         this.objectMapper = objectMapper;
+        this.logBytesAppended = logBytesAppended;
 
         this.v2 = v2;
     }
@@ -668,7 +675,7 @@ public class ProcessResource implements Resource {
      * @param initiator
      * @param limit
      * @return
-     * @deprecated use {@link ProcessResourceV2#list(String, String, UUID, IsoDateParam, IsoDateParam, Set, ProcessStatus, String, UUID, Set, int, int, UriInfo)}
+     * @deprecated use {@link ProcessResourceV2#list(UUID, String, UUID, String, IsoDateParam, IsoDateParam, Set, ProcessStatus, String, UUID, Set, int, int, UriInfo)}
      */
     @GET
     @ApiOperation(value = "List processes for all user's organizations", responseContainer = "list", response = ProcessEntry.class)
@@ -818,7 +825,10 @@ public class ProcessResource implements Resource {
         ProcessKey processKey = processKeyCache.get(instanceId);
 
         try {
-            logsDao.append(processKey, ByteStreams.toByteArray(data));
+            byte[] ab = ByteStreams.toByteArray(data);
+            logsDao.append(processKey, ab);
+
+            logBytesAppended.inc(ab.length);
         } catch (IOException e) {
             log.error("appendLog ['{}'] -> error", instanceId, e);
             throw new ConcordApplicationException("append log error: " + e.getMessage());
