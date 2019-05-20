@@ -346,7 +346,6 @@ class ProcessLogViewer extends React.Component<Props, State> {
             <div ref={(r) => (this.stickyRef = r)}>
                 <Sticky
                     context={this.stickyRef}
-                    offset={10}
                     onStick={() => this.setState({ refreshStuck: true })}
                     onUnstick={() => this.setState({ refreshStuck: false })}>
                     {this.renderToolbar()}
