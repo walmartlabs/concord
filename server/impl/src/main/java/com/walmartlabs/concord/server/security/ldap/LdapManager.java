@@ -129,7 +129,7 @@ public class LdapManager {
         }
     }
 
-    public LdapPrincipal getPrincipal(LdapContext ctx, String username) throws NamingException {
+    private LdapPrincipal getPrincipal(LdapContext ctx, String username) throws NamingException {
         SearchControls searchCtls = new SearchControls();
         searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         if (cfg.getReturningAttributes() != null && !cfg.getReturningAttributes().isEmpty()) {

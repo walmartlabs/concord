@@ -55,21 +55,22 @@ public class LdapRealm extends AbstractLdapRealm {
 
     private final UserManager userManager;
     private final LdapManager ldapManager;
+    private final LdapGroupManager ldapGroupManager;
+    private final LdapContextFactory ldapContextFactory;
     private final AuditLog auditLog;
-    private final LdapGroupsDao ldapGroupsDao;
 
     @Inject
     public LdapRealm(LdapConfiguration cfg,
                      UserManager userManager,
-                     ConcordLdapContextFactory ctxFactory,
+                     ConcordLdapContextFactory ldapContextFactory,
                      LdapManager ldapManager,
-                     AuditLog auditLog,
-                     LdapGroupsDao ldapGroupsDao) {
+                     LdapGroupManager ldapGroupManager,
+                     AuditLog auditLog) {
 
         this.userManager = userManager;
         this.ldapManager = ldapManager;
+        this.ldapGroupManager = ldapGroupManager;
         this.auditLog = auditLog;
-        this.ldapGroupsDao = ldapGroupsDao;
 
         this.url = cfg.getUrl();
         this.searchBase = cfg.getSearchBase();
@@ -90,19 +91,45 @@ public class LdapRealm extends AbstractLdapRealm {
                     Arrays.equals(stored.getPassword(), received.getPassword());
         });
 
-        setLdapContextFactory(ctxFactory);
+        this.ldapContextFactory = ldapContextFactory;
+        setLdapContextFactory(ldapContextFactory);
     }
 
     @Override
     @WithTimer
-    @SuppressWarnings("deprecation")
     protected AuthenticationInfo queryForAuthenticationInfo(AuthenticationToken token, LdapContextFactory ldapContextFactory) throws NamingException {
         if (this.url == null) {
             return null;
         }
 
         UsernamePasswordToken t = (UsernamePasswordToken) token;
+        LdapPrincipal ldapPrincipal = getPrincipal(t);
 
+        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
+        if (u.isDisabled()) {
+            throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
+        }
+
+        UUID userId = u.getId();
+
+        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false)
+                .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
+
+        ldapGroupManager.cacheLdapGroupsIfNeeded(userId, ldapPrincipal.getGroups());
+
+        UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
+
+        auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
+                .userId(userId)
+                .field("username", u.getName())
+                .field("realm", REALM_NAME)
+                .log();
+
+        return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t, getName());
+    }
+
+    @SuppressWarnings("deprecation")
+    private LdapPrincipal getPrincipal(UsernamePasswordToken t) throws NamingException {
         String username = t.getUsername();
         char[] password = t.getPassword();
         if (username == null || password == null) {
@@ -135,28 +162,7 @@ public class LdapRealm extends AbstractLdapRealm {
             LdapUtils.closeContext(ctx);
         }
 
-        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
-        if (u.isDisabled()) {
-            throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
-        }
-
-        UUID userId = u.getId();
-
-        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false)
-                .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
-
-        // update ldap groups
-        ldapGroupsDao.update(userId, ldapPrincipal.getGroups());
-
-        UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);
-
-        auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
-                .userId(userId)
-                .field("username", u.getName())
-                .field("realm", REALM_NAME)
-                .log();
-
-        return new SimpleAccount(Arrays.asList(userPrincipal, t, ldapPrincipal), t, getName());
+        return ldapPrincipal;
     }
 
     @Override

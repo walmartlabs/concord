@@ -13,6 +13,8 @@
     </changeSet>
 
     <changeSet id="1120010" author="ybrigo@gmail.com">
+        <validCheckSum>7:6a9c660fe9a69546e12e914fdc298bb0</validCheckSum>
+
         <createTable tableName="USER_LDAP_GROUPS">
             <column name="USER_ID" type="uuid">
                 <constraints nullable="false"/>
@@ -20,9 +22,13 @@
             <column name="LDAP_GROUP" type="varchar(1024)">
                 <constraints nullable="false"/>
             </column>
+
+            <!-- deprecated in 1.21.0+ -->
+            <!--
             <column name="UPDATED_AT" type="timestamp" defaultValueComputed="current_timestamp">
                 <constraints nullable="false"/>
             </column>
+            -->
         </createTable>
 
         <addForeignKeyConstraint baseTableName="USER_LDAP_GROUPS"
