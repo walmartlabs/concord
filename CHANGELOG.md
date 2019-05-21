@@ -15,6 +15,7 @@ viewer;
 
 ## Changed
 
+- concord-server: throttle the AD/LDAP user group caching;
 - concord-console: fixed the log toolbar's flickering issue.
 
 

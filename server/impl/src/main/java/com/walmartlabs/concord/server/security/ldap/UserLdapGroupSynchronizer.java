@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -40,7 +41,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
-import static com.walmartlabs.concord.server.jooq.Tables.USER_LDAP_GROUPS;
 import static org.jooq.impl.DSL.currentTimestamp;
 import static org.jooq.impl.DSL.field;
 
@@ -54,10 +54,10 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
     private final Dao dao;
     private final LdapManager ldapManager;
     private final UserDao userDao;
-    private final LdapGroupsDao ldapGroupsDao;
+    private final LdapGroupDao ldapGroupsDao;
 
     @Inject
-    public UserLdapGroupSynchronizer(LdapGroupSyncConfiguration cfg, Dao dao, LdapManager ldapManager, UserDao userDao, LdapGroupsDao ldapGroupsDao) {
+    public UserLdapGroupSynchronizer(LdapGroupSyncConfiguration cfg, Dao dao, LdapManager ldapManager, UserDao userDao, LdapGroupDao ldapGroupsDao) {
         this.cfg = cfg;
         this.dao = dao;
         this.ldapManager = ldapManager;
@@ -72,7 +72,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<Timestamp> cutoff = currentTimestamp().minus(field("interval '" + cfg.getMinAge() + "'"));
+        Field<Timestamp> cutoff = currentTimestamp().minus(PgUtils.interval(cfg.getMinAgeSync()));
         long usersCount = 0;
         List<UserItem> users;
         do {
@@ -109,9 +109,8 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         public List<UserItem> list(int limit, Field<Timestamp> cutoff) {
             return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME)
                     .from(USERS)
-                    .leftJoin(USER_LDAP_GROUPS).on(USER_LDAP_GROUPS.USER_ID.eq(USERS.USER_ID))
                     .where(USERS.USER_TYPE.eq(UserType.LDAP.name()))
-                    .and(USER_LDAP_GROUPS.UPDATED_AT.isNull().or(USER_LDAP_GROUPS.UPDATED_AT.lessThan(cutoff)))
+                    .and(USERS.LAST_GROUP_SYNC_DT.isNull().or(USERS.LAST_GROUP_SYNC_DT.lessThan(cutoff)))
                     .and(USERS.IS_DISABLED.isFalse())
                     .limit(limit)
                     .fetch(r -> new UserItem(r.value1(), r.value2())));
