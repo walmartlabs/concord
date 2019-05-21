@@ -34,8 +34,8 @@ public final class OutVariablesUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @SuppressWarnings("unchecked")
-    public static Map<String, Object> read(Path attachmetsDir) throws IOException {
-        Path processOut = attachmetsDir.resolve(InternalConstants.Files.OUT_VALUES_FILE_NAME);
+    public static Map<String, Object> read(Path attachmentsDir) throws IOException {
+        Path processOut = attachmentsDir.resolve(InternalConstants.Files.OUT_VALUES_FILE_NAME);
         if (!Files.exists(processOut)) {
             return Collections.emptyMap();
         }
