@@ -37,7 +37,7 @@ public class ThrowExceptionTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testThrowException() throws Exception {
         URI uri = ThrowExceptionTaskIT.class.getResource("throwExceptionTask").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // start the process
 
@@ -57,7 +57,7 @@ public class ThrowExceptionTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testThrowExceptionMessage() throws Exception {
         URI uri = ThrowExceptionTaskIT.class.getResource("throwExceptionMessage").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // start the process
 

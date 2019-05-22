@@ -201,7 +201,7 @@ public class HttpTaskIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPostWithDebug() throws Exception {
         URI dir = HttpTaskIT.class.getResource("httpPostWithDebug").toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
