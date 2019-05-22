@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.yaml;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.yaml.converter.StepConverter;
 import com.walmartlabs.concord.project.yaml.converter.YamlTaskStepConverter;
-import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
@@ -1157,18 +1156,19 @@ public class YamlParserTest extends AbstractYamlParserTest {
         start(key, "main", args);
 
         // ---
-        ArgumentCaptor<Map<String, Object>> c = ArgumentCaptor.forClass(Map.class);
-        verify(task, times(1)).call(c.capture());
 
-        Map<String, Object> m = c.getValue();
+        ArgumentCaptor<ExecutionContext> captor = ArgumentCaptor.forClass(ExecutionContext.class);
+        verify(task, times(1)).execute(captor.capture());
 
-        Map<String, Object> env = (Map<String, Object>) m.get("env");
+        ExecutionContext ctx = captor.getValue();
+
+        Map<String, Object> env = (Map<String, Object>) ctx.getVariable("env");
         assertNotNull(env);
         assertEquals(2, env.size());
         assertEquals(123, env.get("x"));
         assertEquals(txId, env.get("y"));
 
-        List<String> opts = (List<String>) m.get("hosts");
+        List<String> opts = (List<String>) ctx.getVariable("hosts");
         assertNotNull(opts);
         assertEquals(2, opts.size());
         assertEquals("foo:10.0.0.3", opts.get(0));
@@ -2497,9 +2497,10 @@ public class YamlParserTest extends AbstractYamlParserTest {
         }
     }
 
-    private static class DockerTask implements Task {
+    private static class DockerTask implements JavaDelegate {
 
-        public void call(Map<String, Object> args) {
+        @Override
+        public void execute(ExecutionContext ctx) throws Exception {
         }
     }
 
