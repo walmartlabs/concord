@@ -37,7 +37,6 @@ import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult.ValidationError;
 import io.takari.bpm.form.FormValidator;
 import io.takari.bpm.form.FormValidatorLocale;
-import io.takari.bpm.model.form.FormDefinition;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -51,7 +50,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.common.form.ConcordFormFields.FieldOptions.READ_ONLY;
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
 @Named
@@ -165,7 +163,7 @@ public class ConcordFormService {
             @SuppressWarnings("unchecked")
             Map<String, Object> clearedData = (Map<String, Object>) args.get(f.getFormDefinition().getName());
 
-            args.put(f.getFormDefinition().getName(), removeReadonly(f, clearedData));
+            args.put(f.getFormDefinition().getName(), clearedData);
 
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
@@ -261,22 +259,6 @@ public class ConcordFormService {
         ConfigurationUtils.merge(a, c);
 
         return a;
-    }
-
-    private static Map<String, Object> removeReadonly(Form form, Map<String, Object> data) {
-        FormDefinition fd = form.getFormDefinition();
-        if (fd.getFields() == null) {
-            return data;
-        }
-
-        fd.getFields().forEach(f -> {
-            Boolean isReadOnly = f.getOption(READ_ONLY);
-            if (Boolean.TRUE.equals(isReadOnly)) {
-                data.remove(f.getName());
-            }
-        });
-
-        return data;
     }
 
     private void resume(ProcessKey processKey, String eventName, Map<String, Object> req) throws ExecutionException {
