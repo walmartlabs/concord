@@ -69,4 +69,22 @@ public class DockerIT extends AbstractServerIT {
         assertLog(".*!! Hello, world !!.*", ab);
         assertLog(".*DOCKER: STDERR STILL WORKS.*", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testTaskSyntaxOut() throws Exception {
+        byte[] payload = archive(DockerIT.class.getResource("dockerTaskSyntaxOut").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.image", ITConstants.DOCKER_ANSIBLE_IMAGE);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertNotNull(pir.getLogFileName());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*!! Hello, world !!.*", ab);
+        assertLog(".*DOCKER: STDERR STILL WORKS.*", ab);
+    }
 }
