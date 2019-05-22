@@ -1,0 +1,11 @@
+flows:
+  default:
+  - call: formFlow
+
+  formFlow:
+  - form: myForm
+  - log: ${myForm.myValue}
+
+forms:
+  myForm:
+  - myValue: {type: "string", value: "default value", readonly: true }

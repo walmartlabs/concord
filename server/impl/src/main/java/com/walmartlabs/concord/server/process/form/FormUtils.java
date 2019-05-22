@@ -43,6 +43,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.common.form.ConcordFormFields.FieldOptions.READ_ONLY;
 import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -209,6 +210,7 @@ public final class FormUtils {
     }
 
     // TODO this probably should be a part of the bpm engine's FormService
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> convert(ConcordFormValidatorLocale locale, Form form, Map<String, Object> m) throws ValidationException {
         FormDefinition fd = form.getFormDefinition();
 
@@ -216,10 +218,14 @@ public final class FormUtils {
         Map<String, Object> m2 = new HashMap<>();
         m2.put(FORM_FILES, tmpFiles);
 
+        Map<String, Object> env = form.getEnv();
+
+        Map<String, Object> defaultData = env != null ? (Map<String, Object>) env.get(fd.getName()) : Collections.emptyMap();
+
         for (FormField f : fd.getFields()) {
             String k = f.getName();
 
-            Object v = m.get(k);
+            Object v = Boolean.TRUE.equals(f.getOption(READ_ONLY)) ?  defaultData.get(k) : m.get(k);
 
             /*
              * Use cardinality as an indicator to convert single value (coming as a string) into an array

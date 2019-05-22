@@ -343,6 +343,43 @@ public class FormIT extends AbstractServerIT {
         assertLog(".*We got: " + fieldValue + ".*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testReadonlyField() throws Exception {
+        byte[] payload = archive(FormIT.class.getResource("formReadonlyField").toURI());
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // ---
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        // ---
+
+        FormListEntry form = forms.get(0);
+        String formName = form.getName();
+
+        String fieldValue = "test_" + randomString();
+        Map<String, Object> data = Collections.singletonMap("myValue", fieldValue);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
+        assertTrue(fsr.isOk());
+
+        ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(psr.getLogFileName());
+        assertLog(".*default value.*", ab);
+    }
+
     @Test
     public void testFormCallWithExpression() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formCallWithExpression").toURI());
