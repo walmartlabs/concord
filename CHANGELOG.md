@@ -15,6 +15,8 @@ viewer;
 
 ## Changed
 
+- docker: the task can now be called using the regular `task` syntax
+(in addition to the previous `docker` form);
 - concord-server: keep the original values of `readonly` form fields
 on submit;
 - concord-server: throttle the AD/LDAP user group caching;

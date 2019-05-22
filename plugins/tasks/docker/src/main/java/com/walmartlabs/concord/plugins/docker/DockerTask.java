@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.docker;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,29 +57,26 @@ public class DockerTask implements Task {
     public static final String STDOUT_KEY = "stdout";
 
     @Inject
-    ExecutorService executor;
+    private ExecutorService executor;
 
     @Inject
-    DockerService dockerService;
+    private DockerService dockerService;
 
     @InjectVariable(Constants.Context.WORK_DIR_KEY)
-    String workDir;
+    private String workDir;
 
-    @InjectVariable(Constants.Context.CONTEXT_KEY)
-    Context ctx;
-
-    @SuppressWarnings("unchecked")
-    public void call(Map<String, Object> args) {
+    @Override
+    public void execute(Context ctx) {
         // TODO validation
 
-        String image = assertString(args, IMAGE_KEY);
-        String cmd = assertString(args, CMD_KEY);
-        Map<String, Object> env = (Map<String, Object>) args.get(ENV_KEY);
-        String envFile = (String) args.get(ENV_FILE_KEY);
-        List<String> hosts = (List<String>) args.get(HOSTS_KEY);
-        boolean forcePull = (boolean) args.getOrDefault(FORCE_PULL_KEY, true);
-        boolean debug = (boolean) args.getOrDefault(DEBUG_KEY, false);
-        String stdOutVar = getString(args, STDOUT_KEY);
+        String image = assertString(ctx, IMAGE_KEY);
+        String cmd = assertString(ctx, CMD_KEY);
+        Map<String, Object> env = ContextUtils.getMap(ctx, ENV_KEY, null);
+        String envFile = ContextUtils.getString(ctx, ENV_FILE_KEY);
+        List<String> hosts = ContextUtils.getList(ctx, HOSTS_KEY, null);
+        boolean forcePull = ContextUtils.getBoolean(ctx, FORCE_PULL_KEY, true);
+        boolean debug = ContextUtils.getBoolean(ctx, DEBUG_KEY, false);
+        String stdOutVar = ContextUtils.getString(ctx, STDOUT_KEY);
 
         Path baseDir = Paths.get(workDir);
         Path containerDir = Paths.get(VOLUME_CONTAINER_DEST);
@@ -199,22 +196,8 @@ public class DockerTask implements Task {
         return result;
     }
 
-    private static String getString(Map<String, Object> m, String key) {
-        Object v = m.get(key);
-
-        if (v == null) {
-            return null;
-        }
-
-        if (!(v instanceof String)) {
-            throw new IllegalArgumentException("Expected a string value '" + key + "', got: " + v);
-        }
-
-        return (String) v;
-    }
-
-    private static String assertString(Map<String, Object> m, String key) {
-        String s = getString(m, key);
+    private static String assertString(Context ctx, String key) {
+        String s = ContextUtils.getString(ctx, key);
         if (s == null) {
             throw new IllegalArgumentException("'" + key + "' is required");
         }
