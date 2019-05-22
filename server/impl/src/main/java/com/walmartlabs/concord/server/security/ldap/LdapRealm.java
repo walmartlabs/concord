@@ -103,7 +103,11 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         UsernamePasswordToken t = (UsernamePasswordToken) token;
+
         LdapPrincipal ldapPrincipal = getPrincipal(t);
+        if (ldapPrincipal == null) {
+            throw new AuthenticationException("LDAP data not found: " + t.getUsername());
+        }
 
         UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
         if (u.isDisabled()) {
