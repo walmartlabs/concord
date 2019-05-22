@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 import com.walmartlabs.concord.server.process.ProcessKey;
 
@@ -45,12 +46,17 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
         this.cache = CacheBuilder.newBuilder()
                 .maximumSize(10 * 1024L)
                 .concurrencyLevel(32)
+                .recordStats()
                 .build(new CacheLoader<UUID, ProcessKey>() {
                     @Override
                     public ProcessKey load(UUID key) {
                         return queueDao.getKey(key);
                     }
                 });
+    }
+
+    public CacheStats stats() {
+        return this.cache.stats();
     }
 
     @Override

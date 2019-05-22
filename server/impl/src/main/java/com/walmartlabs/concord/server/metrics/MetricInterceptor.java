@@ -22,23 +22,31 @@ package com.walmartlabs.concord.server.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Suppliers;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class MetricInterceptor implements MethodInterceptor {
 
     private final Map<Method, String> timerNameCache = new HashMap<>();
 
     @Inject
-    private MetricRegistry registry;
+    private Provider<MetricRegistry> registryProvider;
+
+    // because we had to use very late binding for MetricRegistry, let's cache the result
+    private Supplier<MetricRegistry> registrySupplier = Suppliers.memoize(() -> this.registryProvider.get());
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
+        MetricRegistry registry = registrySupplier.get();
+
         Timer t = registry.timer(timerName(invocation.getMethod()));
         Timer.Context ctx = t.time();
         try {
