@@ -48,10 +48,10 @@ public class ProcessQueueGaugeModule extends AbstractModule {
             }
         };
 
-        Multibinder<GaugeProvider> tasks = Multibinder.newSetBinder(binder(), GaugeProvider.class);
-        tasks.addBinding().toInstance(createBaseProvider(base));
+        Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
+        gauges.addBinding().toInstance(createBaseProvider(base));
         for (ProcessStatus s : ProcessStatus.values()) {
-            tasks.addBinding().toInstance(create(base, s));
+            gauges.addBinding().toInstance(create(base, s));
         }
     }
 

@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: additional metrics for the process key cache;
 - concord-server: configurable delay when polling for agent commands;
 - concord-console: show the "so far" duration of active statuses on
 the process status history page;
