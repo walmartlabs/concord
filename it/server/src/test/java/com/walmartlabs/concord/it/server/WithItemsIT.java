@@ -62,7 +62,7 @@ public class WithItemsIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testForms() throws Exception {
         URI uri = ProcessIT.class.getResource("formsWithItems").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -102,7 +102,7 @@ public class WithItemsIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExternalItems() throws Exception {
         URI uri = ProcessIT.class.getResource("externalWithItems").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -129,7 +129,7 @@ public class WithItemsIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testLotsOfItems() throws Exception {
         URI uri = ProcessIT.class.getResource("externalWithItems").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 
@@ -154,7 +154,7 @@ public class WithItemsIT extends AbstractServerIT {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSubsequentCalls() throws Exception {
         URI uri = ProcessIT.class.getResource("multipleWithItems").toURI();
-        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(uri);
 
         // ---
 

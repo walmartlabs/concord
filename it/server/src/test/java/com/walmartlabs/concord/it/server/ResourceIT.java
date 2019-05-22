@@ -61,7 +61,7 @@ public class ResourceIT extends AbstractServerIT {
 
     private void test(String resource, String pattern) throws Exception {
         URI dir = ResourceIT.class.getResource(resource).toURI();
-        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(dir);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
