@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: configurable delay when polling for agent commands;
 - concord-console: show the "so far" duration of active statuses on
 the process status history page;
 - concord-runner: new options to enable or disable recording of task

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.agent;
 
 import com.walmartlabs.concord.server.CommandType;
 import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
 import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
@@ -42,15 +43,15 @@ public class AgentCommandWebSocketHandler extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(AgentCommandWebSocketHandler.class);
 
-    private static final long POLL_DELAY = 1000; // 1 sec
     private static final long ERROR_DELAY = 1 * 60 * 1000L; // 1 min
 
     private final WebSocketChannelManager channelManager;
     private final AgentCommandsDao dao;
 
     @Inject
-    public AgentCommandWebSocketHandler(WebSocketChannelManager channelManager, AgentCommandsDao dao) {
-        super(POLL_DELAY, ERROR_DELAY);
+    public AgentCommandWebSocketHandler(AgentConfiguration cfg, WebSocketChannelManager channelManager, AgentCommandsDao dao) {
+        super(cfg.getCommandPollDelay(), ERROR_DELAY);
+
         this.channelManager = channelManager;
         this.dao = dao;
     }
