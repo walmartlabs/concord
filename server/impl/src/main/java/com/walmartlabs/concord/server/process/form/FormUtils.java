@@ -242,7 +242,7 @@ public final class FormUtils {
                 continue;
             }
 
-            if (f.getType().equals(ConcordFormFields.FileField.TYPE)) {
+            if (v != null && f.getType().equals(ConcordFormFields.FileField.TYPE)) {
                 String wsFileName = "_form_files/" + form.getFormDefinition().getName() + "/" + f.getName();
                 tmpFiles.put(wsFileName, (String) v);
                 m2.put(k, wsFileName);
