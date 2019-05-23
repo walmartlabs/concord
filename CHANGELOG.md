@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed a NPE when handling optional `file` form
+fields.
+
+
+
 ## [1.21.0] - 2019-05-23
 
 ### Added
