@@ -1,0 +1,11 @@
+flows:
+  default:
+  - call: formFlow
+
+  formFlow:
+  - form: myForm
+  - log: ${myForm}
+
+forms:
+  myForm:
+  - myFile: {label: "upload file", type: "file?"}

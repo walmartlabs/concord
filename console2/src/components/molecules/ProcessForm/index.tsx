@@ -311,12 +311,14 @@ class ProcessForm extends React.Component<Props, State> {
         );
     }
 
-    renderFileField({ name, label, type }: FormField) {
+    renderFileField({ name, label, type, cardinality }: FormField) {
         const { errors, submitting, completed } = this.props;
         const error = errors ? errors[name] : undefined;
 
+        const required = cardinality === Cardinality.ONE_AND_ONLY_ONE;
+
         return (
-            <Form.Field key={name} error={!!error}>
+            <Form.Field key={name} error={!!error} required={required}>
                 <label>{label}</label>
 
                 <Input
