@@ -24,6 +24,7 @@ import com.walmartlabs.concord.sdk.Context;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 @Value.Immutable
 public interface ApiClientConfiguration {
@@ -52,11 +53,18 @@ public interface ApiClientConfiguration {
 
     /**
      * Current process' context. If {@link #sessionToken()} or {@link #apiKey()} both are
-     * ommitted, then the context can be used to extract the current session token.
+     * omitted, then the context can be used to extract the current session token.
      * @return
      */
     @Nullable
     Context context();
+
+    /**
+     * Current process instanceId.
+     * @return
+     */
+    @Nullable
+    UUID txId();
 
     static ImmutableApiClientConfiguration.Builder builder() {
         return ImmutableApiClientConfiguration.builder();

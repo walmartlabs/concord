@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-client, concord-runner: use a custom `User-Agent` header;
 - concord-server: fixed a NPE when handling optional `file` form
 fields.
 

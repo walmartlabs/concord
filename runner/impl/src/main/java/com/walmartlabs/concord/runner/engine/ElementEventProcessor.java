@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runner.engine;
  * =====
  */
 
+import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
@@ -91,7 +92,11 @@ public class ElementEventProcessor {
             req.setEventType("ELEMENT"); // TODO should it be in the constants?
             req.setData(e);
 
-            ProcessEventsApi client = new ProcessEventsApi(apiClientFactory.create(event.getSessionToken()));
+            ProcessEventsApi client = new ProcessEventsApi(apiClientFactory.create(
+                    ApiClientConfiguration.builder()
+                            .sessionToken(event.getSessionToken())
+                            .txId(UUID.fromString(event.getInstanceId()))
+                            .build()));
             client.event(UUID.fromString(event.getInstanceId()), req);
         } catch (Exception e) {
             log.warn("process ['{}'] -> transfer error: {}", event.getInstanceId(), e.getMessage());

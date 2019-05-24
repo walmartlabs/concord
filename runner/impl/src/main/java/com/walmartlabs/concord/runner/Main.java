@@ -114,6 +114,7 @@ public class Main {
         ProcessApiClient processApiClient = new ProcessApiClient(runnerCfg,
                 apiClientFactory.create(ApiClientConfiguration.builder()
                         .sessionToken(sessionToken)
+                        .txId(instanceId)
                         .build()));
 
         processApiClient.updateStatus(instanceId, runnerCfg.agentId(), ProcessEntry.StatusEnum.RUNNING);

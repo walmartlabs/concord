@@ -44,6 +44,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Named
 public class SecretServiceImpl implements SecretService {
@@ -132,6 +133,7 @@ public class SecretServiceImpl implements SecretService {
     public String encryptString(Context ctx, String instanceId, String orgName, String projectName, String value) throws Exception {
         ApiClientConfiguration cfg = ApiClientConfiguration.builder()
                 .sessionToken(ContextUtils.getSessionToken(ctx))
+                .txId(UUID.fromString(instanceId))
                 .build();
 
         ApiClient c = clientFactory.create(cfg);
