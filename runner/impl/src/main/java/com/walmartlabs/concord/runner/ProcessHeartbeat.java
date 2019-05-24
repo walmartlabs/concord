@@ -58,6 +58,7 @@ public class ProcessHeartbeat {
 
             ApiClient client = apiClientFactory.create(ApiClientConfiguration.builder()
                     .sessionToken(sessionToken)
+                    .txId(instanceId)
                     .build());
 
             ProcessHeartbeatApi processHeartbeatApi = new ProcessHeartbeatApi(client);

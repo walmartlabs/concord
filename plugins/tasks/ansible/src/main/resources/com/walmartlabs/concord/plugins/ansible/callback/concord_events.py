@@ -43,7 +43,8 @@ class CallbackModule(CallbackBase):
         self.targetUrl = baseUrl + '/api/v1/process/' + instanceId + '/event'
 
         s = requests.Session()
-        s.headers.update({'X-Concord-SessionToken': sessionToken, 'Content-type': 'application/json'})
+        s.headers.update({'X-Concord-SessionToken': sessionToken, 'Content-type': 'application/json',
+                          'User-Agent': 'Concord-Runner: txId=' + instanceId})
 
         self.session = s
 

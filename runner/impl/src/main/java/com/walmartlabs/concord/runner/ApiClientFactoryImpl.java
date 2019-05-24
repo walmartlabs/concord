@@ -28,6 +28,7 @@ import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,6 +38,7 @@ import javax.net.ssl.SSLSocketFactory;
 import java.nio.file.Path;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Named
@@ -87,11 +89,30 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
             throw new IllegalArgumentException("Session token or an API key is required");
         }
 
-        return new ConcordApiClient(baseUrl, httpClient)
+        ApiClient client = new ConcordApiClient(baseUrl, httpClient)
                 .setSessionToken(sessionToken)
                 .setApiKey(apiKey)
                 .addDefaultHeader("Accept", "*/*")
                 .setTempFolderPath(tmpDir.toString());
+
+        UUID txId = getTxId(overrides);
+        if (txId != null) {
+            client = client.setUserAgent("Concord-Runner: txId=" + txId);
+        }
+
+        return client;
+    }
+
+    private static UUID getTxId(ApiClientConfiguration cfg) {
+        if (cfg.txId() != null) {
+            return cfg.txId();
+        }
+
+        if (cfg.context() != null) {
+            return ContextUtils.getTxId(cfg.context());
+        }
+
+        return null;
     }
 
     private static OkHttpClient withSslSocketFactory(OkHttpClient client) throws NoSuchAlgorithmException, KeyManagementException {

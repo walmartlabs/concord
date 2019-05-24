@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -55,7 +56,11 @@ public class ProcessMetadataProcessor {
         }
         currentProcessMeta = meta;
 
-        ProcessApi client = new ProcessApi(apiClientFactory.create(ContextUtils.getSessionToken(variables)));
+        ProcessApi client = new ProcessApi(apiClientFactory.create(
+                ApiClientConfiguration.builder()
+                        .sessionToken(ContextUtils.getSessionToken(variables))
+                        .txId(instanceId)
+                        .build()));
         try {
             client.updateMetadata(instanceId, meta);
         } catch (ApiException e) {
