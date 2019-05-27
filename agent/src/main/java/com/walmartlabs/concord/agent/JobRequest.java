@@ -22,9 +22,13 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
+import com.walmartlabs.concord.server.queueclient.message.ImportEntry;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 public class JobRequest {
@@ -37,7 +41,8 @@ public class JobRequest {
                 resp.getRepoPath(),
                 resp.getCommitId(),
                 resp.getSecretName(),
-                logFactory.createRemoteLog(resp.getProcessId()));
+                logFactory.createRemoteLog(resp.getProcessId()),
+                resp.getImports());
     }
 
     private final Type type;
@@ -49,8 +54,10 @@ public class JobRequest {
     private final String commitId;
     private final String secretName;
     private final ProcessLog log;
+    private final Imports imports;
 
-    protected JobRequest(Type type, UUID instanceId, Path payloadDir, String orgName, String repoUrl, String repoPath, String commitId, String secretName, ProcessLog log) {
+    protected JobRequest(Type type, UUID instanceId, Path payloadDir, String orgName, String repoUrl, String repoPath, String commitId, String secretName, ProcessLog log,
+                         Imports imports) {
         this.type = type;
         this.instanceId = instanceId;
         this.payloadDir = payloadDir;
@@ -60,6 +67,7 @@ public class JobRequest {
         this.commitId = commitId;
         this.secretName = secretName;
         this.log = log;
+        this.imports = imports;
     }
 
     public Type getType() {
@@ -98,6 +106,13 @@ public class JobRequest {
         return log;
     }
 
+    public List<ImportEntry> getImports() {
+        if (imports == null || imports.items() == null) {
+            return Collections.emptyList();
+        }
+        return imports.items();
+    }
+
     @Override
     public String toString() {
         return "JobRequest{" +
@@ -110,6 +125,7 @@ public class JobRequest {
                 ", commitId='" + commitId + '\'' +
                 ", secretName='" + secretName + '\'' +
                 ", log=" + log +
+                ", imports=" + imports +
                 '}';
     }
 

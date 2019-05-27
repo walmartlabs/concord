@@ -376,6 +376,12 @@ public class Grammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     many1(choice(formDef, procDef))));
 
+    // imports := START_OBJECT FIELD_NAME object END_OBJECT
+    private static final Parser<Atom, YamlImport> importField = label("Import",
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    satisfyToken(JsonToken.FIELD_NAME).bind(a ->
+                            object.map(options -> new YamlImport(a.location, a.name, options)))));
+
     @SuppressWarnings("unchecked")
     private static List<String> toListOfStrings(JsonLocation loc, Object v) {
         if (v == null) {
@@ -408,6 +414,10 @@ public class Grammar {
 
     public static Parser<Atom, YamlTrigger> getTrigger() {
         return triggerDef;
+    }
+
+    public static Parser<Atom, YamlImport> getImport() {
+        return importField;
     }
 
     private Grammar() {

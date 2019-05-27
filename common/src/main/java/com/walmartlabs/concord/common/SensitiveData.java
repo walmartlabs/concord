@@ -21,16 +21,29 @@ package com.walmartlabs.concord.common;
  */
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 public final class SensitiveData {
 
-    private static final ThreadLocal<Set<String>> sensitiveData = new ThreadLocal<>();
+    private static final ThreadLocal<Set<String>> sensitiveData = ThreadLocal.withInitial(Collections::emptySet);
 
-    public static <T> T withSensitiveData(Collection<String> data,  Callable<T> c) throws Exception {
-        sensitiveData.set(new HashSet<>(data));
+    public interface SensitiveItem {
+
+        Collection<String> getSensitiveData();
+    }
+
+    public static <T> T withSensitiveData(SensitiveItem item, Callable<T> c) throws Exception {
+        return withSensitiveData(item.getSensitiveData(), c);
+    }
+
+    public static <T> T withSensitiveData(Collection<String> data, Callable<T> c) throws Exception {
+        Set<String> current = new HashSet<>(sensitiveData.get());
+        current.addAll(ensureCollection(data));
+
+        sensitiveData.set(current);
         try {
             return c.call();
         } finally {
@@ -44,7 +57,7 @@ public final class SensitiveData {
         }
 
         Set<String> data = sensitiveData.get();
-        if (data == null) {
+        if (data.isEmpty()) {
             return s;
         }
 
@@ -56,6 +69,13 @@ public final class SensitiveData {
             s = s.replaceAll(p, "***");
         }
         return s;
+    }
+
+    private static Collection<String> ensureCollection(Collection<String> data) {
+        if (data != null) {
+            return data;
+        }
+        return Collections.emptyList();
     }
 
     private SensitiveData() {

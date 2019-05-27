@@ -23,12 +23,12 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.CommitInfo;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
@@ -62,13 +62,11 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Set<String> tags = payload.getHeader(Payload.PROCESS_TAGS);
 
-        // TODO replace with getStatus?
-        ProcessEntry e = queueDao.get(processKey);
-        if (e == null) {
+        ProcessStatus s = queueDao.getStatus(processKey.getInstanceId());
+        if (s == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey);
         }
 
-        ProcessStatus s = e.status();
         if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }
@@ -104,7 +102,9 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
         Map<String, Object> meta = getMeta(payload);
-        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId, commitMsg, processTimeout, handlers, meta, exclusive);
+        Imports imports = payload.getHeader(Payload.IMPORTS);
+        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId,
+                commitMsg, processTimeout, handlers, meta, exclusive, imports);
 
         return chain.process(payload);
     }

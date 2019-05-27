@@ -28,6 +28,8 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+import static com.walmartlabs.concord.project.model.Import.SecretDefinition;
+
 public class RepositoryManager {
 
     private final RepositoryProviders providers;
@@ -51,25 +53,29 @@ public class RepositoryManager {
         this.cacheDir = cfg.getRepositoryCacheDir();
     }
 
-    public void export(String orgName, String secretName, String repoUrl, String commitId, String repoPath, Path workDir) throws ExecutionException {
-        Secret secret = getSecret(orgName, secretName);
+    public void export(String repoUrl, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition) throws ExecutionException {
+        export(repoUrl, null, commitId, repoPath, dest, secretDefinition);
+    }
+
+    public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition) throws ExecutionException {
+        Secret secret = getSecret(secretDefinition);
 
         providers.withLock(repoUrl, () -> {
-            Repository repo = providers.fetch(repoUrl, null, commitId, repoPath, secret, cacheDir);
-            repo.export(workDir);
+            Repository repo = providers.fetch(repoUrl, branch, commitId, repoPath, secret, cacheDir);
+            repo.export(dest);
             return null;
         });
     }
 
-    private Secret getSecret(String orgName, String secretName) throws ExecutionException {
-        if (secretName == null) {
+    private Secret getSecret(SecretDefinition secret) throws ExecutionException {
+        if (secret == null) {
             return null;
         }
 
         try {
-            return secretClient.getData(orgName, secretName, null, null);
+            return secretClient.getData(secret.org(), secret.name(), secret.password(), null);
         } catch (Exception e) {
-            throw new ExecutionException("Error while retrieving a secret '" + secretName + "' in org '" + orgName + "': " + e.getMessage(), e);
+            throw new ExecutionException("Error while retrieving a secret '" + secret.name() + "' in org '" + secret.org() + "': " + e.getMessage(), e);
         }
     }
 }

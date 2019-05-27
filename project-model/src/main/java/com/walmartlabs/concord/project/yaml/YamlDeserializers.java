@@ -23,7 +23,6 @@ package com.walmartlabs.concord.project.yaml;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -46,6 +45,7 @@ public final class YamlDeserializers {
     private static final JsonDeserializer<YamlFormField> yamlFormFieldDeserializer = new YamlFormFieldDeserializer();
     private static final JsonDeserializer<YamlDefinitionFile> yamlDefinitionFileDeserializer = new YamlDefinitionFileDeserializer();
     private static final JsonDeserializer<YamlTrigger> yamlTriggerDeserializer = new YamlTriggerDeserializer();
+    private static final JsonDeserializer<YamlImport> yamlImportDeserializer = new YamlImportDeserializer();
 
     public static JsonDeserializer<YamlStep> getYamlStepDeserializer() {
         return yamlStepDeserializer;
@@ -61,6 +61,10 @@ public final class YamlDeserializers {
 
     public static JsonDeserializer<YamlTrigger> getYamlTriggerDeserializer() {
         return yamlTriggerDeserializer;
+    }
+
+    public static JsonDeserializer<YamlImport> getYamlImportDeserializer() {
+        return yamlImportDeserializer;
     }
 
     private static final class YamlStepDeserializer extends StdDeserializer<YamlStep> {
@@ -116,6 +120,18 @@ public final class YamlDeserializers {
         @Override
         public YamlTrigger deserialize(JsonParser json, DeserializationContext ctx) throws IOException {
             return parse(json, Grammar.getTrigger());
+        }
+    }
+
+    private static final class YamlImportDeserializer extends StdDeserializer<YamlImport> {
+
+        public YamlImportDeserializer() {
+            super(YamlImport.class);
+        }
+
+        @Override
+        public YamlImport deserialize(JsonParser json, DeserializationContext ctx) throws IOException {
+            return parse(json, Grammar.getImport());
         }
     }
 

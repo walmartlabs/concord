@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntr
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
 import com.walmartlabs.concord.server.process.event.EventDao;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -168,7 +169,8 @@ public class ProcessQueueDao extends AbstractDao {
                         Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
                         String commitId, String commitMsg, Long processTimeout,
                         Set<String> handlers, Map<String, Object> meta,
-                        boolean exclusive) {
+                        boolean exclusive,
+                        Imports imports) {
 
         tx(tx -> {
             UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
@@ -219,6 +221,9 @@ public class ProcessQueueDao extends AbstractDao {
                 q.set(PROCESS_QUEUE.META, field(coalesce(PROCESS_QUEUE.META, field("?::jsonb", String.class, "{}")) + " || ?::jsonb", String.class, objectMapper.serialize(meta)));
             }
 
+            if (imports != null && !imports.items().isEmpty()) {
+                q.set(PROCESS_QUEUE.IMPORTS, field("?::jsonb", String.class, objectMapper.serialize(imports)));
+            }
 
             q.set(PROCESS_QUEUE.IS_EXCLUSIVE, exclusive);
 
@@ -618,7 +623,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-        SelectJoinStep<Record11<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, Boolean>> s =
+        SelectJoinStep<Record12<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, Boolean, Object>> s =
                 tx.select(
                         q.INSTANCE_ID,
                         q.CREATED_AT,
@@ -630,7 +635,8 @@ public class ProcessQueueDao extends AbstractDao {
                         q.REPO_URL,
                         q.COMMIT_ID,
                         q.REPO_ID,
-                        q.IS_EXCLUSIVE)
+                        q.IS_EXCLUSIVE,
+                        q.IMPORTS)
                         .from(q);
 
         s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -661,6 +667,7 @@ public class ProcessQueueDao extends AbstractDao {
                         .commitId(r.value9())
                         .repoId(r.value10())
                         .exclusive(r.value11())
+                        .imports(objectMapper.deserialize(r.value12(), Imports.class))
                         .build());
     }
 

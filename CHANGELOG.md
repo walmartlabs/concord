@@ -4,9 +4,15 @@
 
 ### Changed
 
+- concord-server, concord-agents: external `imports` are now
+processed without copying into the process state;
 - concord-client, concord-runner: use a custom `User-Agent` header;
 - concord-server: fixed a NPE when handling optional `file` form
 fields.
+
+### Breaking
+
+- project-model: external `imports` are now a top-level element.
 
 
 

@@ -94,11 +94,6 @@ public class Constants {
         public static final String TEMPLATE_KEY = "template";
 
         /**
-         * External git templates/imports configuration.
-         */
-        public static final String IMPORTS_KEY = "imports";
-
-        /**
          * Process initiator's info.
          */
         public static final String INITIATOR_KEY = "initiator";

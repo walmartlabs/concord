@@ -156,10 +156,14 @@ public final class IOUtils {
     }
 
     public static void unzip(Path in, Path targetDir, CopyOption... options) throws IOException {
-        unzip(in, targetDir, false, options);
+        unzip(in, targetDir, false, null, options);
     }
 
     public static void unzip(Path in, Path targetDir, boolean skipExisting, CopyOption... options) throws IOException {
+        unzip(in, targetDir, skipExisting, null, options);
+    }
+
+    public static void unzip(Path in, Path targetDir, boolean skipExisting, FileVisitor visitor, CopyOption... options) throws IOException {
         try (ZipFile zip = new ZipFile(in.toFile())) {
             Enumeration<ZipArchiveEntry> entries = zip.getEntries();
 
@@ -189,6 +193,9 @@ public final class IOUtils {
                     }
 
                     Files.setPosixFilePermissions(p, Posix.posix(unixMode));
+                    if (visitor != null) {
+                        visitor.visit(p, p);
+                    }
                 }
             }
         }

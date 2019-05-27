@@ -42,7 +42,6 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static org.jooq.impl.DSL.currentTimestamp;
-import static org.jooq.impl.DSL.field;
 
 @Named("user-ldap-group-sync")
 @Singleton

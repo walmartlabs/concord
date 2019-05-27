@@ -40,11 +40,9 @@ import org.jooq.impl.DefaultConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
