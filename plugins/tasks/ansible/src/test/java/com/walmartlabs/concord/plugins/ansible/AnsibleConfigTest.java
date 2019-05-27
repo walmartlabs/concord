@@ -37,7 +37,7 @@ public class AnsibleConfigTest extends AbstractTest {
         AnsibleConfig cfg = new AnsibleConfig(workDir, tmpDir, true);
         cfg.parse(new HashMap<>());
 
-        new AnsibleCallbacks(false, tmpDir).enrich(cfg);
+        new AnsibleCallbacks(false, workDir, tmpDir).enrich(cfg);
         new AnsibleLookup(tmpDir).enrich(cfg);
 
         Path cfgPath = cfg.write();

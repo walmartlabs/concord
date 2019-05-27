@@ -39,7 +39,7 @@ import static com.walmartlabs.concord.sdk.MapUtils.getBoolean;
 public class AnsibleCallbacks {
 
     public static AnsibleCallbacks process(TaskContext ctx, AnsibleConfig config) {
-        return new AnsibleCallbacks(ctx.isDebug(), ctx.getTmpDir())
+        return new AnsibleCallbacks(ctx.isDebug(), ctx.getWorkDir(), ctx.getTmpDir())
                 .parse(ctx.getArgs())
                 .enrich(config)
                 .write();
@@ -54,6 +54,7 @@ public class AnsibleCallbacks {
             "concord_strategy_patch.py", "concord_task_executor_patch.py", "concord_out_vars.py"};
 
     private final boolean debug;
+    private final Path workDir;
     private final Path tmpDir;
 
     private boolean disabled = false;
@@ -62,8 +63,9 @@ public class AnsibleCallbacks {
     private EventSender eventSender;
     private Future<?> eventSenderFuture;
 
-    public AnsibleCallbacks(boolean debug, Path tmpDir) {
+    public AnsibleCallbacks(boolean debug, Path workDir, Path tmpDir) {
         this.debug = debug;
+        this.workDir = workDir;
         this.tmpDir = tmpDir;
     }
 
@@ -133,7 +135,8 @@ public class AnsibleCallbacks {
         }
 
         if (eventsFile != null) {
-            env.put("CONCORD_ANSIBLE_EVENTS_FILE", eventsFile.toAbsolutePath().toString());
+            // must be a relative path to support Ansible containers
+            env.put("CONCORD_ANSIBLE_EVENTS_FILE", workDir.relativize(eventsFile).toString());
         }
 
         return this;

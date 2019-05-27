@@ -407,7 +407,11 @@ public class AnsibleIT extends AbstractServerIT {
         assertNotNull(events);
         // one pre and one post event
         assertEquals(2, events.size());
-        Map<String, Object> data = (Map<String, Object>) events.get(1).getData();
+        Map<String, Object> data = events.stream()
+                .filter(e -> "post".equals(e.getData().get("phase")))
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("post event not found"))
+                .getData();
         assertEquals("message iddqd", ((Map<String, Object>) data.get("result")).get("msg"));
     }
 
