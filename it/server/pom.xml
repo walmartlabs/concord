@@ -161,6 +161,15 @@
             <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- download large dependencies beforehand -->
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <type>pom</type>
+            <version>2.5.2</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -208,6 +217,7 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
+                            <overWriteIfNewer>true</overWriteIfNewer>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>

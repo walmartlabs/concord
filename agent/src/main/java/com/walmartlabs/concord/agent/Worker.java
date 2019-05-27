@@ -131,23 +131,29 @@ public class Worker implements Runnable {
 
         long dt;
         try {
-            SecretDefinition secret = SecretDefinition.builder()
-                    .org(r.getOrgName())
-                    .name(r.getSecretName())
-                    .build();
-
             dt = withTimer(() -> repositoryManager.export(
                     r.getRepoUrl(),
                     r.getCommitId(),
                     r.getRepoPath(),
                     r.getPayloadDir(),
-                    secret));
+                    getSecret(r)));
         } catch (Exception e) {
             r.getLog().error("Repository export error: {}", e.getMessage());
             throw e;
         }
 
         r.getLog().info("Repository data export took {}ms", dt);
+    }
+
+    private static SecretDefinition getSecret(JobRequest r) {
+        if (r.getSecretName() == null) {
+            return null;
+        }
+
+        return SecretDefinition.builder()
+                .org(r.getOrgName())
+                .name(r.getSecretName())
+                .build();
     }
 
     private void downloadState(JobRequest r) throws Exception {
