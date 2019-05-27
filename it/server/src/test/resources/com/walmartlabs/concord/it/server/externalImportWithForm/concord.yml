@@ -1,0 +1,9 @@
+flows:
+  flowFromTemplate:
+    - log: "Hello from Template, ${name}!"
+    - form: myForm
+    - log: "Template form submitted: ${myForm.name}"
+
+forms:
+  myForm:
+    - name: {type: "string"}

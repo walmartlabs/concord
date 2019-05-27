@@ -34,20 +34,20 @@ import java.util.Map;
 public class LastModifiedSnapshot implements Snapshot, FileVisitor {
 
     private final Map<Path, FileTime> files = new HashMap<>();
-    private final Path basePath;
-
-    public LastModifiedSnapshot(Path basePath) {
-        this.basePath = basePath;
-    }
 
     @Override
     public void visit(Path src, Path dst) throws IOException {
-        files.put(basePath.relativize(dst), Files.getLastModifiedTime(dst));
+        files.put(dst, Files.getLastModifiedTime(dst));
+    }
+
+    @Override
+    public boolean contains(Path path) {
+        return files.get(path) != null;
     }
 
     @Override
     public boolean isModified(Path path, BasicFileAttributes attrs) {
-        if (!Files.isRegularFile(basePath.resolve(path), LinkOption.NOFOLLOW_LINKS)) {
+        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
 

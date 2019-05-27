@@ -96,7 +96,8 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
 
             channelManager.sendResponse(channel.getChannelId(),
                     new ProcessResponse(req.getCorrelationId(), item.key().getInstanceId(),
-                            orgName, item.repoUrl(), item.repoPath(), item.commitId(), secret));
+                            orgName, item.repoUrl(), item.repoPath(), item.commitId(), secret,
+                            item.imports()));
             logManager.info(item.key(), "Acquired by: " + channel.getInfo());
         });
     }

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.imports;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,13 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.repository.Snapshot;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.nio.file.Path;
 
-@Named
-@Singleton
-public class ImportsConfiguration {
+import static com.walmartlabs.concord.server.queueclient.message.ImportEntry.GitEntry;
 
-    @Inject
-    @Config("imports.src")
-    private String src;
+public interface RepositoryExporter {
 
-    public String getSrc() {
-        return src;
-    }
+    Snapshot export(GitEntry entry, Path workDir) throws Exception;
 }

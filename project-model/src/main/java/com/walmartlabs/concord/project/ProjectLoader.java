@@ -21,6 +21,7 @@ package com.walmartlabs.concord.project;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.model.Import;
 import com.walmartlabs.concord.project.model.Profile;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
@@ -246,6 +247,7 @@ public class ProjectLoader {
 
             Map<String, Object> variables = new LinkedHashMap<>();
             List<Trigger> triggers = new ArrayList<>();
+            List<Import> imports = new ArrayList<>();
 
             if (projectDefinitions != null) {
                 for (ProjectDefinition pd : projectDefinitions) {
@@ -270,10 +272,14 @@ public class ProjectLoader {
                     if (pd.getTriggers() != null) {
                         triggers.addAll(pd.getTriggers());
                     }
+
+                    if (pd.getImports() != null) {
+                        imports.addAll(pd.getImports());
+                    }
                 }
             }
 
-            return new ProjectDefinition(flows, forms, variables, profiles, triggers);
+            return new ProjectDefinition(flows, forms, variables, profiles, triggers, imports);
         }
 
         private static boolean isYaml(Path p) {

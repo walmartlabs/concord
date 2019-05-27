@@ -25,18 +25,16 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
+import java.util.ListIterator;
 
 @Named
 public class StateImportingProcessor implements PayloadProcessor {
-
-    private static final Logger log = LoggerFactory.getLogger(StateImportingProcessor.class);
 
     private static final String PASS_THROUGH_PATH = "forms/";
 
@@ -52,26 +50,27 @@ public class StateImportingProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Snapshot snapshot = payload.getHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT);
-        stateManager.replacePath(processKey, workspace, (p, attrs) -> filter(p, attrs, snapshot));
+        List<Snapshot> snapshots = payload.getHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT);
+        stateManager.replacePath(processKey, workspace, (p, attrs) -> filter(p, attrs, snapshots, workspace));
 
         return chain.process(payload);
     }
 
-    private boolean filter(Path p, BasicFileAttributes attrs, Snapshot snapshot) {
-        if (p.isAbsolute()) {
-            log.warn("filter ['{}'] -> can't filter absolute paths", p);
-            return true;
-        }
-
+    private boolean filter(Path p, BasicFileAttributes attrs, List<Snapshot> snapshots, Path workDir) {
         // those files we need to store in the DB regardless of whether they are from a repository or not
         // e.g. custom forms: we need those files in the DB in order to serve custom form files
-        if (p.toString().startsWith(PASS_THROUGH_PATH)) {
+        if (workDir.relativize(p).toString().startsWith(PASS_THROUGH_PATH)) {
             return true;
         }
 
-        if (snapshot != null) {
-            return snapshot.isModified(p, attrs);
+        if (snapshots != null) {
+            ListIterator<Snapshot> it = snapshots.listIterator(snapshots.size());
+            while(it.hasPrevious()) {
+                Snapshot s = it.previous();
+                if (s.contains(p)) {
+                    return s.isModified(p, attrs);
+                }
+            }
         }
 
         return true;

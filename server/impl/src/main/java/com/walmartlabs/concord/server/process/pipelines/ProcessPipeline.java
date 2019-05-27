@@ -53,7 +53,7 @@ public class ProcessPipeline extends Pipeline {
                 InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
                 ProjectDefinitionProcessor.class,
-                ImportsProcessor.class,
+                ImportProcessor.class,
                 ProjectDefinitionProcessor.class,
                 RequestDataMergingProcessor.class,
                 EntryPointProcessor.class,

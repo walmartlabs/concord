@@ -1,0 +1,16 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+#    - name: "git-org/concord-template"
+#      version: "master"
+#      path: "dir"
+#      dest: "concord"
+
+flows:
+  default:
+    - log: "Hello, ${name}!"
+    - call: flowFromTemplate
+
+configuration:
+  arguments:
+    name: "Concord"

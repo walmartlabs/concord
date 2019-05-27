@@ -311,11 +311,11 @@ public class ProcessStateManager extends AbstractDao {
             Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Path p = src.relativize(file);
-
-                    if (!filter.apply(p, attrs)) {
+                    if (!filter.apply(file, attrs)) {
                         return FileVisitResult.CONTINUE;
                     }
+
+                    Path p = src.relativize(file);
 
                     // can't import directories or symlinks
                     // the caller shouldn't attempt to import anything but regular files

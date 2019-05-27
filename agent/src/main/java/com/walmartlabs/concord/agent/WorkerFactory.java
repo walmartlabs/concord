@@ -21,16 +21,19 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.walmartlabs.concord.agent.executors.JobExecutor;
+import com.walmartlabs.concord.imports.ImportManager;
 
 import java.util.Map;
 
 public class WorkerFactory {
 
     private final RepositoryManager repositoryManager;
+    private final ImportManager importManager;
     private final Map<JobRequest.Type, JobExecutor> executors;
 
-    public WorkerFactory(RepositoryManager repositoryManager, Map<JobRequest.Type, JobExecutor> executors) {
+    public WorkerFactory(RepositoryManager repositoryManager, ImportManager importManager, Map<JobRequest.Type, JobExecutor> executors) {
         this.repositoryManager = repositoryManager;
+        this.importManager = importManager;
         this.executors = executors;
     }
 
@@ -40,6 +43,6 @@ public class WorkerFactory {
             throw new ExecutionException("Unsupported job type: " + jobRequest.getType());
         }
 
-        return new Worker(repositoryManager, executor, completionCallback, stateFetcher, jobRequest);
+        return new Worker(repositoryManager, importManager, executor, completionCallback, stateFetcher, jobRequest);
     }
 }

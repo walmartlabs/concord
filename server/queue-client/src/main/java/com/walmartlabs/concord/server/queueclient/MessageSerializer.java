@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.queueclient;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 
@@ -28,7 +30,7 @@ import java.util.Map;
 
 public final class MessageSerializer {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = createObjectMapper();
 
     @SuppressWarnings("unchecked")
     public static <E extends Message> E deserialize(String msg) {
@@ -44,13 +46,19 @@ public final class MessageSerializer {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static String serialize(Message msg) {
         try {
             return objectMapper.writeValueAsString(msg);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new GuavaModule());
+        om.registerModule(new Jdk8Module());
+        return om;
     }
 
     private MessageSerializer() {

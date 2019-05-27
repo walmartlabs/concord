@@ -26,4 +26,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 public interface Snapshot {
 
     boolean isModified(Path path, BasicFileAttributes attrs);
+
+    boolean contains(Path path);
 }

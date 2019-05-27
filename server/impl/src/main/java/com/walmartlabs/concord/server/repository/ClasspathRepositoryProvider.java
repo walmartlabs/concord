@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class ClasspathRepositoryProvider implements RepositoryProvider {
 
@@ -74,7 +75,18 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     public Snapshot export(Path src, Path dst) throws IOException {
         IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
-        return (path, attrs) -> true;
+        return new Snapshot() {
+
+            @Override
+            public boolean isModified(Path path, BasicFileAttributes attrs) {
+                return true;
+            }
+
+            @Override
+            public boolean contains(Path path) {
+                return true;
+            }
+        };
     }
 
     @Override

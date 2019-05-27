@@ -23,6 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.imports.ImportManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +31,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.project.model.Import.SecretDefinition;
+
 public class Worker implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(Worker.class);
 
     private final RepositoryManager repositoryManager;
+    private final ImportManager importManager;
     private final JobExecutor executor;
     private final CompletionCallback completionCallback;
     private final StateFetcher stateFetcher;
@@ -43,12 +47,14 @@ public class Worker implements Runnable {
     private JobInstance jobInstance;
 
     public Worker(RepositoryManager repositoryManager,
+                  ImportManager importManager,
                   JobExecutor executor,
                   CompletionCallback completionCallback,
                   StateFetcher stateFetcher,
                   JobRequest jobRequest) {
 
         this.repositoryManager = repositoryManager;
+        this.importManager = importManager;
         this.executor = executor;
         this.jobRequest = jobRequest;
         this.completionCallback = completionCallback;
@@ -63,6 +69,8 @@ public class Worker implements Runnable {
         try {
             // fetch the git repo's data...
             fetchRepo(jobRequest);
+            // ...and process imports
+            processImports(jobRequest);
             // ...and download the saved process state from the server
             downloadState(jobRequest);
 
@@ -123,12 +131,17 @@ public class Worker implements Runnable {
 
         long dt;
         try {
-            dt = withTimer(() -> repositoryManager.export(r.getOrgName(),
-                    r.getSecretName(),
+            SecretDefinition secret = SecretDefinition.builder()
+                    .org(r.getOrgName())
+                    .name(r.getSecretName())
+                    .build();
+
+            dt = withTimer(() -> repositoryManager.export(
                     r.getRepoUrl(),
                     r.getCommitId(),
                     r.getRepoPath(),
-                    r.getPayloadDir()));
+                    r.getPayloadDir(),
+                    secret));
         } catch (Exception e) {
             r.getLog().error("Repository export error: {}", e.getMessage());
             throw e;
@@ -149,6 +162,22 @@ public class Worker implements Runnable {
         }
 
         r.getLog().info("Process state download took {}ms", dt);
+    }
+
+    private void processImports(JobRequest r) throws ExecutionException {
+        if (r.getImports().isEmpty()) {
+            return;
+        }
+
+        long dt;
+        try {
+            dt = withTimer(() -> importManager.process(r.getImports(), r.getPayloadDir()));
+        } catch (Exception e) {
+            r.getLog().error("Error while reading the process' imports: " + e.getMessage());
+            throw new ExecutionException("Error while reading the process' imports", e);
+        }
+
+        r.getLog().info("Import of external resources took {}ms", dt);
     }
 
     private static Throwable unwrap(Throwable t) {

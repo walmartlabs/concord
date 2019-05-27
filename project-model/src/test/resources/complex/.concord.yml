@@ -1,3 +1,16 @@
+imports:
+  - git: {url: "http://host/org/repo", version: "master", path: "dir", dest: "concord"}
+  - git:
+      name: "git-org/concord-template"
+      version: "dev"
+      path: "root"
+      dest: "tmp"
+      secret:
+        org: "Default"
+        name: "secret-name"
+  - mvn:
+      url: "mvn://maven/my-artifact.jar"
+
 flows:
   main:
   - ${myTask.method(arg)}

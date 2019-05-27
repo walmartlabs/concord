@@ -320,7 +320,7 @@ public class GitClient {
     }
 
     private String processUrl(String url, Secret secret) {
-        if (secret == null && url.trim().startsWith("https://") && cfg.oauthToken() != null) {
+        if (secret == null && url.trim().startsWith("https://") && cfg.oauthToken() != null && !url.contains("@")) {
             return "https://" + cfg.oauthToken() + "@" + url.substring("https://".length());
         }
         return url;

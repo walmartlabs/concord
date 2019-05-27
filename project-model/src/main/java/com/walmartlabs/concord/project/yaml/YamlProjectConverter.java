@@ -21,9 +21,7 @@ package com.walmartlabs.concord.project.yaml;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
-import com.walmartlabs.concord.project.model.Profile;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.project.model.*;
 import com.walmartlabs.concord.project.yaml.converter.StepConverter;
 import com.walmartlabs.concord.project.yaml.model.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -31,10 +29,9 @@ import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceMap;
 import io.takari.bpm.model.form.FormDefinition;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static com.walmartlabs.concord.project.yaml.YamlImportConverter.convertImports;
 
 public final class YamlProjectConverter {
 
@@ -44,14 +41,14 @@ public final class YamlProjectConverter {
             Constants.Request.ENTRY_POINT_KEY
     };
 
-
     public static ProjectDefinition convert(YamlProject project) throws YamlConverterException {
         Map<String, ProcessDefinition> flows = convertFlows(project.getFlows());
         Map<String, FormDefinition> forms = convertForms(project.getForms());
         Map<String, Object> cfg = project.getConfiguration();
         Map<String, Profile> profiles = convertProfiles(project.getProfiles());
         List<Trigger> triggers = convertTriggers(project.getTriggers());
-        return new ProjectDefinition(flows, forms, cfg, profiles, triggers);
+        List<Import> imports = convertImports(project.getImports());
+        return new ProjectDefinition(flows, forms, cfg, profiles, triggers, imports);
     }
 
     @SuppressWarnings("unchecked")

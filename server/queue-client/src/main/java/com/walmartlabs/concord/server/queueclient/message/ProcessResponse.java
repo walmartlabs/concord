@@ -33,6 +33,7 @@ public class ProcessResponse extends Message {
     private final String repoPath;
     private final String commitId;
     private final String secretName;
+    private final Imports imports;
 
     @JsonCreator
     public ProcessResponse(
@@ -42,7 +43,8 @@ public class ProcessResponse extends Message {
             @JsonProperty("repoUrl") String repoUrl,
             @JsonProperty("repoPath") String repoPath,
             @JsonProperty("commitId") String commitId,
-            @JsonProperty("secretName") String secretName) {
+            @JsonProperty("secretName") String secretName,
+            @JsonProperty("imports") Imports imports) {
         super(MessageType.PROCESS_RESPONSE);
         setCorrelationId(correlationId);
         this.processId = processId;
@@ -51,6 +53,7 @@ public class ProcessResponse extends Message {
         this.repoPath = repoPath;
         this.commitId = commitId;
         this.secretName = secretName;
+        this.imports = imports;
     }
 
     public UUID getProcessId() {
@@ -77,15 +80,20 @@ public class ProcessResponse extends Message {
         return secretName;
     }
 
+    public Imports getImports() {
+        return imports;
+    }
+
     @Override
     public String toString() {
         return "ProcessResponse{" +
                 "processId=" + processId +
-                ", orgName=" + orgName +
+                ", orgName='" + orgName + '\'' +
                 ", repoUrl='" + repoUrl + '\'' +
                 ", repoPath='" + repoPath + '\'' +
                 ", commitId='" + commitId + '\'' +
                 ", secretName='" + secretName + '\'' +
+                ", imports=" + imports +
                 '}';
     }
 }

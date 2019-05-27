@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.walmartlabs.concord.project.yaml.model.*;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
 
@@ -47,9 +49,11 @@ public class YamlParser {
         module.addDeserializer(YamlFormField.class, YamlDeserializers.getYamlFormFieldDeserializer());
         module.addDeserializer(YamlDefinitionFile.class, YamlDeserializers.getYamlDefinitionFileDeserializer());
         module.addDeserializer(YamlTrigger.class, YamlDeserializers.getYamlTriggerDeserializer());
+        module.addDeserializer(YamlImport.class, YamlDeserializers.getYamlImportDeserializer());
 
         om.registerModule(module);
-
+        om.registerModule(new GuavaModule());
+        om.registerModule(new Jdk8Module());
         this.objectMapper = om;
     }
 

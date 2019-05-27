@@ -76,7 +76,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
 
     @Override
     public Snapshot export(Path src, Path dst) throws IOException {
-        LastModifiedSnapshot snapshot = new LastModifiedSnapshot(dst);
+        LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
         IOUtils.copy(src, dst, GIT_FILES, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }

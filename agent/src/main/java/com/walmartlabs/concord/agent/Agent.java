@@ -84,6 +84,8 @@ public class Agent {
         SecretClient secretClient = new SecretClient(apiClient);
         RepositoryManager repositoryManager = new RepositoryManager(cfg, secretClient);
 
+        ImportManagerProvider imp = new ImportManagerProvider(repositoryManager, new DependencyManager(cfg.getDependencyCacheDir()));
+
         this.processLogFactory = new ProcessLogFactory(cfg.getLogDir(), cfg.getLogMaxDelay(), createLogAppender(processApi));
 
         this.executor = Executors.newCachedThreadPool();
@@ -93,7 +95,7 @@ public class Agent {
         JobExecutor runnerExec = createRunnerJobExecutor(cfg, processApi, processLogFactory, processPool, executor);
         Map<JobRequest.Type, JobExecutor> executors = Collections.singletonMap(JobRequest.Type.RUNNER, runnerExec);
 
-        this.workerFactory = new WorkerFactory(repositoryManager, executors);
+        this.workerFactory = new WorkerFactory(repositoryManager, imp.get(), executors);
     }
 
     public void run() throws Exception {

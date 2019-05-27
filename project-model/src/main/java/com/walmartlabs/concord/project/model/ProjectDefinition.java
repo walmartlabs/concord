@@ -34,15 +34,19 @@ public class ProjectDefinition extends Profile {
 
     private final List<Trigger> triggers;
 
+    private final List<Import> imports;
+
     public ProjectDefinition(Map<String, ProcessDefinition> flows,
                              Map<String, FormDefinition> forms,
                              Map<String, Object> variables,
                              Map<String, Profile> profiles,
-                             List<Trigger> triggers) {
+                             List<Trigger> triggers,
+                             List<Import> imports) {
 
         super(flows, forms, variables);
         this.profiles = profiles;
         this.triggers = triggers;
+        this.imports = imports;
     }
 
     public Map<String, Profile> getProfiles() {
@@ -53,11 +57,16 @@ public class ProjectDefinition extends Profile {
         return triggers;
     }
 
+    public List<Import> getImports() {
+        return imports;
+    }
+
     @Override
     public String toString() {
         return "ProjectDefinition{" +
-                "profiles=" + profiles +
-                "triggers=" + triggers +
+                "profiles=" + profiles + ", " +
+                "triggers=" + triggers + ", " +
+                "imports=" + imports +
                 "} " + super.toString();
     }
 }

@@ -39,6 +39,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -55,7 +57,7 @@ public class RepositoryProcessor implements PayloadProcessor {
      */
     public static final HeaderKey<RepositoryInfo> REPOSITORY_INFO_KEY = HeaderKey.register("_repositoryInfo", RepositoryInfo.class);
 
-    public static final HeaderKey<Snapshot> REPOSITORY_SNAPSHOT = HeaderKey.register("_repositorySnapshot", Snapshot.class);
+    public static final HeaderKey<List<Snapshot>> REPOSITORY_SNAPSHOT = HeaderKey.registerList("_repositorySnapshot");
 
     private final RepositoryDao repositoryDao;
     private final RepositoryManager repositoryManager;
@@ -100,7 +102,7 @@ public class RepositoryProcessor implements PayloadProcessor {
 
                 RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), branch, repo.getCommitId(), ci);
                 return payload.putHeader(REPOSITORY_INFO_KEY, i)
-                        .putHeader(REPOSITORY_SNAPSHOT, snapshot);
+                        .putHeader(REPOSITORY_SNAPSHOT, Collections.singletonList(snapshot));
             } catch (Exception e) {
                 log.error("process ['{}'] -> repository error", processKey, e);
                 logManager.error(processKey, "Error while processing a repository: " + repo.getUrl(), e);

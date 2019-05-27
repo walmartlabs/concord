@@ -20,9 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.Test;
@@ -32,16 +30,57 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class ExternalImportsIT extends AbstractServerIT {
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithForm() throws Exception {
+        String repoUrl = initRepo("externalImportWithForm");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMain", repoUrl);
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for suspend
+
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+        List<FormListEntry> forms = formsApi.list(pir.getInstanceId());
+        assertEquals(1, forms.size());
+
+        formsApi.submit(pir.getInstanceId(), forms.get(0).getName(), Collections.singletonMap("name", "boo"));
+
+        // wait process finished
+        pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // get the name of the agent's log file
+
+        assertNotNull(pir.getLogFileName());
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+        assertLog(".*Hello from Template, Concord!.*", ab);
+        assertLog(".*Template form submitted: boo.*", ab);
+    }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExternalImportWithDefaults() throws Exception {
@@ -132,6 +171,38 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello, Concord!.*", ab);
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
+
+    // payload with concord/concord.yml and import with concord/concord.yml,
+    // concord.yml from import will use.
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithConcordDirReplace() throws Exception {
+        String repoUrl = initRepo("externalImport");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMainWithFlow", repoUrl);
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // get the name of the agent's log file
+
+        assertNotNull(pir.getLogFileName());
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello from Template, Concord!.*", ab);
+    }
+
 
     private static String initRepo(String resourceName) throws Exception {
         Path tmpDir = createTempDir();

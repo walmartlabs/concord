@@ -31,10 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -82,7 +79,6 @@ public class Configuration {
     private final int repositoryHttpLowSpeedTime;
     private final int repositorySshTimeout;
     private final int repositorySshTimeoutRetryCount;
-
 
     private final Path runnerPath;
     private final Path runnerCfgDir;
@@ -335,7 +331,7 @@ public class Configuration {
                 ", maxPreforkAge=" + maxPreforkAge +
                 ", maxPreforkCount=" + maxPreforkCount +
                 ", serverApiBaseUrl='" + serverApiBaseUrl + '\'' +
-                ", serverWebsocketUrls=" + serverWebsocketUrls +
+                ", serverWebsocketUrls=" + Arrays.toString(serverWebsocketUrls) +
                 ", apiVerifySsl=" + apiVerifySsl +
                 ", connectTimeout=" + connectTimeout +
                 ", readTimeout=" + readTimeout +
@@ -346,6 +342,7 @@ public class Configuration {
                 ", dockerHost='" + dockerHost + '\'' +
                 ", dockerOrphanSweeperEnabled=" + dockerOrphanSweeperEnabled +
                 ", dockerOrphanSweeperPeriod=" + dockerOrphanSweeperPeriod +
+                ", extraDockerVolumes=" + extraDockerVolumes +
                 ", repositoryCacheDir=" + repositoryCacheDir +
                 ", repositoryLockTimeout=" + repositoryLockTimeout +
                 ", repositoryOauthToken='" + repositoryOauthToken + '\'' +
@@ -355,6 +352,7 @@ public class Configuration {
                 ", repositorySshTimeout=" + repositorySshTimeout +
                 ", repositorySshTimeoutRetryCount=" + repositorySshTimeoutRetryCount +
                 ", runnerPath=" + runnerPath +
+                ", runnerCfgDir=" + runnerCfgDir +
                 ", agentJavaCmd='" + agentJavaCmd + '\'' +
                 ", runnerSecurityManagerEnabled=" + runnerSecurityManagerEnabled +
                 ", apiKey='" + apiKey + '\'' +

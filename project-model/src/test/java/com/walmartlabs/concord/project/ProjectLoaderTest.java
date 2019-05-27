@@ -92,6 +92,10 @@ public class ProjectLoaderTest {
 
         assertNotNull(pd.getTriggers());
         assertEquals(2, pd.getTriggers().size());
+
+        assertNotNull(pd.getImports());
+        assertEquals(3, pd.getImports().size());
+        assertEquals("git", pd.getImports().get(0).type());
     }
 
     @Test

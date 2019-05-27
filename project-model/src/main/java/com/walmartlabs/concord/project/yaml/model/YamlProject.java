@@ -32,6 +32,7 @@ public class YamlProject extends YamlProfile {
 
     private final Map<String, YamlProfile> profiles;
     private final List<YamlTrigger> triggers;
+    private final List<YamlImport> imports;
 
     @JsonCreator
     public YamlProject(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
@@ -39,11 +40,13 @@ public class YamlProject extends YamlProfile {
                        @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables,
                        @JsonProperty("profiles") Map<String, YamlProfile> profiles,
-                       @JsonProperty("triggers") List<YamlTrigger> triggers) {
+                       @JsonProperty("triggers") List<YamlTrigger> triggers,
+                       @JsonProperty("imports") List<YamlImport> imports) {
 
         super(flows, forms, configuration, variables);
         this.profiles = profiles;
         this.triggers = triggers;
+        this.imports = imports;
     }
 
     public Map<String, YamlProfile> getProfiles() {
@@ -54,11 +57,16 @@ public class YamlProject extends YamlProfile {
         return triggers;
     }
 
+    public List<YamlImport> getImports() {
+        return imports;
+    }
+
     @Override
     public String toString() {
         return "YamlProject{" +
-                "profiles=" + profiles +
-                "triggers=" + triggers +
+                "profiles=" + profiles + ", " +
+                "triggers=" + triggers + ", " +
+                "imports=" + imports +
                 "} " + super.toString();
     }
 }

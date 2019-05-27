@@ -24,6 +24,7 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -49,6 +50,7 @@ public class Payload {
     public static final HeaderKey<Map<String, Object>> REQUIREMENTS = HeaderKey.registerMap("_requirements");
     public static final HeaderKey<PolicyRules> POLICY = HeaderKey.register("_policy", PolicyRules.class);
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
+    public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 
