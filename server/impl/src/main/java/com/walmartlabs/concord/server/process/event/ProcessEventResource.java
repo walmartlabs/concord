@@ -20,7 +20,8 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -29,7 +30,6 @@ import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
@@ -44,7 +44,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -61,19 +60,21 @@ public class ProcessEventResource implements Resource {
     private final ProcessKeyCache processKeyCache;
     private final ProcessQueueDao queueDao;
     private final ProjectAccessManager projectAccessManager;
-    private final ObjectMapper objectMapper;
+
+    private final Histogram batchInsertHistogram;
 
     @Inject
     public ProcessEventResource(EventDao eventDao,
                                 ProcessKeyCache processKeyCache,
                                 ProcessQueueDao queueDao,
-                                ProjectAccessManager projectAccessManager) {
+                                ProjectAccessManager projectAccessManager,
+                                MetricRegistry metricRegistry) {
 
         this.eventDao = eventDao;
         this.processKeyCache = processKeyCache;
         this.queueDao = queueDao;
         this.projectAccessManager = projectAccessManager;
-        this.objectMapper = new ObjectMapper();
+        this.batchInsertHistogram = metricRegistry.histogram("process-events-batch-insert");
     }
 
     /**
@@ -90,16 +91,28 @@ public class ProcessEventResource implements Resource {
     public void event(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                       @ApiParam ProcessEventRequest req) {
 
-        String data;
-        try {
-            // TODO we should be able to capture the event as is, without converting it from JSON and to JSON again
-            data = objectMapper.writeValueAsString(req.getData());
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Error while serializing the event's data: " + e.getMessage(), e);
-        }
+        ProcessKey processKey = processKeyCache.get(processInstanceId);
+        eventDao.insert(processKey, req.getEventType(), req.getData());
+    }
+
+    /**
+     * Register multiple events for the specified process.
+     *
+     * @param processInstanceId
+     * @param data
+     */
+    @POST
+    @ApiOperation(value = "Register multiple events for the specified process", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
+    @Path("/{processInstanceId}/eventBatch")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public void batchEvent(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
+                           @ApiParam List<ProcessEventRequest> data) {
 
         ProcessKey processKey = processKeyCache.get(processInstanceId);
-        eventDao.insert(processKey, req.getEventType(), data);
+        eventDao.insert(processKey, data);
+
+        batchInsertHistogram.update(data.size());
     }
 
     /**

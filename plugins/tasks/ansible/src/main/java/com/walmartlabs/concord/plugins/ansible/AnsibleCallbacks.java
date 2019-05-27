@@ -20,19 +20,26 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.client.ProcessEventsApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.walmartlabs.concord.sdk.MapUtils.getBoolean;
 
 public class AnsibleCallbacks {
 
-    public static void process(TaskContext ctx, AnsibleConfig config) {
-        new AnsibleCallbacks(ctx.getTmpDir())
+    public static AnsibleCallbacks process(TaskContext ctx, AnsibleConfig config) {
+        return new AnsibleCallbacks(ctx.isDebug(), ctx.getTmpDir())
                 .parse(ctx.getArgs())
                 .enrich(config)
                 .write();
@@ -46,11 +53,17 @@ public class AnsibleCallbacks {
             "concord_events.py", "concord_trace.py", "concord_protectdata.py",
             "concord_strategy_patch.py", "concord_task_executor_patch.py", "concord_out_vars.py"};
 
+    private final boolean debug;
     private final Path tmpDir;
 
     private boolean disabled = false;
 
-    public AnsibleCallbacks(Path tmpDir) {
+    private Path eventsFile;
+    private EventSender eventSender;
+    private Future<?> eventSenderFuture;
+
+    public AnsibleCallbacks(boolean debug, Path tmpDir) {
+        this.debug = debug;
         this.tmpDir = tmpDir;
     }
 
@@ -59,9 +72,9 @@ public class AnsibleCallbacks {
         return this;
     }
 
-    public void write() {
+    public AnsibleCallbacks write() {
         if (disabled) {
-            return;
+            return this;
         }
 
         try {
@@ -70,6 +83,8 @@ public class AnsibleCallbacks {
             log.error("Error while adding Concord callback plugins: {}", e.getMessage(), e);
             throw new RuntimeException("Error while adding Concord callback plugins: " + e.getMessage());
         }
+
+        return this;
     }
 
     public AnsibleCallbacks enrich(AnsibleConfig config) {
@@ -80,6 +95,46 @@ public class AnsibleCallbacks {
         config.getDefaults()
                 .prependPath("callback_plugins", CALLBACK_PLUGINS_DIR)
                 .put("stdout_callback", "concord_protectdata");
+
+        return this;
+    }
+
+    public AnsibleCallbacks startEventSender(UUID instanceId, ProcessEventsApi eventsApi) throws IOException {
+        if (disabled) {
+            return this;
+        }
+
+        this.eventsFile = Files.createTempFile(tmpDir, "events", ".log");
+        this.eventSender = new EventSender(debug, instanceId, eventsFile, eventsApi);
+        this.eventSenderFuture = eventSender.start();
+
+        return this;
+    }
+
+    public void stopEventSender() {
+        if (eventSender == null) {
+            return;
+        }
+
+        this.eventSender.stop();
+
+        try {
+            this.eventSenderFuture.get(1, TimeUnit.MINUTES);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            log.warn("Error while stopping the event sending thread", e);
+        }
+
+        this.eventSender = null;
+    }
+
+    public AnsibleCallbacks enrich(AnsibleEnv env) {
+        if (disabled) {
+            return this;
+        }
+
+        if (eventsFile != null) {
+            env.put("CONCORD_ANSIBLE_EVENTS_FILE", eventsFile.toAbsolutePath().toString());
+        }
 
         return this;
     }

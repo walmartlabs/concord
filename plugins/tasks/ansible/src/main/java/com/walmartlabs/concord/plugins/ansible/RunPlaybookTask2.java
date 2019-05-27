@@ -22,6 +22,10 @@ package com.walmartlabs.concord.plugins.ansible;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ApiClientConfiguration;
+import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
@@ -34,6 +38,7 @@ import java.nio.file.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getListAsString;
@@ -47,6 +52,8 @@ public class RunPlaybookTask2 implements Task {
 
     private static final int SUCCESS_EXIT_CODE = 0;
 
+    private final ApiClientFactory apiClientFactory;
+    private final ApiConfiguration apiCfg;
     private final SecretService secretService;
     private final AnsibleAuthFactory ansibleAuthFactory;
     private final DockerService dockerService;
@@ -57,17 +64,18 @@ public class RunPlaybookTask2 implements Task {
     @InjectVariable(Constants.Context.TX_ID_KEY)
     String txId;
 
-    @Inject
-    ApiConfiguration apiCfg;
-
     @InjectVariable("ansibleParams")
     private Map<String, Object> defaults;
 
     @Inject
-    public RunPlaybookTask2(SecretService secretService,
+    public RunPlaybookTask2(ApiClientFactory apiClientFactory,
+                            ApiConfiguration apiCfg,
+                            SecretService secretService,
                             AnsibleAuthFactory ansibleAuthFactory,
                             DockerService dockerService) {
 
+        this.apiClientFactory = apiClientFactory;
+        this.apiCfg = apiCfg;
         this.secretService = secretService;
         this.ansibleAuthFactory = ansibleAuthFactory;
         this.dockerService = dockerService;
@@ -131,7 +139,14 @@ public class RunPlaybookTask2 implements Task {
                 .parse(args)
                 .enrich(env);
 
-        AnsibleCallbacks.process(taskContext, cfg);
+        ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
+                .context(context)
+                .build());
+
+        AnsibleCallbacks callbacks = AnsibleCallbacks.process(taskContext, cfg)
+                .startEventSender(UUID.fromString(txId), new ProcessEventsApi(apiClient))
+                .enrich(env);
+
         AnsibleLibs.process(taskContext, env);
         AnsibleLookup.process(taskContext, cfg);
 
@@ -204,6 +219,8 @@ public class RunPlaybookTask2 implements Task {
                 throw new IllegalStateException("Process finished with exit code " + code);
             }
         } finally {
+            callbacks.stopEventSender();
+
             auth.postProcess();
             groupVarsProcessor.postProcess();
             outVarsProcessor.postProcess();

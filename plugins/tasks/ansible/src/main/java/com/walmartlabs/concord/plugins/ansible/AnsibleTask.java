@@ -20,6 +20,8 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.DockerService;
 import com.walmartlabs.concord.sdk.SecretService;
 
@@ -30,10 +32,12 @@ import javax.inject.Named;
 public class AnsibleTask extends RunPlaybookTask2 {
 
     @Inject
-    public AnsibleTask(SecretService secretService,
+    public AnsibleTask(ApiClientFactory apiClientFactory,
+                       ApiConfiguration apiCfg,
+                       SecretService secretService,
                        AnsibleAuthFactory ansibleAuthFactory,
                        DockerService dockerService) {
 
-        super(secretService, ansibleAuthFactory, dockerService);
+        super(apiClientFactory, apiCfg, secretService, ansibleAuthFactory, dockerService);
     }
 }
