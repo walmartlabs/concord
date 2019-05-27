@@ -20,20 +20,16 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record4;
-import org.jooq.SelectConditionStep;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.List;
@@ -46,10 +42,10 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class EventDao extends AbstractDao {
 
-    private final ObjectMapper objectMapper;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public EventDao(@MainDB Configuration cfg, ObjectMapper objectMapper) {
+    public EventDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;
     }
@@ -98,12 +94,36 @@ public class EventDao extends AbstractDao {
         }
     }
 
-    public void insert(ProcessKey processKey, String eventType, String eventData) {
-        tx(tx -> insert(tx, processKey, eventType, eventData));
+    public void insert(ProcessKey processKey, String eventType, Map<String, Object> data) {
+        tx(tx -> insert(tx, processKey, eventType, data));
     }
 
-    // TODO shouldn't eventData be Serializable or Object?
-    public void insert(DSLContext tx, ProcessKey processKey, String eventType, String eventData) {
+    public void insert(ProcessKey processKey, List<ProcessEventRequest> entries) {
+        if (entries == null || entries.isEmpty()) {
+            return;
+        }
+
+        tx(tx -> {
+            BatchBindStep b = tx.batch(tx.insertInto(PROCESS_EVENTS)
+                    .columns(PROCESS_EVENTS.INSTANCE_ID,
+                            PROCESS_EVENTS.INSTANCE_CREATED_AT,
+                            PROCESS_EVENTS.EVENT_TYPE,
+                            PROCESS_EVENTS.EVENT_DATE,
+                            PROCESS_EVENTS.EVENT_DATA)
+                    .values(null, null, null, currentTimestamp(), field("?::jsonb", "n/a")));
+
+            for (ProcessEventRequest e : entries) {
+                b.bind(processKey.getInstanceId(),
+                        processKey.getCreatedAt(),
+                        e.getEventType(),
+                        objectMapper.serialize(e.getData()));
+            }
+
+            b.execute();
+        });
+    }
+
+    public void insert(DSLContext tx, ProcessKey processKey, String eventType, Map<String, Object> data) {
         tx.insertInto(PROCESS_EVENTS)
                 .columns(PROCESS_EVENTS.INSTANCE_ID,
                         PROCESS_EVENTS.INSTANCE_CREATED_AT,
@@ -114,11 +134,11 @@ public class EventDao extends AbstractDao {
                         value(processKey.getCreatedAt()),
                         value(eventType),
                         currentTimestamp(),
-                        field("?::jsonb", eventData))
+                        field("?::jsonb", objectMapper.serialize(data)))
                 .execute();
     }
 
-    public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, String eventData) {
+    public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, Map<String, Object> data) {
         String sql = tx.insertInto(PROCESS_EVENTS,
                 PROCESS_EVENTS.INSTANCE_ID,
                 PROCESS_EVENTS.INSTANCE_CREATED_AT,
@@ -134,7 +154,7 @@ public class EventDao extends AbstractDao {
                     ps.setObject(1, pk.getInstanceId());
                     ps.setTimestamp(2, pk.getCreatedAt());
                     ps.setString(3, eventType);
-                    ps.setString(4, eventData);
+                    ps.setString(4, objectMapper.serialize(data));
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -147,20 +167,7 @@ public class EventDao extends AbstractDao {
                 .id(r.value1())
                 .eventType(r.value2())
                 .eventDate(r.value3())
-                .data(parse(r.value4()))
+                .data(objectMapper.deserialize(r.value4()))
                 .build();
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> parse(String s) {
-        if (s == null) {
-            return null;
-        }
-
-        try {
-            return objectMapper.readValue(s, Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

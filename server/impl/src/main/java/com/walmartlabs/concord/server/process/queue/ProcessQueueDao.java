@@ -589,7 +589,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
                 .execute();
 
-        String eventData = objectMapper.serialize(waits != null ? waits : new NoneCondition());
+        Map<String, Object> eventData = objectMapper.convertToMap(waits != null ? waits : new NoneCondition());
         eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), eventData);
     }
 
@@ -680,14 +680,14 @@ public class ProcessQueueDao extends AbstractDao {
         payload.put("status", status.name());
         payload.putAll(statusPayload);
 
-        eventDao.insert(tx, processKey, EventType.PROCESS_STATUS.name(), objectMapper.serialize(payload));
+        eventDao.insert(tx, processKey, EventType.PROCESS_STATUS.name(), objectMapper.convertToMap(payload));
     }
 
     private void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("status", status.name());
 
-        eventDao.insert(tx, processKeys, EventType.PROCESS_STATUS.name(), objectMapper.serialize(payload));
+        eventDao.insert(tx, processKeys, EventType.PROCESS_STATUS.name(), objectMapper.convertToMap(payload));
     }
 
     private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {

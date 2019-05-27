@@ -82,4 +82,8 @@ public class ConcordObjectMapper {
             throw new RuntimeException(e);
         }
     }
+
+    public Map<String, Object> convertToMap(Object o) {
+        return delegate.convertValue(o, MAP_TYPE);
+    }
 }

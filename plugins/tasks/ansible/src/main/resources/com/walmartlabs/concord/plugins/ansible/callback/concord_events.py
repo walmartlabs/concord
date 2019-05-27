@@ -7,7 +7,6 @@ from ansible.module_utils.six import string_types
 import time
 
 import os
-import requests
 import ujson as json
 
 def to_millis(t):
@@ -28,35 +27,31 @@ class CallbackModule(CallbackBase):
 
         print("Ansible event recording started...")
 
-        baseUrl = os.environ['CONCORD_BASE_URL']
-        instanceId = os.environ['CONCORD_INSTANCE_ID']
-        sessionToken = os.environ['CONCORD_SESSION_TOKEN']
+        outFilePath = os.environ['CONCORD_ANSIBLE_EVENTS_FILE']
+        self.outFile = open(outFilePath, 'a')
 
-        self.eventCorrelationId = None
-        if "CONCORD_EVENT_CORRELATION_ID" in os.environ:
-            self.eventCorrelationId = os.environ['CONCORD_EVENT_CORRELATION_ID']
-
+        # TODO could be moved into the task itself
         self.currentRetryCount = None
         if "CONCORD_CURRENT_RETRY_COUNT" in os.environ:
             self.currentRetryCount = os.environ['CONCORD_CURRENT_RETRY_COUNT']
 
-        self.targetUrl = baseUrl + '/api/v1/process/' + instanceId + '/event'
-
-        s = requests.Session()
-        s.headers.update({'X-Concord-SessionToken': sessionToken, 'Content-type': 'application/json',
-                          'User-Agent': 'Concord-Runner: txId=' + instanceId})
-
-        self.session = s
+        # TODO could be moved into the task itself
+        self.eventCorrelationId = None
+        if "CONCORD_EVENT_CORRELATION_ID" in os.environ:
+            self.eventCorrelationId = os.environ['CONCORD_EVENT_CORRELATION_ID']
 
         self.taskDurations = {}
 
+    def playbook_on_stats(self, stats):
+        self.outFile.close()
+
     def handle_event(self, event):
-        r = self.session.post(self.targetUrl, data=json.dumps({
+        self.outFile.write(json.dumps({
             'eventType': 'ANSIBLE',
             'data': dict(event, **{'parentCorrelationId': self.eventCorrelationId,
                                    'currentRetryCount': self.currentRetryCount})
         }))
-        r.raise_for_status()
+        self.outFile.write('<~EOL~>\n')
 
     def cleanup_results(self, result):
         abridged_result = self._strip_internal_keys(result)
