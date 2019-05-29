@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: return a list of form `fields` in the generated
+`data.js` for custom forms. The list is in the original order of the
+form definition.
+
 ### Changed
 
 - concord-server, concord-agents: external `imports` are now
