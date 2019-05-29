@@ -67,6 +67,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.process.state.ProcessStateManager.copyTo;
 
@@ -328,6 +329,10 @@ public class CustomFormService implements Resource {
             allowedValues = Collections.emptyMap();
         }
 
+        List<String> fields = fd.getFields().stream()
+                .map(FormField::getName)
+                .collect(Collectors.toList());
+
         for (FormField f : fd.getFields()) {
             Object allowedValue = allowedValues.get(f.getName());
 
@@ -355,7 +360,7 @@ public class CustomFormService implements Resource {
             }
         }
 
-        return new FormData(success, processFailed, submitUrl, _definitions, _values, _errors);
+        return new FormData(success, processFailed, submitUrl, fields, _definitions, _values, _errors);
     }
 
     private void writeData(Path baseDir, Object data) throws IOException {
@@ -423,17 +428,19 @@ public class CustomFormService implements Resource {
         private final boolean success;
         private final boolean processFailed;
         private final String submitUrl;
+        private final List<String> fields;
         private final Map<String, FormDataDefinition> definitions;
         private final Map<String, Object> values;
         private final Map<String, String> errors;
 
         public FormData(boolean success, boolean processFailed, String submitUrl,
-                        Map<String, FormDataDefinition> definitions, Map<String, Object> values,
+                        List<String> fields, Map<String, FormDataDefinition> definitions, Map<String, Object> values,
                         Map<String, String> errors) {
 
             this.success = success;
             this.processFailed = processFailed;
             this.submitUrl = submitUrl;
+            this.fields = fields;
             this.definitions = definitions;
             this.values = values;
             this.errors = errors;
@@ -450,6 +457,8 @@ public class CustomFormService implements Resource {
         public String getSubmitUrl() {
             return submitUrl;
         }
+
+        public List<String> getFields() { return fields; }
 
         public Map<String, FormDataDefinition> getDefinitions() {
             return definitions;
