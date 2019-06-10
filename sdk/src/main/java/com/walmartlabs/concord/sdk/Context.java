@@ -150,4 +150,9 @@ public interface Context {
     default UUID getEventCorrelationId() {
         throw new IllegalStateException("Not supported");
     }
+
+    /**
+     * Return current flow name.
+     */
+    String getCurrentFlowName();
 }

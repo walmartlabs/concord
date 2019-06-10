@@ -1,0 +1,19 @@
+main:
+  - log: "flow: ${__currentFlow}"
+  - call: myFlow
+    in:
+      x: 2
+  - log: "flow: ${__currentFlow}"
+
+  - call: myFaultyFlow
+    error:
+      - log: "error handler: flow: ${__currentFlow}"
+
+  - log: "flow: ${__currentFlow}"
+
+myFlow:
+  - log: "flow: ${__currentFlow}"
+
+myFaultyFlow:
+  - log: "flow: ${__currentFlow}"
+  - return: ohNoes
