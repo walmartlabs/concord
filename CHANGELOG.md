@@ -12,6 +12,7 @@ form definition.
 
 ### Changed
 
+- docker-tasks: make `cmd` optional;
 - concord-server, concord-agents: external `imports` are now
 processed without copying into the process state;
 - ansible: send process events asynchronously;

@@ -70,7 +70,7 @@ public class DockerTask implements Task {
         // TODO validation
 
         String image = assertString(ctx, IMAGE_KEY);
-        String cmd = assertString(ctx, CMD_KEY);
+        String cmd = ContextUtils.getString(ctx, CMD_KEY, null);
         Map<String, Object> env = ContextUtils.getMap(ctx, ENV_KEY, null);
         String envFile = ContextUtils.getString(ctx, ENV_FILE_KEY);
         List<String> hosts = ContextUtils.getList(ctx, HOSTS_KEY, null);
@@ -90,13 +90,20 @@ public class DockerTask implements Task {
         }
 
         try {
-            Path entryPoint = containerDir.resolve(baseDir.relativize(createRunScript(baseDir, cmd)));
+            String entryPoint = null;
+            if (cmd != null) {
+                // create a script containing the specified "cmd"
+                Path runScript = createRunScript(baseDir, cmd);
+                entryPoint = containerDir.resolve(baseDir.relativize(runScript))
+                        .toAbsolutePath()
+                        .toString();
+            }
 
             Process p = dockerService.start(ctx, DockerContainerSpec.builder()
                     .image(image)
                     .env(stringify(env))
                     .envFile(envFile)
-                    .entryPoint(entryPoint.toAbsolutePath().toString())
+                    .entryPoint(entryPoint)
                     .forcePull(forcePull)
                     .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
                     .debug(debug)
