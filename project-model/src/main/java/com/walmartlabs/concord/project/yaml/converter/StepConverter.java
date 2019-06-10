@@ -386,6 +386,10 @@ public interface StepConverter<T extends YamlStep> {
                 return Arrays.asList((Object[])result);
             }
 
+            if (result instanceof Map) {
+                return new ArrayList<>(((Map) result).entrySet());
+            }
+
             throw new IllegalArgumentException("'withItems' values should be a list or an array, got: " + result.getClass());
         }
 
