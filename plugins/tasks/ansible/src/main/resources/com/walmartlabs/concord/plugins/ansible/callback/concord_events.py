@@ -18,8 +18,10 @@ class CallbackModule(CallbackBase):
     CALLBACK_NEEDS_WHITELIST = False
 
     MAX_STRING_LEN = 1024
+    HALF_MAX_STRING_LEN = int(MAX_STRING_LEN / 2)
     OVERLIMIT_STRING_LEN = MAX_STRING_LEN / 10
-    MAX_ARRAY_LEN = 25
+    MAX_ARRAY_LEN = 26
+    HALF_MAX_ARRAY_LENGTH = int(MAX_ARRAY_LEN / 2)
     OVERLIMIT_ARRAY_LEN = MAX_ARRAY_LEN / 10
 
     def __init__(self):
@@ -79,12 +81,16 @@ class CallbackModule(CallbackBase):
     def _trunc_long_items(self, obj):
         if isinstance(obj, basestring):
             overlimit = len(obj) - self.MAX_STRING_LEN
-            return (obj[:self.MAX_STRING_LEN] + '...[skipped ' + str(overlimit) +  ' bytes]') if overlimit > self.OVERLIMIT_STRING_LEN else obj
+            return (obj[:self.HALF_MAX_STRING_LEN] +
+                    '...[skipped ' + str(overlimit) + ' bytes]...' +
+                    obj[len(obj) - self.HALF_MAX_STRING_LEN:]) \
+                if overlimit > self.OVERLIMIT_STRING_LEN else obj
         elif isinstance(obj, list):
             overlimit = len(obj) - self.MAX_ARRAY_LEN
             if overlimit > self.OVERLIMIT_ARRAY_LEN:
-                copy = [self._trunc_long_items(o) for o in obj[:self.MAX_ARRAY_LEN]]
+                copy = [self._trunc_long_items(o) for o in obj[:self.HALF_MAX_ARRAY_LENGTH]]
                 copy.append('[skipped ' + str(overlimit) + ' lines]')
+                copy += [self._trunc_long_items(o) for o in obj[len(obj) - self.HALF_MAX_ARRAY_LENGTH:]]
                 return copy
             else:
                 return [self._trunc_long_items(o) for o in obj]
