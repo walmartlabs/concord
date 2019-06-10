@@ -12,6 +12,8 @@ form definition.
 
 ### Changed
 
+- ansible: keep both the head and the tail when trimming long string
+values in events;
 - project-model: `withItems` now supports iteration over Java Map
 elements;
 - docker-tasks: make `cmd` optional;
