@@ -105,4 +105,9 @@ public class MockContext implements Context {
     public void form(String formName, Map<String, Object> formOptions) {
         throw new IllegalStateException("Not supported");
     }
+
+    @Override
+    public String getCurrentFlowName() {
+        return "n/a";
+    }
 }

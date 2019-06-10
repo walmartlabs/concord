@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-runner: the current flow name is now available via
+`${context.getCurrentFlowName()}` method;
 - concord-server: return a list of form `fields` in the generated
 `data.js` for custom forms. The list is in the original order of the
 form definition.

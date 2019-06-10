@@ -2095,6 +2095,27 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verifyNoMoreInteractions(task);
     }
 
+    @Test
+    public void test072() throws Exception {
+        deploy("072.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("log", task);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.emptyMap();
+        start(key, "main", args);
+
+        // ---
+
+        verify(task, times(3)).log(eq("flow: main"));
+        verify(task, times(1)).log(eq("flow: myFlow"));
+        verify(task, times(1)).log(eq("flow: myFaultyFlow"));
+        verify(task, times(1)).log(eq("error handler: flow: main"));
+    }
+
     // FORMS (100 - 199)
 
     @Test

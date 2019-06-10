@@ -191,5 +191,10 @@ public class ContextUtilsTest {
         public void form(String formName, Map<String, Object> formOptions) {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public String getCurrentFlowName() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

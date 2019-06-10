@@ -153,7 +153,7 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
             Map<String, Object> interpolatedOptions = (Map<String, Object>) interpolate(formOptions);
             FormDefinition fd = new FormDefinition(formName, toFormFields((List<Object>) interpolatedOptions.get("fields")));
 
-            String txId = (String)getVariable(Constants.Context.TX_ID_KEY);
+            String txId = (String) getVariable(Constants.Context.TX_ID_KEY);
             UUID fId = UUID.randomUUID();
             String eventName = UUID.randomUUID().toString();
             try {
@@ -163,6 +163,11 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
             }
 
             suspend(eventName);
+        }
+
+        @Override
+        public String getCurrentFlowName() {
+            return (String) getVariable(CURRENT_FLOW_NAME_KEY);
         }
 
         @SuppressWarnings("unchecked")
@@ -225,7 +230,12 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
         @Override
         public void form(String formName, Map<String, Object> formOptions) {
-            ((Context)delegate).form(formName, formOptions);
+            ((Context) delegate).form(formName, formOptions);
+        }
+
+        @Override
+        public String getCurrentFlowName() {
+            return (String) getVariable(CURRENT_FLOW_NAME_KEY);
         }
     }
 }
