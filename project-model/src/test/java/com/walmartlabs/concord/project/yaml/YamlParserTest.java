@@ -2096,6 +2096,32 @@ public class YamlParserTest extends AbstractYamlParserTest {
     }
 
     @Test
+    public void test071() throws Exception {
+        deploy("071.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("myLogger", task);
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+
+        // ---
+        Map<String, String> items = new HashMap<>();
+        items.put("k1", "v1");
+        items.put("k2", "v2");
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = new HashMap<>();
+        args.put("myMap", items);
+        start(key, "main", args);
+
+        // ---
+
+        verify(task, times(2)).execute(any(ExecutionContext.class));
+        verify(task, times(1)).log(eq("hello k1 -> v1"));
+        verify(task, times(1)).log(eq("hello k2 -> v2"));
+        verifyNoMoreInteractions(task);
+    }
+
+    @Test
     public void test072() throws Exception {
         deploy("072.yml");
 

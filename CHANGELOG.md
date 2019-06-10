@@ -12,6 +12,8 @@ form definition.
 
 ### Changed
 
+- project-model: `withItems` now supports iteration over Java Map
+elements;
 - docker-tasks: make `cmd` optional;
 - concord-server, concord-agents: external `imports` are now
 processed without copying into the process state;
