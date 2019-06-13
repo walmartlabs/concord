@@ -154,7 +154,7 @@ public class RunPlaybookTask2 implements Task {
 
         AnsibleInventory.process(taskContext, b);
 
-        AnsibleVaultPassword.process(taskContext, b);
+        AnsibleVaultId.process(taskContext, b);
 
         AnsibleRoles.process(taskContext, cfg);
 

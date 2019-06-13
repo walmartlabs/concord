@@ -41,7 +41,7 @@ public class PlaybookArgsBuilder {
     private String tags;
     private String skipTags;
     private String privateKey;
-    private String vaultPasswordFile;
+    private Map<String, Path> vaultIds;
     private Map<String, String> extraEnv = Collections.emptyMap();
     private String limit;
     private boolean check;
@@ -99,8 +99,8 @@ public class PlaybookArgsBuilder {
         return this;
     }
 
-    public PlaybookArgsBuilder withVaultPasswordFile(String vaultPasswordFile) {
-        this.vaultPasswordFile = vaultPasswordFile;
+    public PlaybookArgsBuilder withVaultIds(Map<String, Path> vaultIds) {
+        this.vaultIds = vaultIds;
         return this;
     }
 
@@ -169,9 +169,11 @@ public class PlaybookArgsBuilder {
             l.add(privateKey);
         }
 
-        if (vaultPasswordFile != null) {
-            l.add("--vault-password-file");
-            l.add(vaultPasswordFile);
+        if (vaultIds != null) {
+            for (Map.Entry<String, Path> p : vaultIds.entrySet()) {
+                l.add("--vault-id");
+                l.add(p.getKey() + "@" + p.getValue().toString());
+            }
         }
 
         if (limit != null) {

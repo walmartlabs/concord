@@ -30,15 +30,19 @@ import java.util.Map;
 public final class ArgUtils {
 
     public static Path getPath(Map<String, Object> args, String key, Path workDir) {
+        Object v = args.get(key);
+        return getPath(key, v, workDir);
+    }
+
+    public static Path getPath(String key, Object o, Path workDir) {
         Path p = null;
 
-        Object v = args.get(key);
-        if (v instanceof String) {
-            p = workDir.resolve((String) v);
-        } else if (v instanceof Path) {
-            p = workDir.resolve((Path) v);
-        } else if (v != null) {
-            throw new IllegalArgumentException("'" + key + "' should be either a relative path: " + v);
+        if (o instanceof String) {
+            p = workDir.resolve((String) o);
+        } else if (o instanceof Path) {
+            p = workDir.resolve((Path) o);
+        } else if (o != null) {
+            throw new IllegalArgumentException("'" + key + "' should be either a relative path: " + o);
         }
 
         if (p != null && !Files.exists(p)) {
