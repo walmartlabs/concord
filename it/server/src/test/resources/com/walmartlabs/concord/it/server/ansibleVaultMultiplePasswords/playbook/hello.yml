@@ -1,0 +1,6 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "{{ greetings }} {{ name }}"
+      verbosity: 0

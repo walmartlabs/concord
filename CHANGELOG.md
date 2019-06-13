@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible: support for multiple vault IDs/passwords;
 - concord-runner: configurable time interval without a heartbeat
 before the process fails;
 - concord-runner: the current flow name is now available via

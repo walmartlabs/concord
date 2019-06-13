@@ -109,6 +109,48 @@ public class AnsibleIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testVaultWithMultiplePasswords() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleVaultMultiplePasswords").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello, Concord.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testVaultWithMultiplePasswordFiles() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleVaultMultiplePasswordFiles").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello, Concord.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTwoAnsibleRuns() throws Exception {
         URI dir = AnsibleIT.class.getResource("twoAnsible").toURI();
         byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
