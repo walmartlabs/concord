@@ -25,6 +25,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import java.util.concurrent.TimeUnit;
+
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableApiConfiguration.class)
@@ -71,6 +73,14 @@ public interface ApiConfiguration {
     @Value.Default
     default int retryInterval() {
         return 5000;
+    }
+
+    /**
+     * Max interval (in ms) without heartbeat before the process fails.
+     */
+    @Value.Default
+    default long maxNoHeartbeatInterval() {
+        return TimeUnit.MINUTES.toMillis(5);
     }
 
     static ImmutableApiConfiguration.Builder builder() {

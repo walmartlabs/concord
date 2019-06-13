@@ -161,6 +161,7 @@ public class RunnerJob {
                 .debug(debugMode(processCfg))
                 .api(ApiConfiguration.builder().from(apiCfgSrc)
                         .baseUrl(execCfg.getServerApiBaseUrl())
+                        .maxNoHeartbeatInterval(execCfg.getMaxNoHeartbeatInterval())
                         .build())
                 .docker(DockerConfiguration.builder().from(dockerCfgSrc)
                         .extraVolumes(execCfg.getExtraDockerVolumes())
