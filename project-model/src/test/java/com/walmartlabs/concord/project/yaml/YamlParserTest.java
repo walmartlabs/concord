@@ -2142,6 +2142,27 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verify(task, times(1)).log(eq("error handler: flow: main"));
     }
 
+    @Test
+    public void test073() throws Exception {
+        deploy("073.yml");
+
+        MyLogger task = spy(new MyLogger());
+        register("log", task);
+
+        TestBean testBean = spy(new TestBean());
+        register("vars", testBean);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> args = Collections.singletonMap("nested", 123);
+        start(key, "main", args);
+
+        // ---
+
+        verify(task, times(2)).log(eq("Hello, 123"));
+    }
+
     // FORMS (100 - 199)
 
     @Test

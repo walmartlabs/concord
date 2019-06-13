@@ -1,0 +1,6 @@
+main:
+  - log: "Hello, ${nested}"
+  - set:
+      nested:
+        z: ${nested}
+  - log: "Hello, ${nested.z}"
