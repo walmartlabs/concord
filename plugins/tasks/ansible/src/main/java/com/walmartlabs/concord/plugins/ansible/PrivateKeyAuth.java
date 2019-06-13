@@ -52,7 +52,7 @@ public class PrivateKeyAuth implements AnsibleAuth {
     }
 
     @Override
-    public AnsibleAuth enrich(PlaybookArgsBuilder p) {
+    public AnsibleAuth enrich(PlaybookScriptBuilder p) {
         p.withUser(username)
                 .withPrivateKey(workDir.relativize(keyPath).toString());
         return this;

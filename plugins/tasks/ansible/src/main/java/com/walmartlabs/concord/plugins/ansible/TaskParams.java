@@ -119,6 +119,8 @@ public enum TaskParams implements HasKey {
 
     VERBOSE_LEVEL_KEY("verbose"),
 
+    VIRTUALENV_KEY("virtualenv"),
+
     WORK_DIR_KEY("workDir");
 
     private final String key;

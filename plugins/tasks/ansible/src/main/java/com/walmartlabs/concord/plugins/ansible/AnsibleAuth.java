@@ -26,7 +26,7 @@ public interface AnsibleAuth {
 
     AnsibleAuth enrich(AnsibleEnv env);
 
-    AnsibleAuth enrich(PlaybookArgsBuilder p);
+    AnsibleAuth enrich(PlaybookScriptBuilder p);
 
     void postProcess();
 }

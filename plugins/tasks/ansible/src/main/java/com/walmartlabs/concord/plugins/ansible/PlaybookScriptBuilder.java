@@ -21,18 +21,27 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
-public class PlaybookArgsBuilder {
+public class PlaybookScriptBuilder {
+
+    private static final Logger log = LoggerFactory.getLogger(PlaybookScriptBuilder.class);
+
+    private static final String ANSIBLE_CMD = "ansible-playbook";
 
     private final String playbook;
     private List<String> inventories;
     private final Path workDir;
     private final Path tmpDir;
 
+    private boolean debug;
     private String attachmentsDir;
     private Map<String, Object> extraVars;
     private List<String> extraVarsFiles;
@@ -47,90 +56,103 @@ public class PlaybookArgsBuilder {
     private boolean check;
     private boolean syntaxCheck;
     private int verboseLevel = 0;
+    private Virtualenv virtualenv;
 
-    public PlaybookArgsBuilder(String playbook, Path workDir, Path tmpDir) {
+    public PlaybookScriptBuilder(String playbook, Path workDir, Path tmpDir) {
         this.playbook = playbook;
         this.workDir = workDir;
         this.tmpDir = tmpDir;
     }
 
-    public PlaybookArgsBuilder withInventories(List<String> inventories) {
+    public PlaybookScriptBuilder withDebug(boolean debug) {
+        this.debug = debug;
+        return this;
+    }
+
+    public PlaybookScriptBuilder withInventories(List<String> inventories) {
         this.inventories = inventories;
         return this;
     }
 
-    public PlaybookArgsBuilder withExtraVars(Map<String, Object> extraVars) {
+    public PlaybookScriptBuilder withExtraVars(Map<String, Object> extraVars) {
         this.extraVars = extraVars;
         return this;
     }
 
-    public PlaybookArgsBuilder withExtraSshArgs(String extraSshArgs) {
+    public PlaybookScriptBuilder withExtraSshArgs(String extraSshArgs) {
         this.extraSshArgs = extraSshArgs;
         return this;
     }
 
-    public PlaybookArgsBuilder withExtraVarsFiles(List<String> extraVarsFiles) {
+    public PlaybookScriptBuilder withExtraVarsFiles(List<String> extraVarsFiles) {
         this.extraVarsFiles = extraVarsFiles;
         return this;
     }
 
-    public PlaybookArgsBuilder withUser(String user) {
+    public PlaybookScriptBuilder withUser(String user) {
         this.user = user;
         return this;
     }
 
-    public PlaybookArgsBuilder withTags(String tags) {
+    public PlaybookScriptBuilder withTags(String tags) {
         this.tags = tags;
         return this;
     }
 
-    public PlaybookArgsBuilder withSkipTags(String skipTags) {
+    public PlaybookScriptBuilder withSkipTags(String skipTags) {
         this.skipTags = skipTags;
         return this;
     }
 
-    public PlaybookArgsBuilder withPrivateKey(String privateKey) {
+    public PlaybookScriptBuilder withPrivateKey(String privateKey) {
         this.privateKey = privateKey;
         return this;
     }
 
-    public PlaybookArgsBuilder withAttachmentsDir(String attachmentsDir) {
+    public PlaybookScriptBuilder withAttachmentsDir(String attachmentsDir) {
         this.attachmentsDir = attachmentsDir;
         return this;
     }
 
-    public PlaybookArgsBuilder withVaultIds(Map<String, Path> vaultIds) {
+    public PlaybookScriptBuilder withVaultIds(Map<String, Path> vaultIds) {
         this.vaultIds = vaultIds;
         return this;
     }
 
-    public PlaybookArgsBuilder withEnv(Map<String, String> env) {
+    public PlaybookScriptBuilder withEnv(Map<String, String> env) {
         this.extraEnv = env;
         return this;
     }
 
-    public PlaybookArgsBuilder withVerboseLevel(int level) {
+    public PlaybookScriptBuilder withVerboseLevel(int level) {
         this.verboseLevel = level;
         return this;
     }
 
-    public PlaybookArgsBuilder withLimit(String limit) {
+    public PlaybookScriptBuilder withLimit(String limit) {
         this.limit = limit;
         return this;
     }
 
-    public PlaybookArgsBuilder withCheck(boolean check) {
+    public PlaybookScriptBuilder withCheck(boolean check) {
         this.check = check;
         return this;
     }
 
-    public PlaybookArgsBuilder withSyntaxCheck(boolean syntaxCheck) {
+    public PlaybookScriptBuilder withSyntaxCheck(boolean syntaxCheck) {
         this.syntaxCheck = syntaxCheck;
         return this;
     }
 
-    public List<String> buildArgs() throws IOException {
-        List<String> l = new ArrayList<>(Collections.singletonList("ansible-playbook"));
+    public PlaybookScriptBuilder withVirtualenv(Virtualenv virtualenv) {
+        this.virtualenv = virtualenv;
+        return this;
+    }
+
+    private List<String> buildAnsibleArgs() throws IOException {
+        List<String> l = new ArrayList<>();
+        l.add(ANSIBLE_CMD);
+
         for (String i : inventories) {
             l.add("-i");
             l.add(i);
@@ -208,6 +230,55 @@ public class PlaybookArgsBuilder {
         }
 
         return l;
+    }
+
+    public List<String> buildArgs() throws IOException {
+        StringBuilder sb = new StringBuilder("#!/bin/bash").append("\n")
+                .append("set -e").append("\n");
+
+        if (virtualenv.isEnabled()) {
+            String virtualenvDir = workDir.relativize(virtualenv.getTargetDir()).toString();
+
+            sb.append("virtualenv --no-download --system-site-packages ")
+                    .append(virtualenvDir)
+                    .append("\n");
+
+            sb.append("source ").append(virtualenvDir).append("/bin/activate")
+                    .append("\n");
+
+            String indexUrl = virtualenv.getIndexUrl();
+
+            List<String> packages = virtualenv.getPackages();
+            if (packages != null && !packages.isEmpty()) {
+                sb.append("pip install ");
+                if (indexUrl != null) {
+                    sb.append("-i").append(" '").append(indexUrl).append("' ");
+                }
+
+                packages.forEach(p -> sb.append("'").append(p).append("' "));
+
+                sb.append("\n");
+            }
+        }
+
+        if (debug) {
+            sb.append(ANSIBLE_CMD).append(" --version").append("\n");
+        }
+
+        buildAnsibleArgs().forEach(arg -> sb.append(arg).append(" "));
+        sb.append("\n");
+
+        if (virtualenv.isEnabled()) {
+            sb.append("deactivate").append("\n");
+        }
+
+        if (debug) {
+            log.info("Using the run script:\n{}", sb);
+        }
+
+        Path dst = tmpDir.resolve("run.sh");
+        Files.write(dst, sb.toString().getBytes(), StandardOpenOption.CREATE_NEW);
+        return Arrays.asList("/bin/bash", workDir.relativize(dst).toString());
     }
 
     public Map<String, String> buildEnv() {
