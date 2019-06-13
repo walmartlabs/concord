@@ -40,6 +40,7 @@ RUN pip install --upgrade --ignore-installed \
     pyvmomi \
     pywinrm==0.3.0 \
     requests_kerberos \
-    ujson
+    ujson \
+    virtualenv
 
 USER concord

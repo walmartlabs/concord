@@ -65,7 +65,7 @@ public class RunPlaybookTask2 implements Task {
     String txId;
 
     @InjectVariable("ansibleParams")
-    private Map<String, Object> defaults;
+    Map<String, Object> defaults;
 
     @Inject
     public RunPlaybookTask2(ApiClientFactory apiClientFactory,
@@ -94,7 +94,7 @@ public class RunPlaybookTask2 implements Task {
     }
 
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
-        run(args, payloadPath, new PlaybookProcessBuilderImpl(payloadPath));
+        run(args, payloadPath, new DefaultPlaybookProcessBuilder(payloadPath));
     }
 
     @Override
@@ -121,7 +121,7 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilder processBuilder) throws Exception {
+    private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilder playbookProcessBuilder) throws Exception {
         String playbook = assertString(args, TaskParams.PLAYBOOK_KEY.getKey());
         log.info("Using a playbook: {}", playbook);
 
@@ -150,7 +150,7 @@ public class RunPlaybookTask2 implements Task {
         AnsibleLibs.process(taskContext, env);
         AnsibleLookup.process(taskContext, cfg);
 
-        PlaybookArgsBuilder b = new PlaybookArgsBuilder(playbook, workDir, tmpDir);
+        PlaybookScriptBuilder b = new PlaybookScriptBuilder(playbook, workDir, tmpDir);
 
         AnsibleInventory.process(taskContext, b);
 
@@ -181,10 +181,13 @@ public class RunPlaybookTask2 implements Task {
             log.warn("Running in the syntax check mode. No changes will be made.");
         }
 
+        Virtualenv virtualenv = Virtualenv.create(tmpDir, defaults, args);
+
         try {
             Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
 
             b = b.withAttachmentsDir(attachmentsPath.toString())
+                    .withDebug(debug)
                     .withTags(getListAsString(args, TaskParams.TAGS_KEY))
                     .withSkipTags(getListAsString(args, TaskParams.SKIP_TAGS_KEY))
                     .withExtraVars(getMap(args, TaskParams.EXTRA_VARS_KEY.getKey(), null))
@@ -193,11 +196,12 @@ public class RunPlaybookTask2 implements Task {
                     .withVerboseLevel(getVerboseLevel(args))
                     .withCheck(checkMode)
                     .withSyntaxCheck(syntaxCheck)
-                    .withEnv(env.get());
+                    .withEnv(env.get())
+                    .withVirtualenv(virtualenv);
 
             auth.prepare();
 
-            Process p = processBuilder
+            Process p = playbookProcessBuilder
                     .withDebug(debug)
                     .build(b.buildArgs(), b.buildEnv());
 
@@ -224,6 +228,8 @@ public class RunPlaybookTask2 implements Task {
             auth.postProcess();
             groupVarsProcessor.postProcess();
             outVarsProcessor.postProcess();
+
+            virtualenv.destroy();
         }
     }
 

@@ -29,19 +29,19 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
+public class DefaultPlaybookProcessBuilder implements PlaybookProcessBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(PlaybookProcessBuilderImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultPlaybookProcessBuilder.class);
 
     private final String workDir;
 
     private boolean debug;
 
-    public PlaybookProcessBuilderImpl(String workDir) {
+    public DefaultPlaybookProcessBuilder(String workDir) {
         this.workDir = workDir;
     }
 
-    public PlaybookProcessBuilderImpl withDebug(boolean debug) {
+    public DefaultPlaybookProcessBuilder withDebug(boolean debug) {
         this.debug = debug;
         return this;
     }
@@ -63,7 +63,7 @@ public class PlaybookProcessBuilderImpl implements PlaybookProcessBuilder {
             log.info("build -> cmd: {}", String.join(" ", cmd));
         }
 
-        ProcessBuilder b = new ProcessBuilder()
+        java.lang.ProcessBuilder b = new java.lang.ProcessBuilder()
                 .command(cmd)
                 .directory(pwd)
                 .redirectErrorStream(true);

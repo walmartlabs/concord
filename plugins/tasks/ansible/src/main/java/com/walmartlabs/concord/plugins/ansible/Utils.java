@@ -38,6 +38,18 @@ public final class Utils {
         Files.setPosixFilePermissions(p, perms);
     }
 
+    public static String assertArgSafe(String s) {
+        if (s == null) {
+            return s;
+        }
+
+        if (s.contains("'")) {
+            throw new IllegalArgumentException("Illegal character \"'\" in value: " + s);
+        }
+
+        return s;
+    }
+
     private Utils() {
     }
 }

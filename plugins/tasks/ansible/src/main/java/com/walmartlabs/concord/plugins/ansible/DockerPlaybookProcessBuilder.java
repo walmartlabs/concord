@@ -70,6 +70,7 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
                 .debug(debug)
                 .forcePull(forcePull)
                 .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
+                .workdir("/workspace") // TODO constants? move into the docker service as a default workdir value?
                 .build());
     }
 }

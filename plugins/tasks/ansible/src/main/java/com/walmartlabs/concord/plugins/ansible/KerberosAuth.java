@@ -72,7 +72,7 @@ public class KerberosAuth implements AnsibleAuth {
     }
 
     @Override
-    public KerberosAuth enrich(PlaybookArgsBuilder p) {
+    public KerberosAuth enrich(PlaybookScriptBuilder p) {
         p.withExtraSshArgs("-o GSSAPIAuthentication=yes")
                 .withUser(username);
         return this;
