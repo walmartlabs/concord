@@ -507,6 +507,7 @@ public class RunnerJobExecutor {
         private final Path runnerCfgDir;
         private final boolean runnerSecurityManagerEnabled;
         private final List<String> extraDockerVolumes;
+        private final long maxHeartbeatInterval;
 
         public RunnerJobExecutorConfiguration(String agentId,
                                               String serverApiBaseUrl,
@@ -515,7 +516,8 @@ public class RunnerJobExecutor {
                                               Path runnerPath,
                                               Path runnerCfgDir,
                                               boolean isRunnerSecurityManagerEnabled,
-                                              List<String> extraDockerVolumes) {
+                                              List<String> extraDockerVolumes,
+                                              long maxHeartbeatInterval) {
 
             this.agentId = agentId;
             this.serverApiBaseUrl = serverApiBaseUrl;
@@ -525,6 +527,7 @@ public class RunnerJobExecutor {
             this.runnerCfgDir = runnerCfgDir;
             this.runnerSecurityManagerEnabled = isRunnerSecurityManagerEnabled;
             this.extraDockerVolumes = extraDockerVolumes;
+            this.maxHeartbeatInterval = maxHeartbeatInterval;
         }
 
         public Path getRunnerPath() {
@@ -554,6 +557,10 @@ public class RunnerJobExecutor {
 
         public List<String> getExtraDockerVolumes() {
             return extraDockerVolumes;
+        }
+
+        public long getMaxNoHeartbeatInterval() {
+            return maxHeartbeatInterval;
         }
     }
 

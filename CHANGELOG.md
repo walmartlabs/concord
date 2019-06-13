@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-runner: configurable time interval without a heartbeat
+before the process fails;
 - concord-runner: the current flow name is now available via
 `${context.getCurrentFlowName()}` method;
 - concord-server: return a list of form `fields` in the generated

@@ -24,12 +24,14 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessHeartbeatApi;
+import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Date;
 import java.util.UUID;
 
 @Named
@@ -42,10 +44,12 @@ public class ProcessHeartbeat {
 
     private final ApiClientFactory apiClientFactory;
     private Thread worker;
+    private final long maxPingInterval;
 
     @Inject
-    public ProcessHeartbeat(ApiClientFactory apiClientFactory) {
+    public ProcessHeartbeat(RunnerConfiguration cfg, ApiClientFactory apiClientFactory) {
         this.apiClientFactory = apiClientFactory;
+        this.maxPingInterval = cfg.api().maxNoHeartbeatInterval();
     }
 
     public synchronized void start(UUID instanceId, String sessionToken) {
@@ -54,7 +58,7 @@ public class ProcessHeartbeat {
         }
 
         worker = new Thread(() -> {
-            log.info("start ['{}'] -> running every {}ms", instanceId, HEARTBEAT_INTERVAL);
+            log.info("start ['{}'] -> running every {}ms, max interval: {}ms", instanceId, HEARTBEAT_INTERVAL, maxPingInterval);
 
             ApiClient client = apiClientFactory.create(ApiClientConfiguration.builder()
                     .sessionToken(sessionToken)
@@ -63,11 +67,20 @@ public class ProcessHeartbeat {
 
             ProcessHeartbeatApi processHeartbeatApi = new ProcessHeartbeatApi(client);
 
+            long lastSuccessPing = System.currentTimeMillis();
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     processHeartbeatApi.ping(instanceId);
+                    lastSuccessPing = System.currentTimeMillis();
                 } catch (Exception e) {
-                    log.warn("run -> heartbeat error: {}", e.getMessage());
+                    log.warn("run -> heartbeat error: {}, last successful at {}", e.getMessage(), new Date(lastSuccessPing));
+
+                    // check if we hadn't had a successful heartbeat request in a while
+                    long pingInterval = System.currentTimeMillis() - lastSuccessPing;
+                    if (pingInterval > maxPingInterval) {
+                        log.error("No heartbeat for more than {}ms, terminating process...", pingInterval);
+                        System.exit(1);
+                    }
                 }
 
                 try {

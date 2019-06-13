@@ -313,7 +313,8 @@ public class Agent {
                 cfg.getRunnerPath(),
                 cfg.getRunnerCfgDir(),
                 cfg.isRunnerSecurityManagerEnabled(),
-                cfg.getExtraDockerVolumes());
+                cfg.getExtraDockerVolumes(),
+                cfg.getMaxNoHeartbeatInterval());
 
         DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
 

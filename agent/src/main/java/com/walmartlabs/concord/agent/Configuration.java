@@ -65,6 +65,8 @@ public class Configuration {
     private final String userAgent;
     private final long maxWebSocketInactivity;
 
+    private final long maxNoHeartbeatInterval;
+
     private final String dockerHost;
     private final boolean dockerOrphanSweeperEnabled;
     private final long dockerOrphanSweeperPeriod;
@@ -132,6 +134,8 @@ public class Configuration {
         this.userAgent = getStringOrDefault(cfg, "server.userAgent", () -> "Concord-Agent: id=" + this.agentId);
         this.maxWebSocketInactivity = cfg.getDuration("server.maxWebSocketInactivity", TimeUnit.MILLISECONDS);
         this.apiKey = cfg.getString("server.apiKey");
+
+        this.maxNoHeartbeatInterval = cfg.getDuration("server.maxNoHeartbeatInterval", TimeUnit.MILLISECONDS);
 
         this.dockerHost = cfg.getString("docker.host");
         this.dockerOrphanSweeperEnabled = cfg.getBoolean("docker.orphanSweeperEnabled");
@@ -281,6 +285,10 @@ public class Configuration {
 
     public long getMaxWebSocketInactivity() {
         return maxWebSocketInactivity;
+    }
+
+    public long getMaxNoHeartbeatInterval() {
+        return maxNoHeartbeatInterval;
     }
 
     public String getRepositoryOauthToken() {
