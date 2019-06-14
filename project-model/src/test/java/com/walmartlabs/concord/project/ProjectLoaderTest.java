@@ -96,6 +96,14 @@ public class ProjectLoaderTest {
         assertNotNull(pd.getImports());
         assertEquals(3, pd.getImports().size());
         assertEquals("git", pd.getImports().get(0).type());
+
+        assertNotNull(pd.getResources());
+        assertEquals(1, pd.getResources().getDefinitionPaths().size());
+        assertEquals("myFlows", pd.getResources().getDefinitionPaths().get(0));
+        assertEquals(1, pd.getResources().getDisabledDirs().size());
+        assertEquals("processes", pd.getResources().getDisabledDirs().get(0));
+        assertEquals(1, pd.getResources().getProfilesPaths().size());
+        assertEquals("myProfiles", pd.getResources().getProfilesPaths().get(0));
     }
 
     @Test

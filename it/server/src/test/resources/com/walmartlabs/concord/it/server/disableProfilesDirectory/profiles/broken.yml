@@ -1,0 +1,6 @@
+test:
+  configuration:
+    entryPoint: main
+    arguments:
+      x: {
+      name: "stranger"

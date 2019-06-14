@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.model;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,17 +36,21 @@ public class ProjectDefinition extends Profile {
 
     private final List<Import> imports;
 
+    private final Resources resources;
+
     public ProjectDefinition(Map<String, ProcessDefinition> flows,
                              Map<String, FormDefinition> forms,
                              Map<String, Object> variables,
                              Map<String, Profile> profiles,
                              List<Trigger> triggers,
-                             List<Import> imports) {
+                             List<Import> imports,
+                             Resources resources) {
 
         super(flows, forms, variables);
         this.profiles = profiles;
         this.triggers = triggers;
         this.imports = imports;
+        this.resources = resources;
     }
 
     public Map<String, Profile> getProfiles() {
@@ -61,12 +65,17 @@ public class ProjectDefinition extends Profile {
         return imports;
     }
 
+    public Resources getResources() {
+        return resources;
+    }
+
     @Override
     public String toString() {
         return "ProjectDefinition{" +
-                "profiles=" + profiles + ", " +
-                "triggers=" + triggers + ", " +
-                "imports=" + imports +
+                "profiles=" + profiles +
+                ", triggers=" + triggers +
+                ", imports=" + imports +
+                ", resources=" + resources +
                 "} " + super.toString();
     }
 }

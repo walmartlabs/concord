@@ -29,7 +29,10 @@ import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceMap;
 import io.takari.bpm.model.form.FormDefinition;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.project.yaml.YamlImportConverter.convertImports;
 
@@ -48,7 +51,8 @@ public final class YamlProjectConverter {
         Map<String, Profile> profiles = convertProfiles(project.getProfiles());
         List<Trigger> triggers = convertTriggers(project.getTriggers());
         List<Import> imports = convertImports(project.getImports());
-        return new ProjectDefinition(flows, forms, cfg, profiles, triggers, imports);
+        Resources resources = convertResources(project.getResources());
+        return new ProjectDefinition(flows, forms, cfg, profiles, triggers, imports, resources);
     }
 
     @SuppressWarnings("unchecked")
@@ -135,6 +139,14 @@ public final class YamlProjectConverter {
         }
 
         return m;
+    }
+
+    private static Resources convertResources(Map<String, Object> resources) {
+        if (resources == null) {
+            return null;
+        }
+
+        return YamlResourcesConverter.parse(resources);
     }
 
     private YamlProjectConverter() {

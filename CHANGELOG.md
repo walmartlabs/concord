@@ -4,6 +4,8 @@
 
 ### Added
 
+- project-model: support for configurable resource paths such as
+`./profiles`, `./flows`, etc;
 - ansible: initial support for installing additional pip packages
 using Python's virtualenv;
 - ansible: support for multiple vault IDs/passwords;

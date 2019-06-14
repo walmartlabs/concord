@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.yaml.model;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,6 +33,7 @@ public class YamlProject extends YamlProfile {
     private final Map<String, YamlProfile> profiles;
     private final List<YamlTrigger> triggers;
     private final List<YamlImport> imports;
+    private final Map<String, Object> resources;
 
     @JsonCreator
     public YamlProject(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
@@ -41,12 +42,14 @@ public class YamlProject extends YamlProfile {
                        @JsonProperty("variables") Map<String, Object> variables,
                        @JsonProperty("profiles") Map<String, YamlProfile> profiles,
                        @JsonProperty("triggers") List<YamlTrigger> triggers,
-                       @JsonProperty("imports") List<YamlImport> imports) {
+                       @JsonProperty("imports") List<YamlImport> imports,
+                       @JsonProperty("resources") Map<String, Object> resources) {
 
         super(flows, forms, configuration, variables);
         this.profiles = profiles;
         this.triggers = triggers;
         this.imports = imports;
+        this.resources = resources;
     }
 
     public Map<String, YamlProfile> getProfiles() {
@@ -61,12 +64,17 @@ public class YamlProject extends YamlProfile {
         return imports;
     }
 
+    public Map<String, Object> getResources() {
+        return resources;
+    }
+
     @Override
     public String toString() {
         return "YamlProject{" +
-                "profiles=" + profiles + ", " +
-                "triggers=" + triggers + ", " +
-                "imports=" + imports +
+                "profiles=" + profiles +
+                ", triggers=" + triggers +
+                ", imports=" + imports +
+                ", resources=" + resources +
                 "} " + super.toString();
     }
 }
