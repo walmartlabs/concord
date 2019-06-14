@@ -1,0 +1,14 @@
+configuration:
+  entryPoint: main
+  arguments:
+    name: "stranger"
+
+flows:
+  main:
+  - log: Hello, ${name}
+
+
+resources:
+  disabled:
+    - profiles
+

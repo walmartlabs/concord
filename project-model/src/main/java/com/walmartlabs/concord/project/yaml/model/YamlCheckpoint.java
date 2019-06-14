@@ -22,8 +22,6 @@ package com.walmartlabs.concord.project.yaml.model;
 
 import com.fasterxml.jackson.core.JsonLocation;
 
-import java.util.Map;
-
 public class YamlCheckpoint extends YamlStep {
 
     private static final long serialVersionUID = 1L;

@@ -21,15 +21,11 @@ package com.walmartlabs.concord.project;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.project.model.Import;
-import com.walmartlabs.concord.project.model.Profile;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.project.model.*;
 import com.walmartlabs.concord.project.yaml.*;
 import com.walmartlabs.concord.project.yaml.model.*;
 import com.walmartlabs.concord.project.yaml.validator.Validator;
 import com.walmartlabs.concord.project.yaml.validator.ValidatorContext;
-import com.walmartlabs.concord.sdk.Constants;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
@@ -42,6 +38,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
+import static com.walmartlabs.concord.sdk.Constants.Files.*;
+
 public class ProjectLoader {
 
     public static final String[] PROJECT_FILE_NAMES = {".concord.yml", "concord.yml"}; // NOSONAR
@@ -49,12 +47,73 @@ public class ProjectLoader {
     private final YamlParser parser = new YamlParser();
 
     public ProjectDefinition loadProject(Path baseDir) throws IOException {
+        Resources r = getResources(baseDir);
+        if (r != null) {
+            return loadProject(baseDir, r);
+        }
+
+        return loadProject(baseDir,
+                Collections.singletonList(PROJECT_FILES_DIR_NAME),
+                Collections.singletonList(PROFILES_DIR_NAME),
+                Arrays.asList(DEFINITIONS_DIR_NAMES));
+    }
+
+    private ProjectDefinition loadProject(Path baseDir, Resources resources) throws IOException {
+        return loadProject(baseDir,
+                resources.getProjectFilePaths(),
+                resources.getProfilesPaths(),
+                resources.getDefinitionPaths());
+    }
+
+    private ProjectDefinition loadProject(Path baseDir,
+                                          List<String> projectPaths,
+                                          List<String> profilesPaths,
+                                          List<String> definitionPaths) throws IOException {
+
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
-        Path projectsDir = baseDir.resolve(Constants.Files.PROJECT_FILES_DIR_NAME);
-        if (Files.exists(projectsDir)) {
-            b.addProjects(projectsDir);
+        baseDir = baseDir.normalize().toAbsolutePath();
+
+        if (projectPaths != null) {
+            for (String n : projectPaths) {
+                Path p = assertLocal(baseDir, baseDir.resolve(n));
+                if (Files.exists(p)) {
+                    b.addProjects(p);
+                }
+            }
         }
+
+        for (String n : PROJECT_FILE_NAMES) {
+            Path p = assertLocal(baseDir, baseDir.resolve(n));
+            if (Files.exists(p)) {
+                b.addProjectFile(baseDir, p);
+                break;
+            }
+        }
+
+        if (definitionPaths != null) {
+            for (String n : definitionPaths) {
+                Path p = assertLocal(baseDir, baseDir.resolve(n));
+                if (Files.exists(p)) {
+                    b.addDefinitions(p);
+                }
+            }
+        }
+
+        if (profilesPaths != null) {
+            for (String n : profilesPaths) {
+                Path p = assertLocal(baseDir, baseDir.resolve(n));
+                if (Files.exists(p)) {
+                    b.addProfiles(p);
+                }
+            }
+        }
+
+        return b.build();
+    }
+
+    private Resources getResources(Path baseDir) throws IOException {
+        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
         for (String n : PROJECT_FILE_NAMES) {
             Path p = baseDir.resolve(n);
@@ -64,25 +123,23 @@ public class ProjectLoader {
             }
         }
 
-        for (String n : Constants.Files.DEFINITIONS_DIR_NAMES) {
-            Path p = baseDir.resolve(n);
-            if (Files.exists(p)) {
-                b.addDefinitions(p);
-            }
-        }
+        ProjectDefinition pd = b.build();
 
-        Path profilesDir = baseDir.resolve(Constants.Files.PROFILES_DIR_NAME);
-        if (Files.exists(profilesDir)) {
-            b.addProfiles(profilesDir);
-        }
-
-        return b.build();
+        return pd.getResources();
     }
 
     public ProjectDefinition loadProject(InputStream in) throws IOException {
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
         b.loadDefinitions(in);
         return b.build();
+    }
+
+    private static Path assertLocal(Path baseDir, Path p) throws IOException {
+        if (!p.normalize().toAbsolutePath().startsWith(baseDir)) {
+            throw new IOException("Invalid resource path, points outside of the base directory: " + p);
+        }
+
+        return p;
     }
 
     private static class ProjectDefinitionBuilder {
@@ -248,6 +305,7 @@ public class ProjectLoader {
             Map<String, Object> variables = new LinkedHashMap<>();
             List<Trigger> triggers = new ArrayList<>();
             List<Import> imports = new ArrayList<>();
+            Resources resources = null;
 
             if (projectDefinitions != null) {
                 for (ProjectDefinition pd : projectDefinitions) {
@@ -276,10 +334,15 @@ public class ProjectLoader {
                     if (pd.getImports() != null) {
                         imports.addAll(pd.getImports());
                     }
+
+                    if (pd.getResources() != null) {
+                        resources = pd.getResources();
+
+                    }
                 }
             }
 
-            return new ProjectDefinition(flows, forms, variables, profiles, triggers, imports);
+            return new ProjectDefinition(flows, forms, variables, profiles, triggers, imports, resources);
         }
 
         private static boolean isYaml(Path p) {

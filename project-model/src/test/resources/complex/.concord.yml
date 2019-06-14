@@ -11,6 +11,12 @@ imports:
   - mvn:
       url: "mvn://maven/my-artifact.jar"
 
+resources:
+  flows: myFlows
+  profiles: myProfiles
+  disabled:
+    - processes
+
 flows:
   main:
   - ${myTask.method(arg)}
