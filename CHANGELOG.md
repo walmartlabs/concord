@@ -19,6 +19,8 @@ form definition.
 
 ### Changed
 
+- concord-server: fixed a potential NPE when handling process
+metadata;
 - ansible: keep both the head and the tail when trimming long string
 values in events;
 - project-model: `withItems` now supports iteration over Java Map

@@ -76,6 +76,8 @@ public class ProcessQueueDao extends AbstractDao {
     private static final TypeReference<List<ProcessStatusHistoryEntry>> LIST_OF_STATUS_HISTORY = new TypeReference<List<ProcessStatusHistoryEntry>>() {
     };
 
+    private static final Field<?>[] PROCESS_QUEUE_FIELDS = allFieldsWithFixedMeta();
+
     private final List<ProcessQueueEntryFilter> filters;
 
     private final EventDao eventDao;
@@ -692,7 +694,9 @@ public class ProcessQueueDao extends AbstractDao {
 
     private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {
         SelectQuery<Record> query = tx.selectQuery();
-        query.addSelect(PROCESS_QUEUE.fields());
+
+        // process_queue
+        query.addSelect(PROCESS_QUEUE_FIELDS);
         query.addFrom(PROCESS_QUEUE);
 
         // users
@@ -887,6 +891,25 @@ public class ProcessQueueDao extends AbstractDao {
         }
 
         return s.toArray(new String[0]);
+    }
+
+    /**
+     * Returns an array of all fields of {@link ProcessQueue#PROCESS_QUEUE}, but
+     * replaces the meta field with a version with all null values stripped out.
+     */
+    private static Field<?>[] allFieldsWithFixedMeta() {
+        Field<?>[] fields = PROCESS_QUEUE.fields();
+
+        List<Field<?>> l = new ArrayList<>(fields.length);
+        for (Field<?> f : fields) {
+            if (f == PROCESS_QUEUE.META) {
+                l.add(function("jsonb_strip_nulls", Object.class, f).as(f));
+            } else {
+                l.add(f);
+            }
+        }
+
+        return l.toArray(new Field[0]);
     }
 
     public static class IdAndStatus {
