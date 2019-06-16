@@ -28,6 +28,7 @@ import com.walmartlabs.concord.repository.Snapshot;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import static com.walmartlabs.concord.server.queueclient.message.ImportEntry.MvnEntry;
 
@@ -58,7 +59,7 @@ public class MvnProcessor implements ImportProcessor<MvnEntry> {
         }
 
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
-        IOUtils.unzip(archivePath, dest, false, snapshot);
+        IOUtils.unzip(archivePath, dest, false, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 }

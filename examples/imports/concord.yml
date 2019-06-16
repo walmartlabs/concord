@@ -1,22 +1,12 @@
 imports:
+  # import a "Hello, world!" flow from a remote GIT repository
+  # and store it in the `${workDir}/concord/` directory
   - git:
-      url: "git@host:org/concord-template.git" # optional
-  #    name: "git-org/concord-template"        # mutually exclusive with `url`
-      version: "master"      # optional, default 'master'
-      path: "dir"            # optional
-      dest: "concord"        # optional, default 'concord'
-      secret:                # optional
-        org: "Default"       # optional, default 'Default'
-        name: "test-imports"
-  - mvn:
-      url: "mvn://com.walmartlabs.concord.templates:concord-template-1:1.0.1-SNAPSHOT"
-      dest: "concord"          # optional, default 'concord'
-
-flows:
-  default:
-  - log: "Hello, ${name}!"
-  - call: flowFromImport
+      url: "https://github.com/walmartlabs/concord.git"
+      path: "examples/hello_world"
 
 configuration:
   arguments:
-    name: "Concord"
+    name: "you"
+
+# running this example produces a `Hello, you!` log message.
