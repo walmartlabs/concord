@@ -53,6 +53,7 @@
         <module>docker-images</module>
         <module>it</module>
         <module>k8s/agent-operator</module>
+        <module>cli</module>
     </modules>
 
     <properties>
@@ -824,7 +825,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.2.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
