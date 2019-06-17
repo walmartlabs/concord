@@ -29,13 +29,14 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @SuppressWarnings("deprecation")
 public class SmtpTaskTest {
@@ -218,6 +219,43 @@ public class SmtpTaskTest {
             fail("should fail");
         } catch (IllegalArgumentException e) {
         }
+
+        mail.reset();
+    }
+
+    @Test
+    public void testAttachments() throws Exception {
+        SmtpServer server = mail.getSmtp();
+
+        Map<String, Object> smtpParams = new HashMap<>();
+        smtpParams.put("host", "localhost");
+        smtpParams.put("port", server.getPort());
+
+        Map<String, Object> mailParams = new HashMap<>();
+        mailParams.put("from", "my@mail.com");
+        mailParams.put("to", "their@mail.com");
+        mailParams.put("template", new File(ClassLoader.getSystemResource("test.mustache").toURI()).toString());
+        mailParams.put("attachments", Collections.singletonList(new File(ClassLoader.getSystemResource("attahcment.txt").toURI()).toString()));
+        Map<String, Object> m = new HashMap<>();
+        m.put("name", "Concord");
+        m.put("workDir", "/");
+        m.put("smtp", smtpParams);
+        m.put("mail", mailParams);
+
+        Context ctx = new MockContext(m);
+
+        SmtpTask t = new SmtpTask();
+        t.execute(ctx);
+
+        MimeMessage[] messages = mail.getReceivedMessages();
+        assertEquals(1, messages.length);
+        MimeMessage msg = messages[0];
+        assertNotNull(msg.getContent());
+        assertTrue(msg.getContent() instanceof MimeMultipart);
+        MimeMultipart mp = (MimeMultipart) msg.getContent();
+        assertEquals(2, mp.getCount());
+        assertEquals("Hello, Concord!", mp.getBodyPart(0).getContent());
+        assertEquals("test-attachment", mp.getBodyPart(1).getContent());
 
         mail.reset();
     }

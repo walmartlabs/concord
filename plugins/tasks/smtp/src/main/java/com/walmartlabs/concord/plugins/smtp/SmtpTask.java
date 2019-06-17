@@ -23,18 +23,17 @@ package com.walmartlabs.concord.plugins.smtp;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.HtmlEmail;
-import org.apache.commons.mail.SimpleEmail;
+import com.walmartlabs.concord.sdk.*;
+import org.apache.commons.mail.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.FileReader;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,19 +87,9 @@ public class SmtpTask implements Task {
         Collection<String> bcc = zeroOrManyStrings(mail, "bcc", "mail");
         Collection<String> replyTo = zeroOrManyStrings(mail, "replyTo", "mail");
         String subject = (String) mail.get("subject");
-        String msg = assertString(mail, "message", "mail");
-        boolean isHtml = isHtml(mail);
 
         try {
-            Email email;
-            if (isHtml) {
-                HtmlEmail h = new HtmlEmail();
-                h.setHtmlMsg(msg);
-                email = h;
-            } else {
-                email = new SimpleEmail();
-                email.setMsg(msg);
-            }
+            Email email = createEmail(ctx, mail);
 
             email.setHostName(host);
             email.setSmtpPort(port);
@@ -133,6 +122,96 @@ public class SmtpTask implements Task {
         }
     }
 
+    private static Email createEmail(Context ctx, Map<String, Object> mail) throws EmailException {
+        boolean isHtml = isHtml(mail);
+        String msg = assertString(mail, "message", "mail");
+        List<EmailAttachment> attachments = parseAttachments(ctx, mail);
+
+        if (isHtml) {
+            HtmlEmail email = new HtmlEmail();
+            email.setHtmlMsg(msg);
+            if (attachments != null) {
+                processAttachments(email, attachments);
+            }
+            return email;
+        } else {
+            Email email;
+            if (attachments != null) {
+                MultiPartEmail mpe = new MultiPartEmail();
+                processAttachments(mpe, attachments);
+                email = mpe;
+            } else {
+                email = new SimpleEmail();
+            }
+            email.setMsg(msg);
+            return email;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<EmailAttachment> parseAttachments(Context ctx, Map<String, Object> mail) {
+        Object v = mail.get("attachments");
+        if (v == null) {
+            return null;
+        }
+
+        if (!(v instanceof Collection)) {
+            throw new IllegalArgumentException("invalid 'attachments' type - expected a list of attachment values, got: " + v.getClass());
+        }
+
+        Path workDir = ContextUtils.getWorkDir(ctx);
+        List<EmailAttachment> result = new ArrayList<>();
+        for (Object o : (Collection) v) {
+            EmailAttachment a = new EmailAttachment();
+            if (o instanceof String) {
+                a.setPath(assertPath(workDir, (String) o));
+            } else if (o instanceof Map) {
+                Map<String, Object> params = (Map<String, Object>) o;
+                a.setPath(assertPath(workDir, MapUtils.assertString(params, "path")));
+                a.setName(MapUtils.getString(params, "name"));
+                a.setDescription(MapUtils.getString(params, "description"));
+                a.setDisposition(parseDisposition(MapUtils.getString(params, "disposition")));
+            } else {
+                throw new IllegalArgumentException("invalid 'attachments' item type - expected a string or map, got: " + v.getClass());
+            }
+            result.add(a);
+        }
+        return result;
+    }
+
+    private static String assertPath(Path workDir, String path) {
+        Path result = workDir.resolve(path).normalize().toAbsolutePath();
+        if (!result.startsWith(workDir)) {
+            throw new IllegalArgumentException("invalid attachment path: " + path);
+        }
+
+        if (!Files.exists(result)) {
+            throw new IllegalArgumentException("attachment not found: " + result);
+        }
+
+        return result.toString();
+    }
+
+    private static String parseDisposition(String disposition) {
+        if (disposition == null) {
+            return EmailAttachment.ATTACHMENT;
+        }
+
+        if (EmailAttachment.ATTACHMENT.equals(disposition)) {
+            return EmailAttachment.ATTACHMENT;
+        } else if (EmailAttachment.INLINE.equals(disposition)) {
+            return EmailAttachment.INLINE;
+        }
+
+        throw new IllegalArgumentException("invalid 'attachment' disposition value: '" + disposition + "', expected: " + EmailAttachment.ATTACHMENT + " or " + EmailAttachment.INLINE);
+    }
+
+    private static void processAttachments(MultiPartEmail email, List<EmailAttachment> attachments) throws EmailException {
+        for (EmailAttachment a : attachments) {
+            email.attach(a);
+        }
+    }
+
     private static Map<String, Object> applyTemplate(Context ctx, Map<String, Object> mailParams) throws Exception {
         if (mailParams == null) {
             return null;
@@ -145,14 +224,8 @@ public class SmtpTask implements Task {
 
         StringWriter out = new StringWriter();
 
-        String baseDir;
-        if (ctx == null) {
-            baseDir = System.getProperty("user.dir");
-        } else {
-            baseDir = (String) ctx.getVariable("workDir");
-        }
-
-        try (FileReader in = new FileReader(baseDir + "/" + template)) {
+        Path baseDir = getWorkDir(ctx);
+        try (FileReader in = new FileReader(baseDir.resolve(template).toFile())) {
             MustacheFactory mf = new DefaultMustacheFactory();
             Mustache mustache = mf.compile(in, template);
 
@@ -163,6 +236,13 @@ public class SmtpTask implements Task {
         Map<String, Object> m = new HashMap<>(mailParams);
         m.put("message", out.toString());
         return m;
+    }
+
+    private static Path getWorkDir(Context ctx) {
+        if (ctx != null) {
+            return ContextUtils.getWorkDir(ctx);
+        }
+        return Paths.get(System.getProperty("user.dir"));
     }
 
     private static boolean isHtml(Map<String, Object> mailParams) {
@@ -259,7 +339,6 @@ public class SmtpTask implements Task {
         return Collections.emptyList();
     }
 
-    @SuppressWarnings("unchecked")
     private static Collection<String> oneOrManyStrings(Map<String, Object> m, String k, String parent) {
         Collection<String> c = zeroOrManyStrings(m, k, parent);
         if (c.isEmpty()) {
