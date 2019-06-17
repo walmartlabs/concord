@@ -6,6 +6,11 @@
 
 - smtp: support for attachments.
 
+### Changed
+
+- concord-tasks: fix the kill action. Now it is correctly accepts
+the `instanceId` parameter.
+
 
 
 ## [1.22.0] - 2019-05-16
