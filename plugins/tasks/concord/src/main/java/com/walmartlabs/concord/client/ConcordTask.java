@@ -492,7 +492,7 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private void kill(Context ctx) throws Exception {
-        Map<String, Object> cfg = createCfg(ctx);
+        Map<String, Object> cfg = createCfg(ctx, INSTANCE_ID_KEY);
         kill(ctx, cfg);
     }
 
