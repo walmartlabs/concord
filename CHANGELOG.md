@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-server: fix symlink handling when importing the process
+state;
 - concord-tasks: fix the kill action. Now it is correctly accepts
 the `instanceId` parameter.
 
