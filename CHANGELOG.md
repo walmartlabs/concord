@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- smtp: support for attachments.
+
+
+
 ## [1.22.0] - 2019-05-16
 
 ### Added
