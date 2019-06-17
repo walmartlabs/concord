@@ -28,6 +28,8 @@ import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
@@ -61,6 +63,16 @@ public class StateImportingProcessor implements PayloadProcessor {
         // e.g. custom forms: we need those files in the DB in order to serve custom form files
         if (workDir.relativize(p).toString().startsWith(PASS_THROUGH_PATH)) {
             return true;
+        }
+
+        Path resolved = p;
+        if (!p.isAbsolute()) {
+            resolved = workDir.resolve(p).normalize();
+        }
+
+        // we never store symlinks in the DB
+        if (!Files.isRegularFile(resolved, LinkOption.NOFOLLOW_LINKS)) {
+            return false;
         }
 
         if (snapshots != null) {

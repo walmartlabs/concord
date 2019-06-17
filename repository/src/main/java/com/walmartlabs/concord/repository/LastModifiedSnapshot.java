@@ -24,7 +24,6 @@ import com.walmartlabs.concord.common.FileVisitor;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
@@ -47,10 +46,6 @@ public class LastModifiedSnapshot implements Snapshot, FileVisitor {
 
     @Override
     public boolean isModified(Path path, BasicFileAttributes attrs) {
-        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
-            return false;
-        }
-
         FileTime prev = files.get(path);
         if (prev == null) {
             return true;
