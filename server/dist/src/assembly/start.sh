@@ -38,6 +38,7 @@ ${CONCORD_JAVA_OPTS} \
 -XX:NumberOfGCLogFiles=10 \
 -XX:GCLogFileSize=10M \
 -server \
+-Dfile.encoding=UTF-8 \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
 -Dollie.conf=${CONCORD_CFG_FILE} \

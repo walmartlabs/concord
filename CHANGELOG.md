@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-runner, docker-images: use `file.encoding=UTF-8` by
+default. Fixes the issue with Unicode passwords;
 - concord-server: fix symlink handling when importing the process
 state;
 - concord-tasks: fix the kill action. Now it is correctly accepts
