@@ -1,0 +1,17 @@
+configuration:
+  arguments:
+    x: 123
+
+flows:
+  default:
+    - set:
+        x: 234
+    - task: concord
+      in:
+        action: fork
+        entryPoint: sayHello
+        sync: true
+
+  sayHello:
+    - log: "Hello from a subprocess!"
+    - log: "Concord Fork Process ${x}"

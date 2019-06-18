@@ -1,0 +1,15 @@
+configuration:
+  requirements:
+    agent:
+      johnny: "english"
+
+flows:
+  default:
+    - task: concord
+      in:
+        action: fork
+        entryPoint: sayHello
+        sync: true
+
+  sayHello:
+    - log: "Hello from a subprocess!"
