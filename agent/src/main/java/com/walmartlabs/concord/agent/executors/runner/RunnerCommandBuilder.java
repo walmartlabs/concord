@@ -108,6 +108,9 @@ public class RunnerCommandBuilder {
             l.add("-Duser.dir=" + procDir.toString());
         }
 
+        // default to UTF-8
+        l.add("-Dfile.encoding=UTF-8");
+
         // logback configuration looks for logLevel in JVM properties
         if (logLevel != null) {
             l.add("-DlogLevel=" + logLevel);

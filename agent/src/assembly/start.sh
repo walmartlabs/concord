@@ -16,6 +16,7 @@ echo "CONCORD_CFG_FILE: ${CONCORD_CFG_FILE}"
 exec java \
 -Xmx256m \
 -server \
+-Dfile.encoding=UTF-8 \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
 -Dlogback.configurationFile=com/walmartlabs/concord/agent/logback.xml \
