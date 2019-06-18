@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-runner, docker-images: use `file.encoding=UTF-8` by
+default. Fixes the issue with Unicode passwords;
+- concord-server: correctly pass the parent's `requirements` when
+forking a process.
+
+
 ## [1.23.0] - 2019-05-17
 
 ### Added
@@ -8,8 +18,6 @@
 
 ### Changed
 
-- concord-runner, docker-images: use `file.encoding=UTF-8` by
-default. Fixes the issue with Unicode passwords;
 - concord-server: fix symlink handling when importing the process
 state;
 - concord-tasks: fix the kill action. Now it is correctly accepts

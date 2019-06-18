@@ -24,14 +24,11 @@ import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class ConcordTaskIT extends AbstractServerIT {
 
@@ -59,7 +56,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         String teamName = "team_" + randomString();
 
         TeamsApi teamsApi = new TeamsApi(getApiClient());
-        CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
+        teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
 
         teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
                 .setUsername(userAName)
@@ -349,5 +346,147 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         byte[] ab = getLog(pe.getLogFileName());
         assertLog(".*Hello, Concord!.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testForkWithArguments() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .setAcceptsRawPayload(true));
+
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithArguments").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+
+        StartProcessResponse parentSpr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForCompletion(processApi, parentSpr.getInstanceId());
+
+        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        assertEquals(1, processEntry.getChildrenIds().size());
+
+        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        assertNotNull(child);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(child.getLogFileName());
+        assertLog(".*Hello from a subprocess.*", ab);
+        assertLog(".*Concord Fork Process 123.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testForkWithRequirements() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .setAcceptsRawPayload(true));
+
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithRequirements").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+
+        StartProcessResponse parentSpr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pprocess = waitForCompletion(processApi, parentSpr.getInstanceId());
+        assertNotNull(pprocess.getRequirements());
+        assertFalse(pprocess.getRequirements().isEmpty());
+
+        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        assertEquals(1, processEntry.getChildrenIds().size());
+
+        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        assertNotNull(child);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(child.getLogFileName());
+        assertLog(".*Hello from a subprocess.*", ab);
+
+        // ---
+        assertNotNull(child.getRequirements());
+        assertEquals(pprocess.getRequirements(), child.getRequirements());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testForkWithForm() throws Exception {
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .setAcceptsRawPayload(true));
+
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithForm").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+
+        StartProcessResponse parentSpr = start(input);
+
+        // ---
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForStatus(processApi, parentSpr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        // ---
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        List<FormListEntry> forms = formsApi.list(parentSpr.getInstanceId());
+        assertEquals(1, forms.size());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("firstName", "Boo");
+        FormSubmitResponse fsr = formsApi.submit(pir.getInstanceId(), "myForm", data);
+        assertTrue(fsr.isOk());
+
+        waitForCompletion(processApi, parentSpr.getInstanceId());
+
+        // ---
+        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
+        assertEquals(1, processEntry.getChildrenIds().size());
+
+        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
+        assertNotNull(child);
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(child.getLogFileName());
+        assertLog(".*Hello from a subprocess.*", ab);
+        assertLog(".*Concord Fork Process 234.*", ab);
     }
 }
