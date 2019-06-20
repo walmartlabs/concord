@@ -41,7 +41,7 @@ export default class extends React.PureComponent<Props> {
         return (
             <Message negative={true}>
                 {error.message && <Message.Header>{error.message}</Message.Header>}
-                {details && <p>{details}</p>}
+                {details && details.split('\n').map((item, i) => <p key={i}>{item}</p>)}
                 {error.instanceId && (
                     <p>
                         <Link to={`/process/${error.instanceId}/log`}>Open the process log</Link>

@@ -22,6 +22,7 @@ import {
     ConcordId,
     ConcordKey,
     fetchJson,
+    queryParams,
     GenericOperationResult,
     OperationResult
 } from '../../../common';
@@ -54,10 +55,12 @@ export interface EditRepositoryEntry {
     path?: string;
     secretId: string;
     disabled: boolean;
+    triggers?: TriggerEntry;
 }
 
 export interface TriggerCfg {
     entryPoint: string;
+    name?: string;
 }
 
 export interface TriggerEntry {
@@ -65,6 +68,7 @@ export interface TriggerEntry {
     eventSource: ConcordKey;
     arguments?: object;
     conditions?: object;
+    activeProfiles?: string[];
     cfg: TriggerCfg;
 }
 
@@ -138,3 +142,13 @@ export const listTriggers = (
     repoName: ConcordKey
 ): Promise<TriggerEntry[]> =>
     fetchJson(`/api/v1/org/${orgName}/project/${projectName}/repo/${repoName}/trigger`);
+
+export interface TriggerFilter {
+    type?: ConcordKey;
+    orgName: ConcordKey;
+    projectName: ConcordKey;
+    repoName: ConcordKey;
+}
+
+export const listTriggersV2 = (filter: TriggerFilter): Promise<TriggerEntry[]> =>
+    fetchJson(`/api/v2/trigger?${queryParams({ ...filter })}`);

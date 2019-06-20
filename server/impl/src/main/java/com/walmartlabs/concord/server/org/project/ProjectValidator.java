@@ -143,7 +143,7 @@ public class ProjectValidator {
     }
 
     private static String makeErrorMessage(Trigger t, String property, String message) {
-        return t.getName() + " -> " + property + " " + (message) + " " + location(t.getSourceMap());
+        return "trigger: " + t.getName() + " -> " + property + " " + (message) + " " + location(t.getSourceMap());
     }
 }
 

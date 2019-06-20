@@ -114,3 +114,9 @@ triggers:
       entryPoint: doItAfterPush
       arguments:
         message: "${event.action} ${event.commitId} ${event.author}"
+  - manual:
+      name: Build
+      entryPoint: main
+  - manual:
+      name: Run Integration Tests
+      entryPoint: integration
