@@ -21,8 +21,8 @@
 import * as React from 'react';
 import { Dropdown, Icon } from 'semantic-ui-react';
 
-import { ConcordKey } from '../../../api/common';
-import { RepositoryEntry, RepositoryMeta } from '../../../api/org/project/repository';
+import { ConcordKey, RequestError } from '../../../api/common';
+import { RepositoryEntry, RepositoryMeta, TriggerEntry } from '../../../api/org/project/repository';
 import {
     DeleteRepositoryPopup,
     RefreshRepositoryPopup,
@@ -30,6 +30,9 @@ import {
     ValidateRepositoryPopup,
     RepositoryTriggersPopup
 } from '../../organisms';
+import { useState } from 'react';
+import { useEffect } from 'react';
+import { listTriggersV2 as apiListTriggers } from '../../../api/org/project/repository';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -51,97 +54,187 @@ const getEntryPoints = (meta?: RepositoryMeta): string[] => {
     return meta.entryPoints || [];
 };
 
-class RepositoryActionDropdown extends React.PureComponent<ExternalProps> {
-    render() {
-        const { orgName, projectName, repo } = this.props;
+const renderManualTrigger = ({
+    trigger,
+    orgName,
+    projectName,
+    repoName,
+    repoURL,
+    repoBranchOrCommitId,
+    repoPathOrDefault,
+    repoDisabled
+}: {
+    trigger: TriggerEntry;
+    orgName: string;
+    projectName: string;
+    repoName: string;
+    repoURL: string;
+    repoBranchOrCommitId: string;
+    repoPathOrDefault: string;
+    repoDisabled: boolean;
+}) => {
+    return (
+        <StartRepositoryPopup
+            orgName={orgName}
+            projectName={projectName}
+            repoName={repoName}
+            repoURL={repoURL}
+            repoBranchOrCommitId={repoBranchOrCommitId}
+            repoPath={repoPathOrDefault}
+            allowEntryPoint={false}
+            entryPoint={trigger.cfg.entryPoint}
+            allowProfile={false}
+            profile={trigger.activeProfiles}
+            title={`Start '${trigger.cfg.name}' from repository '${repoName}'`}
+            trigger={(onClick: any) => (
+                <Dropdown.Item onClick={onClick} disabled={repoDisabled}>
+                    <Icon name="play" color="green" />
+                    <span className="text">{trigger.cfg.name}</span>
+                </Dropdown.Item>
+            )}
+        />
+    );
+};
 
-        const {
-            name: repoName,
-            url: repoURL,
-            branch: repoBranch,
-            commitId: repoCommitId,
-            path: repoPath,
-            meta: repoMeta
-        } = repo;
+const RepositoryActionDropdown = (props: ExternalProps) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<RequestError>();
+    const [manualTriggers, setManualTriggers] = useState<TriggerEntry[]>();
 
-        // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
-        const repoBranchOrCommitId = repoCommitId
-            ? repoCommitId
-            : repoBranch
-            ? repoBranch
-            : 'master';
-        const repoPathOrDefault = repoPath ? repoPath : '/';
+    useEffect(
+        () => {
+            const fetchData = async () => {
+                setLoading(true);
+                setError(undefined);
 
-        return (
-            <Dropdown icon="ellipsis vertical">
-                <Dropdown.Menu>
-                    <StartRepositoryPopup
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                        repoURL={repoURL}
-                        repoBranchOrCommitId={repoBranchOrCommitId}
-                        repoPath={repoPathOrDefault}
-                        repoProfiles={getProfiles(repoMeta)}
-                        repoEntryPoints={getEntryPoints(repoMeta)}
-                        trigger={(onClick: any) => (
-                            <Dropdown.Item onClick={onClick} disabled={repo.disabled}>
-                                <Icon name="play" color="blue" />
-                                <span className="text">Run</span>
-                            </Dropdown.Item>
-                        )}
-                    />
-                    <ValidateRepositoryPopup
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                        trigger={(onClick: any) => (
-                            <Dropdown.Item onClick={onClick}>
-                                <Icon name="check" />
-                                <span className="text">Validate</span>
-                            </Dropdown.Item>
-                        )}
-                    />
+                try {
+                    const result = await apiListTriggers({
+                        type: 'manual',
+                        orgName: props.orgName,
+                        projectName: props.projectName,
+                        repoName: props.repo.name
+                    });
 
-                    <RepositoryTriggersPopup
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                        trigger={(onClick: any) => (
-                            <Dropdown.Item onClick={onClick}>
-                                <Icon name="lightning" />
-                                <span className="text">Triggers</span>
-                            </Dropdown.Item>
-                        )}
-                    />
+                    setManualTriggers(result);
+                } catch (e) {
+                    setError(e);
+                } finally {
+                    setLoading(false);
+                }
+            };
 
-                    <RefreshRepositoryPopup
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                        trigger={(onClick: any) => (
-                            <Dropdown.Item onClick={onClick}>
-                                <Icon name="refresh" />
-                                <span className="text">Refresh</span>
-                            </Dropdown.Item>
-                        )}
-                    />
+            fetchData();
+        },
+        [props.orgName, props.projectName, props.repo.name]
+    );
 
-                    <DeleteRepositoryPopup
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
-                        trigger={(onClick: any) => (
-                            <Dropdown.Item onClick={onClick}>
-                                <Icon name="delete" color="red" />
-                                <span className="text">Delete</span>
-                            </Dropdown.Item>
-                        )}
-                    />
-                </Dropdown.Menu>
-            </Dropdown>
-        );
-    }
-}
+    const { orgName, projectName, repo } = props;
+
+    const {
+        name: repoName,
+        url: repoURL,
+        branch: repoBranch,
+        commitId: repoCommitId,
+        path: repoPath,
+        meta: repoMeta
+    } = repo;
+
+    // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
+    const repoBranchOrCommitId = repoCommitId ? repoCommitId : repoBranch ? repoBranch : 'master';
+    const repoPathOrDefault = repoPath ? repoPath : '/';
+
+    return (
+        <Dropdown
+            icon="ellipsis vertical"
+            pointing={'top right'}
+            loading={loading}
+            error={error != null}>
+            <Dropdown.Menu>
+                <StartRepositoryPopup
+                    orgName={orgName}
+                    projectName={projectName}
+                    repoName={repoName}
+                    repoURL={repoURL}
+                    repoBranchOrCommitId={repoBranchOrCommitId}
+                    repoPath={repoPathOrDefault}
+                    repoProfiles={getProfiles(repoMeta)}
+                    repoEntryPoints={getEntryPoints(repoMeta)}
+                    allowEntryPoint={true}
+                    allowProfile={true}
+                    trigger={(onClick: any) => (
+                        <Dropdown.Item onClick={onClick} disabled={repo.disabled} loading={true}>
+                            <Icon name="play" color="blue" />
+                            <span className="text">Run</span>
+                        </Dropdown.Item>
+                    )}
+                />
+
+                {manualTriggers &&
+                    manualTriggers.map((t) =>
+                        renderManualTrigger({
+                            trigger: t,
+                            orgName,
+                            projectName,
+                            repoName,
+                            repoURL,
+                            repoBranchOrCommitId,
+                            repoPathOrDefault,
+                            repoDisabled: repo.disabled
+                        })
+                    )}
+
+                <Dropdown.Divider />
+
+                <ValidateRepositoryPopup
+                    orgName={orgName}
+                    projectName={projectName}
+                    repoName={repoName}
+                    trigger={(onClick: any) => (
+                        <Dropdown.Item onClick={onClick}>
+                            <Icon name="check" />
+                            <span className="text">Validate</span>
+                        </Dropdown.Item>
+                    )}
+                />
+
+                <RepositoryTriggersPopup
+                    orgName={orgName}
+                    projectName={projectName}
+                    repoName={repoName}
+                    trigger={(onClick: any) => (
+                        <Dropdown.Item onClick={onClick}>
+                            <Icon name="lightning" />
+                            <span className="text">Triggers</span>
+                        </Dropdown.Item>
+                    )}
+                />
+
+                <RefreshRepositoryPopup
+                    orgName={orgName}
+                    projectName={projectName}
+                    repoName={repoName}
+                    trigger={(onClick: any) => (
+                        <Dropdown.Item onClick={onClick}>
+                            <Icon name="refresh" />
+                            <span className="text">Refresh</span>
+                        </Dropdown.Item>
+                    )}
+                />
+
+                <DeleteRepositoryPopup
+                    orgName={orgName}
+                    projectName={projectName}
+                    repoName={repoName}
+                    trigger={(onClick: any) => (
+                        <Dropdown.Item onClick={onClick}>
+                            <Icon name="delete" color="red" />
+                            <span className="text">Delete</span>
+                        </Dropdown.Item>
+                    )}
+                />
+            </Dropdown.Menu>
+        </Dropdown>
+    );
+};
 
 export default RepositoryActionDropdown;

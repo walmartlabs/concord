@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: initial implementation of "manual"
+triggers;
 - project-model: `error` blocks support for `script` steps.
 
 ### Changed
@@ -40,6 +42,8 @@ the `instanceId` parameter.
 - concord-cli: initial release;
 - project-model: support for configurable resource paths such as
 `./profiles`, `./flows`, etc;
+- project-model: new trigger type - `manual`. Can be used to
+configure process entry point available through the UI;
 - ansible: initial support for installing additional pip packages
 using Python's virtualenv;
 - ansible: support for multiple vault IDs/passwords;

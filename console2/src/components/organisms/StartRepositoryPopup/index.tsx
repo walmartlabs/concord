@@ -38,6 +38,11 @@ interface ExternalProps {
     repoPath: string;
     repoProfiles: string[];
     repoEntryPoints: string[];
+    title?: string;
+    allowEntryPoint?: boolean;
+    entryPoint?: string;
+    allowProfile?: boolean;
+    profile?: string;
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
@@ -74,16 +79,20 @@ const makeOptions = (data?: string[]): DropdownItemProps[] => {
 
 interface SimpleDropdownProps {
     data: string[];
+    defaultValue?: string;
+    disabled: boolean;
     onAdd: (value: string) => void;
     onChange: (value: string) => void;
 }
 
-const SimpleDropdown = ({ data, onAdd, onChange }: SimpleDropdownProps) => (
+const SimpleDropdown = ({ data, defaultValue, disabled, onAdd, onChange }: SimpleDropdownProps) => (
     <Dropdown
         clearable={true}
         selection={true}
         allowAdditions={true}
         search={true}
+        defaultValue={defaultValue}
+        disabled={disabled}
         options={makeOptions(data)}
         onAddItem={(e, data) => onAdd(data.value as string)}
         onChange={(e, data) => onChange(data.value as string)}
@@ -93,7 +102,10 @@ const SimpleDropdown = ({ data, onAdd, onChange }: SimpleDropdownProps) => (
 class StartRepositoryPopup extends React.Component<Props, OwnState> {
     constructor(props: Props) {
         super(props);
-        this.state = { entryPoints: [...props.repoEntryPoints], profiles: [...props.repoProfiles] };
+        this.state = {
+            entryPoints: [...(props.repoEntryPoints || [])],
+            profiles: [...(props.repoProfiles || [])]
+        };
     }
 
     render() {
@@ -109,7 +121,12 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
             error,
             reset,
             onConfirm,
-            openProcessPage
+            openProcessPage,
+            title,
+            allowEntryPoint,
+            entryPoint,
+            allowProfile,
+            profile
         } = this.props;
 
         const successMsg = response ? (
@@ -131,7 +148,7 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
             <SingleOperationPopup
                 customStyle={{ maxWidth: '800px' }}
                 trigger={trigger}
-                title={`Start repository: ${repoName}`}
+                title={title || `Start repository: ${repoName}`}
                 icon="triangle right"
                 iconColor="blue"
                 introMsg={
@@ -154,31 +171,45 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
                             <Table.Row>
                                 <Table.Cell textAlign={'right'}>Flow</Table.Cell>
                                 <Table.Cell>
-                                    <SimpleDropdown
-                                        data={this.state.entryPoints}
-                                        onAdd={(v) =>
-                                            this.setState({
-                                                selectedEntryPoint: v,
-                                                entryPoints: [v, ...this.state.entryPoints]
-                                            })
-                                        }
-                                        onChange={(v) => this.setState({ selectedEntryPoint: v })}
-                                    />
+                                    {allowEntryPoint ? (
+                                        <SimpleDropdown
+                                            data={this.state.entryPoints}
+                                            defaultValue={entryPoint}
+                                            disabled={entryPoint !== undefined}
+                                            onAdd={(v) =>
+                                                this.setState({
+                                                    selectedEntryPoint: v,
+                                                    entryPoints: [v, ...this.state.entryPoints]
+                                                })
+                                            }
+                                            onChange={(v) =>
+                                                this.setState({ selectedEntryPoint: v })
+                                            }
+                                        />
+                                    ) : (
+                                        entryPoint
+                                    )}
                                 </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell textAlign={'right'}>Profile</Table.Cell>
                                 <Table.Cell>
-                                    <SimpleDropdown
-                                        data={this.state.profiles}
-                                        onAdd={(v) =>
-                                            this.setState({
-                                                selectedProfile: v,
-                                                profiles: [v, ...this.state.profiles]
-                                            })
-                                        }
-                                        onChange={(v) => this.setState({ selectedProfile: v })}
-                                    />
+                                    {allowProfile ? (
+                                        <SimpleDropdown
+                                            data={this.state.profiles}
+                                            defaultValue={profile}
+                                            disabled={profile !== undefined}
+                                            onAdd={(v) =>
+                                                this.setState({
+                                                    selectedProfile: v,
+                                                    profiles: [v, ...this.state.profiles]
+                                                })
+                                            }
+                                            onChange={(v) => this.setState({ selectedProfile: v })}
+                                        />
+                                    ) : (
+                                        profile
+                                    )}
                                 </Table.Cell>
                             </Table.Row>
                         </Table.Body>

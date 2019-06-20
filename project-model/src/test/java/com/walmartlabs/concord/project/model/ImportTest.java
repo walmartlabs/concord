@@ -50,7 +50,6 @@ public class ImportTest {
         om.registerModule(new Jdk8Module());
 
         String r = om.writeValueAsString(item);
-        System.out.println(">>" + r);
 
         Import di = om.readValue(r, Import.class);
         assertEquals(item, di);

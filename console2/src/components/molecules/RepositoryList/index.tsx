@@ -36,7 +36,7 @@ const getSource = (r: RepositoryEntry) => {
     if (r.commitId) {
         return r.commitId;
     }
-    return r.branch;
+    return r.branch || 'master';
 };
 
 const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: RepositoryEntry) => {
@@ -62,7 +62,7 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
                 <GitHubLink url={row.url} text={row.url} />
             </Table.Cell>
             <Table.Cell>{getSource(row)}</Table.Cell>
-            <Table.Cell>{row.path}</Table.Cell>
+            <Table.Cell>{row.path || '/'}</Table.Cell>
             <Table.Cell>{row.secretName}</Table.Cell>
             <Table.Cell>
                 <RepositoryActionDropdown orgName={orgName} projectName={projectName} repo={row} />

@@ -90,9 +90,14 @@ public class ProjectLoaderTest {
         ProjectDefinition pd = loader.loadProject(Paths.get(uri));
         assertNotNull(pd);
 
+        //--- triggers
         assertNotNull(pd.getTriggers());
-        assertEquals(2, pd.getTriggers().size());
+        assertEquals(4, pd.getTriggers().size());
+        assertEquals("manual", pd.getTriggers().get(3).getName());
+        assertEquals("integration", pd.getTriggers().get(3).getEntryPoint());
+        assertEquals("Run Integration Tests", pd.getTriggers().get(3).getCfg().get("name"));
 
+        //--- imports
         assertNotNull(pd.getImports());
         assertEquals(3, pd.getImports().size());
         assertEquals("git", pd.getImports().get(0).type());

@@ -109,7 +109,7 @@ public class RepositoryRefresher extends AbstractDao {
             });
         } catch (Exception e) {
             String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-            throw new ConcordApplicationException("Error while refreshing repository: " + errorMessage, e);
+            throw new ConcordApplicationException("Error while refreshing repository: \n" + errorMessage, e);
         } finally {
             cleanUp(repoPath);
         }
