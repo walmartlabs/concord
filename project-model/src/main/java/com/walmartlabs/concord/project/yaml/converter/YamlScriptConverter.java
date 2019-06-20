@@ -24,6 +24,8 @@ import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlScript;
 import io.takari.bpm.model.ScriptTask;
 
+import java.util.Map;
+
 public class YamlScriptConverter implements StepConverter<YamlScript> {
 
     @Override
@@ -31,20 +33,21 @@ public class YamlScriptConverter implements StepConverter<YamlScript> {
         Chunk c = new Chunk();
 
         String id = ctx.nextId();
-        switch (s.getType()) {
-            case CONTENT: {
-                c.addElement(new ScriptTask(id, s.getType(), s.getLanguage(), s.getBody(), true));
-                break;
-            }
-            case REFERENCE: {
-                c.addElement(new ScriptTask(id, s.getType(), null, s.getBody(), true));
-                break;
-            }
-            default:
-                throw new YamlConverterException("Unsupported script task type: " + s.getType());
+        Map<String, Object> options = s.getOptions();
+        String body = (String) options.get("body");
+
+        if(body != null) {
+            c.addElement(new ScriptTask(id, ScriptTask.Type.CONTENT, s.getName(), body, true));
         }
+
+        else {
+            c.addElement(new ScriptTask(id, ScriptTask.Type.REFERENCE, null, s.getName(), true));
+        }
+
         c.addOutput(id);
         c.addSourceMap(id, toSourceMap(s, "Script"));
+
+        applyErrorBlock(ctx, c, id, s.getOptions());
 
         return c;
     }

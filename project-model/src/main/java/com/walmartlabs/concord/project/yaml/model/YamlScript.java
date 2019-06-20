@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.yaml.model;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,41 +21,35 @@ package com.walmartlabs.concord.project.yaml.model;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
-import io.takari.bpm.model.ScriptTask.Type;
+
+import java.util.Map;
 
 public class YamlScript extends YamlStep {
 
     private static final long serialVersionUID = 1L;
 
-    private final Type type;
-    private final String language;
-    private final String body;
+    private final String name;
+    private final Map<String, Object> options;
 
-    public YamlScript(JsonLocation location, Type type, String language, String body) {
+    public YamlScript(JsonLocation location, String name, Map<String, Object> options) {
         super(location);
-        this.type = type;
-        this.language = language;
-        this.body = body;
+        this.name = name;
+        this.options = options;
     }
 
-    public Type getType() {
-        return type;
+    public String getName() {
+        return name;
     }
 
-    public String getLanguage() {
-        return language;
-    }
-
-    public String getBody() {
-        return body;
+    public Map<String, Object> getOptions() {
+        return options;
     }
 
     @Override
     public String toString() {
         return "YamlScript{" +
-                "type=" + type +
-                ", language='" + language + '\'' +
-                ", body='" + body + '\'' +
+                "name='" + name + '\'' +
+                ", options=" + options +
                 '}';
     }
 }

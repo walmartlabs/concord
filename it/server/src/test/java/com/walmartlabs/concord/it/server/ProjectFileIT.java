@@ -78,6 +78,11 @@ public class ProjectFileIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalScriptWithErrorBlock() throws Exception {
+        simpleTest("projectfile/scriptWithErrorBlock", ".*error occurred!.*");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDependencies() throws Exception {
         String dep = "file:///" + ITConstants.DEPENDENCIES_DIR + "/example.jar";
         Path tmpDir = createTempDir();

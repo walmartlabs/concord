@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- project-model: `error` blocks support for `script` steps.
+
 ### Changed
 
 - concord-server: drop the `process_checkpoint` to `process_queue`
