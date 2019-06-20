@@ -3,7 +3,7 @@ configuration:
     gatekeeperParams:
       apiUrl: "http://localhost:9000/api/notify/common"
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.19.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.22.0"
   - "mvn://com.walmartlabs.concord.plugins:gatekeeper-task:0.85.0"
 
 flows:

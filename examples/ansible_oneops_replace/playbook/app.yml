@@ -1,6 +1,0 @@
----
-- hosts: app
-  tasks:
-  - debug:
-      msg: "{{ greetings }}"
-      verbosity: 0

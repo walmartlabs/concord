@@ -3,7 +3,6 @@
 ## Basic
 
 * [ansible](ansible) - running an Ansible playbook from a workflow process;
-* [boo](boo) - using OneOps Boo;
 * [datetime](datetime) - how to work with dates and date/time formats;
 * [forms](forms) - using basic forms;
 * [git](git) - how to clone a GIT repository;
@@ -18,15 +17,13 @@
 * [looper](looper) - triggering Looper jobs from Concord;
 * [loops](loops) - how to iterate a collection;
 * [multiple_flows](multiple_flows) - multiple flows in a single YAML file;
-* [oneops](oneops) - OneOps integration example;
 * [out](out) - how to use process OUT variables;
 * [out_groovy](out_groovy) - using OUT variables coming from Groovy scripts;
 * [parsing_yaml_json](parsing_yaml_json) - how to work with YAML and JSON files;
 * [project_file](project_file) - basic usage of a `concord.yml` project file;
 * [slack](slack) - sending a message to a Slack channel;
 * [slackChannel](slackChannel) - how to manage Slack channels;
-* [smtp](smtp) - using SMTP task;
-* [teamrosters](teamrosters) - getting data from Team Rosters.
+* [smtp](smtp) - using SMTP task.
 
 ## Intermediate
 
@@ -53,7 +50,6 @@
 * [groovy_rest](groovy_rest) - calling a REST endpoint from a flow using Groovy;
 * [imports](imports) - how to use external GIT/http/mvn resources as project files;
 * [juel_java_steams](juel_java_steams) - using expressions, Groovy and Java Streams;
-* [oneops_scaling](oneops_scaling) - how to scaling up or down a platform in OneOps;
 * [profiles](profiles) - how to use profiles;
 * [python_script](python_script) - running a Python script from a flow;
 * [ruby](ruby) - running a Ruby snippet from a flow;
@@ -64,13 +60,9 @@
 ## Advanced
 
 * [ansible_gatekeeper](ansible_gatekeeper) - using Gatekeeper to gate an Ansible deployment;
-* [ansible_oneops](ansible_oneops) - how to get IP addresses from OneOps to use with Ansible;
-* [ansible_oneops_canary](ansible_oneops_canary) - "canary" deployments with OneOps and Ansible;
-* [ansible_oneops_replace](ansible_oneops_replace) - how to run a playbook on a OneOps' VM replacement event;
 * [ansible_out_vars](ansible_out_vars) - saving Ansible variables as Concord flow variables;
 * [ansible_roles](#ansible_roles) - how to use external Ansible roles;
 * [approval](approval) - using forms and `runAs` to implement an approval process;
-* [boo_ansible](boo_ansible) - using Boo and Ansible together;
 * [context_injection](context_injection) - how to use automatic variable injection with custom tasks written in Groovy;
 * [custom_task](custom_task) - how to create a custom Concord task (plugin);
 * [dynamic_form_values](dynamic_form_values) - using custom forms with values added/removed dynamically;
@@ -88,7 +80,6 @@
 ## Expert
 
 * [ansible_gatekeeper](ansible_gatekeeper) - how to forbid execution of certain Ansible steps;
-* [ansible_oneops_replace](ansible_oneops_replace) - using triggers to run a playbook on OneOps VM replacement events;
 * [dynamic_forms](dynamic_forms) - how to create a form dynamically (in runtime);
 * [fork](fork) - starting a subprocess;
 * [fork_join](fork_join) - starting multiple subprocesses and waiting for completion;
