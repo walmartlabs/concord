@@ -56,6 +56,10 @@ public class ProcessStateConfiguration implements Serializable {
     private boolean logsCleanup;
 
     @Inject
+    @Config("process.checkpointCleanup")
+    private boolean checkpointCleanup;
+
+    @Inject
     @Config("process.maxStateAge")
     private long maxStateAge;
 
@@ -103,6 +107,10 @@ public class ProcessStateConfiguration implements Serializable {
 
     public boolean isLogsCleanup() {
         return logsCleanup;
+    }
+
+    public boolean isCheckpointCleanup() {
+        return checkpointCleanup;
     }
 
     public long getMaxStateAge() {

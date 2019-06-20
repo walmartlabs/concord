@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-server: drop the `process_checkpoint` to `process_queue`
+FK, use a cleaning job instead. Enabled usage of partitioning for
+the `process_checkpoints` table;
 - docker-tasks: remove dependency on `io.takari.bpm/bpm-engine-api`;
 - concord-runner, docker-images: use `file.encoding=UTF-8` by
 default. Fixes the issue with Unicode passwords;
