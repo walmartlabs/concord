@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.cfg.TemplateConfiguration;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -45,6 +44,7 @@ import java.util.Optional;
 
 /**
  * Extracts template files into the workspace.
+ * @deprecated old style "_main.js in an archive" are deprecated. Use {@link ImportProcessor}
  */
 @Named
 @Singleton
@@ -58,13 +58,13 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     private final TemplateAliasDao aliasDao;
 
     @Inject
-    public TemplateFilesProcessor(TemplateConfiguration cfg,
+    public TemplateFilesProcessor(DependencyManager dependencyManager,
                                   LogManager logManager,
-                                  TemplateAliasDao aliasDao) throws IOException {
+                                  TemplateAliasDao aliasDao) {
 
         this.logManager = logManager;
         this.aliasDao = aliasDao;
-        this.dependencyManager = new DependencyManager(cfg.getCacheDir());
+        this.dependencyManager = dependencyManager;
     }
 
     @Override

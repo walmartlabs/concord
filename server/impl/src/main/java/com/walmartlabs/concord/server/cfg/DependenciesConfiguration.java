@@ -35,16 +35,16 @@ import static com.walmartlabs.concord.server.cfg.Utils.getPath;
 
 @Named
 @Singleton
-public class TemplateConfiguration {
+public class DependenciesConfiguration {
 
-    private static final Logger log = LoggerFactory.getLogger(TemplateConfiguration.class);
+    private static final Logger log = LoggerFactory.getLogger(DependenciesConfiguration.class);
 
     private final Path cacheDir;
 
     @Inject
-    public TemplateConfiguration(@Config("template.cacheDir") @Nullable String cacheDir) throws IOException {
-        this.cacheDir = getPath(cacheDir, "templateCache");
-        log.info("init -> using {} to cache templates", this.cacheDir);
+    public DependenciesConfiguration(@Config("dependencies.cacheDir") @Nullable String cacheDir) throws IOException {
+        this.cacheDir = getPath(cacheDir, "depsCache");
+        log.info("init -> using {} to cache dependencies", this.cacheDir);
     }
 
     public Path getCacheDir() {
