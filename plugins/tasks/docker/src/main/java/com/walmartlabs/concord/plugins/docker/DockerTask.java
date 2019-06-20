@@ -22,7 +22,6 @@ package com.walmartlabs.concord.plugins.docker;
 
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.sdk.*;
-import io.takari.bpm.api.BpmnError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,10 +65,10 @@ public class DockerTask implements Task {
     private String workDir;
 
     @Override
-    public void execute(Context ctx) {
+    public void execute(Context ctx) throws Exception {
         // TODO validation
 
-        String image = assertString(ctx, IMAGE_KEY);
+        String image = ContextUtils.assertString(ctx, IMAGE_KEY);
         String cmd = ContextUtils.getString(ctx, CMD_KEY, null);
         Map<String, Object> env = ContextUtils.getMap(ctx, ENV_KEY, null);
         String envFile = ContextUtils.getString(ctx, ENV_FILE_KEY);
@@ -89,7 +88,6 @@ public class DockerTask implements Task {
             envFile = p.toAbsolutePath().toString();
         }
 
-        try {
             String entryPoint = null;
             if (cmd != null) {
                 // create a script containing the specified "cmd"
@@ -132,8 +130,7 @@ public class DockerTask implements Task {
             int code = p.waitFor();
             if (code != SUCCESS_EXIT_CODE) {
                 log.warn("call ['{}', '{}', '{}'] -> finished with code {}", image, cmd, workDir, code);
-                throw new BpmnError("dockerError",
-                        new IllegalStateException("Docker process finished with with exit code " + code));
+                throw new RuntimeException("Docker process finished with with exit code " + code);
             }
 
             // retrieve the saved stdout value if needed
@@ -143,12 +140,6 @@ public class DockerTask implements Task {
             }
 
             log.info("call ['{}', '{}', '{}', '{}'] -> done", image, cmd, workDir, hosts);
-        } catch (BpmnError e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("call ['{}', '{}', '{}', '{}'] -> error", image, cmd, workDir, hosts, e);
-            throw new BpmnError("dockerError", e);
-        }
     }
 
     private static void streamToLog(InputStream in) throws IOException {
@@ -203,19 +194,11 @@ public class DockerTask implements Task {
         return result;
     }
 
-    private static String assertString(Context ctx, String key) {
-        String s = ContextUtils.getString(ctx, key);
-        if (s == null) {
-            throw new IllegalArgumentException("'" + key + "' is required");
-        }
-        return s;
-    }
-
     private static String toString(InputStream in) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream(8192);
 
         byte[] ab = new byte[1024];
-        int read = 0;
+        int read;
         while ((read = in.read(ab)) > 0) {
             out.write(ab, 0, read);
         }

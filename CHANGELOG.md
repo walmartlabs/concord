@@ -4,6 +4,7 @@
 
 ### Changed
 
+- docker-tasks: remove dependency on `io.takari.bpm/bpm-engine-api`;
 - concord-runner, docker-images: use `file.encoding=UTF-8` by
 default. Fixes the issue with Unicode passwords;
 - concord-server: correctly pass the parent's `requirements` when
