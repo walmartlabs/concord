@@ -38,6 +38,7 @@ import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessLogs.PROCESS_LOGS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -121,8 +122,15 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
                 }
 
-                log.info("deleteOldState -> removed older than {}: {} queue entries, {} log entries, {} state item(s), {} event(s)",
-                        cutoff, queueEntries, logEntries, stateRecords, events);
+                int checkpoints = 0;
+                if (jobCfg.isCheckpointCleanup()) {
+                    checkpoints = tx.deleteFrom(PROCESS_CHECKPOINTS)
+                            .where(PROCESS_CHECKPOINTS.INSTANCE_ID.in(ids))
+                            .execute();
+                }
+
+                log.info("deleteOldState -> removed older than {}: {} queue entries, {} log entries, {} state item(s), {} event(s), {} checkpoint(s)",
+                        cutoff, queueEntries, logEntries, stateRecords, events, checkpoints);
             });
 
             long t2 = System.currentTimeMillis();
@@ -156,8 +164,15 @@ public class ProcessCleaner implements ScheduledTask {
                             .execute();
                 }
 
-                log.info("deleteOrphans -> removed orphan data: {} log entries, {} state item(s), {} event(s)",
-                        logEntries, stateRecords, events);
+                int checkpoints = 0;
+                if (jobCfg.isCheckpointCleanup()) {
+                    checkpoints = tx.deleteFrom(PROCESS_CHECKPOINTS)
+                            .where(PROCESS_CHECKPOINTS.INSTANCE_ID.notIn(alive))
+                            .execute();
+                }
+
+                log.info("deleteOrphans -> removed orphan data: {} log entries, {} state item(s), {} event(s), {} checkpoint(s)",
+                        logEntries, stateRecords, events, checkpoints);
             });
 
             long t2 = System.currentTimeMillis();
