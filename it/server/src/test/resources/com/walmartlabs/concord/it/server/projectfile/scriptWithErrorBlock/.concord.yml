@@ -1,0 +1,11 @@
+configuration:
+  dependencies:
+  - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
+flows:
+  main:
+  - script: "scripts/myscript.groovy"
+    error:
+      - log: "error occurred!!"
+  - log: bye!
+

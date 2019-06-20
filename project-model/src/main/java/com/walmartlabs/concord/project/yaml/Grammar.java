@@ -23,7 +23,6 @@ package com.walmartlabs.concord.project.yaml;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.project.yaml.model.*;
-import io.takari.bpm.model.ScriptTask;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
@@ -191,6 +190,15 @@ public class Grammar {
                     satisfyToken(JsonToken.VALUE_STRING)
                             .map(v -> new KV<>("withItems", v.value))));
 
+    // body := FIELD_NAME "body" VALUE_STRING
+    private static final Parser<Atom, KV<String, Object>> body = label("script body",
+            satisfyField("body").then(satisfyToken(JsonToken.VALUE_STRING))
+                    .map(v -> new KV<>("body", v.value)));
+
+    // scriptOptions := (body | errorBlock)*
+    private static final Parser<Atom, Map<String, Object>> scriptOptions = label("Script options",
+            many(choice(body, errorBlock)).map(Grammar::toMap));
+
     // exprOptions := (outField | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> exprOptions = label("Expression options",
             many(choice(errorBlock, outField)).map(Grammar::toMap));
@@ -295,9 +303,7 @@ public class Grammar {
     // script := FIELD_NAME "script" VALUE_STRING (FIELD_NAME "body" VALUE_STRING)?
     private static final Parser<Atom, YamlStep> script = label("Script",
             satisfyField("script").then(satisfyToken(JsonToken.VALUE_STRING))
-                    .bind(a -> option(satisfyField("body").then(satisfyToken(JsonToken.VALUE_STRING))
-                                    .map(b -> new YamlScript(a.location, ScriptTask.Type.CONTENT, (String) a.value, (String) b.value)),
-                            new YamlScript(a.location, ScriptTask.Type.REFERENCE, null, (String) a.value))));
+                    .bind(a -> scriptOptions.map(opts -> new YamlScript(a.location, (String) a.value, opts))));
 
     // formCall := FIELD_NAME "form" VALUE_STRING formCallOptions
     private static final Parser<Atom, YamlStep> formCall = label("Form call",
