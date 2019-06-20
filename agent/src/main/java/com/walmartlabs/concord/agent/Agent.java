@@ -84,15 +84,15 @@ public class Agent {
         SecretClient secretClient = new SecretClient(apiClient);
         RepositoryManager repositoryManager = new RepositoryManager(cfg, secretClient);
 
-        ImportManagerProvider imp = new ImportManagerProvider(repositoryManager, new DependencyManager(cfg.getDependencyCacheDir()));
-
         this.processLogFactory = new ProcessLogFactory(cfg.getLogDir(), cfg.getLogMaxDelay(), createLogAppender(processApi));
 
         this.executor = Executors.newCachedThreadPool();
 
         ProcessPool processPool = new ProcessPool(cfg.getMaxPreforkAge(), cfg.getMaxPreforkCount());
+        DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
+        ImportManagerProvider imp = new ImportManagerProvider(repositoryManager, dependencyManager);
 
-        JobExecutor runnerExec = createRunnerJobExecutor(cfg, processApi, processLogFactory, processPool, executor);
+        JobExecutor runnerExec = createRunnerJobExecutor(cfg, processApi, processLogFactory, processPool, dependencyManager, executor);
         Map<JobRequest.Type, JobExecutor> executors = Collections.singletonMap(JobRequest.Type.RUNNER, runnerExec);
 
         this.workerFactory = new WorkerFactory(repositoryManager, imp.get(), executors);
@@ -304,7 +304,8 @@ public class Agent {
                                                        ProcessApi processApi,
                                                        ProcessLogFactory processLogFactory,
                                                        ProcessPool processPool,
-                                                       ExecutorService executor) throws IOException {
+                                                       DependencyManager dependencyManager,
+                                                       ExecutorService executor) {
 
         RunnerJobExecutorConfiguration runnerExecutorCfg = new RunnerJobExecutorConfiguration(cfg.getAgentId(),
                 cfg.getServerApiBaseUrl(),
@@ -315,8 +316,6 @@ public class Agent {
                 cfg.isRunnerSecurityManagerEnabled(),
                 cfg.getExtraDockerVolumes(),
                 cfg.getMaxNoHeartbeatInterval());
-
-        DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
 
         DefaultDependencies defaultDependencies = new DefaultDependencies();
 

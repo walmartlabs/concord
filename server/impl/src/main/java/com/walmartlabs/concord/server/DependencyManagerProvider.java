@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.server;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,32 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.server.cfg.DependenciesConfiguration;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.io.IOException;
 
 @Named
 @Singleton
-public class ImportConfiguration {
+public class DependencyManagerProvider implements Provider<DependencyManager> {
+
+    private final DependenciesConfiguration cfg;
 
     @Inject
-    @Config("imports.src")
-    private String src;
+    public DependencyManagerProvider(DependenciesConfiguration cfg) {
+        this.cfg = cfg;
+    }
 
-    public String getSrc() {
-        return src;
+    @Override
+    public DependencyManager get() {
+        try {
+            return new DependencyManager(cfg.getCacheDir());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
