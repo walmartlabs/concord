@@ -47,20 +47,26 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
-    public UUID insert(String username, UserType type) {
-        return insert(username, null, null, type);
+    public UUID insert(String username, UserType type, Set<String> roles) {
+        return insert(username, null, null, type, roles);
     }
 
-    public UUID insert(String username, String displayName, String email, UserType type) {
-        return txResult(tx -> insert(tx, username, displayName, email, type));
+    public UUID insert(String username, String displayName, String email, UserType type, Set<String> roles) {
+        return txResult(tx -> insert(tx, username, displayName, email, type, roles));
     }
 
-    public UUID insert(DSLContext tx, String username, String displayName, String email, UserType type) {
-        return tx.insertInto(USERS)
+    public UUID insert(DSLContext tx, String username, String displayName, String email, UserType type, Set<String> roles) {
+        UUID userId = tx.insertInto(USERS)
                 .columns(USERS.USERNAME, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
                 .values(username, displayName, email, type.toString())
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
+
+        if (roles != null) {
+            updateRoles(tx, userId, roles);
+        }
+
+        return userId;
     }
 
     public void delete(UUID id) {
@@ -76,7 +82,7 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
-    public UserEntry update(UUID id, String displayName, String email, UserType userType, boolean isDisabled) {
+    public UserEntry update(UUID id, String displayName, String email, UserType userType, boolean isDisabled, Set<String> roles) {
         tx(tx -> {
             UpdateSetMoreStep<UsersRecord> q = tx.update(USERS)
                     .set(USERS.IS_DISABLED, isDisabled);
@@ -95,6 +101,10 @@ public class UserDao extends AbstractDao {
 
             q.where(USERS.USER_ID.eq(id))
                     .execute();
+
+            if (roles != null) {
+                updateRoles(tx, id, roles);
+            }
         });
 
         return get(id);
@@ -147,7 +157,7 @@ public class UserDao extends AbstractDao {
                 .where(TEAMS.TEAM_ID.in(teamIds))
                 .fetch(e -> new OrganizationEntry(e.value1(), e.value2(), null, null, null, null));
 
-        SelectConditionStep<Record1<String>> permissions = select(PERMISSIONS.PERMISSION_NAME).from(PERMISSIONS)
+        SelectConditionStep<Record1<String[]>> permissions = select(arrayAgg(PERMISSIONS.PERMISSION_NAME)).from(PERMISSIONS)
                 .where(PERMISSIONS.PERMISSION_ID.in(
                         select(ROLE_PERMISSIONS.PERMISSION_ID).from(ROLE_PERMISSIONS)
                                 .where(ROLE_PERMISSIONS.ROLE_ID.in(ROLES.ROLE_ID))));
@@ -157,10 +167,10 @@ public class UserDao extends AbstractDao {
                         .eq(r.get(USERS.USER_ID)));
 
         List<RoleEntry> roles = tx.select(ROLES.ROLE_ID, ROLES.ROLE_NAME,
-                array(permissions.asField()))
+                isnull(permissions.asField(), new String[]{}))
                 .from(ROLES)
                 .where(ROLES.ROLE_ID.in(roleIds))
-                .fetch(e -> new RoleEntry(e.value1(), e.value2(), new HashSet<>(Arrays.asList((String[]) e.value3()))));
+                .fetch(e -> new RoleEntry(e.value1(), e.value2(), new HashSet<>(Arrays.asList(e.value3()))));
 
         return new UserEntry(r.get(USERS.USER_ID),
                 r.get(USERS.USERNAME),
@@ -251,15 +261,17 @@ public class UserDao extends AbstractDao {
     }
 
     public void updateRoles(UUID id, Set<String> roles) {
-        tx(tx -> {
-            tx.deleteFrom(USER_ROLES).where(USER_ROLES.USER_ID.eq(id)).execute();
+        tx(tx -> updateRoles(tx, id, roles));
+    }
 
-            tx.insertInto(USER_ROLES).select(
-                    select(
-                            value(id).as(USER_ROLES.USER_ID),
-                            ROLES.ROLE_ID.as(USER_ROLES.ROLE_ID)
-                    ).from(ROLES).where(ROLES.ROLE_NAME.in(roles)))
-                    .execute();
-        });
+    public void updateRoles(DSLContext tx, UUID id, Set<String> roles) {
+        tx.deleteFrom(USER_ROLES).where(USER_ROLES.USER_ID.eq(id)).execute();
+
+        tx.insertInto(USER_ROLES).select(
+                select(
+                        value(id).as(USER_ROLES.USER_ID),
+                        ROLES.ROLE_ID.as(USER_ROLES.ROLE_ID)
+                ).from(ROLES).where(ROLES.ROLE_NAME.in(roles)))
+                .execute();
     }
 }

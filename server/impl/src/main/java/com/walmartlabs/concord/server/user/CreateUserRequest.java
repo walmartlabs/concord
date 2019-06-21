@@ -27,6 +27,7 @@ import com.walmartlabs.concord.common.validation.ConcordUsername;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.Set;
 
 public class CreateUserRequest implements Serializable {
 
@@ -45,18 +46,22 @@ public class CreateUserRequest implements Serializable {
 
     private final boolean disabled;
 
+    private final Set<String> roles;
+
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
                              @JsonProperty("displayName") String displayName,
                              @JsonProperty("email") String email,
                              @JsonProperty("userType") UserType type,
-                             @JsonProperty("disabled") boolean disabled) {
+                             @JsonProperty("disabled") boolean disabled,
+                             @JsonProperty("roles") Set<String> roles) {
 
         this.username = username;
         this.displayName = displayName;
         this.email = email;
         this.type = type;
         this.disabled = disabled;
+        this.roles = roles;
     }
 
     public String getUsername() {
@@ -79,6 +84,10 @@ public class CreateUserRequest implements Serializable {
         return disabled;
     }
 
+    public Set<String> getRoles() {
+        return roles;
+    }
+
     @Override
     public String toString() {
         return "CreateUserRequest{" +
@@ -87,6 +96,7 @@ public class CreateUserRequest implements Serializable {
                 ", email='" + email + '\'' +
                 ", type=" + type +
                 ", disabled=" + disabled +
+                ", roles=" + roles +
                 '}';
     }
 }

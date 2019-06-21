@@ -116,7 +116,7 @@ public class LdapRealm extends AbstractLdapRealm {
 
         UUID userId = u.getId();
 
-        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false)
+        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false,  null )
                 .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
 
         ldapGroupManager.cacheLdapGroupsIfNeeded(userId, ldapPrincipal.getGroups());
