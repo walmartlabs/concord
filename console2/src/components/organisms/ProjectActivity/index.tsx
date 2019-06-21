@@ -29,7 +29,7 @@ import { ConcordKey, RequestError } from '../../../api/common';
 import { ProjectEntry } from '../../../api/org/project';
 import { actions, selectors, State } from '../../../state/data/projects';
 import { comparators } from '../../../utils';
-import { RepositoryList, RequestErrorMessage } from '../../molecules';
+import { RepositoryList, RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
     EncryptValueActivity,
     ProjectOwnerChangeActivity,
@@ -119,7 +119,7 @@ class ProjectActivity extends React.PureComponent<Props> {
         return (
             <>
                 <Header as="h5" disabled={true}>
-                    ID: {p.id}
+                    <WithCopyToClipboard value={p.id}>ID: {p.id}</WithCopyToClipboard>
                 </Header>
 
                 <Segment>

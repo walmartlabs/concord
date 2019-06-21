@@ -60,6 +60,7 @@ export { default as TeamLdapGroupList } from './TeamLdapGroupList';
 export { default as TeamRoleDropdown } from './TeamRoleDropdown';
 export { default as UserProcessByOrgCards } from './UserProcessByOrgCards';
 export { default as UserProcessStats } from './UserProcessStats';
+export { default as WithCopyToClipboard } from './WithCopyToClipboard';
 
 // https://github.com/facebook/create-react-app/issues/6054
 export * from './EditProjectForm';

@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: add "copy to clipboard" buttons to entity IDs;
 - concord-server, concord-console: initial implementation of "manual"
 triggers;
 - project-model: `error` blocks support for `script` steps.
