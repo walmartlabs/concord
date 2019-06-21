@@ -28,18 +28,25 @@ import java.io.Serializable;
 public class UserSearchResult implements Serializable {
 
     private final String username;
+    private final String userDomain;
     private final String displayName;
 
     @JsonCreator
     public UserSearchResult(@JsonProperty("username") String username,
+                            @JsonProperty("userDomain") String userDomain,
                             @JsonProperty("displayName") String displayName) {
 
         this.username = username;
+        this.userDomain = userDomain;
         this.displayName = displayName;
     }
 
     public String getUsername() {
         return username;
+    }
+
+    public String getUserDomain() {
+        return userDomain;
     }
 
     public String getDisplayName() {
@@ -50,6 +57,7 @@ public class UserSearchResult implements Serializable {
     public String toString() {
         return "UserSearchResult{" +
                 "username='" + username + '\'' +
+                ", userDomain='" + userDomain + '\'' +
                 ", displayName='" + displayName + '\'' +
                 '}';
     }

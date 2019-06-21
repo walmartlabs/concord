@@ -47,18 +47,14 @@ public class UserDao extends AbstractDao {
         super(cfg);
     }
 
-    public UUID insert(String username, UserType type, Set<String> roles) {
-        return insert(username, null, null, type, roles);
+    public UUID insert(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
+        return txResult(tx -> insert(tx, username, domain, null, null, type, roles));
     }
 
-    public UUID insert(String username, String displayName, String email, UserType type, Set<String> roles) {
-        return txResult(tx -> insert(tx, username, displayName, email, type, roles));
-    }
-
-    public UUID insert(DSLContext tx, String username, String displayName, String email, UserType type, Set<String> roles) {
+    public UUID insert(DSLContext tx, String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
         UUID userId = tx.insertInto(USERS)
-                .columns(USERS.USERNAME, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
-                .values(username, displayName, email, type.toString())
+                .columns(USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
+                .values(username, domain, displayName, email, type.toString())
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
 
@@ -112,8 +108,8 @@ public class UserDao extends AbstractDao {
 
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Record6<UUID, String, String, String, String, Boolean> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+            Record7<UUID, String, String, String, String, String, Boolean> r =
+                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
                             .from(USERS)
                             .where(USERS.USER_ID.eq(id))
                             .fetchOne();
@@ -126,23 +122,7 @@ public class UserDao extends AbstractDao {
         }
     }
 
-    public UserEntry getByName(String username) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            Record6<UUID, String, String, String, String, Boolean> r =
-                    tx.select(USERS.USER_ID, USERS.USER_TYPE, USERS.USERNAME, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
-                            .from(USERS)
-                            .where(USERS.USERNAME.eq(username))
-                            .fetchOne();
-
-            if (r == null) {
-                return null;
-            }
-
-            return getUserInfo(tx, r);
-        }
-    }
-
-    private UserEntry getUserInfo(DSLContext tx, Record6<UUID, String, String, String, String, Boolean> r) {
+    private UserEntry getUserInfo(DSLContext tx, Record7<UUID, String, String, String, String, String, Boolean> r) {
         // TODO join?
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
@@ -174,6 +154,7 @@ public class UserDao extends AbstractDao {
 
         return new UserEntry(r.get(USERS.USER_ID),
                 r.get(USERS.USERNAME),
+                r.get(USERS.DOMAIN),
                 r.get(USERS.DISPLAY_NAME),
                 new HashSet<>(orgs),
                 UserType.valueOf(r.get(USERS.USER_TYPE)),
@@ -182,21 +163,27 @@ public class UserDao extends AbstractDao {
                 r.get(USERS.IS_DISABLED));
     }
 
-    public UUID getId(String username) {
-        return getId(username, null);
-    }
-
-    public UUID getId(String username, UserType type) {
+    public UUID getId(String username, String userDomain, UserType type) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectConditionStep<Record1<UUID>> q = tx.select(USERS.USER_ID)
                     .from(USERS)
                     .where(USERS.USERNAME.eq(username));
 
+            if (userDomain != null) {
+                q.and(USERS.DOMAIN.eq(userDomain));
+            }
+
             if (type != null) {
                 q.and(USERS.USER_TYPE.eq(type.toString()));
             }
 
-            return q.fetchOne(USERS.USER_ID);
+            List<UUID> result = q.fetch(USERS.USER_ID);
+            if (result.isEmpty()) {
+                return null;
+            } else if (result.size() > 1) {
+                throw new IllegalArgumentException("Non unique results found for username: '" + username + "', domain: '" + userDomain + "', type: " + type);
+            }
+            return result.get(0);
         }
     }
 
@@ -205,15 +192,6 @@ public class UserDao extends AbstractDao {
             return tx.select(USERS.USERNAME).from(USERS)
                     .where(USERS.USER_ID.eq(id))
                     .fetchOne(USERS.USERNAME);
-        }
-    }
-
-    public boolean exists(String username) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            int cnt = tx.fetchCount(tx.selectFrom(USERS)
-                    .where(USERS.USERNAME.eq(username)));
-
-            return cnt > 0;
         }
     }
 
@@ -273,5 +251,14 @@ public class UserDao extends AbstractDao {
                         ROLES.ROLE_ID.as(USER_ROLES.ROLE_ID)
                 ).from(ROLES).where(ROLES.ROLE_NAME.in(roles)))
                 .execute();
+    }
+
+    public void updateDomain(UUID id, String userDomain) {
+        tx(tx -> {
+            tx.update(USERS)
+                    .set(USERS.DOMAIN, value(userDomain))
+                    .where(USERS.USER_ID.eq(id))
+                    .execute();
+        });
     }
 }

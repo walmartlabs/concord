@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.naming.Context;
+import javax.naming.NameAlreadyBoundException;
 import javax.naming.directory.*;
 import java.util.Properties;
 
@@ -63,7 +64,9 @@ public class LdapIT extends AbstractServerIT {
                 .setUsername(username)
                 .setType(CreateUserRequest.TypeEnum.LDAP));
         ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
-        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest().setUsername(username));
+        CreateApiKeyResponse cakr = apiKeyResource.create(new CreateApiKeyRequest()
+                .setUsername(username)
+                .setUserType(CreateApiKeyRequest.UserTypeEnum.LDAP));
 
         setApiKey(cakr.getKey());
 
@@ -111,7 +114,12 @@ public class LdapIT extends AbstractServerIT {
         attributes.put(ou);
         attributes.put(objectClass);
 
-        ldapCtx.createSubcontext(dn, attributes);
+        try {
+            ldapCtx.createSubcontext(dn, attributes);
+        } catch (NameAlreadyBoundException e) {
+            System.err.println("createLdapOrganizationalUnits -> " + e.getMessage());
+            // already exists, ignore
+        }
     }
 
     private static void createLdapUser(String username) throws Exception {
@@ -133,7 +141,12 @@ public class LdapIT extends AbstractServerIT {
         attributes.put(sn);
         attributes.put(objectClass);
 
-        ldapCtx.createSubcontext(dn, attributes);
+        try {
+            ldapCtx.createSubcontext(dn, attributes);
+        } catch (NameAlreadyBoundException e) {
+            System.err.println("createLdapUser -> " + e.getMessage());
+            // already exists, ignore
+        }
     }
 
     private void createLdapGroupWithUser(String groupName, String username) throws Exception {
@@ -149,6 +162,11 @@ public class LdapIT extends AbstractServerIT {
         attributes.put(uniqueMember);
         attributes.put(objectClass);
 
-        ldapCtx.createSubcontext(groupDn, attributes);
+        try {
+            ldapCtx.createSubcontext(groupDn, attributes);
+        } catch (NameAlreadyBoundException e) {
+            System.err.println("createLdapGroupWithUser -> " + e.getMessage());
+            // already exists, ignore
+        }
     }
 }

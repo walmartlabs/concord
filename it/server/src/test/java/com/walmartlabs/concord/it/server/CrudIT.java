@@ -609,7 +609,7 @@ public class CrudIT extends AbstractServerIT {
                 .setOrgName(orgName)
                 .setProjectName(projectName));
 
-        List<PolicyEntry> l = policyResource.list(orgName, projectName, null);
+        List<PolicyEntry> l = policyResource.list(orgName, projectName, null, null, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
@@ -617,7 +617,7 @@ public class CrudIT extends AbstractServerIT {
 
         policyResource.link(policyName, new PolicyLinkEntry().setOrgName(orgName));
 
-        l = policyResource.list(orgName, null, null);
+        l = policyResource.list(orgName, null, null, null, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
@@ -625,7 +625,7 @@ public class CrudIT extends AbstractServerIT {
 
         policyResource.link(policyName, new PolicyLinkEntry().setUserName(userName));
 
-        l = policyResource.list(null, null, userName);
+        l = policyResource.list(null, null, userName, null, null);
         assertEquals(1, l.size());
         assertEquals(policyName, l.get(0).getName());
 
@@ -636,46 +636,46 @@ public class CrudIT extends AbstractServerIT {
                 .setProjectName(projectName)
                 .setUserName(userName));
 
-        l = policyResource.list(orgName, projectName, userName);
+        l = policyResource.list(orgName, projectName, userName, null, null);
         assertEquals(1, l.size());
         assertEquals(policyForUser, l.get(0).getName());
 
         // ---
 
-        policyResource.unlink(policyName, orgName, projectName, null);
-        l = policyResource.list(orgName, projectName, null);
+        policyResource.unlink(policyName, orgName, projectName, null, null, null);
+        l = policyResource.list(orgName, projectName, null, null, null);
         assertEquals(1, l.size());
-        l = policyResource.list(orgName, null, null);
+        l = policyResource.list(orgName, null, null, null, null);
         assertEquals(1, l.size());
 
         // ---
 
-        policyResource.unlink(policyName, orgName, null, null);
-        l = policyResource.list(orgName, projectName, null);
+        policyResource.unlink(policyName, orgName, null, null, null, null);
+        l = policyResource.list(orgName, projectName, null, null, null);
         assertEquals(0, l.size());
-        l = policyResource.list(orgName, null, null);
-        assertEquals(0, l.size());
-
-        // ---
-
-        policyResource.unlink(policyName, null, null, userName);
-        l = policyResource.list(null, null, userName);
-        assertEquals(0, l.size());
-        l = policyResource.list(orgName, null, null);
+        l = policyResource.list(orgName, null, null, null, null);
         assertEquals(0, l.size());
 
         // ---
 
-        policyResource.unlink(policyForUser, orgName, projectName, userName);
-        l = policyResource.list(orgName, projectName, userName);
+        policyResource.unlink(policyName, null, null, userName, null, null);
+        l = policyResource.list(null, null, userName, null, null);
         assertEquals(0, l.size());
-        l = policyResource.list(orgName, null, null);
+        l = policyResource.list(orgName, null, null, null, null);
+        assertEquals(0, l.size());
+
+        // ---
+
+        policyResource.unlink(policyForUser, orgName, projectName, userName, null, null);
+        l = policyResource.list(orgName, projectName, userName, null, null);
+        assertEquals(0, l.size());
+        l = policyResource.list(orgName, null, null, null, null);
         assertEquals(0, l.size());
 
         // ---
 
         policyResource.delete(policyName);
-        l = policyResource.list(null, null, null);
+        l = policyResource.list(null, null, null, null, null);
         for (PolicyEntry e : l) {
             if (policyName.equals(e.getName())) {
                 fail("Should've been removed: " + e.getName());

@@ -34,6 +34,7 @@ public class CreateApiKeyRequest implements Serializable {
 
     private final UUID userId;
     private final String username;
+    private final String userDomain;
     private final UserType userType;
     @ConcordKey
     private final String name;
@@ -41,10 +42,12 @@ public class CreateApiKeyRequest implements Serializable {
     @JsonCreator
     public CreateApiKeyRequest(@JsonProperty("userId") UUID userId,
                                @JsonProperty("username") String username,
+                               @JsonProperty("userDomain") String userDomain,
                                @JsonProperty("userType") UserType userType,
                                @JsonProperty("name") String name) {
         this.userId = userId;
         this.username = username;
+        this.userDomain = userDomain;
         this.userType = userType;
         this.name = name;
     }
@@ -55,6 +58,10 @@ public class CreateApiKeyRequest implements Serializable {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getUserDomain() {
+        return userDomain;
     }
 
     public UserType getUserType() {
@@ -70,6 +77,7 @@ public class CreateApiKeyRequest implements Serializable {
         return "CreateApiKeyRequest{" +
                 "userId=" + userId +
                 ", username='" + username + '\'' +
+                ", userDomain='" + userDomain + '\'' +
                 ", userType=" + userType +
                 ", name='" + name + '\'' +
                 '}';

@@ -21,6 +21,11 @@
 export type ConcordId = string;
 export type ConcordKey = string;
 
+export interface Owner {
+    username: string;
+    userDomain?: string;
+}
+
 export interface RequestErrorData {
     instanceId?: ConcordId;
     message?: string;
@@ -264,6 +269,7 @@ export const fetchJson = async <T>(uri: string, init?: RequestInit): Promise<T> 
 export interface EntityOwner {
     id: ConcordId;
     username: string;
+    userDomain?: string;
     displayName?: string;
 }
 

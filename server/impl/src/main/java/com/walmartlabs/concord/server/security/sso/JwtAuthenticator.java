@@ -103,7 +103,7 @@ public class JwtAuthenticator {
         if (claims == null) {
             return null;
         }
-        return normalizeLogin((String) claims.get("loginId"));
+        return (String) claims.get("loginId");
     }
 
     private Map<String, Object> validateTokenAndGetClaims(String token) {
@@ -182,18 +182,5 @@ public class JwtAuthenticator {
         }
 
         return new HashMap<>(claimSet.getClaims());
-    }
-
-    private static String normalizeLogin(String login) {
-        if (login == null) {
-            return null;
-        }
-
-        int domainPos = login.indexOf('\\');
-        if (domainPos < 0 || domainPos == login.length() - 1) {
-            return login;
-        }
-
-        return login.substring(domainPos + 1);
     }
 }

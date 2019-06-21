@@ -25,8 +25,10 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.records.SecretsRecord;
+import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -213,7 +215,7 @@ public class SecretDao extends AbstractDao {
                         .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record12<UUID, String, UUID, String, UUID, String, UUID, String, String, String, String, String>> query = selectEntry(tx);
+            SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> query = selectEntry(tx);
 
             if (currentUserId != null) {
                 query.where(or(SECRETS.VISIBILITY.eq(SecretVisibility.PUBLIC.toString()), filterByTeamMember));
@@ -298,7 +300,7 @@ public class SecretDao extends AbstractDao {
                 .execute();
     }
 
-    private static SelectJoinStep<Record12<UUID, String, UUID, String, UUID, String, UUID, String, String, String, String, String>> selectEntry(DSLContext tx) {
+    private static SelectOnConditionStep<Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String>> selectEntry(DSLContext tx) {
         Field<String> orgName = select(ORGANIZATIONS.ORG_NAME)
                 .from(ORGANIZATIONS)
                 .where(ORGANIZATIONS.ORG_ID.eq(SECRETS.ORG_ID)).asField();
@@ -307,27 +309,26 @@ public class SecretDao extends AbstractDao {
                 .from(PROJECTS)
                 .where(PROJECTS.PROJECT_ID.eq(SECRETS.PROJECT_ID)).asField();
 
-        Field<String> ownerUsernameField = select(USERS.USERNAME)
-                .from(USERS)
-                .where(USERS.USER_ID.eq(SECRETS.OWNER_ID))
-                .asField();
-
         return tx.select(SECRETS.SECRET_ID,
                 SECRETS.SECRET_NAME,
                 SECRETS.ORG_ID,
                 orgName,
                 SECRETS.PROJECT_ID,
                 projectName,
-                SECRETS.OWNER_ID,
-                ownerUsernameField,
                 SECRETS.SECRET_TYPE,
                 SECRETS.ENCRYPTED_BY,
                 SECRETS.STORE_TYPE,
-                SECRETS.VISIBILITY)
-                .from(SECRETS);
+                SECRETS.VISIBILITY,
+                USERS.USER_ID,
+                USERS.USERNAME,
+                USERS.DOMAIN,
+                USERS.DISPLAY_NAME,
+                USERS.USER_TYPE)
+                .from(SECRETS)
+                .leftJoin(USERS).on(SECRETS.OWNER_ID.eq(USERS.USER_ID));
     }
 
-    private static SecretEntry toEntry(Record12<UUID, String, UUID, String, UUID, String, UUID, String, String, String, String, String> r) {
+    private static SecretEntry toEntry(Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
         return new SecretEntry(r.get(SECRETS.SECRET_ID),
                 r.get(SECRETS.SECRET_NAME),
                 r.get(SECRETS.ORG_ID),
@@ -338,14 +339,22 @@ public class SecretDao extends AbstractDao {
                 SecretEncryptedByType.valueOf(r.get(SECRETS.ENCRYPTED_BY)),
                 r.get(SECRETS.STORE_TYPE),
                 SecretVisibility.valueOf(r.get(SECRETS.VISIBILITY)),
-                toOwner(r.get(SECRETS.OWNER_ID), r.value8()));
+                toOwner(r));
     }
 
-    private static SecretOwner toOwner(UUID id, String username) {
+    private static EntityOwner toOwner(Record15<UUID, String, UUID, String, UUID, String, String, String, String, String, UUID, String, String, String, String> r) {
+        UUID id = r.get(USERS.USER_ID);
         if (id == null) {
             return null;
         }
-        return new SecretOwner(id, username);
+
+        return EntityOwner.builder()
+                .id(id)
+                .username(r.get(USERS.USERNAME))
+                .userDomain(r.get(USERS.DOMAIN))
+                .displayName(r.get(USERS.DISPLAY_NAME))
+                .userType(UserType.valueOf(r.get(USERS.USER_TYPE)))
+                .build();
     }
 
     public static class SecretDataEntry extends SecretEntry {
@@ -359,7 +368,7 @@ public class SecretDao extends AbstractDao {
 
         public SecretDataEntry(UUID id, String name, UUID orgId, String orgName, UUID projectId, String projectName, SecretType type,
                                SecretEncryptedByType encryptedByType, String storeType, SecretVisibility visibility,
-                               SecretOwner owner, byte[] data) { // NOSONAR
+                               EntityOwner owner, byte[] data) { // NOSONAR
 
             super(id, name, orgId, orgName, projectId, projectName, type, encryptedByType, storeType, visibility, owner);
             this.data = data;

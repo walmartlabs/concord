@@ -53,10 +53,10 @@ Enter host password for user 'myuser': q1
 The VM can be stopped with `vagrant halt` or suspended
 with `vagrant suspend`.
 
-## Updating the images
+## Updating the Local Images
 
 1. build new Concord images;
-2. run `vagrant provision`.
+2. run `USE_LOCAL_IMAGES=true vagrant provision`.
 
 ## TODO
 

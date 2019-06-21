@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.user.UserType;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Set;
 import java.util.UUID;
 
 @Named
@@ -47,9 +48,9 @@ public class LocalUserInfoProvider implements UserInfoProvider {
     }
 
     @Override
-    public UserInfo getInfo(UUID id, String username) {
+    public UserInfo getInfo(UUID id, String username, String userDomain) {
         if (id == null) {
-            id = userDao.getId(username, UserType.LOCAL);
+            id = userDao.getId(username, userDomain, UserType.LOCAL);
         }
 
         if (id == null) {
@@ -64,8 +65,14 @@ public class LocalUserInfoProvider implements UserInfoProvider {
         return UserInfo.builder()
                 .id(id)
                 .username(e.getName())
+                .userDomain(userDomain)
                 .displayName(e.getDisplayName())
                 .email(e.getEmail())
                 .build();
+    }
+
+    @Override
+    public UUID create(String username, String domain, String displayName, String email, Set<String> roles) {
+        return userDao.insert(username, domain, displayName, email, UserType.LOCAL, roles);
     }
 }

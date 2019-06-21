@@ -25,4 +25,17 @@
                                  referencedColumnNames="ROLE_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
+
+    <changeSet id="1240100" author="ybrigo@gmail.com">
+        <addColumn tableName="USERS">
+            <column name="DOMAIN" type="varchar(512)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1240110" author="ybrigo@gmail.com">
+        <dropUniqueConstraint tableName="USERS" constraintName="USERS_USERNAME_KEY"/>
+        <addUniqueConstraint tableName="USERS" columnNames="USERNAME, DOMAIN, USER_TYPE"/>
+    </changeSet>
 </databaseChangeLog>

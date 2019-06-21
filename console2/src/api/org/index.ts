@@ -18,7 +18,7 @@
  * =====
  */
 
-import { fetchJson, ConcordKey, ConcordId, OperationResult, EntityOwner } from '../common';
+import {fetchJson, ConcordKey, ConcordId, OperationResult, EntityOwner, Owner} from '../common';
 
 export enum OrganizationVisibility {
     PUBLIC = 'PUBLIC',
@@ -88,7 +88,7 @@ export const get = (orgName: ConcordKey): Promise<OrganizationEntry> =>
 
 export const changeOwner = (
     orgId: ConcordId,
-    owner: string
+    owner: Owner
 ): Promise<OrganizationOperationResult> => {
     const opts = {
         method: 'POST',
@@ -97,7 +97,7 @@ export const changeOwner = (
         },
         body: JSON.stringify({
             id: orgId,
-            owner: { username: owner }
+            owner: { username: owner.username, userDomain: owner.userDomain }
         })
     };
 

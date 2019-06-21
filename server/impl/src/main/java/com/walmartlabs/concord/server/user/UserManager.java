@@ -40,45 +40,55 @@ public class UserManager {
     private final Map<UserType, UserInfoProvider> userInfoProviders;
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao, List<UserInfoProvider> producers) {
+    public UserManager(UserDao userDao, TeamDao teamDao, List<UserInfoProvider> providers) {
         this.userDao = userDao;
         this.teamDao = teamDao;
 
         this.userInfoProviders = new HashMap<>();
-        producers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
+        providers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
     }
 
-    public UserEntry getOrCreate(String username, UserType type) {
-        UserEntry user = userDao.getByName(username);
-        if (user != null) {
-            return user;
+    public UserEntry getOrCreate(String username, String userDomain, UserType type) {
+        if (type == null) {
+            type = UserPrincipal.assertCurrent().getType();
         }
-        return create(username, null, null, type, null);
+
+        UUID id = userDao.getId(username, userDomain, type);
+        if (id != null) {
+            return userDao.get(id);
+        }
+
+        // TODO: remove me when all users migrated
+        if (userDomain != null) {
+            id = userDao.getId(username, null, type);
+            if (id != null) {
+                userDao.updateDomain(id, userDomain);
+                return userDao.get(id);
+            }
+        }
+
+        return create(username, userDomain, null, null, type, null);
     }
 
     public Optional<UserEntry> get(UUID id) {
         return Optional.ofNullable(userDao.get(id));
     }
 
-    public Optional<UUID> getId(String username) {
-        UUID id = userDao.getId(username);
-        return Optional.ofNullable(id);
+    public Optional<UUID> getId(String username, String userDomain, UserType type) {
+        return Optional.ofNullable(userDao.getId(username, userDomain, type));
     }
 
     public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled, Set<String> roles) {
         return Optional.ofNullable(userDao.update(userId, displayName, email, userType, isDisabled, roles));
     }
 
-    public UserEntry create(String username, String displayName, String email, UserType type, Set<String> roles) {
+    public UserEntry create(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UserInfo i = getInfo(username, type);
-
-        String dn = displayName != null ? displayName : (i != null ? i.displayName() : null);
-        String em = email != null ? email : (i != null ? i.email() : null);
-        UUID id = userDao.insert(username, dn, em, type, roles);
+        UserInfoProvider provider = assertProvider(type);
+        UUID id = provider.create(username, domain, displayName, email, roles);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;
@@ -100,12 +110,12 @@ public class UserManager {
         }
 
         UserInfoProvider p = assertProvider(u.getType());
-        return p.getInfo(u.getId(), u.getUsername());
+        return p.getInfo(u.getId(), u.getUsername(), u.getDomain());
     }
 
-    public UserInfo getInfo(String username, UserType type) {
+    public UserInfo getInfo(String username, String domain, UserType type) {
         UserInfoProvider p = assertProvider(type);
-        return p.getInfo(null, username);
+        return p.getInfo(null, username, domain);
     }
 
     private UserInfoProvider assertProvider(UserType type) {

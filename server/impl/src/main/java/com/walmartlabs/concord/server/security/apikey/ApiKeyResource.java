@@ -87,7 +87,7 @@ public class ApiKeyResource implements Resource {
     public CreateApiKeyResponse create(@ApiParam @Valid CreateApiKeyRequest req) {
         UUID userId = assertUserId(req.getUserId());
         if (userId == null) {
-            userId = assertUsername(req.getUsername(), req.getUserType());
+            userId = assertUsername(req.getUsername(), req.getUserDomain(), req.getUserType());
         }
 
         if (userId == null) {
@@ -130,7 +130,7 @@ public class ApiKeyResource implements Resource {
         return new GenericOperationResult(OperationResult.DELETED);
     }
 
-    private UUID assertUsername(String username, UserType type) {
+    private UUID assertUsername(String username, String domain, UserType type) {
         if (username == null) {
             return null;
         }
@@ -139,7 +139,7 @@ public class ApiKeyResource implements Resource {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        return userManager.getOrCreate(username, type).getId();
+        return userManager.getOrCreate(username, domain, type).getId();
     }
 
     private UUID assertUserId(UUID userId) {

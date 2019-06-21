@@ -20,7 +20,7 @@
 
 import { Action } from 'redux';
 
-import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import {ConcordId, ConcordKey, GenericOperationResult, Owner, RequestError} from '../../../api/common';
 import {
     NewProjectEntry,
     ProjectEntry,
@@ -68,7 +68,7 @@ export interface ChangeProjectOwnerRequest extends Action {
     orgName: ConcordKey;
     projectId: ConcordId;
     projectName: ConcordKey;
-    owner: ConcordId;
+    owner: Owner;
 }
 
 export interface SetAcceptsRawPayloadRequest extends Action {

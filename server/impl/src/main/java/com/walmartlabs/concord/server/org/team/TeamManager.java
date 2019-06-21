@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.User;
 import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -133,7 +134,7 @@ public class TeamManager {
                 type = UserPrincipal.assertCurrent().getType();
             }
 
-            UUID id = getOrCreateUserId(u.getUsername(), type);
+            UUID id = getOrCreateUserId(u.getUsername(), u.getUserDomain(), type);
             userIds.put(u.getUsername(), id);
         }
 
@@ -203,11 +204,11 @@ public class TeamManager {
         }
     }
 
-    public void removeUsers(String orgName, String teamName, Collection<String> usernames) {
+    public void removeUsers(String orgName, String teamName, Collection<User> users) {
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
 
-        Collection<UUID> userIds = usernames.stream()
-                .map(userManager::getId)
+        Collection<UUID> userIds = users.stream()
+                .map(u -> userManager.getId(u.username(), u.domain(), u.type()))
                 .flatMap(id -> id.map(Stream::of).orElseGet(Stream::empty))
                 .collect(Collectors.toSet());
 
@@ -218,7 +219,7 @@ public class TeamManager {
                 .field("orgId", t.getOrgId())
                 .field("name", t.getName())
                 .field("action", "removeUsers")
-                .field("users", usernames)
+                .field("users", users)
                 .log();
     }
 
@@ -295,7 +296,7 @@ public class TeamManager {
         return assertAccess(org.getId(), teamName, requiredRole, teamMembersOnly);
     }
 
-    private UUID getOrCreateUserId(String username, UserType type) {
-        return userManager.getOrCreate(username, type).getId();
+    private UUID getOrCreateUserId(String username, String userDomain, UserType type) {
+        return userManager.getOrCreate(username, userDomain, type).getId();
     }
 }

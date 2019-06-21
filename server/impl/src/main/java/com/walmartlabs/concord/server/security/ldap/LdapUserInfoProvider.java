@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserType;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.naming.NamingException;
+import java.util.Set;
 import java.util.UUID;
 
 @Named
@@ -38,10 +40,12 @@ public class LdapUserInfoProvider implements UserInfoProvider {
 
     private static final Logger log = LoggerFactory.getLogger(LdapUserInfoProvider.class);
 
+    private final UserDao userDao;
     private final LdapManager ldapManager;
 
     @Inject
-    public LdapUserInfoProvider(LdapManager ldapManager) {
+    public LdapUserInfoProvider(UserDao userDao, LdapManager ldapManager) {
+        this.userDao = userDao;
         this.ldapManager = ldapManager;
     }
 
@@ -51,24 +55,46 @@ public class LdapUserInfoProvider implements UserInfoProvider {
     }
 
     @Override
-    public UserInfo getInfo(UUID id, String username) {
+    public UserInfo getInfo(UUID id, String username, String userDomain) {
         try {
-            LdapPrincipal p = ldapManager.getPrincipal(username);
-            return getInfo(id, username, p);
+            LdapPrincipal p = ldapManager.getPrincipal(username, userDomain);
+            return buildInfo(id, p);
         } catch (NamingException e) {
             log.error("getInfo ['{}'] -> error", username, e);
             throw new ConcordApplicationException("Error while retrieving LDAP information for " + username, e);
         }
     }
 
-    private static UserInfo getInfo(UUID id, String username, LdapPrincipal p) {
+    @Override
+    public UUID create(String username, String userDomain, String displayName, String email, Set<String> roles) {
+        UserInfo info = getInfo(null, username, userDomain);
+        if (info == null) {
+            throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
+        }
+
+        return userDao.insert(info.username(), info.userDomain(), info.displayName(), info.email(), UserType.LDAP, roles);
+    }
+
+    private static boolean isUpn(String username) {
+        return username.contains("@");
+    }
+
+    private static String getUserLogonName(String username) {
+        if (!isUpn(username)) {
+            return username;
+        }
+        return username.substring(0, username.indexOf("@"));
+    }
+
+    private static UserInfo buildInfo(UUID id, LdapPrincipal p) {
         if (p == null) {
             return null;
         }
 
         return UserInfo.builder()
                 .id(id)
-                .username(username)
+                .username(p.getUsername())
+                .userDomain(p.getDomain())
                 .displayName(p.getDisplayName())
                 .email(p.getEmail())
                 .groups(p.getGroups())

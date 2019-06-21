@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org;
+package com.walmartlabs.concord.server.user;
 
 /*-
  * *****
@@ -23,35 +23,29 @@ package com.walmartlabs.concord.server.org;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.server.user.UserType;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.UUID;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableEntityOwner.class)
-@JsonDeserialize(as = ImmutableEntityOwner.class)
-public interface EntityOwner extends Serializable {
+@JsonSerialize(as = ImmutableUser.class)
+@JsonDeserialize(as = ImmutableUser.class)
+public interface User extends Serializable {
 
-    @Nullable
-    UUID id();
-
-    @Nullable
     String username();
 
     @Nullable
-    String userDomain();
+    String domain();
 
-    @Nullable
-    String displayName();
+    UserType type();
 
-    @Nullable
-    UserType userType();
-
-    static ImmutableEntityOwner.Builder builder() {
-        return ImmutableEntityOwner.builder();
+    static User of(String username, String domain, UserType type) {
+        return ImmutableUser.builder()
+                .username(username)
+                .domain(domain)
+                .type(type)
+                .build();
     }
 }

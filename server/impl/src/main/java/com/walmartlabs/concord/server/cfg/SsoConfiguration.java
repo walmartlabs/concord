@@ -82,6 +82,10 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.validateNonce")
     private boolean validateNonce;
 
+    @Inject
+    @Config("sso.domainSuffix")
+    private String domainSuffix;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -128,5 +132,9 @@ public class SsoConfiguration implements Serializable {
 
     public boolean isValidateNonce() {
         return validateNonce;
+    }
+
+    public String getDomainSuffix() {
+        return domainSuffix;
     }
 }

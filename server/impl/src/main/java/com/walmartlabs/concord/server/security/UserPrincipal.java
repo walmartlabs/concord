@@ -66,6 +66,10 @@ public class UserPrincipal implements Serializable {
         return user.getName();
     }
 
+    public String getDomain() {
+        return user.getDomain();
+    }
+
     public UserType getType() {
         return user.getType();
     }

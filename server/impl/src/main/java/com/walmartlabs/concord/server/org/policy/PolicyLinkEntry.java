@@ -42,22 +42,26 @@ public class PolicyLinkEntry implements Serializable {
     @ConcordKey
     private final String userName;
 
+    private final String userDomain;
+
     public PolicyLinkEntry() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
 
     public PolicyLinkEntry(String orgName) {
-        this(orgName, null, null);
+        this(orgName, null, null, null);
     }
 
     @JsonCreator
     public PolicyLinkEntry(@JsonProperty("orgName") String orgName,
                            @JsonProperty("projectName") String projectName,
-                           @JsonProperty("userName") String userName) {
+                           @JsonProperty("userName") String userName,
+                           @JsonProperty("userDomain") String userDomain) {
 
         this.orgName = orgName;
         this.projectName = projectName;
         this.userName = userName;
+        this.userDomain = userDomain;
     }
 
     public String getOrgName() {
@@ -72,12 +76,17 @@ public class PolicyLinkEntry implements Serializable {
         return userName;
     }
 
+    public String getUserDomain() {
+        return userDomain;
+    }
+
     @Override
     public String toString() {
         return "PolicyLinkEntry{" +
                 "orgName='" + orgName + '\'' +
                 ", projectName='" + projectName + '\'' +
                 ", userName='" + userName + '\'' +
+                ", userDomain='" + userDomain + '\'' +
                 '}';
     }
 }

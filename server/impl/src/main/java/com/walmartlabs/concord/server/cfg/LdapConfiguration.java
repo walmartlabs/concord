@@ -53,10 +53,6 @@ public class LdapConfiguration implements Serializable {
     private String userSearchFilter;
 
     @Inject
-    @Config("ldap.usernameProperty")
-    private String usernameProperty;
-
-    @Inject
     @Config("ldap.groupSearchFilter")
     private String groupSearchFilter;
 
@@ -76,6 +72,14 @@ public class LdapConfiguration implements Serializable {
     @Config("ldap.systemPassword")
     @Nullable
     private String systemPassword;
+
+    @Inject
+    @Config("ldap.userPrincipalNameProperty")
+    private String userPrincipalNameProperty;
+
+    @Inject
+    @Config("ldap.usernameProperty")
+    private String usernameProperty;
 
     @Inject
     @Config("ldap.mailProperty")
@@ -114,10 +118,6 @@ public class LdapConfiguration implements Serializable {
         return userSearchFilter;
     }
 
-    public String getUsernameProperty() {
-        return usernameProperty;
-    }
-
     public String getGroupSearchFilter() {
         return groupSearchFilter;
     }
@@ -136,6 +136,14 @@ public class LdapConfiguration implements Serializable {
 
     public String getSystemPassword() {
         return systemPassword;
+    }
+
+    public String getUserPrincipalNameProperty() {
+        return userPrincipalNameProperty;
+    }
+
+    public String getUsernameProperty() {
+        return usernameProperty;
     }
 
     public String getMailProperty() {

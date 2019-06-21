@@ -34,17 +34,20 @@ public class UserResponse implements Serializable {
 
     private final String realm;
     private final String username;
+    private final String userDomain;
     private final String displayName;
     private final Set<OrganizationEntry> orgs;
 
     @JsonCreator
     public UserResponse(@JsonProperty("realm") String realm,
                         @JsonProperty("username") String username,
+                        @JsonProperty("userDomain") String userDomain,
                         @JsonProperty("displayName") String displayName,
                         @JsonProperty("orgs") Set<OrganizationEntry> orgs) {
 
         this.realm = realm;
         this.username = username;
+        this.userDomain = userDomain;
         this.displayName = displayName;
         this.orgs = orgs;
     }
@@ -55,6 +58,10 @@ public class UserResponse implements Serializable {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getUserDomain() {
+        return userDomain;
     }
 
     public String getDisplayName() {
@@ -70,6 +77,7 @@ public class UserResponse implements Serializable {
         return "UserResponse{" +
                 "realm='" + realm + '\'' +
                 ", username='" + username + '\'' +
+                ", userDomain='" + userDomain + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", orgs=" + orgs +
                 '}';
