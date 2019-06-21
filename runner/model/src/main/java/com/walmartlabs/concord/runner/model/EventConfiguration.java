@@ -38,7 +38,12 @@ public interface EventConfiguration {
     /**
      * Commonly used variable names that can potentially contain sensitive data.
      */
-    Collection<String> DEFAULT_IN_VARS_BLACKLIST = Arrays.asList("password", "apiToken", "apiKey");
+    Collection<String> DEFAULT_IN_VARS_BLACKLIST = Arrays.asList(
+            "apiKey",
+            "apiToken",
+            "password",
+            "privateKey",
+            "vaultPassword");
 
     /**
      * Enable/disable recording of IN variables in task calls.
