@@ -18,20 +18,29 @@
  * =====
  */
 
+import { push as pushHistory } from 'connected-react-router';
 import * as React from 'react';
+import ReactJson from 'react-json-view';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
-import { push as pushHistory } from 'connected-react-router';
-import { Button, Divider, Header, Icon } from 'semantic-ui-react';
+import { Button, Divider, Header, Icon, Modal } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
-import { canBeCancelled, isFinal, hasState, ProcessEntry } from '../../../api/process';
+import {
+    canBeCancelled,
+    hasState,
+    isFinal,
+    ProcessEntry,
+    ProcessStatus
+} from '../../../api/process';
 import { FormListEntry } from '../../../api/process/form';
 import { actions } from '../../../state/data/processes/poll';
 import { State } from '../../../state/data/processes/poll/types';
 import { ProcessActionList, ProcessStatusTable } from '../../molecules';
-import { CancelProcessPopup, DisableProcessPopup, AnsibleStatsActivity } from '../../organisms';
+import { AnsibleStatsActivity, CancelProcessPopup, DisableProcessPopup } from '../../organisms';
 import ProcessCheckpoint from '../CheckpointView/ProcessCheckpoint';
+
+import './styles.css';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -75,8 +84,37 @@ class ProcessStatusActivity extends React.Component<Props> {
         }
     }
 
-    disableIcon(disable: boolean) {
+    static disableIcon(disable: boolean) {
         return <Icon name="power" color={disable ? 'green' : 'grey'} />;
+    }
+
+    static failureDetails(p: ProcessEntry) {
+        if (p.status !== ProcessStatus.FAILED || !p.meta || !p.meta.out || !p.meta.out.lastError) {
+            return;
+        }
+
+        return (
+            <Modal
+                size="fullscreen"
+                dimmer="inverted"
+                trigger={
+                    <Icon
+                        className="failureDetailsButton"
+                        name="question circle outline"
+                        color="red"
+                        title="Failure details"
+                    />
+                }>
+                <Modal.Content>
+                    <ReactJson
+                        src={p.meta.out.lastError}
+                        collapsed={false}
+                        name={null}
+                        enableClipboard={false}
+                    />
+                </Modal.Content>
+            </Modal>
+        );
     }
 
     createAdditionalAction() {
@@ -111,7 +149,7 @@ class ProcessStatusActivity extends React.Component<Props> {
                         trigger={(onClick: any) => (
                             <Button
                                 attached={false}
-                                icon={this.disableIcon(process.disabled)}
+                                icon={ProcessStatusActivity.disableIcon(process.disabled)}
                                 content={process.disabled ? 'Enable' : 'Disable'}
                                 onClick={onClick}
                             />
@@ -122,11 +160,6 @@ class ProcessStatusActivity extends React.Component<Props> {
         );
     }
 
-    handleForceLoadAll(ev: React.SyntheticEvent) {
-        ev.preventDefault();
-        this.props.startPolling(true);
-    }
-
     render() {
         const { loading, refresh, startWizard, instanceId, process, forms } = this.props;
 
@@ -134,13 +167,16 @@ class ProcessStatusActivity extends React.Component<Props> {
         return (
             <>
                 <Header as="h3">
-                    <Icon
-                        disabled={loading}
-                        name="refresh"
-                        loading={loading}
-                        onClick={() => refresh()}
-                    />
-                    {process && process.status}
+                    <div>
+                        <Icon
+                            disabled={loading}
+                            name="refresh"
+                            loading={loading}
+                            onClick={() => refresh()}
+                        />
+                        {process && process.status}
+                        {process && ProcessStatusActivity.failureDetails(process)}
+                    </div>
                 </Header>
 
                 {process && (

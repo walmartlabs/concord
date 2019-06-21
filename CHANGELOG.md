@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: display error details for `FAILED` processes;
 - concord-server, concord-console: support for AD/LDAP domains,
 custom username validators;
 - concord-server: API endpoints for role and permission management;

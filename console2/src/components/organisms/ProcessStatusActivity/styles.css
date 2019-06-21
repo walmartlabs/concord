@@ -1,0 +1,7 @@
+.failureDetailsButton {
+    padding-left: 10px;
+}
+
+.failureDetailsButton:hover {
+    cursor: pointer;
+}
