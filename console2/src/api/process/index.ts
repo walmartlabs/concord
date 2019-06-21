@@ -110,6 +110,14 @@ export interface ProcessWaitHistoryEntry {
     payload?: WaitPayload;
 }
 
+export interface ProcessMeta {
+    out?: {
+        lastError?: {};
+        [x: string]: any;
+    };
+    [x: string]: any;
+}
+
 export interface ProcessEntry {
     instanceId: ConcordId;
     parentInstanceId?: ConcordId;
@@ -124,7 +132,7 @@ export interface ProcessEntry {
     initiator: string;
     createdAt: string;
     lastUpdatedAt: string;
-    meta?: {};
+    meta?: ProcessMeta;
     checkpoints?: ProcessCheckpointEntry[];
     statusHistory?: ProcessHistoryEntry[];
     disabled: boolean;
