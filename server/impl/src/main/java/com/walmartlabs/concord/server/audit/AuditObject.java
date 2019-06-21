@@ -29,5 +29,6 @@ public enum AuditObject {
     PROJECT,
     SECRET,
     SYSTEM,
-    TEAM
+    TEAM,
+    ROLE
 }

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +26,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class UserManagementIT extends AbstractServerIT {
 
@@ -96,5 +95,35 @@ public class UserManagementIT extends AbstractServerIT {
         usersApi.createOrUpdate(new CreateUserRequest()
                 .setUsername(userBName)
                 .setType(CreateUserRequest.TypeEnum.LOCAL));
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testWithRoles() throws Exception {
+        UsersApi usersApi = new UsersApi(getApiClient());
+
+        String roleName = "role_" + randomString();
+        String username = "user_" + randomString();
+
+        RolesApi rolesApi = new RolesApi(getApiClient());
+        RoleOperationResponse ror = rolesApi.createOrUpdate(new RoleEntry().setName(roleName));
+        assertEquals(RoleOperationResponse.ResultEnum.CREATED, ror.getResult());
+
+        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setRoles(Collections.singletonList(roleName)));
+        assertTrue(cur.isOk());
+
+        UserEntry userEntry = usersApi.findByUsername(username);
+        assertNotNull(userEntry);
+        assertEquals(roleName, userEntry.getRoles().get(0).getName());
+
+        // ---
+
+        DeleteUserResponse dur = usersApi.delete(cur.getId());
+        assertTrue(dur.isOk());
+
+        GenericOperationResult delete = rolesApi.delete(roleName);
+        assertEquals(GenericOperationResult.ResultEnum.DELETED, delete.getResult());
     }
 }

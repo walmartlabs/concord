@@ -53,7 +53,7 @@ public class UserManager {
         if (user != null) {
             return user;
         }
-        return create(username, null, null, type);
+        return create(username, null, null, type, null);
     }
 
     public Optional<UserEntry> get(UUID id) {
@@ -65,11 +65,11 @@ public class UserManager {
         return Optional.ofNullable(id);
     }
 
-    public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled) {
-        return Optional.ofNullable(userDao.update(userId, displayName, email, userType, isDisabled));
+    public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled, Set<String> roles) {
+        return Optional.ofNullable(userDao.update(userId, displayName, email, userType, isDisabled, roles));
     }
 
-    public UserEntry create(String username, String displayName, String email, UserType type) {
+    public UserEntry create(String username, String displayName, String email, UserType type, Set<String> roles) {
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();
         }
@@ -78,7 +78,7 @@ public class UserManager {
 
         String dn = displayName != null ? displayName : (i != null ? i.displayName() : null);
         String em = email != null ? email : (i != null ? i.email() : null);
-        UUID id = userDao.insert(username, dn, em, type);
+        UUID id = userDao.insert(username, dn, em, type, roles);
 
         // add the new user to the default org/team
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;

@@ -78,10 +78,10 @@ public class UserResource implements Resource {
 
         UUID id = userDao.getId(username);
         if (id == null) {
-            UserEntry e = userManager.create(username, req.getDisplayName(), req.getEmail(), req.getType());
+            UserEntry e = userManager.create(username, req.getDisplayName(), req.getEmail(), req.getType(), req.getRoles());
             return new CreateUserResponse(e.getId(), OperationResult.CREATED);
         } else {
-            userManager.update(id, req.getDisplayName(), req.getEmail(), req.getType(), req.isDisabled());
+            userManager.update(id, req.getDisplayName(), req.getEmail(), req.getType(), req.isDisabled(), req.getRoles());
             return new CreateUserResponse(id, OperationResult.UPDATED);
         }
     }

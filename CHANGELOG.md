@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: API endpoints for role and permission management;
 - concord-console: add "copy to clipboard" buttons to entity IDs;
 - concord-server, concord-console: initial implementation of "manual"
 triggers;

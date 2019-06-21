@@ -26,10 +26,7 @@ import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -686,6 +683,42 @@ public class CrudIT extends AbstractServerIT {
         }
 
         usersApi.delete(createUserResponse.getId());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testRoles() throws Exception {
+        RolesApi rolesApi = new RolesApi(getApiClient());
+
+        String roleName = "role_" + randomString();
+
+        // --- create
+
+        RoleOperationResponse createRoleResponse = rolesApi.createOrUpdate(new RoleEntry().setName(roleName));
+        assertEquals(RoleOperationResponse.ResultEnum.CREATED, createRoleResponse.getResult());
+        assertNotNull(createRoleResponse.getId());
+
+        // --- update
+
+        RoleOperationResponse updateRoleResponse = rolesApi.createOrUpdate(new RoleEntry()
+                .setId(createRoleResponse.getId())
+                .setName(roleName)
+                .setPermissions(Collections.singletonList("getProcessQueueAllOrgs")));
+        assertEquals(RoleOperationResponse.ResultEnum.UPDATED, updateRoleResponse.getResult());
+
+        // --- get
+
+        RoleEntry roleEntry = rolesApi.get(roleName);
+        assertNotNull(roleEntry);
+        assertEquals(createRoleResponse.getId(), roleEntry.getId());
+        assertEquals("getProcessQueueAllOrgs", roleEntry.getPermissions().get(0));
+
+        // --- list
+
+        List<RoleEntry> roleEntryList = rolesApi.list();
+        assertNotNull(roleEntryList);
+
+        GenericOperationResult r = rolesApi.delete(roleName);
+        assertEquals(GenericOperationResult.ResultEnum.DELETED, r.getResult());
     }
 
     private static OrganizationEntry findOrganization(List<OrganizationEntry> l, String name) {

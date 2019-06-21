@@ -8,4 +8,21 @@
         <dropForeignKeyConstraint baseTableName="PROCESS_CHECKPOINTS"
                                   constraintName="FK_PCHECKP_PQ_ID"/>
     </changeSet>
+
+    <changeSet id="1240100" author="muhammad.wasi@walmart.com">
+        <addForeignKeyConstraint baseTableName="ROLE_PERMISSIONS"
+                                 baseColumnNames="ROLE_ID"
+                                 constraintName="FK_ROLE_PERMISSIONS_ROLES"
+                                 referencedTableName="ROLES"
+                                 referencedColumnNames="ROLE_ID"
+                                 onDelete="CASCADE"/>
+
+        <dropForeignKeyConstraint baseTableName="USER_ROLES" constraintName="FK_U_R_ROLE"/>
+        <addForeignKeyConstraint baseTableName="USER_ROLES"
+                                 baseColumnNames="ROLE_ID"
+                                 constraintName="FK_U_R_ROLE"
+                                 referencedTableName="ROLES"
+                                 referencedColumnNames="ROLE_ID"
+                                 onDelete="CASCADE"/>
+    </changeSet>
 </databaseChangeLog>
