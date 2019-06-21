@@ -86,6 +86,10 @@ public class LdapConfiguration implements Serializable {
     private String mailProperty;
 
     @Inject
+    @Config("ldap.autoCreateUsers")
+    private boolean autoCreateUsers;
+
+    @Inject
     @Nullable
     @Config("ldap.returningAttributes")
     private List<String> returningAttributes;
@@ -160,6 +164,10 @@ public class LdapConfiguration implements Serializable {
 
     public List<String> getReturningAttributes() {
         return returningAttributes;
+    }
+
+    public boolean isAutoCreateUsers() {
+        return autoCreateUsers;
     }
 
     private static Set<String> split(String s) {

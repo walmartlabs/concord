@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: option to disable automatic user creation for
+the LDAP realm;
 - concord-console: display error details for `FAILED` processes;
 - concord-server, concord-console: support for AD/LDAP domains,
 custom username validators;
