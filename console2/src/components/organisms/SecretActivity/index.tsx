@@ -33,7 +33,7 @@ import {
     typeToText
 } from '../../../api/org/secret';
 import { actions, selectors, State } from '../../../state/data/secrets';
-import { RequestErrorMessage } from '../../molecules';
+import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
     PublicKeyPopup,
     SecretDeleteActivity,
@@ -138,7 +138,7 @@ class SecretActivity extends React.PureComponent<Props> {
         return (
             <>
                 <Header as="h5" disabled={true}>
-                    ID: {data.id}
+                    <WithCopyToClipboard value={data.id}>ID: {data.id}</WithCopyToClipboard>
                 </Header>
 
                 <Segment>

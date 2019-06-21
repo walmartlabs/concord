@@ -1,0 +1,4 @@
+.copyToClipboardButton:hover {
+    color: gray;
+    cursor: pointer;
+}

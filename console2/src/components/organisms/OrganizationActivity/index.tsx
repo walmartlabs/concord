@@ -28,7 +28,7 @@ import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react'
 import { ConcordKey, RequestError } from '../../../api/common';
 import { OrganizationEntry } from '../../../api/org';
 import { actions, selectors, State } from '../../../state/data/orgs';
-import { RequestErrorMessage } from '../../molecules';
+import { WithCopyToClipboard, RequestErrorMessage } from '../../molecules';
 import {
     OrganizationOwnerChangeActivity,
     ProcessListActivity,
@@ -93,7 +93,7 @@ class OrganizationActivity extends React.PureComponent<Props> {
         return (
             <>
                 <Header as="h5" disabled={true}>
-                    ID: {e.id}
+                    <WithCopyToClipboard value={e.id}>ID: {e.id}</WithCopyToClipboard>
                 </Header>
 
                 <Divider horizontal={true} content="Danger Zone" />

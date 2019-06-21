@@ -26,7 +26,7 @@ import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react'
 import { ConcordKey, RequestError } from '../../../api/common';
 import { TeamEntry } from '../../../api/org/team';
 import { actions, selectors, State } from '../../../state/data/teams';
-import { RequestErrorMessage } from '../../molecules';
+import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import { NotFoundPage } from '../../pages';
 import {
     TeamDeleteActivity,
@@ -59,6 +59,10 @@ class TeamActivity extends React.PureComponent<Props> {
     static renderSetting(t: TeamEntry) {
         return (
             <>
+                <Header as="h5" disabled={true}>
+                    <WithCopyToClipboard value={t.id}>ID: {t.id}</WithCopyToClipboard>
+                </Header>
+
                 <Divider horizontal={true} content="Danger Zone" />
 
                 <Segment color="red">

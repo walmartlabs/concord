@@ -27,7 +27,7 @@ import { Icon, Loader, Menu, Breadcrumb } from 'semantic-ui-react';
 import { ConcordId, RequestError } from '../../../api/common';
 import { ProcessEntry } from '../../../api/process';
 import { actions, State } from '../../../state/data/processes';
-import { BreadcrumbSegment, RequestErrorMessage } from '../../molecules';
+import { BreadcrumbSegment, RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import { NotFoundPage } from '../../pages';
 import {
     ProcessLogActivity,
@@ -96,7 +96,11 @@ class ProcessActivity extends React.PureComponent<Props> {
                         <Link to={`/process`}>Processes</Link>
                     </Breadcrumb.Section>
                     <Breadcrumb.Divider />
-                    <Breadcrumb.Section active={true}>{data.instanceId}</Breadcrumb.Section>
+                    <Breadcrumb.Section active={true}>
+                        <WithCopyToClipboard value={data.instanceId}>
+                            {data.instanceId}
+                        </WithCopyToClipboard>
+                    </Breadcrumb.Section>
                 </BreadcrumbSegment>
             );
         }
