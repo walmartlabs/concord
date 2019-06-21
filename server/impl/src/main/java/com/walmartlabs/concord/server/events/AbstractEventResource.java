@@ -185,7 +185,7 @@ public abstract class AbstractEventResource {
         }
 
         String author = event.getOrDefault("author", "").toString();
-        return userManager.getOrCreate(author, UserType.LDAP);
+        return userManager.getOrCreate(author, null, UserType.LDAP);
     }
 
     private boolean filter(Map<String, Object> conditions, TriggerEntry t) {

@@ -64,7 +64,8 @@ public class SsoHandler {
         if (login == null) {
             return null;
         }
-        return new SsoToken(login);
+        String[] usernameDomain = getUsernameDomain(login);
+        return new SsoToken(usernameDomain[0], usernameDomain[1]);
     }
 
     public boolean onAccessDenied(ServletRequest request, ServletResponse response) throws IOException {
@@ -82,5 +83,19 @@ public class SsoHandler {
         }
 
         return false;
+    }
+
+    private String[] getUsernameDomain(String s) {
+        s = s.trim();
+
+        int pos = s.indexOf("\\");
+        if (pos < 0) {
+            return new String[] {s, null};
+        }
+
+        String domain = s.substring(0, pos) + cfg.getDomainSuffix();
+        String username = s.substring(pos + 1);
+
+        return new String[] {username, domain};
     }
 }

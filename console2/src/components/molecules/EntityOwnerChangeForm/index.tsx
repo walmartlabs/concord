@@ -26,6 +26,7 @@ import { FindUserField } from '../../organisms';
 
 interface Owner {
     username: string;
+    userDomain?: string;
     displayName?: string;
 }
 
@@ -88,6 +89,9 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
                                 placeholder="Search for a user..."
                                 defaultUsername={
                                     originalOwner !== undefined ? originalOwner.username : ''
+                                }
+                                defaultUserDomain={
+                                    originalOwner !== undefined ? originalOwner.userDomain : undefined
                                 }
                                 defaultDisplayName={
                                     originalOwner !== undefined ? originalOwner.displayName : ''

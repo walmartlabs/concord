@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-console: support for AD/LDAP domains,
+custom username validators;
 - concord-server: API endpoints for role and permission management;
 - concord-console: add "copy to clipboard" buttons to entity IDs;
 - concord-server, concord-console: initial implementation of "manual"

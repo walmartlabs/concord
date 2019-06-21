@@ -127,6 +127,7 @@ export const testRepository = async (req: RepositoryTestRequest): Promise<void> 
 
 export interface UserSearchResult {
     username: string;
+    userDomain?: string;
     displayName: string;
 }
 

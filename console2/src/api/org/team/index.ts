@@ -103,6 +103,7 @@ export enum TeamRole {
 export interface TeamUserEntry {
     userId: ConcordId;
     username: string;
+    userDomain?: string;
     displayName?: string;
     userType: UserType;
     role: TeamRole;
@@ -115,6 +116,7 @@ export interface TeamLdapGroupEntry {
 
 export interface NewTeamUserEntry {
     username: string;
+    userDomain?: string;
     displayName?: string;
     userType: UserType;
     role: TeamRole;

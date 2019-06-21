@@ -200,7 +200,7 @@ public class ProjectManager {
         }
 
         if (owner.username() != null) {
-            return userManager.getOrCreate(owner.username(), UserType.LDAP);
+            return userManager.getOrCreate(owner.username(), owner.userDomain(), UserType.LDAP);
         }
 
         return defaultOwner;

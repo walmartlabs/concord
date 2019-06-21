@@ -144,7 +144,7 @@
         - /opt/concord/conf:/opt/concord/conf:ro
       env:
         CONCORD_CFG_FILE: /opt/concord/conf/agent.conf
-        CONCORD_DOCKER_LOCAL_MODE: false
+        CONCORD_DOCKER_LOCAL_MODE: "false"
 
   - name: Copy the LDAP user file
     copy:

@@ -47,7 +47,6 @@ public class LdapManager {
 
     private static final String MEMBER_OF_ATTR = "memberOf"; // TODO move to cfg
     private static final String DISPLAY_NAME_ATTR = "displayName"; // TODO move to cfg
-    private static final String USER_PRINCIPAL_NAME_ATTR = "userPrincipalName"; // TODO move to cfg
 
     private final LdapConfiguration cfg;
     private final LdapContextFactory ctxFactory;
@@ -61,8 +60,11 @@ public class LdapManager {
     }
 
     public List<UserSearchResult> search(String filter) throws NamingException {
-        return search(filter, cfg.getUserSearchFilter(), new String[]{cfg.getUsernameProperty(), DISPLAY_NAME_ATTR},
-                attrs -> new UserSearchResult(attrs.get(cfg.getUsernameProperty()), attrs.get(DISPLAY_NAME_ATTR)));
+        return search(filter, cfg.getUserSearchFilter(), new String[]{cfg.getUserPrincipalNameProperty(), DISPLAY_NAME_ATTR},
+                attrs -> {
+                    String upn = attrs.get(cfg.getUserPrincipalNameProperty());
+                    return new UserSearchResult(getUsername(upn), getDomain(upn), attrs.get(DISPLAY_NAME_ATTR));
+                });
     }
 
     public List<LdapGroupSearchResult> searchGroups(String filter) throws NamingException {
@@ -116,48 +118,57 @@ public class LdapManager {
         return result;
     }
 
-    public LdapPrincipal getPrincipal(String username) throws NamingException {
+    public LdapPrincipal getPrincipal(String username, String domain) throws NamingException {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-            return getPrincipal(ctx, username);
+            return getPrincipal(ctx, username, domain);
         } catch (Exception e) {
-            log.warn("getPrincipal ['{}'] -> error while retrieving LDAP data: {}", username, e.getMessage(), e);
+            log.warn("getPrincipal ['{}', '{}'] -> error while retrieving LDAP data: {}", username, domain, e.getMessage(), e);
             throw e;
         } finally {
             LdapUtils.closeContext(ctx);
         }
     }
 
-    private LdapPrincipal getPrincipal(LdapContext ctx, String username) throws NamingException {
-        SearchControls searchCtls = new SearchControls();
-        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+    private LdapPrincipal getPrincipal(LdapContext ctx, String username, String domain) throws NamingException {
+        SearchControls ctls = new SearchControls();
+        ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         if (cfg.getReturningAttributes() != null && !cfg.getReturningAttributes().isEmpty()) {
-            searchCtls.setReturningAttributes(cfg.getReturningAttributes().toArray(new String[0]));
+            ctls.setReturningAttributes(cfg.getReturningAttributes().toArray(new String[0]));
         }
-        Object[] args = new Object[]{username};
 
-        NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, searchCtls);
+        Object[] args = new Object[]{normalizeUsername(username, domain)};
+        NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
         if (!answer.hasMoreElements()) {
             return null;
         }
 
         LdapPrincipalBuilder b = new LdapPrincipalBuilder();
-        while (answer.hasMoreElements()) {
-            SearchResult sr = (SearchResult) answer.next();
 
-            b.nameInNamespace(sr.getNameInNamespace());
+        SearchResult sr = (SearchResult) answer.next();
+        b.nameInNamespace(sr.getNameInNamespace());
 
-            Attributes attrs = sr.getAttributes();
-            if (attrs != null) {
-                NamingEnumeration ae = attrs.getAll();
-                while (ae.hasMore()) {
-                    Attribute attr = (Attribute) ae.next();
-                    processAttribute(b, attr);
-                }
+        Attributes attrs = sr.getAttributes();
+        if (attrs != null) {
+            NamingEnumeration ae = attrs.getAll();
+            while (ae.hasMore()) {
+                Attribute attr = (Attribute) ae.next();
+                processAttribute(b, attr);
             }
         }
-        return b.build();
+
+        if (answer.hasMoreElements()) {
+            throw new RuntimeException("LDAP error, non unique result found for username: '" + username + "'. " +
+                    "Try using a fully-qualified username.");
+        }
+
+        LdapPrincipal result = b.build();
+        if (!getUsername(username).equals(result.getUsername())) {
+            throw new RuntimeException("LDAP error, requested username '" + username + "' and result username mismatch '" + result.getUsername() + "' (" + result.getUserPrincipalName() + ")");
+        }
+
+        return result;
     }
 
     private <E> List<E> search(String filter, String searchFilter, String[] returningAttributes, Function<Map<String, String>, E> converter) throws NamingException {
@@ -165,13 +176,13 @@ public class LdapManager {
         try {
             ctx = ctxFactory.getSystemLdapContext();
 
-            SearchControls searchCtls = new SearchControls();
-            searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            searchCtls.setReturningAttributes(returningAttributes);
-            searchCtls.setCountLimit(10);
+            SearchControls ctls = new SearchControls();
+            ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+            ctls.setReturningAttributes(returningAttributes);
+            ctls.setCountLimit(10);
             Object[] args = new Object[]{filter};
 
-            NamingEnumeration answer = ctx.search(cfg.getSearchBase(), searchFilter, args, searchCtls);
+            NamingEnumeration answer = ctx.search(cfg.getSearchBase(), searchFilter, args, ctls);
             if (!answer.hasMoreElements()) {
                 return Collections.emptyList();
             }
@@ -185,10 +196,10 @@ public class LdapManager {
                     Map<String, String> attributes = new HashMap<>();
                     while (ae.hasMore()) {
                         Attribute attr = (Attribute) ae.next();
-                        String id = attr.getID();
                         if (attr.size() == 0) {
                             continue;
                         }
+                        String id = attr.getID();
                         attributes.put(id, attr.get().toString());
                     }
 
@@ -205,14 +216,27 @@ public class LdapManager {
         String id = attr.getID();
         Object v = attr.get();
 
+        boolean matched = false;
+        if (id.equals(cfg.getUserPrincipalNameProperty())) {
+            String upn = v.toString();
+            b.userPrincipalName(upn);
+            b.domain(getDomain(upn));
+            matched = true;
+        }
+
         if (id.equals(cfg.getUsernameProperty())) {
-            b.username(v.toString());
-            return;
+            String username = v.toString();
+            b.username(getUsername(username));
+            matched = true;
         }
 
         if (id.equals(cfg.getMailProperty())) {
             b.email(v.toString());
             b.addAttribute(id, v.toString());
+            matched = true;
+        }
+
+        if (matched) {
             return;
         }
 
@@ -224,10 +248,6 @@ public class LdapManager {
             }
             case DISPLAY_NAME_ATTR: {
                 b.displayName(v.toString());
-                break;
-            }
-            case USER_PRINCIPAL_NAME_ATTR: {
-                b.userPrincipalName(v.toString());
                 break;
             }
             default: {
@@ -248,9 +268,34 @@ public class LdapManager {
         }
     }
 
+    private static String normalizeUsername(String username, String domain) {
+        if (domain == null) {
+            return username;
+        }
+
+        return username + "@" + domain;
+    }
+
+    private static String getDomain(String upn) {
+        int pos = upn.indexOf("@");
+        if (pos > 0) {
+            return upn.substring(pos + 1);
+        }
+        return null;
+    }
+
+    private static String getUsername(String upn) {
+        int pos = upn.indexOf("@");
+        if (pos > 0) {
+            return upn.substring(0, pos);
+        }
+        return upn;
+    }
+
     private static final class LdapPrincipalBuilder {
 
         private String username;
+        private String domain;
         private String nameInNamespace;
         private String userPrincipalName;
         private String displayName;
@@ -260,6 +305,11 @@ public class LdapManager {
 
         public LdapPrincipalBuilder username(String username) {
             this.username = username;
+            return this;
+        }
+
+        public LdapPrincipalBuilder domain(String domain) {
+            this.domain = domain;
             return this;
         }
 
@@ -303,11 +353,12 @@ public class LdapManager {
             if (groups == null) {
                 groups = Collections.emptySet();
             }
+
             if (attributes == null) {
                 attributes = Collections.emptyMap();
             }
 
-            return new LdapPrincipal(username, nameInNamespace, userPrincipalName, displayName, email, groups, attributes);
+            return new LdapPrincipal(username, domain, nameInNamespace, userPrincipalName, displayName, email, groups, attributes);
         }
     }
 }

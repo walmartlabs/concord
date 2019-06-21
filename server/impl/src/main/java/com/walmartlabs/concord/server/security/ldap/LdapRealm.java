@@ -109,14 +109,16 @@ public class LdapRealm extends AbstractLdapRealm {
             throw new AuthenticationException("LDAP data not found: " + t.getUsername());
         }
 
-        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), UserType.LDAP);
+        // TODO merge getOrCreate+update operations into a single one (only for this use case)
+
+        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP);
         if (u.isDisabled()) {
             throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
         }
 
         UUID userId = u.getId();
 
-        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false,  null )
+        u = userManager.update(userId, ldapPrincipal.getDisplayName(), ldapPrincipal.getEmail(), UserType.LDAP, false, null)
                 .orElseThrow(() -> new RuntimeException("User record not found: " + userId));
 
         ldapGroupManager.cacheLdapGroupsIfNeeded(userId, ldapPrincipal.getGroups());
@@ -126,6 +128,7 @@ public class LdapRealm extends AbstractLdapRealm {
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(userId)
                 .field("username", u.getName())
+                .field("domain", u.getDomain())
                 .field("realm", REALM_NAME)
                 .log();
 
@@ -140,9 +143,8 @@ public class LdapRealm extends AbstractLdapRealm {
             return null;
         }
 
-        username = username.trim();
-
-        LdapPrincipal ldapPrincipal = ldapManager.getPrincipal(username);
+        String[] usernameDomain = getUsernameDomain(t);
+        LdapPrincipal ldapPrincipal = ldapManager.getPrincipal(usernameDomain[0], usernameDomain[1]);
         if (ldapPrincipal == null) {
             throw new AuthenticationException("LDAP data not found: " + username);
         }
@@ -167,6 +169,15 @@ public class LdapRealm extends AbstractLdapRealm {
         }
 
         return ldapPrincipal;
+    }
+
+    private String[] getUsernameDomain(UsernamePasswordToken t) {
+        String username = t.getUsername().trim();
+        int pos = username.indexOf("@");
+        if (pos < 0) {
+            return new String[]{username, null};
+        }
+        return new String[]{username.substring(0, pos), username.substring(pos + 1)};
     }
 
     @Override

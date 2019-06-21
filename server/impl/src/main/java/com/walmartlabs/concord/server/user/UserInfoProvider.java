@@ -38,9 +38,12 @@ public interface UserInfoProvider {
      * Returns data for the specified user.
      * @param id user's ID, optional
      * @param username user's name, mandatory
+     * @param userDomain user's domain, optional
      * @return
      */
-    UserInfo getInfo(UUID id, String username);
+    UserInfo getInfo(UUID id, String username, String userDomain);
+
+    UUID create(String username, String domain, String displayName, String email, Set<String> roles);
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     interface BaseUserInfo {
@@ -50,6 +53,9 @@ public interface UserInfoProvider {
 
         @Nullable
         String username();
+
+        @Nullable
+        String userDomain();
 
         @Nullable
         String displayName();

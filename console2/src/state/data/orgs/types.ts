@@ -20,7 +20,7 @@
 
 import { Action } from 'redux';
 
-import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
+import {ConcordId, ConcordKey, Owner, RequestError} from '../../../api/common';
 import { OrganizationEntry, OrganizationOperationResult } from '../../../api/org';
 import { RequestState } from '../common';
 
@@ -40,7 +40,7 @@ export interface GetOrganizationRequest extends Action {
 export interface ChangeOrganizationOwnerRequest extends Action {
     orgId: ConcordId;
     orgName: ConcordKey;
-    owner: string;
+    owner: Owner;
 }
 
 export interface Organizations {

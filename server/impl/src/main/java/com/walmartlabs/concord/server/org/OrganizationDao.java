@@ -65,7 +65,7 @@ public class OrganizationDao extends AbstractDao {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
 
-            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY,
+            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY,
                     o.META.cast(String.class), o.ORG_CFG.cast(String.class))
                     .from(o)
                     .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
@@ -88,7 +88,7 @@ public class OrganizationDao extends AbstractDao {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
 
-            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY,
+            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY,
                     o.META.cast(String.class), o.ORG_CFG.cast(String.class))
                     .from(o)
                     .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
@@ -160,10 +160,11 @@ public class OrganizationDao extends AbstractDao {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
 
-            SelectOnConditionStep<Record9<UUID, String, UUID, String, String, String, String, String, String>> q = tx.select(o.ORG_ID,
+            SelectOnConditionStep<Record10<UUID, String, UUID, String, String, String, String, String, String, String>> q = tx.select(o.ORG_ID,
                     o.ORG_NAME,
                     o.OWNER_ID,
                     u.USERNAME,
+                    u.DOMAIN,
                     u.DISPLAY_NAME,
                     u.USER_TYPE,
                     o.VISIBILITY,
@@ -210,19 +211,24 @@ public class OrganizationDao extends AbstractDao {
                 .execute());
     }
 
-    private OrganizationEntry toEntry(Record9<UUID, String, UUID, String, String, String, String, String, String> r) {
-        Map<String, Object> meta = objectMapper.deserialize(r.value8());
-        Map<String, Object> cfg = objectMapper.deserialize(r.value9());
+    private OrganizationEntry toEntry(Record10<UUID, String, UUID, String, String, String, String, String, String, String> r) {
+        Map<String, Object> meta = objectMapper.deserialize(r.value9());
+        Map<String, Object> cfg = objectMapper.deserialize(r.value10());
         return new OrganizationEntry(r.value1(), r.value2(),
-                toOwner(r.value3(), r.value4(), r.value5(), r.value6()),
-                OrganizationVisibility.valueOf(r.value7()), meta, cfg);
+                toOwner(r.value3(), r.value4(), r.value5(), r.value6(), r.value7()),
+                OrganizationVisibility.valueOf(r.value8()), meta, cfg);
     }
 
-    private EntityOwner toOwner(UUID id, String username, String displayName, String type) {
+    private EntityOwner toOwner(UUID id, String username, String domain, String displayName, String userType) {
         if (id == null) {
             return null;
         }
-
-        return EntityOwner.of(id, username, displayName, UserType.valueOf(type));
+        return EntityOwner.builder()
+                .id(id)
+                .username(username)
+                .userDomain(domain)
+                .displayName(displayName)
+                .userType(UserType.valueOf(userType))
+                .build();
     }
 }

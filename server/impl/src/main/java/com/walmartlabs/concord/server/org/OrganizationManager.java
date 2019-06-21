@@ -225,7 +225,7 @@ public class OrganizationManager {
 
         if (owner.username() != null) {
             UserType t = owner.userType() != null ? owner.userType() : UserPrincipal.assertCurrent().getType();
-            return userManager.getOrCreate(owner.username(), t);
+            return userManager.getOrCreate(owner.username(), owner.userDomain(), t);
         }
 
         return defaultOwner;

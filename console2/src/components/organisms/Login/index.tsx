@@ -47,6 +47,7 @@ interface LoginData {
     password: string;
     apiKey: string;
     rememberMe: boolean;
+    validationError?: string;
 }
 
 interface StateProps {
@@ -79,11 +80,31 @@ class Login extends React.Component<Props, LoginData> {
     }
 
     handleSubmit() {
-        this.props.onSubmit(this.state);
+        const error = this.validate();
+        if (error !== null) {
+            this.setState({validationError: error});
+        } else {
+            this.setState({validationError: undefined});
+            this.props.onSubmit(this.state);
+        }
+    }
+
+    validate() {
+        const { username } = this.state;
+
+        const externalValidator = ((window.concord || {}).login || {}).usernameValidator;
+        if (externalValidator) {
+            const err = externalValidator(username);
+            if (err) {
+                return err;
+            }
+        }
+
+        return null;
     }
 
     render() {
-        const { username, password, rememberMe, apiKey } = this.state;
+        const { validationError, username, password, rememberMe, apiKey } = this.state;
 
         const useApiKey = this.props.location.search.search('useApiKey=true') >= 0;
 
@@ -96,7 +117,7 @@ class Login extends React.Component<Props, LoginData> {
                         <Loader />
                     </Dimmer>
 
-                    <Form error={!!this.props.apiError} onSubmit={() => this.handleSubmit()}>
+                    <Form error={!!this.props.apiError || validationError !== undefined} onSubmit={() => this.handleSubmit()}>
                         {!useApiKey && (
                             <>
                                 <Form.Input
@@ -105,6 +126,7 @@ class Login extends React.Component<Props, LoginData> {
                                     icon="user"
                                     required={true}
                                     value={username}
+                                    placeholder={(window.concord.login || {}).usernameHint || 'username@domain'}
                                     onChange={(e, { value }) => this.setState({ username: value })}
                                 />
                                 <Form.Input
@@ -145,6 +167,7 @@ class Login extends React.Component<Props, LoginData> {
                         <Divider />
 
                         <Message error={true} content={this.props.apiError} />
+                        <Message error={true} content={validationError} />
                         <Form.Button id="loginButton" primary={true} fluid={true}>
                             Login
                         </Form.Button>

@@ -35,6 +35,7 @@ public class LdapPrincipal implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String username;
+    private final String domain;
     private final String nameInNamespace;
     private final String userPrincipalName;
     private final String displayName;
@@ -43,6 +44,7 @@ public class LdapPrincipal implements Serializable {
     private final Map<String, Object> attributes;
 
     public LdapPrincipal(String username,
+                         String domain,
                          String nameInNamespace,
                          String userPrincipalName,
                          String displayName,
@@ -51,6 +53,7 @@ public class LdapPrincipal implements Serializable {
                          Map<String, Object> attributes) {
 
         this.username = username;
+        this.domain = domain;
         this.nameInNamespace = nameInNamespace;
         this.userPrincipalName = userPrincipalName;
         this.displayName = displayName;
@@ -65,6 +68,10 @@ public class LdapPrincipal implements Serializable {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getDomain() {
+        return domain;
     }
 
     public String getNameInNamespace() {
@@ -95,6 +102,7 @@ public class LdapPrincipal implements Serializable {
     public String toString() {
         return "LdapPrincipal{" +
                 "username='" + username + '\'' +
+                ", domain='" + domain + '\'' +
                 ", nameInNamespace='" + nameInNamespace + '\'' +
                 ", userPrincipalName='" + userPrincipalName + '\'' +
                 ", displayName='" + displayName + '\'' +

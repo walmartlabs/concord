@@ -24,30 +24,37 @@ import org.apache.shiro.authc.AuthenticationToken;
 
 public class SsoToken implements AuthenticationToken {
 
-    private final String login;
+    private final String username;
+    private final String domain;
 
-    public SsoToken(String login) {
-        this.login = login;
+    public SsoToken(String username, String domain) {
+        this.username = username;
+        this.domain = domain;
     }
 
-    public String getLogin() {
-        return login;
+    public String getUsername() {
+        return username;
+    }
+
+    public String getDomain() {
+        return domain;
     }
 
     @Override
     public Object getPrincipal() {
-        return login;
+        return username + "@" + domain;
     }
 
     @Override
     public Object getCredentials() {
-        return login;
+        return getPrincipal();
     }
 
     @Override
     public String toString() {
         return "SsoToken{" +
-                "login='" + login + '\'' +
+                "username='" + username + '\'' +
+                ", domain='" + domain + '\'' +
                 '}';
     }
 }

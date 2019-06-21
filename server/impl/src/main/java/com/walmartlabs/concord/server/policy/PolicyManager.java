@@ -92,7 +92,7 @@ public class PolicyManager {
         attrs.put("username", owner.getName());
         attrs.put("userType", owner.getType().name());
 
-        UserInfoProvider.UserInfo userInfo = userManager.getInfo(owner.getName(), owner.getType());
+        UserInfoProvider.UserInfo userInfo = userManager.getInfo(owner.getName(), owner.getDomain(), owner.getType());
         if (userInfo == null) {
             throw new ValidationErrorsException("User not found: " + owner.getId());
         }

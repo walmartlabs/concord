@@ -48,7 +48,6 @@ import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserManager;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -76,7 +75,6 @@ public class SecretManager {
     private final SecretStoreConfiguration secretCfg;
     private final SecretStoreProvider secretStoreProvider;
     private final UserDao userDao;
-    private final UserManager userManager;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -86,8 +84,7 @@ public class SecretManager {
                          SecretDao secretDao,
                          SecretStoreConfiguration secretCfg,
                          SecretStoreProvider secretStoreProvider,
-                         UserDao userDao,
-                         UserManager userManager) {
+                         UserDao userDao) {
 
         this.policyManager = policyManager;
         this.secretDao = secretDao;
@@ -97,7 +94,6 @@ public class SecretManager {
         this.secretStoreProvider = secretStoreProvider;
         this.auditLog = auditLog;
         this.processQueueDao = processQueueDao;
-        this.userManager = userManager;
     }
 
     @WithTimer
@@ -135,8 +131,8 @@ public class SecretManager {
 
         UserPrincipal p = UserPrincipal.assertCurrent();
 
-        SecretOwner owner = e.getOwner();
-        if (owner != null && owner.getId().equals(p.getId())) {
+        EntityOwner owner = e.getOwner();
+        if (owner != null && p.getId().equals(owner.id())) {
             // the owner can do anything with his secrets
             return e;
         }

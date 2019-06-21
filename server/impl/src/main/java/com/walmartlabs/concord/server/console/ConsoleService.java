@@ -124,7 +124,7 @@ public class ConsoleService implements Resource {
         UserEntry user = userManager.get(p.getId())
                 .orElseThrow(() -> new ConcordApplicationException("Unknown user: " + p.getId()));
 
-        return new UserResponse(p.getRealm(), user.getName(), displayName, user.getOrgs());
+        return new UserResponse(p.getRealm(), user.getName(), user.getDomain(), displayName, user.getOrgs());
     }
 
     @POST

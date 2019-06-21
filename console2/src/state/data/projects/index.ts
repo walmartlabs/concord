@@ -22,7 +22,7 @@ import { push as pushHistory } from 'connected-react-router';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest, throttle } from 'redux-saga/effects';
 
-import { ConcordId, ConcordKey } from '../../../api/common';
+import {ConcordId, ConcordKey, Owner} from '../../../api/common';
 import {
     createOrUpdate as apiCreateOrUpdate,
     get as apiGet,
@@ -176,7 +176,7 @@ export const actions = {
         orgName: ConcordKey,
         projectId: ConcordId,
         projectName: ConcordKey,
-        owner: ConcordKey
+        owner: Owner
     ): ChangeProjectOwnerRequest => ({
         type: actionTypes.CHANGE_PROJECT_OWNER_REQUEST,
         orgName,

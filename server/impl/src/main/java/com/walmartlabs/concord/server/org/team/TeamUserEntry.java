@@ -41,6 +41,9 @@ public class TeamUserEntry implements Serializable {
     @Size(max = UserEntry.MAX_USERNAME_LENGTH)
     private final String username;
 
+    @Size(max = UserEntry.MAX_DOMAIN_LENGTH)
+    private final String userDomain;
+
     private final String displayName;
 
     private final UserType userType;
@@ -48,18 +51,20 @@ public class TeamUserEntry implements Serializable {
     private final TeamRole role;
 
     public TeamUserEntry(String username, TeamRole role) {
-        this(null, username, null, null, role);
+        this(null, username, null, null, null, role);
     }
 
     @JsonCreator
     public TeamUserEntry(@JsonProperty("userId") UUID userId,
                          @JsonProperty("username") String username,
+                         @JsonProperty("userDomain") String userDomain,
                          @JsonProperty("displayName") String displayName,
                          @JsonProperty("userType") UserType userType,
                          @JsonProperty("role") TeamRole role) {
 
         this.userId = userId;
         this.username = username;
+        this.userDomain = userDomain;
         this.displayName = displayName;
         this.userType = userType;
         this.role = role;
@@ -71,6 +76,10 @@ public class TeamUserEntry implements Serializable {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getUserDomain() {
+        return userDomain;
     }
 
     public String getDisplayName() {
@@ -90,6 +99,7 @@ public class TeamUserEntry implements Serializable {
         return "TeamUserEntry{" +
                 "userId=" + userId +
                 ", username='" + username + '\'' +
+                ", userDomain='" + userDomain + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", userType=" + userType +
                 ", role=" + role +

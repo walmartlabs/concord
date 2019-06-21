@@ -28,6 +28,7 @@ import { actions, State } from '../../../state/data/search';
 
 interface ExternalProps {
     defaultUsername?: string;
+    defaultUserDomain?: string;
     defaultDisplayName?: string;
     onSelect: (value: UserSearchResult) => void;
     onChange?: (value?: string) => void;
@@ -55,29 +56,34 @@ type Props = ExternalProps & StateProps & DispatchProps;
 const toResults = (items: UserSearchResult[]) =>
     items.map((i) => ({
         title: i.displayName,
-        description: i.username
+        description: i.username + (i.userDomain ? '@' + i.userDomain : '')
     }));
 
 // TODO remove when the Search component will support custom result types
 const resultToItem = (result: SearchResultProps, items: UserSearchResult[]) =>
-    items.find((i) => i.username === result.description)!;
+    items.find((i) => (i.username + (i.userDomain ? '@' + i.userDomain : '')) === result.description)!;
 
-export const renderUser = (username: string, displayName?: string): string =>
-    displayName !== undefined ? displayName + ' (' + username + ' )' : username;
+export const renderUsername = (username: string, userDomain?: string): string => {
+    return userDomain !== undefined ? username + '@' + userDomain : username;
+};
+
+export const renderUser = (username: string, userDomain?: string, displayName?: string): string => {
+    return displayName !== undefined ? displayName + ' (' + renderUsername(username, userDomain) + ' )' : username;
+};
 
 class FindUserField extends React.PureComponent<Props, InternalState> {
     constructor(props: Props) {
         super(props);
 
-        const { defaultUsername, defaultDisplayName } = this.props;
-        this.state = { value: renderUser(defaultUsername || '', defaultDisplayName) };
+        const { defaultUsername, defaultUserDomain, defaultDisplayName } = this.props;
+        this.state = { value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName) };
     }
 
     componentDidMount() {
         this.props.reset();
 
-        const { defaultUsername, defaultDisplayName } = this.props;
-        this.setState({ value: renderUser(defaultUsername || '', defaultDisplayName) });
+        const { defaultUsername, defaultUserDomain, defaultDisplayName } = this.props;
+        this.setState({ value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName) });
     }
 
     handleSelect({ result }: SearchResultData) {
@@ -91,7 +97,7 @@ class FindUserField extends React.PureComponent<Props, InternalState> {
             return;
         }
 
-        this.setState({ value: renderUser(i.username, i.displayName) });
+        this.setState({ value: renderUser(i.username, i.userDomain, i.displayName) });
 
         const { onSelect } = this.props;
         onSelect(i);

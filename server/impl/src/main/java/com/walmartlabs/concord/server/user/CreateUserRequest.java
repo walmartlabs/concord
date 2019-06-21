@@ -36,6 +36,9 @@ public class CreateUserRequest implements Serializable {
     @Size(max = UserEntry.MAX_USERNAME_LENGTH)
     private final String username;
 
+    @Size(max = UserEntry.MAX_DOMAIN_LENGTH)
+    private final String userDomain;
+
     @Size(max = UserEntry.MAX_DISPLAY_NAME_LENGTH)
     private final String displayName;
 
@@ -50,6 +53,7 @@ public class CreateUserRequest implements Serializable {
 
     @JsonCreator
     public CreateUserRequest(@JsonProperty("username") String username,
+                             @JsonProperty("userDomain") String userDomain,
                              @JsonProperty("displayName") String displayName,
                              @JsonProperty("email") String email,
                              @JsonProperty("userType") UserType type,
@@ -57,6 +61,7 @@ public class CreateUserRequest implements Serializable {
                              @JsonProperty("roles") Set<String> roles) {
 
         this.username = username;
+        this.userDomain = userDomain;
         this.displayName = displayName;
         this.email = email;
         this.type = type;
@@ -66,6 +71,10 @@ public class CreateUserRequest implements Serializable {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getUserDomain() {
+        return userDomain;
     }
 
     public String getDisplayName() {
@@ -92,6 +101,7 @@ public class CreateUserRequest implements Serializable {
     public String toString() {
         return "CreateUserRequest{" +
                 "username='" + username + '\'' +
+                ", userDomain='" + userDomain + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", email='" + email + '\'' +
                 ", type=" + type +

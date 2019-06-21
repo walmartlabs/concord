@@ -34,7 +34,9 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -64,14 +66,14 @@ public class PolicyResource implements Resource {
     private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
     private final PolicyDao policyDao;
-    private final UserDao userDao;
+    private final UserManager userManager;
     private final AuditLog auditLog;
 
     @Inject
     public PolicyResource(OrganizationManager orgManager,
                           OrganizationDao orgDao,
                           ProjectDao projectDao,
-                          UserDao userDao,
+                          UserManager userManager,
                           PolicyDao policyDao,
                           AuditLog auditLog) {
 
@@ -79,7 +81,7 @@ public class PolicyResource implements Resource {
         this.orgDao = orgDao;
         this.projectDao = projectDao;
         this.policyDao = policyDao;
-        this.userDao = userDao;
+        this.userManager = userManager;
         this.auditLog = auditLog;
     }
 
@@ -154,7 +156,7 @@ public class PolicyResource implements Resource {
     }
 
     @PUT
-    @ApiOperation("Link an existing policy to an organization or a project")
+    @ApiOperation("Link an existing policy to an organization, a project or user")
     @Path("/{policyName}/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -163,7 +165,9 @@ public class PolicyResource implements Resource {
 
         assertAdmin();
 
-        PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName(), entry.getUserName());
+        // TODO: add user type into request
+        UserType userType = UserPrincipal.assertCurrent().getType();
+        PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName(), entry.getUserName(), entry.getUserDomain(), userType);
         policyDao.link(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
@@ -183,11 +187,16 @@ public class PolicyResource implements Resource {
     public GenericOperationResult unlink(@ApiParam @PathParam("policyName") @ConcordKey String policyName,
                                          @ApiParam @QueryParam("orgName") @ConcordKey String orgName,
                                          @ApiParam @QueryParam("projectName") @ConcordKey String projectName,
-                                         @ApiParam @QueryParam("userName") @ConcordKey String userName) {
+                                         @ApiParam @QueryParam("userName") @ConcordKey String userName,
+                                         @ApiParam @QueryParam("userDomain") String domain,
+                                         @ApiParam @QueryParam("userType") UserType userType) {
 
         assertAdmin();
 
-        PolicyLink l = assertLink(policyName, orgName, projectName, userName);
+        if (userType == null) {
+            userType = UserPrincipal.assertCurrent().getType();
+        }
+        PolicyLink l = assertLink(policyName, orgName, projectName, userName, domain, userType);
         policyDao.unlink(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
@@ -201,12 +210,14 @@ public class PolicyResource implements Resource {
     }
 
     @GET
-    @ApiOperation(value = "List policies, optionally filtering by organization and/or project links", responseContainer = "list", response = PolicyEntry.class)
+    @ApiOperation(value = "List policies, optionally filtering by organization, project and/or user links", responseContainer = "list", response = PolicyEntry.class)
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public List<PolicyEntry> list(@ApiParam @QueryParam("orgName") @ConcordKey String orgName,
                                   @ApiParam @QueryParam("projectName") @ConcordKey String projectName,
-                                  @ApiParam @QueryParam("userName") @ConcordKey String userName) {
+                                  @ApiParam @QueryParam("userName") @ConcordKey String userName,
+                                  @ApiParam @QueryParam("userDomain") String userDomain,
+                                  @ApiParam @QueryParam("userType") UserType userType) {
 
         if (orgName == null && projectName == null && userName == null) {
             return policyDao.list();
@@ -234,7 +245,10 @@ public class PolicyResource implements Resource {
 
         UUID userId = null;
         if (userName != null) {
-            userId = assertUser(userName);
+            if (userType == null) {
+                userType = UserPrincipal.assertCurrent().getType();
+            }
+            userId = assertUser(userName, userDomain, userType);
         }
 
         PolicyEntry e = policyDao.getLinked(orgId, projectId, userId);
@@ -254,16 +268,12 @@ public class PolicyResource implements Resource {
         return id;
     }
 
-    private UUID assertUser(String userName) {
-        UUID id = userDao.getId(userName);
-        if (id == null) {
-            throw new ConcordApplicationException("User not found: " + userName, Status.BAD_REQUEST);
-        }
-
-        return id;
+    private UUID assertUser(String userName, String doamin, UserType userType) {
+        return userManager.getId(userName, doamin, userType)
+                .orElseThrow(() -> new ConcordApplicationException("User '" + userName + "' with domain '" + doamin + "' (" + userType + ") not found", Status.BAD_REQUEST));
     }
 
-    private PolicyLink assertLink(String policyName, String orgName, String projectName, String userName) {
+    private PolicyLink assertLink(String policyName, String orgName, String projectName, String userName, String domain, UserType userType) {
         UUID policyId = policyDao.getId(policyName);
         if (policyId == null) {
             throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
@@ -290,8 +300,8 @@ public class PolicyResource implements Resource {
         }
 
         UUID userId = null;
-        if (userName != null) {
-            userId = assertUser(userName);
+        if (userName != null && userType != null) {
+            userId = assertUser(userName, domain, userType);
         }
 
         return new PolicyLink(policyId, orgId, projectId, userId);

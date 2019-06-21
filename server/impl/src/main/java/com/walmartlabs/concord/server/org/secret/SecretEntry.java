@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.org.EntityOwner;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -62,7 +63,7 @@ public class SecretEntry implements Serializable {
 
     private final SecretVisibility visibility;
 
-    private final SecretOwner owner;
+    private final EntityOwner owner;
 
     @JsonCreator
     public SecretEntry(@JsonProperty("id") UUID id,
@@ -75,7 +76,7 @@ public class SecretEntry implements Serializable {
                        @JsonProperty("encryptedBy") SecretEncryptedByType encryptedBy,
                        @JsonProperty("storeType") String storeType,
                        @JsonProperty("visibility") SecretVisibility visibility,
-                       @JsonProperty("owner") SecretOwner owner) {
+                       @JsonProperty("owner") EntityOwner owner) {
 
         this.id = id;
         this.name = name;
@@ -130,7 +131,7 @@ public class SecretEntry implements Serializable {
         return visibility;
     }
 
-    public SecretOwner getOwner() {
+    public EntityOwner getOwner() {
         return owner;
     }
 

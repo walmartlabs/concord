@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
+import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -76,9 +77,10 @@ public class UserResource implements Resource {
 
         String username = req.getUsername();
 
-        UUID id = userDao.getId(username);
+        UserType type = assertUserType(req.getType());
+        UUID id = userManager.getId(username, req.getUserDomain(), type).orElse(null);
         if (id == null) {
-            UserEntry e = userManager.create(username, req.getDisplayName(), req.getEmail(), req.getType(), req.getRoles());
+            UserEntry e = userManager.create(username, req.getUserDomain(), req.getDisplayName(), req.getEmail(), req.getType(), req.getRoles());
             return new CreateUserResponse(e.getId(), OperationResult.CREATED);
         } else {
             userManager.update(id, req.getDisplayName(), req.getEmail(), req.getType(), req.isDisabled(), req.getRoles());
@@ -100,10 +102,12 @@ public class UserResource implements Resource {
     public UserEntry findByUsername(@PathParam("username") @ConcordUsername @Size(max = UserEntry.MAX_USERNAME_LENGTH) @NotNull String username) {
         assertAdmin();
 
-        UUID id = userDao.getId(username);
-        if (id == null) {
-            throw new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND);
-        }
+        // TODO: user type from request
+        UserType type = UserPrincipal.assertCurrent().getType();
+        // TODO: user domain from request
+        String userDomain = null;
+        UUID id = userManager.getId(username, userDomain, type)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND));
         return userDao.get(id);
     }
 
@@ -139,10 +143,12 @@ public class UserResource implements Resource {
                                                   @ApiParam @Valid UpdateUserRolesRequest req) {
         assertAdmin();
 
-        UUID id = userDao.getId(username);
-        if (id == null) {
-            throw new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND);
-        }
+        // TODO: type from request
+        UserType type = UserPrincipal.assertCurrent().getType();
+        // TODO: userDomain from request
+        String userDomain = null;
+        UUID id = userManager.getId(username, userDomain, type)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND));
 
         userDao.updateRoles(id, req.getRoles());
         return new GenericOperationResult(OperationResult.UPDATED);
@@ -152,5 +158,12 @@ public class UserResource implements Resource {
         if (!Roles.isAdmin()) {
             throw new UnauthorizedException("Only admins can do that");
         }
+    }
+
+    private static UserType assertUserType(UserType type) {
+        if (type != null) {
+            return type;
+        }
+        return UserPrincipal.assertCurrent().getType();
     }
 }

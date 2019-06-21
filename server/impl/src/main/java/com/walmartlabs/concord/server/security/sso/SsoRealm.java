@@ -68,24 +68,28 @@ public class SsoRealm extends AuthorizingRealm {
     @WithTimer
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         SsoToken t = (SsoToken) token;
-        String username = t.getLogin();
 
-        UserEntry u = userManager.getOrCreate(username, UserType.LDAP);
+        if (t.getUsername() == null) {
+            return null;
+        }
 
         LdapPrincipal ldapPrincipal;
         try {
-            ldapPrincipal = ldapManager.getPrincipal(username);
+            ldapPrincipal = ldapManager.getPrincipal(t.getUsername(), t.getDomain());
         } catch (Exception e) {
             throw new AuthenticationException("LDAP error", e);
         }
 
         if (ldapPrincipal == null) {
-            throw new AuthenticationException("LDAP data not found: " + username);
+            throw new AuthenticationException("LDAP data not found: " + t.getUsername() + "@" + t.getDomain());
         }
+
+        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP);
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(u.getId())
                 .field("username", u.getName())
+                .field("userDomain", u.getDomain())
                 .field("realm", REALM_NAME)
                 .log();
 

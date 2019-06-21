@@ -26,6 +26,9 @@ import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.user.User;
+import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -42,6 +45,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -240,7 +244,11 @@ public class TeamResource implements Resource {
             throw new ValidationErrorsException("Empty user list");
         }
 
-        teamManager.removeUsers(orgName, teamName, usernames);
+        // TODO: add user type into request params
+        UserType type = UserPrincipal.assertCurrent().getType();
+        // TODO: add user domain into request params
+        String domain = null;
+        teamManager.removeUsers(orgName, teamName, usernames.stream().map(n -> User.of(n, domain, type)).collect(Collectors.toList()));
         return new RemoveTeamUsersResponse();
     }
 
