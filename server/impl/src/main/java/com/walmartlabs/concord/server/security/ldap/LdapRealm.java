@@ -44,6 +44,7 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
 
 @Named
@@ -58,6 +59,7 @@ public class LdapRealm extends AbstractLdapRealm {
     private final LdapGroupManager ldapGroupManager;
     private final LdapContextFactory ldapContextFactory;
     private final AuditLog auditLog;
+    private final LdapConfiguration cfg;
 
     @Inject
     public LdapRealm(LdapConfiguration cfg,
@@ -67,6 +69,7 @@ public class LdapRealm extends AbstractLdapRealm {
                      LdapGroupManager ldapGroupManager,
                      AuditLog auditLog) {
 
+        this.cfg = cfg;
         this.userManager = userManager;
         this.ldapManager = ldapManager;
         this.ldapGroupManager = ldapGroupManager;
@@ -107,6 +110,13 @@ public class LdapRealm extends AbstractLdapRealm {
         LdapPrincipal ldapPrincipal = getPrincipal(t);
         if (ldapPrincipal == null) {
             throw new AuthenticationException("LDAP data not found: " + t.getUsername());
+        }
+
+        if (!cfg.isAutoCreateUsers()) {
+            Optional<UUID> id = userManager.getId(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP);
+            if (!id.isPresent()) {
+                throw new AuthenticationException("Automatic creation of users is disabled.");
+            }
         }
 
         // TODO merge getOrCreate+update operations into a single one (only for this use case)
