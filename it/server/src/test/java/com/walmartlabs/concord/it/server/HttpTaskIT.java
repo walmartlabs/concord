@@ -25,6 +25,7 @@ import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
+import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
@@ -55,6 +56,7 @@ public class HttpTaskIT extends AbstractServerIT {
     private static final String mockHttpAuthUser = "cn=test";
     private static final String mockHttpAuthPassword = "password";
     private static final String mockHttpPathPing = "/api/v1/server/ping";
+    private static final String mockHttpPathQueryParams = "/query";
     private static final String mockHttpPathToken = "/token";
     private static final String mockHttpPathPassword = "/password";
     private static final String mockHttpPathHeaders = "/headers";
@@ -70,12 +72,13 @@ public class HttpTaskIT extends AbstractServerIT {
 
     @Rule
     public WireMockRule rule = new WireMockRule(WireMockConfiguration.options()
-            .extensions(new RequestHeaders())
+            .extensions(new RequestHeaders(), new ResponseTemplateTransformer(false))
             .dynamicPort());
 
     @Before
     public void setup() {
         stubForGetAsStringEndpoint(mockHttpPathPing);
+        stubForGetWithQueryEndpoint(mockHttpPathQueryParams);
         stubForGetSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
         stubForPostSecureEndpoint(mockHttpAuthUser, mockHttpAuthPassword, mockHttpPathPassword);
         stubForGetSecureTokenEndpoint(mockHttpAuthToken, mockHttpPathToken);
@@ -130,6 +133,51 @@ public class HttpTaskIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Success response.*", ab);
         assertLog(".*Out Response: true*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testGetAsDefaultMethod() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpGetAsDefaultMethod").toURI();
+        byte[] payload = archive(dir);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.url", SERVER_URL + mockHttpPathPing);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Request method: GET*", ab);
+        assertLog(".*Success response.*", ab);
+        assertLog(".*Out Response: true*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testGetWithQueryParams() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpGetWithQueryParams").toURI();
+        byte[] payload = archive(dir);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathQueryParams);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Success response.*", ab);
+        assertLog(".*message: hello concord!*", ab);
+        assertLog(".*multi-value-1: value1*", ab);
+        assertLog(".*multi-value-2: value2*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -352,6 +400,21 @@ public class HttpTaskIT extends AbstractServerIT {
                                 "  \"Success\": \"true\"\n" +
                                 "}"))
         );
+    }
+
+    private void stubForGetWithQueryEndpoint(String url) {
+        // Use response templating because of multi-value params limitation in WireMock
+        rule.stubFor(get(urlPathEqualTo(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("{\n" +
+                                " \"message\": \"{{request.requestLine.query.message}}\", " +
+                                " \"multiValue1\": \"{{request.requestLine.query.multiValue.[0]}}\", " +
+                                " \"multiValue2\": \"{{request.requestLine.query.multiValue.[1]}}\"" +
+                                "}")
+                        .withTransformers("response-template"))
+        );
+
     }
 
     private void stubForGetSecureEndpoint(String user, String password, String url) {
