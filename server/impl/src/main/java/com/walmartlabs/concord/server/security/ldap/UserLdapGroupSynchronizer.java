@@ -85,7 +85,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     private void processUser(UserItem u) {
         try {
-            Set<String> groups = ldapManager.getGroups(u.username);
+            Set<String> groups = ldapManager.getGroups(u.username, u.domain);
             if (groups == null) {
                 userDao.disable(u.userId);
                 log.info("processUser ['{}'] -> not found in LDAP, user is disabled", u.username);
@@ -106,13 +106,13 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         }
 
         public List<UserItem> list(int limit, Field<Timestamp> cutoff) {
-            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME)
+            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN)
                     .from(USERS)
                     .where(USERS.USER_TYPE.eq(UserType.LDAP.name()))
                     .and(USERS.LAST_GROUP_SYNC_DT.isNull().or(USERS.LAST_GROUP_SYNC_DT.lessThan(cutoff)))
                     .and(USERS.IS_DISABLED.isFalse())
                     .limit(limit)
-                    .fetch(r -> new UserItem(r.value1(), r.value2())));
+                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3())));
         }
     }
 
@@ -120,10 +120,12 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
         private final UUID userId;
         private final String username;
+        private final String domain;
 
-        private UserItem(UUID userId, String username) {
+        private UserItem(UUID userId, String username, String domain) {
             this.userId = userId;
             this.username = username;
+            this.domain = domain;
         }
     }
 }

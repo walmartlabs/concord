@@ -75,11 +75,11 @@ public class LdapManager {
                         .build());
     }
 
-    public Set<String> getGroups(String username) throws NamingException {
+    public Set<String> getGroups(String username, String domain) throws NamingException {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-            return getGroups(ctx, username);
+            return getGroups(ctx, username, domain);
         } catch (Exception e) {
             log.warn("getGroups ['{}'] -> error while retrieving LDAP data: {}", username, e.getMessage(), e);
             throw e;
@@ -88,13 +88,13 @@ public class LdapManager {
         }
     }
 
-    public Set<String> getGroups(LdapContext ctx, String username) throws NamingException {
-        SearchControls searchCtls = new SearchControls();
-        searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        searchCtls.setReturningAttributes(new String[]{MEMBER_OF_ATTR});
-        Object[] args = new Object[]{username};
+    public Set<String> getGroups(LdapContext ctx, String username, String domain) throws NamingException {
+        SearchControls ctls = new SearchControls();
+        ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        ctls.setReturningAttributes(new String[]{MEMBER_OF_ATTR});
 
-        NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, searchCtls);
+        Object[] args = new Object[]{normalizeUsername(username, domain)};
+        NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
         if (!answer.hasMoreElements()) {
             return null;
         }
