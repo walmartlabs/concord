@@ -4,6 +4,7 @@
 
 ### Added
 
+- http: support for query parameters;
 - concord-server: option to disable automatic user creation for
 the LDAP realm;
 - concord-console: display error details for `FAILED` processes;
@@ -17,6 +18,7 @@ triggers;
 
 ### Changed
 
+- http: make `method: GET` default;
 - concord-server: drop the `process_checkpoint` to `process_queue`
 FK, use a cleaning job instead. Enabled usage of partitioning for
 the `process_checkpoints` table;
@@ -25,6 +27,7 @@ the `process_checkpoints` table;
 default. Fixes the issue with Unicode passwords;
 - concord-server: correctly pass the parent's `requirements` when
 forking a process.
+
 
 
 ## [1.23.0] - 2019-05-17

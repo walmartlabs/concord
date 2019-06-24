@@ -23,7 +23,9 @@ package com.walmartlabs.concord.plugins.http;
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import com.walmartlabs.concord.sdk.Context;
+import org.apache.http.client.utils.URIBuilder;
 
+import java.util.Collection;
 import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
@@ -191,7 +193,7 @@ public class Configuration {
         private RequestType requestType;
         private ResponseType responseType;
         private String workDir;
-        private RequestMethodType methodType;
+        private RequestMethodType methodType = RequestMethodType.GET;
         private Map<String, String> requestHeaders;
         private Object body;
         private Integer connectTimeout = 30000;
@@ -352,8 +354,6 @@ public class Configuration {
         public Configuration build() {
             if (this.url == null || this.url.isEmpty()) {
                 throw new IllegalArgumentException("URL is missing");
-            } else if (this.methodType == null) {
-                throw new IllegalArgumentException("Http request method is missing");
             } else if (responseType == ResponseType.FILE && (workDir == null || workDir.isEmpty())) {
                 throw new IllegalArgumentException("Working directory is mandatory for ResponseType FILE");
             } else if (this.methodType == RequestMethodType.POST && (this.body == null)) {
@@ -371,17 +371,36 @@ public class Configuration {
          *
          * @param ctx context use to build the configuration
          * @return new instance of this {@link Configuration}
+         * @throws Exception
          */
         @SuppressWarnings("unchecked")
-        public Configuration build(Context ctx) {
+        public Configuration build(Context ctx) throws Exception {
             validateMandatory(ctx);
 
             this.url = (String) ctx.getVariable(URL_KEY);
 
-            if (RequestMethodType.isMember((String) ctx.getVariable(METHOD_KEY))) {
-                this.methodType = RequestMethodType.valueOf(((String) ctx.getVariable(METHOD_KEY)).toUpperCase());
-            } else {
-                throw new IllegalArgumentException("'" + METHOD_KEY + ": " + ctx.getVariable(METHOD_KEY) + "' is not valid");
+            if (ctx.getVariable(QUERY_KEY) != null) {
+                Map<String, Object> queryParams = (Map<String, Object>) ctx.getVariable(QUERY_KEY);
+
+                URIBuilder uriBuilder = new URIBuilder(url);
+                queryParams.forEach((k, v) -> {
+                    if (v instanceof Collection) {
+                        ((Collection<String>) v).forEach(item -> uriBuilder.addParameter(k, item));
+                    } else {
+                        uriBuilder.setParameter(k, (String) v);
+                    }
+                });
+
+                this.url = uriBuilder.build().toURL().toString();
+            }
+
+            // method param is optional
+            if (ctx.getVariable(METHOD_KEY) != null) {
+                if (RequestMethodType.isMember((String) ctx.getVariable(METHOD_KEY))) {
+                    this.methodType = RequestMethodType.valueOf(((String) ctx.getVariable(METHOD_KEY)).toUpperCase());
+                } else {
+                    throw new IllegalArgumentException("'" + METHOD_KEY + ": " + ctx.getVariable(METHOD_KEY) + "' is not valid");
+                }
             }
 
             // auth param is optional
@@ -450,9 +469,7 @@ public class Configuration {
          * @param ctx context which contains the mandatory arguments
          */
         private void validateMandatory(Context ctx) {
-            if (ctx.getVariable(METHOD_KEY) == null) {
-                throw new IllegalArgumentException("('" + METHOD_KEY + "') argument is missing");
-            } else if (ctx.getVariable(URL_KEY) == null) {
+            if (ctx.getVariable(URL_KEY) == null) {
                 throw new IllegalArgumentException("('" + URL_KEY + "') argument is missing");
             } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD_KEY)) && ctx.getVariable(REQUEST_KEY) == null) {
                 throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");

@@ -1,0 +1,23 @@
+flows:
+  default:
+  - try:
+    - task: http
+      in:
+        method: GET
+        url: ${url}
+        query:
+          message: "hello concord!"
+          multiValue:
+          - "value1"
+          - "value2"
+        response: json
+        out: rsp
+    - log: "message: ${rsp.content.message}"
+    - log: "multi-value-1: ${rsp.content.multiValue1}"
+    - log: "multi-value-2: ${rsp.content.multiValue2}"
+    error:
+    - log: "Gotcha! ${lastError}"
+
+configuration:
+  arguments:
+    url: "http://localhost:8001"

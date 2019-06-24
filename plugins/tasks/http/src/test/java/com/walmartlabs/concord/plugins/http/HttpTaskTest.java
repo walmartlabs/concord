@@ -63,6 +63,17 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     }
 
     @Test
+    public void testExecuteGetRequestWithQueryParams() throws Exception {
+        Map<String, Object> queryParams = new HashMap<>();
+        queryParams.put("key", "value with space");
+
+        initCxtForRequest(mockContext, "GET", queryParams, null, "string",
+                "http://localhost:" + rule.port() + "/query", false, 0);
+        task.execute(mockContext);
+        verify(getRequestedFor(urlPathEqualTo("/query")).withQueryParam("key", equalTo("value with space")));
+    }
+
+    @Test
     public void testExecutePostRequestForJson() throws Exception {
         initCxtForRequest(mockContext, "POST", "json", "json",
                 "http://localhost:" + rule.port() + "/post", false, 0);
@@ -103,6 +114,15 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentExceptionForRequest() throws Exception {
         task.execute(mockContext);
+    }
+
+    @Test
+    public void testGetAsDefaultRequestMethod() throws Exception {
+        initCxtForRequest(mockContext, null, "json", "json",
+                "http://localhost:" + rule.port() + "/json", false, 0);
+        task.execute(mockContext);
+        assertNotNull(response);
+        assertNotNull(response.get("content"));
     }
 
     @Test

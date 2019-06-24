@@ -62,6 +62,7 @@ public abstract class AbstractHttpTaskTest {
         stubForStringResponse();
         stubForPostRequest();
         stubForGetSecureEndpoint();
+        stubForGetWithQueryParams();
         stubForPostSecureEndpoint();
         stubForPostRequestForRequestTypeFile();
         stubForGetRequestForResponseTypeStringFile();
@@ -79,11 +80,17 @@ public abstract class AbstractHttpTaskTest {
         response = null;
     }
 
-    @SuppressWarnings("unchecked")
     protected void initCxtForRequest(Context ctx, String requestMethod, String requestType, String responseType,
+                                     String url, boolean ignoreErrors, int requestTimeout) {
+        initCxtForRequest(ctx, requestMethod, null, requestType, responseType, url, ignoreErrors, requestTimeout);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void initCxtForRequest(Context ctx, String requestMethod, Map<String, Object> query, String requestType, String responseType,
                                      String url, boolean ignoreErrors, int requestTimeout) {
         when(ctx.getVariable("url")).thenReturn(url);
         when(ctx.getVariable("method")).thenReturn(requestMethod);
+        when(ctx.getVariable("query")).thenReturn(query);
         when(ctx.getVariable("request")).thenReturn(requestType);
         when(ctx.getVariable("response")).thenReturn(responseType);
         when(ctx.getVariable("out")).thenReturn("rsp");
@@ -152,6 +159,15 @@ public abstract class AbstractHttpTaskTest {
                 .willReturn(aResponse()
                         .withStatus(401)
                         .withBody("Unauthorized"))
+        );
+    }
+
+    protected void stubForGetWithQueryParams() {
+        rule.stubFor(get(urlPathEqualTo("/query"))
+                .withQueryParam("key", equalTo("value with space"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("Success response"))
         );
     }
 

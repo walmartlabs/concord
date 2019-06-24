@@ -1,0 +1,15 @@
+flows:
+  default:
+  - try:
+    - task: http
+      in:
+        url: ${url}
+        response: json
+        out: rsp
+    - log: "Out Response: ${rsp.success}"
+    error:
+    - log: "Gotcha! ${lastError}"
+
+configuration:
+  arguments:
+    url: "http://localhost:8001"

@@ -58,11 +58,9 @@ public class HttpTask implements Task {
      * @throws IOException exception
      */
     public String asString(String url) throws Exception {
-        Configuration configuration = Configuration.custom().withUrl(url)
-                .withMethodType(RequestMethodType.GET)
-                .build();
+        Configuration config = Configuration.custom().withUrl(url).build();
 
-        return (String) executeRequest(configuration).get(CONTENT_KEY);
+        return (String) executeRequest(config).get(CONTENT_KEY);
     }
 
     /**
@@ -157,6 +155,7 @@ public class HttpTask implements Task {
         static final String CONTENT_KEY = "content";
         static final String DEBUG_KEY = "debug";
         static final String HEADERS_KEY = "headers";
+        static final String QUERY_KEY = "query";
         static final String IGNORE_ERRORS_KEY = "ignoreErrors";
         static final String METHOD_KEY = "method";
         static final String OUT_KEY = "out";
