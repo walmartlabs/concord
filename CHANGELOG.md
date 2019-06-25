@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: automatic reload of `defaultConfiguration` file
+without restart;
 - http: support for query parameters;
 - concord-server: option to disable automatic user creation for
 the LDAP realm;

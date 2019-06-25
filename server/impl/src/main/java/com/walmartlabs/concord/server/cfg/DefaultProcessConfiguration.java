@@ -20,8 +20,10 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.ollie.config.Config;
 import org.eclipse.sisu.Nullable;
 import org.slf4j.Logger;
@@ -30,48 +32,69 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Default values for {@code configuration} object in processes.
  */
 @Named
 @Singleton
-public class DefaultProcessConfiguration {
+public class DefaultProcessConfiguration implements FileChangeNotifier.FileChangeListener {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultProcessConfiguration.class);
 
-    private final Map<String, Object> cfg;
+    private static final TypeReference<Map<String, Object>> CFG_TYPE = new TypeReference<Map<String, Object>>() {
+    };
+
+    private final Object mutex = new Object();
+    private Map<String, Object> cfg;
 
     @Inject
-    @SuppressWarnings("unchecked")
-    public DefaultProcessConfiguration(@Config("process.defaultConfiguration") @Nullable String path) throws IOException {
+    public DefaultProcessConfiguration(@Config("process.defaultConfiguration") @Nullable String path) {
         if (path == null) {
-            log.warn("init -> no default process configuration");
             this.cfg = Collections.emptyMap();
+            log.warn("init -> no default process configuration");
             return;
         }
 
-        log.info("init -> using external default process configuration: {}", path);
+        FileChangeNotifier changeNotifier = new FileChangeNotifier(Paths.get(path), this);
+        changeNotifier.start();
 
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try (InputStream in = Files.newInputStream(Paths.get(path))) {
-            this.cfg = Optional.ofNullable(mapper.readValue(in, Map.class)).orElse(Collections.emptyMap());
+        this.cfg = Collections.emptyMap();
+        log.info("init -> using external default process configuration: {}", path);
+    }
+
+    public Map<String, Object> getCfg() {
+        synchronized (mutex) {
+            return MapUtils.getMap(cfg, "configuration", Collections.emptyMap());
         }
     }
 
-    @SuppressWarnings(value = "unchecked")
-    public Map<String, Object> getCfg() {
-        if (cfg.get("configuration") == null) {
-            return Collections.emptyMap();
+    @Override
+    public void onChange(Path file) {
+        Map<String, Object> newCfg = readCfg(file);
+        if (newCfg == null) {
+            return;
         }
+        log.info("onChange ['{}'] -> default process configuration changed", file);
+        synchronized (mutex) {
+            this.cfg = newCfg;
+        }
+    }
 
-        return (Map<String, Object>) cfg.get("configuration");
+    private static Map<String, Object> readCfg(Path path) {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try (InputStream in = Files.newInputStream(path)) {
+            Map<String, Object> cfg = mapper.readValue(in, CFG_TYPE);
+            return cfg != null ? cfg : Collections.emptyMap();
+        } catch (Exception e) {
+            log.warn("readCfg ['{}'] -> error while reading the configuration file: {}", path, e.getMessage());
+            return null;
+        }
     }
 }
