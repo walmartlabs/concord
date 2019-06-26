@@ -62,10 +62,16 @@ public class DefaultProcessConfiguration implements FileChangeNotifier.FileChang
             return;
         }
 
+        this.cfg = Collections.emptyMap();
+
+        Map<String, Object> currentCfg = readCfg(Paths.get(path));
+        if (currentCfg != null) {
+            this.cfg = currentCfg;
+        }
+
         FileChangeNotifier changeNotifier = new FileChangeNotifier(Paths.get(path), this);
         changeNotifier.start();
 
-        this.cfg = Collections.emptyMap();
         log.info("init -> using external default process configuration: {}", path);
     }
 
