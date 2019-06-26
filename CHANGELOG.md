@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed the initial loading of default process
+configuration.
+
+
+
 ## [1.24.0] - 2019-05-25
 
 ### Added
