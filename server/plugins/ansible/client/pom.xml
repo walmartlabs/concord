@@ -55,6 +55,7 @@
                 <groupId>io.takari.maven.plugins</groupId>
                 <artifactId>takari-lifecycle-plugin</artifactId>
                 <configuration>
+                    <privatePackageReference>ignore</privatePackageReference>
                     <proc>proc</proc>
                 </configuration>
             </plugin>

@@ -82,8 +82,8 @@
         <glassfish.el.version>3.0.1-b11</glassfish.el.version>
         <greenmail.version>1.5.10</greenmail.version>
         <groovy.version>2.4.11</groovy.version>
-        <gson.fire.version>1.8.0</gson.fire.version>
-        <gson.version>2.8.0</gson.version> <!-- updates break concord-client codegen -->
+        <gson.fire.version>1.8.3</gson.fire.version>
+        <gson.version>2.8.5</gson.version>
         <guava.version>25.1-jre</guava.version>
         <guice.version>4.2.2</guice.version>
         <hikaricp.version>3.3.1</hikaricp.version>
