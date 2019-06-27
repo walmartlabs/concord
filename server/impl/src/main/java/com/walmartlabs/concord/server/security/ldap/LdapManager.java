@@ -163,12 +163,7 @@ public class LdapManager {
                     "Try using a fully-qualified username.");
         }
 
-        LdapPrincipal result = b.build();
-        if (!getUsername(username).equals(result.getUsername())) {
-            throw new RuntimeException("LDAP error, requested username '" + username + "' and result username mismatch '" + result.getUsername() + "' (" + result.getUserPrincipalName() + ")");
-        }
-
-        return result;
+        return b.build();
     }
 
     private <E> List<E> search(String filter, String searchFilter, String[] returningAttributes, Function<Map<String, String>, E> converter) throws NamingException {

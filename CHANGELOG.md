@@ -4,6 +4,9 @@
 
 ### Changed
 
+- concord-server: fixed the login when format of usernames
+provided by users didn't match the data returned by the AD/LDAP
+server;
 - concord-server: fixed the initial loading of default process
 configuration.
 
