@@ -55,6 +55,10 @@ public class UserDao extends AbstractDao {
         UUID userId = tx.insertInto(USERS)
                 .columns(USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
                 .values(username, domain, displayName, email, type.toString())
+                .onConflict(USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE)
+                .doUpdate()
+                .set(USERS.DISPLAY_NAME, displayName)
+                .set(USERS.USER_EMAIL, email)
                 .returning(USERS.USER_ID)
                 .fetchOne().getUserId();
 

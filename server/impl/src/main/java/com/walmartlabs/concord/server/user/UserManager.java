@@ -49,21 +49,21 @@ public class UserManager {
     }
 
     public UserEntry getOrCreate(String username, String userDomain, UserType type) {
+        UserEntry result = get(username, userDomain, type);
+        if (result != null) {
+            return result;
+        }
+
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UUID id = userDao.getId(username, userDomain, type);
-        if (id != null) {
-            return userDao.get(id);
-        }
-
-        // TODO: remove me when all users migrated
-        if (userDomain != null) {
-            id = userDao.getId(username, null, type);
-            if (id != null) {
-                userDao.updateDomain(id, userDomain);
-                return userDao.get(id);
+        UserInfoProvider provider = assertProvider(type);
+        UserInfo info = provider.getInfo(null, username, userDomain);
+        if (info != null) {
+            result = get(info.username(), info.userDomain(), type);
+            if (result != null) {
+                return result;
             }
         }
 
@@ -116,6 +116,28 @@ public class UserManager {
     public UserInfo getInfo(String username, String domain, UserType type) {
         UserInfoProvider p = assertProvider(type);
         return p.getInfo(null, username, domain);
+    }
+
+    private UserEntry get(String username, String userDomain, UserType type) {
+        if (type == null) {
+            type = UserPrincipal.assertCurrent().getType();
+        }
+
+        UUID id = userDao.getId(username, userDomain, type);
+        if (id != null) {
+            return userDao.get(id);
+        }
+
+        // TODO: remove me when all users migrated
+        if (userDomain != null) {
+            id = userDao.getId(username, null, type);
+            if (id != null) {
+                userDao.updateDomain(id, userDomain);
+                return userDao.get(id);
+            }
+        }
+
+        return null;
     }
 
     private UserInfoProvider assertProvider(UserType type) {
