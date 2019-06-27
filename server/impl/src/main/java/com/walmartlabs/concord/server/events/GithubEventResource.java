@@ -34,7 +34,11 @@ import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.github.GithubKey;
+import com.walmartlabs.concord.server.security.ldap.LdapManager;
+import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
+import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
+import com.walmartlabs.concord.server.user.UserType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -45,6 +49,7 @@ import org.sonatype.siesta.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.naming.NamingException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -90,6 +95,8 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private final RepositoryDao repositoryDao;
     private final GithubConfiguration githubCfg;
     private final EncryptedProjectValueManager encryptedValueManager;
+    private final LdapManager ldapManager;
+    private final UserManager userManager;
 
     @Inject
     public GithubEventResource(ExternalEventsConfiguration cfg,
@@ -100,7 +107,9 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                EncryptedProjectValueManager encryptedValueManager,
                                TriggersConfiguration triggersConfiguration,
                                UserManager userManager,
-                               GithubConfiguration githubCfg) {
+                               GithubConfiguration githubCfg,
+                               LdapManager ldapManager,
+                               UserManager userManager1) {
 
         super(cfg, processManager, triggersDao, projectDao, repositoryDao,
                 new GithubTriggerDefinitionEnricher(projectDao, githubCfg),
@@ -110,6 +119,8 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         this.repositoryDao = repositoryDao;
         this.githubCfg = githubCfg;
         this.encryptedValueManager = encryptedValueManager;
+        this.ldapManager = ldapManager;
+        this.userManager = userManager1;
     }
 
     @POST
@@ -238,6 +249,27 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         return Base64.getEncoder().withoutPadding().encodeToString(ab);
     }
 
+    @Override
+    protected UserEntry getOrCreateUserEntry(Map<String, Object> event) {
+        if (!githubCfg.isUseSenderLdapDn()) {
+            return super.getOrCreateUserEntry(event);
+        }
+
+        String ldapDn = getSenderLdapDn(event);
+        if (ldapDn == null) {
+            log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", event);
+            return super.getOrCreateUserEntry(event);
+        }
+
+        // only LDAP users are supported in GitHub triggers
+        try {
+            LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
+            return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP);
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static class RepositoryItem {
 
         private final UUID id;
@@ -357,6 +389,21 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         }
 
         return (String) sender.get("login");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String getSenderLdapDn(Map<String, Object> event) {
+        Map<String, Object> payload = (Map<String, Object>) event.get("payload");
+        if (payload == null) {
+            return null;
+        }
+
+        Map<String, Object> sender = (Map<String, Object>) payload.get("sender");
+        if (sender == null) {
+            return null;
+        }
+
+        return (String) sender.get("ldap_dn");
     }
 
     private static class GithubTriggerDefinitionEnricher implements TriggerDefinitionEnricher {

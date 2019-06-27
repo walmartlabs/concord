@@ -122,7 +122,21 @@ public class LdapManager {
         LdapContext ctx = null;
         try {
             ctx = ctxFactory.getSystemLdapContext();
-            return getPrincipal(ctx, username, domain);
+            return getPrincipal(new SearchFn(ctx) {
+
+                @Override
+                public NamingEnumeration lookup(SearchControls ctls) throws NamingException {
+                    Object[] args = new Object[]{normalizeUsername(username, domain)};
+                    return ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
+                }
+
+                @Override
+                public void handleNonUniqueResult() {
+                    log.error("getPrincipal ['{}', '{}'] -> non unique results", username, domain);
+                    throw new RuntimeException("LDAP error, non unique result found for username: '" + username + "'. " +
+                            "Try using a fully-qualified username.");
+                }
+            });
         } catch (Exception e) {
             log.warn("getPrincipal ['{}', '{}'] -> error while retrieving LDAP data: {}", username, domain, e.getMessage(), e);
             throw e;
@@ -131,15 +145,46 @@ public class LdapManager {
         }
     }
 
-    private LdapPrincipal getPrincipal(LdapContext ctx, String username, String domain) throws NamingException {
+    public LdapPrincipal getPrincipalByDn(String dn) throws NamingException {
+        int idx = dn.indexOf(",");
+        if (idx < 0 || idx + 1 > dn.length()) {
+            throw new IllegalArgumentException("Invalid LDAP DN: " + dn);
+        }
+
+        String searchDn = dn.substring(0, idx);
+        String baseDn = dn.substring(idx + 1);
+
+        LdapContext ctx = null;
+        try {
+            ctx = ctxFactory.getSystemLdapContext();
+            return getPrincipal(new SearchFn(ctx) {
+                @Override
+                public NamingEnumeration lookup(SearchControls ctls) throws NamingException {
+                    return ctx.search(baseDn, searchDn, ctls);
+                }
+
+                @Override
+                public void handleNonUniqueResult() {
+                    log.error("getPrincipalByDn ['{}'] -> non unique results", dn);
+                    throw new RuntimeException("LDAP error, non unique result found for DN: '" + dn + "'.");
+                }
+            });
+        } catch (Exception e) {
+            log.warn("getPrincipalByDn ['{}'] -> error while retrieving LDAP data: {}", dn, e.getMessage(), e);
+            throw e;
+        } finally {
+            LdapUtils.closeContext(ctx);
+        }
+    }
+
+    private LdapPrincipal getPrincipal(SearchFn searchFn) throws NamingException {
         SearchControls ctls = new SearchControls();
         ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         if (cfg.getReturningAttributes() != null && !cfg.getReturningAttributes().isEmpty()) {
             ctls.setReturningAttributes(cfg.getReturningAttributes().toArray(new String[0]));
         }
 
-        Object[] args = new Object[]{normalizeUsername(username, domain)};
-        NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
+        NamingEnumeration answer = searchFn.lookup(ctls);
         if (!answer.hasMoreElements()) {
             return null;
         }
@@ -159,9 +204,7 @@ public class LdapManager {
         }
 
         if (answer.hasMoreElements()) {
-            log.error("getPrincipal ['{}', '{}'] -> non unique results", username, domain);
-            throw new RuntimeException("LDAP error, non unique result found for username: '" + username + "'. " +
-                    "Try using a fully-qualified username.");
+            searchFn.handleNonUniqueResult();
         }
 
         return b.build();
@@ -286,6 +329,19 @@ public class LdapManager {
             return upn.substring(0, pos);
         }
         return upn;
+    }
+
+    private static abstract class SearchFn {
+
+        protected final LdapContext ctx;
+
+        protected SearchFn(LdapContext ctx) {
+            this.ctx = ctx;
+        }
+
+        public abstract NamingEnumeration lookup(SearchControls ctls) throws NamingException;
+
+        public abstract void handleNonUniqueResult();
     }
 
     private static final class LdapPrincipalBuilder {
