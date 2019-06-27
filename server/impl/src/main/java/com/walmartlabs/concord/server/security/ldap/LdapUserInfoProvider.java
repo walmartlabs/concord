@@ -75,17 +75,6 @@ public class LdapUserInfoProvider implements UserInfoProvider {
         return userDao.insert(info.username(), info.userDomain(), info.displayName(), info.email(), UserType.LDAP, roles);
     }
 
-    private static boolean isUpn(String username) {
-        return username.contains("@");
-    }
-
-    private static String getUserLogonName(String username) {
-        if (!isUpn(username)) {
-            return username;
-        }
-        return username.substring(0, username.indexOf("@"));
-    }
-
     private static UserInfo buildInfo(UUID id, LdapPrincipal p) {
         if (p == null) {
             return null;

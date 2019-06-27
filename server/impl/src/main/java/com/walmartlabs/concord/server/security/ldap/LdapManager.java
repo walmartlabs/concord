@@ -159,6 +159,7 @@ public class LdapManager {
         }
 
         if (answer.hasMoreElements()) {
+            log.error("getPrincipal ['{}', '{}'] -> non unique results", username, domain);
             throw new RuntimeException("LDAP error, non unique result found for username: '" + username + "'. " +
                     "Try using a fully-qualified username.");
         }
