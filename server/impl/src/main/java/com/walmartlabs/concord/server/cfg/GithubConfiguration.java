@@ -45,6 +45,10 @@ public class GithubConfiguration {
     @Config("github.defaultFilter")
     private Map<String, Object> defaultFilter;
 
+    @Inject
+    @Config("github.useSenderLdapDn")
+    private boolean useSenderLdapDn;
+
     public String getSecret() {
         return secret;
     }
@@ -55,5 +59,9 @@ public class GithubConfiguration {
 
     public Map<String, Object> getDefaultFilter() {
         return defaultFilter;
+    }
+
+    public boolean isUseSenderLdapDn() {
+        return useSenderLdapDn;
     }
 }

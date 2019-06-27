@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: use GitHub event's `ldap_dn` to determine the
+event's initiator.
+
+
+
 ## [1.24.1] - 2019-06-27
 
 ### Changed

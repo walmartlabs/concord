@@ -184,6 +184,11 @@ public abstract class AbstractEventResource {
             return initiator.getUser();
         }
 
+        return getOrCreateUserEntry(event);
+    }
+
+    protected UserEntry getOrCreateUserEntry(Map<String, Object> event) {
+        // TODO make sure all event resources perform the user lookup correctly, e.g. using correct input data
         String author = event.getOrDefault("author", "").toString();
         return userManager.getOrCreate(author, null, UserType.LDAP);
     }
