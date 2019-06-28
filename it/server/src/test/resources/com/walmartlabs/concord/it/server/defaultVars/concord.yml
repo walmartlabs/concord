@@ -1,0 +1,3 @@
+flows:
+  default:
+  - log: "Default vars: ${testDefaultVars.var1}"
