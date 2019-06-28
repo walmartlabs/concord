@@ -26,6 +26,7 @@
         <docker.host.addr>localhost</docker.host.addr>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
         <it.server.port>8001</it.server.port>
+        <is.docker.profile>false</is.docker.profile>
         <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
         <tmp.dir>${java.io.tmpdir}</tmp.dir>
         <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
@@ -203,6 +204,7 @@
                     </environmentVariables>
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
+                        <isDocker>${is.docker.profile}</isDocker>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -339,6 +341,9 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
+            <properties>
+                <is.docker.profile>true</is.docker.profile>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -447,6 +452,8 @@
                                                 <volume>${deps.dir.src.mount}:${deps.dir}:ro</volume>
                                                 <!-- provide the server's cfg -->
                                                 <volume>${base.dir}/src/test/resources/server.conf:/opt/concord/conf/server.conf:ro</volume>
+                                                <!-- provide the default process variables cfg -->
+                                                <volume>${base.dir}/src/test/resources/default_vars.yml:/opt/concord/conf/default_vars.yml:ro</volume>
                                             </bind>
                                         </volumes>
                                         <env>
