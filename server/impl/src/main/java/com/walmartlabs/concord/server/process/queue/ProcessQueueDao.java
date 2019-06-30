@@ -782,7 +782,8 @@ public class ProcessQueueDao extends AbstractDao {
                                                     inline("name"), pc.CHECKPOINT_NAME,
                                                     inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
                     .from(pc)
-                    .where(pc.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)).asField("checkpoints");
+                    .where(pc.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)
+                        .and(pc.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))).asField("checkpoints");
 
             query.addSelect(checkpoints);
         }
