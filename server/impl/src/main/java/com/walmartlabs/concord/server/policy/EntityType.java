@@ -24,7 +24,8 @@ public enum EntityType {
 
     ORGANIZATION("org"),
     PROJECT("project"),
-    SECRET("secret");
+    SECRET("secret"),
+    TRIGGER("trigger");
 
     private final String id;
 

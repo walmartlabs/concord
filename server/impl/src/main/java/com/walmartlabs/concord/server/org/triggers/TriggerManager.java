@@ -23,6 +23,11 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.policy.EntityAction;
+import com.walmartlabs.concord.server.policy.EntityType;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,25 +37,38 @@ import javax.inject.Named;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.policy.PolicyUtils.toMap;
+
 @Named
 public class TriggerManager extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerManager.class);
 
     private final Map<String, TriggerProcessor> triggerProcessors;
+    private final ProjectDao projectDao;
     private final TriggersDao triggersDao;
+    private final PolicyManager policyManager;
 
     @Inject
     public TriggerManager(@MainDB Configuration cfg,
                           Map<String, TriggerProcessor> triggerProcessors,
-                          TriggersDao triggersDao) {
+                          ProjectDao projectDao,
+                          TriggersDao triggersDao,
+                          PolicyManager policyManager) {
 
         super(cfg);
         this.triggerProcessors = triggerProcessors;
+        this.projectDao = projectDao;
         this.triggersDao = triggersDao;
+        this.policyManager = policyManager;
     }
 
     public void refresh(UUID projectId, UUID repoId, ProjectDefinition pd) {
+        UUID orgId = projectDao.getOrgId(projectId);
+        for(Trigger t : pd.getTriggers()) {
+            policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, toMap(orgId, projectId, t));
+        }
+
         tx(tx -> {
             triggersDao.delete(tx, projectId, repoId);
 
