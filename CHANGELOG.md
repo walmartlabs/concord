@@ -8,6 +8,9 @@
 
 ### Changed
 
+- concord-server: fixed the handling of `queue.concurrent` policies:
+enqueued processes now track each running process instead of a single
+one;
 - concord-console: fixed the issue when a repository refresh error
 persists even after the refresh dialog is closed.
 

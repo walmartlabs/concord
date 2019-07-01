@@ -22,7 +22,6 @@ package com.walmartlabs.concord.policyengine;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 
 public class ProcessTimeoutPolicy {
 
@@ -43,8 +42,7 @@ public class ProcessTimeoutPolicy {
         }
 
         if (processTimeout >= parseTimeout(rule.getMax())) {
-            return new CheckResult<>(Collections.emptyList(),
-                    Collections.singletonList(new CheckResult.Item<>(rule, timeout)));
+            return CheckResult.error(new CheckResult.Item<>(rule, timeout));
         }
         return CheckResult.success();
     }

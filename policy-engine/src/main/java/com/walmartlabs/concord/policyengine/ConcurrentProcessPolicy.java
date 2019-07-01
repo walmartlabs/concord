@@ -52,8 +52,7 @@ public class ConcurrentProcessPolicy {
         }
 
         if (processes.size() >= max) {
-            return new CheckResult<>(Collections.emptyList(),
-                    Collections.singletonList(new CheckResult.Item<>(rule, processes)));
+            return CheckResult.error(new CheckResult.Item<>(rule, processes));
         }
         return CheckResult.success();
     }
