@@ -79,7 +79,7 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
             return Collections.emptyList();
         }
 
-        return Collections.singletonList(result.getDeny().get(0).getEntity().get(0));
+        return result.getDeny().get(0).getEntity();
     }
 
     @Override

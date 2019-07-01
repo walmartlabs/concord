@@ -20,7 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import java.util.Collections;
 import java.util.concurrent.Callable;
 
 public class ForkDepthPolicy {
@@ -38,8 +37,7 @@ public class ForkDepthPolicy {
 
         int depth = c.call();
         if (depth >= rule.getMax()) {
-            return new CheckResult<>(Collections.emptyList(),
-                    Collections.singletonList(new CheckResult.Item<>(rule, depth)));
+            return CheckResult.error(new CheckResult.Item<>(rule, depth));
         }
         return CheckResult.success();
     }

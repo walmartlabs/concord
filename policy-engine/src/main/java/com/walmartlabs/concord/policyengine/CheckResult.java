@@ -20,6 +20,7 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,6 +43,16 @@ public class CheckResult<R, E> {
     public CheckResult(List<Item<R, E>> warn, List<Item<R, E>> deny) {
         this.warn = warn;
         this.deny = deny;
+    }
+
+    @SafeVarargs
+    public static <R, E> CheckResult<R, E> warn(Item<R, E> ... items) {
+        return new CheckResult<R, E>(Arrays.asList(items), Collections.emptyList());
+    }
+
+    @SafeVarargs
+    public static <R, E> CheckResult<R, E> error(Item<R, E> ... items) {
+        return new CheckResult<R, E>(Collections.emptyList(), Arrays.asList(items));
     }
 
     public List<Item<R, E>> getWarn() {

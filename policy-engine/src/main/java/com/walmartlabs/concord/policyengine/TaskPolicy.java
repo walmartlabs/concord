@@ -51,13 +51,13 @@ public class TaskPolicy {
 
         for(TaskRule r : rules.getDeny()) {
             if (matchRule(taskName, methodName, params, r)) {
-                return new CheckResult<>(Collections.emptyList(), Collections.singletonList(new CheckResult.Item<>(r, methodName)));
+                return CheckResult.error(new CheckResult.Item<>(r, methodName));
             }
         }
 
         for(TaskRule r : rules.getWarn()) {
             if (matchRule(taskName, methodName, params, r)) {
-                return new CheckResult<>(Collections.singletonList(new CheckResult.Item<>(r, methodName)), Collections.emptyList());
+                return CheckResult.warn(new CheckResult.Item<>(r, methodName));
             }
         }
 
