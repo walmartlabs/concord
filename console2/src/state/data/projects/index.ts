@@ -448,11 +448,11 @@ const deleteRepositoryReducers = combineReducers<DeleteRepositoryState>({
 const refreshRepositoryReducers = combineReducers<RefreshRepositoryState>({
     running: makeLoadingReducer(
         [actionTypes.REFRESH_REPOSITORY_REQUEST],
-        [actionTypes.REFRESH_REPOSITORY_RESPONSE]
+        [actionTypes.RESET_REPOSITORY, actionTypes.REFRESH_REPOSITORY_RESPONSE]
     ),
     error: makeErrorReducer(
         [actionTypes.REFRESH_REPOSITORY_REQUEST],
-        [actionTypes.REFRESH_REPOSITORY_RESPONSE]
+        [actionTypes.RESET_REPOSITORY, actionTypes.REFRESH_REPOSITORY_RESPONSE]
     ),
     response: makeResponseReducer(
         actionTypes.REFRESH_REPOSITORY_RESPONSE,
