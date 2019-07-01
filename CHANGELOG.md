@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: support for triggers in `entity` policies.
+
+
+
 ## [1.24.2] - 2019-06-27
 
 ### Changed

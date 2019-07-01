@@ -20,11 +20,13 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
+import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.secret.SecretVisibility;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -75,6 +77,17 @@ public final class PolicyUtils {
         if (storeType != null) {
             m.put("storeType", storeType);
         }
+        return m;
+    }
+
+    public static Map<String, Object> toMap(UUID orgId, UUID projectId, Trigger trigger) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("name", trigger.getName());
+        m.put("orgId", orgId);
+        m.put("projectId", projectId);
+        m.put("arguments", trigger.getArguments() != null ? trigger.getArguments() : Collections.emptyList());
+        m.put("params", trigger.getParams() != null ? trigger.getParams() : Collections.emptyList());
+        m.put("cfg", trigger.getCfg() != null ? trigger.getCfg() : Collections.emptyList());
         return m;
     }
 
