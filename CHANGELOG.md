@@ -6,6 +6,11 @@
 
 - concord-server: support for triggers in `entity` policies.
 
+### Changed
+
+- concord-console: fixed the issue when a repository refresh error
+persists even after the refresh dialog is closed.
+
 
 
 ## [1.24.2] - 2019-06-27
