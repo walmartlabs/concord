@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.github.GithubKey;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
@@ -106,21 +107,21 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                ProcessManager processManager,
                                EncryptedProjectValueManager encryptedValueManager,
                                TriggersConfiguration triggersConfiguration,
-                               UserManager userManager,
                                GithubConfiguration githubCfg,
                                LdapManager ldapManager,
-                               UserManager userManager1) {
+                               UserManager userManager,
+                               ProcessSecurityContext processSecurityContext) {
 
         super(cfg, processManager, triggersDao, projectDao, repositoryDao,
                 new GithubTriggerDefinitionEnricher(projectDao, githubCfg),
-                triggersConfiguration, userManager);
+                triggersConfiguration, userManager, processSecurityContext);
 
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.githubCfg = githubCfg;
         this.encryptedValueManager = encryptedValueManager;
         this.ldapManager = ldapManager;
-        this.userManager = userManager1;
+        this.userManager = userManager;
     }
 
     @POST
