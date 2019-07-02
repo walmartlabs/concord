@@ -126,7 +126,7 @@ class Login extends React.Component<Props, LoginData> {
                                     icon="user"
                                     required={true}
                                     value={username}
-                                    placeholder={(window.concord.login || {}).usernameHint || 'username@domain'}
+                                    placeholder={(window.concord.login || {}).usernameHint || 'Username'}
                                     onChange={(e, { value }) => this.setState({ username: value })}
                                 />
                                 <Form.Input
