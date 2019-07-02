@@ -25,7 +25,8 @@ import {
     fetchJson,
     GenericOperationResult,
     OperationResult,
-    EntityOwner, Owner
+    EntityOwner,
+    Owner
 } from '../../common';
 import { RepositoryEntry } from './repository';
 

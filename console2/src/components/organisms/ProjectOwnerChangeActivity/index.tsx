@@ -22,7 +22,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 
-import {ConcordId, ConcordKey, EntityOwner, Owner, RequestError} from '../../../api/common';
+import { ConcordId, ConcordKey, EntityOwner, Owner, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
 import { EntityOwnerChangeForm, RequestErrorMessage } from '../../molecules';
 
@@ -66,7 +66,12 @@ class ProjectOwnerChangeActivity extends React.PureComponent<Props> {
                     originalOwner={owner || { username: '' }}
                     confirmationHeader="Change project owner?"
                     confirmationContent="Are you sure you want to change the project's owner?"
-                    onSubmit={(value) => change(orgName, projectId, projectName, {username: value.username, userDomain: value.userDomain})}
+                    onSubmit={(value) =>
+                        change(orgName, projectId, projectName, {
+                            username: value.username,
+                            userDomain: value.userDomain
+                        })
+                    }
                     submitting={changing}
                 />
             </>

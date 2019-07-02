@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: add the UI's version to the About page.
+
+
+
 ## [1.25.0] - 2019-07-02
 
 ### Added

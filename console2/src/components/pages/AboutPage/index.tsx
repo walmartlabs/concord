@@ -37,6 +37,9 @@ class ProcessPage extends React.PureComponent {
                 <p>
                     Server version: <ServerVersion />
                 </p>
+                <p>
+                    Console version: {process.env.REACT_APP_CONCORD_VERSION || 'n/a'}
+                </p>
             </>
         );
     }

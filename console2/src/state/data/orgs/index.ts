@@ -31,7 +31,7 @@ import {
     Organizations,
     State
 } from './types';
-import {ConcordId, ConcordKey, Owner} from '../../../api/common';
+import { ConcordId, ConcordKey, Owner } from '../../../api/common';
 
 // https://github.com/facebook/create-react-app/issues/6054
 export * from './types';

@@ -20,7 +20,7 @@
 
 import { Action } from 'redux';
 
-import {ConcordId, ConcordKey, Owner, RequestError} from '../../../api/common';
+import { ConcordId, ConcordKey, Owner, RequestError } from '../../../api/common';
 import { OrganizationEntry, OrganizationOperationResult } from '../../../api/org';
 import { RequestState } from '../common';
 
