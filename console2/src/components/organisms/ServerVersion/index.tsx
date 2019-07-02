@@ -19,36 +19,35 @@
  */
 
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Icon } from 'semantic-ui-react';
 import { version as apiVersion } from '../../../api/server';
 
-interface State {
-    loading: boolean;
-    version?: string;
-}
+export default () => {
+    const [loading, setLoading] = useState(false);
+    const [version, setVersion] = useState('n/a');
 
-class ServerVersion extends React.Component<{}, State> {
-    constructor(props: {}) {
-        super(props);
-        this.state = { loading: false };
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setVersion('n/a');
+
+            try {
+                const result = await apiVersion();
+                setVersion(result.version);
+            } catch (e) {
+                setVersion(`error: ${e}`);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return <Icon name="circle notched" loading={true} />;
     }
 
-    componentDidMount() {
-        this.setState({ loading: true });
-        apiVersion()
-            .then((v) => this.setState({ loading: false, version: v.version }))
-            .catch(() => this.setState({ loading: false, version: 'error' }));
-    }
-
-    render() {
-        const { loading, version } = this.state;
-
-        if (loading || !version) {
-            return <Icon name="circle notched" loading={true} />;
-        }
-
-        return version;
-    }
-}
-
-export default ServerVersion;
+    return <>{version}</>;
+};

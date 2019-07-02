@@ -82,9 +82,9 @@ class Login extends React.Component<Props, LoginData> {
     handleSubmit() {
         const error = this.validate();
         if (error !== null) {
-            this.setState({validationError: error});
+            this.setState({ validationError: error });
         } else {
-            this.setState({validationError: undefined});
+            this.setState({ validationError: undefined });
             this.props.onSubmit(this.state);
         }
     }
@@ -117,7 +117,9 @@ class Login extends React.Component<Props, LoginData> {
                         <Loader />
                     </Dimmer>
 
-                    <Form error={!!this.props.apiError || validationError !== undefined} onSubmit={() => this.handleSubmit()}>
+                    <Form
+                        error={!!this.props.apiError || validationError !== undefined}
+                        onSubmit={() => this.handleSubmit()}>
                         {!useApiKey && (
                             <>
                                 <Form.Input
@@ -126,7 +128,9 @@ class Login extends React.Component<Props, LoginData> {
                                     icon="user"
                                     required={true}
                                     value={username}
-                                    placeholder={(window.concord.login || {}).usernameHint || 'Username'}
+                                    placeholder={
+                                        (window.concord.login || {}).usernameHint || 'Username'
+                                    }
                                     onChange={(e, { value }) => this.setState({ username: value })}
                                 />
                                 <Form.Input

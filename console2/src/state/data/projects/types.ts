@@ -20,7 +20,13 @@
 
 import { Action } from 'redux';
 
-import {ConcordId, ConcordKey, GenericOperationResult, Owner, RequestError} from '../../../api/common';
+import {
+    ConcordId,
+    ConcordKey,
+    GenericOperationResult,
+    Owner,
+    RequestError
+} from '../../../api/common';
 import {
     NewProjectEntry,
     ProjectEntry,

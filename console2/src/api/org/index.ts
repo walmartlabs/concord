@@ -18,7 +18,7 @@
  * =====
  */
 
-import {fetchJson, ConcordKey, ConcordId, OperationResult, EntityOwner, Owner} from '../common';
+import { fetchJson, ConcordKey, ConcordId, OperationResult, EntityOwner, Owner } from '../common';
 
 export enum OrganizationVisibility {
     PUBLIC = 'PUBLIC',

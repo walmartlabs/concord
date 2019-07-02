@@ -42,7 +42,7 @@ import {
     SecretTeamAccessActivity
 } from '../../organisms';
 import { NotFoundPage } from '../../pages';
-import {renderUser} from "../FindUserField";
+import { renderUser } from '../FindUserField';
 
 export type TabLink = 'info' | 'settings' | 'access' | null;
 
@@ -91,7 +91,15 @@ class SecretActivity extends React.PureComponent<Props> {
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Owner</Table.Cell>
-                                <Table.Cell>{data.owner ? renderUser(data.owner.username, data.owner.userDomain, data.owner.displayName) : '-'}</Table.Cell>
+                                <Table.Cell>
+                                    {data.owner
+                                        ? renderUser(
+                                              data.owner.username,
+                                              data.owner.userDomain,
+                                              data.owner.displayName
+                                          )
+                                        : '-'}
+                                </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Actions</Table.Cell>

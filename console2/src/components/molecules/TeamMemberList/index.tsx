@@ -174,7 +174,9 @@ class EntryList extends React.Component<Props, State> {
                         <Table.Body>
                             {data.map((e, idx) => (
                                 <Table.Row key={idx} negative={e.deleted} positive={e.added}>
-                                    <Table.Cell>{renderUser(e.username, e.userDomain, e.displayName)}</Table.Cell>
+                                    <Table.Cell>
+                                        {renderUser(e.username, e.userDomain, e.displayName)}
+                                    </Table.Cell>
                                     <Table.Cell>{e.userType}</Table.Cell>
                                     <Table.Cell>
                                         {editMode ? (

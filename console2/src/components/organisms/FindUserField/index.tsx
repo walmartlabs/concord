@@ -61,14 +61,18 @@ const toResults = (items: UserSearchResult[]) =>
 
 // TODO remove when the Search component will support custom result types
 const resultToItem = (result: SearchResultProps, items: UserSearchResult[]) =>
-    items.find((i) => (i.username + (i.userDomain ? '@' + i.userDomain : '')) === result.description)!;
+    items.find(
+        (i) => i.username + (i.userDomain ? '@' + i.userDomain : '') === result.description
+    )!;
 
 export const renderUsername = (username: string, userDomain?: string): string => {
     return userDomain !== undefined ? username + '@' + userDomain : username;
 };
 
 export const renderUser = (username: string, userDomain?: string, displayName?: string): string => {
-    return displayName !== undefined ? displayName + ' (' + renderUsername(username, userDomain) + ' )' : username;
+    return displayName !== undefined
+        ? displayName + ' (' + renderUsername(username, userDomain) + ' )'
+        : username;
 };
 
 class FindUserField extends React.PureComponent<Props, InternalState> {
@@ -76,14 +80,18 @@ class FindUserField extends React.PureComponent<Props, InternalState> {
         super(props);
 
         const { defaultUsername, defaultUserDomain, defaultDisplayName } = this.props;
-        this.state = { value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName) };
+        this.state = {
+            value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName)
+        };
     }
 
     componentDidMount() {
         this.props.reset();
 
         const { defaultUsername, defaultUserDomain, defaultDisplayName } = this.props;
-        this.setState({ value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName) });
+        this.setState({
+            value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName)
+        });
     }
 
     handleSelect({ result }: SearchResultData) {

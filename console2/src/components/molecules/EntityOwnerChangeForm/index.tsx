@@ -91,7 +91,9 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
                                     originalOwner !== undefined ? originalOwner.username : ''
                                 }
                                 defaultUserDomain={
-                                    originalOwner !== undefined ? originalOwner.userDomain : undefined
+                                    originalOwner !== undefined
+                                        ? originalOwner.userDomain
+                                        : undefined
                                 }
                                 defaultDisplayName={
                                     originalOwner !== undefined ? originalOwner.displayName : ''
