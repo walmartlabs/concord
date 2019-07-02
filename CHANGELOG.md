@@ -8,6 +8,9 @@
 
 ### Changed
 
+- concord-server: GitHub trigger's `useInitiator` is now correctly
+runs the process using the commit user's security context. This fixes
+the issue with child processes not inheriting the initiator;
 - concord-server: fixed the handling of `queue.concurrent` policies:
 enqueued processes now track each running process instead of a single
 one;

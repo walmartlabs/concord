@@ -28,10 +28,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
-import com.walmartlabs.concord.server.process.PartialProcessKey;
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.PayloadBuilder;
-import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -43,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +59,7 @@ public abstract class AbstractEventResource {
     private final TriggerDefinitionEnricher triggerDefinitionEnricher;
     private final TriggersConfiguration triggersCfg;
     private final UserManager userManager;
+    private final ProcessSecurityContext processSecurityContext;
 
     public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
                                  ProcessManager processManager,
@@ -70,9 +67,10 @@ public abstract class AbstractEventResource {
                                  ProjectDao projectDao,
                                  RepositoryDao repositoryDao,
                                  TriggersConfiguration triggersCfg,
-                                 UserManager userManager) {
+                                 UserManager userManager,
+                                 ProcessSecurityContext processSecurityContext) {
 
-        this(eventsCfg, processManager, triggersDao, projectDao, repositoryDao, AS_IS_ENRICHER, triggersCfg, userManager);
+        this(eventsCfg, processManager, triggersDao, projectDao, repositoryDao, AS_IS_ENRICHER, triggersCfg, userManager, processSecurityContext);
     }
 
     public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
@@ -81,7 +79,8 @@ public abstract class AbstractEventResource {
                                  RepositoryDao repositoryDao,
                                  TriggerDefinitionEnricher enricher,
                                  TriggersConfiguration triggersCfg,
-                                 UserManager userManager) {
+                                 UserManager userManager,
+                                 ProcessSecurityContext processSecurityContext) {
 
         this.eventsCfg = eventsCfg;
         this.processManager = processManager;
@@ -89,9 +88,11 @@ public abstract class AbstractEventResource {
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
         this.triggerDefinitionEnricher = enricher;
-        this.log = LoggerFactory.getLogger(this.getClass());
+        this.processSecurityContext = processSecurityContext;
         this.triggersCfg = triggersCfg;
         this.userManager = userManager;
+
+        this.log = LoggerFactory.getLogger(this.getClass());
     }
 
     protected int process(String eventId,
@@ -113,7 +114,7 @@ public abstract class AbstractEventResource {
                 continue;
             }
 
-            if(isRepositoryDisabled(t)){
+            if (isRepositoryDisabled(t)) {
                 log.warn("Repository is disabled, skipping -> ['{}'] ", t);
                 continue;
             }
@@ -206,20 +207,22 @@ public abstract class AbstractEventResource {
                                            UUID projectId,
                                            UUID repoId,
                                            Map<String, Object> cfg,
-                                           UserEntry initiator) throws IOException {
+                                           UserEntry initiator) throws Exception {
 
         PartialProcessKey processKey = PartialProcessKey.create();
 
-        Payload payload = PayloadBuilder.start(processKey)
-                .initiator(initiator.getId(), initiator.getName())
-                .organization(orgId)
-                .project(projectId)
-                .repository(repoId)
-                .configuration(cfg)
-                .build();
+        processSecurityContext.runAs(initiator.getId(), () -> {
+            Payload payload = PayloadBuilder.start(processKey)
+                    .initiator(initiator.getId(), initiator.getName())
+                    .organization(orgId)
+                    .project(projectId)
+                    .repository(repoId)
+                    .configuration(cfg)
+                    .build();
 
-        // TODO consider using ProcessSecurityContext#runAs
-        processManager.start(payload, false);
+            processManager.start(payload, false);
+            return null;
+        });
 
         return processKey;
     }

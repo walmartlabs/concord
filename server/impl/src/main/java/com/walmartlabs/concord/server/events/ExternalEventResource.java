@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.ProcessManager;
+import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -64,9 +65,10 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
                                  ProjectDao projectDao,
                                  RepositoryDao repositoryDao,
                                  TriggersConfiguration triggersCfg,
-                                 UserManager userManager) {
+                                 UserManager userManager,
+                                 ProcessSecurityContext processSecurityContext) {
 
-        super(cfg, processManager, triggersDao, projectDao, repositoryDao, triggersCfg, userManager);
+        super(cfg, processManager, triggersDao, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
     }
 
     @POST
