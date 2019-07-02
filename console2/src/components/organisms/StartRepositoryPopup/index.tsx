@@ -36,13 +36,13 @@ interface ExternalProps {
     repoURL: string;
     repoBranchOrCommitId: string;
     repoPath: string;
-    repoProfiles: string[];
-    repoEntryPoints: string[];
+    repoProfiles?: string[];
+    repoEntryPoints?: string[];
     title?: string;
     allowEntryPoint?: boolean;
     entryPoint?: string;
     allowProfile?: boolean;
-    profile?: string;
+    profiles?: string[];
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
@@ -126,7 +126,7 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
             allowEntryPoint,
             entryPoint,
             allowProfile,
-            profile
+            profiles
         } = this.props;
 
         const successMsg = response ? (
@@ -197,8 +197,8 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
                                     {allowProfile ? (
                                         <SimpleDropdown
                                             data={this.state.profiles}
-                                            defaultValue={profile}
-                                            disabled={profile !== undefined}
+                                            defaultValue={profiles ? profiles[0] : undefined}
+                                            disabled={profiles !== undefined}
                                             onAdd={(v) =>
                                                 this.setState({
                                                     selectedProfile: v,
@@ -208,7 +208,7 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
                                             onChange={(v) => this.setState({ selectedProfile: v })}
                                         />
                                     ) : (
-                                        profile
+                                        profiles
                                     )}
                                 </Table.Cell>
                             </Table.Row>
