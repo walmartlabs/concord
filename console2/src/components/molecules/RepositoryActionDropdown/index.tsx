@@ -84,7 +84,7 @@ const renderManualTrigger = ({
             allowEntryPoint={false}
             entryPoint={trigger.cfg.entryPoint}
             allowProfile={false}
-            profile={trigger.activeProfiles}
+            profiles={trigger.activeProfiles}
             title={`Start '${trigger.cfg.name}' from repository '${repoName}'`}
             trigger={(onClick: any) => (
                 <Dropdown.Item onClick={onClick} disabled={repoDisabled}>
