@@ -278,55 +278,6 @@ public class CrudIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testLanding() throws Exception {
-        LandingPagesApi resource = new LandingPagesApi(getApiClient());
-
-        String orgName = "Default";
-        String projectName = "project_" + randomString();
-        String repositoryName = "repository_" + randomString();
-        String name = "lp-name-1";
-        String description = "description";
-        String icon = new String(Base64.getEncoder().encode("icon".getBytes()));
-
-        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRepositories(Collections.singletonMap(repositoryName, new RepositoryEntry()
-                        .setName(repositoryName)
-                        .setUrl("http://test"))));
-
-        // --- create
-        LandingEntry entry = new LandingEntry()
-                .setProjectName(projectName)
-                .setRepositoryName(repositoryName)
-                .setName(name)
-                .setDescription(description)
-                .setIcon(icon);
-        CreateLandingResponse result = resource.createOrUpdate(orgName, entry);
-        assertNotNull(result);
-        assertTrue(result.isOk());
-        assertNotNull(result.getId());
-        assertEquals(CreateLandingResponse.ResultEnum.CREATED, result.getResult());
-
-        // --- update
-        result = resource.createOrUpdate(orgName, new LandingEntry()
-                .setId(result.getId())
-                .setProjectName(projectName)
-                .setRepositoryName(repositoryName)
-                .setName(name)
-                .setDescription(description)
-                .setIcon(icon));
-        assertNotNull(result);
-        assertTrue(result.isOk());
-        assertNotNull(result.getId());
-        assertEquals(CreateLandingResponse.ResultEnum.UPDATED, result.getResult());
-
-        // --- list
-        List<LandingEntry> listResult = resource.list(orgName);
-        assertNotNull(listResult);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDashes() throws Exception {
         String orgName = randomString() + "-test~";
 

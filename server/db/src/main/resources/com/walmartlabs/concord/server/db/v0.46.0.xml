@@ -55,6 +55,8 @@
         </addColumn>
     </changeSet>
 
+    <!-- deprecated in 1.26.0+ -->
+    <!--
     <changeSet id="46200" author="brig@gmail.com">
         <validCheckSum>7:4da9f8084cf605c5bb8dbf860e705266</validCheckSum>
         <createTable tableName="LANDING_PAGE">
@@ -92,6 +94,7 @@
                                  referencedColumnNames="REPO_ID"
                                  onDelete="CASCADE"/>
     </changeSet>
+    -->
 
     <changeSet id="46300" author="ybrigo@gmail.com">
         <addColumn tableName="REPOSITORIES">
