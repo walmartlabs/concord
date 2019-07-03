@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown, Image, Menu } from 'semantic-ui-react';
-import { LinkMeta } from '../../../../env';
+import { LinkMeta } from '../../../../cfg';
 
 export type GlobalNavTab = 'activity' | 'process' | 'org' | null;
 

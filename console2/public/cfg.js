@@ -1,6 +1,6 @@
 // environment specific data
 window.concord = {
-    documentationSite: 'https://concord.walmart.com',
+    documentationSite: 'https://concord.walmartlabs.com',
     topBar: {
         systemLinks: [
             {

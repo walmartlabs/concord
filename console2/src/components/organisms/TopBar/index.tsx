@@ -23,7 +23,7 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { push as pushHistory } from 'connected-react-router';
-import { LinkMeta } from '../../../../env';
+import { LinkMeta } from '../../../../cfg';
 
 import { actions, State as SessionState } from '../../../state/session';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
