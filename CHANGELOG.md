@@ -6,6 +6,10 @@
 
 - concord-console: add the UI's version to the About page.
 
+### Breaking
+
+- concord-server: the "Landing Page" support is removed.
+
 
 
 ## [1.25.0] - 2019-07-02
