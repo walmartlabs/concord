@@ -265,6 +265,11 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         // only LDAP users are supported in GitHub triggers
         try {
             LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
+            if (p == null) {
+                log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", event, ldapDn);
+                return super.getOrCreateUserEntry(event);
+            }
+            
             return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP);
         } catch (NamingException e) {
             throw new RuntimeException(e);
