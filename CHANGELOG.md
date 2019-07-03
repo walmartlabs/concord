@@ -8,6 +8,8 @@
 
 ### Breaking
 
+- concord-server: the inventory subsytem now only accepts JSON
+objects as top-level entries;
 - concord-server: the "Landing Page" support is removed.
 
 

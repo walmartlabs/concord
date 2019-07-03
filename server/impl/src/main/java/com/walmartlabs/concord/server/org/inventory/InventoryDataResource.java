@@ -29,6 +29,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -124,6 +125,11 @@ public class InventoryDataResource implements Resource {
                        @ApiParam @PathParam("inventoryName") String inventoryName,
                        @ApiParam @PathParam("itemPath") String itemPath,
                        @ApiParam Object data) {
+
+        // we expect all top-level entries to be JSON objects
+        if (!itemPath.contains("/") && !(data instanceof Map)) {
+            throw new ValidationErrorsException("Top-level inventory entries must be JSON objects. Got: " + data.getClass());
+        }
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.WRITER, true);
