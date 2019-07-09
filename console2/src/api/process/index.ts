@@ -245,7 +245,7 @@ export const list = async (q: ProcessListQuery): Promise<PaginatedProcessEntries
     const requestLimit = limit + 1;
 
     const filters = { ...q, limit: requestLimit };
-    const qp = filters ? '&' + queryParams(filters) : '';
+    const qp = filters ? queryParams(filters) : '';
 
     const data: ProcessEntry[] = await fetchJson(`/api/v2/process?${qp}`);
 
