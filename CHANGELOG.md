@@ -6,6 +6,11 @@
 
 - concord-console: add the UI's version to the About page.
 
+### Changed
+
+- concord-console: fixed the bug preventing the clear button on the
+process list's filter popup from working.
+
 ### Breaking
 
 - concord-server: the inventory subsytem now only accepts JSON
