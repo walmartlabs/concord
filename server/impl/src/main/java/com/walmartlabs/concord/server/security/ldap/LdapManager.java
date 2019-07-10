@@ -63,16 +63,25 @@ public class LdapManager {
         return search(filter, cfg.getUserSearchFilter(), new String[]{cfg.getUserPrincipalNameProperty(), DISPLAY_NAME_ATTR},
                 attrs -> {
                     String upn = attrs.get(cfg.getUserPrincipalNameProperty());
+                    if (upn == null) {
+                        return null;
+                    }
                     return new UserSearchResult(getUsername(upn), getDomain(upn), attrs.get(DISPLAY_NAME_ATTR));
                 });
     }
 
     public List<LdapGroupSearchResult> searchGroups(String filter) throws NamingException {
         return search(filter, cfg.getGroupSearchFilter(), new String[]{cfg.getGroupNameProperty(), cfg.getGroupDisplayNameProperty()},
-                attrs -> LdapGroupSearchResult.builder()
-                        .groupName(attrs.get(cfg.getGroupNameProperty()))
-                        .displayName(attrs.getOrDefault(cfg.getGroupDisplayNameProperty(), "n/a"))
-                        .build());
+                attrs -> {
+                    String groupName = attrs.get(cfg.getGroupNameProperty());
+                    if (groupName == null) {
+                        return null;
+                    }
+                    return LdapGroupSearchResult.builder()
+                            .groupName(groupName)
+                            .displayName(attrs.getOrDefault(cfg.getGroupDisplayNameProperty(), "n/a"))
+                            .build();
+                });
     }
 
     public Set<String> getGroups(String username, String domain) throws NamingException {
@@ -242,7 +251,10 @@ public class LdapManager {
                         attributes.put(id, attr.get().toString());
                     }
 
-                    result.add(converter.apply(attributes));
+                    E item = converter.apply(attributes);
+                    if (item != null) {
+                        result.add(item);
+                    }
                 }
             }
             return result;
