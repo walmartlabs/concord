@@ -8,6 +8,8 @@
 
 ### Changed
 
+- concord-console: fixed the issue with duplicate results in
+the "find user" field;
 - concord-server: fixed potential NPE when searching users in
 AD/LDAP (e.g. by using the Console's "find user" field);
 - concord-console: fixed the bug preventing the clear button on the

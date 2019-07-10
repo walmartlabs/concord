@@ -56,7 +56,8 @@ type Props = ExternalProps & StateProps & DispatchProps;
 const toResults = (items: UserSearchResult[]) =>
     items.map((i) => ({
         title: i.displayName,
-        description: i.username + (i.userDomain ? '@' + i.userDomain : '')
+        description: i.username + (i.userDomain ? '@' + i.userDomain : ''),
+        key: i.username + (i.userDomain ? '@' + i.userDomain : '')
     }));
 
 // TODO remove when the Search component will support custom result types
