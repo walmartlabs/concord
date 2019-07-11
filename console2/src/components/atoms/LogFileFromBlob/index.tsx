@@ -111,9 +111,7 @@ class FileFromBlob extends React.Component<Props, State> {
             if (checkpointId) {
                 return line.replace(
                     concordKeyRE,
-                    `<a style=" background: yellow; color: black; font-weight: bold" id="${
-                        checkpointId[0]
-                    }">${checkpointId[0]}</a>`
+                    `<a style=" background: yellow; color: black; font-weight: bold" id="${checkpointId[0]}">${checkpointId[0]}</a>`
                 );
             } else {
                 return line;

@@ -24,7 +24,7 @@ import * as React from 'react';
 import { Form, FormInputProps, Input, Label } from 'semantic-ui-react';
 
 interface ExternalProps {
-    validate?: ((value: {}) => string | Promise<void> | undefined);
+    validate?: (value: {}) => string | Promise<void> | undefined;
 }
 
 type Props = FormInputProps & ExternalProps;

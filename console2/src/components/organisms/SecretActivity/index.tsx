@@ -37,6 +37,7 @@ import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
     PublicKeyPopup,
     SecretDeleteActivity,
+    SecretProjectActivity,
     SecretRenameActivity,
     SecretVisibilityActivity,
     SecretTeamAccessActivity
@@ -155,6 +156,7 @@ class SecretActivity extends React.PureComponent<Props> {
                     <SecretVisibilityActivity
                         orgName={data.orgName}
                         secretId={data.id}
+                        projectId={data.projectId}
                         visibility={data.visibility}
                     />
                 </Segment>
@@ -162,11 +164,19 @@ class SecretActivity extends React.PureComponent<Props> {
                 <Divider horizontal={true} content="Danger Zone" />
 
                 <Segment color="red">
+                    <Header as="h4">Project</Header>
+                    <SecretProjectActivity
+                        orgName={data.orgName}
+                        secretName={data.name}
+                        projectName={data.projectName}
+                    />
+
                     <Header as="h4">Secret name</Header>
                     <SecretRenameActivity
                         orgName={data.orgName}
                         secretId={data.id}
                         secretName={data.name}
+                        projectId={data.projectId}
                     />
 
                     <Header as="h4">Delete Secret</Header>

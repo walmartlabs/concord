@@ -91,7 +91,7 @@ const mapStateToProps = (
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName, secretName) => {
-        dispatch(actions.SecretTeamAccess(orgName, secretName));
+        dispatch(actions.secretTeamAccess(orgName, secretName));
     },
     update: (orgName, secretName, data) => {
         dispatch(actions.updateSecretTeamAccess(orgName, secretName, data));

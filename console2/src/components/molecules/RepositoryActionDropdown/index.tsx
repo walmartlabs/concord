@@ -101,32 +101,29 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
     const [error, setError] = useState<RequestError>();
     const [manualTriggers, setManualTriggers] = useState<TriggerEntry[]>();
 
-    useEffect(
-        () => {
-            const fetchData = async () => {
-                setLoading(true);
-                setError(undefined);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError(undefined);
 
-                try {
-                    const result = await apiListTriggers({
-                        type: 'manual',
-                        orgName: props.orgName,
-                        projectName: props.projectName,
-                        repoName: props.repo.name
-                    });
+            try {
+                const result = await apiListTriggers({
+                    type: 'manual',
+                    orgName: props.orgName,
+                    projectName: props.projectName,
+                    repoName: props.repo.name
+                });
 
-                    setManualTriggers(result);
-                } catch (e) {
-                    setError(e);
-                } finally {
-                    setLoading(false);
-                }
-            };
+                setManualTriggers(result);
+            } catch (e) {
+                setError(e);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            fetchData();
-        },
-        [props.orgName, props.projectName, props.repo.name]
-    );
+        fetchData();
+    }, [props.orgName, props.projectName, props.repo.name]);
 
     const { orgName, projectName, repo } = props;
 

@@ -114,12 +114,8 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                                 icon="download"
                                                 color="blue"
                                                 content="State"
-                                                href={`/api/v1/process/${
-                                                    data.instanceId
-                                                }/state/snapshot`}
-                                                download={`Concord_${data.status}_${
-                                                    data.instanceId
-                                                }.zip`}
+                                                href={`/api/v1/process/${data.instanceId}/state/snapshot`}
+                                                download={`Concord_${data.status}_${data.instanceId}.zip`}
                                             />
                                         )}
                                         {additionalActions}

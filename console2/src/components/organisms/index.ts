@@ -70,6 +70,7 @@ export { default as SecretDeleteActivity } from './SecretDeleteActivity';
 export { default as SecretDropdown } from './SecretDropdown';
 export { default as SecretList } from './SecretList';
 export { default as SecretListActivity } from './SecretListActivity';
+export { default as SecretProjectActivity } from './SecretProjectActivity';
 export { default as SecretRenameActivity } from './SecretRenameActivity';
 export { default as SecretTeamAccessActivity } from './SecretTeamAccessActivity';
 export { default as SecretStoreDropdown } from './SecretStoreDropdown';

@@ -157,10 +157,8 @@ public class SecretDao extends AbstractDao {
     }
 
     @SuppressWarnings("unchecked")
-    public void update(UUID id, String newName, byte[] data, SecretVisibility visibility) {
-        if (newName == null && data == null && visibility == null) {
-            throw new IllegalArgumentException("Nothing to update");
-        }
+    public void update(UUID id, String newName, byte[] data, SecretVisibility visibility, UUID projectId) {
+
 
         tx(tx -> {
             UpdateSetFirstStep<SecretsRecord> u = tx.update(SECRETS);
@@ -176,6 +174,8 @@ public class SecretDao extends AbstractDao {
             if (data != null) {
                 u.set(SECRETS.SECRET_DATA, data);
             }
+
+            u.set(SECRETS.PROJECT_ID, projectId);
 
             int i = ((UpdateSetMoreStep<SecretsRecord>) u)
                     .where(SECRETS.SECRET_ID.eq(id))

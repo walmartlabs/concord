@@ -33,6 +33,8 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
@@ -75,6 +77,7 @@ public class SecretManager {
     private final SecretStoreConfiguration secretCfg;
     private final SecretStoreProvider secretStoreProvider;
     private final UserDao userDao;
+    private final ProjectAccessManager projectAccessManager;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -84,7 +87,8 @@ public class SecretManager {
                          SecretDao secretDao,
                          SecretStoreConfiguration secretCfg,
                          SecretStoreProvider secretStoreProvider,
-                         UserDao userDao) {
+                         UserDao userDao,
+                         ProjectAccessManager projectAccessManager) {
 
         this.policyManager = policyManager;
         this.secretDao = secretDao;
@@ -94,6 +98,7 @@ public class SecretManager {
         this.secretStoreProvider = secretStoreProvider;
         this.auditLog = auditLog;
         this.processQueueDao = processQueueDao;
+        this.projectAccessManager = projectAccessManager;
     }
 
     @WithTimer
@@ -292,7 +297,18 @@ public class SecretManager {
             newData = SecretUtils.encrypt(newData, getPwd(pwd), salt);
         }
 
-        secretDao.update(e.getId(), req.name(), newData, req.visibility());
+        UUID projectId = req.projectId();
+        String projectName = req.projectName() == null ? "" : req.projectName();
+
+        if (projectId != null || !projectName.isEmpty()) {
+            ProjectEntry entry = projectAccessManager.assertProjectAccess(e.getOrgId(), projectId, projectName, ResourceAccessLevel.READER, true);
+            projectId = entry.getId();
+            if (!entry.getOrgId().equals(e.getOrgId())) {
+                throw new ValidationErrorsException("Project -> " + entry.getName() + " does not belong to organization -> " + orgName);
+            }
+        }
+
+        secretDao.update(e.getId(), req.name(), newData, req.visibility(), projectId);
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
         changes.put("updated", updated);
