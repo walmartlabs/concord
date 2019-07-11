@@ -97,34 +97,31 @@ const TaskCallDetails = (props: Props) => {
     const [error, setError] = useState<RequestError>();
     const [data, setData] = useState<ProcessEventEntry<{}>[]>();
 
-    useEffect(
-        () => {
-            const fetchData = async () => {
-                setLoading(true);
-                setError(undefined);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError(undefined);
 
-                try {
-                    const result = await apiListEvents({
-                        instanceId: props.instanceId,
-                        type: 'ELEMENT',
-                        eventCorrelationId: props.correlationId,
-                        eventPhase: 'PRE',
-                        includeAll: true,
-                        limit: 1
-                    });
+            try {
+                const result = await apiListEvents({
+                    instanceId: props.instanceId,
+                    type: 'ELEMENT',
+                    eventCorrelationId: props.correlationId,
+                    eventPhase: 'PRE',
+                    includeAll: true,
+                    limit: 1
+                });
 
-                    setData(result);
-                } catch (e) {
-                    setError(e);
-                } finally {
-                    setLoading(false);
-                }
-            };
+                setData(result);
+            } catch (e) {
+                setError(e);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            fetchData();
-        },
-        [props.instanceId, props.correlationId]
-    );
+        fetchData();
+    }, [props.instanceId, props.correlationId]);
 
     if (loading) {
         return <Loader active={loading} />;

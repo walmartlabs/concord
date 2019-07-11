@@ -53,6 +53,7 @@ export { default as RepositoryForm } from './RepositoryForm';
 export { default as RepositoryList } from './RepositoryList';
 export { default as RequestErrorMessage } from './RequestErrorMessage';
 export { default as SingleOperationPopup } from './SingleOperationPopup';
+export { default as SecretProjectForm } from './SecretProjectForm';
 export { default as TeamAccessDropdown } from './TeamAccessDropdown';
 export { default as TeamAccessList } from './TeamAccessList';
 export { default as TeamMemberList } from './TeamMemberList';

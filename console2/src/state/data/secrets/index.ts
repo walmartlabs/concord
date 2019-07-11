@@ -56,12 +56,12 @@ import {
     RenameSecretState,
     SecretDataResponse,
     Secrets,
-    secretTeamAccessState,
     State,
-    updateSecretTeamAccessState,
+    UpdateSecretTeamAccessState,
     UpdateSecretVisibilityResponse,
     UpdateSecretVisiblityRequest,
-    UpdateSecretVisiblityState
+    UpdateSecretVisiblityState,
+    SecretTeamAccessState
 } from './types';
 import { UpdateSecretTeamAccessRequest } from '../secrets/types';
 import { ResourceAccessEntry } from '../../../api/org';
@@ -124,26 +124,30 @@ export const actions = {
     renameSecret: (
         orgName: ConcordKey,
         secretId: ConcordId,
-        secretName: ConcordKey
+        secretName: ConcordKey,
+        projectId: ConcordId
     ): RenameSecretRequest => ({
         type: actionTypes.RENAME_SECRET_REQUEST,
         orgName,
         secretId,
-        secretName
+        secretName,
+        projectId
     }),
 
     updateSecretVisibility: (
         orgName: ConcordKey,
         secretId: ConcordId,
+        projectId: ConcordId,
         visibility: SecretVisibility
     ): UpdateSecretVisiblityRequest => ({
         type: actionTypes.UPDATE_SECRET_VISIBLITY_REQUEST,
         orgName,
         secretId,
+        projectId,
         visibility
     }),
 
-    SecretTeamAccess: (orgName: ConcordKey, secretName: ConcordKey): SecretTeamAccessRequest => ({
+    secretTeamAccess: (orgName: ConcordKey, secretName: ConcordKey): SecretTeamAccessRequest => ({
         type: actionTypes.SECRET_TEAM_ACCESS_REQUEST,
         orgName,
         secretName
@@ -262,7 +266,7 @@ const updateSecretVisibilityReducers = combineReducers<UpdateSecretVisiblityStat
     )
 });
 
-const secretTeamAccessReducers = combineReducers<secretTeamAccessState>({
+const secretTeamAccessReducers = combineReducers<SecretTeamAccessState>({
     running: makeLoadingReducer(
         [actionTypes.SECRET_TEAM_ACCESS_REQUEST],
         [actionTypes.SECRET_TEAM_ACCESS_RESPONSE]
@@ -274,7 +278,7 @@ const secretTeamAccessReducers = combineReducers<secretTeamAccessState>({
     response: makeResponseReducer(actionTypes.SECRET_TEAM_ACCESS_RESPONSE)
 });
 
-const updateSecretTeamAccessReducers = combineReducers<updateSecretTeamAccessState>({
+const updateSecretTeamAccessReducers = combineReducers<UpdateSecretTeamAccessState>({
     running: makeLoadingReducer(
         [actionTypes.UPDATE_SECRET_TEAM_ACCESS_REQUEST],
         [actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE]
@@ -365,9 +369,9 @@ function* onDelete({ orgName, secretName }: DeleteSecretRequest) {
     }
 }
 
-function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
+function* onRename({ orgName, secretId, secretName, projectId }: RenameSecretRequest) {
     try {
-        const response = yield call(apiRenameSecret, orgName, secretId, secretName);
+        const response = yield call(apiRenameSecret, orgName, secretId, secretName, projectId);
         yield put(genericResult(actionTypes.RENAME_SECRET_RESPONSE, response));
 
         yield put(pushHistory(`/org/${orgName}/secret`));
@@ -376,9 +380,14 @@ function* onRename({ orgName, secretId, secretName }: RenameSecretRequest) {
     }
 }
 
-function* onUpdateVisibility({ orgName, secretId, visibility }: UpdateSecretVisiblityRequest) {
+function* onUpdateVisibility({
+    orgName,
+    secretId,
+    projectId,
+    visibility
+}: UpdateSecretVisiblityRequest) {
     try {
-        yield call(apiUpdateSecretVisibility, orgName, secretId, visibility);
+        yield call(apiUpdateSecretVisibility, orgName, secretId, projectId, visibility);
         yield put({
             type: actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE,
             secretId,
@@ -405,7 +414,7 @@ function* onUpdateSecretTeamAccess({ orgName, secretName, teams }: UpdateSecretT
     try {
         const response = yield call(updateSecretAccess, orgName, secretName, teams);
         yield put(genericResult(actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE, response));
-        yield put(actions.SecretTeamAccess(orgName, secretName));
+        yield put(actions.secretTeamAccess(orgName, secretName));
     } catch (e) {
         yield handleErrors(actionTypes.UPDATE_SECRET_TEAM_ACCESS_RESPONSE, e);
     }

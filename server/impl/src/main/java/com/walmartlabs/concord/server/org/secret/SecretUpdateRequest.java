@@ -54,6 +54,12 @@ public interface SecretUpdateRequest extends Serializable {
     String newStorePassword();
 
     @Nullable
+    String projectName();
+
+    @Nullable
+    UUID projectId();
+
+    @Nullable
     @ApiModelProperty(dataType = "string")
     byte[] data();
 }

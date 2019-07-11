@@ -278,43 +278,34 @@ export const useCheckpoint = (initial: InitialProps) => {
         refreshProcessData({ ...args, ...activeFilters });
     };
 
-    useEffect(
-        () => {
-            if (initial.refreshInterval !== undefined) {
-                // Load initial dataset
-                reloadData(getCurrentParams());
+    useEffect(() => {
+        if (initial.refreshInterval !== undefined) {
+            // Load initial dataset
+            reloadData(getCurrentParams());
 
-                // Continue to request data updates on
-                const onPollInterval = setInterval(() => {
-                    reloadData();
-                }, initial.refreshInterval);
+            // Continue to request data updates on
+            const onPollInterval = setInterval(() => {
+                reloadData();
+            }, initial.refreshInterval);
 
-                return () => {
-                    clearInterval(onPollInterval);
-                };
-            }
-        },
-        [activeFilters, currentPage]
-    );
+            return () => {
+                clearInterval(onPollInterval);
+            };
+        }
+    }, [activeFilters, currentPage]);
 
     // If activefilters change
-    useEffect(
-        () => {
-            // Reset to page 1
-            setPage(1);
-        },
-        [activeFilters]
-    );
+    useEffect(() => {
+        // Reset to page 1
+        setPage(1);
+    }, [activeFilters]);
 
     /**
      * Update active filter when query params change
      */
-    useEffect(
-        () => {
-            setActiveFilters({ ...queryParams });
-        },
-        [queryParams]
-    );
+    useEffect(() => {
+        setActiveFilters({ ...queryParams });
+    }, [queryParams]);
 
     /**
      * Selector to see if we are currently on the first page.

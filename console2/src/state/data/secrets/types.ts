@@ -60,12 +60,14 @@ export interface RenameSecretRequest extends Action {
     orgName: ConcordKey;
     secretId: ConcordId;
     secretName: ConcordKey;
+    projectId: ConcordId;
 }
 
 export interface UpdateSecretVisiblityRequest extends Action {
     orgName: ConcordKey;
     secretId: ConcordId;
     visibility: SecretVisibility;
+    projectId: ConcordId;
 }
 
 export interface UpdateSecretVisibilityResponse extends Action {
@@ -99,8 +101,8 @@ export type CreateSecretState = RequestState<CreateSecretResponse>;
 export type DeleteSecretState = RequestState<GenericOperationResult>;
 export type RenameSecretState = RequestState<GenericOperationResult>;
 export type UpdateSecretVisiblityState = RequestState<GenericOperationResult>;
-export type secretTeamAccessState = RequestState<SecretTeamAccessResponse>;
-export type updateSecretTeamAccessState = RequestState<GenericOperationResult>;
+export type SecretTeamAccessState = RequestState<SecretTeamAccessResponse>;
+export type UpdateSecretTeamAccessState = RequestState<GenericOperationResult>;
 
 export interface State {
     secretById: Secrets;
@@ -109,8 +111,8 @@ export interface State {
     createSecret: CreateSecretState;
     deleteSecret: DeleteSecretState;
     renameSecret: RenameSecretState;
-    updateSecretVisibility: UpdateSecretVisiblityState;
+    secretTeamAccess: SecretTeamAccessState;
 
-    secretTeamAccess: secretTeamAccessState;
-    updateSecretTeamAccess: updateSecretTeamAccessState;
+    updateSecretTeamAccess: UpdateSecretTeamAccessState;
+    updateSecretVisibility: UpdateSecretVisiblityState;
 }

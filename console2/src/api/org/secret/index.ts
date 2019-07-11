@@ -117,7 +117,8 @@ export const deleteSecret = (
 export const renameSecret = (
     orgName: ConcordKey,
     secretId: ConcordId,
-    secretName: ConcordKey
+    secretName: ConcordKey,
+    projectId: ConcordId
 ): Promise<GenericOperationResult> => {
     const opts = {
         method: 'POST',
@@ -126,7 +127,8 @@ export const renameSecret = (
         },
         body: JSON.stringify({
             id: secretId,
-            name: secretName
+            name: secretName,
+            projectId
         })
     };
 
@@ -137,6 +139,7 @@ export const renameSecret = (
 export const updateSecretVisibility = (
     orgName: ConcordKey,
     secretId: ConcordId,
+    projectId: ConcordId,
     visibility: SecretVisibility
 ): Promise<GenericOperationResult> => {
     const opts = {
@@ -146,12 +149,31 @@ export const updateSecretVisibility = (
         },
         body: JSON.stringify({
             id: secretId,
+            projectId,
             visibility
         })
     };
 
     // TODO placeholder name as a workaround for swagger-maven-plugin issue
     return fetchJson(`/api/v1/org/${orgName}/secret/todo`, opts);
+};
+
+export const updateSecretProject = (
+    orgName: ConcordKey,
+    secretName: ConcordKey,
+    projectName: ConcordKey
+): Promise<GenericOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            projectName
+        })
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`, opts);
 };
 
 // TODO response type

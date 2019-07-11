@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: a form to change the secret's project.
+
+
+
 ## [1.26.0] - 2019-07-10
 
 ### Added

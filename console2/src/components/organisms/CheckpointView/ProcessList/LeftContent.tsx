@@ -71,9 +71,7 @@ export default ({ project, process }: Props) => {
                     <div>
                         <Label>Repo: </Label>
                         <Link
-                            to={`/org/${process.orgName}/project/${
-                                process.projectName
-                            }/repository/${process.repoName}`}>
+                            to={`/org/${process.orgName}/project/${process.projectName}/repository/${process.repoName}`}>
                             {process.repoName}
                         </Link>
                     </div>
