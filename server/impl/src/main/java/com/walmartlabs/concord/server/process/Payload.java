@@ -36,6 +36,7 @@ public class Payload {
     public static final HeaderKey<UUID> PROJECT_ID = HeaderKey.register("_projectId", UUID.class);
     public static final HeaderKey<UUID> REPOSITORY_ID = HeaderKey.register("_repoId", UUID.class);
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
+    public static final HeaderKey<String> EXCLUSIVE_GROUP = HeaderKey.register("_exclusiveGroup", String.class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<UUID> INITIATOR_ID = HeaderKey.register("_initiatorId", UUID.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);

@@ -107,6 +107,13 @@ public class TriggerSchedulerEntry implements Serializable {
         return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
     }
 
+    public String getExclusiveGroup() {
+        if (cfg == null) {
+            return null;
+        }
+        return (String) cfg.get(Constants.Trigger.EXCLUSIVE_GROUP);
+    }
+
     @Override
     public String toString() {
         return "TriggerSchedulerEntry{" +

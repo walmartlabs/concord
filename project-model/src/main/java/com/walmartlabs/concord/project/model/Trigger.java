@@ -82,6 +82,14 @@ public class Trigger implements Serializable {
         return v;
     }
 
+    @JsonIgnore
+    public String getExclusiveGroup() {
+        if (cfg == null) {
+            return null;
+        }
+        return (String)cfg.get(Constants.Trigger.EXCLUSIVE_GROUP);
+    }
+
     public List<String> getActiveProfiles() {
         return activeProfiles;
     }
