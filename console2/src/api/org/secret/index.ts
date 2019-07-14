@@ -24,7 +24,8 @@ import {
     ConcordKey,
     fetchJson,
     GenericOperationResult,
-    EntityOwner
+    EntityOwner,
+    queryParams
 } from '../../common';
 import { ResourceAccessEntry } from '../';
 
@@ -92,6 +93,16 @@ export interface NewSecretEntry {
     storeType?: SecretStoreType;
 }
 
+export interface PaginatedSecretEntries {
+    items: SecretEntry[];
+    next?: boolean;
+}
+
+export interface Pagination {
+    limit: number;
+    offset: number;
+}
+
 export interface PublicKeyResponse {
     publicKey: string;
 }
@@ -100,8 +111,34 @@ export const get = (orgName: ConcordKey, secretName: ConcordKey): Promise<Secret
     return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`);
 };
 
-export const list = (orgName: ConcordKey): Promise<SecretEntry[]> =>
-    fetchJson(`/api/v1/org/${orgName}/secret`);
+export const list = async (
+    orgName: ConcordKey,
+    offset: number,
+    limit: number,
+    filter?: string
+): Promise<PaginatedSecretEntries> => {
+    const offsetParam = offset * limit;
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: SecretEntry[] = await fetchJson(
+        `/api/v1/org/${orgName}/secret?${queryParams({
+            offset: offsetParam,
+            limit: limitParam,
+            filter
+        })}`
+    );
+
+    const hasMoreElements: boolean = !!limit && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data,
+        next: hasMoreElements
+    };
+};
 
 export const deleteSecret = (
     orgName: ConcordKey,

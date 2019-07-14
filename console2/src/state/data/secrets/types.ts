@@ -25,6 +25,11 @@ import { NewSecretEntry, SecretEntry, SecretVisibility } from '../../../api/org/
 import { RequestState } from '../common';
 import { ResourceAccessEntry } from '../../../api/org';
 
+export interface Pagination {
+    limit: number;
+    offset: number;
+}
+
 export interface GetSecretRequest extends Action {
     orgName: ConcordKey;
     secretName: ConcordKey;
@@ -32,11 +37,14 @@ export interface GetSecretRequest extends Action {
 
 export interface ListSecretsRequest extends Action {
     orgName: ConcordKey;
+    pagination: Pagination;
+    filter?: string;
 }
 
 export interface SecretDataResponse extends Action {
     error?: RequestError;
     items?: SecretEntry[];
+    next?: boolean;
 }
 
 export interface CreateSecretRequest extends Action {
@@ -92,6 +100,10 @@ export interface UpdateSecretTeamAccessRequest extends Action {
     teams: ResourceAccessEntry[];
 }
 
+export interface PaginatedSecrets {
+    items?: Secrets;
+    next?: boolean;
+}
 export interface Secrets {
     [id: string]: SecretEntry;
 }
@@ -105,7 +117,7 @@ export type SecretTeamAccessState = RequestState<SecretTeamAccessResponse>;
 export type UpdateSecretTeamAccessState = RequestState<GenericOperationResult>;
 
 export interface State {
-    secretById: Secrets;
+    secretById: PaginatedSecrets;
 
     listSecrets: ListSecretsState;
     createSecret: CreateSecretState;
