@@ -113,7 +113,8 @@ public class HttpTask implements Task {
     public enum RequestType {
         JSON,
         FILE,
-        STRING;
+        STRING,
+        FORM;
 
         public static boolean isMember(String aName) {
             RequestType[] requestTypes = RequestType.values();

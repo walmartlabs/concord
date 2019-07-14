@@ -23,15 +23,17 @@ package com.walmartlabs.concord.plugins.http;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
 
@@ -74,6 +76,7 @@ public final class HttpTaskUtils {
      * @return FileEntity for RequestType.FILE with ContentType.APPLICATION_OCTET_STREAM otherwise return {@link StringEntity}
      * @throws Exception exception
      */
+    @SuppressWarnings("unchecked")
     static HttpEntity getHttpEntity(Object body, RequestType requestType) throws Exception {
         if ((RequestType.FILE == requestType) && (body instanceof String)) {
             String filePath = (String) body;
@@ -85,6 +88,19 @@ public final class HttpTaskUtils {
 
             return new FileEntity(newFile, ContentType.APPLICATION_OCTET_STREAM);
 
+        } else if ((RequestType.FORM == requestType) && (body instanceof Map)) {
+            List<NameValuePair> params = new ArrayList<>();
+
+            Map<String, Object> bodyParams = (Map<String, Object>) body;
+            bodyParams.forEach((k, v) -> {
+                if (v instanceof Collection) {
+                    ((Collection<Object>) v).forEach(item -> params.add(new BasicNameValuePair(k, item.toString())));
+                } else {
+                    params.add(new BasicNameValuePair(k, v.toString()));
+                }
+            });
+
+            return new UrlEncodedFormEntity(params);
         } else if ((RequestType.JSON == requestType)) {
             if (body instanceof String) {
                 String strBody = (String) body;

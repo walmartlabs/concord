@@ -1,0 +1,13 @@
+flows:
+  default:
+
+  - task: http
+    in:
+      method: POST
+      url: ${url}
+      request: form
+      body:
+        message: "Hello Concord!"
+      response: json
+      out: rsp
+  - log: "Out Response: ${rsp.success}"

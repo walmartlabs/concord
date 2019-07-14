@@ -158,6 +158,8 @@ public class HttpTaskRequest implements Request {
             return MediaType.APPLICATION_OCTET_STREAM;
         } else if (RequestType.STRING == requestType) {
             return MediaType.TEXT_PLAIN;
+        } else if (RequestType.FORM == requestType) {
+            return MediaType.APPLICATION_FORM_URLENCODED;
         }
 
         return null;
