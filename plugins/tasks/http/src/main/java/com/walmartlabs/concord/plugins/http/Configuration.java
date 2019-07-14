@@ -385,9 +385,9 @@ public class Configuration {
                 URIBuilder uriBuilder = new URIBuilder(url);
                 queryParams.forEach((k, v) -> {
                     if (v instanceof Collection) {
-                        ((Collection<String>) v).forEach(item -> uriBuilder.addParameter(k, item));
+                        ((Collection<Object>) v).forEach(item -> uriBuilder.addParameter(k, item.toString()));
                     } else {
-                        uriBuilder.setParameter(k, (String) v);
+                        uriBuilder.setParameter(k, v.toString());
                     }
                 });
 

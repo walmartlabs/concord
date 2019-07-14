@@ -62,6 +62,7 @@ public class HttpTaskIT extends AbstractServerIT {
     private static final String mockHttpPathHeaders = "/headers";
     private static final String mockHttpPathUnauthorized = "/unauthorized";
     private static final String mockHttpPathEmpty = "/empty";
+    private static final String mockHttpPathFormUrlEncoded = "/formUrlEncode";
 
     private static final String SERVER_URL;
 
@@ -87,6 +88,7 @@ public class HttpTaskIT extends AbstractServerIT {
         stubForHeadersEndpoint(mockHttpPathHeaders);
         stubForUnAuthorizedRequestEndpoint(mockHttpPathUnauthorized);
         stubForEmptyResponse(mockHttpPathEmpty);
+        stubForFormUrlEncodedEndpoint(mockHttpPathFormUrlEncoded);
     }
 
     @After
@@ -266,6 +268,26 @@ public class HttpTaskIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*requestInfo.*", ab);
         assertLog(".*responseInfo.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testPostWithFormUrlEncoded() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpPostWithFormUrlEncoded").toURI();
+        byte[] payload = archive(dir);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathFormUrlEncoded);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Success response.*", ab);
+        assertLog(".*Out Response: true*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -493,6 +515,17 @@ public class HttpTaskIT extends AbstractServerIT {
         rule.stubFor(get(urlEqualTo(url))
                 .willReturn(aResponse()
                         .withStatus(204)));
+    }
+
+    private void stubForFormUrlEncodedEndpoint(String url) {
+        rule.stubFor(post(urlEqualTo(url))
+                .withHeader("Content-Type", equalTo("application/x-www-form-urlencoded"))
+                .withRequestBody(containing("message=Hello+Concord%21"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("{\n" +
+                                "  \"Success\": \"true\"\n" +
+                                "}")));
     }
 
     public static class RequestHeaders extends ResponseDefinitionTransformer {

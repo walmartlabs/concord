@@ -4,6 +4,8 @@
 
 ### Added
 
+- http: support for `application/x-www-form-urlencoded`
+(`request: form` type);
 - concord-server, concord-console: pagination for the secret list;
 - concord-server: support for "exclusive" triggers and "exclusive"
 execution groups;

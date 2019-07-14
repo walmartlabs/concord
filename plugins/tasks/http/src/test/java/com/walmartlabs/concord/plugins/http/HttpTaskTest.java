@@ -25,6 +25,7 @@ import com.walmartlabs.concord.sdk.Context;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,6 +72,14 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
                 "http://localhost:" + rule.port() + "/query", false, 0);
         task.execute(mockContext);
         verify(getRequestedFor(urlPathEqualTo("/query")).withQueryParam("key", equalTo("value with space")));
+    }
+
+    @Test
+    public void testExecutePostRequestWithFormUrlEncoded() throws Exception {
+        initCxtForRequest(mockContext, "POST", "form", "json",
+                "http://localhost:" + rule.port() + "/post", false, 0);
+        when(mockContext.getVariable("body")).thenReturn(Collections.singletonMap("message", "Hello Concord!"));
+        task.execute(mockContext);
     }
 
     @Test
