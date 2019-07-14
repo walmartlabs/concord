@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support for "exclusive" triggers and "exclusive"
+execution groups;
 - concord-console: a form to change the secret's project.
 
 

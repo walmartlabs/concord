@@ -48,6 +48,7 @@ public class ProcessPipeline extends Pipeline {
                 PolicyExportProcessor.class,
                 QueuePolicyProcessor.class,
                 InitialQueueEntryProcessor.class,
+                ExclusiveGroupProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
                 InventoryProcessor.class,

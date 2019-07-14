@@ -58,7 +58,8 @@ public final class YamlTriggersConverter {
 
         private static final String[] TRIGGER_CONFIG_KEYS = {
                 "name",
-                Constants.Request.ENTRY_POINT_KEY
+                Constants.Request.ENTRY_POINT_KEY,
+                Constants.Trigger.EXCLUSIVE_GROUP
         };
 
         protected ManualTriggerConverter() {
@@ -71,7 +72,8 @@ public final class YamlTriggersConverter {
         private static final String[] TRIGGER_CONFIG_KEYS = {
                 Constants.Trigger.USE_INITIATOR,
                 Constants.Trigger.USE_EVENT_COMMIT_ID,
-                Constants.Request.ENTRY_POINT_KEY
+                Constants.Request.ENTRY_POINT_KEY,
+                Constants.Trigger.EXCLUSIVE_GROUP
         };
 
         public DefaultTriggerConverter() {

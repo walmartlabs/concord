@@ -86,6 +86,7 @@ class RepositoryTriggersPopup extends React.Component<Props, OwnState> {
                             <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
                             <Table.HeaderCell>Conditions</Table.HeaderCell>
                             <Table.HeaderCell collapsing={true}>Entry Point</Table.HeaderCell>
+                            <Table.HeaderCell>Configuration</Table.HeaderCell>
                             <Table.HeaderCell>Arguments</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
@@ -105,6 +106,14 @@ class RepositoryTriggersPopup extends React.Component<Props, OwnState> {
                                     )}
                                 </Table.Cell>
                                 <Table.Cell>{t.cfg.entryPoint}</Table.Cell>
+                                <Table.Cell>
+                                    <ReactJson
+                                        src={t.cfg}
+                                        collapsed={true}
+                                        name={null}
+                                        enableClipboard={false}
+                                    />
+                                </Table.Cell>
                                 <Table.Cell>
                                     {t.arguments && (
                                         <ReactJson

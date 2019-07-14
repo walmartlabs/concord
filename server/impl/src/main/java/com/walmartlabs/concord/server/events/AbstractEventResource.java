@@ -144,7 +144,7 @@ public abstract class AbstractEventResource {
                 UserEntry initiator = getInitiator(t, event);
                 UUID orgId = projectDao.getOrgId(t.getProjectId());
 
-                PartialProcessKey processKey = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), cfg, initiator);
+                PartialProcessKey processKey = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), cfg, initiator, t.getExclusiveGroup());
                 log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, processKey, t);
             } catch (Exception e) {
                 log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
@@ -207,7 +207,8 @@ public abstract class AbstractEventResource {
                                            UUID projectId,
                                            UUID repoId,
                                            Map<String, Object> cfg,
-                                           UserEntry initiator) throws Exception {
+                                           UserEntry initiator,
+                                           String exclusiveGroup) throws Exception {
 
         PartialProcessKey processKey = PartialProcessKey.create();
 
@@ -218,6 +219,7 @@ public abstract class AbstractEventResource {
                     .project(projectId)
                     .repository(repoId)
                     .configuration(cfg)
+                    .exclusiveGroup(exclusiveGroup)
                     .build();
 
             processManager.start(payload, false);

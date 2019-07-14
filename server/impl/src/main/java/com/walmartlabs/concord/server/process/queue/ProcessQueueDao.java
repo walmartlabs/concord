@@ -81,8 +81,8 @@ public class ProcessQueueDao extends AbstractDao {
     private final List<ProcessQueueEntryFilter> filters;
 
     private final EventDao eventDao;
-    private final ConcordObjectMapper objectMapper;
     private final ProcessQueueLock queueLock;
+    private final ConcordObjectMapper objectMapper;
 
     @Inject
     protected ProcessQueueDao(@MainDB Configuration cfg,
@@ -107,13 +107,15 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void insertInitial(ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, UUID initiatorId, Map<String, Object> meta) {
+                              UUID projectId, UUID initiatorId, Map<String, Object> meta,
+                              String exclusiveGroup) {
 
-        tx(tx -> insertInitial(tx, processKey, kind, parentInstanceId, projectId, initiatorId, meta));
+        tx(tx -> insertInitial(tx, processKey, kind, parentInstanceId, projectId, initiatorId, meta, exclusiveGroup));
     }
 
-    private void insertInitial(DSLContext tx, ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
-                               UUID projectId, UUID initiatorId, Map<String, Object> meta) {
+    public void insertInitial(DSLContext tx, ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
+                               UUID projectId, UUID initiatorId, Map<String, Object> meta,
+                               String exclusiveGroup) {
 
         tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
@@ -124,7 +126,8 @@ public class ProcessQueueDao extends AbstractDao {
                         PROCESS_QUEUE.INITIATOR_ID,
                         PROCESS_QUEUE.CURRENT_STATUS,
                         PROCESS_QUEUE.LAST_UPDATED_AT,
-                        PROCESS_QUEUE.META)
+                        PROCESS_QUEUE.META,
+                        PROCESS_QUEUE.EXCLUSIVE_GROUP)
                 .values(value(processKey.getInstanceId()),
                         value(kind.toString()),
                         value(parentInstanceId),
@@ -133,7 +136,8 @@ public class ProcessQueueDao extends AbstractDao {
                         value(initiatorId),
                         value(ProcessStatus.PREPARING.toString()),
                         currentTimestamp(),
-                        field("?::jsonb", objectMapper.serialize(meta)))
+                        field("?::jsonb", objectMapper.serialize(meta)),
+                        value(exclusiveGroup))
                 .execute();
 
         insertStatusHistory(tx, processKey, ProcessStatus.PREPARING);

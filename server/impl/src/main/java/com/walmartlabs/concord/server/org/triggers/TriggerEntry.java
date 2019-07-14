@@ -149,6 +149,11 @@ public class TriggerEntry implements Serializable {
         return MapUtils.getBoolean(cfg, Constants.Trigger.USE_EVENT_COMMIT_ID, false);
     }
 
+    @JsonIgnore
+    public String getExclusiveGroup() {
+        return MapUtils.getString(cfg, Constants.Trigger.EXCLUSIVE_GROUP, null);
+    }
+
     public List<String> getActiveProfiles() {
         return activeProfiles;
     }

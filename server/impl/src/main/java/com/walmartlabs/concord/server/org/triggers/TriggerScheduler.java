@@ -44,7 +44,6 @@ public class TriggerScheduler implements ScheduledTask {
     private static final UUID INITIATOR_ID = UUID.fromString("1f9ae527-e7ab-42c0-b0e5-0092f9285f22");
     private static final String INITIATOR = "cron";
 
-    private static final String REALM = "cron";
     private static final String EVENT_SOURCE = "cron";
 
     private final Date startedAt;
@@ -118,10 +117,10 @@ public class TriggerScheduler implements ScheduledTask {
             cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
         }
 
-        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), cfg);
+        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), t.getExclusiveGroup(), cfg);
     }
 
-    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String entryPoint, Map<String, Object> cfg) {
+    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String entryPoint, String exclusiveGroup, Map<String, Object> cfg) {
         PartialProcessKey processKey = PartialProcessKey.create();
 
         Payload payload;
@@ -132,6 +131,7 @@ public class TriggerScheduler implements ScheduledTask {
                     .project(projectId)
                     .repository(repoId)
                     .entryPoint(entryPoint)
+                    .exclusiveGroup(exclusiveGroup)
                     .configuration(cfg)
                     .build();
         } catch (Exception e) {
@@ -145,17 +145,10 @@ public class TriggerScheduler implements ScheduledTask {
         } catch (Exception e) {
             log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error starting process",
                     triggerId, orgId, projectId, repoId, entryPoint, e);
+            return;
         }
 
         log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, entryPoint, processKey);
-    }
-
-    private void sleep(long t) {
-        try {
-            Thread.sleep(t);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     private boolean isRepositoryDisabled(TriggerSchedulerEntry t) {

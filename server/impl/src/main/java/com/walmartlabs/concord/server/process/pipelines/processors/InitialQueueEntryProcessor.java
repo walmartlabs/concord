@@ -57,8 +57,9 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
 
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
         Map<String, Object> meta = getMeta(cfg);
+        String exclusiveGroup = payload.getHeader(Payload.EXCLUSIVE_GROUP);
 
-        queueDao.insertInitial(processKey, kind, parentInstanceId, projectId, initiatorId, meta);
+        queueDao.insertInitial(processKey, kind, parentInstanceId, projectId, initiatorId, meta, exclusiveGroup);
 
         return chain.process(payload);
     }

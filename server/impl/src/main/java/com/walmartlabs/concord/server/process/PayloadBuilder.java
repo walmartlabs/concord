@@ -130,6 +130,13 @@ public final class PayloadBuilder {
         return this;
     }
 
+    public PayloadBuilder exclusiveGroup(String group) {
+        if (group != null) {
+            payload = payload.putHeader(Payload.EXCLUSIVE_GROUP, group);
+        }
+        return this;
+    }
+
     public PayloadBuilder workspace(InputStream in) throws IOException {
         if (in == null) {
             return this;
