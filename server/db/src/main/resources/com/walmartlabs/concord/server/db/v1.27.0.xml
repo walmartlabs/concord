@@ -11,4 +11,8 @@
             where WAIT_CONDITIONS is not null
         </sql>
     </changeSet>
+
+    <changeSet id="1270100" author="ibodrov@gmail.com">
+        <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_CURR_STAT"/>
+    </changeSet>
 </databaseChangeLog>
