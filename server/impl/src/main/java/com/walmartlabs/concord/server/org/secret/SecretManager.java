@@ -409,14 +409,14 @@ public class SecretManager {
     /**
      * Returns a list of secrets for the specified organization.
      */
-    public List<SecretEntry> list(UUID orgId) {
+    public List<SecretEntry> list(UUID orgId, int offset, int limit, String filter) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
             userId = null;
         }
 
-        return secretDao.list(orgId, userId, SECRETS.SECRET_NAME, true);
+        return secretDao.list(orgId, userId, SECRETS.SECRET_NAME, true, offset, limit, filter);
     }
 
     /**

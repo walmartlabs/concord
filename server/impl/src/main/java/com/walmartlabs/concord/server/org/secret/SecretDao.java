@@ -204,7 +204,7 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    public List<SecretEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc) {
+    public List<SecretEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc, int offset, int limit, String filter) {
 
         SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
                 .from(TEAMS)
@@ -226,8 +226,20 @@ public class SecretDao extends AbstractDao {
                 query.where(SECRETS.ORG_ID.eq(orgId));
             }
 
+            if(filter != null) {
+                query.where(SECRETS.SECRET_NAME.containsIgnoreCase(filter));
+            }
+
             if (sortField != null) {
                 query.orderBy(asc ? sortField.asc() : sortField.desc());
+            }
+
+            if (offset >= 0) {
+                query.offset(offset);
+            }
+
+            if (limit > 0) {
+                query.limit(limit);
             }
 
             return query.fetch(SecretDao::toEntry);

@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server, concord-console: pagination for the secret list;
 - concord-server: support for "exclusive" triggers and "exclusive"
 execution groups;
 - concord-console: a form to change the secret's project.

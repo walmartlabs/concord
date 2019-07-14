@@ -26,9 +26,9 @@ import { Icon, Loader, Table } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
 import { SecretEntry, SecretVisibility, typeToText } from '../../../api/org/secret';
-import { actions, State } from '../../../state/data/secrets';
+import { actions, State, Pagination } from '../../../state/data/secrets';
 import { comparators } from '../../../utils';
-import { RequestErrorMessage } from '../../molecules';
+import { RequestErrorMessage, PaginationToolBar } from '../../molecules';
 
 interface ExternalProps {
     orgName: string;
@@ -39,10 +39,22 @@ interface StateProps {
     secrets: SecretEntry[];
     loading: boolean;
     error: RequestError;
+    next?: boolean;
 }
 
+interface PaginationState {
+    next: boolean;
+    paginationFilter: Pagination;
+}
+const toState = (paginationFilter: Pagination): PaginationState => {
+    return {
+        next: true,
+        paginationFilter: paginationFilter || {}
+    };
+};
+
 interface DispatchProps {
-    load: () => void;
+    load: (paginationFilter: Pagination, filter?: string) => void;
 }
 
 const SecretVisibilityIcon = ({ secret }: { secret: SecretEntry }) => {
@@ -55,22 +67,68 @@ const SecretVisibilityIcon = ({ secret }: { secret: SecretEntry }) => {
 
 type Props = StateProps & DispatchProps & ExternalProps;
 
-class SecretList extends React.PureComponent<Props> {
+class SecretList extends React.Component<Props, PaginationState> {
+    constructor(props: Props) {
+        super(props);
+        this.state = toState({ limit: 50, offset: 0 });
+        this.handleNext = this.handleNext.bind(this);
+        this.handlePrev = this.handlePrev.bind(this);
+        this.handleFirst = this.handleFirst.bind(this);
+    }
     componentDidMount() {
-        this.props.load();
+        const { paginationFilter } = this.state;
+        const { filter } = this.props;
+        this.props.load(paginationFilter, filter);
     }
 
     componentDidUpdate(prevProps: Props) {
-        const { orgName: newOrgName } = this.props;
-        const { orgName: oldOrgName } = prevProps;
+        const { orgName: newOrgName, filter } = this.props;
+        const { orgName: oldOrgName, filter: oldFilter } = prevProps;
+        const { paginationFilter } = this.state;
 
         if (oldOrgName !== newOrgName) {
-            this.props.load();
+            this.props.load(this.state.paginationFilter, filter);
         }
+
+        if (filter !== oldFilter) {
+            this.handleNavigation(0, paginationFilter.limit);
+        }
+    }
+
+    handleLimitChange(limit: any) {
+        this.handleNavigation(0, limit);
+    }
+
+    handleNext() {
+        const { paginationFilter } = this.state;
+        let nextOffSet = this.state.paginationFilter.offset + 1;
+
+        this.handleNavigation(nextOffSet, paginationFilter.limit);
+    }
+
+    handlePrev() {
+        const { paginationFilter } = this.state;
+        let nextOffSet = this.state.paginationFilter.offset - 1;
+
+        this.handleNavigation(nextOffSet, paginationFilter.limit);
+    }
+
+    handleFirst() {
+        const { paginationFilter } = this.state;
+        this.handleNavigation(0, paginationFilter.limit);
+    }
+
+    handleNavigation(offset: number, limit: number) {
+        const { load, filter } = this.props;
+
+        this.setState({ paginationFilter: { offset, limit } }, () => {
+            load(this.state.paginationFilter, filter);
+        });
     }
 
     render() {
         const { error, loading, secrets, orgName } = this.props;
+        const { paginationFilter } = this.state;
 
         if (error) {
             return <RequestErrorMessage error={error} />;
@@ -80,53 +138,78 @@ class SecretList extends React.PureComponent<Props> {
             return <Loader active={true} />;
         }
 
-        if (secrets.length === 0) {
-            return <h3>No secrets found.</h3>;
-        }
-
         return (
-            <Table celled={true} compact={true}>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell collapsing={true} />
-                        <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
-                        <Table.HeaderCell>Type</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Project</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {secrets.map((secret, index) => (
-                        <Table.Row key={index}>
-                            <Table.Cell>
-                                <SecretVisibilityIcon secret={secret} />
-                            </Table.Cell>
-                            <Table.Cell singleLine={true}>
-                                <Link to={`/org/${orgName}/secret/${secret.name}`}>
-                                    {secret.name}
-                                </Link>
-                            </Table.Cell>
-                            <Table.Cell>{typeToText(secret.type)}</Table.Cell>
-                            <Table.Cell>{secret.projectName}</Table.Cell>
+            <>
+                <Table attached="top" basic={true} style={{ borderBottom: 0 }}>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell
+                                textAlign="right"
+                                collapsing={true}
+                                style={{ fontWeight: 'normal' }}>
+                                <PaginationToolBar
+                                    filterProps={paginationFilter}
+                                    handleLimitChange={(limit) => this.handleLimitChange(limit)}
+                                    handleNext={this.handleNext}
+                                    handlePrev={this.handlePrev}
+                                    handleFirst={this.handleFirst}
+                                    disablePrevious={this.state.paginationFilter.offset <= 0}
+                                    disableNext={!this.props.next}
+                                    disableFirst={this.state.paginationFilter.offset <= 0}
+                                />
+                            </Table.HeaderCell>
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table>
+                    </Table.Header>
+                </Table>
+
+                <Table celled={true} compact={true} attached="bottom">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell collapsing={true} />
+                            <Table.HeaderCell collapsing={true}>Name</Table.HeaderCell>
+                            <Table.HeaderCell>Type</Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true}>Project</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {secrets.map((secret, index) => (
+                            <Table.Row key={index}>
+                                <Table.Cell>
+                                    <SecretVisibilityIcon secret={secret} />
+                                </Table.Cell>
+                                <Table.Cell singleLine={true}>
+                                    <Link to={`/org/${orgName}/secret/${secret.name}`}>
+                                        {secret.name}
+                                    </Link>
+                                </Table.Cell>
+                                <Table.Cell>{typeToText(secret.type)}</Table.Cell>
+                                <Table.Cell>{secret.projectName}</Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table>
+                {secrets.length <= 0 && <h3>No secrets found. </h3>}
+            </>
         );
     }
 }
 
 // TODO refactor as a selector?
-const makeSecretList = (data: { [id: string]: SecretEntry }, filter?: string): SecretEntry[] =>
-    Object.keys(data)
+const makeSecretList = (data?: { [id: string]: SecretEntry }): SecretEntry[] => {
+    if (!data) {
+        return [];
+    }
+    return Object.keys(data)
         .map((k) => data[k])
-        .filter((e) => (filter ? e.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 : true))
         .sort(comparators.byName);
+};
 
 const mapStateToProps = (
     { secrets }: { secrets: State },
     { filter }: ExternalProps
 ): StateProps => ({
-    secrets: makeSecretList(secrets.secretById, filter),
+    secrets: makeSecretList(secrets.secretById.items),
+    next: secrets.secretById.next,
     loading: secrets.listSecrets.running,
     error: secrets.listSecrets.error
 });
@@ -135,7 +218,8 @@ const mapDispatchToProps = (
     dispatch: Dispatch<AnyAction>,
     { orgName }: ExternalProps
 ): DispatchProps => ({
-    load: () => dispatch(actions.listSecrets(orgName))
+    load: (paginationFilter, filter) =>
+        dispatch(actions.listSecrets(orgName, paginationFilter, filter))
 });
 
 export default connect(

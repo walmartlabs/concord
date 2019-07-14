@@ -219,9 +219,12 @@ public class SecretResource implements Resource {
     @Path("/{orgName}/secret")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public List<SecretEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
+    public List<SecretEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                  @QueryParam("offset") int offset,
+                                  @QueryParam("limit") int limit,
+                                  @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return secretManager.list(org.getId());
+        return secretManager.list(org.getId(), offset, limit, filter);
     }
 
     @DELETE

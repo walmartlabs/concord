@@ -52,10 +52,11 @@ import {
     SecretTeamAccessRequest,
     ListSecretsRequest,
     ListSecretsState,
+    Pagination,
+    PaginatedSecrets,
     RenameSecretRequest,
     RenameSecretState,
     SecretDataResponse,
-    Secrets,
     State,
     UpdateSecretTeamAccessState,
     UpdateSecretVisibilityResponse,
@@ -104,9 +105,15 @@ export const actions = {
         secretName
     }),
 
-    listSecrets: (orgName: ConcordKey): ListSecretsRequest => ({
+    listSecrets: (
+        orgName: ConcordKey,
+        pagination: Pagination,
+        filter?: string
+    ): ListSecretsRequest => ({
         type: actionTypes.LIST_SECRETS_REQUEST,
-        orgName
+        orgName,
+        pagination,
+        filter
     }),
 
     createSecret: (orgName: ConcordKey, entry: NewSecretEntry): CreateSecretRequest => ({
@@ -169,7 +176,7 @@ export const actions = {
     })
 };
 
-const secretById: Reducer<Secrets> = (
+const secretById: Reducer<PaginatedSecrets> = (
     state = {},
     action: SecretDataResponse | UpdateSecretVisibilityResponse
 ) => {
@@ -188,7 +195,7 @@ const secretById: Reducer<Secrets> = (
             a.items.forEach((o) => {
                 result[o.id] = o;
             });
-            return result;
+            return { items: result, next: a.next };
         }
         case actionTypes.UPDATE_SECRET_VISIBLITY_RESPONSE: {
             const a = action as UpdateSecretVisibilityResponse;
@@ -197,7 +204,11 @@ const secretById: Reducer<Secrets> = (
                 return state;
             }
 
-            state[a.secretId].visibility = a.visibility;
+            if (!state.items) {
+                return {};
+            }
+
+            state.items[a.secretId].visibility = a.visibility;
             return state;
         }
         default: {
@@ -304,8 +315,12 @@ export const reducers = combineReducers<State>({
 
 export const selectors = {
     secretByName: (state: State, orgName: ConcordKey, secretName: ConcordKey) => {
-        for (const id of Object.keys(state.secretById)) {
-            const p = state.secretById[id];
+        if (!state.secretById.items) {
+            return;
+        }
+
+        for (const id of Object.keys(state.secretById.items)) {
+            const p = state.secretById.items[id];
             if (p.orgName === orgName && p.name === secretName) {
                 return p;
             }
@@ -331,12 +346,13 @@ function* onGet({ orgName, secretName }: GetSecretRequest) {
     }
 }
 
-function* onList({ orgName }: ListSecretsRequest) {
+function* onList({ orgName, pagination, filter }: ListSecretsRequest) {
     try {
-        const response = yield call(apiList, orgName);
+        const response = yield call(apiList, orgName, pagination.offset, pagination.limit, filter);
         yield put({
             type: actionTypes.SECRET_DATA_RESPONSE,
-            items: response
+            items: response.items,
+            next: response.next
         });
     } catch (e) {
         yield handleErrors(actionTypes.SECRET_DATA_RESPONSE, e);
