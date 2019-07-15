@@ -208,6 +208,7 @@ export const combinePrePostEvents = (
             const preEvent = findEvent('pre', data.correlationId);
             if (preEvent) {
                 const clone = { ...preEvent };
+                clone.data = event.data;
                 clone.duration = timestampDiffMs(event.eventDate, preEvent.eventDate);
                 result.push(clone);
             } else {

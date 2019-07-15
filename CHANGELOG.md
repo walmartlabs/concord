@@ -13,6 +13,8 @@ execution groups;
 
 ### Changed
 
+- concord-server, concord-console: fix the Ansible event status
+calculation;
 - ansible: fixed an issue with using arrays as the `tags` parameter
 values.
 
