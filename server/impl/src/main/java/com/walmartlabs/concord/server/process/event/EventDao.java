@@ -89,7 +89,7 @@ public class EventDao extends AbstractDao {
                 q.limit(limit);
             }
 
-            return q.orderBy(PROCESS_EVENTS.EVENT_DATE)
+            return q.orderBy(PROCESS_EVENTS.EVENT_SEQ)
                     .fetch(this::toEntry);
         }
     }
