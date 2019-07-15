@@ -11,6 +11,11 @@
 execution groups;
 - concord-console: a form to change the secret's project.
 
+### Changed
+
+- ansible: fixed an issue with using arrays as the `tags` parameter
+values.
+
 
 
 ## [1.26.0] - 2019-07-10
