@@ -178,12 +178,12 @@ public class PlaybookScriptBuilder {
 
         if (tags != null) {
             l.add("-t");
-            l.add(tags);
+            l.add(quote(tags));
         }
 
         if (skipTags != null) {
             l.add("--skip-tags");
-            l.add(skipTags);
+            l.add(quote(skipTags));
         }
 
         if (privateKey != null) {
@@ -294,5 +294,13 @@ public class PlaybookScriptBuilder {
         Path result = tmpDir.resolve("ansible-extra-vars.json");
         new ObjectMapper().writeValue(result.toFile(), extraVars);
         return result;
+    }
+
+    /**
+     * Puts the specified string into single quotes.
+     * It is necessary to correctly pass multi-value parameters in the Ansible command line.
+     */
+    private static String quote(String s) {
+        return "'" + s + "'";
     }
 }
