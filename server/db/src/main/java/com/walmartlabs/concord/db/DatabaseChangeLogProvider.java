@@ -20,26 +20,19 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.DatabaseChangeLogProvider;
+public interface DatabaseChangeLogProvider {
 
-import javax.inject.Named;
+    String getChangeLogPath();
 
-@Named
-public class ServerDatabaseChangeLogProvider implements DatabaseChangeLogProvider {
-
-    @Override
-    public String getChangeLogPath() {
-        return "com/walmartlabs/concord/server/db/liquibase.xml";
+    default String getChangeLogTable() {
+        return "SERVER_DB_LOG";
     }
 
-    @Override
-    public int order() {
-        // we expect the server's DB to be migrated first
-        return 0;
+    default String getLockTable() {
+        return "SERVER_DB_LOCK";
     }
 
-    @Override
-    public String toString() {
-        return "server-db";
+    default int order() {
+        return 1;
     }
 }

@@ -24,7 +24,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.DatabaseConfiguration;
 import com.walmartlabs.concord.db.DatabaseModule;
-import com.walmartlabs.concord.db.ServerDatabaseChangeLogProvider;
+import com.walmartlabs.concord.db.MainDBChangeLogProvider;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -45,7 +45,7 @@ public abstract class AbstractDaoTest {
         DatabaseConfiguration cfg = new DatabaseConfigurationImpl("jdbc:postgresql://localhost:5432/postgres", "postgres", "q1", 3);
 
         DatabaseModule db = new DatabaseModule();
-        this.dataSource = db.appDataSource(cfg, new MetricRegistry(), Collections.singletonList(new ServerDatabaseChangeLogProvider()));
+        this.dataSource = db.appDataSource(cfg, new MetricRegistry(), Collections.singleton(new MainDBChangeLogProvider()));
 
         this.cfg = db.appJooqConfiguration(this.dataSource);
     }
