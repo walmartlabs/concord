@@ -42,9 +42,7 @@ public abstract class AbstractDaoTest {
 
     @Before
     public void initDataSource() {
-        DatabaseConfiguration cfg = new DatabaseConfiguration("org.postgresql.Driver",
-                "jdbc:postgresql://localhost:5432/postgres",
-                "postgres", "q1", "inventory", "q1", 3);
+        DatabaseConfiguration cfg = new DatabaseConfigurationImpl("jdbc:postgresql://localhost:5432/postgres", "postgres", "q1", 3);
 
         DatabaseModule db = new DatabaseModule();
         this.dataSource = db.appDataSource(cfg, new MetricRegistry(), Collections.singletonList(new ServerDatabaseChangeLogProvider()));
@@ -69,5 +67,40 @@ public abstract class AbstractDaoTest {
 
     protected Configuration getConfiguration() {
         return cfg;
+    }
+
+    private static final class DatabaseConfigurationImpl implements DatabaseConfiguration {
+
+        private final String url;
+        private final String username;
+        private final String password;
+        private final int maxPoolSize;
+
+        private DatabaseConfigurationImpl(String url, String username, String password, int maxPoolSize) {
+            this.url = url;
+            this.username = username;
+            this.password = password;
+            this.maxPoolSize = maxPoolSize;
+        }
+
+        @Override
+        public String url() {
+            return url;
+        }
+
+        @Override
+        public String username() {
+            return username;
+        }
+
+        @Override
+        public String password() {
+            return password;
+        }
+
+        @Override
+        public int maxPoolSize() {
+            return maxPoolSize;
+        }
     }
 }

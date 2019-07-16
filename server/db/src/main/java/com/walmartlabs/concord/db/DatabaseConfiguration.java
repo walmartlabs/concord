@@ -4,7 +4,7 @@ package com.walmartlabs.concord.db;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,60 +20,17 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
-import java.io.Serializable;
+public interface DatabaseConfiguration {
 
-public class DatabaseConfiguration implements Serializable {
-
-    private final String driverClassName;
-    private final String url;
-    private final String appUsername;
-    private final String appPassword;
-    private final String inventoryUsername;
-    private final String inventoryPassword;
-    private final int maxPoolSize;
-
-    public DatabaseConfiguration(String driverClassName,
-                                 String url,
-                                 String appUsername,
-                                 String appPassword,
-                                 String inventoryUsername,
-                                 String inventoryPassword,
-                                 int maxPoolSize) {
-
-        this.driverClassName = driverClassName;
-        this.url = url;
-        this.appUsername = appUsername;
-        this.appPassword = appPassword;
-        this.inventoryUsername = inventoryUsername;
-        this.inventoryPassword = inventoryPassword;
-        this.maxPoolSize = maxPoolSize;
+    default String driverClassName() {
+        return "org.postgresql.Driver";
     }
 
-    public String getDriverClassName() {
-        return driverClassName;
-    }
+    String url();
 
-    public String getUrl() {
-        return url;
-    }
+    String username();
 
-    public String getAppUsername() {
-        return appUsername;
-    }
+    String password();
 
-    public String getAppPassword() {
-        return appPassword;
-    }
-
-    public String getInventoryUsername() {
-        return inventoryUsername;
-    }
-
-    public String getInventoryPassword() {
-        return inventoryPassword;
-    }
-
-    public int getMaxPoolSize() {
-        return maxPoolSize;
-    }
+    int maxPoolSize();
 }

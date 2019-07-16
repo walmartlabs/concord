@@ -9,9 +9,9 @@ package com.walmartlabs.concord.db;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,10 +60,10 @@ public class DatabaseModule extends AbstractModule {
     @Provides
     @MainDB
     @Singleton
-    public DataSource appDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry,
+    public DataSource appDataSource(@MainDB DatabaseConfiguration cfg, MetricRegistry metricRegistry,
                                     List<DatabaseChangeLogProvider> changeLogProviders) {
 
-        DataSource ds = createDataSource(cfg, "app", cfg.getAppUsername(), cfg.getAppPassword(), metricRegistry);
+        DataSource ds = createDataSource(cfg, "app", cfg.username(), cfg.password(), metricRegistry);
         changeLogProviders.stream()
                 .sorted(Comparator.comparingInt(DatabaseChangeLogProvider::order))
                 .forEach(p -> migrateDb(ds, p));
@@ -74,8 +74,8 @@ public class DatabaseModule extends AbstractModule {
     @Provides
     @InventoryDB
     @Singleton
-    public DataSource inventoryDataSource(DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
-        return createDataSource(cfg, "inventory", cfg.getInventoryUsername(), cfg.getInventoryPassword(), metricRegistry);
+    public DataSource inventoryDataSource(@InventoryDB DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
+        return createDataSource(cfg, "inventory", cfg.username(), cfg.password(), metricRegistry);
     }
 
     @Provides
@@ -100,14 +100,14 @@ public class DatabaseModule extends AbstractModule {
 
         HikariDataSource ds = new HikariDataSource();
         ds.setPoolName(poolName);
-        ds.setJdbcUrl(cfg.getUrl());
-        ds.setDriverClassName(cfg.getDriverClassName());
+        ds.setJdbcUrl(cfg.url());
+        ds.setDriverClassName(cfg.driverClassName());
         ds.setUsername(username);
         ds.setPassword(password);
         ds.setAutoCommit(false);
         ds.setMaxLifetime(Long.MAX_VALUE);
         ds.setMinimumIdle(1);
-        ds.setMaximumPoolSize(cfg.getMaxPoolSize());
+        ds.setMaximumPoolSize(cfg.maxPoolSize());
         ds.setLeakDetectionThreshold(10000);
         ds.setMetricRegistry(metricRegistry);
         return ds;

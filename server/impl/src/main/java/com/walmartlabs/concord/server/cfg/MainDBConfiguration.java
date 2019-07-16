@@ -21,16 +21,17 @@ package com.walmartlabs.concord.server.cfg;
  */
 
 import com.walmartlabs.concord.db.DatabaseConfiguration;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Named
 @Singleton
-public class DatabaseConfigurationProvider implements Provider<DatabaseConfiguration> {
+@MainDB
+public class MainDBConfiguration implements DatabaseConfiguration {
 
     @Inject
     @Config("db.url")
@@ -38,27 +39,34 @@ public class DatabaseConfigurationProvider implements Provider<DatabaseConfigura
 
     @Inject
     @Config("db.appUsername")
-    private String appUsername;
+    private String username;
 
     @Inject
     @Config("db.appPassword")
-    private String appPassword;
-
-    @Inject
-    @Config("db.inventoryUsername")
-    private String inventoryUsername;
-
-    @Inject
-    @Config("db.inventoryPassword")
-    private String inventoryPassword;
+    private String password;
 
     @Inject
     @Config("db.maxPoolSize")
     private int maxPoolSize;
 
+
     @Override
-    public DatabaseConfiguration get() {
-        return new DatabaseConfiguration("org.postgresql.Driver", url,
-                appUsername, appPassword, inventoryUsername, inventoryPassword, maxPoolSize);
+    public String url() {
+        return url;
+    }
+
+    @Override
+    public String username() {
+        return username;
+    }
+
+    @Override
+    public String password() {
+        return password;
+    }
+
+    @Override
+    public int maxPoolSize() {
+        return maxPoolSize;
     }
 }
