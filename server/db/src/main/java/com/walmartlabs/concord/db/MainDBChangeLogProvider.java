@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.plugins.ansible.db;
+package com.walmartlabs.concord.db;
 
 /*-
  * *****
@@ -20,22 +20,25 @@ package com.walmartlabs.concord.server.plugins.ansible.db;
  * =====
  */
 
-import com.walmartlabs.concord.server.sdk.DatabaseChangeLogProvider;
-
 import javax.inject.Named;
-import javax.inject.Singleton;
 
 @Named
-@Singleton
-public class AnsibleDatabaseChangeLogProvider implements DatabaseChangeLogProvider {
+@MainDB
+public class MainDBChangeLogProvider implements DatabaseChangeLogProvider {
 
     @Override
     public String getChangeLogPath() {
-        return "com/walmartlabs/concord/server/plugins/ansible/db/liquibase.xml";
+        return "com/walmartlabs/concord/server/db/liquibase.xml";
+    }
+
+    @Override
+    public int order() {
+        // we expect the server's DB to be migrated first
+        return 0;
     }
 
     @Override
     public String toString() {
-        return "ansible-db";
+        return "server-db";
     }
 }

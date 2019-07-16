@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.sdk;
+package com.walmartlabs.concord.server.plugins.ansible.db;
 
 /*-
  * *****
@@ -20,19 +20,22 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
-public interface DatabaseChangeLogProvider {
+import com.walmartlabs.concord.db.DatabaseChangeLogProvider;
+import com.walmartlabs.concord.db.MainDB;
 
-    String getChangeLogPath();
+import javax.inject.Named;
 
-    default String getChangeLogTable() {
-        return "SERVER_DB_LOG";
+@Named
+@MainDB
+public class AnsibleDBChangeLogProvider implements DatabaseChangeLogProvider {
+
+    @Override
+    public String getChangeLogPath() {
+        return "com/walmartlabs/concord/server/plugins/ansible/db/liquibase.xml";
     }
 
-    default String getLockTable() {
-        return "SERVER_DB_LOCK";
-    }
-
-    default int order() {
-        return 1;
+    @Override
+    public String toString() {
+        return "ansible-db";
     }
 }
