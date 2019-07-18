@@ -29,7 +29,6 @@ import io.takari.bpm.api.JavaDelegate;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult;
 import io.takari.bpm.model.ProcessDefinition;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -2124,7 +2123,6 @@ public class YamlParserTest extends AbstractYamlParserTest {
     }
 
     @Test
-    @Ignore
     public void test072() throws Exception {
         deploy("072.yml");
 
@@ -2141,6 +2139,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
 
         verify(task, times(3)).log(eq("flow: main"));
         verify(task, times(1)).log(eq("flow: myFlow"));
+        verify(task, times(1)).log(eq("flow: myFlow2"));
         verify(task, times(1)).log(eq("flow: myFaultyFlow"));
         verify(task, times(1)).log(eq("error handler: flow: main"));
     }
