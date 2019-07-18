@@ -13,6 +13,8 @@ execution groups;
 
 ### Changed
 
+- concord-server: process statup errors now correctly shown when
+the "browser link" is used;
 - concord-server, concord-console: fix the Ansible event status
 calculation;
 - ansible: fixed an issue with using arrays as the `tags` parameter
