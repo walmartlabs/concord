@@ -13,6 +13,8 @@ execution groups;
 
 ### Changed
 
+- project-model: fixed a bug preventing `withItems` and `retry` from
+working correctly when used together;
 - concord-server: process statup errors now correctly shown when
 the "browser link" is used;
 - concord-server, concord-console: fix the Ansible event status

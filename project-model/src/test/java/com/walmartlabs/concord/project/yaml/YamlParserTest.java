@@ -29,11 +29,13 @@ import io.takari.bpm.api.JavaDelegate;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormSubmitResult;
 import io.takari.bpm.model.ProcessDefinition;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -1516,7 +1518,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
 
         verify(testBean, times(1)).toString(eq(101L));
         verify(testBean, times(1)).toString(eq("2:item1"));
-        verify(testBean, times(1)).toString(eq("2:1"));
+        verify(testBean, times(1)).toString(eq("2:2"));
         verify(testBean, times(1)).toString(eq("2:item3"));
         verifyNoMoreInteractions(testBean);
     }
@@ -1812,7 +1814,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
             start(key, "main", args);
             fail("exception expected");
         } catch (ExecutionException e) {
-            assertTrue(e.getCause().getMessage().contains("should be a list"));
+            assertTrue(e.getCause().getCause().getMessage().contains("should be a list"));
         }
     }
 
@@ -2122,6 +2124,7 @@ public class YamlParserTest extends AbstractYamlParserTest {
     }
 
     @Test
+    @Ignore
     public void test072() throws Exception {
         deploy("072.yml");
 
@@ -2161,6 +2164,43 @@ public class YamlParserTest extends AbstractYamlParserTest {
         // ---
 
         verify(task, times(2)).log(eq("Hello, 123"));
+    }
+
+    @Test
+    public void test074() throws Exception {
+        deploy("074.yml");
+
+        register("__withItemsUtils", new StepConverter.WithItemsUtilsTask());
+        register("__retryUtils", new YamlTaskStepConverter.RetryUtilsTask());
+
+        MyLogger task = spy(new MyLogger());
+        register("log", task);
+
+        TestErrorTask http = spy(new TestErrorTask());
+        register("http", http);
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+
+        start(key, "default");
+
+        // ---
+        ArgumentCaptor<ExecutionContext> captor = ArgumentCaptor.forClass(ExecutionContext.class);
+        verify(http, times(12)).execute(captor.capture());
+
+        List<String> urls = captor.getAllValues()
+                .stream()
+                .map(e -> (String)e.getVariable("url"))
+                .collect(Collectors.toList());
+
+        assertContains("https://nonexistant.example.com/test/a", urls, 4);
+        assertContains("https://nonexistant.example.com/test/b", urls, 4);
+        assertContains("https://nonexistant.example.com/test/c", urls, 4);
+
+        assertTrue(urls.isEmpty());
+
+        verifyNoMoreInteractions(http);
     }
 
     // FORMS (100 - 199)
@@ -2473,6 +2513,15 @@ public class YamlParserTest extends AbstractYamlParserTest {
                 .map(e -> (ProcessDefinition) e)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("subprocess not found"));
+    }
+
+    private static void assertContains(String str, List<String> items, int expectedCount) {
+        for (int i = 0; i < expectedCount; i++) {
+            boolean removed = items.remove(str);
+            assertTrue(removed);
+        }
+
+        assertFalse(items.contains(str));
     }
 
     private static class TestBean {

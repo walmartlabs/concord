@@ -1,0 +1,21 @@
+myFlow:
+  - try:
+      - log: "Fetching item: ${item}"
+      - task: http
+        retry:
+          times: 3
+          delay: 1
+        in:
+          url: "https://nonexistant.example.com/test/${item}"
+          response: string
+          out: response
+
+    error:
+      - log: "woowee: ${lastError}"
+
+default:
+  - call: myFlow
+    withItems:
+    - "a"
+    - "b"
+    - "c"

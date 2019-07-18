@@ -34,6 +34,10 @@ public class Chunk implements Serializable {
     private final Set<String> outputs = new HashSet<>();
     private final Map<String, SourceMap> sourceMap = new HashMap<>();
 
+    public void addFirstElement(AbstractElement e) {
+        elements.add(0, e);
+    }
+
     public void addElement(AbstractElement e) {
         elements.add(e);
     }

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
+import io.takari.bpm.Configuration;
 import io.takari.bpm.EngineBuilder;
 import io.takari.bpm.ProcessDefinitionProvider;
 import io.takari.bpm.api.Engine;
@@ -75,11 +76,17 @@ public abstract class AbstractYamlParserTest {
 
         ResourceResolver resourceResolver = ClassLoader::getSystemResourceAsStream;
 
+        Configuration cfg = new Configuration();
+        cfg.setInterpolateInputVariables(true);
+        cfg.setWrapAllExceptionsAsBpmnErrors(true);
+        cfg.setCopyAllCallActivityOutVariables(true);
+
         engine = new EngineBuilder()
                 .withDefinitionProvider(workflowProvider.processes())
                 .withTaskRegistry(taskRegistry)
                 .withUserTaskHandler(new FormTaskHandler(contextFactory, workflowProvider.forms(), formService))
                 .withResourceResolver(resourceResolver)
+                .withConfiguration(cfg)
                 .build();
     }
 
