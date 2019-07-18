@@ -13,6 +13,8 @@ execution groups;
 
 ### Changed
 
+- bpm: updated to `0.58.1`, resolves an issue with incorrect
+`context#getCurrentFlowName()` value in some cases;
 - project-model: fixed a bug preventing `withItems` and `retry` from
 working correctly when used together;
 - concord-server: process statup errors now correctly shown when

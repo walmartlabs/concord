@@ -13,6 +13,10 @@ main:
 
 myFlow:
   - log: "flow: ${__currentFlow}"
+  - call: myFlow2
+
+myFlow2:
+  - log: "flow: ${__currentFlow}"
 
 myFaultyFlow:
   - log: "flow: ${__currentFlow}"
