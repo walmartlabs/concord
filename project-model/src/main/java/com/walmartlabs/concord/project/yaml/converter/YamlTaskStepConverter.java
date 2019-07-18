@@ -80,6 +80,11 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
             return;
         }
 
+        // retry init
+        String initId = ctx.nextId();
+        c.addFirstElement(new ServiceTask(initId, ExpressionType.SIMPLE, "${__retryUtils.init(execution)}", null, null, true));
+        c.addElement(new SequenceFlow(ctx.nextId(), initId, attachedRef));
+
         // task boundary event
         String originalTaskEvId = ctx.nextId();
         c.addElement(new BoundaryEvent(originalTaskEvId, attachedRef, null));
@@ -125,7 +130,7 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
 
         String endId = ctx.nextId();
         c.addElement(new EndEvent(endId));
-        c.addElement(new SequenceFlow(ctx.nextId(),throwTaskId, endId));
+        c.addElement(new SequenceFlow(ctx.nextId(), throwTaskId, endId));
 
         c.addSourceMaps(c.getSourceMap());
     }
@@ -203,6 +208,8 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
         }
 
         public void throwLastError(ExecutionContext ctx) throws Throwable {
+            clearLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER);
+
             Object lastError = ctx.getVariable(Constants.Context.LAST_ERROR_KEY);
             if (lastError instanceof BpmnError) {
                 BpmnError e = (BpmnError) lastError;
@@ -214,6 +221,14 @@ public class YamlTaskStepConverter implements StepConverter<YamlTaskStep> {
             }
 
             throw new RuntimeException("Retry count exceeded");
+        }
+
+        public void init(ExecutionContext ctx) {
+            List<Integer> retryCounter = getList(ctx, InternalConstants.Context.RETRY_COUNTER);
+            retryCounter.add(0);
+            ctx.setVariable(InternalConstants.Context.RETRY_COUNTER, retryCounter);
+
+            ctx.setVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER, 0);
         }
 
         public void inc(ExecutionContext ctx) {
