@@ -56,9 +56,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static javax.ws.rs.core.Response.Status;
 
@@ -185,9 +186,8 @@ public class ProjectProcessResource implements Resource {
 
             return doStartProcess(orgId, projectId, repoId, repoBranchOrTag, repoCommitId, entryPoint, activeProfiles, requestInfo);
         } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error",
-                    orgName, projectName, repoName, entryPoint, activeProfiles, e);
-            return processError(null, "Process error: " + e.getMessage());
+            log.warn("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error: {}", orgName, projectName, repoName, entryPoint, activeProfiles, e.getMessage());
+            return processError(null, "Process error: " + e.getMessage(), e);
         }
     }
 
@@ -233,12 +233,9 @@ public class ProjectProcessResource implements Resource {
                     .configuration(cfg)
                     .build();
 
-            Thread processStartThread = new Thread(() -> processManager.start(payload, false));
-            processStartThread.start();
-
-            waitTillProcessIsInitialized(processKey);
+            processManager.start(payload, false);
         } catch (Exception e) {
-            return processError(processKey, e.getMessage());
+            return processError(processKey, e.getMessage(), e);
         }
 
         return proceed(processKey);
@@ -271,13 +268,13 @@ public class ProjectProcessResource implements Resource {
 
         ProcessStatus s = entry.status();
         if (s == ProcessStatus.FAILED || s == ProcessStatus.CANCELLED || s == ProcessStatus.TIMED_OUT) {
-            return processError(processKey, "Process failed");
+            return processError(processKey, "Process failed: " + s, null);
         } else if (s == ProcessStatus.FINISHED) {
             return processFinished(processKey);
         } else if (s == ProcessStatus.SUSPENDED) {
             String nextFormId = formService.nextFormId(pk);
             if (nextFormId == null) {
-                return processError(processKey, "Invalid process state: no forms found");
+                return processError(processKey, "Invalid process state: no forms found", null);
             }
 
             String url = "/#/process/" + entry.instanceId() + "/wizard";
@@ -287,16 +284,6 @@ public class ProjectProcessResource implements Resource {
         } else {
             Map<String, Object> args = prepareArgumentsForInProgressTemplate(entry);
             return responseTemplates.inProgressWait(Response.ok(), args).build();
-        }
-    }
-
-    private void waitTillProcessIsInitialized(PartialProcessKey processKey) throws InterruptedException {
-        while (true) {
-            if (queueDao.exists(processKey)) {
-                return;
-            }
-
-            TimeUnit.MILLISECONDS.sleep(100);
         }
     }
 
@@ -390,18 +377,37 @@ public class ProjectProcessResource implements Resource {
                 .build();
     }
 
-    private Response processError(PartialProcessKey processKey, String message) {
+    private Response processError(PartialProcessKey processKey, String message, Throwable t) {
         Map<String, Object> args = new HashMap<>();
 
-        if (processKey != null) {
+        if (processKey != null && queueDao.exists(processKey)) {
             UUID instanceId = processKey.getInstanceId();
             if (instanceId != null) {
                 args.put("instanceId", instanceId);
             }
         }
+
         args.put("message", message);
+
+        if (t != null) {
+            t = unwrap(t);
+            args.put("stacktrace", stacktraceToString(t));
+        }
 
         return responseTemplates.processError(Response.status(Status.INTERNAL_SERVER_ERROR), args)
                 .build();
+    }
+
+    private static Throwable unwrap(Throwable t) {
+        if (t instanceof ProcessException && t.getCause() != null) {
+            return t.getCause();
+        }
+        return t;
+    }
+
+    private static String stacktraceToString(Throwable t) {
+        StringWriter w = new StringWriter();
+        t.printStackTrace(new PrintWriter(w));
+        return w.toString();
     }
 }
