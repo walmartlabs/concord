@@ -1,9 +1,6 @@
 configuration:
   dependencies:
-    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.22.0"
-  arguments:
-    useRetryFile: false
-    makeItFail: true
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.26.0"
 
 flows:
   default:
@@ -14,15 +11,20 @@ flows:
           local:
             hosts:
               - "127.0.0.1"
+              - "127.0.0.2"
+              - "127.0.0.3"
             vars:
               ansible_connection: "local"
         extraVars:
-          makeItFail: ${makeItFail}
-        retry: ${useRetryFile}
+          makeItFail: true # just to simulate a failure inside of the playbook
       retry:
+        # specify new task parameters on the retry
         in:
+          retry: true # force Ansible to re-use the existing *.retry file
+
+          # this bit is just for example
           extraVars: # override the task's `extraVars` on retry
-            useRetryFile: true # force Ansible to re-use the existing *.retry file
             makeItFail: false # this time the playbook should succeed
+
         times: 1
         delay: 3
