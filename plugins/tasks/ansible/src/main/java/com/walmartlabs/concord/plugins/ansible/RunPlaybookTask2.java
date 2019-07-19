@@ -233,14 +233,23 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private String getLimit(Map<String, Object> args, String playbook) {
+    private static String getLimit(Map<String, Object> args, String playbook) {
+        boolean debug = getBoolean(args, TaskParams.DEBUG_KEY.getKey(), false);
+
         boolean retry = getBoolean(args, TaskParams.RETRY_KEY.getKey(), false);
         if (retry) {
-            return "@" + getNameWithoutExtension(playbook) + ".retry";
+            String s = "@" + getNameWithoutExtension(playbook) + ".retry";
+            if (debug) {
+                log.info("Using a limit file: {}", s);
+            }
+            return s;
         }
 
         String limit = getString(args, TaskParams.LIMIT_KEY.getKey());
         if (limit != null) {
+            if (debug) {
+                log.info("Using the limit value: {}", limit);
+            }
             return limit;
         }
 
