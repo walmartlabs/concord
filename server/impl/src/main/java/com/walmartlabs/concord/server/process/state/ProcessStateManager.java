@@ -35,6 +35,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -61,7 +63,10 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_ST
 @Singleton
 public class ProcessStateManager extends AbstractDao {
 
+    private static final Logger log = LoggerFactory.getLogger(ProcessStateManager.class);
+
     private static final String PATH_SEPARATOR = "/";
+    private static final int INSERT_BATCH_SIZE = 10;
 
     private final SecretStoreConfiguration secretCfg;
     private final Set<String> secureFiles = new HashSet<>();
@@ -302,11 +307,7 @@ public class ProcessStateManager extends AbstractDao {
     private void importPath(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
         String prefix = fixPath(path);
 
-        String sql = tx.insertInto(PROCESS_STATE)
-                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
-                .values((UUID) null, null, null, null, null, null)
-                .getSQL();
-
+        List<BatchItem> batch = new ArrayList<>();
         try {
             Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
                 @Override
@@ -338,41 +339,70 @@ public class ProcessStateManager extends AbstractDao {
                             .and(PROCESS_STATE.ITEM_PATH.eq(n)))
                             .execute();
 
-                    String itemPath = n;
-                    tx.connection(conn -> {
-                        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                            // INSTANCE_ID
-                            ps.setObject(1, instanceId);
-
-                            // INSTANCE_CREATED_AT
-                            ps.setTimestamp(2, instanceCreatedAt);
-
-                            // ITEM_PATH
-                            ps.setString(3, itemPath);
-
-                            // UNIX_MODE
-                            ps.setInt(4, unixMode);
-
-                            // ITEM_DATA
-                            try (InputStream in = Files.newInputStream(file);
-                                 InputStream processed = needsEncryption ? encrypt(in) : in) {
-                                ps.setBinaryStream(5, processed);
-                            }
-
-                            // IS_ENCRYPTED
-                            ps.setBoolean(6, needsEncryption);
-
-                            ps.execute();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                    batch.add(new BatchItem(n, file, unixMode, needsEncryption));
+                    if (batch.size() >= INSERT_BATCH_SIZE) {
+                        insert(tx, instanceId, instanceCreatedAt, batch);
+                        batch.clear();
+                    }
 
                     return FileVisitResult.CONTINUE;
                 }
             });
+
+            if (!batch.isEmpty()) {
+                insert(tx, instanceId, instanceCreatedAt, batch);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void insert(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, Collection<BatchItem> batch) {
+        String sql = tx.insertInto(PROCESS_STATE)
+                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
+                .values((UUID) null, null, null, null, null, null)
+                .getSQL();
+
+        List<InputStream> streams = new LinkedList<>();
+        try {
+            tx.connection(conn -> {
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for (BatchItem item : batch) {
+                        // INSTANCE_ID
+                        ps.setObject(1, instanceId);
+
+                        // INSTANCE_CREATED_AT
+                        ps.setTimestamp(2, instanceCreatedAt);
+
+                        // ITEM_PATH
+                        ps.setString(3, item.itemPath);
+
+                        // UNIX_MODE
+                        ps.setInt(4, item.unixMode);
+
+                        InputStream in = Files.newInputStream(item.path);
+                        streams.add(in); // keep the streams open until the batch is committed
+
+                        if (item.needsEncryption) {
+                            in = encrypt(in);
+                        }
+
+                        // ITEM_DATA
+                        ps.setBinaryStream(5, in);
+
+                        // IS_ENCRYPTED
+                        ps.setBoolean(6, item.needsEncryption);
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } finally {
+            streams.forEach(ProcessStateManager::closeSilently);
         }
     }
 
@@ -528,12 +558,7 @@ public class ProcessStateManager extends AbstractDao {
         return String.join(PATH_SEPARATOR, elements);
     }
 
-    public interface ItemConsumer {
-
-        void accept(String name, int unixMode, InputStream src);
-    }
-
-    public ProcessKey assertKey(PartialProcessKey processKey) {
+    private ProcessKey assertKey(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             Timestamp createdAt = assertCreatedAt(tx, processKey.getInstanceId());
             return new ProcessKey(processKey, createdAt);
@@ -544,7 +569,7 @@ public class ProcessStateManager extends AbstractDao {
         return assertCreatedAt(processKey.getInstanceId());
     }
 
-    public Timestamp assertCreatedAt(UUID instanceId) {
+    private Timestamp assertCreatedAt(UUID instanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
             return assertCreatedAt(tx, instanceId);
         }
@@ -560,6 +585,23 @@ public class ProcessStateManager extends AbstractDao {
         }
 
         return t;
+    }
+
+    private static void closeSilently(AutoCloseable c) {
+        if (c == null) {
+            return;
+        }
+
+        try {
+            c.close();
+        } catch (Exception e) {
+            log.error("Error while closing a resource", e);
+        }
+    }
+
+    public interface ItemConsumer {
+
+        void accept(String name, int unixMode, InputStream src);
     }
 
     public static final class CopyConsumer implements ItemConsumer {
@@ -641,6 +683,21 @@ public class ProcessStateManager extends AbstractDao {
             if (checkFn.apply(name)) {
                 delegate.accept(name, unixMode, src);
             }
+        }
+    }
+
+    private static final class BatchItem {
+
+        private final String itemPath;
+        private final Path path;
+        private final int unixMode;
+        private final boolean needsEncryption;
+
+        private BatchItem(String itemPath, Path path, int unixMode, boolean needsEncryption) {
+            this.itemPath = itemPath;
+            this.path = path;
+            this.unixMode = unixMode;
+            this.needsEncryption = needsEncryption;
         }
     }
 }

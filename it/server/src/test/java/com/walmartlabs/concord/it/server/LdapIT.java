@@ -31,6 +31,7 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeNotNull;
 
 public class LdapIT extends AbstractServerIT {
 
@@ -42,6 +43,8 @@ public class LdapIT extends AbstractServerIT {
 
     @BeforeClass
     public static void createLdapStructure() throws Exception {
+        assumeNotNull(System.getenv("IT_LDAP_URL"));
+
         ldapCtx = createContext();
 
         //create organization units
