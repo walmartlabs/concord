@@ -64,7 +64,7 @@ public final class DataSourceUtils {
         ds.setMaxLifetime(Long.MAX_VALUE);
         ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(cfg.maxPoolSize());
-        ds.setLeakDetectionThreshold(10000);
+        ds.setLeakDetectionThreshold(30000);
         ds.setMetricRegistry(metricRegistry);
         return ds;
     }
