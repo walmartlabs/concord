@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -123,7 +123,7 @@ public class Configuration {
 
         this.serverApiBaseUrl = cfg.getString("server.apiBaseUrl");
         log.info("Using the Server's API address: {}", serverApiBaseUrl);
-        this.serverWebsocketUrls = getCSV(cfg.getString("server.websockerUrl"));
+        this.serverWebsocketUrls = getWebsocketUrls(cfg);
         log.info("Using the Server's websocket addresses: {}", (Object[]) serverWebsocketUrls);
 
         this.apiVerifySsl = cfg.getBoolean("server.verifySsl");
@@ -370,6 +370,19 @@ public class Configuration {
     private static Config load(String name) {
         EnvironmentSelector environmentSelector = new EnvironmentSelector();
         return new ConfigurationProcessor(name, environmentSelector.select()).process();
+    }
+
+    private static String[] getWebsocketUrls(Config cfg) {
+        // we had a silly typo ("websockeR") in our configs, so for backward compatibility we must check the old variant first
+        String oldKey = "server.websockerUrl";
+        if (cfg.hasPath(oldKey)) {
+            String[] as = getCSV(cfg.getString(oldKey));
+            if (as != null) {
+                return as;
+            }
+        }
+
+        return getCSV(cfg.getString("server.websocketUrl"));
     }
 
     private static String getStringOrDefault(Config cfg, String key, Supplier<String> defaultValueSupplier) {
