@@ -38,10 +38,12 @@ import {
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
-    UPDATED_AT_COLUMN
+    UPDATED_AT_COLUMN,
+    TAGS_COLUMN
 } from '../ProcessList';
 import { ProcessFilters } from '../../../api/process';
 
+// list of columns for the default process list configuration
 const defaultColumns = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
@@ -50,6 +52,8 @@ const defaultColumns = [
     CREATED_AT_COLUMN,
     UPDATED_AT_COLUMN
 ];
+
+// columns used on the list of a project's processes
 const withoutProjectColumns = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
@@ -57,6 +61,9 @@ const withoutProjectColumns = [
     CREATED_AT_COLUMN,
     UPDATED_AT_COLUMN
 ];
+
+// columns that are available in filters
+const filterColumns = [...defaultColumns, TAGS_COLUMN];
 
 interface Props {
     processes: ProcessEntry[];
@@ -274,7 +281,8 @@ class ProcessListWithSearch extends React.Component<Props, State> {
         }
 
         const showProjectColumn = !projectName;
-        const cols = columns || (showProjectColumn ? defaultColumns : withoutProjectColumns);
+        const displayColumns =
+            columns || (showProjectColumn ? defaultColumns : withoutProjectColumns);
 
         return (
             <>
@@ -298,8 +306,8 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                                 />
                             </Table.HeaderCell>
                             <Table.HeaderCell>
-                                {hasFilter(processFilters, columns) &&
-                                    this.renderFilterLabels(cols, processFilters, loading)}
+                                {hasFilter(processFilters, filterColumns) &&
+                                    this.renderFilterLabels(filterColumns, processFilters, loading)}
                             </Table.HeaderCell>
                             <Table.HeaderCell collapsing={true} style={{ fontWeight: 'normal' }}>
                                 {usePagination && (
@@ -321,7 +329,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
 
                 <ProcessList
                     data={processes}
-                    columns={cols}
+                    columns={displayColumns}
                     onSelectProcess={this.onSelectProcess}
                     filterProps={processFilters}
                     onFilterChange={this.onFilterChange}

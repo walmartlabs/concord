@@ -22,8 +22,13 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Grid, Popup, Table } from 'semantic-ui-react';
 
-import { getStatusSemanticColor, ProcessEntry } from '../../../api/process';
-import { GitHubLink, LocalTimestamp } from '../index';
+import {
+    getStatusSemanticColor,
+    ProcessEntry,
+    ProcessKind,
+    ProcessStatus
+} from '../../../api/process';
+import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../index';
 
 interface Props {
     data: ProcessEntry;
@@ -31,6 +36,21 @@ interface Props {
     showStateDownload?: boolean;
     additionalActions?: React.ReactNode;
 }
+
+const kindToDescription = (k: ProcessKind): string => {
+    switch (k) {
+        case ProcessKind.DEFAULT:
+            return 'Default';
+        case ProcessKind.FAILURE_HANDLER:
+            return 'onFailure handler';
+        case ProcessKind.CANCEL_HANDLER:
+            return 'onCancel handler';
+        case ProcessKind.TIMEOUT_HANDLER:
+            return 'onTimeout handler';
+        default:
+            return 'Unknown';
+    }
+};
 
 class ProcessStatusTable extends React.PureComponent<Props> {
     static renderCommitId(data: ProcessEntry) {
@@ -51,6 +71,36 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         }
 
         return <Popup trigger={<span>{link}</span>} content={data.commitMsg} />;
+    }
+
+    static renderProcessKind(data: ProcessEntry) {
+        return (
+            <>
+                {kindToDescription(data.kind)}
+                {data.kind === ProcessKind.FAILURE_HANDLER &&
+                    data.status !== ProcessStatus.FAILED && (
+                        <ProcessLastErrorModal process={data} title="Parent process' error" />
+                    )}
+            </>
+        );
+    }
+
+    static renderTags({ tags }: ProcessEntry) {
+        if (!tags || tags.length === 0) {
+            return '-';
+        }
+
+        const items = tags.map((t) => <Link to={`/process?tags=${t}`}>{t}</Link>);
+
+        const result = [];
+        for (let i = 0; i < items.length; i++) {
+            result.push(items[i]);
+            if (i + 1 !== items.length) {
+                result.push(', ');
+            }
+        }
+
+        return result;
     }
 
     render() {
@@ -82,8 +132,14 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                 <Table.Cell>{data.initiator}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
+                                <Table.Cell>Type</Table.Cell>
+                                <Table.Cell>
+                                    {ProcessStatusTable.renderProcessKind(data)}
+                                </Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
-                                    Created at
+                                    Created At
                                 </Table.Cell>
                                 <Table.Cell>
                                     <LocalTimestamp value={data.createdAt} />
@@ -148,9 +204,18 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
-                                    Repository
+                                    Concord Repository
                                 </Table.Cell>
-                                <Table.Cell>{data.repoName ? data.repoName : ' - '}</Table.Cell>
+                                <Table.Cell>
+                                    {data.repoName ? (
+                                        <Link
+                                            to={`/org/${data.orgName}/project/${data.projectName}/repository/${data.repoName}`}>
+                                            {data.repoName}
+                                        </Link>
+                                    ) : (
+                                        ' - '
+                                    )}
+                                </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
@@ -180,11 +245,17 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                     )}
                                 </Table.Cell>
                             </Table.Row>
-                            <Table.Row style={{ height: '100%' }}>
+                            <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Commit ID
                                 </Table.Cell>
                                 <Table.Cell>{ProcessStatusTable.renderCommitId(data)}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row style={{ height: '100%' }}>
+                                <Table.Cell collapsing={true} singleLine={true}>
+                                    Process Tags
+                                </Table.Cell>
+                                <Table.Cell>{ProcessStatusTable.renderTags(data)}</Table.Cell>
                             </Table.Row>
                         </Table.Body>
                     </Table>

@@ -23,7 +23,7 @@ import { Button, Popup, Grid } from 'semantic-ui-react';
 import ClassIcon from '../../../atoms/ClassIcon';
 import Truncate from '../../../atoms/Truncate';
 
-import ProcessLogContainer from '../../../molecules/ProcessLogContainer';
+import { ProcessLogContainer } from '../../../molecules';
 import RestoreProcess from './RestoreProcess';
 import { CheckpointName } from '../shared/Labels';
 import { CustomCheckpoint } from '../shared/types';
