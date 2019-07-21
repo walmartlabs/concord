@@ -23,7 +23,6 @@ package com.walmartlabs.concord.repository;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.common.SensitiveData;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
 import com.walmartlabs.concord.sdk.Secret;
@@ -513,6 +512,6 @@ public class GitClient {
         for (String p : sensitiveData) {
             s = s.replaceAll(p, "***");
         }
-        return SensitiveData.hide(s);
+        return s;
     }
 }
