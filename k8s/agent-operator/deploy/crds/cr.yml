@@ -51,7 +51,7 @@ spec:
 
           server {
               apiBaseUrl = "http://192.168.99.1:8001"
-              websockerUrl = "ws://192.168.99.1:8001/websocket"
+              websocketUrl = "ws://192.168.99.1:8001/websocket"
               readTimeout = "10 minutes"
           }
         }
