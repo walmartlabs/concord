@@ -51,6 +51,7 @@ public class ForkPipeline extends Pipeline {
                 StateImportingProcessor.class,
                 ProcessHandlersProcessor.class,
                 ForkRepositoryInfoProcessor.class,
+                RepositoryInfoUpdateProcessor.class,
                 EnqueueingProcessor.class);
 
         this.exceptionProcessor = injector.getInstance(FailProcessor.class);

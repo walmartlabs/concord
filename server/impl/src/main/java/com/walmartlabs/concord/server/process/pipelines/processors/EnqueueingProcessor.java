@@ -25,8 +25,6 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.CommitInfo;
-import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor.RepositoryInfo;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -38,15 +36,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Moves the process into ENQUEUED status, filling in the necessary attributed.
  */
 @Named
 public class EnqueueingProcessor implements PayloadProcessor {
-
-    private static final int MAX_COMMIT_ID_LENGTH = 128;
 
     private final ProcessQueueDao queueDao;
 
@@ -73,29 +72,6 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
         Map<String, Object> requirements = payload.getHeader(Payload.REQUIREMENTS);
 
-        UUID repoId = null;
-        String repoUrl = null;
-        String repoPath = null;
-        String commitId = null;
-        String commitMsg = null;
-
-        RepositoryInfo repoInfo = payload.getHeader(RepositoryProcessor.REPOSITORY_INFO_KEY);
-        if (repoInfo != null) {
-            repoId = repoInfo.getId();
-            repoUrl = repoInfo.getUrl();
-            repoPath = repoInfo.getPath();
-
-            CommitInfo commitInfo = repoInfo.getCommitInfo();
-            if (commitInfo != null) {
-                commitId = commitInfo.getId();
-
-                commitMsg = commitInfo.getMessage();
-                if (commitMsg != null && commitMsg.length() > MAX_COMMIT_ID_LENGTH) {
-                    commitMsg = commitMsg.substring(0, MAX_COMMIT_ID_LENGTH - 3) + "...";
-                }
-            }
-        }
-
         Instant startAt = getStartAt(payload);
         Long processTimeout = getProcessTimeout(payload);
         boolean exclusive = isExclusive(payload);
@@ -103,8 +79,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
         Map<String, Object> meta = getMeta(payload);
         Imports imports = payload.getHeader(Payload.IMPORTS);
-        queueDao.enqueue(processKey, tags, startAt, requirements, repoId, repoUrl, repoPath, commitId,
-                commitMsg, processTimeout, handlers, meta, exclusive, imports);
+        queueDao.enqueue(processKey, tags, startAt, requirements, processTimeout, handlers, meta, exclusive, imports);
 
         return chain.process(payload);
     }
