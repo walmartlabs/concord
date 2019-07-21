@@ -40,7 +40,13 @@ export interface ColumnDefinition {
     source: string;
     textAlign?: 'center' | 'left' | 'right';
     collapsing?: boolean;
-    render?: 'process-link' | 'process-status' | 'project-link' | 'timestamp' | 'repo-link';
+    render?:
+        | 'process-link'
+        | 'process-status'
+        | 'project-link'
+        | 'timestamp'
+        | 'repo-link'
+        | 'string-array';
     searchValueType?: SearchValueType;
     searchType?: SearchType;
     searchOptions?: SearchOption[];

@@ -118,10 +118,18 @@ export interface ProcessMeta {
     [x: string]: any;
 }
 
+export enum ProcessKind {
+    DEFAULT = 'DEFAULT',
+    FAILURE_HANDLER = 'FAILURE_HANDLER',
+    CANCEL_HANDLER = 'CANCEL_HANDLER',
+    TIMEOUT_HANDLER = 'TIMEOUT_HANDLER'
+}
+
 export interface ProcessEntry {
     instanceId: ConcordId;
     parentInstanceId?: ConcordId;
     status: ProcessStatus;
+    kind: ProcessKind;
     orgName?: ConcordKey;
     projectName?: ConcordKey;
     repoName?: ConcordKey;
@@ -132,7 +140,9 @@ export interface ProcessEntry {
     initiator: string;
     createdAt: string;
     lastUpdatedAt: string;
+    handlers?: string[];
     meta?: ProcessMeta;
+    tags?: string[];
     checkpoints?: ProcessCheckpointEntry[];
     statusHistory?: ProcessHistoryEntry[];
     disabled: boolean;

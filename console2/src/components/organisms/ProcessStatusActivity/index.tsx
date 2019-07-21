@@ -20,10 +20,9 @@
 
 import { push as pushHistory } from 'connected-react-router';
 import * as React from 'react';
-import ReactJson from 'react-json-view';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
-import { Button, Divider, Header, Icon, Modal } from 'semantic-ui-react';
+import { Button, Divider, Header, Icon } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
 import {
@@ -36,7 +35,7 @@ import {
 import { FormListEntry } from '../../../api/process/form';
 import { actions } from '../../../state/data/processes/poll';
 import { State } from '../../../state/data/processes/poll/types';
-import { ProcessActionList, ProcessStatusTable } from '../../molecules';
+import { ProcessActionList, ProcessLastErrorModal, ProcessStatusTable } from '../../molecules';
 import { AnsibleStatsActivity, CancelProcessPopup, DisableProcessPopup } from '../../organisms';
 import ProcessCheckpoint from '../CheckpointView/ProcessCheckpoint';
 
@@ -86,35 +85,6 @@ class ProcessStatusActivity extends React.Component<Props> {
 
     static disableIcon(disable: boolean) {
         return <Icon name="power" color={disable ? 'green' : 'grey'} />;
-    }
-
-    static failureDetails(p: ProcessEntry) {
-        if (p.status !== ProcessStatus.FAILED || !p.meta || !p.meta.out || !p.meta.out.lastError) {
-            return;
-        }
-
-        return (
-            <Modal
-                size="fullscreen"
-                dimmer="inverted"
-                trigger={
-                    <Icon
-                        className="failureDetailsButton"
-                        name="question circle outline"
-                        color="red"
-                        title="Failure details"
-                    />
-                }>
-                <Modal.Content>
-                    <ReactJson
-                        src={p.meta.out.lastError}
-                        collapsed={false}
-                        name={null}
-                        enableClipboard={false}
-                    />
-                </Modal.Content>
-            </Modal>
-        );
     }
 
     createAdditionalAction() {
@@ -175,7 +145,9 @@ class ProcessStatusActivity extends React.Component<Props> {
                             onClick={() => refresh()}
                         />
                         {process && process.status}
-                        {process && ProcessStatusActivity.failureDetails(process)}
+                        {process && process.status === ProcessStatus.FAILED && (
+                            <ProcessLastErrorModal process={process} />
+                        )}
                     </div>
                 </Header>
 

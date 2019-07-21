@@ -142,7 +142,6 @@ public class ProcessResourceV2 implements Resource {
         Set<UUID> orgIds = null;
         if (orgId != null) {
             // we got an org ID, use it as it is
-            effectiveOrgId = orgId;
             orgIds = Collections.singleton(effectiveOrgId);
         } if (orgName != null) {
             // we got an org name, validate it first by resolving its ID

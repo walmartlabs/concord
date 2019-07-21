@@ -43,6 +43,7 @@ export { default as PaginationToolBar } from './PaginationToolBar';
 export { default as ProcessActionList } from './ProcessActionList';
 export { default as ProcessElementList } from './ProcessElementList';
 export { default as ProcessForm } from './ProcessForm';
+export { default as ProcessLastErrorModal } from './ProcessLastErrorModal';
 export { default as ProcessList } from './ProcessList';
 export { default as ProcessLogContainer } from './ProcessLogContainer';
 export { default as ProcessLogViewer } from './ProcessLogViewer';

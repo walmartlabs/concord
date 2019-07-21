@@ -79,6 +79,12 @@ export const UPDATED_AT_COLUMN: ColumnDefinition = {
     render: 'timestamp'
 };
 
+export const TAGS_COLUMN: ColumnDefinition = {
+    caption: 'Tags',
+    source: 'tags',
+    render: 'string-array'
+};
+
 interface Entry extends ProcessEntry {
     checked: boolean;
 }
@@ -137,6 +143,8 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
         );
     } else if (c.render === 'process-status') {
         return <ProcessStatusIcon status={e.status} />;
+    } else if (c.render === 'string-array') {
+        return v.join(', ');
     }
 
     return v;
