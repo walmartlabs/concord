@@ -51,6 +51,7 @@ public class ProcessPipeline extends Pipeline {
                 ExclusiveGroupProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,
+                RepositoryInfoUpdateProcessor.class,
                 InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
                 ProjectDefinitionProcessor.class,

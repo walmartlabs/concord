@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: store repository info (commit ID, commit message,
+etc) early in the pipeline to preserve the data in case or process
+startup errors (e.g. bad syntax).
+
+
+
 ## [1.27.0] - 2019-07-20
 
 ### Added

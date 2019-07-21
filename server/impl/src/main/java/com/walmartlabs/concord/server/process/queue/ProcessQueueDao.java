@@ -114,8 +114,8 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public void insertInitial(DSLContext tx, ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
-                               UUID projectId, UUID initiatorId, Map<String, Object> meta,
-                               String exclusiveGroup) {
+                              UUID projectId, UUID initiatorId, Map<String, Object> meta,
+                              String exclusiveGroup) {
 
         tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
@@ -171,12 +171,8 @@ public class ProcessQueueDao extends AbstractDao {
                         .otherwise(PROCESS_QUEUE.LAST_RUN_AT));
     }
 
-    public void enqueue(ProcessKey processKey, Set<String> tags, Instant startAt,
-                        Map<String, Object> requirements, UUID repoId, String repoUrl, String repoPath,
-                        String commitId, String commitMsg, Long processTimeout,
-                        Set<String> handlers, Map<String, Object> meta,
-                        boolean exclusive,
-                        Imports imports) {
+    public void enqueue(ProcessKey processKey, Set<String> tags, Instant startAt, Map<String, Object> requirements,
+                        Long processTimeout, Set<String> handlers, Map<String, Object> meta, boolean exclusive, Imports imports) {
 
         tx(tx -> {
             UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
@@ -193,26 +189,6 @@ public class ProcessQueueDao extends AbstractDao {
 
             if (requirements != null) {
                 q.set(PROCESS_QUEUE.REQUIREMENTS, field("?::jsonb", String.class, objectMapper.serialize(requirements)));
-            }
-
-            if (repoId != null) {
-                q.set(PROCESS_QUEUE.REPO_ID, repoId);
-            }
-
-            if (repoUrl != null) {
-                q.set(PROCESS_QUEUE.REPO_URL, repoUrl);
-            }
-
-            if (repoPath != null) {
-                q.set(PROCESS_QUEUE.REPO_PATH, repoPath);
-            }
-
-            if (commitId != null) {
-                q.set(PROCESS_QUEUE.COMMIT_ID, commitId);
-            }
-
-            if (commitMsg != null) {
-                q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
             }
 
             if (processTimeout != null) {
@@ -242,6 +218,41 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED);
+        });
+    }
+
+    public void updateRepositoryDetails(PartialProcessKey processKey, UUID repoId, String repoUrl, String repoPath, String commitId, String commitMsg) {
+        tx(tx -> {
+            UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
+
+            if (repoId != null) {
+                q.set(PROCESS_QUEUE.REPO_ID, repoId);
+            }
+
+            if (repoUrl != null) {
+                q.set(PROCESS_QUEUE.REPO_URL, repoUrl);
+            }
+
+            if (repoPath != null) {
+                q.set(PROCESS_QUEUE.REPO_PATH, repoPath);
+            }
+
+            if (commitId != null) {
+                q.set(PROCESS_QUEUE.COMMIT_ID, commitId);
+            }
+
+            if (commitMsg != null) {
+                q.set(PROCESS_QUEUE.COMMIT_MSG, commitMsg);
+            }
+
+            int i = q
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .execute();
+
+            if (i != 1) {
+                throw new DataAccessException("Invalid number of rows updated: " + i);
+            }
         });
     }
 
@@ -787,7 +798,7 @@ public class ProcessQueueDao extends AbstractDao {
                                                     inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
                     .from(pc)
                     .where(pc.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)
-                        .and(pc.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))).asField("checkpoints");
+                            .and(pc.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))).asField("checkpoints");
 
             query.addSelect(checkpoints);
         }
