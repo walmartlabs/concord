@@ -1,0 +1,7 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+
+flows:
+  default:
+    - ${misc.throwBpmnError("boom!")}

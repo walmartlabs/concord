@@ -4,9 +4,11 @@
 
 ### Changed
 
+- concord-server: fixed an issue preventing `imports` from working
+correctly in `onFailure` and other handlers;
 - concord-console: add process tags to the process status page;
-- concord-server: process `tags` can now be specified using a comma-separated
-startup argument, e.g. `curl -F tags=x,y,z`;
+- concord-server: process `tags` can now be specified using a
+comma-separated startup argument, e.g. `curl -F tags=x,y,z`;
 - concord-server: store repository info (commit ID, commit message,
 etc) early in the pipeline to preserve the data in case or process
 startup errors (e.g. bad syntax).
