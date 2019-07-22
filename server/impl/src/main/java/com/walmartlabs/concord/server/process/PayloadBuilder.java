@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -126,6 +127,13 @@ public final class PayloadBuilder {
     public PayloadBuilder workspace(Path workDir) {
         if (workDir != null) {
             payload = payload.putHeader(Payload.WORKSPACE_DIR, workDir);
+        }
+        return this;
+    }
+
+    public PayloadBuilder imports(Imports imports) {
+        if (imports != null && !imports.isEmpty()) {
+            payload = payload.putHeader(Payload.IMPORTS, imports);
         }
         return this;
     }

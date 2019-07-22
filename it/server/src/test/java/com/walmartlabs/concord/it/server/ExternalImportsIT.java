@@ -203,6 +203,32 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template, Concord!.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithOnFailure() throws Exception {
+        String repoUrl = initRepo("externalImportFailHandler");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMainFailed", repoUrl);
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+
+        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, ProcessEntry.StatusEnum.FINISHED);
+
+        // check the logs
+
+        byte[] ab = getLog(child.getLogFileName());
+
+        assertLog(".*oh, handled.*", ab);
+    }
 
     private static String initRepo(String resourceName) throws Exception {
         Path tmpDir = createTempDir();

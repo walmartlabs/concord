@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.agent.AgentCommandsDao;
 import com.walmartlabs.concord.server.agent.Commands;
@@ -32,6 +33,7 @@ import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -166,7 +168,8 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             PartialProcessKey childKey = PartialProcessKey.create();
             try {
                 Payload payload = payloadManager.createFork(childKey, parent.processKey, entry.handlerKind,
-                        parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null);
+                        parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null,
+                        parent.imports);
 
                 processManager.startFork(payload, false);
 
@@ -254,9 +257,12 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     @Named
     private static final class WatchdogDao extends AbstractDao {
 
+        private final ConcordObjectMapper objectMapper;
+
         @Inject
-        public WatchdogDao(@MainDB Configuration cfg) {
+        public WatchdogDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
             super(cfg);
+            this.objectMapper = objectMapper;
         }
 
         private void transaction(Tx t) {
@@ -266,7 +272,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         public List<ProcessEntry> poll(PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
-            return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, q.INITIATOR_ID)
+            return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, q.INITIATOR_ID, q.IMPORTS)
                     .from(q)
                     .where(q.PROCESS_KIND.in(Utils.toString(HANDLED_PROCESS_KINDS))
                             .and(q.CURRENT_STATUS.eq(entry.status.toString()))
@@ -276,7 +282,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                             .and(count(tx, q.INSTANCE_ID, entry.handlerKind).lessThan(entry.maxTries))
                             .and(noRunningHandlers(q.INSTANCE_ID)))
                     .limit(maxEntries)
-                    .fetch(WatchdogDao::toEntry));
+                    .fetch(this::toEntry));
         }
 
         public List<ProcessKey> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
@@ -331,11 +337,12 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                             .and(PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
-        private static ProcessEntry toEntry(Record4<UUID, Timestamp, UUID, UUID> r) {
+        private ProcessEntry toEntry(Record5<UUID, Timestamp, UUID, UUID, Object> r) {
             ProcessKey processKey = new ProcessKey(r.get(PROCESS_QUEUE.INSTANCE_ID), r.get(PROCESS_QUEUE.CREATED_AT));
             return new ProcessEntry(processKey,
                     r.get(PROCESS_QUEUE.PROJECT_ID),
-                    r.get(PROCESS_QUEUE.INITIATOR_ID));
+                    r.get(PROCESS_QUEUE.INITIATOR_ID),
+                    objectMapper.deserialize(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
         }
 
         private static TimedOutEntry toExpiredEntry(Record4<UUID, Timestamp, String, Long> r) {
@@ -349,11 +356,13 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         private final ProcessKey processKey;
         private final UUID projectId;
         private final UUID initiatorId;
+        private final Imports imports;
 
-        private ProcessEntry(ProcessKey processKey, UUID projectId, UUID initiatorId) {
+        private ProcessEntry(ProcessKey processKey, UUID projectId, UUID initiatorId,  Imports imports) {
             this.processKey = processKey;
             this.projectId = projectId;
             this.initiatorId = initiatorId;
+            this.imports = imports;
         }
     }
 

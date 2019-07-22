@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -212,7 +213,8 @@ public class PayloadManager {
      * Creates a payload to fork an existing process.
      */
     public Payload createFork(PartialProcessKey processKey, ProcessKey parentProcessKey, ProcessKind kind,
-                              UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out) throws IOException {
+                              UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out,
+                              Imports imports) throws IOException {
 
         Path tmpDir = IOUtils.createTempDir("payload");
 
@@ -229,6 +231,7 @@ public class PayloadManager {
                 .configuration(req)
                 .outExpressions(out)
                 .workspace(tmpDir)
+                .imports(imports)
                 .build();
     }
 

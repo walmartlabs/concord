@@ -425,7 +425,7 @@ public class ProcessResource implements Resource {
         Payload payload;
         try {
             payload = payloadManager.createFork(processKey, parentProcessKey, ProcessKind.DEFAULT,
-                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out);
+                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out, null);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", processKey, parentProcessKey, e);
             throw new ConcordApplicationException("Error creating a payload", e);
