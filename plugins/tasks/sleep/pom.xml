@@ -20,6 +20,13 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-client</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <scope>provided</scope>

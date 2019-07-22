@@ -87,7 +87,8 @@ export interface ProcessHistoryEntry {
 export enum WaitType {
     NONE = 'NONE',
     PROCESS_COMPLETION = 'PROCESS_COMPLETION',
-    PROCESS_LOCK = 'PROCESS_LOCK'
+    PROCESS_LOCK = 'PROCESS_LOCK',
+    PROCESS_SLEEP = 'PROCESS_SLEEP'
 }
 
 export interface ProcessWaitPayload {
@@ -100,7 +101,11 @@ export interface ProcessLockPayload {
     scope: string;
 }
 
-export type WaitPayload = ProcessWaitPayload | ProcessLockPayload;
+export interface ProcessSleepPayload {
+    until: string;
+}
+
+export type WaitPayload = ProcessWaitPayload | ProcessLockPayload | ProcessSleepPayload;
 
 export interface ProcessWaitHistoryEntry {
     id: ConcordId;

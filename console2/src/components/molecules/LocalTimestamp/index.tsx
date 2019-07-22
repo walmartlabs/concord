@@ -35,6 +35,8 @@ export default class extends React.PureComponent<Props> {
             return <div>Bad date value provided</div>;
         }
 
-        return <Popup trigger={<span>{formatTimestamp(value)}</span>} content={'Browser time'} />;
+        return <Popup trigger={<span>{formatTimestamp(value)}</span>}>
+            Browser time. Original value: {value}
+        </Popup>;
     }
 }

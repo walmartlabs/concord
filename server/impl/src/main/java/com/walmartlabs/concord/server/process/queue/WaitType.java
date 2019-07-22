@@ -32,5 +32,10 @@ public enum WaitType {
     /**
      * Waiting for a (named) lock taken by another process.
      */
-    PROCESS_LOCK
+    PROCESS_LOCK,
+
+    /**
+     * Waiting for a specific timeout to resume process.
+     */
+    PROCESS_SLEEP
 }

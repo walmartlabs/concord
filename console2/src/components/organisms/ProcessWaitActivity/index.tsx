@@ -26,6 +26,7 @@ import { Header, Icon, Loader, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
 import {
     ProcessLockPayload,
+    ProcessSleepPayload,
     ProcessWaitHistoryEntry,
     ProcessWaitPayload,
     WaitPayload,
@@ -102,6 +103,15 @@ class ProcessWaitActivity extends React.Component<Props> {
                     <>
                         <Icon name="hourglass half" />
                         Waiting for the lock ({lockPayload.name})
+                    </>
+                );
+            }
+            case WaitType.PROCESS_SLEEP: {
+                const sleepPayload = payload as ProcessSleepPayload;
+                return (
+                    <>
+                        <Icon name="hourglass half" />
+                        Waiting until ({<LocalTimestamp value={sleepPayload.until} />})
                     </>
                 );
             }

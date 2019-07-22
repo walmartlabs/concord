@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- sleep-tasks, concord-server: a way to suspend a process until the
+specified date/time.
+
 ### Changed
 
 - concord-server: fixed an issue preventing `imports` from working
