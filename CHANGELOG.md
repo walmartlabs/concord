@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: display the process' `startAt` on the process
+status page;
 - concord-server: support for multiple `user` entries in the form's
 `runAs` block;
 - sleep-tasks, concord-server: a way to suspend a process until the

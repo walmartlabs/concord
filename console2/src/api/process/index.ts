@@ -144,6 +144,7 @@ export interface ProcessEntry {
     commitMsg?: string;
     initiator: string;
     createdAt: string;
+    startAt: string;
     lastUpdatedAt: string;
     handlers?: string[];
     meta?: ProcessMeta;
