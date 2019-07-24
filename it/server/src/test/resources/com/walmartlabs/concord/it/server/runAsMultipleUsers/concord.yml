@@ -1,0 +1,17 @@
+configuration:
+  arguments:
+    testUser: ""
+flows:
+  default:
+    - log: "${initiator} == ${currentUser}"
+    - form: myForm
+      runAs:
+        username:
+         - "admin"
+         - ${testUser}
+        keep: true
+    - log: "Now we are running as ${currentUser.username}"
+
+forms:
+  myForm:
+  - firstName: { label: "First name", type: "string"}
