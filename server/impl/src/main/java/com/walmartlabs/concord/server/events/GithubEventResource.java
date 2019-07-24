@@ -132,8 +132,11 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     @WithTimer
     @SuppressWarnings("unchecked")
     public String onEvent(@ApiParam Map<String, Object> payload,
+                          @HeaderParam("X-GitHub-Delivery") String deliveryId,
                           @HeaderParam("X-GitHub-Event") String eventName,
                           @Context UriInfo uriInfo) {
+
+        log.info("onEvent ['{}', '{}'] -> processing...", deliveryId, eventName);
 
         if ("ping".equalsIgnoreCase(eventName)) {
             return "ok";
