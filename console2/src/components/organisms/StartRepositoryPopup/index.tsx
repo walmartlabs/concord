@@ -102,8 +102,10 @@ const SimpleDropdown = ({ data, defaultValue, disabled, onAdd, onChange }: Simpl
 class StartRepositoryPopup extends React.Component<Props, OwnState> {
     constructor(props: Props) {
         super(props);
+
         this.state = {
             entryPoints: [...(props.repoEntryPoints || [])],
+            selectedEntryPoint: props.entryPoint,
             profiles: [...(props.repoProfiles || [])]
         };
     }
