@@ -13,6 +13,8 @@ specified date/time.
 
 ### Changed
 
+- concord-server: make organization names optional when using secrets
+in `imports`;
 - concord-console: fixed an issue with the profile selection in
 the manual trigger popup;
 - concord-console: hide system files in the process attachments list;
