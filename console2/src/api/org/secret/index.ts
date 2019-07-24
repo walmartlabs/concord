@@ -117,7 +117,7 @@ export const list = async (
     limit: number,
     filter?: string
 ): Promise<PaginatedSecretEntries> => {
-    const offsetParam = offset > 0 ? offset * limit : offset;
+    const offsetParam = offset > 0 && limit > 0 ? offset * limit : offset;
     const limitParam = limit > 0 ? limit + 1 : limit;
 
     const data: SecretEntry[] = await fetchJson(
