@@ -805,7 +805,7 @@ public class GitHubTriggersIT extends AbstractServerIT {
         client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(payload));
 
         GitHubEventsApi eventsApi = new GitHubEventsApi(client);
-        eventsApi.onEvent(payload, event);
+        eventsApi.onEvent(payload, "abc", event);
     }
 
     private void assertLog(ProcessEntry entry, String pattern) throws Exception {

@@ -175,7 +175,7 @@ public class GithubEventResourceIT extends AbstractServerIT {
 
         GitHubEventsApi gitHubEvents = new GitHubEventsApi(client);
 
-        String result = gitHubEvents.onEvent(event, "push");
+        String result = gitHubEvents.onEvent(event, "abc", "push");
         assertEquals("ok", result);
     }
 
