@@ -25,6 +25,8 @@ import com.walmartlabs.concord.project.model.Import;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.server.cfg.ImportConfiguration;
+import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -38,9 +40,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.project.model.Import.GitDefinition;
 import static com.walmartlabs.concord.project.model.Import.MvnDefinition;
+import static com.walmartlabs.concord.server.process.Payload.ORGANIZATION_ID;
 import static com.walmartlabs.concord.server.queueclient.message.ImportEntry.GitEntry;
 import static com.walmartlabs.concord.server.queueclient.message.ImportEntry.MvnEntry;
 
@@ -54,12 +58,14 @@ public class ImportProcessor implements PayloadProcessor {
     private static final String DEFAULT_VERSION = "master";
     private static final String DEFAULT_DEST = "concord";
 
+    private final OrganizationDao orgDao;
     private final LogManager logManager;
     private final ImportManager importManager;
     private final ImportConfiguration cfg;
 
     @Inject
-    public ImportProcessor(LogManager logManager, ImportManager importManager, ImportConfiguration cfg) {
+    public ImportProcessor(OrganizationDao orgDao, LogManager logManager, ImportManager importManager, ImportConfiguration cfg) {
+        this.orgDao = orgDao;
         this.logManager = logManager;
         this.importManager = importManager;
         this.cfg = cfg;
@@ -95,7 +101,7 @@ public class ImportProcessor implements PayloadProcessor {
         }
 
         if (pd.getImports() != null && !pd.getImports().isEmpty()) {
-            return convert(pd.getImports());
+            return convert(payload, pd.getImports());
         }
 
         return Collections.emptyList();
@@ -111,34 +117,23 @@ public class ImportProcessor implements PayloadProcessor {
         return payload.putHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT, result);
     }
 
-    private List<ImportEntry> convert(List<Import> items) {
+    private List<ImportEntry> convert(Payload payload, List<Import> items) {
         if (items == null) {
             return Collections.emptyList();
         }
 
         List<ImportEntry> result = new ArrayList<>();
         for (Import i : items) {
-            result.add(convert(i));
+            result.add(convert(payload, i));
         }
         return result;
     }
 
-    private ImportEntry convert(Import i) {
+    private ImportEntry convert(Payload payload, Import i) {
         switch (i.type()) {
             case "git": {
                 GitDefinition e = (GitDefinition) i;
-                String url = e.url();
-                if (url == null) {
-                    String name = e.name();
-                    url = normalizeUrl(cfg.getSrc()) + name;
-                }
-                return GitEntry.builder()
-                        .url(url)
-                        .version(e.version() != null ? e.version() : DEFAULT_VERSION)
-                        .path(e.path())
-                        .dest(e.dest() != null ? e.dest() : DEFAULT_DEST)
-                        .secret(e.secret())
-                        .build();
+                return convertGitImport(payload, e);
             }
             case "mvn": {
                 MvnDefinition e = (MvnDefinition) i;
@@ -151,6 +146,48 @@ public class ImportProcessor implements PayloadProcessor {
                 throw new IllegalArgumentException("Unknown import type: '" + i.type() + "'");
             }
         }
+    }
+
+    private ImportEntry convertGitImport(Payload payload, GitDefinition e) {
+        String url = e.url();
+        if (url == null) {
+            String name = e.name();
+            url = normalizeUrl(cfg.getSrc()) + name;
+        }
+
+        Import.SecretDefinition secret = e.secret();
+        if (secret != null && secret.org() == null) {
+            String secretOrgName = getOrgName(payload);
+            if (secretOrgName == null) {
+                logManager.error(payload.getProcessKey(), "Error while importing external resource - can't determine the '{}' secret's organization", secret.name());
+                throw new ProcessException(payload.getProcessKey(), "Can't determine organization for secret: '" + secret.name() + "'");
+            }
+
+            secret = Import.SecretDefinition.builder().from(secret)
+                    .org(secretOrgName)
+                    .build();
+        }
+
+        return GitEntry.builder()
+                .url(url)
+                .version(e.version() != null ? e.version() : DEFAULT_VERSION)
+                .path(e.path())
+                .dest(e.dest() != null ? e.dest() : DEFAULT_DEST)
+                .secret(secret)
+                .build();
+    }
+
+    private String getOrgName(Payload payload) {
+        UUID orgId = payload.getHeader(ORGANIZATION_ID);
+        if (orgId == null) {
+            return null;
+        }
+
+        OrganizationEntry org = orgDao.get(orgId);
+        if (org == null) {
+            return null;
+        }
+        return org.getName();
     }
 
     private static String normalizeUrl(String u) {
