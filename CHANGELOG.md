@@ -11,6 +11,7 @@ specified date/time.
 
 ### Changed
 
+- concord-console: hide system files in the process attachments list;
 - concord-server: fixed an issue preventing `imports` from working
 correctly in `onFailure` and other handlers;
 - concord-console: add process tags to the process status page;

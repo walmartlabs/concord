@@ -61,7 +61,10 @@ export const reducers = combineReducers<State>({
 
 export const selectors = {
     processAttachments: (state: State) => {
-        return state.list.response ? state.list.response.items : [];
+        const attachments = state.list.response ? state.list.response.items : [];
+
+        // filter out the system files
+        return attachments.filter((attachment) => attachment.indexOf('_state') < 0);
     }
 };
 
