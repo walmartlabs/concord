@@ -13,6 +13,8 @@ specified date/time.
 
 ### Changed
 
+- concord-console: fixed an issue with the profile selection in
+the manual trigger popup;
 - concord-console: hide system files in the process attachments list;
 - concord-server: fixed an issue preventing `imports` from working
 correctly in `onFailure` and other handlers;
