@@ -59,24 +59,38 @@ public final class FormUtils {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
 
     /**
-     * Returns the name of the users which can submit the form or {@code null} if no restrictions are specified.
+     * Returns the name of the users which can submit the form or an empty collection if no restrictions are specified.
      */
-    public static String getRunAsUser(String formName, Map<String, Object> runAsParams) {
+    @SuppressWarnings("unchecked")
+    public static Set<String> getRunAsUsers(String formName, Map<String, Object> runAsParams) {
         if (runAsParams == null) {
-            return null;
+            return Collections.emptySet();
         }
 
         Object v = runAsParams.get(InternalConstants.Forms.RUN_AS_USERNAME_KEY);
         if (v == null) {
-            return null;
+            return Collections.emptySet();
         }
 
-        if (!(v instanceof String)) {
-            throw new ValidationErrorsException("Expected a string value, got: " + v + ". " +
-                    "Check the '" + RUN_AS_USERNAME_PATH + "' parameter of '" + formName + "' form definition.");
+        if (v instanceof String) {
+            return Collections.singleton((String) v);
+        } else if (v instanceof Collection) {
+            Collection<Object> items = (Collection<Object>) v;
+
+            Set<String> result = new HashSet<>();
+            for (Object item : items) {
+                if (item instanceof String) {
+                    result.add((String) item);
+                } else {
+                    throw new ValidationErrorsException("Expected a string or a list of strings value, got: " + item + ". " +
+                            "Check the '" + RUN_AS_USERNAME_PATH + "' parameter of '" + formName + "' form definition.");
+                }
+            }
+            return result;
         }
 
-        return (String) v;
+        throw new ValidationErrorsException("Invalid form definition: " + formName + ". " +
+                "Expected a username definition, got: " + v);
     }
 
     /**
@@ -225,7 +239,7 @@ public final class FormUtils {
         for (FormField f : fd.getFields()) {
             String k = f.getName();
 
-            Object v = Boolean.TRUE.equals(f.getOption(READ_ONLY)) ?  defaultData.get(k) : m.get(k);
+            Object v = Boolean.TRUE.equals(f.getOption(READ_ONLY)) ? defaultData.get(k) : m.get(k);
 
             /*
              * Use cardinality as an indicator to convert single value (coming as a string) into an array

@@ -71,8 +71,8 @@ public class FormAccessManager {
 
         UserPrincipal p = UserPrincipal.assertCurrent();
 
-        String expectedUser = FormUtils.getRunAsUser(formName, runAsParams);
-        if (expectedUser != null && !expectedUser.equals(p.getUsername())) {
+        Set<String> expectedUsers = FormUtils.getRunAsUsers(formName, runAsParams);
+        if (!expectedUsers.isEmpty() && !expectedUsers.contains(p.getUsername())) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                     "the necessary permissions to access the form.");
         }

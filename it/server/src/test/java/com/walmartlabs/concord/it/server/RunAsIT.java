@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
@@ -110,6 +111,88 @@ public class RunAsIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testWithMultipleUsers() throws Exception {
+        // create a new org
+
+        String orgName = "org_" + randomString();
+        createOrg(orgName);
+
+        // add the user A
+
+        String userAName = "userA_" + randomString();
+        CreateApiKeyResponse apiKeyA = addUser(userAName);
+
+        // add the user B
+
+        String userBName = "userB_" + randomString();
+        CreateApiKeyResponse apiKeyB = addUser(userBName);
+
+        // create the user's team
+
+        String teamName = "team_" + randomString();
+        UUID teamId = createTeam(orgName, teamName, userAName, userBName);
+
+        // switch to the user A and create a new project
+
+        setApiKey(apiKeyA.getKey());
+
+        String projectName = "project_" + randomString();
+        createProject(orgName, projectName);
+
+        // grant the team access to the project
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.updateAccessLevel(orgName, projectName, new ResourceAccessEntry()
+                .setTeamId(teamId)
+                .setOrgName(orgName)
+                .setTeamName(teamName)
+                .setLevel(ResourceAccessEntry.LevelEnum.READER));
+
+        // Start a process
+
+        byte[] payload = archive(RunAsIT.class.getResource("runAsMultipleUsers").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("arguments.testUser", userBName);
+
+        StartProcessResponse p = start(input);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForStatus(processApi, p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*username=" + userAName + ".*==.*username=" + userAName + ".*", ab);
+
+        String formName = findForm(p.getInstanceId());
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+
+        Map<String, Object> data = Collections.singletonMap("firstName", "xxx");
+
+        // try submit as a wrong user
+
+        try {
+            formsApi.submit(p.getInstanceId(), formName, data);
+            fail("exception expected");
+        } catch (ApiException e) {
+            // ignore
+        }
+
+        // switch to the user B and submit the form
+        setApiKey(apiKeyB.getKey());
+
+        FormSubmitResponse fsr = formsApi.submit(p.getInstanceId(), formName, data);
+        assertTrue(fsr.isOk());
+
+        pe = waitForCompletion(processApi, p.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+
+        ab = getLog(pe.getLogFileName());
+        assertLog(".*Now we are running as " + userBName + ".*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testPayload() throws Exception {
         // create a new org
 
@@ -167,13 +250,15 @@ public class RunAsIT extends AbstractServerIT {
         assertTrue(r.isOk());
     }
 
-    private UUID createTeam(String orgName, String teamName, String username) throws Exception {
+    private UUID createTeam(String orgName, String teamName, String... username) throws Exception {
         TeamsApi teamsApi = new TeamsApi(getApiClient());
         CreateTeamResponse ctr = teamsApi.createOrUpdate(orgName, new TeamEntry().setName(teamName));
 
-        teamsApi.addUsers(orgName, teamName, false, Collections.singletonList(new TeamUserEntry()
-                .setUsername(username)
-                .setRole(TeamUserEntry.RoleEnum.MEMBER)));
+        teamsApi.addUsers(orgName, teamName, false, Arrays.stream(username)
+                .map(u -> new TeamUserEntry()
+                        .setUsername(u)
+                        .setRole(TeamUserEntry.RoleEnum.MEMBER))
+                .collect(Collectors.toList()));
 
         return ctr.getId();
     }
