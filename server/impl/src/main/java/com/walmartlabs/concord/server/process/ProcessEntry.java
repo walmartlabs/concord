@@ -90,7 +90,11 @@ public interface ProcessEntry extends Serializable {
 
     @Nullable
     String lastAgentId();
-
+    
+    @Nullable
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    Date startAt();
+    
     @Nullable
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     Date lastUpdatedAt();

@@ -145,6 +145,16 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                     <LocalTimestamp value={data.createdAt} />
                                 </Table.Cell>
                             </Table.Row>
+                            {data.startAt && (
+                                <Table.Row>
+                                    <Table.Cell collapsing={true} singleLine={true}>
+                                        Start At
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <LocalTimestamp value={data.startAt} />
+                                    </Table.Cell>
+                                </Table.Row>
+                            )}
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Last Update

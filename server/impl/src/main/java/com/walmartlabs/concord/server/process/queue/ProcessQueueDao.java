@@ -868,6 +868,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .commitMsg(r.get(PROCESS_QUEUE.COMMIT_MSG))
                 .initiator(r.get(USERS.USERNAME))
                 .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
+                .startAt(r.get(PROCESS_QUEUE.START_AT))
                 .lastUpdatedAt(r.get(PROCESS_QUEUE.LAST_UPDATED_AT))
                 .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
                 .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
