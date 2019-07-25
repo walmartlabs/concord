@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -112,6 +113,8 @@ public class TriggersRefreshIT extends AbstractServerIT {
         // ---
 
         l = waitForTriggers(orgName, projectName, repoName, 2);
+        l.sort(Comparator.comparing(TriggersRefreshIT::getEntryPoint));
+
         assertEquals("onTrigger", getEntryPoint(l.get(0)));
         assertEquals("onTrigger2", getEntryPoint(l.get(1)));
     }
