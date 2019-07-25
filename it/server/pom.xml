@@ -14,28 +14,29 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <ansible.image>walmartlabs/concord-ansible</ansible.image>
-        <db.image>library/postgres</db.image>
-        <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
-        <dind.image>docker:stable-dind</dind.image>
-        <socat.image>bobrik/socat</socat.image>
+        <ansible.image>walmartlabs/concord-ansible</ansible.image>
         <base.dir>${basedir}</base.dir>
-        <deps.dir>${project.basedir}/target/deps</deps.dir>
+        <db.image>library/postgres</db.image>
         <deps.dir.src.mount>${project.basedir}/target/deps</deps.dir.src.mount>
-        <docker.host.addr>localhost</docker.host.addr>
+        <deps.dir>${project.basedir}/target/deps</deps.dir>
+        <dind.image>docker:stable-dind</dind.image>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
-        <it.server.port>8001</it.server.port>
+        <docker.host.addr>localhost</docker.host.addr>
         <is.docker.profile>false</is.docker.profile>
-        <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
-        <tmp.dir>${java.io.tmpdir}</tmp.dir>
-        <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
-        <network>net-server-it</network>
-        <skip.socat>true</skip.socat>
-        <it.docker.port>2375</it.docker.port>
-        <it.server.network.mode>custom</it.server.network.mode>
         <it.db.addr>db-node:5432</it.db.addr>
+        <it.docker.port>2375</it.docker.port>
         <it.ldap.addr>ldap-node:389</it.ldap.addr>
+        <it.server.network.mode>custom</it.server.network.mode>
+        <it.server.port>8001</it.server.port>
+        <local.repository.src.mount>${settings.localRepository}</local.repository.src.mount>
+        <network>net-server-it</network>
+        <oldap.image>osixia/openldap</oldap.image>
+        <server.image>walmartlabs/concord-server</server.image>
+        <skip.socat>true</skip.socat>
+        <socat.image>bobrik/socat</socat.image>
+        <tmp.dir.src.mount>${java.io.tmpdir}</tmp.dir.src.mount>
+        <tmp.dir>${java.io.tmpdir}</tmp.dir>
     </properties>
 
     <dependencies>
@@ -391,7 +392,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>osixia/openldap</name>
+                                    <name>${oldap.image}</name>
                                     <alias>openldap</alias>
                                     <run>
                                         <ports>
