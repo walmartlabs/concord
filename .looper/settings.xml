@@ -75,6 +75,7 @@
                 <console.image>${env.CONSOLE_IMAGE}</console.image>
                 <db.image>${env.DB_IMAGE}</db.image>
                 <dind.image>${env.DIND_IMAGE}</dind.image>
+                <oldap.image>${env.OLDAP_IMAGE}</oldap.image>
                 <s3mock.image>${env.S3MOCK_IMAGE}</s3mock.image>
                 <selenium.image>${env.SELENIUM_IMAGE}</selenium.image>
                 <server.image>${env.SERVER_IMAGE}</server.image>
