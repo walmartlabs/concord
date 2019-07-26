@@ -54,6 +54,7 @@ class CallbackModule(CallbackBase):
                                    'currentRetryCount': self.currentRetryCount})
         }))
         self.outFile.write('<~EOL~>\n')
+        self.outFile.flush()
 
     def cleanup_results(self, result):
         abridged_result = self._strip_internal_keys(result)

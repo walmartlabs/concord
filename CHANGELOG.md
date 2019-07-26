@@ -17,6 +17,8 @@ specified date/time.
 
 ### Changed
 
+- ansible: fixed an issue with events not being sent to the server in
+some cases;
 - concord-server: make organization names optional when using secrets
 in `imports`;
 - concord-console: fixed an issue with the profile selection in
