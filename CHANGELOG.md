@@ -17,6 +17,9 @@ specified date/time.
 
 ### Changed
 
+- concord-server: some optimizations for the process event processing
+(including Ansible). Reduces the contention on the process queue
+table;
 - ansible: fixed an issue with events not being sent to the server in
 some cases;
 - concord-server: make organization names optional when using secrets

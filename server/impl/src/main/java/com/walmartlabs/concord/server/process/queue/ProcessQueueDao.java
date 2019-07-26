@@ -85,7 +85,7 @@ public class ProcessQueueDao extends AbstractDao {
     private final ConcordObjectMapper objectMapper;
 
     @Inject
-    protected ProcessQueueDao(@MainDB Configuration cfg,
+    public ProcessQueueDao(@MainDB Configuration cfg,
                               List<ProcessQueueEntryFilter> filters,
                               EventDao eventDao,
                               ProcessQueueLock queueLock,

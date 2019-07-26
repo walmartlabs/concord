@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- removed in 1.28.0+
     <changeSet id="100100" author="ybrigo@gmail.com">
         <createTable tableName="EVENT_PROCESSOR_MARKER">
             <column name="PROCESSOR_NAME" type="varchar(64)">
@@ -26,4 +27,5 @@
             </column>
         </createTable>
     </changeSet>
+    -->
 </databaseChangeLog>
