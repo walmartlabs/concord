@@ -24,8 +24,11 @@ import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class ArgUtils {
 
@@ -60,7 +63,6 @@ public final class ArgUtils {
         return v;
     }
 
-    @SuppressWarnings("unchecked")
     public static String getListAsString(Map<String, Object> args, TaskParams c) {
         Object v = args.get(c.getKey());
         if (v == null) {
@@ -71,11 +73,18 @@ public final class ArgUtils {
             return ((String) v).trim();
         }
 
+        Collection<String> items = null;
         if (v instanceof Collection) {
-            return String.join(", ", (Collection<String>) v);
+            items = ((Collection<?>) v).stream().map(Object::toString).collect(Collectors.toList());
+        } else if (v.getClass().isArray()) {
+            items = Arrays.stream((Object[]) v).map(Object::toString).collect(Collectors.toList());
         }
 
-        throw new IllegalArgumentException("unexpected '" + c.getKey() + "' type: " + v);
+        if (items != null) {
+            return String.join(", ", items);
+        }
+
+        throw new IllegalArgumentException("Unexpected '" + c.getKey() + "' type: " + v);
     }
 
     private ArgUtils() {

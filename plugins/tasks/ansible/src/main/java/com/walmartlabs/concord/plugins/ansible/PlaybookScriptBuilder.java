@@ -200,7 +200,7 @@ public class PlaybookScriptBuilder {
 
         if (limit != null) {
             l.add("--limit");
-            l.add(limit);
+            l.add(quote(limit));
         }
 
         if (check) {

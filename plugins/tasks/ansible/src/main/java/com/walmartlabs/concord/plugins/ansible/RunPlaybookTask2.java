@@ -245,7 +245,7 @@ public class RunPlaybookTask2 implements Task {
             return s;
         }
 
-        String limit = getString(args, TaskParams.LIMIT_KEY.getKey());
+        String limit = getListAsString(args, TaskParams.LIMIT_KEY);
         if (limit != null) {
             if (debug) {
                 log.info("Using the limit value: {}", limit);
