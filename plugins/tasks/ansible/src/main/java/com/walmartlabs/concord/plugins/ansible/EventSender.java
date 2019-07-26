@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,21 +92,24 @@ public class EventSender {
                 if (line == null || line.isEmpty()) {
                     if (stop) {
                         // looks like the end of the play
-                        break;
+
+                        // don't stop until we reach the end of the file
+                        if (Files.size(eventsFile) <= f.getFilePointer()) {
+                            break;
+                        }
                     }
 
                     // wait for more data
                     sleep(NO_DATA_DELAY);
-                    continue;
-                }
-
-                if (line.endsWith(EOL_MARKER)) {
-                    String data = line.substring(0, line.length() - EOL_MARKER.length());
-                    ProcessEventRequest req = objectMapper.readValue(data, ProcessEventRequest.class);
-                    batch.add(req);
                 } else {
-                    // partial line, re-read next time
-                    f.seek(f.getFilePointer() - line.length());
+                    if (line.endsWith(EOL_MARKER)) {
+                        String data = line.substring(0, line.length() - EOL_MARKER.length());
+                        ProcessEventRequest req = objectMapper.readValue(data, ProcessEventRequest.class);
+                        batch.add(req);
+                    } else {
+                        // partial line, re-read next time
+                        f.seek(f.getFilePointer() - line.length());
+                    }
                 }
 
                 long t2 = System.currentTimeMillis();
