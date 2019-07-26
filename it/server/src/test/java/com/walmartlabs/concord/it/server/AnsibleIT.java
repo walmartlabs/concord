@@ -516,4 +516,25 @@ public class AnsibleIT extends AbstractServerIT {
         assertLog(".*Hello aaa.*", ab);
         assertLog(".*Hello bbb.*", ab);
     }
+
+    @Test
+    public void testLimitWithMultipleHost() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleLimitWithMultipleHost").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLogAtLeast(".*Hello aaa.*", 2, ab);
+        assertLogAtLeast(".*Hello ccc.*", 2, ab);
+        assertNoLog(".*Hello bbb.*", ab);
+    }
 }

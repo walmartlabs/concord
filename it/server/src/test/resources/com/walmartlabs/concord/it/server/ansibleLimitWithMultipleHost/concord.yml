@@ -1,0 +1,28 @@
+flows:
+  default:
+    - task: ansible
+      withItems:
+        - "${'aaa,ccc'.split(',')}"
+        - ["aaa", "ccc"]
+      in:
+        playbook: playbook/hello.yml
+        inventory:
+          - aaa:
+              hosts:
+                - "127.0.0.1"
+              vars:
+                ansible_connection: "local"
+                msg: "Hello aaa"
+          - bbb:
+              hosts:
+                - "127.0.0.2"
+              vars:
+                ansible_connection: "local"
+                msg: "Hello bbb"
+          - ccc:
+              hosts:
+                - "127.0.0.3"
+              vars:
+                ansible_connection: "local"
+                msg: "Hello ccc"
+        limit: "${item}"

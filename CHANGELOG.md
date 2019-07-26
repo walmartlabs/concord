@@ -17,6 +17,7 @@ specified date/time.
 
 ### Changed
 
+- ansible: the `limits` parameter now accepts list and array values;
 - concord-server: some optimizations for the process event processing
 (including Ansible). Reduces the contention on the process queue
 table;
