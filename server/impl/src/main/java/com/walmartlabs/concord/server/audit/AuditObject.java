@@ -23,12 +23,13 @@ package com.walmartlabs.concord.server.audit;
 
 public enum AuditObject {
 
+    EXTERNAL_EVENT,
     INVENTORY,
     ORGANIZATION,
     POLICY,
     PROJECT,
+    ROLE,
     SECRET,
     SYSTEM,
-    TEAM,
-    ROLE
+    TEAM
 }

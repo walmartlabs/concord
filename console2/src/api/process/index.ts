@@ -130,6 +130,15 @@ export enum ProcessKind {
     TIMEOUT_HANDLER = 'TIMEOUT_HANDLER'
 }
 
+export interface TriggeredByEntry {
+    externalEventId?: string;
+    trigger: TriggerEntry;
+}
+
+export interface TriggerEntry {
+    eventSource: string;
+}
+
 export interface ProcessEntry {
     instanceId: ConcordId;
     parentInstanceId?: ConcordId;
@@ -152,6 +161,7 @@ export interface ProcessEntry {
     checkpoints?: ProcessCheckpointEntry[];
     statusHistory?: ProcessHistoryEntry[];
     disabled: boolean;
+    triggeredBy?: TriggeredByEntry;
 }
 
 export interface StartProcessResponse {

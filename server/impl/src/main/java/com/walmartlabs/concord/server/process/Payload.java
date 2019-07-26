@@ -52,6 +52,7 @@ public class Payload {
     public static final HeaderKey<PolicyRules> POLICY = HeaderKey.register("_policy", PolicyRules.class);
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
+    public static final HeaderKey<TriggeredByEntry> TRIGGERED_BY = HeaderKey.register("_triggeredBy", TriggeredByEntry.class);
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 

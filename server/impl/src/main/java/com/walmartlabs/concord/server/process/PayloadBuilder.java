@@ -267,6 +267,11 @@ public final class PayloadBuilder {
         return this;
     }
 
+    public PayloadBuilder triggeredBy(TriggeredByEntry t) {
+        payload = payload.putHeader(Payload.TRIGGERED_BY, t);
+        return this;
+    }
+
     private Path ensureBaseDir() throws IOException {
         Path baseDir = payload.getHeader(Payload.BASE_DIR);
         if (baseDir == null) {

@@ -108,39 +108,37 @@ public class ProcessQueueDao extends AbstractDao {
 
     public void insertInitial(ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
                               UUID projectId, UUID initiatorId, Map<String, Object> meta,
-                              String exclusiveGroup) {
+                              String exclusiveGroup, TriggeredByEntry triggeredBy) {
 
-        tx(tx -> insertInitial(tx, processKey, kind, parentInstanceId, projectId, initiatorId, meta, exclusiveGroup));
-    }
+        tx(tx -> {
+            tx.insertInto(PROCESS_QUEUE)
+                    .columns(PROCESS_QUEUE.INSTANCE_ID,
+                            PROCESS_QUEUE.PROCESS_KIND,
+                            PROCESS_QUEUE.PARENT_INSTANCE_ID,
+                            PROCESS_QUEUE.PROJECT_ID,
+                            PROCESS_QUEUE.CREATED_AT,
+                            PROCESS_QUEUE.INITIATOR_ID,
+                            PROCESS_QUEUE.CURRENT_STATUS,
+                            PROCESS_QUEUE.LAST_UPDATED_AT,
+                            PROCESS_QUEUE.META,
+                            PROCESS_QUEUE.EXCLUSIVE_GROUP,
+                            PROCESS_QUEUE.TRIGGERED_BY)
+                    .values(value(processKey.getInstanceId()),
+                            value(kind.toString()),
+                            value(parentInstanceId),
+                            value(projectId),
+                            value(processKey.getCreatedAt()),
+                            value(initiatorId),
+                            value(ProcessStatus.PREPARING.toString()),
+                            currentTimestamp(),
+                            field("?::jsonb", objectMapper.serialize(meta)),
+                            value(exclusiveGroup),
+                            field("?::jsonb", objectMapper.serialize(triggeredBy)))
+                    .execute();
 
-    public void insertInitial(DSLContext tx, ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, UUID initiatorId, Map<String, Object> meta,
-                              String exclusiveGroup) {
 
-        tx.insertInto(PROCESS_QUEUE)
-                .columns(PROCESS_QUEUE.INSTANCE_ID,
-                        PROCESS_QUEUE.PROCESS_KIND,
-                        PROCESS_QUEUE.PARENT_INSTANCE_ID,
-                        PROCESS_QUEUE.PROJECT_ID,
-                        PROCESS_QUEUE.CREATED_AT,
-                        PROCESS_QUEUE.INITIATOR_ID,
-                        PROCESS_QUEUE.CURRENT_STATUS,
-                        PROCESS_QUEUE.LAST_UPDATED_AT,
-                        PROCESS_QUEUE.META,
-                        PROCESS_QUEUE.EXCLUSIVE_GROUP)
-                .values(value(processKey.getInstanceId()),
-                        value(kind.toString()),
-                        value(parentInstanceId),
-                        value(projectId),
-                        value(processKey.getCreatedAt()),
-                        value(initiatorId),
-                        value(ProcessStatus.PREPARING.toString()),
-                        currentTimestamp(),
-                        field("?::jsonb", objectMapper.serialize(meta)),
-                        value(exclusiveGroup))
-                .execute();
-
-        insertStatusHistory(tx, processKey, ProcessStatus.PREPARING);
+            insertStatusHistory(tx, processKey, ProcessStatus.PREPARING);
+        });
     }
 
     public void updateAgentId(ProcessKey processKey, String agentId, ProcessStatus status) {
@@ -882,6 +880,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .logFileName(r.get(PROCESS_QUEUE.INSTANCE_ID) + ".log")
                 .checkpoints(objectMapper.deserialize(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
                 .statusHistory(objectMapper.deserialize(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
+                .triggeredBy(objectMapper.deserialize(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
                 .build();
     }
 

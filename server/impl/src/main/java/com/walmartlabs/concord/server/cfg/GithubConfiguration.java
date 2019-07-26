@@ -49,6 +49,10 @@ public class GithubConfiguration {
     @Config("github.useSenderLdapDn")
     private boolean useSenderLdapDn;
 
+    @Inject
+    @Config("github.logEvents")
+    private boolean logEvents;
+
     public String getSecret() {
         return secret;
     }
@@ -63,5 +67,9 @@ public class GithubConfiguration {
 
     public boolean isUseSenderLdapDn() {
         return useSenderLdapDn;
+    }
+
+    public boolean isLogEvents() {
+        return logEvents;
     }
 }

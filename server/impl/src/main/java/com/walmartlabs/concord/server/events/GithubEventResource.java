@@ -21,6 +21,9 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
@@ -31,6 +34,7 @@ import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
@@ -98,6 +102,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
     private final EncryptedProjectValueManager encryptedValueManager;
     private final LdapManager ldapManager;
     private final UserManager userManager;
+    private final AuditLog auditLog;
 
     @Inject
     public GithubEventResource(ExternalEventsConfiguration cfg,
@@ -110,7 +115,8 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                                GithubConfiguration githubCfg,
                                LdapManager ldapManager,
                                UserManager userManager,
-                               ProcessSecurityContext processSecurityContext) {
+                               ProcessSecurityContext processSecurityContext,
+                               AuditLog auditLog) {
 
         super(cfg, processManager, triggersDao, projectDao, repositoryDao,
                 new GithubTriggerDefinitionEnricher(projectDao, githubCfg),
@@ -122,6 +128,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         this.encryptedValueManager = encryptedValueManager;
         this.ldapManager = ldapManager;
         this.userManager = userManager;
+        this.auditLog = auditLog;
     }
 
     @POST
@@ -164,14 +171,14 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             repos = Collections.singletonList(UNKNOWN_REPO);
         }
 
+        List<PartialProcessKey> totalInstanceIds = new ArrayList<>();
         for (RepositoryItem r : repos) {
             Map<String, Object> conditions = buildConditions(payload, r.repositoryName, eventBranch, r.project, eventName);
             conditions = enrich(conditions, uriInfo);
 
             Map<String, Object> event = buildTriggerEvent(payload, r.id, r.project, conditions);
 
-            String eventId = UUID.randomUUID().toString();
-            int count = process(eventId, EVENT_SOURCE, conditions, event, (t, cfg) -> {
+            List<PartialProcessKey> instanceIds = process(deliveryId, EVENT_SOURCE, conditions, event, (t, cfg) -> {
                 // if `useEventCommitId` is true then the process is forced to use the specified commit ID
                 String commitId = (String) event.get(COMMIT_ID_KEY);
                 if (commitId != null && t.isUseEventCommitId()) {
@@ -180,7 +187,20 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                 return cfg;
             });
 
-            log.info("payload ['{}'] -> {} processes started", eventId, count);
+            log.info("payload ['{}'] -> {} processes started", deliveryId, instanceIds.size());
+
+            // collect all IDs of launched processes
+            totalInstanceIds.addAll(instanceIds);
+        }
+
+        if (githubCfg.isLogEvents()) {
+            auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
+                    .field("source", "github")
+                    .field("eventId", deliveryId)
+                    .field("githubEvent", eventName)
+                    .field("payload", payload)
+                    .field("instanceIds", totalInstanceIds)
+                    .log();
         }
 
         if (unknownRepo) {

@@ -60,14 +60,14 @@ public class ProcessQueueDaoTest extends AbstractDaoTest {
         UUID projectId = projectDao.insert(orgId, projectName, null, null, null, null, true, new byte[0], null);
 
         ProcessKey instanceA = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
-        queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, null, null, null);
+        queueDao.insertInitial(instanceA, ProcessKind.DEFAULT, null, projectId, null, null, null, null);
         queueDao.updateStatus(instanceA, ProcessStatus.ENQUEUED);
 
         // add a small delay between two jobs
         Thread.sleep(100);
 
         ProcessKey instanceB = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
-        queueDao.insertInitial(instanceB, ProcessKind.DEFAULT, null, projectId, null, null, null);
+        queueDao.insertInitial(instanceB, ProcessKind.DEFAULT, null, projectId, null, null, null, null);
         queueDao.updateStatus(instanceB, ProcessStatus.ENQUEUED);
 
         // ---
