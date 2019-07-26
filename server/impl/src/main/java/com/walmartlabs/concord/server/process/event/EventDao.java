@@ -24,19 +24,23 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.jooq.tables.ProcessEventStats;
+import com.walmartlabs.concord.server.jooq.tables.records.ProcessEventsRecord;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.PreparedStatement;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.Statement;
+import java.sql.*;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENT_STATS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -103,28 +107,11 @@ public class EventDao extends AbstractDao {
             return;
         }
 
-        tx(tx -> {
-            BatchBindStep b = tx.batch(tx.insertInto(PROCESS_EVENTS)
-                    .columns(PROCESS_EVENTS.INSTANCE_ID,
-                            PROCESS_EVENTS.INSTANCE_CREATED_AT,
-                            PROCESS_EVENTS.EVENT_TYPE,
-                            PROCESS_EVENTS.EVENT_DATE,
-                            PROCESS_EVENTS.EVENT_DATA)
-                    .values(null, null, null, currentTimestamp(), field("?::jsonb", "n/a")));
-
-            for (ProcessEventRequest e : entries) {
-                b.bind(processKey.getInstanceId(),
-                        processKey.getCreatedAt(),
-                        e.getEventType(),
-                        objectMapper.serialize(e.getData()));
-            }
-
-            b.execute();
-        });
+        tx(tx -> insert(tx, processKey, entries));
     }
 
     public void insert(DSLContext tx, ProcessKey processKey, String eventType, Map<String, Object> data) {
-        tx.insertInto(PROCESS_EVENTS)
+        ProcessEventsRecord r = tx.insertInto(PROCESS_EVENTS)
                 .columns(PROCESS_EVENTS.INSTANCE_ID,
                         PROCESS_EVENTS.INSTANCE_CREATED_AT,
                         PROCESS_EVENTS.EVENT_TYPE,
@@ -135,7 +122,10 @@ public class EventDao extends AbstractDao {
                         value(eventType),
                         currentTimestamp(),
                         field("?::jsonb", objectMapper.serialize(data)))
-                .execute();
+                .returning(PROCESS_EVENTS.EVENT_SEQ)
+                .fetchOne();
+
+        updateStats(tx, Collections.singletonList(new StatItem(startOfDay(processKey.getCreatedAt()), r.getEventSeq())));
     }
 
     public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, Map<String, Object> data) {
@@ -146,6 +136,7 @@ public class EventDao extends AbstractDao {
                 PROCESS_EVENTS.EVENT_DATE,
                 PROCESS_EVENTS.EVENT_DATA)
                 .values(value((UUID) null), null, null, currentTimestamp(), field("?::jsonb"))
+                .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .getSQL();
 
         tx.connection(conn -> {
@@ -158,8 +149,54 @@ public class EventDao extends AbstractDao {
                     ps.addBatch();
                 }
                 ps.executeBatch();
+
+                updateStats(tx, toStatItems(ps, processKeys::get));
             }
         });
+    }
+
+    private void insert(DSLContext tx, ProcessKey processKey, List<ProcessEventRequest> entries) {
+        String sql = tx.insertInto(PROCESS_EVENTS)
+                .columns(PROCESS_EVENTS.INSTANCE_ID,
+                        PROCESS_EVENTS.INSTANCE_CREATED_AT,
+                        PROCESS_EVENTS.EVENT_TYPE,
+                        PROCESS_EVENTS.EVENT_DATE,
+                        PROCESS_EVENTS.EVENT_DATA)
+                .values(null, null, null, currentTimestamp(), field("?::jsonb", "n/a"))
+                .returning(PROCESS_EVENTS.EVENT_SEQ)
+                .getSQL();
+
+        tx.connection(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                for (ProcessEventRequest e : entries) {
+                    ps.setObject(1, processKey.getInstanceId());
+                    ps.setTimestamp(2, processKey.getCreatedAt());
+                    ps.setString(3, e.getEventType());
+                    ps.setString(4, objectMapper.serialize(e.getData()));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+
+                updateStats(tx, toStatItems(ps, index -> processKey));
+            }
+        });
+    }
+
+    private static void updateStats(DSLContext tx, List<StatItem> items) {
+        ProcessEventStats p = PROCESS_EVENT_STATS.as("p");
+        BatchBindStep q = tx.batch(
+                tx.insertInto(p)
+                        .columns(p.INSTANCE_CREATED_DATE, p.MAX_EVENT_SEQ)
+                        .values((Timestamp) null, null)
+                        .onDuplicateKeyUpdate()
+                        .set(p.MAX_EVENT_SEQ, when(p.MAX_EVENT_SEQ.lessThan((Long)null), value((Long)null)).otherwise(p.MAX_EVENT_SEQ))
+        );
+
+        for (StatItem i : items) {
+            q.bind(value(i.instanceCreatedDate), value(i.maxEventSeq), value(i.maxEventSeq), value(i.maxEventSeq), value(i.maxEventSeq));
+        }
+
+        q.execute();
     }
 
     private ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
@@ -169,5 +206,38 @@ public class EventDao extends AbstractDao {
                 .eventDate(r.value3())
                 .data(objectMapper.deserialize(r.value4()))
                 .build();
+    }
+
+    private static List<StatItem> toStatItems(PreparedStatement ps, Function<Integer, ProcessKey> processKey) throws SQLException {
+        Map<Timestamp, Long> result = new HashMap<>();
+
+        int index = 0;
+        try (ResultSet rs = ps.getGeneratedKeys()) {
+            while (rs.next()) {
+                long eventSeq = rs.getLong(PROCESS_EVENTS.EVENT_SEQ.getName());
+                Timestamp createdDate = startOfDay(processKey.apply(index).getCreatedAt());
+                result.compute(createdDate, (k, v) -> (v == null) ? eventSeq : Math.max(eventSeq, v));
+                index++;
+            }
+        }
+        return result.entrySet().stream()
+                .map(e -> new StatItem(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private static Timestamp startOfDay(Timestamp ts) {
+        return Timestamp.valueOf(ts.toLocalDateTime().toLocalDate().atTime(LocalTime.MIN));
+    }
+
+    private static class StatItem {
+
+        private final Timestamp instanceCreatedDate;
+
+        private final long maxEventSeq;
+
+        private StatItem(Timestamp instanceCreatedDate, long maxEventSeq) {
+            this.instanceCreatedDate = instanceCreatedDate;
+            this.maxEventSeq = maxEventSeq;
+        }
     }
 }

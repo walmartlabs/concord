@@ -11,4 +11,30 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="1280100" author="ybrigo@gmail.com">
+        <createTable tableName="PROCESS_EVENT_STATS">
+            <column name="INSTANCE_CREATED_DATE" type="timestamp">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="MAX_EVENT_SEQ" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1280200" author="ybrigo@gmail.com">
+        <createTable tableName="EVENT_PROCESSOR_MARKERS">
+            <column name="PROCESSOR_NAME" type="varchar(64)">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="INSTANCE_CREATED_DATE" type="timestamp">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="EVENT_SEQ" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>
