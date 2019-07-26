@@ -40,10 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEventResource {
@@ -95,11 +92,17 @@ public abstract class AbstractEventResource {
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
-    protected int process(String eventId,
-                          String eventName,
-                          Map<String, Object> conditions,
-                          Map<String, Object> event,
-                          ProcessConfigurationEnricher cfgEnricher) {
+    /**
+     * Processes the event and starts new processes with triggers that are
+     * matching the specified event.
+     *
+     * @return a list of IDs of started processes
+     */
+    protected List<PartialProcessKey> process(String eventId,
+                                              String eventName,
+                                              Map<String, Object> conditions,
+                                              Map<String, Object> event,
+                                              ProcessConfigurationEnricher cfgEnricher) {
 
         assertRoles(eventName);
 
@@ -107,6 +110,8 @@ public abstract class AbstractEventResource {
                 .map(triggerDefinitionEnricher::enrich)
                 .filter(t -> filter(conditions, t))
                 .collect(Collectors.toList());
+
+        List<PartialProcessKey> processKeys = new ArrayList<>(triggers.size());
 
         for (TriggerEntry t : triggers) {
             if (isDisabled(eventName)) {
@@ -144,14 +149,15 @@ public abstract class AbstractEventResource {
                 UserEntry initiator = getInitiator(t, event);
                 UUID orgId = projectDao.getOrgId(t.getProjectId());
 
-                PartialProcessKey processKey = startProcess(orgId, t.getProjectId(), t.getRepositoryId(), cfg, initiator, t.getExclusiveGroup());
-                log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, processKey, t);
+                PartialProcessKey pk = startProcess(eventId, orgId, t, cfg, initiator);
+                processKeys.add(pk);
+                log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, pk, t);
             } catch (Exception e) {
                 log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
             }
         }
 
-        return triggers.size();
+        return processKeys;
     }
 
     private boolean isRepositoryDisabled(TriggerEntry t) {
@@ -203,12 +209,11 @@ public abstract class AbstractEventResource {
         }
     }
 
-    private PartialProcessKey startProcess(UUID orgId,
-                                           UUID projectId,
-                                           UUID repoId,
+    private PartialProcessKey startProcess(String eventId,
+                                           UUID orgId,
+                                           TriggerEntry t,
                                            Map<String, Object> cfg,
-                                           UserEntry initiator,
-                                           String exclusiveGroup) throws Exception {
+                                           UserEntry initiator) throws Exception {
 
         PartialProcessKey processKey = PartialProcessKey.create();
 
@@ -216,10 +221,14 @@ public abstract class AbstractEventResource {
             Payload payload = PayloadBuilder.start(processKey)
                     .initiator(initiator.getId(), initiator.getName())
                     .organization(orgId)
-                    .project(projectId)
-                    .repository(repoId)
+                    .project(t.getProjectId())
+                    .repository(t.getRepositoryId())
                     .configuration(cfg)
-                    .exclusiveGroup(exclusiveGroup)
+                    .exclusiveGroup(t.getExclusiveGroup())
+                    .triggeredBy(TriggeredByEntry.builder()
+                            .externalEventId(eventId)
+                            .trigger(t)
+                            .build())
                     .build();
 
             processManager.start(payload, false);

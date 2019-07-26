@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -102,9 +103,9 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
 
         String eventId = String.valueOf(event.get("cmsId"));
-        int count = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent, null);
+        List<PartialProcessKey> processKeys = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent, null);
 
-        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, count);
+        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, processKeys.size());
         return Response.ok().build();
     }
 

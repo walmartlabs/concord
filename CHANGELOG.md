@@ -4,6 +4,10 @@
 
 ### Added
 
+- concord-server: save external `github` events into the audit log;
+- concord-server: save the process' trigger information in the
+process queue. The process endpoints now return the new `triggeredBy`
+field;
 - concord-console: display the process' `startAt` on the process
 status page;
 - concord-server: support for multiple `user` entries in the form's

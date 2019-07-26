@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKind;
+import com.walmartlabs.concord.server.process.TriggeredByEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 
 import javax.inject.Inject;
@@ -54,12 +55,12 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
         UUID initiatorId = payload.getHeader(Payload.INITIATOR_ID);
-
         Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
         Map<String, Object> meta = getMeta(cfg);
         String exclusiveGroup = payload.getHeader(Payload.EXCLUSIVE_GROUP);
+        TriggeredByEntry triggeredBy = payload.getHeader(Payload.TRIGGERED_BY);
 
-        queueDao.insertInitial(processKey, kind, parentInstanceId, projectId, initiatorId, meta, exclusiveGroup);
+        queueDao.insertInitial(processKey, kind, parentInstanceId, projectId, initiatorId, meta, exclusiveGroup, triggeredBy);
 
         return chain.process(payload);
     }

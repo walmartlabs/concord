@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -47,6 +48,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -88,9 +90,9 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
             eventId = UUID.randomUUID().toString();
         }
 
-        int count = process(eventId, eventName, event, event, null);
+        List<PartialProcessKey> processKeys = process(eventId, eventName, event, event, null);
 
-        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, count);
+        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, processKeys.size());
         return Response.ok().build();
     }
 }
