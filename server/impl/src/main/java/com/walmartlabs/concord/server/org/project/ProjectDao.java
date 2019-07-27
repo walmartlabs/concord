@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
+import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
@@ -101,15 +102,6 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
-    public Optional<Boolean> isAcceptsRawPayload(UUID projectId) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROJECTS.ACCEPTS_RAW_PAYLOAD)
-                    .from(PROJECTS)
-                    .where(PROJECTS.PROJECT_ID.eq(projectId))
-                    .fetchOptional(PROJECTS.ACCEPTS_RAW_PAYLOAD);
-        }
-    }
-
     public ProjectEntry get(UUID projectId) {
         Projects p = PROJECTS.as("p");
         Users u = USERS.as("u");
@@ -119,7 +111,7 @@ public class ProjectDao extends AbstractDao {
         Field<String> metaField = p.META.cast(String.class);
 
         try (DSLContext tx = DSL.using(cfg)) {
-            Record14<UUID, String, String, UUID, String, String, String, UUID, String, String, String, String, Boolean, String> r = tx.select(
+            Record14<UUID, String, String, UUID, String, String, String, UUID, String, String, String, String, RawPayloadMode, String> r = tx.select(
                     p.PROJECT_ID,
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
@@ -132,7 +124,7 @@ public class ProjectDao extends AbstractDao {
                     u.DOMAIN,
                     u.USER_TYPE,
                     u.DISPLAY_NAME,
-                    p.ACCEPTS_RAW_PAYLOAD,
+                    p.RAW_PAYLOAD_MODE,
                     metaField)
                     .from(p)
                     .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
@@ -180,6 +172,7 @@ public class ProjectDao extends AbstractDao {
             }
 
             Map<String, Object> cfg = objectMapper.deserialize(r.get(cfgField));
+
             return new ProjectEntry(projectId,
                     r.get(p.PROJECT_NAME),
                     r.get(p.DESCRIPTION),
@@ -189,19 +182,20 @@ public class ProjectDao extends AbstractDao {
                     cfg,
                     ProjectVisibility.valueOf(r.get(p.VISIBILITY)),
                     toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.DOMAIN), r.get(u.DISPLAY_NAME), r.get(u.USER_TYPE)),
-                    r.get(p.ACCEPTS_RAW_PAYLOAD),
+                    r.get(p.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
+                    r.get(p.RAW_PAYLOAD_MODE),
                     objectMapper.deserialize(r.get(metaField)));
         }
     }
 
     public UUID insert(UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
-                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey, Map<String, Object> meta) {
+                       ProjectVisibility visibility, RawPayloadMode rawPayloadMode, byte[] encryptedKey, Map<String, Object> meta) {
 
-        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, acceptsRawPayload, encryptedKey, meta));
+        return txResult(tx -> insert(tx, orgId, name, description, ownerId, cfg, visibility, rawPayloadMode, encryptedKey, meta));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, String name, String description, UUID ownerId, Map<String, Object> cfg,
-                       ProjectVisibility visibility, boolean acceptsRawPayload, byte[] encryptedKey, Map<String, Object> meta) {
+                       ProjectVisibility visibility, RawPayloadMode rawPayloadMode, byte[] encryptedKey, Map<String, Object> meta) {
 
         if (visibility == null) {
             visibility = ProjectVisibility.PUBLIC;
@@ -214,7 +208,7 @@ public class ProjectDao extends AbstractDao {
                         PROJECTS.PROJECT_CFG,
                         PROJECTS.VISIBILITY,
                         PROJECTS.OWNER_ID,
-                        PROJECTS.ACCEPTS_RAW_PAYLOAD,
+                        PROJECTS.RAW_PAYLOAD_MODE,
                         PROJECTS.SECRET_KEY,
                         PROJECTS.META)
                 .values(value(name),
@@ -223,7 +217,7 @@ public class ProjectDao extends AbstractDao {
                         field("?::jsonb", objectMapper.serialize(cfg)),
                         value(visibility.toString()),
                         value(ownerId),
-                        value(acceptsRawPayload),
+                        value(rawPayloadMode != null ? rawPayloadMode : RawPayloadMode.DISABLED),
                         value(encryptedKey),
                         field("?::jsonb", objectMapper.serialize(meta)))
                 .returning(PROJECTS.PROJECT_ID)
@@ -232,8 +226,9 @@ public class ProjectDao extends AbstractDao {
     }
 
     public void update(DSLContext tx, UUID orgId, UUID id, ProjectVisibility visibility,
-                       String name, String description, Map<String, Object> cfg, Boolean acceptsRawPayload,
+                       String name, String description, Map<String, Object> cfg, RawPayloadMode rawPayloadMode,
                        UUID ownerId, Map<String, Object> meta) {
+
         UpdateSetFirstStep<ProjectsRecord> q = tx.update(PROJECTS);
 
         if (name != null) {
@@ -252,8 +247,8 @@ public class ProjectDao extends AbstractDao {
             q.set(PROJECTS.VISIBILITY, visibility.toString());
         }
 
-        if (acceptsRawPayload != null) {
-            q.set(PROJECTS.ACCEPTS_RAW_PAYLOAD, acceptsRawPayload);
+        if (rawPayloadMode != null) {
+            q.set(PROJECTS.RAW_PAYLOAD_MODE, rawPayloadMode);
         }
 
         if (ownerId != null) {
@@ -315,7 +310,7 @@ public class ProjectDao extends AbstractDao {
                         .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectOnConditionStep<Record12<UUID, String, String, UUID, String, String, UUID, String, String, String, String, Boolean>> q = tx.select(
+            SelectOnConditionStep<Record12<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode>> q = tx.select(
                     p.PROJECT_ID,
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
@@ -327,7 +322,7 @@ public class ProjectDao extends AbstractDao {
                     u.DOMAIN,
                     u.DISPLAY_NAME,
                     u.USER_TYPE,
-                    p.ACCEPTS_RAW_PAYLOAD)
+                    p.RAW_PAYLOAD_MODE)
                     .from(p)
                     .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID));
 
@@ -453,7 +448,7 @@ public class ProjectDao extends AbstractDao {
                 .execute();
     }
 
-    private static ProjectEntry toEntry(Record12<UUID, String, String, UUID, String, String, UUID, String, String, String, String, Boolean> r) {
+    private static ProjectEntry toEntry(Record12<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode> r) {
         return new ProjectEntry(r.get(PROJECTS.PROJECT_ID),
                 r.get(PROJECTS.PROJECT_NAME),
                 r.get(PROJECTS.DESCRIPTION),
@@ -463,7 +458,8 @@ public class ProjectDao extends AbstractDao {
                 null,
                 ProjectVisibility.valueOf(r.get(PROJECTS.VISIBILITY)),
                 toOwner(r.get(PROJECTS.OWNER_ID), r.get(USERS.USERNAME), r.get(USERS.DOMAIN), r.get(USERS.DISPLAY_NAME), r.get(USERS.USER_TYPE)),
-                r.get(PROJECTS.ACCEPTS_RAW_PAYLOAD),
+                r.get(PROJECTS.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
+                r.get(PROJECTS.RAW_PAYLOAD_MODE),
                 null);
     }
 

@@ -22,10 +22,10 @@ import { ColumnDefinition, ResourceAccessEntry } from '../';
 import {
     ConcordId,
     ConcordKey,
+    EntityOwner,
     fetchJson,
     GenericOperationResult,
     OperationResult,
-    EntityOwner,
     Owner
 } from '../../common';
 import { RepositoryEntry } from './repository';
@@ -47,6 +47,14 @@ export interface ProjectEntryMeta {
     ui?: ProjectEntryMetaUI;
 }
 
+export enum RawPayloadMode {
+    DISABLED = 'DISABLED',
+    OWNERS = 'OWNERS',
+    TEAM_MEMBERS = 'TEAM_MEMBERS',
+    ORG_MEMBERS = 'ORG_MEMBERS',
+    EVERYONE = 'EVERYONE'
+}
+
 export interface ProjectEntry {
     id: ConcordId;
     name: ConcordKey;
@@ -61,7 +69,7 @@ export interface ProjectEntry {
 
     repositories?: Repositories;
 
-    acceptsRawPayload: boolean;
+    rawPayloadMode: RawPayloadMode;
 
     meta?: ProjectEntryMeta;
 }
@@ -70,7 +78,6 @@ export interface NewProjectEntry {
     name: ConcordKey;
     description?: string;
     visibility: ProjectVisibility;
-    acceptsRawPayload?: boolean;
 }
 
 export interface UpdateProjectEntry {
@@ -78,7 +85,7 @@ export interface UpdateProjectEntry {
     name?: ConcordKey;
     description?: string;
     visibility?: ProjectVisibility;
-    acceptsRawPayload?: boolean;
+    rawPayloadMode?: RawPayloadMode;
 }
 
 export const get = (orgName: ConcordKey, projectName: ConcordKey): Promise<ProjectEntry> => {
@@ -143,26 +150,6 @@ export const changeOwner = (
         body: JSON.stringify({
             id: projectId,
             owner: { username: owner.username, userDomain: owner.userDomain }
-        })
-    };
-
-    return fetchJson(`/api/v1/org/${orgName}/project`, opts);
-};
-
-// TODO should we just use createOrUpdate instead?
-export const setAcceptsRawPayload = (
-    orgName: ConcordKey,
-    projectId: ConcordId,
-    acceptsRawPayload: boolean
-): Promise<ProjectOperationResult> => {
-    const opts = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            id: projectId,
-            acceptsRawPayload
         })
     };
 

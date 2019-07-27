@@ -213,7 +213,7 @@ public class ConsoleService implements Resource {
     @WithTimer
     public boolean testRepository(RepositoryTestRequest req) {
         OrganizationEntry org = orgManager.assertAccess(null, req.getOrgName(), false);
-        ProjectEntry project = projectAccessManager.assertProjectAccess(org.getId(), null, req.getProjectName(), ResourceAccessLevel.READER, false);
+        ProjectEntry project = projectAccessManager.assertAccess(org.getId(), null, req.getProjectName(), ResourceAccessLevel.READER, false);
 
         try {
             String secretName = secretDao.getName(req.getSecretId());

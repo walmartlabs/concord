@@ -72,7 +72,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 
@@ -230,7 +230,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskFailChild").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -262,7 +262,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithItemsWithOut").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -296,7 +296,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithItems").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -392,7 +392,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithArguments").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -432,7 +432,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithRequirements").toURI());
         Map<String, Object> input = new HashMap<>();
@@ -477,7 +477,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithForm").toURI());
         Map<String, Object> input = new HashMap<>();

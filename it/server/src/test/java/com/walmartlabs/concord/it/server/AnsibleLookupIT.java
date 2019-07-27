@@ -48,7 +48,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -94,7 +94,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -139,7 +139,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -180,7 +180,7 @@ public class AnsibleLookupIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 

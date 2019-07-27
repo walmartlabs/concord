@@ -277,7 +277,7 @@ public class RunAsIT extends AbstractServerIT {
         ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
         assertTrue(por.isOk());
     }
 

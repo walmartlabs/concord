@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.google.common.collect.ImmutableSet;
+import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
@@ -99,6 +100,6 @@ public class AttachmentStoringProcessor implements PayloadProcessor {
         }
 
         ProjectEntry project = projectDao.get(projectId);
-        return project.getAcceptsRawPayload();
+        return project.getRawPayloadMode() != RawPayloadMode.DISABLED;
     }
 }

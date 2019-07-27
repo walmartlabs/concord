@@ -386,7 +386,7 @@ public class TeamRbacIT extends AbstractServerIT {
             projectsApi.createOrUpdate(orgName, new ProjectEntry()
                     .setName(projectName)
                     .setDescription("new description")
-                    .setAcceptsRawPayload(true));
+                    .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
             fail("should fail");
         } catch (ApiException e) {
         }
@@ -397,7 +397,7 @@ public class TeamRbacIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setDescription("new description")
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -416,7 +416,7 @@ public class TeamRbacIT extends AbstractServerIT {
             projectsApi.createOrUpdate(orgName, new ProjectEntry()
                     .setName(projectName)
                     .setDescription("another description")
-                    .setAcceptsRawPayload(true));
+                    .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
             fail("should fail");
         } catch (ApiException e) {
         }
@@ -434,7 +434,7 @@ public class TeamRbacIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setDescription("another description")
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

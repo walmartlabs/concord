@@ -179,7 +179,7 @@ public class ProcessEventResource implements Resource {
         if (projectId != null) {
             // if the process belongs to a project, only those who have WRITER privileges can
             // access extended event data
-            projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+            projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
         }
 
         UUID initiatorId = queueDao.getInitiatorId(processKey);

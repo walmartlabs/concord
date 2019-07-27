@@ -112,7 +112,7 @@ public class AnsibleProjectIT extends AbstractServerIT {
                 .setName(projectName)
                 .setRepositories(singletonMap(repoName, repo))
                 .setCfg(cfg)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 

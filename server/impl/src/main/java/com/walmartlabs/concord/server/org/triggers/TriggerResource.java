@@ -176,7 +176,7 @@ public class TriggerResource implements Resource {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        return projectAccessManager.assertProjectAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
     }
 
     private static void assertAdmin() {

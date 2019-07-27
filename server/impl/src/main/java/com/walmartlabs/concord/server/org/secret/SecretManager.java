@@ -301,7 +301,7 @@ public class SecretManager {
         String projectName = req.projectName() == null ? "" : req.projectName();
 
         if (projectId != null || !projectName.isEmpty()) {
-            ProjectEntry entry = projectAccessManager.assertProjectAccess(e.getOrgId(), projectId, projectName, ResourceAccessLevel.READER, true);
+            ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), projectId, projectName, ResourceAccessLevel.READER, true);
             projectId = entry.getId();
             if (!entry.getOrgId().equals(e.getOrgId())) {
                 throw new ValidationErrorsException("Project -> " + entry.getName() + " does not belong to organization -> " + orgName);

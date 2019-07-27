@@ -675,7 +675,7 @@ public class GitHubTriggersIT extends AbstractServerIT {
 
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true)
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
                 .setRepositories(ImmutableMap.of(repoName, repo)));
 
         return bareRepo;

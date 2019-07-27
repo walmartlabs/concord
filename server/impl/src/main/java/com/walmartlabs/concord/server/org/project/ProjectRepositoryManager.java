@@ -77,7 +77,7 @@ public class ProjectRepositoryManager {
     }
 
     public void createOrUpdate(DSLContext tx, UUID projectId, RepositoryEntry entry) {
-        ProjectEntry project = projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
+        ProjectEntry project = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, false);
 
         UUID secretId = entry.getSecretId();
         if (secretId == null && entry.getSecretName() != null) {
@@ -97,7 +97,7 @@ public class ProjectRepositoryManager {
     }
 
     public void delete(UUID projectId, String repoName) {
-        ProjectEntry projEntry = projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
+        ProjectEntry projEntry = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, false);
 
         UUID repoId = repositoryDao.getId(projectId, repoName);
         if (repoId == null) {

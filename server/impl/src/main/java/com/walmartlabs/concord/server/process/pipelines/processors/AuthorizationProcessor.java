@@ -45,7 +45,7 @@ public class AuthorizationProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
+        accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
         return chain.process(payload);
     }
 }

@@ -120,7 +120,7 @@ public class RepositoryRefresher extends AbstractDao {
             throw new ValidationErrorsException("Invalid project name");
         }
 
-        return projectAccessManager.assertProjectAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
     }
 
     private void cleanUp(Path repoPath) {

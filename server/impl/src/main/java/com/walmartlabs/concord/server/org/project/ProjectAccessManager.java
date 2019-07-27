@@ -49,11 +49,11 @@ public class ProjectAccessManager {
     }
 
     public void updateAccessLevel(UUID projectId, UUID teamId, ResourceAccessLevel level) {
-        assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
+        assertAccess(projectId, ResourceAccessLevel.OWNER, true);
         projectDao.upsertAccessLevel(projectId, teamId, level);
     }
 
-    public ProjectEntry assertProjectAccess(UUID orgId, UUID projectId, String projectName, ResourceAccessLevel level, boolean orgMembersOnly) {
+    public ProjectEntry assertAccess(UUID orgId, UUID projectId, String projectName, ResourceAccessLevel level, boolean orgMembersOnly) {
         if (projectId == null && projectName == null) {
             throw new ValidationErrorsException("Project ID or name is required");
         }
@@ -65,67 +65,77 @@ public class ProjectAccessManager {
             }
         }
 
-        return assertProjectAccess(projectId, level, orgMembersOnly);
+        return assertAccess(projectId, level, orgMembersOnly);
     }
 
-    @WithTimer
-    public ProjectEntry assertProjectAccess(UUID projectId, ResourceAccessLevel level, boolean orgMembersOnly) {
-        ProjectEntry e = projectDao.get(projectId);
-        if (e == null) {
+    public ProjectEntry assertAccess(UUID projectId, ResourceAccessLevel level, boolean orgMembersOnly) {
+        ProjectEntry project = projectDao.get(projectId);
+        if (project == null) {
             throw new ValidationErrorsException("Project not found: " + projectId);
         }
 
+        if (!hasAccess(project, level, orgMembersOnly)) {
+            UserPrincipal p = UserPrincipal.getCurrent();
+            throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
+                    "the necessary access level (" + level + ") to the project: " + project.getName());
+        }
+
+        return project;
+    }
+
+    @WithTimer
+    public boolean hasAccess(ProjectEntry project, ResourceAccessLevel level, boolean orgMembersOnly) {
         if (Roles.isAdmin()) {
             // an admin can access any project
-            return e;
+            return true;
         }
 
-        UserPrincipal p = UserPrincipal.assertCurrent();
+        UserPrincipal principal = UserPrincipal.assertCurrent();
 
         if (level == ResourceAccessLevel.READER && (Roles.isGlobalReader() || Roles.isGlobalWriter())) {
-            return e;
+            return true;
         } else if (level == ResourceAccessLevel.WRITER && Roles.isGlobalWriter()) {
-            return e;
+            return true;
         }
 
-        EntityOwner owner = e.getOwner();
-        if (ResourceAccessUtils.isSame(p, owner)) {
+        EntityOwner owner = project.getOwner();
+        if (ResourceAccessUtils.isSame(principal, owner)) {
             // the owner can do anything with his projects
-            return e;
+            return true;
         }
 
-        if (orgMembersOnly && e.getVisibility() == ProjectVisibility.PUBLIC
+        if (orgMembersOnly && project.getVisibility() == ProjectVisibility.PUBLIC
                 && level == ResourceAccessLevel.READER
-                && userDao.isInOrganization(p.getId(), e.getOrgId())) {
+                && userDao.isInOrganization(principal.getId(), project.getOrgId())) {
             // organization members can access any public project in the same organization
-            return e;
+            return true;
         }
 
-        OrganizationEntry org = orgManager.assertAccess(e.getOrgId(), false);
-        if (ResourceAccessUtils.isSame(p, org.getOwner())) {
+        OrganizationEntry org = orgManager.assertAccess(project.getOrgId(), false);
+        if (ResourceAccessUtils.isSame(principal, org.getOwner())) {
             // the org owner can do anything with the org's projects
-            return e;
+            return true;
         }
 
-        if (orgMembersOnly || e.getVisibility() != ProjectVisibility.PUBLIC) {
+        if (orgMembersOnly || project.getVisibility() != ProjectVisibility.PUBLIC) {
             // we need to check the resource's access level if the access is limited to
             // the organization's members or the project is not public
-            if (!projectDao.hasAccessLevel(projectId, p.getId(), ResourceAccessLevel.atLeast(level))) {
-                throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
-                        "the necessary access level (" + level + ") to the project: " + e.getName());
+            if (!projectDao.hasAccessLevel(project.getId(), principal.getId(), ResourceAccessLevel.atLeast(level))) {
+                throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+                        "the necessary access level (" + level + ") to the project: " + project.getName());
             }
         }
 
-        return e;
+        return true;
     }
 
     public List<ResourceAccessEntry> getResourceAccess(UUID projectId) {
-        assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
+        assertAccess(projectId, ResourceAccessLevel.READER, false);
         return projectDao.getAccessLevel(projectId);
     }
 
     public void updateAccessLevel(UUID projectId, Collection<ResourceAccessEntry> entries, boolean isReplace) {
-        assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
+        assertAccess(projectId, ResourceAccessLevel.OWNER, true);
 
         projectDao.tx(tx -> {
             if (isReplace) {
@@ -136,5 +146,10 @@ public class ProjectAccessManager {
                 projectDao.upsertAccessLevel(tx, projectId, e.getTeamId(), e.getLevel());
             }
         });
+    }
+
+    public boolean isTeamMember(UUID projectId) {
+        UserPrincipal principal = UserPrincipal.assertCurrent();
+        return projectDao.hasAccessLevel(projectId, principal.getId(), ResourceAccessLevel.READER);
     }
 }
