@@ -26,6 +26,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ImmutableApiClientConfiguration.Builder;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
@@ -51,11 +52,19 @@ public abstract class AbstractConcordTask implements Task {
     ApiClientFactory apiClientFactory;
 
     protected <T> T withClient(Context ctx, CheckedFunction<ApiClient, T> f) throws Exception {
-        ApiClientConfiguration cfg = ApiClientConfiguration.builder()
+        return withClient(ctx, true, f);
+    }
+
+    protected <T> T withClient(Context ctx, boolean withApiKey, CheckedFunction<ApiClient, T> f) throws Exception {
+        Builder builder = ApiClientConfiguration.builder()
                 .baseUrl(getBaseUrl(ctx))
-                .apiKey(getApiKey(ctx))
-                .context(ctx)
-                .build();
+                .context(ctx);
+
+        if (withApiKey) {
+            builder.apiKey(getApiKey(ctx));
+        }
+
+        ImmutableApiClientConfiguration cfg = builder.build();
 
         return f.apply(apiClientFactory.create(cfg));
     }

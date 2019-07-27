@@ -349,6 +349,37 @@ public class ConcordTaskIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSuspendParentProcess() throws Exception {
+        String username = "user_" + randomString();
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
+                .setUsername(username));
+
+        // ---
+
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskSuspendParentProcess").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.myApiKey", cakr.getKey());
+
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Hello, Concord!.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testForkWithArguments() throws Exception {
         String orgName = "org_" + randomString();
 

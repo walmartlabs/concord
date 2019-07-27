@@ -359,7 +359,7 @@ public class ConcordTask extends AbstractConcordTask {
         condition.put("processes", jobs);
         condition.put("resumeEvent", RESUME_EVENT_NAME);
 
-        ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
+        ClientUtils.withRetry(3, 1000, () -> withClient(ctx, false, client -> {
             ProcessApi api = new ProcessApi(client);
             api.setWaitCondition(ContextUtils.getTxId(ctx), condition);
             return null;

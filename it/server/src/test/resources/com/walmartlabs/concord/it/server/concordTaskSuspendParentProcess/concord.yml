@@ -1,0 +1,15 @@
+flows:
+  default:
+    - task: concord
+      in:
+        apiKey: "${myApiKey}"
+        action: start
+        payload: payload
+        sync: true
+        suspend: true
+        arguments:
+          name: "Concord"
+        outVars:
+          - xyz
+
+    - log: "${jobOut.xyz}"
