@@ -146,7 +146,7 @@ public class RepositoryResource implements Resource {
             throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
+        accessManager.assertAccess(projectId, ResourceAccessLevel.READER, true);
 
         UUID repoId = repositoryDao.getId(projectId, repositoryName);
         if (repoId == null) {

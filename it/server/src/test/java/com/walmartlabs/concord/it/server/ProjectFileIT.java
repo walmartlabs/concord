@@ -148,7 +148,7 @@ public class ProjectFileIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true)
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
                         .setUrl(repoUrl)
@@ -194,7 +194,7 @@ public class ProjectFileIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true)
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
                         .setUrl(repoUrl)

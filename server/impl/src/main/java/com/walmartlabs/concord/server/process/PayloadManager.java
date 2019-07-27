@@ -35,7 +35,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -43,7 +42,6 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -233,23 +231,6 @@ public class PayloadManager {
                 .workspace(tmpDir)
                 .imports(imports)
                 .build();
-    }
-
-    public void assertAcceptsRawPayload(Payload payload) {
-        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-        if (projectId == null) {
-            return;
-        }
-
-        Optional<Boolean> o = projectDao.isAcceptsRawPayload(projectId);
-        if (!o.isPresent()) {
-            throw new ProcessException(payload.getProcessKey(), "Project not found: " + projectId);
-        }
-
-        if (!o.get()) {
-            throw new ProcessException(payload.getProcessKey(), "The project is not accepting raw payloads: " + projectId,
-                    Status.BAD_REQUEST);
-        }
     }
 
     public EntryPoint parseEntryPoint(PartialProcessKey processKey, UUID orgId, String entryPoint) {

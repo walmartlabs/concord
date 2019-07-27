@@ -149,7 +149,7 @@ public class ProjectResource implements Resource {
         }
 
         // TODO move to ProjectManager
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
+        accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
 
         String[] ps = cfgPath(path);
         Object v = projectDao.getConfigurationValue(projectId, ps);
@@ -185,7 +185,7 @@ public class ProjectResource implements Resource {
         }
 
         // TODO move to ProjectManager
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        accessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
 
         Map<String, Object> cfg = projectDao.getConfiguration(projectId);
         if (cfg == null) {
@@ -237,7 +237,7 @@ public class ProjectResource implements Resource {
         }
 
         // TODO move to ProjectManager
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+        accessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
 
         Map<String, Object> cfg = projectDao.getConfiguration(projectId);
         if (cfg == null) {
@@ -358,7 +358,7 @@ public class ProjectResource implements Resource {
             throw new ConcordApplicationException("Project not found: " + projectName, Status.NOT_FOUND);
         }
 
-        accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, true);
+        accessManager.assertAccess(projectId, ResourceAccessLevel.READER, true);
 
         byte[] input = value.getBytes();
         byte[] result = encryptedValueManager.encrypt(projectId, input);

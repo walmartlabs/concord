@@ -46,7 +46,7 @@ public class VariablesIT extends AbstractServerIT {
                                 ImmutableMap.of(
                                         "y", "cba",
                                         "z", true))))
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -80,7 +80,7 @@ public class VariablesIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         EncryptValueResponse evr = projectsApi.encrypt(orgName, projectName, secretValue);
         String encryptedValue = evr.getData();

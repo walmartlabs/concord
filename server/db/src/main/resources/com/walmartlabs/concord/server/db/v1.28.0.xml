@@ -37,4 +37,27 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="1280200" author="ibodrov@gmail.com">
+        <sql>
+            create type raw_payload_mode as enum ('DISABLED', 'OWNERS', 'TEAM_MEMBERS', 'ORG_MEMBERS', 'EVERYONE')
+        </sql>
+
+        <addColumn tableName="PROJECTS">
+            <column name="RAW_PAYLOAD_MODE" type="raw_payload_mode" defaultValue="DISABLED">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1280210" author="ibodrov@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="PROJECTS" columnName="ACCEPTS_RAW_PAYLOAD"/>
+        </preConditions>
+        <sql>
+            update PROJECTS set RAW_PAYLOAD_MODE = case
+                    when ACCEPTS_RAW_PAYLOAD is true then 'ORG_MEMBERS'::raw_payload_mode
+                    else 'DISABLED'::raw_payload_mode
+                end
+        </sql>
+    </changeSet>
 </databaseChangeLog>

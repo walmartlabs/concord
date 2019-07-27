@@ -371,7 +371,7 @@ public class ProcessIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         ProjectOperationResponse por1 = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 
@@ -470,7 +470,7 @@ public class ProcessIT extends AbstractServerIT {
         ProjectOperationResponse por = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 

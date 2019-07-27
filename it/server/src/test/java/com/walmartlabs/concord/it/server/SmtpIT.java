@@ -66,7 +66,7 @@ public class SmtpIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setCfg(cfg)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // --
 

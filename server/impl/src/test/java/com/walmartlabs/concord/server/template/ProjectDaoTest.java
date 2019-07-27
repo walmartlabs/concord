@@ -59,7 +59,7 @@ public class ProjectDaoTest extends AbstractDaoTest {
 
         Map<String, Object> cfg = ImmutableMap.of("a", "a-v");
         String projectName = "project#" + System.currentTimeMillis();
-        UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null, true, new byte[0], null);
+        UUID projectId = projectDao.insert(orgId, projectName, "test", null, cfg, null, null, new byte[0], null);
 
         // ---
         Map<String, Object> actualCfg = projectDao.getConfiguration(projectId);
@@ -109,8 +109,8 @@ public class ProjectDaoTest extends AbstractDaoTest {
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
 
-        projectDao.insert(orgId, aName, "test", null, null, null, true, new byte[0], null);
-        projectDao.insert(orgId, bName, "test", null, null, null, true, new byte[0], null);
+        projectDao.insert(orgId, aName, "test", null, null, null, null, new byte[0], null);
+        projectDao.insert(orgId, bName, "test", null, null, null, null, new byte[0], null);
 
         // ---
 

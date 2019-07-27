@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.EntityOwner;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
@@ -81,7 +82,7 @@ public class ProjectManager {
     }
 
     public ProjectEntry get(UUID projectId) {
-        return accessManager.assertProjectAccess(projectId, ResourceAccessLevel.READER, false);
+        return accessManager.assertAccess(projectId, ResourceAccessLevel.READER, false);
     }
 
     public UUID insert(UUID orgId, String orgName, ProjectEntry entry) {
@@ -93,11 +94,15 @@ public class ProjectManager {
         policyManager.checkEntity(orgId, null, EntityType.PROJECT, EntityAction.CREATE, owner, PolicyUtils.toMap(orgId, orgName, entry));
 
         UUID id = projectDao.txResult(tx -> {
-            boolean acceptsRawPayload = entry.getAcceptsRawPayload() != null ? entry.getAcceptsRawPayload() : false;
             byte[] encryptedKey = encryptedValueManager.createEncryptedSecretKey();
 
+            RawPayloadMode rawPayloadMode = entry.getRawPayloadMode();
+            if (rawPayloadMode == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
+                rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
+            }
+
             UUID pId = projectDao.insert(tx, orgId, entry.getName(), entry.getDescription(), owner.getId(), entry.getCfg(),
-                    entry.getVisibility(), acceptsRawPayload, encryptedKey, entry.getMeta());
+                    entry.getVisibility(), rawPayloadMode, encryptedKey, entry.getMeta());
 
             if (repos != null) {
                 repos.forEach((k, v) -> projectRepositoryManager.insert(tx, orgId, orgName, pId, entry.getName(), v, false));
@@ -135,15 +140,20 @@ public class ProjectManager {
             level = ResourceAccessLevel.OWNER;
         }
 
-        ProjectEntry prevEntry = accessManager.assertProjectAccess(projectId, level, true);
+        ProjectEntry prevEntry = accessManager.assertAccess(projectId, level, true);
         UUID orgId = prevEntry.getOrgId();
 
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         assertSecrets(orgId, repos);
 
         projectDao.tx(tx -> {
+            RawPayloadMode rawPayloadMode = entry.getRawPayloadMode();
+            if (rawPayloadMode == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
+                rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
+            }
+
             projectDao.update(tx, orgId, projectId, entry.getVisibility(), entry.getName(),
-                    entry.getDescription(), entry.getCfg(), entry.getAcceptsRawPayload(), updatedOwnerId, entry.getMeta());
+                    entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta());
 
             if (repos != null) {
                 repositoryDao.deleteAll(tx, projectId);
@@ -164,7 +174,7 @@ public class ProjectManager {
     }
 
     public void delete(UUID projectId) {
-        ProjectEntry e = accessManager.assertProjectAccess(projectId, ResourceAccessLevel.OWNER, true);
+        ProjectEntry e = accessManager.assertAccess(projectId, ResourceAccessLevel.OWNER, true);
 
         projectDao.delete(projectId);
 

@@ -138,7 +138,7 @@ public class ProcessCheckpointManager {
 
         UUID projectId = e.projectId();
         if (projectId != null) {
-            projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, false);
+            projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, false);
             return;
         }
 

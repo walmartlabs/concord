@@ -126,6 +126,6 @@ public class TriggerV2Resource implements Resource {
             throw new ValidationErrorsException("Invalid project ID or name");
         }
 
-        return projectAccessManager.assertProjectAccess(projectId, accessLevel, orgMembersOnly);
+        return projectAccessManager.assertAccess(projectId, accessLevel, orgMembersOnly);
     }
 }

@@ -42,7 +42,7 @@ public class ProjectInfoIT extends AbstractServerIT {
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // ---
 

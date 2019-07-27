@@ -27,6 +27,7 @@ import {
     Owner,
     RequestError
 } from '../../../api/common';
+import { ResourceAccessEntry } from '../../../api/org';
 import {
     NewProjectEntry,
     ProjectEntry,
@@ -37,7 +38,6 @@ import {
     EditRepositoryEntry,
     RepositoryValidationResponse
 } from '../../../api/org/project/repository';
-import { ResourceAccessEntry } from '../../../api/org';
 import { RequestState } from '../common';
 
 export interface GetProjectRequest extends Action {
@@ -75,12 +75,6 @@ export interface ChangeProjectOwnerRequest extends Action {
     projectId: ConcordId;
     projectName: ConcordKey;
     owner: Owner;
-}
-
-export interface SetAcceptsRawPayloadRequest extends Action {
-    orgName: ConcordKey;
-    projectId: ConcordKey;
-    acceptsRawPayload: boolean;
 }
 
 export interface DeleteProjectRequest extends Action {
@@ -134,18 +128,12 @@ export interface ProjectTeamAccessResponse extends Action {
     items?: ResourceAccessEntry[];
 }
 
-export interface SetAcceptsRawPayloadResponse extends Action {
-    projectId: ConcordKey;
-    acceptsRawPayload: boolean;
-}
-
 export interface Projects {
     [id: string]: ProjectEntry;
 }
 
 export type ChangeProjectOwnerState = RequestState<ProjectOperationResult>;
 export type RenameProjectState = RequestState<ProjectOperationResult>;
-export type SetAcceptsRawPayloadState = RequestState<ProjectOperationResult>;
 export type DeleteProjectState = RequestState<GenericOperationResult>;
 export type CreateRepositoryState = RequestState<GenericOperationResult>;
 export type UpdateRepositoryState = RequestState<GenericOperationResult>;
@@ -165,7 +153,6 @@ export interface State {
 
     rename: RenameProjectState;
     changeOwner: ChangeProjectOwnerState;
-    acceptRawPayload: SetAcceptsRawPayloadState;
     deleteProject: DeleteProjectState;
     updateProject: updateProjectState;
     projectTeamAccess: ProjectTeamAccessState;

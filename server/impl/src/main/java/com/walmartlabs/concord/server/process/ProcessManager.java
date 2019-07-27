@@ -408,7 +408,7 @@ public class ProcessManager {
         UUID projectId = e.projectId();
         if (projectId != null) {
             // only org members with WRITER rights can kill or disable the process
-            projectAccessManager.assertProjectAccess(projectId, ResourceAccessLevel.WRITER, true);
+            projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
             return;
         }
 

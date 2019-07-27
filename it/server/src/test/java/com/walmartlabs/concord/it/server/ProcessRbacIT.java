@@ -74,7 +74,7 @@ public class ProcessRbacIT extends AbstractServerIT {
         projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE)
-                .setAcceptsRawPayload(true));
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
         // grant the team access to the project
 

@@ -20,19 +20,18 @@
 
 import { InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
-import { Divider, Form, Icon, Popup } from 'semantic-ui-react';
+import { Divider, Form } from 'semantic-ui-react';
 import { ConcordKey } from '../../../api/common';
 import { ProjectVisibility } from '../../../api/org/project';
 import { isProjectExists } from '../../../api/service/console';
 import { notEmpty } from '../../../utils';
 import { project as validation, projectAlreadyExistsError } from '../../../validation';
-import { FormikCheckbox, FormikDropdown, FormikInput } from '../../atoms';
+import { FormikDropdown, FormikInput } from '../../atoms';
 
 interface FormValues {
     name: string;
     visibility: ProjectVisibility;
     description?: string;
-    acceptsRawPayload?: boolean;
 }
 
 export type NewProjectFormValues = FormValues;
@@ -81,21 +80,6 @@ class NewProjectForm extends React.PureComponent<InjectedFormikProps<Props, Form
                     label="Description"
                     placeholder="Project description"
                 />
-
-                <Form.Group>
-                    <FormikCheckbox
-                        name="acceptsRawPayload"
-                        label="Accepts payload archives"
-                        toggle={true}
-                    />
-                    <Popup
-                        trigger={<Icon name="question circle" size="large" />}
-                        content={
-                            'Allows users to start new processes using payload archives. ' +
-                            'When disabled, only the configured repositories can be used to start a new process.'
-                        }
-                    />
-                </Form.Group>
 
                 <Divider />
 

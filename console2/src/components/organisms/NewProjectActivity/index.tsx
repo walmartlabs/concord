@@ -56,8 +56,7 @@ class NewProjectActivity extends React.PureComponent<Props> {
                     initial={{
                         name: '',
                         visibility: ProjectVisibility.PUBLIC,
-                        description: '',
-                        acceptsRawPayload: false
+                        description: ''
                     }}
                 />
             </>

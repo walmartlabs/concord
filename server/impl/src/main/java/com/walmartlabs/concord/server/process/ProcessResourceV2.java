@@ -105,7 +105,7 @@ public class ProcessResourceV2 implements Resource {
         }
 
         if (e.projectId() != null) {
-            projectAccessManager.assertProjectAccess(e.orgId(), e.projectId(), null, ResourceAccessLevel.READER, false);
+            projectAccessManager.assertAccess(e.orgId(), e.projectId(), null, ResourceAccessLevel.READER, false);
         }
 
         return e;
@@ -171,7 +171,7 @@ public class ProcessResourceV2 implements Resource {
         }
 
         if (effectiveProjectId != null) {
-            projectAccessManager.assertProjectAccess(effectiveProjectId, effectiveProjectId, null, ResourceAccessLevel.READER, false);
+            projectAccessManager.assertAccess(effectiveProjectId, effectiveProjectId, null, ResourceAccessLevel.READER, false);
         } else if (effectiveOrgId != null) {
             orgManager.assertAccess(effectiveOrgId, null, false);
         } else {

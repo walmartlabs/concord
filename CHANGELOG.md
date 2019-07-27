@@ -17,6 +17,10 @@ specified date/time.
 
 ### Changed
 
+- concord-server, concord-console: the `acceptsRawPayload` property
+in projects is replaced with `rawPayloadMode`. The old property is
+deprecated. New projects are created with `rawPayloadMode: DISABLED`
+by default;
 - concord-tasks: fixed an issue when a subprocess is started using an
 API key specified by the user with `suspend: true`;
 - ansible: the `limits` parameter now accepts list and array values;

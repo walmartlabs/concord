@@ -20,9 +20,9 @@
 
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 import { Redirect, Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
+import { AnyAction, Dispatch } from 'redux';
 import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
@@ -33,18 +33,18 @@ import { RepositoryList, RequestErrorMessage, WithCopyToClipboard } from '../../
 import {
     EncryptValueActivity,
     ProjectOwnerChangeActivity,
+    ProjectRawPayloadModeActivity,
     ProjectTeamAccessActivity
 } from '../../organisms';
 import { NotFoundPage } from '../../pages';
+import CheckpointView from '../CheckpointView';
 import {
+    EditProjectActivity,
     ProcessListActivity,
     ProjectDeleteActivity,
-    ProjectRawPayloadActivity,
     ProjectRenameActivity,
-    RedirectButton,
-    EditProjectActivity
+    RedirectButton
 } from '../index';
-import CheckpointView from '../CheckpointView';
 
 export type TabLink = 'process' | 'checkpoint' | 'repository' | 'settings' | 'access' | null;
 
@@ -124,10 +124,10 @@ class ProjectActivity extends React.PureComponent<Props> {
 
                 <Segment>
                     <Header as="h4">Allow payload archives</Header>
-                    <ProjectRawPayloadActivity
+                    <ProjectRawPayloadModeActivity
                         orgName={p.orgName}
                         projectId={p.id}
-                        acceptsRawPayload={p.acceptsRawPayload}
+                        initialValue={p.rawPayloadMode}
                     />
                 </Segment>
 

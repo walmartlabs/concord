@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.EntityOwner;
 
 import javax.validation.Valid;
@@ -40,7 +41,7 @@ public class ProjectEntry implements Serializable {
 
     public static ProjectEntry replace(ProjectEntry e, Map<String, RepositoryEntry> repos) {
         return new ProjectEntry(e.id, e.name, e.description, e.orgId, e.orgName, repos,
-                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.meta);
+                e.cfg, e.visibility, e.owner, e.acceptsRawPayload, e.rawPayloadMode, e.meta);
     }
 
     private final UUID id;
@@ -66,24 +67,30 @@ public class ProjectEntry implements Serializable {
 
     private final EntityOwner owner;
 
+    /**
+     * @deprecated use {@link #rawPayloadMode}
+     */
+    @Deprecated
     private final Boolean acceptsRawPayload;
+
+    private final RawPayloadMode rawPayloadMode;
 
     private final Map<String, Object> meta;
 
     public ProjectEntry(String name) {
-        this(null, name, null, null, null, null, null, null, null, true, null);
+        this(null, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null);
     }
 
     public ProjectEntry(String name, ProjectVisibility visibility) {
-        this(null, name, null, null, null, null, null, visibility, null, true, null);
+        this(null, name, null, null, null, null, null, visibility, null, false, RawPayloadMode.DISABLED, null);
     }
 
     public ProjectEntry(String name, Map<String, RepositoryEntry> repositories) {
-        this(null, name, null, null, null, repositories, null, null, null, true, null);
+        this(null, name, null, null, null, repositories, null, null, null, false, RawPayloadMode.DISABLED, null);
     }
 
     public ProjectEntry(String name, UUID id) {
-        this(id, name, null, null, null, null, null, null, null, true, null);
+        this(id, name, null, null, null, null, null, null, null, false, RawPayloadMode.DISABLED, null);
     }
 
     @JsonCreator
@@ -97,6 +104,7 @@ public class ProjectEntry implements Serializable {
                         @JsonProperty("visibility") ProjectVisibility visibility,
                         @JsonProperty("owner") EntityOwner owner,
                         @JsonProperty("acceptsRawPayload") Boolean acceptsRawPayload,
+                        @JsonProperty("rawPayloadMode") RawPayloadMode rawPayloadMode,
                         @JsonProperty("meta") Map<String, Object> meta) {
 
         this.id = id;
@@ -109,6 +117,7 @@ public class ProjectEntry implements Serializable {
         this.visibility = visibility;
         this.owner = owner;
         this.acceptsRawPayload = acceptsRawPayload;
+        this.rawPayloadMode = rawPayloadMode;
         this.meta = meta;
     }
 
@@ -152,8 +161,13 @@ public class ProjectEntry implements Serializable {
         return owner;
     }
 
+    @Deprecated
     public Boolean getAcceptsRawPayload() {
         return acceptsRawPayload;
+    }
+
+    public RawPayloadMode getRawPayloadMode() {
+        return rawPayloadMode;
     }
 
     public Map<String, Object> getMeta() {
@@ -173,6 +187,7 @@ public class ProjectEntry implements Serializable {
                 ", visibility=" + visibility +
                 ", owner=" + owner +
                 ", acceptsRawPayload=" + acceptsRawPayload +
+                ", rawPayloadMode=" + rawPayloadMode +
                 ", meta=" + meta +
                 '}';
     }

@@ -20,21 +20,21 @@
 
 import { push as pushHistory } from 'connected-react-router';
 import { Action, combineReducers, Reducer } from 'redux';
-import { all, call, put, takeLatest, throttle } from 'redux-saga/effects';
+import { all, call, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey, Owner } from '../../../api/common';
+import { ResourceAccessEntry } from '../../../api/org';
 import {
-    createOrUpdate as apiCreateOrUpdate,
-    get as apiGet,
-    list as apiList,
-    rename as apiRename,
     changeOwner as apiChangeOwner,
+    createOrUpdate as apiCreateOrUpdate,
     deleteProject as apiDeleteProject,
+    get as apiGet,
     getProjectAccess,
-    setAcceptsRawPayload as apiSetAcceptsRawPayload,
+    list as apiList,
     NewProjectEntry,
-    UpdateProjectEntry,
-    updateProjectAccess
+    rename as apiRename,
+    updateProjectAccess,
+    UpdateProjectEntry
 } from '../../../api/org/project';
 import {
     createOrUpdate as apiRepoCreateOrUpdate,
@@ -52,6 +52,8 @@ import {
 } from '../common';
 import {
     AddRepositoryRequest,
+    ChangeProjectOwnerRequest,
+    ChangeProjectOwnerState,
     CreateProjectRequest,
     CreateRepositoryState,
     DeleteProjectRequest,
@@ -61,29 +63,23 @@ import {
     GetProjectRequest,
     ListProjectsRequest,
     ProjectDataResponse,
+    Projects,
     ProjectTeamAccessRequest,
     ProjectTeamAccessState,
-    Projects,
     RefreshRepositoryRequest,
     RefreshRepositoryState,
     RenameProjectRequest,
     RenameProjectState,
-    SetAcceptsRawPayloadRequest,
-    SetAcceptsRawPayloadState,
     State,
-    UpdateRepositoryRequest,
-    UpdateRepositoryState,
-    ValidateRepositoryState,
-    ValidateRepositoryRequest,
-    updateProjectState,
     UpdateProjectRequest,
+    updateProjectState,
     UpdateProjectTeamAccessRequest,
     UpdateProjectTeamAccessState,
-    SetAcceptsRawPayloadResponse,
-    ChangeProjectOwnerRequest,
-    ChangeProjectOwnerState
+    UpdateRepositoryRequest,
+    UpdateRepositoryState,
+    ValidateRepositoryRequest,
+    ValidateRepositoryState
 } from './types';
-import { ResourceAccessEntry } from '../../../api/org';
 
 // https://github.com/facebook/create-react-app/issues/6054
 export * from './types';
@@ -102,9 +98,6 @@ const actionTypes = {
 
     CHANGE_PROJECT_OWNER_REQUEST: `${NAMESPACE}/changeOwner/request`,
     CHANGE_PROJECT_OWNER_RESPONSE: `${NAMESPACE}/changeOwner/response`,
-
-    SET_ACCEPTS_RAW_PAYLOAD_REQUEST: `${NAMESPACE}/acceptsRawPayload/request`,
-    SET_ACCEPTS_RAW_PAYLOAD_RESPONSE: `${NAMESPACE}/acceptsRawPayload/response`,
 
     DELETE_PROJECT_REQUEST: `${NAMESPACE}/delete/request`,
     DELETE_PROJECT_RESPONSE: `${NAMESPACE}/delete/response`,
@@ -183,17 +176,6 @@ export const actions = {
         projectId,
         projectName,
         owner
-    }),
-
-    setAcceptsRawPayload: (
-        orgName: ConcordKey,
-        projectId: ConcordId,
-        acceptsRawPayload: boolean
-    ): SetAcceptsRawPayloadRequest => ({
-        type: actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST,
-        orgName,
-        projectId,
-        acceptsRawPayload
     }),
 
     deleteProject: (orgName: ConcordKey, projectName: ConcordKey): DeleteProjectRequest => ({
@@ -282,10 +264,7 @@ export const actions = {
     })
 };
 
-const projectById: Reducer<Projects> = (
-    state = {},
-    r: ProjectDataResponse | SetAcceptsRawPayloadResponse
-) => {
+const projectById: Reducer<Projects> = (state = {}, r: ProjectDataResponse) => {
     switch (r.type) {
         case actionTypes.PROJECT_DATA_RESPONSE: {
             const a = r as ProjectDataResponse;
@@ -298,12 +277,6 @@ const projectById: Reducer<Projects> = (
                 result[o.id] = o;
             });
             return result;
-        }
-        case actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE: {
-            const a = r as SetAcceptsRawPayloadResponse;
-
-            state[a.projectId].acceptsRawPayload = a.acceptsRawPayload;
-            return state;
         }
         default:
             return state;
@@ -370,21 +343,6 @@ const changeOwnerReducers = combineReducers<ChangeProjectOwnerState>({
     response: makeResponseReducer(
         actionTypes.CHANGE_PROJECT_OWNER_RESPONSE,
         actionTypes.CHANGE_PROJECT_OWNER_REQUEST
-    )
-});
-
-const acceptsRawPayloadReducers = combineReducers<SetAcceptsRawPayloadState>({
-    running: makeLoadingReducer(
-        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST],
-        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST],
-        [actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE]
-    ),
-    response: makeResponseReducer(
-        actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE,
-        actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST
     )
 });
 
@@ -506,7 +464,6 @@ export const reducers = combineReducers<State>({
 
     rename: renameReducers,
     changeOwner: changeOwnerReducers,
-    acceptRawPayload: acceptsRawPayloadReducers,
     deleteProject: deleteProjectReducers,
     updateProject: updateProjectReducers,
     projectTeamAccess: getTeamAccessReducers,
@@ -620,23 +577,6 @@ function* onUpdateProject({ orgName, entry }: UpdateProjectRequest) {
     }
 }
 
-function* onSetAcceptsRawPayload({
-    orgName,
-    projectId,
-    acceptsRawPayload
-}: SetAcceptsRawPayloadRequest) {
-    try {
-        yield call(apiSetAcceptsRawPayload, orgName, projectId, acceptsRawPayload);
-        yield put({
-            type: actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE,
-            projectId,
-            acceptsRawPayload
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.SET_ACCEPTS_RAW_PAYLOAD_RESPONSE, e);
-    }
-}
-
 function* onDelete({ orgName, projectName }: DeleteProjectRequest) {
     try {
         yield call(apiDeleteProject, orgName, projectName);
@@ -729,7 +669,6 @@ export const sagas = function*() {
         takeLatest(actionTypes.CHANGE_PROJECT_OWNER_REQUEST, onChangeOwner),
         takeLatest(actionTypes.DELETE_PROJECT_REQUEST, onDelete),
         takeLatest(actionTypes.UPDATE_PROJECT_REQUEST, onUpdateProject),
-        throttle(2000, actionTypes.SET_ACCEPTS_RAW_PAYLOAD_REQUEST, onSetAcceptsRawPayload),
         takeLatest(actionTypes.ADD_REPOSITORY_REQUEST, onAddRepository),
         takeLatest(actionTypes.UPDATE_REPOSITORY_REQUEST, onUpdateRepository),
         takeLatest(actionTypes.DELETE_REPOSITORY_REQUEST, onDeleteRepository),
