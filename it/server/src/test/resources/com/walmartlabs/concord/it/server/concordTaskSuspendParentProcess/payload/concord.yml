@@ -1,0 +1,4 @@
+flows:
+  default:
+    - set:
+        xyz: "Hello, ${name}!"

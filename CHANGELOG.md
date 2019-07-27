@@ -17,6 +17,8 @@ specified date/time.
 
 ### Changed
 
+- concord-tasks: fixed an issue when a subprocess is started using an
+API key specified by the user with `suspend: true`;
 - ansible: the `limits` parameter now accepts list and array values;
 - concord-server: some optimizations for the process event processing
 (including Ansible). Reduces the contention on the process queue
