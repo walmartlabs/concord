@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible: improved calculation of host statuses during playbook
+execution.
+
+
+
 ## [1.28.0] - 2019-07-27
 
 ### Added

@@ -87,6 +87,7 @@ class AnsibleTaskListActivity extends React.Component<Props> {
 const makeAnsibleEvents = (eventById: AnsibleEvents): Array<ProcessEventEntry<AnsibleEvent>> =>
     Object.keys(eventById)
         .map((k) => eventById[k])
+        .filter((value) => value.data.status !== undefined)
         .sort((a, b) => (a.eventDate > b.eventDate ? 1 : a.eventDate < b.eventDate ? -1 : 0));
 
 interface StateType {

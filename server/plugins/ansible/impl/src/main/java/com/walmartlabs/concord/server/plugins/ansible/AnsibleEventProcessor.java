@@ -127,7 +127,7 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
 
         public List<EventItem> list(DSLContext tx, EventMarker marker, int count) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            SelectConditionStep<Record10<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer>> q = tx.select(
+            SelectConditionStep<Record11<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer, String>> q = tx.select(
                     pe.INSTANCE_ID,
                     pe.INSTANCE_CREATED_AT,
                     pe.EVENT_SEQ,
@@ -137,7 +137,8 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
                     field("{0}->>'status'", String.class, pe.EVENT_DATA),
                     coalesce(field("{0}->>'duration'", Long.class, pe.EVENT_DATA), value("0")),
                     coalesce(field("{0}->>'ignore_errors'", Boolean.class, pe.EVENT_DATA), value("false")),
-                    coalesce(field("{0}->>'currentRetryCount'", Integer.class, pe.EVENT_DATA), value("0")))
+                    coalesce(field("{0}->>'currentRetryCount'", Integer.class, pe.EVENT_DATA), value("0")),
+                    field("{0}->>'hostStatus'", String.class, pe.EVENT_DATA))
                     .from(pe)
                     .where(pe.EVENT_TYPE.eq(Constants.EVENT_TYPE)
                             .and(pe.INSTANCE_CREATED_AT.greaterOrEqual(marker.instanceCreatedStart())
@@ -149,11 +150,16 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
                     .fetch(AnsibleEventDao::toEntity);
         }
 
-        private static EventItem toEntity(Record10<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer> r) {
+        private static EventItem toEntity(Record11<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer, String> r) {
             boolean ignoreErrors = Boolean.TRUE.equals(r.value9());
             String status = r.value7();
             if (ignoreErrors && Status.FAILED.name().equals(status)) {
                 status = Status.OK.name();
+            }
+
+            String hostStatus = r.value11();
+            if (hostStatus != null) {
+                status = hostStatus;
             }
 
             return ImmutableEventItem.builder()

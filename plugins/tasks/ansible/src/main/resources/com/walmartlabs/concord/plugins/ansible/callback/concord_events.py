@@ -43,9 +43,7 @@ class CallbackModule(CallbackBase):
             self.eventCorrelationId = os.environ['CONCORD_EVENT_CORRELATION_ID']
 
         self.taskDurations = {}
-
-    def playbook_on_stats(self, stats):
-        self.outFile.close()
+        self.hostStatus = {}
 
     def handle_event(self, event):
         self.outFile.write(json.dumps({
@@ -55,6 +53,15 @@ class CallbackModule(CallbackBase):
         }))
         self.outFile.write('<~EOL~>\n')
         self.outFile.flush()
+
+    def _record_host_statuses(self):
+        for v in self.hostStatus.values():
+            event = {
+                'hostStatus': "OK",
+                'host': v['host'],
+                'hostGroup': v['hostGroup']
+            }
+            self.handle_event(event)
 
     def cleanup_results(self, result):
         abridged_result = self._strip_internal_keys(result)
@@ -102,30 +109,52 @@ class CallbackModule(CallbackBase):
         else:
             return obj
 
+    @staticmethod
+    def _host_correlation_id(host_group, host_uuid):
+        return host_group + host_uuid
+
+    def _remove_host(self, host):
+        host_uuid = host._uuid
+        host_group = self.play.get_name()
+        correlation_id = self._host_correlation_id(host_group, host_uuid)
+        self.hostStatus.pop(correlation_id)
+
+    def _mark_host_running(self, host):
+        host_uuid = host._uuid
+        host_group = self.play.get_name()
+        host_name = host.name
+        correlation_id = self._host_correlation_id(host_group, host_uuid)
+        self.hostStatus[correlation_id] = {'hostGroup': host_group, 'host': host_name}
+
+    @staticmethod
+    def _task_correlation_id(host_name, task_uuid):
+        return host_name + task_uuid
+
     def _task_duration(self, correlation_id):
         if correlation_id in self.taskDurations:
             return to_millis(time.time()) - self.taskDurations.pop(correlation_id)
         return 0
 
     def _on_task_start(self, host, task):
-        correlation_id = host.name + task._uuid
-        self.taskDurations[correlation_id] = to_millis(time.time())
+        task_correlation_id = self._task_correlation_id(host.name, task._uuid)
+        self.taskDurations[task_correlation_id] = to_millis(time.time())
 
         data = {
             'status': "RUNNING",
+            'hostStatus': "RUNNING",
             'playbook': self.playbook._file_name,
             'host': host.name,
             'hostGroup': self.play.get_name(),
             'task': task.get_name(),
             'action': task.action,
-            'correlationId': correlation_id,
+            'correlationId': task_correlation_id,
             'phase': "pre"
         }
 
         self.handle_event(data)
 
     def _on_task_skipped(self, result):
-        correlation_id = result._host.name + result._task._uuid
+        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
             'status': 'SKIPPED',
@@ -134,9 +163,9 @@ class CallbackModule(CallbackBase):
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'action': result._task.action,
-            'correlationId': correlation_id,
+            'correlationId': task_correlation_id,
             'phase': "post",
-            'duration': self._task_duration(correlation_id),
+            'duration': self._task_duration(task_correlation_id),
             'result': self.cleanup_results(result._result)
         }
 
@@ -148,8 +177,12 @@ class CallbackModule(CallbackBase):
         self.playbook = playbook
         self.playbook_on_start()
 
-    def v2_runner_on_failed(self, result, **kwargs):
-        correlation_id = result._host.name + result._task._uuid
+    def playbook_on_stats(self, stats):
+        self._record_host_statuses()
+        self.outFile.close()
+
+    def v2_runner_on_failed(self, result, ignore_errors=False):
+        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
             'status': "FAILED",
@@ -158,64 +191,77 @@ class CallbackModule(CallbackBase):
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'action': result._task.action,
-            'correlationId': correlation_id,
+            'correlationId': task_correlation_id,
             'phase': "post",
-            'duration': self._task_duration(correlation_id),
+            'duration': self._task_duration(task_correlation_id),
             'result': self.cleanup_results(result._result),
-            'ignore_errors': result._task_fields['ignore_errors']
+            'ignore_errors': ignore_errors
         }
+
+        if not ignore_errors:
+            data['hostStatus'] = "FAILED"
+            self._remove_host(result._host)
 
         self.handle_event(data)
 
     def v2_runner_on_ok(self, result, **kwargs):
-        correlation_id = result._host.name + result._task._uuid
+        self._mark_host_running(result._host)
+
+        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
-            'status': 'OK',
+            'status': "OK",
+            'hostStatus': 'RUNNING',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'action': result._task.action,
-            'correlationId': correlation_id,
+            'correlationId': task_correlation_id,
             'phase': "post",
-            'duration': self._task_duration(correlation_id),
+            'duration': self._task_duration(task_correlation_id),
             'result': self.cleanup_results(result._result)
         }
 
         self.handle_event(data)
 
     def v2_runner_on_unreachable(self, result):
-        correlation_id = result._host.name + result._task._uuid
+        self._remove_host(result._host)
+
+        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
             'status': 'UNREACHABLE',
+            'hostStatus': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'action': result._task.action,
-            'correlationId': correlation_id,
+            'correlationId': task_correlation_id,
             'phase': "post",
-            'duration': self._task_duration(correlation_id),
+            'duration': self._task_duration(task_correlation_id),
             'result': self.cleanup_results(result._result)
         }
 
         self.handle_event(data)
 
     def v2_runner_on_async_failed(self, result, **kwargs):
-        correlation_id = result._host.name + result._task._uuid
+        self._remove_host(result._host)
+
+        task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
             'status': 'UNREACHABLE',
+            'hostStatus': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
             'task': result._task.get_name(),
             'action': result._task.action,
-            'correlationId': correlation_id,
+            'correlationId': task_correlation_id,
             'phase': "post",
-            'duration': self._task_duration(correlation_id),
+            'duration': self._task_duration(task_correlation_id),
             'result': self.cleanup_results(result._result)
         }
 
