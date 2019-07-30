@@ -80,7 +80,7 @@ export interface AnsibleEvent {
     host: string;
     hostGroup: string;
     playbook: string;
-    status: AnsibleStatus;
+    status?: AnsibleStatus;
     task: string;
     action?: string;
     result?: object;
