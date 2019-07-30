@@ -68,7 +68,7 @@ export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED }: 
         };
 
         update();
-    }, [value]);
+    }, [orgName, projectId, value]);
 
     return (
         <>
