@@ -150,7 +150,7 @@ public class AnsibleConfig {
             String k = c.getKey();
             Object v = c.getValue();
             if (!(v instanceof Map)) {
-                throw new IllegalArgumentException("Invalid configuration. Expected a JSON object: " + k + ", got: " + v);
+                throw new IllegalArgumentException("Invalid configuration. Expected a Map object for key: " + k + ", got: " + v);
             }
 
             result.put(k, (Map<String, Object>) v);
