@@ -33,7 +33,6 @@ import {
 import { AnsibleEvent } from '../../../api/process/ansible';
 import { actions, MAX_EVENT_COUNT } from '../../../state/data/processes/poll';
 import { ProcessEvents, State } from '../../../state/data/processes/poll/types';
-import { timestampDiffMs } from '../../../utils';
 import { ProcessElementList } from '../../molecules';
 import { CancelProcessPopup } from '../../organisms';
 
@@ -199,7 +198,6 @@ export const combinePrePostEvents = (
             if (postEvent) {
                 const clone = { ...event };
                 clone.data = postEvent.data;
-                clone.duration = timestampDiffMs(postEvent.eventDate, event.eventDate);
                 result.push(clone);
             } else {
                 result.push(event);
@@ -209,7 +207,6 @@ export const combinePrePostEvents = (
             if (preEvent) {
                 const clone = { ...preEvent };
                 clone.data = event.data;
-                clone.duration = timestampDiffMs(event.eventDate, preEvent.eventDate);
                 result.push(clone);
             } else {
                 result.push(event);

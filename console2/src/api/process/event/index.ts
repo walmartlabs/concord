@@ -45,6 +45,7 @@ export interface ProcessElementEvent {
     in?: VariableMapping[];
     out?: VariableMapping[];
     correlationId?: string;
+    duration?: number;
 }
 
 export type ProcessEventData = ProcessElementEvent | AnsibleEvent | {};
@@ -63,7 +64,6 @@ export interface ProcessEventEntry<T extends ProcessEventData> {
     id: ConcordId;
     eventType: ProcessEventType;
     eventDate: string;
-    duration?: number;
     data: T;
 }
 

@@ -38,6 +38,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.project.InternalConstants.Context.EVENT_CORRELATION_KEY;
+import static com.walmartlabs.concord.project.InternalConstants.Context.EVENT_CREATED_AT_KEY;
 
 public class TaskEventInterceptor implements TaskInterceptor {
 
@@ -70,11 +71,13 @@ public class TaskEventInterceptor implements TaskInterceptor {
         });
 
         ctx.setVariable(EVENT_CORRELATION_KEY, correlationId);
+        ctx.setVariable(EVENT_CREATED_AT_KEY, System.currentTimeMillis());
     }
 
     @Override
     public void postTask(String taskName, Context ctx) throws ExecutionException {
         UUID correlationId = (UUID) ctx.getVariable(EVENT_CORRELATION_KEY);
+        Long preEventTime = (Long) ctx.getVariable(EVENT_CREATED_AT_KEY);
 
         TaskTag.post(taskName, correlationId).log();
 
@@ -87,10 +90,14 @@ public class TaskEventInterceptor implements TaskInterceptor {
             if (p != null) {
                 params.put("out", p);
             }
+            if (preEventTime != null) {
+                params.put("duration", System.currentTimeMillis() - preEventTime);
+            }
             return params;
         });
 
         ctx.removeVariable(EVENT_CORRELATION_KEY);
+        ctx.removeVariable(EVENT_CREATED_AT_KEY);
     }
 
     private List<VariableMapping> getInParams(Context ctx, AbstractElement element) {

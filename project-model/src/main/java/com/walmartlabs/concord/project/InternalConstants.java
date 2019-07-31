@@ -62,6 +62,11 @@ public final class InternalConstants extends Constants {
         public static final String EVENT_CORRELATION_KEY = "__eventCorrelationId";
 
         /**
+         * "pre-" event creation time. Can be used to calculate event durations.
+         */
+        public static final String EVENT_CREATED_AT_KEY = "__eventCreatedAt";
+
+        /**
          * The maximum number of retries of the current `retry` block.
          */
         public static final String RETRY_COUNTER = "__retryCount";
