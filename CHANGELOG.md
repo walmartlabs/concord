@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: allow retrieval of public keys of project-scoped
+key pairs;
 - ansible: improved calculation of host statuses during playbook
 execution.
 

@@ -522,6 +522,10 @@ public class SecretManager {
             return;
         }
 
+        if (scope instanceof InternalAccessScope) {
+            return;
+        }
+
         // internal access within a scope of a project
         if (scope instanceof ProjectAccessScope) {
             UUID scopeProjectId = ((ProjectAccessScope) scope).getProjectId();

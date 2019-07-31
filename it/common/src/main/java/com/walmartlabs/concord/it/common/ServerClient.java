@@ -87,13 +87,17 @@ public class ServerClient {
         return request("/api/v1/org/" + orgName + "/secret", input, SecretOperationResponse.class);
     }
 
-    public SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) throws ApiException {
+    public SecretOperationResponse generateKeyPair(String orgName, String projectName, String name, boolean generatePassword, String storePassword) throws ApiException {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("generatePassword", generatePassword);
         m.put("type", SecretEntry.TypeEnum.KEY_PAIR.toString());
         if (storePassword != null) {
             m.put("storePassword", storePassword);
+        }
+
+        if (projectName != null) {
+            m.put("project", projectName);
         }
 
         return postSecret(orgName, m);
