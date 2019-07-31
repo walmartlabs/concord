@@ -172,6 +172,7 @@ public class HttpTask implements Task {
         static final String TOKEN_KEY = "token";
         static final String URL_KEY = "url";
         static final String USERNAME_KEY = "username";
+        static final String WORK_DIR_KEY = "workDir";
 
         private HttpTaskConstant() {
         }

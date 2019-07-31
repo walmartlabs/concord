@@ -23,6 +23,7 @@ package com.walmartlabs.concord.plugins.http;
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.Collection;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
 import static com.walmartlabs.concord.plugins.http.HttpTask.RequestMethodType;
+import static com.walmartlabs.concord.sdk.ContextUtils.*;
 import static javax.xml.transform.OutputKeys.METHOD;
 
 /**
@@ -377,10 +379,10 @@ public class Configuration {
         public Configuration build(Context ctx) throws Exception {
             validateMandatory(ctx);
 
-            this.url = (String) ctx.getVariable(URL_KEY);
+            this.url = getString(ctx, URL_KEY);
 
             if (ctx.getVariable(QUERY_KEY) != null) {
-                Map<String, Object> queryParams = (Map<String, Object>) ctx.getVariable(QUERY_KEY);
+                Map<String, Object> queryParams = getMap(ctx, QUERY_KEY);
 
                 URIBuilder uriBuilder = new URIBuilder(url);
                 queryParams.forEach((k, v) -> {
@@ -396,8 +398,9 @@ public class Configuration {
 
             // method param is optional
             if (ctx.getVariable(METHOD_KEY) != null) {
-                if (RequestMethodType.isMember((String) ctx.getVariable(METHOD_KEY))) {
-                    this.methodType = RequestMethodType.valueOf(((String) ctx.getVariable(METHOD_KEY)).toUpperCase());
+                String method = getString(ctx, METHOD_KEY);
+                if (RequestMethodType.isMember(method)) {
+                    this.methodType = RequestMethodType.valueOf(method.toUpperCase());
                 } else {
                     throw new IllegalArgumentException("'" + METHOD_KEY + ": " + ctx.getVariable(METHOD_KEY) + "' is not valid");
                 }
@@ -405,58 +408,61 @@ public class Configuration {
 
             // auth param is optional
             if (ctx.getVariable(AUTH_KEY) != null) {
-                Map<String, Object> authParams = (Map<String, Object>) ctx.getVariable(AUTH_KEY);
+                Map<String, Object> authParams = getMap(ctx, AUTH_KEY);
 
-                this.encodedAuthToken = HttpTaskUtils.getBasicAuthorization((Map<String, String>) authParams.get(BASIC_KEY));
+                this.encodedAuthToken = HttpTaskUtils.getBasicAuthorization(MapUtils.assertMap(authParams, BASIC_KEY));
+
             }
 
             // request param is optional
             if (ctx.getVariable(REQUEST_KEY) != null) {
-                if (RequestType.isMember((String) ctx.getVariable(REQUEST_KEY))) {
-                    this.requestType = RequestType.valueOf(((String) ctx.getVariable(REQUEST_KEY)).toUpperCase());
+                String request = getString(ctx, REQUEST_KEY);
+                if (RequestType.isMember(request)) {
+                    this.requestType = RequestType.valueOf(request.toUpperCase());
                 } else {
                     throw new IllegalArgumentException("'" + REQUEST_KEY + ": " + ctx.getVariable(REQUEST_KEY) + "' is not valid");
                 }
             }
 
             if (ctx.getVariable(RESPONSE_KEY) != null) {
-                if (ResponseType.isMember((String) ctx.getVariable(RESPONSE_KEY))) {
-                    this.responseType = ResponseType.valueOf(((String) ctx.getVariable(RESPONSE_KEY)).toUpperCase());
+                String response = getString(ctx, RESPONSE_KEY);
+                if (ResponseType.isMember(response)) {
+                    this.responseType = ResponseType.valueOf(response.toUpperCase());
                 } else {
                     throw new IllegalArgumentException("'" + RESPONSE_KEY + ": " + ctx.getVariable(RESPONSE_KEY) + "' is not valid");
                 }
             }
 
-            this.workDir = (String) ctx.getVariable("workDir");
+            this.workDir = getString(ctx, WORK_DIR_KEY);
 
             if (responseType == ResponseType.FILE && (workDir == null || workDir.isEmpty())) {
                 throw new IllegalArgumentException("Working directory is mandatory for ResponseType FILE");
             }
 
-            this.requestHeaders = (Map<String, String>) ctx.getVariable(HEADERS_KEY);
+            this.requestHeaders = getMap(ctx, HEADERS_KEY);
 
             this.body = ctx.getVariable(BODY_KEY);
 
             if (ctx.getVariable(CONNECT_TIMEOUT_KEY) != null) {
-                this.connectTimeout = (Integer) ctx.getVariable(CONNECT_TIMEOUT_KEY);
+                this.connectTimeout = getInt(ctx, CONNECT_TIMEOUT_KEY, 0);
             }
 
             if (ctx.getVariable(SOCKET_TIMEOUT_KEY) != null) {
-                this.socketTimeout = (Integer) ctx.getVariable(SOCKET_TIMEOUT_KEY);
+                this.socketTimeout = getInt(ctx, SOCKET_TIMEOUT_KEY, 0);
             }
 
             if (ctx.getVariable(IGNORE_ERRORS_KEY) != null) {
-                this.ignoreErrors = (boolean) ctx.getVariable(IGNORE_ERRORS_KEY);
+                this.ignoreErrors = getBoolean(ctx, IGNORE_ERRORS_KEY, true);
             }
 
             if (ctx.getVariable(REQUEST_TIMEOUT_KEY) != null) {
-                this.requestTimeout = (Integer) ctx.getVariable(REQUEST_TIMEOUT_KEY);
+                this.requestTimeout = getInt(ctx, REQUEST_TIMEOUT_KEY, 0);
             }
 
-            this.proxy = (String) ctx.getVariable(PROXY_KEY);
+            this.proxy = getString(ctx, PROXY_KEY);
 
             if (ctx.getVariable(DEBUG_KEY) != null) {
-                this.debug = (boolean) ctx.getVariable(DEBUG_KEY);
+                this.debug = getBoolean(ctx, DEBUG_KEY, false);
             }
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,

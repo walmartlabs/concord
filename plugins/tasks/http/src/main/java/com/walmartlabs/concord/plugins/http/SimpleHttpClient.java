@@ -202,7 +202,7 @@ public class SimpleHttpClient {
             case FILE:
                 return storeFile(e);
             case JSON:
-                return objectMapper.readValue(e.getContent(), Object.class);
+                return parseJson(e);
             default:
                 return EntityUtils.toString(e);
         }
@@ -284,6 +284,21 @@ public class SimpleHttpClient {
         }
 
         return path;
+    }
+
+    /**
+     * Method to parse the json response
+     *
+     * @param entity {@link HttpEntity}
+     * @return parsed Json {@link Object}
+     * @throws RuntimeException
+     */
+    private Object parseJson(HttpEntity entity) {
+        try {
+            return objectMapper.readValue(entity.getContent(), Object.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Invalid JSON response: " + e.getMessage());
+        }
     }
 
     /**
