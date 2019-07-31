@@ -73,6 +73,7 @@ public abstract class AbstractHttpTaskTest {
         stubForPatchRequest();
         stubForFault();
         stubForRequestTimeout();
+        stubForInvalidJsonResponse();
     }
 
     @After
@@ -80,14 +81,14 @@ public abstract class AbstractHttpTaskTest {
         response = null;
     }
 
-    protected void initCxtForRequest(Context ctx, String requestMethod, String requestType, String responseType,
-                                     String url, boolean ignoreErrors, int requestTimeout) {
+    protected void initCxtForRequest(Context ctx, Object requestMethod, Object requestType, Object responseType,
+                                     Object url, Object ignoreErrors, Object requestTimeout) {
         initCxtForRequest(ctx, requestMethod, null, requestType, responseType, url, ignoreErrors, requestTimeout);
     }
 
     @SuppressWarnings("unchecked")
-    protected void initCxtForRequest(Context ctx, String requestMethod, Map<String, Object> query, String requestType, String responseType,
-                                     String url, boolean ignoreErrors, int requestTimeout) {
+    protected void initCxtForRequest(Context ctx, Object requestMethod, Object query, Object requestType, Object responseType,
+                                     Object url, Object ignoreErrors, Object requestTimeout) {
         when(ctx.getVariable("url")).thenReturn(url);
         when(ctx.getVariable("method")).thenReturn(requestMethod);
         when(ctx.getVariable("query")).thenReturn(query);
@@ -119,6 +120,16 @@ public abstract class AbstractHttpTaskTest {
                                 "        \"test\": \"1.1\"\n" +
                                 "    }\n" +
                                 "]"))
+        );
+    }
+
+    protected void stubForInvalidJsonResponse() {
+        rule.stubFor(get(urlEqualTo("/invalid/json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withHeader("Accept", "application/json")
+                        .withBody(""))
         );
     }
 

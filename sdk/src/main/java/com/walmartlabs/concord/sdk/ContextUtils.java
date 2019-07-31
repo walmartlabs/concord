@@ -56,6 +56,10 @@ public final class ContextUtils {
         return result;
     }
 
+    public static <K, V> Map<K, V> getMap(Context ctx, String key) {
+        return getMap(ctx, key, null);
+    }
+
     public static <K, V> Map<K, V> getMap(Context ctx, HasKey k, Map<K, V> defaultValue) {
         return getMap(ctx, k.getKey(), defaultValue);
     }

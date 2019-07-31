@@ -4,6 +4,8 @@
 
 ### Changed
 
+- http: improved input parameter validation, additional validation
+for JSON responses;
 - concord-console, concord-runner: fixed displayed duration for
 Ansible and process events;
 - concord-server: allow retrieval of public keys of project-scoped

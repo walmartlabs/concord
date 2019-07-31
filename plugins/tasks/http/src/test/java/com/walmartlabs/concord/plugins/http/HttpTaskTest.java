@@ -294,4 +294,33 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
                 "http://localhost:" + rule.port() + "/requestTimeout", false, 5000);
         task.execute(mockContext);
     }
+
+    @Test(expected = RuntimeException.class)
+    public void testInvalidJsonResponse() throws Exception {
+        initCxtForRequest(mockContext, "GET", "json", "json",
+                "http://localhost:" + rule.port() + "/invalid/json", false, 0);
+        task.execute(mockContext);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidRequestMethod() throws Exception {
+        initCxtForRequest(mockContext, 123, "json", "json",
+                "http://localhost:" + rule.port() + "/json", false, 0);
+        task.execute(mockContext);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidRequest() throws Exception {
+        initCxtForRequest(mockContext, "GET", 123, "json",
+                "http://localhost:" + rule.port() + "/json", false, 0);
+        task.execute(mockContext);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidResponse() throws Exception {
+        initCxtForRequest(mockContext, "GET", "json", 123,
+                "http://localhost:" + rule.port() + "/json", false, 0);
+        task.execute(mockContext);
+    }
+
 }
