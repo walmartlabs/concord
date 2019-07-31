@@ -210,7 +210,7 @@ public class SecretResource implements Resource {
                                           @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        DecryptedKeyPair k = secretManager.getKeyPair(SecretManager.AccessScope.apiRequest(), org.getId(), secretName);
+        DecryptedKeyPair k = secretManager.getKeyPair(SecretManager.AccessScope.internal(), org.getId(), secretName);
         return new PublicKeyResponse(k.getId(), null, null, new String(k.getData()));
     }
 

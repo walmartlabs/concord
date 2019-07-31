@@ -113,7 +113,11 @@ public abstract class AbstractServerIT {
     }
 
     protected SecretOperationResponse generateKeyPair(String orgName, String name, boolean generatePassword, String storePassword) throws ApiException {
-        return serverClient.generateKeyPair(orgName, name, generatePassword, storePassword);
+        return serverClient.generateKeyPair(orgName, null, name, generatePassword, storePassword);
+    }
+
+    protected SecretOperationResponse generateKeyPair(String orgName, String projectName, String name, boolean generatePassword, String storePassword) throws ApiException {
+        return serverClient.generateKeyPair(orgName, projectName, name, generatePassword, storePassword);
     }
 
     protected byte[] getLog(String logFileName) throws ApiException {
