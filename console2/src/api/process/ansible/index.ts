@@ -85,6 +85,7 @@ export interface AnsibleEvent {
     action?: string;
     result?: object;
     ignore_errors?: boolean;
+    duration?: number;
     phase: 'pre' | 'post';
     correlationId: string;
 }

@@ -91,7 +91,7 @@ class AnsibleTaskList extends React.Component<Props> {
                                             <LocalTimestamp value={value.eventDate} />
                                         </Table.Cell>
                                         <Table.Cell singleLine={true}>
-                                            <HumanizedDuration value={value.duration} />
+                                            <HumanizedDuration value={value.data.duration} />
                                         </Table.Cell>
                                         <Table.Cell>
                                             <ReactJson

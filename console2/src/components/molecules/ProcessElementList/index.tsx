@@ -113,7 +113,7 @@ const renderElementRow = (
             </Table.Cell>
             <Table.Cell singleLine={true}>{renderTimestamp(ev, idx, arr)}</Table.Cell>
             <Table.Cell singleLine={true}>
-                <HumanizedDuration value={ev.duration} />
+                <HumanizedDuration value={ev.data.duration} />
             </Table.Cell>
             <Table.Cell>{ev.data.line}</Table.Cell>
             <Table.Cell>{ev.data.column}</Table.Cell>
