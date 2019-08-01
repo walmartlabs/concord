@@ -93,42 +93,6 @@ public class ProcessIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testUploadAndRunSync() throws Exception {
-        // prepare the payload
-
-        byte[] payload = archive(ProcessIT.class.getResource("process-sync").toURI());
-
-        // start the process
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        Map<String, Object> input = new HashMap<>();
-        input.put("archive", payload);
-        input.put("sync", true);
-        StartProcessResponse spr = start(input);
-        assertNotNull(spr.getInstanceId());
-
-        // wait for completion
-
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-
-        // get the name of the agent's log file
-
-        assertNotNull(pir.getLogFileName());
-
-        // check the logs
-
-        byte[] ab = getLog(pir.getLogFileName());
-
-        assertLog(".*110123.*", ab);
-        assertLog(".*Boo Zoo.*", ab);
-        assertLog(".*100022.*", ab);
-        assertLog(".*120123.*", ab);
-        assertLog(".*redColor.*", ab);
-
-        assertTrue(pir.getStatus() == StatusEnum.FINISHED);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTimeout() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("timeout").toURI());
 

@@ -171,7 +171,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                         parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null,
                         parent.imports);
 
-                processManager.startFork(payload, false);
+                processManager.startFork(payload);
 
                 log.info("process -> created a new child process '{}' (parent '{}', entryPoint: '{}')",
                         childKey, parent.processKey, entry.flow);

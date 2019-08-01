@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -28,7 +27,6 @@ import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.form.ConcordFormService;
-import com.walmartlabs.concord.server.process.form.ConcordFormService.FormSubmitResult;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ProcessPipeline;
@@ -135,12 +133,12 @@ public class ProcessManager {
         return queueDao.poll(capabilities);
     }
 
-    public ProcessResult start(Payload payload, boolean sync) {
-        return start(processPipeline, payload, sync);
+    public ProcessResult start(Payload payload) {
+        return start(processPipeline, payload);
     }
 
-    public ProcessResult startFork(Payload payload, boolean sync) {
-        return start(forkPipeline, payload, sync);
+    public ProcessResult startFork(Payload payload) {
+        return start(forkPipeline, payload);
     }
 
     public void resume(Payload payload) {
@@ -290,13 +288,13 @@ public class ProcessManager {
         return TERMINATED_PROCESS_STATUSES.contains(status);
     }
 
-    private ProcessResult start(Chain pipeline, Payload payload, boolean sync) {
+    private ProcessResult start(Chain pipeline, Payload payload) {
         assertRepositoryDisabled(payload);
 
         ProcessKey processKey = payload.getProcessKey();
 
         try {
-            pipeline.process(payload);
+            payload = pipeline.process(payload);
         } catch (ProcessException e) {
             throw e;
         } catch (Exception e) {
@@ -304,14 +302,8 @@ public class ProcessManager {
             throw new ProcessException(processKey, "Error starting the process", e, Status.INTERNAL_SERVER_ERROR);
         }
 
-        Map<String, Object> out = null;
-        if (sync) {
-            Map<String, Object> args = readArgs(processKey);
-            out = process(processKey, args);
-        }
-
         UUID instanceId = processKey.getInstanceId();
-        return new ProcessResult(instanceId, out);
+        return new ProcessResult(instanceId);
     }
 
     private void assertRepositoryDisabled(Payload payload) {
@@ -326,38 +318,6 @@ public class ProcessManager {
         }
     }
 
-    private Map<String, Object> process(ProcessKey processKey, Map<String, Object> params) {
-        while (true) {
-            ProcessEntry entry = queueDao.get(processKey);
-            ProcessStatus status = entry.status();
-
-            if (status == ProcessStatus.SUSPENDED) {
-                wakeUpProcess(processKey, params);
-            } else if (status == ProcessStatus.FAILED || status == ProcessStatus.CANCELLED) {
-                throw new ProcessException(processKey, "Process error: " + status, Status.INTERNAL_SERVER_ERROR);
-            } else if (status == ProcessStatus.FINISHED) {
-                return readOutValues(entry);
-            }
-
-            try {
-                Thread.sleep(1_000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    private void wakeUpProcess(ProcessKey processKey, Map<String, Object> data) {
-        FormSubmitResult r = formService.submitNext(processKey, data);
-        if (r != null && !r.isValid()) {
-            String error = "n/a";
-            if (r.getErrors() != null) {
-                error = r.getErrors().stream().map(e -> e.getFieldName() + ": " + e.getError()).collect(Collectors.joining(","));
-            }
-            throw new ProcessException(processKey, "Form '" + r.getFormName() + "' submit error: " + error, Status.BAD_REQUEST);
-        }
-    }
-
     private boolean cancel(ProcessKey processKey, ProcessStatus current, List<ProcessStatus> expected) {
         boolean found = false;
         for (ProcessStatus s : expected) {
@@ -368,30 +328,6 @@ public class ProcessManager {
         }
 
         return found && queueDao.updateStatus(processKey, current, ProcessStatus.CANCELLED);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> readOutValues(ProcessEntry entry) {
-        Map<String, Object> meta = entry.meta();
-        return meta != null ? (Map<String, Object>) meta.get("out") : null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> readArgs(ProcessKey processKey) {
-        String resource = InternalConstants.Files.REQUEST_DATA_FILE_NAME;
-        Optional<Map<String, Object>> o = stateManager.get(processKey, resource, in -> {
-            try {
-                ObjectMapper om = new ObjectMapper();
-
-                Map<String, Object> cfg = om.readValue(in, Map.class);
-                Map<String, Object> args = (Map<String, Object>) cfg.get(InternalConstants.Request.ARGUMENTS_KEY);
-
-                return Optional.ofNullable(args);
-            } catch (IOException e) {
-                throw new ConcordApplicationException("Error while reading request data", e);
-            }
-        });
-        return o.orElse(Collections.emptyMap());
     }
 
     private void assertKillOrDisableRights(ProcessEntry e) {
@@ -443,19 +379,13 @@ public class ProcessManager {
     public static final class ProcessResult implements Serializable {
 
         private final UUID instanceId;
-        private final Map<String, Object> out;
 
-        public ProcessResult(UUID instanceId, Map<String, Object> out) {
+        public ProcessResult(UUID instanceId) {
             this.instanceId = instanceId;
-            this.out = out;
         }
 
         public UUID getInstanceId() {
             return instanceId;
-        }
-
-        public Map<String, Object> getOut() {
-            return out;
         }
     }
 }

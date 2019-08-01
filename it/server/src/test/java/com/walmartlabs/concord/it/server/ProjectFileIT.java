@@ -179,57 +179,6 @@ public class ProjectFileIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testArchiveOverrideSync() throws Exception {
-        String orgName = "Default";
-
-        // ---
-
-        String projectName = "project_" + randomString();
-        String repoName = "repo_" + randomString();
-        String repoUrl = "git@test_" + randomString();
-        String secretName = "secret_" + randomString();
-
-        generateKeyPair(orgName, secretName, false, null);
-
-        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE)
-                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
-                        .setName(repoName)
-                        .setUrl(repoUrl)
-                        .setBranch("master")
-                        .setSecretName(secretName))));
-
-        // ---
-
-        byte[] payload = archive(ProcessIT.class.getResource("projectfile/singleprofile-sync").toURI());
-
-        // ---
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        Map<String, Object> input = new HashMap<>();
-        input.put("archive", payload);
-        input.put("org", orgName);
-        input.put("project", projectName);
-        input.put("sync", true);
-        StartProcessResponse spr = start(input);
-        assertNotNull(spr.getInstanceId());
-
-        ProcessEntry pir = processApi.get(spr.getInstanceId());
-
-        // ---
-        byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*100223.*", ab);
-        assertLog(".*Boo Zoo.*", ab);
-        assertLog(".*1000022.*", ab);
-        assertLog(".*100323.*", ab);
-        assertLog(".*r3d.*", ab);
-
-        assertSame(pir.getStatus(), ProcessEntry.StatusEnum.FINISHED);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExpressionScriptName() throws Exception {
         simpleTest("projectfile/expressionscript", ".*hello!.*", ".*bye!.*");
     }

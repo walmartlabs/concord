@@ -479,16 +479,22 @@ public class ConcordTask extends AbstractConcordTask {
         Map<String, Object> req = createRequest(cfg);
 
         UUID instanceId = assertUUID(cfg, INSTANCE_ID_KEY);
-        boolean sync = getBoolean(cfg, SYNC_KEY, false);
 
         log.info("Forking the current instance (sync={}, req={})...", sync, req);
 
-        return withClient(ctx, client -> {
+        UUID id = withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
-            StartProcessResponse resp = api.fork(instanceId, req, sync, null);
+            StartProcessResponse resp = api.fork(instanceId, req, false, null);
             log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId().toString()));
             return resp.getInstanceId();
         });
+
+        boolean sync = getBoolean(cfg, SYNC_KEY, false);
+        if (sync) {
+            waitForCompletion(ctx, Collections.singletonList(id.toString()));
+        }
+
+        return id;
     }
 
     private void kill(Context ctx) throws Exception {

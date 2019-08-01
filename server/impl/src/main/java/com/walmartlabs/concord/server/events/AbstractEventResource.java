@@ -231,7 +231,7 @@ public abstract class AbstractEventResource {
                             .build())
                     .build();
 
-            processManager.start(payload, false);
+            processManager.start(payload);
             return null;
         });
 

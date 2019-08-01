@@ -196,52 +196,6 @@ public class ProjectIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testSync() throws Exception {
-        Path tmpDir = createTempDir();
-
-        File src = new File(ProjectIT.class.getResource("project-sync").toURI());
-        IOUtils.copy(src.toPath(), tmpDir);
-
-        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
-        repo.add().addFilepattern(".").call();
-        repo.commit().setMessage("import").call();
-
-        String gitUrl = tmpDir.toAbsolutePath().toString();
-
-        // ---
-
-        String projectName = "myProject_" + randomString();
-        String username = "myUser_" + randomString();
-        Set<String> permissions = Collections.emptySet();
-        String repoName = "myRepo_" + randomString();
-        String repoUrl = gitUrl;
-        String entryPoint = "main";
-
-        Map<String, Object> args = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
-                ImmutableMap.of(
-                        "myForm1", ImmutableMap.of(
-                                "x", 100123, "firstName", "Boo"),
-                        "myForm2", ImmutableMap.of(
-                                "lastName", "Zoo",
-                                "age", 1200,
-                                "color", "redColor")
-                ));
-
-        // ---
-
-        ProcessEntry psr = doTest(projectName, username, permissions, repoName, repoUrl, entryPoint, args, true);
-
-        byte[] ab = getLog(psr.getLogFileName());
-        assertLog(".*110123.*", ab);
-        assertLog(".*Boo Zoo.*", ab);
-        assertLog(".*101200.*", ab);
-        assertLog(".*120123.*", ab);
-        assertLog(".*redColor.*", ab);
-
-        assertTrue(psr.getStatus() == ProcessEntry.StatusEnum.FINISHED);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInitImport() throws Exception {
         Path tmpDir = createTempDir();
 
