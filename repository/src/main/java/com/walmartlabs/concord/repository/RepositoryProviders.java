@@ -35,7 +35,7 @@ import java.util.concurrent.locks.Lock;
 
 public class RepositoryProviders {
 
-    private final Striped<Lock> locks = Striped.lock(32);
+    private final Striped<Lock> locks = Striped.lock(64);
 
     private final List<RepositoryProvider> providers;
     private final long lockTimeout;
