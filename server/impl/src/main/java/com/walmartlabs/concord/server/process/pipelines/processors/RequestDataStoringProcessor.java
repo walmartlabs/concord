@@ -71,7 +71,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Error while saving a metadata file: " + dst, e);
         }
 
-        log.info("process ['{}'] -> done", processKey);
+        log.info("process -> done");
         return chain.process(payload);
     }
 }

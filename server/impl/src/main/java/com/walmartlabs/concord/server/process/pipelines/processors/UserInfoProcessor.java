@@ -64,7 +64,7 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
 
         payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, m);
 
-        log.info("process ['{}'] -> done", payload.getProcessKey());
+        log.info("process -> done");
         return chain.process(payload);
     }
 

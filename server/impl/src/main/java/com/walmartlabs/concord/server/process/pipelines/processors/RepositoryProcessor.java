@@ -103,7 +103,7 @@ public class RepositoryProcessor implements PayloadProcessor {
                 return payload.putHeader(REPOSITORY_INFO_KEY, i)
                         .putHeader(REPOSITORY_SNAPSHOT, Collections.singletonList(snapshot));
             } catch (Exception e) {
-                log.error("process ['{}'] -> repository error", processKey, e);
+                log.error("process -> repository error", e);
                 logManager.error(processKey, "Error while processing a repository: " + repo.getUrl(), e);
                 throw new ProcessException(processKey, "Error while processing a repository: " + repo.getUrl(), e);
             }

@@ -66,10 +66,10 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
         if (hasFlow(pd, profiles, flow)) {
             boolean suppressed = getBoolean(payload, disableFlag);
             if (suppressed) {
-                log.info("process ['{}'] -> {} is suppressed, skipping...", processKey, flow);
+                log.info("process -> {} is suppressed, skipping...", flow);
             } else {
                 handlers.add(flow);
-                log.info("process ['{}'] -> added {} handler", processKey, flow);
+                log.info("process -> added {} handler", flow);
             }
         }
     }

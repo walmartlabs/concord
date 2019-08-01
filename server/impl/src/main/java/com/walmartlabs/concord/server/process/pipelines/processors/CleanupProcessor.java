@@ -24,6 +24,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
+import org.slf4j.MDC;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,6 +44,9 @@ public class CleanupProcessor implements FinalizerProcessor {
 
     @Override
     public void process(Payload payload) {
+        // cleanup the MDC
+        MDC.clear();
+
         delete(payload.getProcessKey(), payload.getHeader(Payload.WORKSPACE_DIR));
         delete(payload.getProcessKey(), payload.getHeader(Payload.BASE_DIR));
     }

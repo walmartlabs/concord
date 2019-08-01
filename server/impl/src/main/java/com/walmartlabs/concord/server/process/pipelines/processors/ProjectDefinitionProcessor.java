@@ -55,7 +55,7 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
             return chain.process(payload);
         } catch (IOException e) {
-            log.warn("process ['{}'] -> ({}) project loading error: {}", processKey, workspace, e.getMessage());
+            log.warn("process -> ({}) project loading error: {}", workspace, e.getMessage());
             throw new ProcessException(processKey, "Error while loading the project, check the syntax. " + e.getMessage());
         }
     }

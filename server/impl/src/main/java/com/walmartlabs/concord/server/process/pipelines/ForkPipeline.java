@@ -35,6 +35,7 @@ public class ForkPipeline extends Pipeline {
     @Inject
     public ForkPipeline(Injector injector) {
         super(injector,
+                LoggingMDCProcessor.class,
                 PolicyExportProcessor.class,
                 InitialQueueEntryProcessor.class,
                 ForkPolicyProcessor.class,
