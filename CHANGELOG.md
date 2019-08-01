@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: use MDC to log process ID in the pipeline
+processors;
 - http: improved input parameter validation, additional validation
 for JSON responses;
 - concord-console, concord-runner: fixed displayed duration for

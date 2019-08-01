@@ -78,7 +78,7 @@ public class DependenciesProcessor implements PayloadProcessor {
         req.put(InternalConstants.Request.DEPENDENCIES_KEY, deps);
         payload = payload.putHeader(Payload.REQUEST_DATA_MAP, req);
 
-        log.info("process ['{}'] -> done", processKey);
+        log.info("process -> done");
         return chain.process(payload);
     }
 

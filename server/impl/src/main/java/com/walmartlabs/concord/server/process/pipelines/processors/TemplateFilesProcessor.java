@@ -122,6 +122,6 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         // copy template's files to the payload, skipping the existing files
         IOUtils.unzip(template, workspacePath, true);
 
-        log.debug("process ['{}', '{}'] -> done", processKey, template);
+        log.debug("process ['{}'] -> done", template);
     }
 }

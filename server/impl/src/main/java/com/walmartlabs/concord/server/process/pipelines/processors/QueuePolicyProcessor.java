@@ -79,7 +79,7 @@ public class QueuePolicyProcessor implements PayloadProcessor {
                     .getQueueProcessPolicy()
                     .check(statuses -> dao.metrics(orgId, prjId, statuses));
         } catch (Exception e) {
-            log.error("process ['{}'] -> error", processKey, e);
+            log.error("process -> error", e);
             throw new ProcessException(processKey, "Error while processing queue policies", e);
         }
 

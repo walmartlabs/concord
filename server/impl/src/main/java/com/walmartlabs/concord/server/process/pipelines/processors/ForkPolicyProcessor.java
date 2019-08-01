@@ -78,7 +78,7 @@ public class ForkPolicyProcessor implements PayloadProcessor {
                     .getForkDepthPolicy()
                     .check(() -> forkDepthDao.getDepth(parentInstanceId));
         } catch (Exception e) {
-            log.error("process ['{}'] -> error", processKey, e);
+            log.error("process -> error", e);
             throw new ProcessException(processKey, "Found fork policy check error", e);
         }
 
