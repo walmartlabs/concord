@@ -233,7 +233,7 @@ public class ProjectProcessResource implements Resource {
                     .configuration(cfg)
                     .build();
 
-            processManager.start(payload, false);
+            processManager.start(payload);
         } catch (Exception e) {
             return processError(processKey, e.getMessage(), e);
         }

@@ -448,7 +448,7 @@ public class AnsibleIT extends AbstractServerIT {
         List<ProcessEventEntry> events = eventsApi.list(pir.getInstanceId(), "ANSIBLE", null, null, null, null, null);
         assertNotNull(events);
         // one pre and one post event
-        assertEquals(2, events.size());
+        assertEquals(3, events.size());
         Map<String, Object> data = events.stream()
                 .filter(e -> "post".equals(e.getData().get("phase")))
                 .findAny()

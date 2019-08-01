@@ -157,10 +157,6 @@ public class Payload {
         return new Payload(this, this.headers, m);
     }
 
-    public Payload clearAttachments() {
-        return new Payload(this, this.headers, Collections.emptyMap());
-    }
-
     @Override
     public String toString() {
         return "Payload{" +

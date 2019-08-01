@@ -149,8 +149,12 @@ public class ProcessResource implements Resource {
     @Deprecated
     public StartProcessResponse start(@ApiParam InputStream in,
                                       @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
+
+        if (sync) {
+            throw syncIsForbidden();
+        }
 
         assertPartialKey(parentInstanceId);
 
@@ -166,7 +170,7 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.start(payload, sync));
+        return toResponse(processManager.start(payload));
     }
 
     /**
@@ -186,7 +190,7 @@ public class ProcessResource implements Resource {
     @Deprecated
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
 
         return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync, out);
@@ -212,8 +216,12 @@ public class ProcessResource implements Resource {
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam Map<String, Object> req,
                                       @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
+
+        if (sync) {
+            throw syncIsForbidden();
+        }
 
         assertPartialKey(parentInstanceId);
 
@@ -231,7 +239,7 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.start(payload, sync));
+        return toResponse(processManager.start(payload));
     }
 
     /**
@@ -253,6 +261,11 @@ public class ProcessResource implements Resource {
                                       @ApiParam @Deprecated @QueryParam("out") String[] out,
                                       @Context HttpServletRequest request) {
 
+        boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
+        if (sync || sync2) {
+            throw syncIsForbidden();
+        }
+
         Payload payload;
         try {
             payload = payloadManager.createPayload(input, parseRequestInfo(request));
@@ -267,8 +280,7 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        boolean sync2 = MultipartUtils.getBoolean(input, Constants.Multipart.SYNC, false);
-        return toResponse(processManager.start(payload, sync || sync2));
+        return toResponse(processManager.start(payload));
     }
 
     /**
@@ -291,8 +303,12 @@ public class ProcessResource implements Resource {
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam MultipartInput input,
                                       @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
+
+        if (sync) {
+            throw syncIsForbidden();
+        }
 
         assertPartialKey(parentInstanceId);
 
@@ -310,7 +326,7 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.start(payload, sync));
+        return toResponse(processManager.start(payload));
     }
 
     /**
@@ -333,8 +349,12 @@ public class ProcessResource implements Resource {
     public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
                                       @ApiParam InputStream in,
                                       @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                       @ApiParam @QueryParam("out") String[] out) {
+
+        if (sync) {
+            throw syncIsForbidden();
+        }
 
         // allow empty POST requests
         if (isEmpty(in)) {
@@ -357,7 +377,7 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.start(payload, sync));
+        return toResponse(processManager.start(payload));
     }
 
     /**
@@ -408,8 +428,12 @@ public class ProcessResource implements Resource {
     @WithTimer
     public StartProcessResponse fork(@ApiParam @PathParam("id") UUID parentInstanceId,
                                      @ApiParam Map<String, Object> req,
-                                     @ApiParam @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                     @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
                                      @ApiParam @QueryParam("out") String[] out) {
+
+        if (sync) {
+            throw syncIsForbidden();
+        }
 
         ProcessEntry parent = queueDao.get(PartialProcessKey.from(parentInstanceId));
         if (parent == null) {
@@ -431,7 +455,7 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        return toResponse(processManager.startFork(payload, sync));
+        return toResponse(processManager.startFork(payload));
     }
 
     /**
@@ -1061,7 +1085,7 @@ public class ProcessResource implements Resource {
     }
 
     private StartProcessResponse toResponse(ProcessResult r) {
-        return new StartProcessResponse(r.getInstanceId(), r.getOut());
+        return new StartProcessResponse(r.getInstanceId());
     }
 
     private PartialProcessKey assertPartialKey(UUID id) {
@@ -1109,5 +1133,10 @@ public class ProcessResource implements Resource {
         } catch (IOException e) {
             throw new ConcordApplicationException("Error while copying a state file: " + e.getMessage(), e);
         }
+    }
+
+    private static RuntimeException syncIsForbidden() {
+        return new ConcordApplicationException("The 'sync' mode is no longer available. " +
+                "Please use sync=false and poll for the status updates.", Status.BAD_REQUEST);
     }
 }

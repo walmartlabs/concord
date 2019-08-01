@@ -15,6 +15,12 @@ key pairs;
 - ansible: improved calculation of host statuses during playbook
 execution.
 
+### Breaking
+
+- concord-server: `sync=true` option is removed. Processes can no
+longer be started in the "synchronous" mode, users should poll for
+the process status updates instead.
+
 
 
 ## [1.28.0] - 2019-07-27
