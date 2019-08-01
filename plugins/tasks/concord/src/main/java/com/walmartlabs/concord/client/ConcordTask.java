@@ -480,6 +480,7 @@ public class ConcordTask extends AbstractConcordTask {
 
         UUID instanceId = assertUUID(cfg, INSTANCE_ID_KEY);
 
+        boolean sync = getBoolean(cfg, SYNC_KEY, false);
         log.info("Forking the current instance (sync={}, req={})...", sync, req);
 
         UUID id = withClient(ctx, client -> {
@@ -489,7 +490,6 @@ public class ConcordTask extends AbstractConcordTask {
             return resp.getInstanceId();
         });
 
-        boolean sync = getBoolean(cfg, SYNC_KEY, false);
         if (sync) {
             waitForCompletion(ctx, Collections.singletonList(id.toString()));
         }
