@@ -33,6 +33,7 @@ import org.apache.http.message.BasicNameValuePair;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
@@ -105,13 +106,13 @@ public final class HttpTaskUtils {
             if (body instanceof String) {
                 String strBody = (String) body;
                 if (isValidJSON(strBody)) {
-                    return new StringEntity(strBody);
+                    return new StringEntity(strBody, StandardCharsets.UTF_8);
                 }
             } else if (body instanceof Map) {
-                return new StringEntity(new ObjectMapper().writeValueAsString(body));
+                return new StringEntity(new ObjectMapper().writeValueAsString(body), StandardCharsets.UTF_8);
             }
         } else if ((RequestType.STRING == requestType) && (body instanceof String)) {
-            return new StringEntity((String) body);
+            return new StringEntity((String) body, StandardCharsets.UTF_8);
         }
 
         throw new IllegalArgumentException("'" + REQUEST_KEY + ": " + requestType.toString().toLowerCase() + "' is not compatible with '" + BODY_KEY + "'");
