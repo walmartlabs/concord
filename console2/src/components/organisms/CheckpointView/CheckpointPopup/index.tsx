@@ -49,7 +49,7 @@ const CheckpointPopup: React.SFC<{
             closeOnTriggerClick={true}
             hoverable={true}
             hideOnScroll={true}
-            position="bottom left"
+            position="top center"
             flowing={true}
             style={{ maxWidth: '300px' }}
             content={
@@ -90,7 +90,7 @@ const CheckpointPopup: React.SFC<{
                                 loading={process.status === 'ENQUEUED'}
                                 onClick={() => {
                                     restoreProcess(process.instanceId, checkpoint.id);
-                                    // TODO: ಠ_ಠ ... hack, needs to be better.
+                                    // // TODO: ಠ_ಠ ... hack, needs to be better.
                                     setTimeout(() => {
                                         loadData({
                                             orgId,

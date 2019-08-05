@@ -87,6 +87,13 @@ class AnsibleHostList extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {};
+
+        this.handleNext = this.handleNext.bind(this);
+        this.handlePrev = this.handlePrev.bind(this);
+        this.handleFirst = this.handleFirst.bind(this);
+        this.handleHostOnBlur = this.handleHostOnBlur.bind(this);
+        this.handleHostChange = this.handleHostChange.bind(this);
+        this.handleHostGroupChange = this.handleHostGroupChange.bind(this);
     }
 
     handleNext() {
@@ -151,7 +158,7 @@ class AnsibleHostList extends React.Component<Props, State> {
                             type="text"
                             icon="filter"
                             placeholder="Host"
-                            onBlur={() => this.handleHostOnBlur()}
+                            onBlur={this.handleHostOnBlur}
                             onChange={(ev, data) => this.handleHostChange(data.value)}
                         />
                     </Grid.Column>
@@ -171,9 +178,9 @@ class AnsibleHostList extends React.Component<Props, State> {
                     <Grid.Column textAlign={'right'}>
                         <PaginationToolBar
                             filterProps={{}}
-                            handleNext={() => this.handleNext()}
-                            handlePrev={() => this.handlePrev()}
-                            handleFirst={() => this.handleFirst()}
+                            handleNext={this.handleNext}
+                            handlePrev={this.handlePrev}
+                            handleFirst={this.handleFirst}
                             disablePrevious={prev === undefined}
                             disableNext={next === undefined}
                             disableFirst={prev === undefined}

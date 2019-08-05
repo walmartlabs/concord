@@ -21,16 +21,15 @@
 import * as React from 'react';
 import ReactJson from 'react-json-view';
 import { Icon, Modal } from 'semantic-ui-react';
-import { ProcessEntry } from '../../../api/process';
+import { ProcessMeta } from '../../../api/process';
 
 interface Props {
-    process: ProcessEntry;
+    processMeta?: ProcessMeta;
     title?: string;
 }
 
-export default ({ process, title = 'Last error' }: Props) => {
-    const { meta } = process;
-    if (!meta || !meta.out || !meta.out.lastError) {
+export default ({ processMeta, title = 'Last error' }: Props) => {
+    if (!processMeta || !processMeta.out || !processMeta.out.lastError) {
         return <></>;
     }
 
@@ -49,7 +48,7 @@ export default ({ process, title = 'Last error' }: Props) => {
             <Modal.Header>{title}</Modal.Header>
             <Modal.Content>
                 <ReactJson
-                    src={meta.out.lastError}
+                    src={processMeta.out.lastError}
                     collapsed={false}
                     name={null}
                     enableClipboard={false}

@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/processes';
 import { SingleOperationPopup } from '../../molecules';
+import { memo, useCallback } from 'react';
+import { kill as apiKill } from '../../../api/process';
+import { useState } from 'react';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -32,56 +32,49 @@ interface ExternalProps {
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
-interface DispatchProps {
-    reset: () => void;
-    onConfirm: () => void;
-}
+const CancelProcessPopup = memo((props: ExternalProps) => {
+    const [cancelling, setCancelling] = useState(false);
+    const [error, setError] = useState<RequestError>();
+    const [success, setSuccess] = useState(false);
 
-interface StateProps {
-    cancelling: boolean;
-    success: boolean;
-    error: RequestError;
-}
+    const instanceId = props.instanceId;
 
-type Props = DispatchProps & ExternalProps & StateProps;
+    const cancelProcess = useCallback(async () => {
+        setCancelling(true);
 
-class CancelProcessPopup extends React.Component<Props> {
-    render() {
-        const { trigger, cancelling, success, error, reset, refresh, onConfirm } = this.props;
+        try {
+            await apiKill(instanceId);
+            setSuccess(true);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setCancelling(false);
+        }
+    }, [instanceId]);
 
-        return (
-            <SingleOperationPopup
-                trigger={trigger}
-                title="Cancel the process?"
-                introMsg={<p>Are you sure you want to cancel the selected process?</p>}
-                running={cancelling}
-                runningMsg={<p>Cancelling...</p>}
-                success={success}
-                successMsg={<p>The cancel command was sent successfully.</p>}
-                error={error}
-                reset={reset}
-                onDone={refresh}
-                onConfirm={onConfirm}
-            />
-        );
-    }
-}
+    const reset = useCallback(() => {
+        setCancelling(false);
+        setSuccess(false);
+        setError(undefined);
+    }, []);
 
-const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
-    cancelling: processes.cancelProcess.running,
-    success: !!processes.cancelProcess.response,
-    error: processes.cancelProcess.error
+    const { trigger, refresh } = props;
+
+    return (
+        <SingleOperationPopup
+            trigger={trigger}
+            title="Cancel the process?"
+            introMsg={<p>Are you sure you want to cancel the selected process?</p>}
+            running={cancelling}
+            runningMsg={<p>Cancelling...</p>}
+            success={success}
+            successMsg={<p>The cancel command was sent successfully.</p>}
+            error={error}
+            reset={reset}
+            onDone={refresh}
+            onConfirm={cancelProcess}
+        />
+    );
 });
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { instanceId }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.reset()),
-    onConfirm: () => dispatch(actions.cancel(instanceId))
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(CancelProcessPopup);
+export default CancelProcessPopup;

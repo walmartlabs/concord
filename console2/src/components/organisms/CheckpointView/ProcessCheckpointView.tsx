@@ -2,7 +2,7 @@
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,13 @@
  * limitations under the License.
  * =====
  */
+import * as React from 'react';
+import { ProcessEntry } from '../../../api/process';
 
-import { Action } from 'redux';
-import { RequestState } from '../../common';
-import { ConcordId } from '../../../../api/common';
-
-export interface ListProcessAttachments extends Action {
-    instanceId: ConcordId;
+interface ExternalProps {
+    process: ProcessEntry;
 }
 
-export interface ListProcessAttachmentResponse extends Action {
-    items: string[];
-}
+const ProcessCheckpointView = (props: ExternalProps) => {};
 
-export type ListProcessAttachmentState = RequestState<ListProcessAttachmentResponse>;
-
-export interface State {
-    list: ListProcessAttachmentState;
-}
+export default ProcessCheckpointView;

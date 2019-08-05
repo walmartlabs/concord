@@ -20,7 +20,7 @@
 
 import { Action } from 'redux';
 import { ConcordId, RequestError } from '../../../../api/common';
-import { ProcessStatus } from '../../../../api/process';
+import { ProcessEntry } from '../../../../api/process';
 import { LogChunk, LogRange } from '../../../../api/process/log';
 import { RequestState } from '../../common';
 import { LogProcessorOptions } from './processors';
@@ -38,7 +38,7 @@ export interface LoadWholeProcessLog extends Action {
 }
 
 export interface GetProcessLogResponse extends Action {
-    status?: ProcessStatus;
+    process?: ProcessEntry;
     error?: RequestError;
     chunk?: LogChunk;
     overwrite?: boolean;
@@ -64,7 +64,7 @@ export interface LogSegment {
 }
 
 export interface State {
-    status: ProcessStatus | null;
+    process: ProcessEntry | null;
     data: LogSegment[];
     length: number;
     completed: boolean;

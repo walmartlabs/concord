@@ -19,141 +19,73 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Header, Icon, Table, Loader } from 'semantic-ui-react';
-import { ConcordId } from '../../../api/common';
-import { ProcessHistoryEntry, isFinal } from '../../../api/process';
-import { actions, selectors } from '../../../state/data/processes/history';
-import { State } from '../../../state/data/processes/history/types';
-import { LocalTimestamp } from '../../molecules';
-import { formatDuration } from '../../../utils';
+import { useRef, useState } from 'react';
+import { ProcessHistoryEntry, ProcessEntry, get as apiGet, isFinal } from '../../../api/process';
+import { ProcessHistoryList, ProcessToolbar } from '../../molecules';
+import { useCallback } from 'react';
+import { usePolling } from '../../../api/usePolling';
+import RequestErrorActivity from '../RequestErrorActivity';
 
 interface ExternalProps {
-    instanceId: ConcordId;
+    process: ProcessEntry;
 }
 
-interface StateProps {
-    loading: boolean;
-    data: ProcessHistoryEntry[];
-}
+const DATA_FETCH_INTERVAL = 5000;
 
-interface DispatchProps {
-    load: (instanceId: ConcordId) => void;
-}
+const ProcessHistoryActivity = (props: ExternalProps) => {
+    const stickyRef = useRef(null);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const [process, setProcess] = useState<ProcessEntry>(props.process);
+    const [data, setData] = useState<ProcessHistoryEntry[]>(props.process.statusHistory || []);
 
-class ProcessHistoryActivity extends React.Component<Props> {
-    componentDidMount() {
-        this.init();
-    }
-    init() {
-        const { instanceId, load } = this.props;
-        load(instanceId);
-    }
+    const fetchData = useCallback(async () => {
+        const process = await apiGet(props.process.instanceId, ['history']);
+        setProcess(process);
 
-    renderTableHeader = () => {
+        setData(makeProcessHistoryList(process));
+
+        return !isFinal(process.status);
+    }, [props.process.instanceId]);
+
+    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+
+    if (error) {
         return (
-            <Table.Row>
-                <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
-                <Table.HeaderCell collapsing={true}>Change Time </Table.HeaderCell>
-                <Table.HeaderCell collapsing={true}>Elapsed Time </Table.HeaderCell>
-            </Table.Row>
-        );
-    };
+            <div ref={stickyRef}>
+                <ProcessToolbar
+                    stickyRef={stickyRef}
+                    loading={loading}
+                    refresh={refresh}
+                    process={process}
+                />
 
-    renderTableRow = (row: ProcessHistoryEntry, idx: number) => {
-        const { data } = this.props;
-        let elapsedTime: string | undefined;
-
-        if (idx === 0 && !isFinal(row.status)) {
-            const startTime: Date = new Date(data[idx].changeDate);
-            const currentTime: Date = new Date();
-            const duration = currentTime.getTime() - startTime.getTime();
-            elapsedTime = formatDuration(duration) + ' (so far)';
-        } else if (idx > 0) {
-            const endTime: Date = new Date(row.changeDate);
-            const startTime: Date = new Date(data[idx - 1].changeDate);
-            const duration = startTime.getTime() - endTime.getTime();
-            elapsedTime = formatDuration(duration);
-        }
-
-        return (
-            <Table.Row>
-                <Table.Cell>{row.status}</Table.Cell>
-                <Table.Cell>
-                    <LocalTimestamp value={row.changeDate} />
-                </Table.Cell>
-                <Table.Cell>{elapsedTime}</Table.Cell>
-            </Table.Row>
-        );
-    };
-
-    render() {
-        // TODO error handling
-
-        const { instanceId, loading, load, data } = this.props;
-
-        if (loading) {
-            return <Loader active={true} />;
-        }
-
-        return (
-            <>
-                <Header as="h3">
-                    <Icon
-                        disabled={loading}
-                        name="refresh"
-                        loading={loading}
-                        onClick={() => load(instanceId)}
-                    />
-                </Header>
-
-                <Table celled={true} attached="bottom">
-                    <Table.Header>{this.renderTableHeader()}</Table.Header>
-                    <Table.Body>
-                        {data && data.map((p, idx) => this.renderTableRow(p, idx))}
-                        {!data && (
-                            <tr style={{ color: 'red', fontWeight: 'bold' }}>
-                                <Table.Cell negative={true}>No history available</Table.Cell>
-                            </tr>
-                        )}
-                    </Table.Body>
-                </Table>
-            </>
+                <RequestErrorActivity error={error} />
+            </div>
         );
     }
-}
 
-interface StateType {
-    processes: {
-        history: State;
-    };
-}
+    return (
+        <div ref={stickyRef}>
+            <ProcessToolbar
+                stickyRef={stickyRef}
+                loading={loading}
+                refresh={refresh}
+                process={process}
+            />
 
-const makeProcessHistoryList = (data: ProcessHistoryEntry[]): ProcessHistoryEntry[] => {
-    if (data === undefined) {
+            <ProcessHistoryList data={data} />
+        </div>
+    );
+};
+
+const makeProcessHistoryList = (process: ProcessEntry): ProcessHistoryEntry[] => {
+    if (process.statusHistory === undefined) {
         return [];
     }
 
-    return Object.keys(data)
-        .map((k) => data[k])
-        .sort((a, b) => (a.changeDate < b.changeDate ? 1 : a.changeDate > b.changeDate ? -1 : 0));
+    return process.statusHistory.sort((a, b) =>
+        a.changeDate < b.changeDate ? 1 : a.changeDate > b.changeDate ? -1 : 0
+    );
 };
 
-export const mapStateToProps = ({ processes: { history } }: StateType): StateProps => ({
-    loading: history.getHistory.running,
-    data: makeProcessHistoryList(selectors.processHistory(history))
-});
-
-export const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (instanceId: ConcordId) => {
-        dispatch(actions.getProcessHistory(instanceId));
-    }
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessHistoryActivity);
+export default ProcessHistoryActivity;

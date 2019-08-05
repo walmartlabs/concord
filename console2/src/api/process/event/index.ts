@@ -67,5 +67,7 @@ export interface ProcessEventEntry<T extends ProcessEventData> {
     data: T;
 }
 
-export const listEvents = (filter: ProcessEventFilter): Promise<ProcessEventEntry<{}>[]> =>
+export const listEvents = <T extends ProcessEventData>(
+    filter: ProcessEventFilter
+): Promise<ProcessEventEntry<T>[]> =>
     fetchJson(`/api/v1/process/${filter.instanceId}/event?${queryParams({ ...filter })}`);

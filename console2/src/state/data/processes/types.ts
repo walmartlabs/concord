@@ -29,14 +29,9 @@ import {
     StartProcessResponse
 } from '../../../api/process';
 import { RequestState } from '../common';
-import { State as AnsibleState } from './ansible/types';
-import { State as AttachmentState } from './attachments/types';
 import { State as ChildrenState } from './children/types';
 import { State as EventsState } from './events/types';
-import { State as HistoryState } from './history/types';
 import { State as LogState } from './logs/types';
-import { State as PollState } from './poll/types';
-import { State as WaitState } from './waits/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
@@ -119,17 +114,10 @@ export interface State {
     error: RequestError;
 
     startProcess: StartProcessState;
-    disableProcess: DisableProcessState;
-    cancelProcess: CancelProcessState;
     cancelBulkProcess: CancelBullkProcessState;
     restoreProcess: RestoreProcessState;
 
-    ansible: AnsibleState;
     log: LogState;
-    poll: PollState;
-    history: HistoryState;
-    waits: WaitState;
-    attachments: AttachmentState;
     children: ChildrenState;
     events: EventsState;
 }

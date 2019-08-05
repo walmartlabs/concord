@@ -45,10 +45,13 @@ interface Props {
     refresh: (filter: SearchFilter) => void;
 }
 
-class AnsibleStats extends React.Component<Props, State> {
+class AnsibleStats extends React.PureComponent<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = { filter: {} };
+
+        this.handleStatusChange = this.handleStatusChange.bind(this);
+        this.handleRefresh = this.handleRefresh.bind(this);
     }
 
     handleStatusChange(status?: AnsibleStatus) {
@@ -83,7 +86,7 @@ class AnsibleStats extends React.Component<Props, State> {
                                             height={300}
                                             data={makeStats(stats)}
                                             uniqueHosts={stats.uniqueHosts}
-                                            onClick={(status) => this.handleStatusChange(status)}
+                                            onClick={this.handleStatusChange}
                                         />
                                     </Grid.Column>
                                     <Grid.Column>
@@ -93,7 +96,7 @@ class AnsibleStats extends React.Component<Props, State> {
                                             hostGroups={stats.hostGroups}
                                             prev={prev}
                                             next={next}
-                                            refresh={(filter) => this.handleRefresh(filter)}
+                                            refresh={this.handleRefresh}
                                         />
                                     </Grid.Column>
                                 </Grid>
