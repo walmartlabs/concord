@@ -34,7 +34,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.Statement;
 import java.sql.*;
+import java.time.Instant;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -104,8 +106,8 @@ public class EventDao extends AbstractDao {
         }
     }
 
-    public void insert(ProcessKey processKey, String eventType, Map<String, Object> data) {
-        tx(tx -> insert(tx, processKey, eventType, data));
+    public void insert(ProcessKey processKey, String eventType, OffsetDateTime eventDate, Map<String, Object> data) {
+        tx(tx -> insert(tx, processKey, eventType, eventDate, data));
     }
 
     public void insert(ProcessKey processKey, List<ProcessEventRequest> entries) {
@@ -116,7 +118,11 @@ public class EventDao extends AbstractDao {
         tx(tx -> insert(tx, processKey, entries));
     }
 
-    public void insert(DSLContext tx, ProcessKey processKey, String eventType, Map<String, Object> data) {
+    public void insert(DSLContext tx, ProcessKey processKey, String eventType, OffsetDateTime eventDate, Map<String, Object> data) {
+        // client have option to send the actual event's timestamp
+        // if it's not available then the current DB timestamp will be used
+        Field<Timestamp> ts = eventDate != null ? value(Timestamp.from(eventDate.toInstant())) : currentTimestamp();
+
         ProcessEventsRecord r = tx.insertInto(PROCESS_EVENTS)
                 .columns(PROCESS_EVENTS.INSTANCE_ID,
                         PROCESS_EVENTS.INSTANCE_CREATED_AT,
@@ -126,7 +132,7 @@ public class EventDao extends AbstractDao {
                 .values(value(processKey.getInstanceId()),
                         value(processKey.getCreatedAt()),
                         value(eventType),
-                        currentTimestamp(),
+                        ts,
                         field("?::jsonb", objectMapper.serialize(data)))
                 .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .fetchOne();
@@ -168,17 +174,20 @@ public class EventDao extends AbstractDao {
                         PROCESS_EVENTS.EVENT_TYPE,
                         PROCESS_EVENTS.EVENT_DATE,
                         PROCESS_EVENTS.EVENT_DATA)
-                .values(null, null, null, currentTimestamp(), field("?::jsonb", "n/a"))
+                .values((UUID)null, null, null, null, field("?::jsonb", "n/a"))
                 .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .getSQL();
 
         tx.connection(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 for (ProcessEventRequest e : entries) {
+                    Timestamp eventDate = e.getEventDate() != null ? Timestamp.from(e.getEventDate().toInstant()) : Timestamp.from(Instant.now());
+
                     ps.setObject(1, processKey.getInstanceId());
                     ps.setTimestamp(2, processKey.getCreatedAt());
                     ps.setString(3, e.getEventType());
-                    ps.setString(4, objectMapper.serialize(e.getData()));
+                    ps.setTimestamp(4, eventDate);
+                    ps.setString(5, objectMapper.serialize(e.getData()));
                     ps.addBatch();
                 }
                 ps.executeBatch();

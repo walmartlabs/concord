@@ -34,6 +34,8 @@ import io.takari.bpm.model.SourceMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -91,6 +93,7 @@ public class ElementEventProcessor {
             ProcessEventRequest req = new ProcessEventRequest();
             req.setEventType("ELEMENT"); // TODO should it be in the constants?
             req.setData(e);
+            req.setEventDate(Instant.now().atOffset(ZoneOffset.UTC));
 
             ProcessEventsApi client = new ProcessEventsApi(apiClientFactory.create(
                     ApiClientConfiguration.builder()

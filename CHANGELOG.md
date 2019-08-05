@@ -9,6 +9,8 @@ sequence ID in the `/api/v1/process/{id}/events` endpoint.
 
 ### Changed
 
+- concord-server, concord-ansible: use the event's timestamp instead
+of the DB's timestamp when recording events (if available);
 - concord-console: fix the project payload settings being applied
 when the settings page opens;
 - concord-console: use the same process toolbar on all tabs on the

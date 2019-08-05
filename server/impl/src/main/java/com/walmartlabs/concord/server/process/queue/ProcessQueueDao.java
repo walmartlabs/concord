@@ -605,7 +605,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .execute();
 
         Map<String, Object> eventData = objectMapper.convertToMap(waits != null ? waits : new NoneCondition());
-        eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), eventData);
+        eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), null, eventData);
     }
 
     private FindResult findEntry(Map<String, Object> capabilities) {
@@ -695,7 +695,7 @@ public class ProcessQueueDao extends AbstractDao {
         payload.put("status", status.name());
         payload.putAll(statusPayload);
 
-        eventDao.insert(tx, processKey, EventType.PROCESS_STATUS.name(), objectMapper.convertToMap(payload));
+        eventDao.insert(tx, processKey, EventType.PROCESS_STATUS.name(), null, objectMapper.convertToMap(payload));
     }
 
     private void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {

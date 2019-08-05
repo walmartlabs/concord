@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.eclipse.sisu.EagerSingleton;
 
 import javax.inject.Inject;
@@ -37,5 +38,6 @@ public class ObjectMapperInitializer {
         ObjectMapper om = mapperProvider.get();
         om.registerModule(new GuavaModule());
         om.registerModule(new Jdk8Module());
+        om.registerModule(new JavaTimeModule());
     }
 }
