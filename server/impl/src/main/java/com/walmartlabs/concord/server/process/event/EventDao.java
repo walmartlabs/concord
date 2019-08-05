@@ -59,8 +59,9 @@ public class EventDao extends AbstractDao {
 
             ProcessKey processKey = filter.processKey();
 
-            SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
-                    .select(PROCESS_EVENTS.EVENT_ID,
+            SelectConditionStep<Record5<Long, UUID, String, Timestamp, String>> q = tx
+                    .select(PROCESS_EVENTS.EVENT_SEQ,
+                            PROCESS_EVENTS.EVENT_ID,
                             PROCESS_EVENTS.EVENT_TYPE,
                             PROCESS_EVENTS.EVENT_DATE,
                             function("jsonb_strip_nulls", Object.class, PROCESS_EVENTS.EVENT_DATA).cast(String.class))
@@ -71,6 +72,11 @@ public class EventDao extends AbstractDao {
             Timestamp after = filter.after();
             if (after != null) {
                 q.and(PROCESS_EVENTS.EVENT_DATE.ge(after));
+            }
+
+            Long fromId = filter.fromId();
+            if (fromId != null) {
+                q.and(PROCESS_EVENTS.EVENT_SEQ.greaterThan(fromId));
             }
 
             String eventType = filter.eventType();
@@ -183,6 +189,10 @@ public class EventDao extends AbstractDao {
     }
 
     private static void updateStats(DSLContext tx, List<StatItem> items) {
+        if (items.isEmpty()) {
+            return;
+        }
+
         ProcessEventStats p = PROCESS_EVENT_STATS.as("p");
         BatchBindStep q = tx.batch(
                 tx.insertInto(p)
@@ -199,12 +209,13 @@ public class EventDao extends AbstractDao {
         q.execute();
     }
 
-    private ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
+    private ProcessEventEntry toEntry(Record5<Long, UUID, String, Timestamp, String> r) {
         return ImmutableProcessEventEntry.builder()
-                .id(r.value1())
-                .eventType(r.value2())
-                .eventDate(r.value3())
-                .data(objectMapper.deserialize(r.value4()))
+                .seqId(r.value1())
+                .id(r.value2())
+                .eventType(r.value3())
+                .eventDate(r.value4())
+                .data(objectMapper.deserialize(r.value5()))
                 .build();
     }
 

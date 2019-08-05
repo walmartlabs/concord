@@ -33,6 +33,9 @@ public interface ProcessEventFilter {
     ProcessKey processKey();
 
     @Nullable
+    Long fromId();
+
+    @Nullable
     Timestamp after();
 
     @Nullable
