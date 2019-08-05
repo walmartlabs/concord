@@ -48,7 +48,7 @@ interface Props {
     success: boolean;
     successMsg?: React.ReactNode;
 
-    error: RequestError;
+    error?: RequestError;
     errorRenderer?: (error: RequestErrorData) => React.ReactNode;
 
     reset: () => void;

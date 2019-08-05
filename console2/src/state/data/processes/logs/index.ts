@@ -23,7 +23,7 @@ import { delay } from 'redux-saga';
 import { all, call, cancel, fork, put, race, take, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../../api/common';
-import { get as apiGet, isFinal, ProcessStatus } from '../../../../api/process';
+import { get as apiGet, isFinal, ProcessEntry } from '../../../../api/process';
 import { getLog as apiGetLog, LogChunk, LogRange } from '../../../../api/process/log';
 import { handleErrors, makeErrorReducer, makeLoadingReducer } from '../../common';
 import { LogProcessorOptions, process } from './processors';
@@ -82,10 +82,10 @@ export const actions = {
         chunk: LogChunk,
         overwrite: boolean,
         opts: LogProcessorOptions,
-        status?: ProcessStatus
+        process?: ProcessEntry
     ): GetProcessLogResponse => ({
         type: actionTypes.GET_PROCESS_LOG_RESPONSE,
-        status,
+        process,
         chunk,
         overwrite,
         opts
@@ -100,18 +100,18 @@ export const actions = {
     })
 };
 
-const statusReducer: Reducer<ProcessStatus | null> = (
+const processReducer: Reducer<ProcessEntry | null> = (
     state = null,
-    { type, status }: GetProcessLogResponse
+    { type, process }: GetProcessLogResponse
 ) => {
     switch (type) {
         case actionTypes.RESET_PROCESS_LOG:
             return null;
         case actionTypes.GET_PROCESS_LOG_RESPONSE:
-            if (!status) {
+            if (!process) {
                 return state;
             }
-            return status;
+            return process;
         default:
             return state;
     }
@@ -197,7 +197,7 @@ const getLogReducers = combineReducers<GetProcessLogState>({
 });
 
 export const reducers = combineReducers<State>({
-    status: statusReducer,
+    process: processReducer,
     data: dataReducer,
     length: lengthReducer,
     completed: completedReducer,
@@ -219,7 +219,7 @@ function* doPoll(instanceId: ConcordId, opts: LogProcessorOptions, range: LogRan
                 call(apiGetLog, instanceId, r)
             ]);
 
-            yield put(actions.logResponce(chunk, false, opts, proc.status));
+            yield put(actions.logResponce(chunk, false, opts, proc));
 
             // adjust the range
             r.low = chunk.range.high;

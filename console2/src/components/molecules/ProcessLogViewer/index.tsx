@@ -19,26 +19,17 @@
  */
 
 import * as React from 'react';
-import {
-    Button,
-    Divider,
-    Header,
-    Icon,
-    Menu,
-    Popup,
-    Radio,
-    Sticky,
-    Transition
-} from 'semantic-ui-react';
+import { Button, Divider, Icon, Loader, Popup, Radio, Transition } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
-import { ProcessStatus } from '../../../api/process';
+import { ProcessEntry } from '../../../api/process';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
 import { LogSegment, LogSegmentType, TagData } from '../../../state/data/processes/logs/types';
 import { RequestErrorMessage } from '../../molecules';
 import { TaskCallDetails } from '../../organisms';
 
 import './styles.css';
+import ProcessToolbar from '../ProcessToolbar';
 
 interface State {
     refreshStuck: boolean;
@@ -51,7 +42,7 @@ interface Props {
     instanceId: ConcordId;
 
     loading: boolean;
-    status: ProcessStatus | null;
+    process: ProcessEntry | null;
     data: LogSegment[];
     error: RequestError;
     completed: boolean;
@@ -176,8 +167,9 @@ class ProcessLogViewer extends React.Component<Props, State> {
 
         this.handleScroll = this.handleScroll.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
-        this.renderToolbar = this.renderToolbar.bind(this);
         this.handleTagClick = this.handleTagClick.bind(this);
+
+        this.stickyRef = React.createRef();
     }
 
     componentDidMount() {
@@ -287,69 +279,59 @@ class ProcessLogViewer extends React.Component<Props, State> {
         );
     }
 
-    renderToolbar() {
-        const { loading, refresh, status, completed, loadWholeLog, instanceId } = this.props;
+    createLogToolbarActions() {
+        const { loading, completed, loadWholeLog, instanceId, process } = this.props;
         const { opts, scrollAnchorRef } = this.state;
 
         return (
-            <Menu borderless={true} secondary={!this.state.refreshStuck}>
-                <Menu.Item>
-                    <Header as="h3">
-                        <Icon
-                            disabled={loading}
-                            name="refresh"
-                            loading={loading}
-                            onClick={() => refresh()}
-                        />
-                        {status}
-                    </Header>
-                </Menu.Item>
-                <Menu.Item position="right">
-                    <Radio
-                        label="Auto-Scroll"
-                        toggle={true}
-                        checked={scrollAnchorRef}
-                        onChange={this.handleScroll}
-                        style={{ paddingRight: 20 }}
-                    />
+            <>
+                <Radio
+                    label="Auto-Scroll"
+                    toggle={true}
+                    checked={scrollAnchorRef}
+                    onChange={this.handleScroll}
+                    style={{ paddingRight: 20 }}
+                />
 
-                    {this.renderSettingsMenu(opts)}
+                {this.renderSettingsMenu(opts)}
 
-                    <Button.Group>
-                        {status && !completed && (
-                            <Button disabled={loading} onClick={() => loadWholeLog(opts)}>
-                                Show the whole log
-                            </Button>
-                        )}
-                        <Button
-                            onClick={() =>
-                                window.open(`/api/v1/process/${instanceId}/log`, '_blank')
-                            }>
-                            Raw
+                <Button.Group>
+                    {process!.status && !completed && (
+                        <Button disabled={loading} onClick={() => loadWholeLog(opts)}>
+                            Show the whole log
                         </Button>
-                    </Button.Group>
-                </Menu.Item>
-            </Menu>
+                    )}
+                    <Button
+                        onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
+                        Raw
+                    </Button>
+                </Button.Group>
+            </>
         );
     }
 
     render() {
-        const { error, instanceId, data } = this.props;
+        const { error, instanceId, data, loading, refresh, process } = this.props;
 
         if (error) {
             return <RequestErrorMessage error={error} />;
         }
 
+        if (!process) {
+            return <Loader active={loading} />;
+        }
+
         const { expandedItems } = this.state;
 
         return (
-            <div ref={(r) => (this.stickyRef = r)}>
-                <Sticky
-                    context={this.stickyRef}
-                    onStick={() => this.setState({ refreshStuck: true })}
-                    onUnstick={() => this.setState({ refreshStuck: false })}>
-                    {this.renderToolbar()}
-                </Sticky>
+            <div ref={this.stickyRef}>
+                <ProcessToolbar
+                    stickyRef={this.stickyRef}
+                    loading={loading}
+                    refresh={refresh}
+                    process={process}
+                    additionalActions={this.createLogToolbarActions()}
+                />
 
                 <LogContainer
                     instanceId={instanceId}

@@ -18,7 +18,6 @@
  * =====
  */
 export { default as AnsibleTaskListActivity } from './AnsibleTaskActivity';
-export { default as AnsibleStatsActivity } from './AnsibleStatsActivity';
 export { default as APITokenDeleteActivity } from './APITokenDeleteActivity';
 export { default as APITokenList } from './APITokenList';
 export { default as BulkCancelProcessPopup } from './BulkCancelProcessPopup';
@@ -41,6 +40,7 @@ export { default as OrganizationListActivity } from './OrganizationListActivity'
 export { default as OrganizationOwnerChangeActivity } from './OrganizationOwnerChangeActivity';
 export { default as ProcessActivity } from './ProcessActivity';
 export { default as ProcessChildrenActivity } from './ProcessChildrenActivity';
+export { default as ProcessCheckpointActivity } from './ProcessCheckpointActivity';
 export { default as ProcessEventsActivity } from './ProcessEventsActivity';
 export { default as ProcessFormActivity } from './ProcessFormActivity';
 export { default as ProcessHistoryActivity } from './ProcessHistoryActivity';

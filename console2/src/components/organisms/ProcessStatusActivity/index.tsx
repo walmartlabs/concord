@@ -18,196 +18,182 @@
  * =====
  */
 
-import { push as pushHistory } from 'connected-react-router';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Button, Divider, Header, Icon } from 'semantic-ui-react';
+import { Divider } from 'semantic-ui-react';
 
-import { ConcordId } from '../../../api/common';
+import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
+import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 import {
-    canBeCancelled,
-    hasState,
-    isFinal,
-    ProcessEntry,
-    ProcessStatus
-} from '../../../api/process';
-import { FormListEntry } from '../../../api/process/form';
-import { actions } from '../../../state/data/processes/poll';
-import { State } from '../../../state/data/processes/poll/types';
-import { ProcessActionList, ProcessLastErrorModal, ProcessStatusTable } from '../../molecules';
-import { AnsibleStatsActivity, CancelProcessPopup, DisableProcessPopup } from '../../organisms';
-import ProcessCheckpoint from '../CheckpointView/ProcessCheckpoint';
+    AnsibleStats,
+    ProcessActionList,
+    ProcessStatusTable,
+    ProcessToolbar
+} from '../../molecules';
 
 import './styles.css';
+import { useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
+import { usePolling } from '../../../api/usePolling';
+import RequestErrorActivity from '../RequestErrorActivity';
+import {
+    AnsibleHost,
+    AnsibleStatsEntry,
+    getAnsibleStats as apiGetAnsibleStats,
+    listAnsibleHosts as apiListAnsibleHosts,
+    SearchFilter
+} from '../../../api/process/ansible';
+import { addMinutes, isBefore } from 'date-fns';
+import { Route } from 'react-router';
+import ProcessCheckpointActivity from '../ProcessCheckpointActivity';
 
 interface ExternalProps {
-    instanceId: ConcordId;
+    process: ProcessEntry;
 }
 
-interface StateProps {
-    loading: boolean;
-    process?: ProcessEntry;
-    forms: FormListEntry[];
-}
+const DATA_FETCH_INTERVAL = 5000;
+const ANSIBLE_HOST_LIMIT = 10;
 
-interface DispatchProps {
-    startPolling: (forceLoadAll?: boolean) => void;
-    stopPolling: () => void;
-    refresh: () => void;
-    startWizard: () => void;
-}
+const ProcessStatusActivity = (props: ExternalProps) => {
+    const stickyRef = useRef(null);
+    const isInitialMount = useRef(true);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const sharedAnsibleHostsFilter = useRef<SearchFilter>({});
 
-// TODO extract the AnsibleEventBrowser component
-class ProcessStatusActivity extends React.Component<Props> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
+    const [process, setProcess] = useState<ProcessEntry>(props.process);
+    const [forms, setForms] = useState<FormListEntry[]>([]);
+    const [ansibleStats, setAnsibleStats] = useState<AnsibleStatsEntry>({
+        uniqueHosts: 0,
+        hostGroups: [],
+        stats: {}
+    });
+    const [ansibleHosts, setAnsibleHosts] = useState<AnsibleHost[]>([]);
+    const [ansibleHostsNext, setAnsibleHostsNext] = useState<number>();
+    const [ansibleHostsPrev, setAnsibleHostsPrev] = useState<number>();
+    const [ansibleHostsFilter, setAnsibleHostsFilter] = useState();
 
-    componentDidMount() {
-        this.props.startPolling();
-    }
+    const fetchAnsibleHosts = useCallback(
+        async (filter: SearchFilter) => {
+            const limit = filter.limit || ANSIBLE_HOST_LIMIT;
+            const ansibleHosts = await apiListAnsibleHosts(props.process.instanceId, {
+                ...filter,
+                limit
+            });
+            setAnsibleHosts(ansibleHosts.items);
+            setAnsibleHostsNext(ansibleHosts.next);
+            setAnsibleHostsPrev(ansibleHosts.prev);
+        },
+        [props.process.instanceId]
+    );
 
-    componentWillUnmount() {
-        this.props.stopPolling();
-    }
+    const fetchData = useCallback(async () => {
+        const process = await apiGet(props.process.instanceId, ['checkpoints', 'history']);
+        setProcess(process);
 
-    componentDidUpdate(prevProps: Props) {
-        const { instanceId, startPolling, stopPolling } = this.props;
-        if (instanceId !== prevProps.instanceId) {
-            stopPolling();
-            startPolling();
-        }
-    }
+        const forms = await apiListForms(props.process.instanceId);
+        setForms(forms);
 
-    static disableIcon(disable: boolean) {
-        return <Icon name="power" color={disable ? 'green' : 'grey'} />;
-    }
+        const ansibleStats = await apiGetAnsibleStats(props.process.instanceId);
+        setAnsibleStats(ansibleStats);
 
-    createAdditionalAction() {
-        const { process, refresh, startPolling } = this.props;
+        fetchAnsibleHosts(sharedAnsibleHostsFilter.current);
 
-        if (!process) {
+        // because Ansible stats are calculated by an async process on the backend, we poll for
+        // additional 10 minutes after the process finishes to make sure we got everything
+        const changedRecently = isBefore(Date.now(), addMinutes(process.lastUpdatedAt, 10));
+
+        return !isFinal(process.status) || changedRecently;
+    }, [props.process.instanceId, fetchAnsibleHosts]);
+
+    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
             return;
         }
 
+        sharedAnsibleHostsFilter.current = ansibleHostsFilter;
+        fetchAnsibleHosts(ansibleHostsFilter);
+    }, [ansibleHostsFilter, fetchAnsibleHosts]);
+
+    if (error) {
         return (
-            <>
-                {canBeCancelled(process.status) && (
-                    <CancelProcessPopup
-                        instanceId={process.instanceId}
-                        refresh={refresh}
-                        trigger={(onClick: any) => (
-                            <Button
-                                attached={false}
-                                negative={true}
-                                icon="delete"
-                                content="Cancel"
-                                onClick={onClick}
-                            />
-                        )}
-                    />
-                )}
-                {isFinal(process.status) && (
-                    <DisableProcessPopup
-                        instanceId={process.instanceId}
-                        disabled={!process.disabled}
-                        refresh={startPolling}
-                        trigger={(onClick: any) => (
-                            <Button
-                                attached={false}
-                                icon={ProcessStatusActivity.disableIcon(process.disabled)}
-                                content={process.disabled ? 'Enable' : 'Disable'}
-                                onClick={onClick}
-                            />
-                        )}
-                    />
-                )}
-            </>
+            <div ref={stickyRef}>
+                <ProcessToolbar
+                    stickyRef={stickyRef}
+                    loading={loading}
+                    refresh={refresh}
+                    process={process}
+                />
+
+                <RequestErrorActivity error={error} />
+            </div>
         );
     }
 
-    render() {
-        const { loading, refresh, startWizard, instanceId, process, forms } = this.props;
+    const hasCheckpoints = process.checkpoints && process.checkpoints.length > 0;
+    const hasStatusHistory = process.statusHistory && process.statusHistory.length > 0;
 
-        // TODO replace the loading icon with something more visually pleasing
-        return (
-            <>
-                <Header as="h3">
-                    <div>
-                        <Icon
-                            disabled={loading}
-                            name="refresh"
-                            loading={loading}
-                            onClick={() => refresh()}
-                        />
-                        {process && process.status}
-                        {process && process.status === ProcessStatus.FAILED && (
-                            <ProcessLastErrorModal process={process} />
+    return (
+        <div ref={stickyRef}>
+            <ProcessToolbar
+                stickyRef={stickyRef}
+                loading={loading}
+                refresh={refresh}
+                process={process}
+            />
+
+            <Divider content="Process Details" horizontal={true} />
+            <ProcessStatusTable data={process} />
+
+            {forms.length > 0 && (
+                <>
+                    <Divider content="Required Actions" horizontal={true} />
+                    <Route
+                        render={({ history }) => (
+                            <ProcessActionList
+                                instanceId={props.process.instanceId}
+                                forms={forms}
+                                onOpenWizard={() =>
+                                    history.push(
+                                        `/process/${props.process.instanceId}/wizard?fullScreen=true`
+                                    )
+                                }
+                            />
                         )}
-                    </div>
-                </Header>
+                    />
+                </>
+            )}
 
-                {process && (
-                    <>
-                        <Divider content="Process Details" horizontal={true} />
-                        <ProcessStatusTable
-                            data={process}
-                            onOpenWizard={forms.length > 0 ? startWizard : undefined}
-                            showStateDownload={hasState(process.status)}
-                            additionalActions={this.createAdditionalAction()}
-                        />
-                    </>
-                )}
+            {hasCheckpoints && hasStatusHistory && (
+                <>
+                    <Divider content="Checkpoints" horizontal={true} />
+                    <ProcessCheckpointActivity
+                        instanceId={process.instanceId}
+                        processStatus={process.status}
+                        processDisabled={process.disabled}
+                        checkpoints={process.checkpoints!}
+                        statusHistory={process.statusHistory!}
+                        onRestoreComplete={refresh}
+                    />
+                </>
+            )}
 
-                {forms.length > 0 && (
-                    <>
-                        <Divider content="Required Actions" horizontal={true} />
-                        <ProcessActionList instanceId={instanceId} forms={forms} />
-                    </>
-                )}
+            {ansibleStats.uniqueHosts > 0 && (
+                <>
+                    <Divider content="Ansible Stats" horizontal={true} />
+                    <AnsibleStats
+                        instanceId={props.process.instanceId}
+                        hosts={ansibleHosts}
+                        stats={ansibleStats}
+                        next={ansibleHostsNext}
+                        prev={ansibleHostsPrev}
+                        refresh={setAnsibleHostsFilter}
+                    />
+                </>
+            )}
+        </div>
+    );
+};
 
-                {process && (
-                    <>
-                        <Divider content="Checkpoints" horizontal={true} />
-
-                        <ProcessCheckpoint process={process} />
-                    </>
-                )}
-
-                <AnsibleStatsActivity instanceId={instanceId} />
-            </>
-        );
-    }
-}
-
-interface StateType {
-    processes: {
-        poll: State;
-    };
-}
-
-export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps => ({
-    loading: poll.currentRequest.running,
-    process: poll.currentRequest.response ? poll.currentRequest.response.process : undefined,
-    forms: poll.forms
-});
-
-export const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { instanceId }: ExternalProps
-): DispatchProps => ({
-    startPolling: (forceLoadAll?: boolean) =>
-        dispatch(actions.startProcessPolling(instanceId, forceLoadAll)),
-    stopPolling: () => dispatch(actions.stopProcessPolling()),
-    refresh: () => dispatch(actions.forcePoll()),
-    startWizard: () => dispatch(pushHistory(`/process/${instanceId}/wizard?fullScreen=true`))
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessStatusActivity);
+export default ProcessStatusActivity;

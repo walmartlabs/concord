@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Grid, Popup, Table } from 'semantic-ui-react';
+import { Grid, Popup, Table } from 'semantic-ui-react';
 
 import {
     getStatusSemanticColor,
@@ -32,9 +32,6 @@ import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../index';
 
 interface Props {
     data: ProcessEntry;
-    onOpenWizard?: () => void;
-    showStateDownload?: boolean;
-    additionalActions?: React.ReactNode;
 }
 
 const kindToDescription = (k: ProcessKind): string => {
@@ -79,7 +76,10 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                 {kindToDescription(data.kind)}
                 {data.kind === ProcessKind.FAILURE_HANDLER &&
                     data.status !== ProcessStatus.FAILED && (
-                        <ProcessLastErrorModal process={data} title="Parent process' error" />
+                        <ProcessLastErrorModal
+                            processMeta={data.meta}
+                            title="Parent process' error"
+                        />
                     )}
             </>
         );
@@ -104,7 +104,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
     }
 
     render() {
-        const { data, onOpenWizard, showStateDownload, additionalActions } = this.props;
+        const { data } = this.props;
 
         return (
             <Grid columns={2}>
@@ -145,47 +145,20 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                     <LocalTimestamp value={data.createdAt} />
                                 </Table.Cell>
                             </Table.Row>
-                            {data.startAt && (
-                                <Table.Row>
-                                    <Table.Cell collapsing={true} singleLine={true}>
-                                        Start At
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <LocalTimestamp value={data.startAt} />
-                                    </Table.Cell>
-                                </Table.Row>
-                            )}
+                            <Table.Row>
+                                <Table.Cell collapsing={true} singleLine={true}>
+                                    Start At
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {data.startAt ? <LocalTimestamp value={data.startAt} /> : ' - '}
+                                </Table.Cell>
+                            </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Last Update
                                 </Table.Cell>
                                 <Table.Cell>
                                     <LocalTimestamp value={data.lastUpdatedAt} />
-                                </Table.Cell>
-                            </Table.Row>
-                            <Table.Row>
-                                <Table.Cell collapsing={true} singleLine={true}>
-                                    Actions
-                                </Table.Cell>
-                                <Table.Cell>
-                                    <Button.Group>
-                                        {onOpenWizard && (
-                                            <Button
-                                                onClick={() => onOpenWizard()}
-                                                content="Wizard"
-                                            />
-                                        )}
-                                        {showStateDownload && (
-                                            <Button
-                                                icon="download"
-                                                color="blue"
-                                                content="State"
-                                                href={`/api/v1/process/${data.instanceId}/state/snapshot`}
-                                                download={`Concord_${data.status}_${data.instanceId}.zip`}
-                                            />
-                                        )}
-                                        {additionalActions}
-                                    </Button.Group>
                                 </Table.Cell>
                             </Table.Row>
                         </Table.Body>

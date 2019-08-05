@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Table } from 'semantic-ui-react';
+import { Button, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
 
 import { FormListEntry, FormRunAs } from '../../../api/process/form';
@@ -28,6 +28,7 @@ import { FormListEntry, FormRunAs } from '../../../api/process/form';
 interface Props {
     instanceId: ConcordId;
     forms: FormListEntry[];
+    onOpenWizard: () => void;
 }
 
 // this ugly mess handles all our different ways of specifying LDAP groups in `runAs` form parameter
@@ -80,13 +81,14 @@ const renderRunAs = (v?: FormRunAs) => {
 
 class ProcessActionList extends React.PureComponent<Props> {
     render() {
-        const { instanceId, forms } = this.props;
+        const { instanceId, forms, onOpenWizard } = this.props;
 
         return (
             <Table>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell collapsing={true}>Action</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Additional Action</Table.HeaderCell>
                         <Table.HeaderCell>Description</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
@@ -95,6 +97,9 @@ class ProcessActionList extends React.PureComponent<Props> {
                         <Table.Row key={name}>
                             <Table.Cell singleLine={true}>
                                 <Link to={`/process/${instanceId}/form/${name}/step`}>{name}</Link>
+                            </Table.Cell>
+                            <Table.Cell singleLine={true}>
+                                <Button onClick={() => onOpenWizard()} content="Wizard" />
                             </Table.Cell>
                             <Table.Cell>
                                 Form

@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/processes';
 import { SingleOperationPopup } from '../../molecules';
+import { memo } from 'react';
+import { useState } from 'react';
+import { useCallback } from 'react';
+import { disable as apiDisable } from '../../../api/process';
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -33,66 +34,51 @@ interface ExternalProps {
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
-interface DispatchProps {
-    reset: () => void;
-    onConfirm: () => void;
-}
+const DisableProcessPopup = memo((props: ExternalProps) => {
+    const [disabling, setDisabling] = useState(false);
+    const [error, setError] = useState<RequestError>();
+    const [success, setSuccess] = useState(false);
 
-interface StateProps {
-    disabling: boolean;
-    success: boolean;
-    error: RequestError;
-}
+    const { instanceId, disabled } = props;
 
-type Props = DispatchProps & ExternalProps & StateProps;
+    const disableProcess = useCallback(async () => {
+        setDisabling(true);
 
-class DisableProcessPopup extends React.Component<Props> {
-    render() {
-        const {
-            disabled,
-            trigger,
-            disabling,
-            success,
-            error,
-            reset,
-            refresh,
-            onConfirm
-        } = this.props;
-        const operation = disabled ? 'Disable' : 'Enable';
-        return (
-            <SingleOperationPopup
-                trigger={trigger}
-                title={operation + ' the process?'}
-                introMsg={
-                    <p>Are you sure you want to {operation.toLowerCase()} the selected process?</p>
-                }
-                running={disabling}
-                runningMsg={disabled ? 'Disabling...' : 'Enabling...'}
-                success={success}
-                error={error}
-                reset={reset}
-                onDone={refresh}
-                onConfirm={onConfirm}
-            />
-        );
-    }
-}
+        try {
+            apiDisable(instanceId, disabled);
+            setSuccess(true);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setDisabling(false);
+        }
+    }, [instanceId, disabled]);
 
-const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
-    disabling: processes.disableProcess.running,
-    success: !!processes.disableProcess.response,
-    error: processes.disableProcess.error
+    const reset = useCallback(() => {
+        setDisabling(false);
+        setSuccess(false);
+        setError(undefined);
+    }, []);
+
+    const { trigger, refresh } = props;
+    const operation = disabled ? 'Disable' : 'Enable';
+
+    return (
+        <SingleOperationPopup
+            trigger={trigger}
+            title={operation + ' the process?'}
+            introMsg={
+                <p>Are you sure you want to {operation.toLowerCase()} the selected process?</p>
+            }
+            running={disabling}
+            runningMsg={disabled ? 'Disabling...' : 'Enabling...'}
+            success={success}
+            error={error}
+            reset={reset}
+            onDone={refresh}
+            onConfirm={disableProcess}
+        />
+    );
 });
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { instanceId, disabled }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.reset()),
-    onConfirm: () => dispatch(actions.disable(instanceId, disabled))
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(DisableProcessPopup);
+export default DisableProcessPopup;

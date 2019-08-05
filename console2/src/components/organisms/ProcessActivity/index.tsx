@@ -177,25 +177,25 @@ class ProcessActivity extends React.PureComponent<Props> {
                         <Redirect to={`${baseUrl}/status`} />
                     </Route>
                     <Route path={`${baseUrl}/status`}>
-                        <ProcessStatusActivity instanceId={instanceId} />
+                        <ProcessStatusActivity process={data} />
                     </Route>
                     <Route path={`${baseUrl}/events`}>
-                        <ProcessEventsActivity instanceId={instanceId} />
+                        <ProcessEventsActivity process={data} />
                     </Route>
                     <Route path={`${baseUrl}/log`} exact={true}>
                         <ProcessLogActivity instanceId={instanceId} />
                     </Route>
                     <Route path={`${baseUrl}/history`} exact={true}>
-                        <ProcessHistoryActivity instanceId={instanceId} />
+                        <ProcessHistoryActivity process={data} />
                     </Route>
                     <Route path={`${baseUrl}/wait`} exact={true}>
-                        <ProcessWaitActivity instanceId={instanceId} />
+                        <ProcessWaitActivity process={data} />
                     </Route>
                     <Route path={`${baseUrl}/children`} exact={true}>
                         <ProcessChildrenActivity instanceId={instanceId} />
                     </Route>
                     <Route path={`${baseUrl}/attachments`} exact={true}>
-                        <ProcessAttachmentsActivity instanceId={instanceId} />
+                        <ProcessAttachmentsActivity process={data} />
                     </Route>
 
                     <Route component={NotFoundPage} />

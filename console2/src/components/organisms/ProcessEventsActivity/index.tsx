@@ -19,152 +19,115 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Button, Divider, Header, Icon, Message } from 'semantic-ui-react';
 
-import { ConcordId } from '../../../api/common';
-import { canBeCancelled, ProcessEntry } from '../../../api/process';
+import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
 import {
+    listEvents as apiListEvents,
     ProcessElementEvent,
-    ProcessEventEntry,
-    ProcessEventType
+    ProcessEventEntry
 } from '../../../api/process/event';
 import { AnsibleEvent } from '../../../api/process/ansible';
-import { actions, MAX_EVENT_COUNT } from '../../../state/data/processes/poll';
-import { ProcessEvents, State } from '../../../state/data/processes/poll/types';
-import { ProcessElementList } from '../../molecules';
-import { CancelProcessPopup } from '../../organisms';
+import { ProcessElementList, ProcessToolbar } from '../../molecules';
+import { useCallback, useRef } from 'react';
+import { useState } from 'react';
+import { usePolling } from '../../../api/usePolling';
+import { ConcordId } from '../../../api/common';
+import RequestErrorActivity from '../RequestErrorActivity';
 
 interface ExternalProps {
-    instanceId: ConcordId;
+    process: ProcessEntry;
 }
 
-interface StateProps {
-    loading: boolean;
-    process?: ProcessEntry;
-    elementEvents: Array<ProcessEventEntry<ProcessElementEvent>>;
-    tooMuchData?: boolean;
-}
+const DATA_FETCH_INTERVAL = 5000;
 
-interface DispatchProps {
-    startPolling: (forceLoadAll?: boolean) => void;
-    stopPolling: () => void;
-    refresh: () => void;
-}
+const ProcessEventsActivity = (props: ExternalProps) => {
+    let lastEventTimestamp = useRef<string>();
+    const stickyRef = useRef(null);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const [process, setProcess] = useState<ProcessEntry>(props.process);
+    const [events, setEvents] = useState<ProcessEventEntry<ProcessElementEvent>[]>([]);
 
-// TODO extract the AnsibleEventBrowser component
-class ProcessEventsActivity extends React.Component<Props> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
+    const fetchData = useCallback(async () => {
+        const process = await apiGet(props.process.instanceId, []);
+        setProcess(process);
 
-    componentDidMount() {
-        this.props.startPolling();
-    }
+        const events = await apiListEvents<ProcessElementEvent>({
+            instanceId: props.process.instanceId,
+            type: 'ELEMENT',
+            after: lastEventTimestamp.current,
+            limit: 100
+        });
 
-    componentWillUnmount() {
-        this.props.stopPolling();
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        const { instanceId, startPolling, stopPolling } = this.props;
-        if (instanceId !== prevProps.instanceId) {
-            stopPolling();
-            startPolling();
-        }
-    }
-
-    createAdditionalAction() {
-        const { process, refresh } = this.props;
-
-        if (!process) {
-            return;
+        // TODO: use eventSeq
+        if (events.length > 0) {
+            lastEventTimestamp.current = events[events.length - 1].eventDate;
         }
 
-        if (!canBeCancelled(process.status)) {
-            return;
-        }
+        setEvents((prevEvents) => reduceEvents(prevEvents, events));
 
+        return !(events.length === 0 && isFinal(process.status));
+    }, [props.process.instanceId]);
+
+    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+
+    if (error) {
         return (
-            <CancelProcessPopup
-                instanceId={process.instanceId}
+            <div ref={stickyRef}>
+                <ProcessToolbar
+                    stickyRef={stickyRef}
+                    loading={loading}
+                    refresh={refresh}
+                    process={process}
+                />
+
+                <RequestErrorActivity error={error} />
+            </div>
+        );
+    }
+
+    return (
+        <div ref={stickyRef}>
+            <ProcessToolbar
+                stickyRef={stickyRef}
+                loading={loading}
                 refresh={refresh}
-                trigger={(onClick: any) => (
-                    <Button negative={true} icon="delete" content="Cancel" onClick={onClick} />
-                )}
+                process={process}
             />
-        );
+
+            <ProcessElementList
+                instanceId={process.instanceId}
+                events={events}
+                processStatus={process.status}
+            />
+        </div>
+    );
+};
+
+const reduceEvents = (
+    prevEvents: ProcessEventEntry<ProcessElementEvent>[],
+    events: ProcessEventEntry<ProcessElementEvent>[]
+): ProcessEventEntry<ProcessElementEvent>[] => {
+    function hasEvent(id: ConcordId, events: ProcessEventEntry<ProcessElementEvent>[]): boolean {
+        return events.find((value) => value.id === id) !== undefined;
     }
 
-    handleForceLoadAll(ev: React.SyntheticEvent) {
-        ev.preventDefault();
-        this.props.startPolling(true);
+    const newEvents = events.filter((value) => !hasEvent(value.id, prevEvents));
+    if (newEvents.length === 0) {
+        return prevEvents;
     }
 
-    render() {
-        const { loading, refresh, instanceId, process, elementEvents, tooMuchData } = this.props;
+    return combinePrePostEvents(prevEvents.concat(sortEvents(newEvents))) as ProcessEventEntry<
+        ProcessElementEvent
+    >[];
+};
 
-        // TODO replace the loading icon with something more visually pleasing
-        return (
-            <>
-                <Header as="h3">
-                    <Icon
-                        disabled={loading}
-                        name="refresh"
-                        loading={loading}
-                        onClick={() => refresh()}
-                    />
-                    {process && process.status}
-                </Header>
-
-                {tooMuchData && (
-                    <Message warning={true}>
-                        Looks like there's a lot of data. Only the first {MAX_EVENT_COUNT} events
-                        were loaded. Click {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        <a href="#" onClick={(ev) => this.handleForceLoadAll(ev)}>
-                            here
-                        </a>{' '}
-                        to load all events. Note: it may take a while.
-                    </Message>
-                )}
-
-                {process && elementEvents.length > 0 && (
-                    <>
-                        <Divider content="Process Events" horizontal={true} />
-                        <ProcessElementList
-                            instanceId={instanceId}
-                            events={elementEvents}
-                            processStatus={process.status}
-                            tooMuchData={tooMuchData}
-                        />
-                    </>
-                )}
-            </>
-        );
-    }
-}
-
-interface StateType {
-    processes: {
-        poll: State;
-    };
-}
-
-// TODO move to selectors?
-
-// assumes that "eventDate" can be sorted lexicographically
-const makeElementEvents = (
-    eventById: ProcessEvents
-): Array<ProcessEventEntry<ProcessElementEvent>> =>
-    Object.keys(eventById)
-        .map((k) => eventById[k])
-        .filter((e) => e.eventType === ProcessEventType.ELEMENT)
-        .map((e) => e as ProcessEventEntry<ProcessElementEvent>)
-        .sort((a, b) => (a.eventDate > b.eventDate ? 1 : a.eventDate < b.eventDate ? -1 : 0));
+const sortEvents = (
+    events: ProcessEventEntry<ProcessElementEvent>[]
+): Array<ProcessEventEntry<ProcessElementEvent>> => {
+    return events.sort((a, b) =>
+        a.eventDate > b.eventDate ? 1 : a.eventDate < b.eventDate ? -1 : 0
+    );
+};
 
 export const combinePrePostEvents = (
     events: Array<ProcessEventEntry<AnsibleEvent | ProcessElementEvent>>
@@ -219,26 +182,4 @@ export const combinePrePostEvents = (
     return result;
 };
 
-export const mapStateToProps = ({ processes: { poll } }: StateType): StateProps => ({
-    loading: poll.currentRequest.running,
-    process: poll.currentRequest.response ? poll.currentRequest.response.process : undefined,
-    elementEvents: combinePrePostEvents(makeElementEvents(poll.eventById)) as Array<
-        ProcessEventEntry<ProcessElementEvent>
-    >,
-    tooMuchData: poll.currentRequest.response ? poll.currentRequest.response.tooMuchData : false
-});
-
-export const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { instanceId }: ExternalProps
-): DispatchProps => ({
-    startPolling: (forceLoadAll?: boolean) =>
-        dispatch(actions.startProcessPolling(instanceId, forceLoadAll)),
-    stopPolling: () => dispatch(actions.stopProcessPolling()),
-    refresh: () => dispatch(actions.forcePoll())
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessEventsActivity);
+export default ProcessEventsActivity;

@@ -2,10 +2,15 @@
 
 ## [Unreleased]
 
-### Changed
+### Added
 
 - concord-server: process events now can be filtered by their
 sequence ID in the `/api/v1/process/{id}/events` endpoint.
+
+### Changed
+
+- concord-console: use the same process toolbar on all tabs on the
+process page.
 
 
 

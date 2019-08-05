@@ -30,8 +30,7 @@ import { ProcessRestoreActivity } from '../../organisms';
 interface Props {
     instanceId: ConcordId;
     processStatus: ProcessStatus;
-    events: Array<ProcessEventEntry<ProcessElementEvent>>;
-    tooMuchData?: boolean;
+    events: ProcessEventEntry<ProcessElementEvent>[];
 }
 
 const renderDefinitionId = (
@@ -123,7 +122,7 @@ const renderElementRow = (
 
 class ProcessElementList extends React.PureComponent<Props> {
     render() {
-        const { instanceId, processStatus, events, tooMuchData } = this.props;
+        const { instanceId, processStatus, events } = this.props;
         return (
             <Table celled={true} definition={true}>
                 <Table.Header>
@@ -143,20 +142,17 @@ class ProcessElementList extends React.PureComponent<Props> {
                 </Table.Header>
 
                 <Table.Body>
-                    {events.map((e, idx, arr) =>
-                        renderElementRow(instanceId, processStatus, e, idx, arr)
+                    {events.length > 0 &&
+                        events.map((e, idx, arr) =>
+                            renderElementRow(instanceId, processStatus, e, idx, arr)
+                        )}
+                    {events.length === 0 && (
+                        <tr style={{ fontWeight: 'bold' }}>
+                            <Table.Cell> </Table.Cell>
+                            <Table.Cell colSpan={5}>No data available</Table.Cell>
+                        </tr>
                     )}
                 </Table.Body>
-
-                {tooMuchData && (
-                    <Table.Footer fullWidth={true}>
-                        <Table.Row>
-                            <Table.HeaderCell colSpan={6}>
-                                <Icon name="warning sign" /> <strong>Partial data</strong>
-                            </Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Footer>
-                )}
             </Table>
         );
     }

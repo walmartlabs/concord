@@ -19,103 +19,71 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Table, Loader } from 'semantic-ui-react';
 
-import { ConcordId } from '../../../api/common';
-import { actions, selectors } from '../../../state/data/processes/attachments';
-import { State } from '../../../state/data/processes/attachments/types';
+import { list as apiList } from '../../../api/process/attachment';
+import { useState } from 'react';
+import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
+import { ProcessAttachmentsList, ProcessToolbar } from '../../molecules';
+import { useRef } from 'react';
+import RequestErrorActivity from '../RequestErrorActivity';
+import { useCallback } from 'react';
+import { usePolling } from '../../../api/usePolling';
 
 interface ExternalProps {
-    instanceId: ConcordId;
+    process: ProcessEntry;
 }
 
-interface StateProps {
-    loading: boolean;
-    data: string[];
-}
+const DATA_FETCH_INTERVAL = 5000;
 
-interface DispatchProps {
-    load: (instanceId: ConcordId) => void;
-}
+const ProcessAttachmentsActivity = (props: ExternalProps) => {
+    const stickyRef = useRef(null);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const [process, setProcess] = useState<ProcessEntry>(props.process);
+    const [data, setData] = useState<string[]>([]);
 
-class ProcessAttachmentsActivity extends React.Component<Props> {
-    componentDidMount() {
-        this.init();
-    }
+    const fetchData = useCallback(async () => {
+        const process = await apiGet(props.process.instanceId, ['history']);
+        setProcess(process);
 
-    init() {
-        const { instanceId, load } = this.props;
-        load(instanceId);
-    }
+        const data = await apiList(props.process.instanceId);
+        setData(makeAttachmentsList(data));
 
-    renderTableHeader = () => {
+        return !isFinal(process.status);
+    }, [props.process.instanceId]);
+
+    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+
+    if (error) {
         return (
-            <Table.Row>
-                <Table.HeaderCell collapsing={true}>Attached File(s)</Table.HeaderCell>
-            </Table.Row>
-        );
-    };
+            <div ref={stickyRef}>
+                <ProcessToolbar
+                    stickyRef={stickyRef}
+                    loading={loading}
+                    refresh={refresh}
+                    process={process}
+                />
 
-    renderTableRow = (attachment: string) => {
-        const { instanceId } = this.props;
-        const attachmentName = attachment.substring(attachment.lastIndexOf('/'));
-        return (
-            <Table.Row>
-                <Table.Cell>
-                    <a
-                        href={'/api/v1/process/' + instanceId + '/attachment/' + attachment}
-                        download={attachmentName}>
-                        {attachment}
-                    </a>
-                </Table.Cell>
-            </Table.Row>
-        );
-    };
-
-    render() {
-        const { loading, data } = this.props;
-
-        if (loading) {
-            return <Loader active={true} />;
-        }
-
-        return (
-            <>
-                <Table celled={true} attached="bottom">
-                    <Table.Header>{this.renderTableHeader()}</Table.Header>
-                    <Table.Body>
-                        {data.length > 0 && data.map((p) => this.renderTableRow(p))}
-                    </Table.Body>
-                </Table>
-
-                {data.length === 0 && <h3>No attachments found.</h3>}
-            </>
+                <RequestErrorActivity error={error} />
+            </div>
         );
     }
-}
 
-interface StateType {
-    processes: {
-        attachments: State;
-    };
-}
+    return (
+        <div ref={stickyRef}>
+            <ProcessToolbar
+                stickyRef={stickyRef}
+                loading={loading}
+                refresh={refresh}
+                process={process}
+            />
 
-export const mapStateToProps = ({ processes: { attachments } }: StateType): StateProps => ({
-    loading: attachments.list.running,
-    data: selectors.processAttachments(attachments)
-});
+            <ProcessAttachmentsList instanceId={props.process.instanceId} data={data} />
+        </div>
+    );
+};
 
-export const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (instanceId: ConcordId) => {
-        dispatch(actions.listProcessAttachments(instanceId));
-    }
-});
+const makeAttachmentsList = (data: string[]): string[] => {
+    return data.filter((attachment) => attachment.indexOf('_state') < 0);
+};
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessAttachmentsActivity);
+export default ProcessAttachmentsActivity;

@@ -19,208 +19,81 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Link } from 'react-router-dom';
-import { Header, Icon, Loader, Table } from 'semantic-ui-react';
-import { ConcordId } from '../../../api/common';
 import {
-    ProcessLockPayload,
-    ProcessSleepPayload,
-    ProcessWaitHistoryEntry,
-    ProcessWaitPayload,
-    WaitPayload,
-    WaitType
+    get as apiGetProcess,
+    isFinal,
+    ProcessEntry,
+    ProcessWaitHistoryEntry
 } from '../../../api/process';
-import { actions, selectors } from '../../../state/data/processes/waits';
-import { State } from '../../../state/data/processes/waits/types';
-import { LocalTimestamp } from '../../molecules';
+import { get as apiGetWaits } from '../../../api/process/wait';
+import { ProcessToolbar, ProcessWaitList } from '../../molecules';
+import { useState } from 'react';
+import { useRef } from 'react';
+import RequestErrorActivity from '../RequestErrorActivity';
+import { useCallback } from 'react';
+import { usePolling } from '../../../api/usePolling';
 
 interface ExternalProps {
-    instanceId: ConcordId;
+    process: ProcessEntry;
 }
 
-interface StateProps {
-    loading: boolean;
-    data: ProcessWaitHistoryEntry[];
-}
+const DATA_FETCH_INTERVAL = 5000;
 
-interface DispatchProps {
-    load: (instanceId: ConcordId) => void;
-}
+const ProcessWaitActivity = (props: ExternalProps) => {
+    const stickyRef = useRef(null);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const [process, setProcess] = useState<ProcessEntry>(props.process);
+    const [data, setData] = useState<ProcessWaitHistoryEntry[]>([]);
 
-class ProcessWaitActivity extends React.Component<Props> {
-    componentDidMount() {
-        this.init();
-    }
+    const fetchData = useCallback(async () => {
+        const process = await apiGetProcess(props.process.instanceId, []);
+        setProcess(process);
 
-    init() {
-        const { instanceId, load } = this.props;
-        load(instanceId);
-    }
+        const result = await apiGetWaits(props.process.instanceId);
+        setData(makeProcessWaitList(result));
 
-    static renderTableHeader() {
+        return !isFinal(process.status);
+    }, [props.process.instanceId]);
+
+    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+
+    if (error) {
         return (
-            <Table.Row>
-                <Table.HeaderCell collapsing={true}>Date</Table.HeaderCell>
-                <Table.HeaderCell collapsing={true}>Condition</Table.HeaderCell>
-                <Table.HeaderCell>Dependencies</Table.HeaderCell>
-            </Table.Row>
+            <div ref={stickyRef}>
+                <ProcessToolbar
+                    stickyRef={stickyRef}
+                    loading={loading}
+                    refresh={refresh}
+                    process={process}
+                />
+
+                <RequestErrorActivity error={error} />
+            </div>
         );
     }
 
-    static renderProcessLink = (id: ConcordId) => {
-        return (
-            <p>
-                <Link to={`/process/${id}`}>{id}</Link>
-            </p>
-        );
-    };
+    return (
+        <div ref={stickyRef}>
+            <ProcessToolbar
+                stickyRef={stickyRef}
+                loading={loading}
+                refresh={refresh}
+                process={process}
+            />
 
-    static renderCondition({ type, reason, payload }: ProcessWaitHistoryEntry) {
-        switch (type) {
-            case WaitType.NONE: {
-                return (
-                    <>
-                        <Icon name="check" /> No wait conditions
-                    </>
-                );
-            }
-            case WaitType.PROCESS_COMPLETION: {
-                return (
-                    <>
-                        <Icon name="hourglass half" />
-                        Waiting for the process to complete
-                        {reason && ` (${reason})`}
-                    </>
-                );
-            }
-            case WaitType.PROCESS_LOCK: {
-                const lockPayload = payload as ProcessLockPayload;
-                return (
-                    <>
-                        <Icon name="hourglass half" />
-                        Waiting for the lock ({lockPayload.name})
-                    </>
-                );
-            }
-            case WaitType.PROCESS_SLEEP: {
-                const sleepPayload = payload as ProcessSleepPayload;
-                return (
-                    <>
-                        <Icon name="hourglass half" />
-                        Waiting until ({<LocalTimestamp value={sleepPayload.until} />})
-                    </>
-                );
-            }
-            default:
-                return type;
-        }
-    }
+            <ProcessWaitList data={data} />
+        </div>
+    );
+};
 
-    renderProcessWaitDetails = (payload: ProcessWaitPayload) => {
-        return payload.processes.map((p) => ProcessWaitActivity.renderProcessLink(p));
-    };
-
-    renderProcessLockDetails = (payload: ProcessLockPayload) => {
-        return ProcessWaitActivity.renderProcessLink(payload.instanceId);
-    };
-
-    renderDependencies = (type: WaitType, payload: WaitPayload) => {
-        switch (type) {
-            case WaitType.PROCESS_COMPLETION: {
-                return this.renderProcessWaitDetails(payload as ProcessWaitPayload);
-            }
-            case WaitType.PROCESS_LOCK: {
-                return this.renderProcessLockDetails(payload as ProcessLockPayload);
-            }
-            default:
-                return '';
-        }
-    };
-
-    renderTableRow = (row: ProcessWaitHistoryEntry) => {
-        return (
-            <Table.Row key={row.id} verticalAlign="top">
-                <Table.Cell singleLine={true}>
-                    <LocalTimestamp value={row.eventDate} />
-                </Table.Cell>
-                <Table.Cell collapsing={true}>
-                    {ProcessWaitActivity.renderCondition(row)}
-                </Table.Cell>
-                <Table.Cell>
-                    {row.payload && this.renderDependencies(row.type, row.payload)}
-                </Table.Cell>
-            </Table.Row>
-        );
-    };
-
-    render() {
-        // TODO error handling
-
-        const { instanceId, loading, load, data } = this.props;
-
-        if (loading) {
-            return <Loader active={true} />;
-        }
-
-        return (
-            <>
-                <Header as="h3">
-                    <Icon
-                        disabled={loading}
-                        name="refresh"
-                        loading={loading}
-                        onClick={() => load(instanceId)}
-                    />
-                </Header>
-
-                <Table celled={true} attached="bottom">
-                    <Table.Header>{ProcessWaitActivity.renderTableHeader()}</Table.Header>
-                    <Table.Body>
-                        {data && data.length > 0 && data.map((p) => this.renderTableRow(p))}
-                        {(!data || (data && data.length === 0)) && (
-                            <tr style={{ fontWeight: 'bold' }}>
-                                <Table.Cell colSpan={3}>No data available</Table.Cell>
-                            </tr>
-                        )}
-                    </Table.Body>
-                </Table>
-            </>
-        );
-    }
-}
-
-interface StateType {
-    processes: {
-        waits: State;
-    };
-}
-
-const makeProcessWaitList = (data: ProcessWaitHistoryEntry[]): ProcessWaitHistoryEntry[] => {
+const makeProcessWaitList = (data?: ProcessWaitHistoryEntry[]): ProcessWaitHistoryEntry[] => {
     if (data === undefined) {
         return [];
     }
 
-    return Object.keys(data)
-        .map((k) => data[k])
-        .sort((a, b) => (a.waitStart < b.waitStart ? 1 : a.waitStart > b.waitStart ? -1 : 0));
+    return data.sort((a, b) =>
+        a.eventDate < b.eventDate ? 1 : a.eventDate > b.eventDate ? -1 : 0
+    );
 };
 
-export const mapStateToProps = ({ processes: { waits } }: StateType): StateProps => ({
-    loading: waits.getWait.running,
-    data: makeProcessWaitList(selectors.processWait(waits))
-});
-
-export const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (instanceId: ConcordId) => {
-        dispatch(actions.getProcessWait(instanceId));
-    }
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessWaitActivity);
+export default ProcessWaitActivity;

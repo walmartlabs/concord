@@ -19,6 +19,7 @@
  */
 import { styled } from 'reakit';
 import { ProcessStatus } from '../../../../api/process';
+import { SemanticCOLORS } from 'semantic-ui-react';
 
 export const FlexWrapper = styled.div`
     height: 100%;
@@ -51,6 +52,26 @@ export const getStatusColor = (status: string): string => {
         case ProcessStatus.FAILED:
         case ProcessStatus.TIMED_OUT:
             return '#DB2928';
+        case ProcessStatus.ENQUEUED:
+        case ProcessStatus.RESUMING:
+        default:
+            return 'grey';
+    }
+};
+
+export const getStatusButtonColor = (status: string): SemanticCOLORS => {
+    switch (status) {
+        case ProcessStatus.PREPARING:
+        case ProcessStatus.RUNNING:
+        case ProcessStatus.STARTING:
+        case ProcessStatus.SUSPENDED:
+            return 'blue';
+        case ProcessStatus.FINISHED:
+            return 'green';
+        case ProcessStatus.CANCELLED:
+        case ProcessStatus.FAILED:
+        case ProcessStatus.TIMED_OUT:
+            return 'red';
         case ProcessStatus.ENQUEUED:
         case ProcessStatus.RESUMING:
         default:

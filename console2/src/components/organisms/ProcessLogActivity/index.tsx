@@ -22,7 +22,7 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 
 import { ConcordId, RequestError } from '../../../api/common';
-import { ProcessStatus } from '../../../api/process';
+import { ProcessEntry } from '../../../api/process';
 import { actions } from '../../../state/data/processes/logs';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
 import { LogSegment, State } from '../../../state/data/processes/logs/types';
@@ -35,7 +35,7 @@ interface ExternalProps {
 }
 
 interface StateProps {
-    status: ProcessStatus | null;
+    process: ProcessEntry | null;
     loading: boolean;
     data: LogSegment[];
     error: RequestError;
@@ -56,7 +56,7 @@ interface StateType {
 }
 
 const mapStateToProps = ({ processes: { log } }: StateType): StateProps => ({
-    status: log.status,
+    process: log.process,
     loading: log.getLog.running,
     error: log.getLog.error,
     data: log.data,

@@ -25,8 +25,6 @@ import { ConcordId, ConcordKey } from '../../../api/common';
 import { list as apiProcessList, ProcessFilters } from '../../../api/process';
 import {
     get as apiGet,
-    disable as apiDisable,
-    kill as apiKill,
     start as apiStart,
     killBulk as apiKillBulk,
     ProcessDataInclude
@@ -34,21 +32,12 @@ import {
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import { reducers as logReducers, sagas as logSagas } from './logs';
-import { actions as pollActions, reducers as pollReducers, sagas as pollSagas } from './poll';
-import { reducers as historyReducers, sagas as historySagas } from './history';
-import { reducers as attachmentReducers, sagas as attachmentSagas } from './attachments';
 import { reducers as childrenReducers, sagas as childrenSagas } from './children';
 import { reducers as eventsReducers, sagas as eventsSagas } from './events';
-import { reducers as ansibleReducers, sagas as ansibleSagas } from './ansible';
-import { reducers as waitReducers, sagas as waitSagas } from './waits';
 
 import {
     CancelBulkProcessRequest,
     CancelBullkProcessState,
-    CancelProcessRequest,
-    CancelProcessState,
-    DisableProcessRequest,
-    DisableProcessState,
     GetProcessRequest,
     ListProcessesRequest,
     PaginatedProcessDataResponse,
@@ -77,17 +66,11 @@ const actionTypes = {
     START_PROCESS_REQUEST: `${NAMESPACE}/start/request`,
     START_PROCESS_RESPONSE: `${NAMESPACE}/start/response`,
 
-    CANCEL_PROCESS_REQUEST: `${NAMESPACE}/cancel/request`,
-    CANCEL_PROCESS_RESPONSE: `${NAMESPACE}/cancel/response`,
-
     CANCEL_BULK_PROCESS_REQUEST: `${NAMESPACE}/cancel/bulk/process/request`,
     CANCEL_BULK_PROCESS_RESPONSE: `${NAMESPACE}/cancel/bulk/process/response`,
 
     RESTORE_PROCESS_REQUEST: `${NAMESPACE}/restore/request`,
     RESTORE_PROCESS_RESPONSE: `${NAMESPACE}/restore/response`,
-
-    DISABLE_PROCESS_REQUEST: `${NAMESPACE}/disable/request`,
-    DISABLE_PROCESS_RESPONSE: `${NAMESPACE}/disable/response`,
 
     RESET_PROCESS: `${NAMESPACE}/reset`,
     RESET_BULK_PROCESS: `${NAMESPACE}/reset/bulk`
@@ -134,16 +117,6 @@ export const actions = {
         checkpointId
     }),
 
-    disable: (instanceId: ConcordId, disabled: boolean): DisableProcessRequest => ({
-        type: actionTypes.DISABLE_PROCESS_REQUEST,
-        instanceId,
-        disabled
-    }),
-
-    cancel: (instanceId: ConcordId): CancelProcessRequest => ({
-        type: actionTypes.CANCEL_PROCESS_REQUEST,
-        instanceId
-    }),
     cancelBulk: (instanceIds: ConcordId[]): CancelBulkProcessRequest => ({
         type: actionTypes.CANCEL_BULK_PROCESS_REQUEST,
         instanceIds
@@ -233,48 +206,6 @@ const restoreProcessReducers = combineReducers<RestoreProcessState>({
     response: makeResponseReducer(actionTypes.RESTORE_PROCESS_RESPONSE, actionTypes.RESET_PROCESS)
 });
 
-const disableProcessReducers = combineReducers<DisableProcessState>({
-    running: makeLoadingReducer(
-        [actionTypes.DISABLE_PROCESS_REQUEST],
-        [actionTypes.RESET_PROCESS, actionTypes.DISABLE_PROCESS_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.RESET_PROCESS, actionTypes.DISABLE_PROCESS_REQUEST],
-        [actionTypes.DISABLE_PROCESS_RESPONSE]
-    ),
-    response: (state = false, { type, error }: Action & { error?: {} }) => {
-        switch (type) {
-            case actionTypes.RESET_PROCESS:
-                return false;
-            case actionTypes.DISABLE_PROCESS_RESPONSE:
-                return !error;
-            default:
-                return state;
-        }
-    }
-});
-
-const cancelProcessReducers = combineReducers<CancelProcessState>({
-    running: makeLoadingReducer(
-        [actionTypes.CANCEL_PROCESS_REQUEST],
-        [actionTypes.RESET_PROCESS, actionTypes.CANCEL_PROCESS_RESPONSE]
-    ),
-    error: makeErrorReducer(
-        [actionTypes.RESET_PROCESS, actionTypes.CANCEL_PROCESS_REQUEST],
-        [actionTypes.CANCEL_PROCESS_RESPONSE]
-    ),
-    response: (state = false, { type, error }: Action & { error?: {} }) => {
-        switch (type) {
-            case actionTypes.RESET_PROCESS:
-                return false;
-            case actionTypes.CANCEL_PROCESS_RESPONSE:
-                return !error;
-            default:
-                return state;
-        }
-    }
-});
-
 const cancelBulkProcessReducers = combineReducers<CancelBullkProcessState>({
     running: makeLoadingReducer(
         [actionTypes.CANCEL_BULK_PROCESS_REQUEST],
@@ -305,19 +236,12 @@ export const reducers = combineReducers<State>({
     error: errorMsg,
 
     startProcess: startProcessReducers,
-    disableProcess: disableProcessReducers,
-    cancelProcess: cancelProcessReducers,
     restoreProcess: restoreProcessReducers,
     cancelBulkProcess: cancelBulkProcessReducers,
 
-    ansible: ansibleReducers,
     log: logReducers,
-    poll: pollReducers,
-    history: historyReducers,
     children: childrenReducers,
-    attachments: attachmentReducers,
-    events: eventsReducers,
-    waits: waitReducers
+    events: eventsReducers
 });
 
 function* onGetProcess({ instanceId, includes }: GetProcessRequest) {
@@ -369,28 +293,6 @@ function* onStartProcess({
     }
 }
 
-function* onDisableProcess({ instanceId, disabled }: DisableProcessRequest) {
-    try {
-        yield call(apiDisable, instanceId, disabled);
-        yield put({
-            type: actionTypes.DISABLE_PROCESS_RESPONSE
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.DISABLE_PROCESS_RESPONSE, e);
-    }
-}
-
-function* onCancelProcess({ instanceId }: CancelProcessRequest) {
-    try {
-        yield call(apiKill, instanceId);
-        yield put({
-            type: actionTypes.CANCEL_PROCESS_RESPONSE
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.CANCEL_PROCESS_RESPONSE, e);
-    }
-}
-
 function* onCancelBulkProcess({ instanceIds }: CancelBulkProcessRequest) {
     try {
         yield call(apiKillBulk, instanceIds);
@@ -409,8 +311,6 @@ function* onRestoreProcess({ instanceId, checkpointId }: RestoreProcessRequest) 
             type: actionTypes.RESTORE_PROCESS_RESPONSE,
             ...response
         });
-
-        yield put(pollActions.startProcessPolling(instanceId));
     } catch (e) {
         yield handleErrors(actionTypes.RESTORE_PROCESS_RESPONSE, e);
     }
@@ -421,17 +321,10 @@ export const sagas = function*() {
         takeLatest(actionTypes.GET_PROCESS_REQUEST, onGetProcess),
         throttle(1000, actionTypes.LIST_PROJECT_PROCESSES_REQUEST, onProcessList),
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
-        takeLatest(actionTypes.DISABLE_PROCESS_REQUEST, onDisableProcess),
         takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),
-        takeLatest(actionTypes.CANCEL_PROCESS_REQUEST, onCancelProcess),
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),
         fork(logSagas),
-        fork(pollSagas),
-        fork(historySagas),
         fork(childrenSagas),
-        fork(attachmentSagas),
-        fork(eventsSagas),
-        fork(ansibleSagas),
-        fork(waitSagas)
+        fork(eventsSagas)
     ]);
 };

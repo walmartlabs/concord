@@ -33,8 +33,6 @@ import { isFinal, ProcessStatus } from '../../../../api/process';
 import { isFunction } from 'util';
 
 interface ExternalProps {
-    // processId: string;
-    // checkpointId: string;
     children?: RenderCallback;
     render?: RenderCallback;
 }
