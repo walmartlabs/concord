@@ -115,7 +115,7 @@ class ProjectActivity extends React.PureComponent<Props> {
         return <ProjectTeamAccessActivity orgName={p.orgName} projectName={p.name} />;
     }
 
-    static renderSettings(p: ProjectEntry) {
+    static renderSettings(p: ProjectEntry, refresh: () => void) {
         return (
             <>
                 <Header as="h5" disabled={true}>
@@ -128,6 +128,7 @@ class ProjectActivity extends React.PureComponent<Props> {
                         orgName={p.orgName}
                         projectId={p.id}
                         initialValue={p.rawPayloadMode}
+                        refresh={refresh}
                     />
                 </Segment>
 
@@ -194,7 +195,7 @@ class ProjectActivity extends React.PureComponent<Props> {
             return <Loader active={true} />;
         }
 
-        const { activeTab, orgName, projectName } = this.props;
+        const { activeTab, orgName, projectName, load } = this.props;
         const baseUrl = `/org/${orgName}/project/${projectName}`;
 
         return (
@@ -240,7 +241,7 @@ class ProjectActivity extends React.PureComponent<Props> {
                         {ProjectActivity.renderTeamAccess(data)}
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
-                        {ProjectActivity.renderSettings(data)}
+                        {ProjectActivity.renderSettings(data, () => load(orgName, projectName))}
                     </Route>
 
                     <Route component={NotFoundPage} />

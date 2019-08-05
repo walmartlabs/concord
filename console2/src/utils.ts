@@ -18,8 +18,8 @@
  * =====
  */
 
-import { format as formatDate, getTime } from 'date-fns';
 import { default as AnsiUp } from 'ansi_up';
+import { format as formatDate, getTime } from 'date-fns';
 
 interface HasName {
     name: string;
