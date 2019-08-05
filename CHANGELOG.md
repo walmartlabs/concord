@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: process events now can be filtered by their
+sequence ID in the `/api/v1/process/{id}/events` endpoint.
+
+
+
 ## [1.28.1] - 2019-08-01
 
 ### Changed

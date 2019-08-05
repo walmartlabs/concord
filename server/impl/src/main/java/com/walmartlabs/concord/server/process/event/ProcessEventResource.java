@@ -129,6 +129,7 @@ public class ProcessEventResource implements Resource {
     public List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                                         @ApiParam @QueryParam("type") String eventType,
                                         @ApiParam @QueryParam("after") IsoDateParam geTimestamp,
+                                        @ApiParam @QueryParam("fromId") Long fromId,
                                         @ApiParam @QueryParam("eventCorrelationId") UUID eventCorrelationId,
                                         @ApiParam @QueryParam("eventPhase") EventPhase eventPhase, // TODO make it case-insensitive?
                                         @ApiParam @QueryParam("includeAll") @DefaultValue("false") boolean includeAll,
@@ -153,6 +154,7 @@ public class ProcessEventResource implements Resource {
                 .eventCorrelationId(eventCorrelationId)
                 .eventPhase(eventPhase)
                 .limit(limit)
+                .fromId(fromId)
                 .build();
 
         List<ProcessEventEntry> l = eventDao.list(f);

@@ -55,15 +55,15 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, -1);
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null,-1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
-            if (!(e.getData() instanceof Map)) {
+            if (e.getData() == null) {
                 return false;
             }
 
-            Map<String, Object> m = (Map<String, Object>) e.getData();
+            Map<String, Object> m = e.getData();
 
             Map<String, Object> r = (Map<String, Object>) m.get("result");
             if (r == null) {
@@ -82,7 +82,6 @@ public class AnsibleEventIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    @SuppressWarnings("unchecked")
     public void testIgnoredFailures() throws Exception {
         URI uri = ProcessIT.class.getResource("ansibleIgnoredFailures").toURI();
         byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
@@ -100,15 +99,15 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, -1);
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null,-1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
-            if (!(e.getData() instanceof Map)) {
+            if (e.getData() == null) {
                 return false;
             }
 
-            Map<String, Object> m = (Map<String, Object>) e.getData();
+            Map<String, Object> m = e.getData();
 
             Object ignoreErrors = m.get("ignore_errors");
             if (ignoreErrors == null) {

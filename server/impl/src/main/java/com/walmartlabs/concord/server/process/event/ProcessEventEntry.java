@@ -38,7 +38,10 @@ import java.util.UUID;
 @JsonDeserialize(as = ImmutableProcessEventEntry.class)
 public interface ProcessEventEntry extends Serializable {
 
+    @Deprecated
     UUID id();
+
+    long seqId();
 
     String eventType();
 
