@@ -5,6 +5,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible.module_utils.six import string_types
 
 import time
+import datetime
 
 import os
 import ujson as json
@@ -48,6 +49,7 @@ class CallbackModule(CallbackBase):
     def handle_event(self, event):
         self.outFile.write(json.dumps({
             'eventType': 'ANSIBLE',
+            'eventDate': datetime.datetime.utcnow().isoformat() + 'Z',
             'data': dict(event, **{'parentCorrelationId': self.eventCorrelationId,
                                    'currentRetryCount': self.currentRetryCount})
         }))

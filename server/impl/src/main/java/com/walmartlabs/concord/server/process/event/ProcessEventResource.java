@@ -92,7 +92,7 @@ public class ProcessEventResource implements Resource {
                       @ApiParam ProcessEventRequest req) {
 
         ProcessKey processKey = processKeyCache.get(processInstanceId);
-        eventDao.insert(processKey, req.getEventType(), req.getData());
+        eventDao.insert(processKey, req.getEventType(), req.getEventDate(), req.getData());
     }
 
     /**

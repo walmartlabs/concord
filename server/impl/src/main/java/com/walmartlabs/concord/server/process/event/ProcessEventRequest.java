@@ -25,28 +25,34 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProcessEventRequest implements Serializable {
 
-    private String eventType;
+    private final String eventType;
+
+    private final OffsetDateTime eventDate;
+
     private final Map<String, Object> data;
 
     @JsonCreator
     public ProcessEventRequest(@JsonProperty("eventType") String eventType,
+                               @JsonProperty("eventDate") OffsetDateTime eventDate,
                                @JsonProperty("data") Map<String, Object> data) {
 
         this.eventType = eventType;
+        this.eventDate = eventDate;
         this.data = data;
-    }
-
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
     }
 
     public String getEventType() {
         return eventType;
+    }
+
+    public OffsetDateTime getEventDate() {
+        return eventDate;
     }
 
     public Map<String, Object> getData() {

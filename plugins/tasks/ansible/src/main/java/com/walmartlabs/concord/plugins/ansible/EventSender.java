@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
@@ -57,7 +58,14 @@ public class EventSender {
     private final Path eventsFile;
     private final ProcessEventsApi eventsApi;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = createObjectMapper();
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new JavaTimeModule());
+        return om;
+    }
+
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private volatile boolean stop = false;

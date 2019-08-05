@@ -52,15 +52,15 @@ public class EventDaoTest extends AbstractDaoTest {
     @Test
     public void testInsert() {
         ProcessKey pk = processQueueDao.getKey(UUID.fromString("57cd23b4-3c04-4254-87a2-432a5a8c22f5"));
-        eventDao.insert(pk, "TEST", Collections.singletonMap("k", "v"));
+        eventDao.insert(pk, "TEST", null, Collections.singletonMap("k", "v"));
     }
 
     @Test
     public void testBatchInsert() {
         ProcessKey pk = processQueueDao.getKey(UUID.fromString("57cd23b4-3c04-4254-87a2-432a5a8c22f5"));
         List<ProcessEventRequest> events = new ArrayList<>();
-        events.add(new ProcessEventRequest("TEST", Collections.singletonMap("k1", "v1")));
-        events.add(new ProcessEventRequest("TEST", Collections.singletonMap("k2", "v2")));
+        events.add(new ProcessEventRequest("TEST", null, Collections.singletonMap("k1", "v1")));
+        events.add(new ProcessEventRequest("TEST", null, Collections.singletonMap("k2", "v2")));
 
         eventDao.insert(pk, events);
     }
