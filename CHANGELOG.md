@@ -9,6 +9,8 @@ sequence ID in the `/api/v1/process/{id}/events` endpoint.
 
 ### Changed
 
+- concord-server: allow project `OWNERS` to download state archives
+of the project's processes;
 - concord-server: record `github` events before starting any
 processes;
 - http: use `UTF-8` for string and JSON requests by default;

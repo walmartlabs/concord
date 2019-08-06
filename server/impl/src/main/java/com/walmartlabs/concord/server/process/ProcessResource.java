@@ -32,7 +32,9 @@ import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.metrics.InjectCounter;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
+import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
+import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
@@ -99,6 +101,7 @@ public class ProcessResource implements Resource {
     private final EncryptedProjectValueManager encryptedValueManager;
     private final ProcessKeyCache processKeyCache;
     private final ObjectMapper objectMapper;
+    private final ProjectAccessManager projectAccessManager;
 
     @InjectCounter
     private final Counter logBytesAppended;
@@ -113,6 +116,7 @@ public class ProcessResource implements Resource {
                            ProcessStateManager stateManager,
                            SecretStoreConfiguration secretStoreCfg,
                            EncryptedProjectValueManager encryptedValueManager,
+                           ProjectAccessManager projectAccessManager,
                            ProcessKeyCache processKeyCache,
                            ObjectMapper objectMapper,
                            Counter logBytesAppended,
@@ -125,6 +129,7 @@ public class ProcessResource implements Resource {
         this.stateManager = stateManager;
         this.secretStoreCfg = secretStoreCfg;
         this.encryptedValueManager = encryptedValueManager;
+        this.projectAccessManager = projectAccessManager;
         this.processKeyCache = processKeyCache;
         this.objectMapper = objectMapper;
         this.logBytesAppended = logBytesAppended;
@@ -1069,6 +1074,11 @@ public class ProcessResource implements Resource {
         }
 
         if (Roles.isAdmin() || Roles.isGlobalReader()) {
+            return;
+        }
+
+        if (p.projectId() != null) {
+            projectAccessManager.assertAccess(p.projectId(), ResourceAccessLevel.OWNER, true);
             return;
         }
 
