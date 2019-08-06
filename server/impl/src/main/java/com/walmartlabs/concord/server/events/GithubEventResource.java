@@ -159,6 +159,15 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             return "ok";
         }
 
+        if (githubCfg.isLogEvents()) {
+            auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
+                    .field("source", "github")
+                    .field("eventId", deliveryId)
+                    .field("githubEvent", eventName)
+                    .field("payload", payload)
+                    .log();
+        }
+
         // support for hooks restricted to a specific repository
         GithubKey githubKey = GithubKey.getCurrent();
         UUID hookProjectId = githubKey.getProjectId();
@@ -171,7 +180,6 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             repos = Collections.singletonList(UNKNOWN_REPO);
         }
 
-        List<PartialProcessKey> totalInstanceIds = new ArrayList<>();
         for (RepositoryItem r : repos) {
             Map<String, Object> conditions = buildConditions(payload, r.repositoryName, eventBranch, r.project, eventName);
             conditions = enrich(conditions, uriInfo);
@@ -188,19 +196,6 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             });
 
             log.info("payload ['{}'] -> {} processes started", deliveryId, instanceIds.size());
-
-            // collect all IDs of launched processes
-            totalInstanceIds.addAll(instanceIds);
-        }
-
-        if (githubCfg.isLogEvents()) {
-            auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
-                    .field("source", "github")
-                    .field("eventId", deliveryId)
-                    .field("githubEvent", eventName)
-                    .field("payload", payload)
-                    .field("instanceIds", totalInstanceIds)
-                    .log();
         }
 
         if (unknownRepo) {
