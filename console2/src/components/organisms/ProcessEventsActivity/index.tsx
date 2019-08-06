@@ -41,7 +41,7 @@ interface ExternalProps {
 const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessEventsActivity = (props: ExternalProps) => {
-    let lastEventTimestamp = useRef<string>();
+    let lastEventId = useRef<number>();
     const stickyRef = useRef(null);
 
     const [process, setProcess] = useState<ProcessEntry>(props.process);
@@ -54,13 +54,12 @@ const ProcessEventsActivity = (props: ExternalProps) => {
         const events = await apiListEvents<ProcessElementEvent>({
             instanceId: props.process.instanceId,
             type: 'ELEMENT',
-            after: lastEventTimestamp.current,
+            fromId: lastEventId.current,
             limit: 100
         });
 
-        // TODO: use eventSeq
         if (events.length > 0) {
-            lastEventTimestamp.current = events[events.length - 1].eventDate;
+            lastEventId.current = Math.max.apply(Math, events.map((e) => e.seqId));
         }
 
         setEvents((prevEvents) => reduceEvents(prevEvents, events));

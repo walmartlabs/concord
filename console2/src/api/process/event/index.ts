@@ -53,7 +53,7 @@ export type ProcessEventData = ProcessElementEvent | AnsibleEvent | {};
 export interface ProcessEventFilter {
     instanceId: ConcordId;
     type?: string;
-    after?: string;
+    fromId?: number;
     eventCorrelationId?: string;
     eventPhase?: 'PRE' | 'POST';
     includeAll?: boolean;
@@ -62,6 +62,7 @@ export interface ProcessEventFilter {
 
 export interface ProcessEventEntry<T extends ProcessEventData> {
     id: ConcordId;
+    seqId: number;
     eventType: ProcessEventType;
     eventDate: string;
     data: T;
