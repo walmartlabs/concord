@@ -154,6 +154,33 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.revapi</groupId>
+                <artifactId>revapi-maven-plugin</artifactId>
+                <configuration>
+                    <analysisConfiguration>
+                        <revapi.ignore>
+                            <item>
+                                <code>java.class.nowFinal</code>
+                            </item>
+                            <item>
+                                <code>java.class.removed</code>
+                            </item>
+                            <item>
+                                <code>java.class.added</code>
+                            </item>
+                        </revapi.ignore>
+                        <revapi.filter>
+                            <elements>
+                                <exclude>
+                                    <item>.*com\.walmartlabs\.concord\.client\.ProcessApi.*</item>
+                                </exclude>
+                            </elements>
+                        </revapi.filter>
+                    </analysisConfiguration>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
