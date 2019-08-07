@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.29.0] - 2019-08-06
 
 ### Added
 
@@ -134,7 +134,7 @@ process list's filter popup from working.
 
 ### Breaking
 
-- concord-server: the inventory subsytem now only accepts JSON
+- concord-server: the inventory subsystem now only accepts JSON
 objects as top-level entries;
 - concord-server: the "Landing Page" support is removed.
 
