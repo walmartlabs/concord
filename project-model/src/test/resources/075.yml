@@ -1,0 +1,8 @@
+myFlow:
+  - ${testBean.throwBpmnError('boom')}
+
+default:
+  - call: myFlow
+    retry:
+      times: 2
+      delay: 1

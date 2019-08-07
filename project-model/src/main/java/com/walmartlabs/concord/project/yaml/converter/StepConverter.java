@@ -9,9 +9,9 @@ package com.walmartlabs.concord.project.yaml.converter;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,21 +21,31 @@ package com.walmartlabs.concord.project.yaml.converter;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
+import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.model.*;
 import io.takari.bpm.model.SourceMap.Significance;
 import io.takari.parc.Seq;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public interface StepConverter<T extends YamlStep> {
+
+    long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(5);
 
     Chunk convert(ConverterContext ctx, T s) throws YamlConverterException;
 
@@ -78,12 +88,12 @@ public interface StepConverter<T extends YamlStep> {
         Set<String> outVars = Optional.ofNullable(getVarMap(opts, "out")).map(vars -> vars.stream().map(VariableMapping::getTarget).collect(Collectors.toSet())).orElse(Collections.emptySet());
         VariableMapping outVarsMapping = new VariableMapping(null, null, outVars, "__0", true);
 
-        String startId        = ctx.nextId();
-        String initId         = ctx.nextId();
+        String startId = ctx.nextId();
+        String initId = ctx.nextId();
         String nextItemTaskId = ctx.nextId();
         String processOutVarsTask = ctx.nextId();
-        String hasNextGwId    = ctx.nextId();
-        String cleanupTaskId  = ctx.nextId();
+        String hasNextGwId = ctx.nextId();
+        String cleanupTaskId = ctx.nextId();
 
         result.addElement(new ServiceTask(initId, ExpressionType.SIMPLE, "${__withItemsUtils.init(execution)}", Collections.singleton(taskVars), null, true));
         result.addElement(new ServiceTask(nextItemTaskId, ExpressionType.SIMPLE, "${__withItemsUtils.nextItem(execution)}", Collections.singleton(taskVars), null, true));
@@ -113,6 +123,69 @@ public interface StepConverter<T extends YamlStep> {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
+    default void applyRetryBlock(ConverterContext ctx, Chunk c, String attachedRef, JsonLocation loc, Map<String, Object> opts,
+                                 BiFunction<String, Map<String, Object>, String> f) throws YamlConverterException {
+
+        if (opts == null) {
+            return;
+        }
+
+        Map<String, Object> retryParams = toMap((Seq<KV<String, Object>>) opts.get("retry"));
+        if (retryParams.isEmpty()) {
+            return;
+        }
+
+        // retry init
+        String initId = ctx.nextId();
+        c.addFirstElement(new ServiceTask(initId, ExpressionType.SIMPLE, "${__retryUtils.init(execution)}", null, null, true));
+        c.addElement(new SequenceFlow(ctx.nextId(), initId, attachedRef));
+
+        // boundary event
+        String originalEvId = ctx.nextId();
+        c.addElement(new BoundaryEvent(originalEvId, attachedRef, null));
+
+        // inc retry count
+        String incCounterId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), originalEvId, incCounterId));
+        c.addElement(new ServiceTask(incCounterId, ExpressionType.SIMPLE, "${__retryUtils.inc(execution)}", null, null, true));
+
+        // retry count GW
+        String retryCountGwId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), incCounterId, retryCountGwId));
+        c.addElement(new ExclusiveGateway(retryCountGwId));
+
+        // sleep
+        String retryDelayId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, retryDelayId, "${__retryUtils.isRetryCountExceeded(execution, " + retryParams.get("times") + ")}"));
+        c.addElement(new ServiceTask(retryDelayId, ExpressionType.SIMPLE, "${__retryUtils.sleep(" + getRetryDelay(retryParams, loc) + ")}", null, null, true));
+
+        // retry step
+        String retryId = f.apply(retryDelayId, retryParams);
+
+        // cleanup
+        String cleanupTaskId = ctx.nextId();
+        c.addElement(new SequenceFlow(ctx.nextId(), retryId, cleanupTaskId));
+        c.addElement(new ServiceTask(cleanupTaskId, ExpressionType.SIMPLE, "${__retryUtils.cleanup(execution)}", null, null, true));
+        c.addOutput(cleanupTaskId);
+
+        String retryEventId = ctx.nextId();
+        c.addElement(new BoundaryEvent(retryEventId, retryId, null));
+        c.addElement(new SequenceFlow(ctx.nextId(), retryEventId, incCounterId));
+
+        // throw last error
+        String throwCallId = ctx.nextId();
+        String expr = "${__retryUtils.throwLastError(execution)}";
+        c.addElement(new ServiceTask(throwCallId, ExpressionType.DELEGATE, expr, null, null, true));
+        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, throwCallId));
+
+        String endId = ctx.nextId();
+        c.addElement(new EndEvent(endId));
+        c.addElement(new SequenceFlow(ctx.nextId(), throwCallId, endId));
+
+        c.addSourceMaps(c.getSourceMap());
+    }
+
     static Object getWithItems(Map<String, Object> options) {
         if (options == null) {
             return null;
@@ -129,6 +202,44 @@ public interface StepConverter<T extends YamlStep> {
     default SourceMap toSourceMap(YamlStep step, String description) {
         JsonLocation l = step.getLocation();
         return new SourceMap(Significance.HIGH, String.valueOf(l.getSourceRef()), l.getLineNr(), l.getColumnNr(), description);
+    }
+
+    default Map<String, Object> toMap(Seq<KV<String, Object>> values) {
+        if (values == null) {
+            return Collections.emptyMap();
+        }
+
+        return values.stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, this::toValue));
+    }
+
+    default Object toValue(KV<String, Object> kv) {
+        Object v = kv.getValue();
+        if (v == null && kv.getKey() != null) {
+            return false;
+        }
+        return StepConverter.deepConvert(v);
+    }
+
+    default Set<VariableMapping> toVarMapping(Map<String, Object> params) {
+        Set<VariableMapping> result = new HashSet<>();
+        for (Map.Entry<String, Object> e : params.entrySet()) {
+            String target = e.getKey();
+
+            String sourceExpr = null;
+            Object sourceValue = null;
+
+            Object v = StepConverter.deepConvert(e.getValue());
+            if (StepConverter.isExpression(v)) {
+                sourceExpr = v.toString();
+            } else {
+                sourceValue = v;
+            }
+
+            result.add(new VariableMapping(null, sourceExpr, sourceValue, target, true));
+        }
+
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -160,9 +271,29 @@ public interface StepConverter<T extends YamlStep> {
         }
 
         if (key.equals("in") && getWithItems(options) != null) {
-           result = appendWithItemsVar(result);
+            result = appendWithItemsVar(result);
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    default Set<VariableMapping> getInVars(Map<String, Object> opts, Map<String, Object> retryParams) {
+        Map<String, Object> retryInVars = Optional.ofNullable((Map<String, Object>) retryParams.get("in")).orElse(Collections.emptyMap());
+        Map<String, Object> originalInVars = toMap((Seq<KV<String, Object>>) opts.get("in"));
+        return toVarMapping(ConfigurationUtils.deepMerge(originalInVars, retryInVars));
+    }
+
+    default long getRetryDelay(Map<String, Object> params, JsonLocation loc) throws YamlConverterException {
+        Object v = params.get("delay");
+        if (v == null) {
+            return DEFAULT_DELAY;
+        }
+
+        if (!(v instanceof Integer)) {
+            throw new YamlConverterException("Invalid 'delay' value. Expected an integer, got: " + v + " @ " + loc);
+        }
+
+        return TimeUnit.SECONDS.toMillis((int) v);
     }
 
     static Set<VariableMapping> appendWithItemsVar(Set<VariableMapping> inVars) {
@@ -303,8 +434,10 @@ public interface StepConverter<T extends YamlStep> {
          * <li><code>__withItemsHasNext</code> - boolean - true if there's an item to process</li>
          * <li><code>item</code> - Object - item to be processed</li>
          * </ul>
+         *
          * @param ctx context containing execution variables
          */
+        @SuppressWarnings("unused")
         public void nextItem(ExecutionContext ctx) {
             int currentItemIndex = getLastVariable(ctx, CURRENT_INDEX);
 
@@ -319,10 +452,12 @@ public interface StepConverter<T extends YamlStep> {
             setLastVariable(ctx, CURRENT_INDEX, currentItemIndex);
         }
 
+        @SuppressWarnings("unused")
         public boolean hasNext(ExecutionContext ctx) {
             return getLastVariable(ctx, HAS_NEXT);
         }
 
+        @SuppressWarnings("unused")
         public void processOutVars(ExecutionContext ctx, Set<String> taskOutVars) {
             // restore current item variable
             ctx.setVariable(ITEM, getLastVariable(ctx, ITEM_HISTORY));
@@ -340,6 +475,7 @@ public interface StepConverter<T extends YamlStep> {
             });
         }
 
+        @SuppressWarnings("unused")
         public void cleanup(ExecutionContext ctx, Set<String> taskOutVars) {
             clearLastVariable(ctx, CURRENT_INDEX);
             ctx.removeVariable(ITEM);
@@ -363,7 +499,7 @@ public interface StepConverter<T extends YamlStep> {
 
         @SuppressWarnings("unchecked")
         private static Set<String> collectOutVars(ExecutionContext ctx) {
-            Set<String> before = (Set<String>)ctx.getVariable("__withItems_keysBeforeTask");
+            Set<String> before = (Set<String>) ctx.getVariable("__withItems_keysBeforeTask");
             return ctx.toMap().keySet().stream()
                     .filter(v -> !v.startsWith("__"))
                     .filter(v -> !v.equals(ITEM))
@@ -379,11 +515,11 @@ public interface StepConverter<T extends YamlStep> {
             }
 
             if (result instanceof List) {
-                return (List<Object>)result;
+                return (List<Object>) result;
             }
 
             if (result.getClass().isArray()) {
-                return Arrays.asList((Object[])result);
+                return Arrays.asList((Object[]) result);
             }
 
             if (result instanceof Map) {
@@ -405,7 +541,7 @@ public interface StepConverter<T extends YamlStep> {
             }
 
             if (v.getClass().isArray()) {
-                return Arrays.asList((E[])v);
+                return Arrays.asList((E[]) v);
             }
 
             throw new IllegalArgumentException("expected list with name '" + name + "', but got: " + v);
@@ -419,6 +555,106 @@ public interface StepConverter<T extends YamlStep> {
         private static void setLastVariable(ExecutionContext ctx, String name, Object value) {
             List<Object> v = getList(ctx, name);
             v.set(v.size() - 1, value);
+            ctx.setVariable(name, v);
+        }
+
+        private static void clearLastVariable(ExecutionContext ctx, String name) {
+            List<Object> v = getList(ctx, name);
+            v.remove(v.size() - 1);
+            if (v.isEmpty()) {
+                ctx.removeVariable(name);
+            } else {
+                ctx.setVariable(name, v);
+            }
+        }
+    }
+
+    @Named("__retryUtils")
+    class RetryUtilsTask implements Task {
+
+        private static final Logger log = LoggerFactory.getLogger(RetryUtilsTask.class);
+
+        public void sleep(long t) {
+            try {
+                log.info("retry delay {} sec", t / 1000);
+                Thread.sleep(t);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        @SuppressWarnings("unused")
+        public void throwLastError(ExecutionContext ctx) throws Throwable {
+            clearLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER);
+
+            Object lastError = ctx.getVariable(Constants.Context.LAST_ERROR_KEY);
+            if (lastError instanceof BpmnError) {
+                BpmnError e = (BpmnError) lastError;
+                if (e.getCause() != null) {
+                    throw e.getCause();
+                } else {
+                    throw e;
+                }
+            }
+
+            throw new RuntimeException("Retry count exceeded");
+        }
+
+        public void init(ExecutionContext ctx) {
+            List<Integer> retryCounter = getList(ctx, InternalConstants.Context.RETRY_COUNTER);
+            retryCounter.add(0);
+            ctx.setVariable(InternalConstants.Context.RETRY_COUNTER, retryCounter);
+
+            ctx.setVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER, 0);
+        }
+
+        public void inc(ExecutionContext ctx) {
+            int currentValue = getLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, 0);
+            currentValue++;
+            setLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, currentValue);
+            ctx.setVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER, currentValue);
+        }
+
+        @SuppressWarnings("unused")
+        public boolean isRetryCountExceeded(ExecutionContext ctx, int maxRetryCount) {
+            return getLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, 0) <= maxRetryCount;
+        }
+
+        @SuppressWarnings("unused")
+        public void cleanup(ExecutionContext ctx) {
+            clearLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER);
+            ctx.removeVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER);
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <E> List<E> getList(ExecutionContext ctx, String name) {
+            Object v = ctx.getVariable(name);
+            if (v == null) {
+                return new ArrayList<>();
+            }
+
+            if (v instanceof List) {
+                return (List<E>) v;
+            }
+
+            throw new IllegalArgumentException("Expected a list with name '" + name + "', got: " + v);
+        }
+
+        private static <E> E getLastVariable(ExecutionContext ctx, String name, E defaultValue) {
+            List<E> v = getList(ctx, name);
+            if (v.isEmpty()) {
+                return defaultValue;
+            }
+            return v.get(v.size() - 1);
+        }
+
+        private static void setLastVariable(ExecutionContext ctx, String name, Object value) {
+            List<Object> v = getList(ctx, name);
+            if (v.isEmpty()) {
+                v.add(value);
+            } else {
+                v.set(v.size() - 1, value);
+            }
             ctx.setVariable(name, v);
         }
 

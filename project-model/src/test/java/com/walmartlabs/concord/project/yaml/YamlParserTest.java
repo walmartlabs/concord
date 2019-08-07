@@ -2202,6 +2202,29 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verifyNoMoreInteractions(http);
     }
 
+    @Test
+    public void test075() throws Exception {
+        deploy("075.yml");
+
+        TestBean testBean = spy(new TestBean());
+        register("testBean", testBean);
+
+        register("__retryUtils", new YamlTaskStepConverter.RetryUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        try {
+            start(key, "default");
+            fail("should fail");
+        } catch (ExecutionException e) {
+        }
+
+        // ---
+
+        verify(testBean, times(3)).throwBpmnError(anyString());
+    }
+
     // FORMS (100 - 199)
 
     @Test

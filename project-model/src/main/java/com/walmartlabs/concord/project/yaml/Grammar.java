@@ -209,7 +209,7 @@ public class Grammar {
 
     // callOptions := (inVars | outVars | errorBlock)*
     private static final Parser<Atom, Map<String, Object>> callOptions = label("Process call options",
-            many(choice(inVars, outVars, errorBlock, withItems, withItemsShort)).map(Grammar::toMap));
+            many(choice(inVars, outVars, errorBlock, withItems, withItemsShort, retryBlock)).map(Grammar::toMap));
 
     // groupOptions := (errorBlock)*
     private static final Parser<Atom, Map<String, Object>> groupOptions = label("Group options",
