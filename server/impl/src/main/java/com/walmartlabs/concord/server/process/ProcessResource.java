@@ -147,15 +147,15 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation("Start a new process instance using the supplied payload archive")
+    @ApiOperation(value = "Start a new process instance using the supplied payload archive", hidden = true)
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_octetstream")
     @Deprecated
-    public StartProcessResponse start(@ApiParam InputStream in,
-                                      @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                      @ApiParam @QueryParam("out") String[] out) {
+    public StartProcessResponse start(InputStream in,
+                                      @QueryParam("parentId") UUID parentInstanceId,
+                                      @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @QueryParam("out") String[] out) {
 
         if (sync) {
             throw syncIsForbidden();
@@ -188,15 +188,15 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation("Start a new process using the specified entry point")
+    @ApiOperation(value = "Start a new process using the specified entry point", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_queryparams")
     @Deprecated
-    public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
-                                      @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                      @ApiParam @QueryParam("out") String[] out) {
+    public StartProcessResponse start(@PathParam("entryPoint") String entryPoint,
+                                      @QueryParam("parentId") UUID parentInstanceId,
+                                      @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @QueryParam("out") String[] out) {
 
         return start(entryPoint, Collections.emptyMap(), parentInstanceId, sync, out);
     }
@@ -212,17 +212,17 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation("Start a new process using the specified entry point and provided configuration")
+    @ApiOperation(value = "Start a new process using the specified entry point and provided configuration", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_json")
     @Deprecated
-    public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
-                                      @ApiParam Map<String, Object> req,
-                                      @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                      @ApiParam @QueryParam("out") String[] out) {
+    public StartProcessResponse start(@PathParam("entryPoint") String entryPoint,
+                                      Map<String, Object> req,
+                                      @QueryParam("parentId") UUID parentInstanceId,
+                                      @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @QueryParam("out") String[] out) {
 
         if (sync) {
             throw syncIsForbidden();
@@ -299,17 +299,17 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation("Start a new process using the specified entry point and multipart request data")
+    @ApiOperation(value = "Start a new process using the specified entry point and multipart request data", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_with_entrypoint")
     @Deprecated
-    public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
-                                      @ApiParam MultipartInput input,
-                                      @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                      @ApiParam @QueryParam("out") String[] out) {
+    public StartProcessResponse start(@PathParam("entryPoint") String entryPoint,
+                                      MultipartInput input,
+                                      @QueryParam("parentId") UUID parentInstanceId,
+                                      @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @QueryParam("out") String[] out) {
 
         if (sync) {
             throw syncIsForbidden();
@@ -345,17 +345,17 @@ public class ProcessResource implements Resource {
      * @deprecated use {@link #start(MultipartInput, UUID, boolean, String[], HttpServletRequest)}
      */
     @POST
-    @ApiOperation("Start a new process using the specified entry point and payload archive")
+    @ApiOperation(value = "Start a new process using the specified entry point and payload archive", hidden = true)
     @javax.ws.rs.Path("/{entryPoint}")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer(suffix = "_octetstream_and_entrypoint")
     @Deprecated
-    public StartProcessResponse start(@ApiParam @PathParam("entryPoint") String entryPoint,
-                                      @ApiParam InputStream in,
-                                      @ApiParam @QueryParam("parentId") UUID parentInstanceId,
-                                      @ApiParam @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
-                                      @ApiParam @QueryParam("out") String[] out) {
+    public StartProcessResponse start(@PathParam("entryPoint") String entryPoint,
+                                      InputStream in,
+                                      @QueryParam("parentId") UUID parentInstanceId,
+                                      @Deprecated @DefaultValue("false") @QueryParam("sync") boolean sync,
+                                      @QueryParam("out") String[] out) {
 
         if (sync) {
             throw syncIsForbidden();
