@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- project-model: support for `retry` for flow `call` blocks.
+
+
+
 ## [1.29.0] - 2019-08-06
 
 ### Added
