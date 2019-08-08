@@ -170,6 +170,9 @@
                             <item>
                                 <code>java.class.added</code>
                             </item>
+                            <item>
+                                <code>java.field.serialVersionUIDUnchanged</code>
+                            </item>
                         </revapi.ignore>
                         <revapi.filter>
                             <elements>
