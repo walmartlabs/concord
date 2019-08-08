@@ -131,6 +131,9 @@ public interface ProcessEntry extends Serializable {
     @Nullable
     TriggeredByEntry triggeredBy();
 
+    @Nullable
+    Long timeout();
+
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableProcessCheckpointEntry.class)

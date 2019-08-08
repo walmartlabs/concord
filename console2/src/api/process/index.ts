@@ -153,7 +153,7 @@ export interface ProcessEntry {
     commitMsg?: string;
     initiator: string;
     createdAt: string;
-    startAt: string;
+    startAt?: string;
     lastUpdatedAt: string;
     handlers?: string[];
     meta?: ProcessMeta;
@@ -162,6 +162,7 @@ export interface ProcessEntry {
     statusHistory?: ProcessHistoryEntry[];
     disabled: boolean;
     triggeredBy?: TriggeredByEntry;
+    timeout?: number;
 }
 
 export interface StartProcessResponse {

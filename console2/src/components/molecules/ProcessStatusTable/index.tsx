@@ -29,6 +29,7 @@ import {
     ProcessStatus
 } from '../../../api/process';
 import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../index';
+import { formatDuration } from '../../../utils';
 
 interface Props {
     data: ProcessEntry;
@@ -159,6 +160,23 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                 </Table.Cell>
                                 <Table.Cell>
                                     <LocalTimestamp value={data.lastUpdatedAt} />
+                                </Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell collapsing={true} singleLine={true}>
+                                    Timeout
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {data.timeout ? (
+                                        <Popup
+                                            trigger={
+                                                <span>{formatDuration(data.timeout * 1000)}</span>
+                                            }
+                                            content={`${data.timeout}s`}
+                                        />
+                                    ) : (
+                                        ' - '
+                                    )}
                                 </Table.Cell>
                             </Table.Row>
                         </Table.Body>
