@@ -43,7 +43,8 @@
 * [error_handling](error_handling) - how to handle failures;
 * [external_script](external_script) - calling an external JavaScript file;
 * [form_and_long_process](form_and_long_process) - how to deal with long "background" processes;
-* [forms_brandind](forms_branding) - using forms with custom HTML/CSS;
+* [custom_form](custom_form) - using forms with custom HTML/CSS and a templating library;
+* [custom_form_basic](custom_form_basic) - a basic example of a custom form;
 * [forms_override](forms_override) - how to override default values in forms;
 * [groovy](groovy) - running a Groovy script from a flow;
 * [groovy_grape](groovy_grape) - how to use Groovy's `@Grab` in scripts;

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>My Form</title>
+    <script src="data.js"></script>
+</head>
+<body>
+
+<h1>My Form</h1>
+
+<p>Example of a very basic custom form.</p>
+
+<h2 id="successBox" style="display: none;">
+    Success!
+</h2>
+
+<h2 id="errorBox" style="display: none;">
+    Validation error!
+</h2>
+
+<form id="myForm" method="post" enctype="multipart/form-data" onsubmit="handleOnSubmit()">
+    <label for="nameField">Name</label>
+    <input id="nameField" name="name"/>
+    <button id="submitButton" type="submit">Submit</button>
+</form>
+
+<script>
+    function handleOnSubmit() {
+        // disable the button after submit
+        var b = document.getElementById("submitButton");
+        b.disabled = true;
+        b.textContent = "Submitting...";
+    }
+
+    var form = document.getElementById("myForm");
+    form.action = data.submitUrl;
+
+    document.getElementById("nameField").value = data.values.name;
+
+    if (data.success) {
+        // make the "success box" visible if the form was successfully submitted
+        document.getElementById("successBox").style.display = "block";
+        // and hide the form, we don't need it anymore
+        form.style.display = "none";
+    }
+
+    if (data.errors) {
+        // show validation errors if any
+        document.getElementById("errorBox").style.display = "block";
+    }
+</script>
+
+</body>
+</html>
