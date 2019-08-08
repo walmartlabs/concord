@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: show the process' timeout of the status page;
 - project-model: support for `retry` for flow `call` blocks.
 
 

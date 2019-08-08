@@ -881,6 +881,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .checkpoints(objectMapper.deserialize(getOrNull(r, "checkpoints"), LIST_OF_CHECKPOINTS))
                 .statusHistory(objectMapper.deserialize(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .triggeredBy(objectMapper.deserialize(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
+                .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
                 .build();
     }
 
