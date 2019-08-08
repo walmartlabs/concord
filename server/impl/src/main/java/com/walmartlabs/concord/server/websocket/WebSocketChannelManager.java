@@ -88,11 +88,20 @@ public class WebSocketChannelManager {
         return channel.sendResponse(response);
     }
 
+    public boolean pong(UUID channelId) {
+        WebSocketChannel channel = channels.get(channelId);
+        if (channel == null) {
+            log.warn("pong ['{}'] -> channel not found", channelId);
+            return false;
+        }
+
+        return channel.pong();
+    }
+
     @SuppressWarnings("unchecked")
     public <E> Map<WebSocketChannel, E> getRequests(MessageType requestType) {
         Map<WebSocketChannel, E> result = new HashMap<>();
         channels.forEach((channelId, channel) -> {
-
             Message m = channel.getRequest(requestType);
             if (m != null) {
                 result.put(channel, (E)m);

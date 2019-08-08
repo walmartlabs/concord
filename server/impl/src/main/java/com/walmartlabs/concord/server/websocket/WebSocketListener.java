@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.websocket;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,12 +22,14 @@ package com.walmartlabs.concord.server.websocket;
 
 import com.walmartlabs.concord.server.queueclient.MessageSerializer;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
-public class WebSocketListener implements org.eclipse.jetty.websocket.api.WebSocketListener {
+public class WebSocketListener implements org.eclipse.jetty.websocket.api.WebSocketListener, WebSocketPingPongListener {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketListener.class);
 
@@ -40,6 +42,16 @@ public class WebSocketListener implements org.eclipse.jetty.websocket.api.WebSoc
         this.channelManager = channelManager;
         this.channelId = channelId;
         this.channelInfo = channelInfo;
+    }
+
+    @Override
+    public void onWebSocketPing(ByteBuffer payload) {
+        channelManager.pong(channelId);
+    }
+
+    @Override
+    public void onWebSocketPong(ByteBuffer payload) {
+        // we don't expect pongs
     }
 
     @Override

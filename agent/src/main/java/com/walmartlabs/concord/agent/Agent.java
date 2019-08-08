@@ -166,7 +166,8 @@ public class Agent {
                 .apiKey(cfg.getApiKey())
                 .userAgent(cfg.getUserAgent())
                 .connectTimeout(cfg.getConnectTimeout())
-                .maxInactivityPeriod(cfg.getMaxWebSocketInactivity())
+                .pingInterval(cfg.getWebSocketPingInterval())
+                .maxNoActivityPeriod(cfg.getWebsocketMaxNoActivityPeriod())
                 .build());
 
         queueClient.start();

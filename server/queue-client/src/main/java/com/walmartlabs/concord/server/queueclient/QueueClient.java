@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.slf4j.Logger;
@@ -103,7 +104,7 @@ public class QueueClient {
         return (Future<E>) f;
     }
 
-    private static final class Worker implements Runnable, WebSocketListener {
+    private static final class Worker implements Runnable, WebSocketListener, WebSocketPingPongListener {
 
         private enum State {
             CONNECTING,
@@ -121,11 +122,13 @@ public class QueueClient {
         private final URI[] destUris;
         private final Map<Long, RequestEntry> awaitResponses;
         private final List<RequestEntry> requests;
+        private final long pingInterval;
+        private final long maxNoActivityPeriod;
+        private final long connectTimeout;
 
         private WebSocketClient client;
-        private long lastActivity;
-        private final long maxInactivity;
-        private final long connectTimeout;
+        private long lastRequestTimestamp;
+        private long lastResponseTimestamp;
 
         private volatile State state;
 
@@ -136,7 +139,8 @@ public class QueueClient {
             this.requests = requests;
             this.destUris = toURIs(cfg.getAddresses());
             this.awaitResponses = new ConcurrentHashMap<>();
-            this.maxInactivity = cfg.getMaxInactivityPeriod();
+            this.pingInterval = cfg.getPingInterval();
+            this.maxNoActivityPeriod = cfg.getMaxNoActivityPeriod();
             this.connectTimeout = cfg.getConnectTimeout();
 
             this.state = State.CONNECTING;
@@ -152,7 +156,8 @@ public class QueueClient {
                         case CONNECTING: {
                             session = connect(destUris[destUriIndex]);
                             state = State.CONNECTED;
-                            lastActivity = System.currentTimeMillis();
+                            lastRequestTimestamp = System.currentTimeMillis();
+                            lastResponseTimestamp = lastRequestTimestamp;
                             log.info("connect ['{}'] -> done", destUris[destUriIndex]);
                             break;
                         }
@@ -193,12 +198,24 @@ public class QueueClient {
         }
 
         @Override
+        public void onWebSocketPong(ByteBuffer payload) {
+            this.lastResponseTimestamp = System.currentTimeMillis();
+        }
+
+        @Override
+        public void onWebSocketPing(ByteBuffer payload) {
+            // we don't expect pings
+        }
+
+        @Override
         public void onWebSocketBinary(byte[] payload, int offset, int len) {
             log.warn("onWebSocketBinary [{}, '{}'] -> ignored", offset, len);
         }
 
         @Override
         public void onWebSocketText(String message) {
+            this.lastResponseTimestamp = System.currentTimeMillis();
+
             Message response = MessageSerializer.deserialize(message);
             RequestEntry request = awaitResponses.remove(response.getCorrelationId());
             if (request == null) {
@@ -248,7 +265,7 @@ public class QueueClient {
             try {
                 session.getRemote().sendString(MessageSerializer.serialize(message));
 
-                lastActivity = System.currentTimeMillis();
+                lastRequestTimestamp = System.currentTimeMillis();
 
                 log.info("send ['{}'] -> done", message);
                 return true;
@@ -270,15 +287,20 @@ public class QueueClient {
                 state = State.DISCONNECTING;
                 return;
             }
+
             awaitResponses.put(e.getCorrelationId(), e);
         }
 
         private void processPing(Session session) throws IOException {
             long now = System.currentTimeMillis();
-            if (now - lastActivity > maxInactivity) {
+
+            if (now - lastRequestTimestamp >= pingInterval) {
                 session.getRemote().sendPing(ByteBuffer.wrap("ping".getBytes()));
-                lastActivity = now;
-                log.info("processPing -> done");
+            }
+
+            if (now - lastResponseTimestamp >= maxNoActivityPeriod) {
+                log.warn("processPing -> no response for more than {}ms...", maxNoActivityPeriod);
+                disconnect();
             }
         }
 
@@ -299,9 +321,10 @@ public class QueueClient {
                 log.error("stop -> error", e);
             }
 
-            synchronized (requests) {
+            synchronized (this.requests) {
                 this.requests.forEach(RequestEntry::cancel);
                 this.requests.clear();
+
                 this.awaitResponses.values().forEach(RequestEntry::cancel);
                 this.awaitResponses.clear();
             }

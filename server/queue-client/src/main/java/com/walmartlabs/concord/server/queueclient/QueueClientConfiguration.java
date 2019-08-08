@@ -28,14 +28,16 @@ public class QueueClientConfiguration implements Serializable {
     private final String apiKey;
     private final String userAgent;
     private final long connectTimeout;
-    private final long maxInactivityPeriod;
+    private final long pingInterval;
+    private final long maxNoActivityPeriod;
 
-    private QueueClientConfiguration(String[] addresses, String apiKey, String userAgent, long connectTimeout, long maxInactivityPeriod) {
-        this.addresses = addresses;
-        this.apiKey = apiKey;
-        this.userAgent = userAgent;
-        this.connectTimeout = connectTimeout;
-        this.maxInactivityPeriod = maxInactivityPeriod;
+    private QueueClientConfiguration(Builder b) {
+        this.addresses = b.addresses;
+        this.apiKey = b.apiKey;
+        this.userAgent = b.userAgent;
+        this.connectTimeout = b.connectTimeout;
+        this.pingInterval = b.pingInterval;
+        this.maxNoActivityPeriod = b.maxNoActivityPeriod;
     }
 
     public String[] getAddresses() {
@@ -54,8 +56,12 @@ public class QueueClientConfiguration implements Serializable {
         return connectTimeout;
     }
 
-    public long getMaxInactivityPeriod() {
-        return maxInactivityPeriod;
+    public long getPingInterval() {
+        return pingInterval;
+    }
+
+    public long getMaxNoActivityPeriod() {
+        return maxNoActivityPeriod;
     }
 
     public static class Builder {
@@ -65,7 +71,8 @@ public class QueueClientConfiguration implements Serializable {
         private String apiKey;
         private String userAgent;
         private long connectTimeout = 30000;
-        private long maxInactivityPeriod = 120000;
+        private long pingInterval = 10000;
+        private long maxNoActivityPeriod = 30000;
 
         public Builder(String[] addresses) {
             this.addresses = addresses;
@@ -86,13 +93,18 @@ public class QueueClientConfiguration implements Serializable {
             return this;
         }
 
-        public Builder maxInactivityPeriod(long maxInactivityPeriod) {
-            this.maxInactivityPeriod = maxInactivityPeriod;
+        public Builder pingInterval(long pingInterval) {
+            this.pingInterval = pingInterval;
+            return this;
+        }
+
+        public Builder maxNoActivityPeriod(long maxNoActivityPeriod) {
+            this.maxNoActivityPeriod = maxNoActivityPeriod;
             return this;
         }
 
         public QueueClientConfiguration build() {
-            return new QueueClientConfiguration(addresses, apiKey, userAgent, connectTimeout, maxInactivityPeriod);
+            return new QueueClientConfiguration(this);
         }
     }
 }
