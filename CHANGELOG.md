@@ -7,6 +7,13 @@
 - concord-console: show the process' timeout of the status page;
 - project-model: support for `retry` for flow `call` blocks.
 
+### Changed
+
+- concord-agent, queue-client: replace `maxWebSocketInactivity`
+parameter with `websocketPingInterval` and
+`websocketMaxNoActivityPeriod`. Use the latter to detect dead
+connections.
+
 
 
 ## [1.29.0] - 2019-08-06

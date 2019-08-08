@@ -57,13 +57,12 @@ public class Configuration {
 
     private final String serverApiBaseUrl;
     private final String[] serverWebsocketUrls;
+    private final long webSocketPingInterval;
+    private final long websocketMaxNoActivityPeriod;
     private final boolean apiVerifySsl;
     private final long connectTimeout;
     private final long readTimeout;
-    private final int retryCount;
-    private final long retryInterval;
     private final String userAgent;
-    private final long maxWebSocketInactivity;
 
     private final long maxNoHeartbeatInterval;
 
@@ -125,14 +124,13 @@ public class Configuration {
         log.info("Using the Server's API address: {}", serverApiBaseUrl);
         this.serverWebsocketUrls = getWebsocketUrls(cfg);
         log.info("Using the Server's websocket addresses: {}", (Object[]) serverWebsocketUrls);
+        this.webSocketPingInterval = cfg.getDuration("server.websocketPingInterval", TimeUnit.MILLISECONDS);
+        this.websocketMaxNoActivityPeriod = cfg.getDuration("server.websocketMaxNoActivityPeriod", TimeUnit.MILLISECONDS);
 
         this.apiVerifySsl = cfg.getBoolean("server.verifySsl");
         this.connectTimeout = cfg.getDuration("server.connectTimeout", TimeUnit.MILLISECONDS);
         this.readTimeout = cfg.getDuration("server.readTimeout", TimeUnit.MILLISECONDS);
-        this.retryCount = cfg.getInt("server.retryCount");
-        this.retryInterval = cfg.getDuration("server.retryInterval", TimeUnit.MILLISECONDS);
         this.userAgent = getStringOrDefault(cfg, "server.userAgent", () -> "Concord-Agent: id=" + this.agentId);
-        this.maxWebSocketInactivity = cfg.getDuration("server.maxWebSocketInactivity", TimeUnit.MILLISECONDS);
         this.apiKey = cfg.getString("server.apiKey");
 
         this.maxNoHeartbeatInterval = cfg.getDuration("server.maxNoHeartbeatInterval", TimeUnit.MILLISECONDS);
@@ -255,14 +253,6 @@ public class Configuration {
         return connectTimeout;
     }
 
-    public int getRetryCount() {
-        return retryCount;
-    }
-
-    public long getRetryInterval() {
-        return retryInterval;
-    }
-
     public long getPollInterval() {
         return pollInterval;
     }
@@ -283,8 +273,12 @@ public class Configuration {
         return javaPath;
     }
 
-    public long getMaxWebSocketInactivity() {
-        return maxWebSocketInactivity;
+    public long getWebSocketPingInterval() {
+        return webSocketPingInterval;
+    }
+
+    public long getWebsocketMaxNoActivityPeriod() {
+        return websocketMaxNoActivityPeriod;
     }
 
     public long getMaxNoHeartbeatInterval() {
@@ -343,10 +337,8 @@ public class Configuration {
                 ", apiVerifySsl=" + apiVerifySsl +
                 ", connectTimeout=" + connectTimeout +
                 ", readTimeout=" + readTimeout +
-                ", retryCount=" + retryCount +
-                ", retryInterval=" + retryInterval +
                 ", userAgent='" + userAgent + '\'' +
-                ", maxWebSocketInactivity=" + maxWebSocketInactivity +
+                ", maxWebSocketInactivity=" + webSocketPingInterval +
                 ", dockerHost='" + dockerHost + '\'' +
                 ", dockerOrphanSweeperEnabled=" + dockerOrphanSweeperEnabled +
                 ", dockerOrphanSweeperPeriod=" + dockerOrphanSweeperPeriod +

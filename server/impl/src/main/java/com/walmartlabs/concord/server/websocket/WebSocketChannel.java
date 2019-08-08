@@ -27,6 +27,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -83,6 +84,16 @@ public class WebSocketChannel {
             return true;
         } catch (Exception e) {
             log.error("response ['{}', '{}'] -> error", channelId, response, e);
+            return false;
+        }
+    }
+
+    public boolean pong() {
+        try {
+            session.getRemote().sendPong(ByteBuffer.wrap("pong".getBytes()));
+            return true;
+        } catch (Exception e) {
+            log.error("pong ['{}'] -> error", channelId, e);
             return false;
         }
     }
