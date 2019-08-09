@@ -212,8 +212,7 @@ public class PlaybookScriptBuilder {
         }
 
         if (extraSshArgs != null) {
-            l.add("--ssh-extra-args");
-            l.add(extraSshArgs);
+            l.add("--ssh-extra-args=" + quote(extraSshArgs));
         }
 
         if (verboseLevel > 0) {
