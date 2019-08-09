@@ -9,6 +9,7 @@
 
 ### Changed
 
+- ansible: fixed passing of `--ssh-extra-args` parameters;
 - concord-agent, queue-client: replace `maxWebSocketInactivity`
 parameter with `websocketPingInterval` and
 `websocketMaxNoActivityPeriod`. Use the latter to detect dead
