@@ -52,8 +52,16 @@ done
 echo "done!"
 
 docker run -d \
+--name dind \
+--privileged \
+-v "/tmp:/tmp" \
+docker:stable-dind \
+dockerd -H tcp://0.0.0.0:6666 --bip=10.11.13.1/24
+
+docker run -d \
 --name agent \
 --link server \
+--link dind \
 -v "/tmp:/tmp" \
 -v "${HOME}/.m2/repository:/home/concord/.m2/repository" \
 -v "${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro" \
@@ -61,6 +69,7 @@ docker run -d \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
 -e 'SERVER_API_BASE_URL=http://server:8001' \
 -e 'SERVER_WEBSOCKET_URL=ws://server:8001/websocket' \
+-e 'DOCKER_HOST=tcp://dind:6666' \
 "${DOCKER_PREFIX}/concord-agent:${VERSION}"
 
 docker run -d \
