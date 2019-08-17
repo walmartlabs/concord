@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: expose `repoBranch` and `repoPath` in
+the `projectInfo` variable;
 - concord-console: show the process' timeout of the status page;
 - project-model: support for `retry` for flow `call` blocks.
 
