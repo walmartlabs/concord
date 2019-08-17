@@ -86,6 +86,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     };
 
     private static final ProcessStatus[] ACTIVE_PROCESS_STATUSES = {
+            ProcessStatus.NEW,
             ProcessStatus.PREPARING,
             ProcessStatus.ENQUEUED,
             ProcessStatus.STARTING,

@@ -36,7 +36,6 @@ public class SecurityModule extends ShiroWebModule {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void configureShiroWeb() {
         bindRealm().to(ApiKeyRealm.class);
         bindRealm().to(LdapRealm.class);

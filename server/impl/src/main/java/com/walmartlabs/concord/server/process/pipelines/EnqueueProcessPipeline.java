@@ -28,27 +28,19 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-/**
- * Processing project requests.
- * <p>
- * Runs a process by pulling a project's repository and applying
- * overrides from a request JSON.
- */
 @Named
-public class ProcessPipeline extends Pipeline {
+public class EnqueueProcessPipeline extends Pipeline {
 
     private final ExceptionProcessor exceptionProcessor;
     private final FinalizerProcessor finalizerProcessor;
 
     @Inject
-    public ProcessPipeline(Injector injector) {
+    public EnqueueProcessPipeline(Injector injector) {
         super(injector,
+                RunAsCurrentProcessUserProcessor.class,
                 LoggingMDCProcessor.class,
-                RateLimitProcessor.class,
-                AuthorizationProcessor.class,
+                PayloadRestoreProcessor.class,
                 PolicyExportProcessor.class,
-                QueuePolicyProcessor.class,
-                InitialQueueEntryProcessor.class,
                 ExclusiveGroupProcessor.class,
                 WorkspaceArchiveProcessor.class,
                 RepositoryProcessor.class,

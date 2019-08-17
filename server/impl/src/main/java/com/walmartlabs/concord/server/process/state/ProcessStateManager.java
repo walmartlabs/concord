@@ -287,7 +287,15 @@ public class ProcessStateManager extends AbstractDao {
      */
     @WithTimer
     public void importPath(ProcessKey processKey, String path, Path src) {
-        tx(tx -> importPath(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path, src, (p, attrs) -> true));
+        importPath(processKey, path, src, (p, attrs) -> true);
+    }
+
+    /**
+     * Imports data from the specified directory or a file.
+     */
+    @WithTimer
+    public void importPath(ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
+        tx(tx -> importPath(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path, src, filter));
     }
 
     /**

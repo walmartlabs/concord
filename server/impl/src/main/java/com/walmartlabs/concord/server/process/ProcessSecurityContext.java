@@ -122,4 +122,26 @@ public class ProcessSecurityContext {
 
         return c.call();
     }
+
+    public <T> T runAsCurrentUser(ProcessKey processKey, Callable<T> c) throws Exception {
+        PrincipalCollection principals = getPrincipals(processKey);
+
+        SecurityManager securityManager = injector.getInstance(SecurityManager.class);
+        ThreadContext.bind(securityManager);
+
+        Subject subject = new Subject.Builder()
+                .sessionCreationEnabled(false)
+                .authenticated(true)
+                .principals(principals)
+                .buildSubject();
+
+        try {
+            ThreadContext.bind(subject);
+
+            return c.call();
+        } finally {
+            ThreadContext.unbindSubject();
+            ThreadContext.unbindSecurityManager();
+        }
+    }
 }

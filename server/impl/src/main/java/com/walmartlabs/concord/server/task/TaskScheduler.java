@@ -72,10 +72,10 @@ public class TaskScheduler extends PeriodicTask {
     }
 
     @Override
-    protected void performTask() {
+    protected boolean performTask() {
         List<String> ids = dao.poll();
         if (ids.isEmpty()) {
-            return;
+            return false;
         }
 
         ids.forEach(this::startTask);
@@ -83,6 +83,8 @@ public class TaskScheduler extends PeriodicTask {
         updateRunningTasks();
 
         failStalled();
+
+        return false;
     }
 
     @Override

@@ -61,8 +61,10 @@ public abstract class PeriodicTask implements BackgroundTask {
     private void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                performTask();
-                sleep(interval);
+                boolean isContinue = performTask();
+                if (!isContinue) {
+                    sleep(interval);
+                }
             } catch (Exception e) {
                 log.warn("run -> task {} error: {}. Will retry in {}ms...", taskName(), e.getMessage(), errorDelay, e);
                 sleep(errorDelay);
@@ -74,9 +76,9 @@ public abstract class PeriodicTask implements BackgroundTask {
         return this.getClass().getSimpleName();
     }
 
-    protected abstract void performTask() throws Exception;
+    protected abstract boolean performTask() throws Exception;
 
-    private static void sleep(long ms) {
+    protected static void sleep(long ms) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {

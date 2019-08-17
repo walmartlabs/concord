@@ -31,6 +31,7 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static java.util.Collections.singletonMap;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class PolicyIT extends AbstractServerIT {
@@ -319,12 +320,14 @@ public class PolicyIT extends AbstractServerIT {
         input.put("project", projectName);
         input.put("request", singletonMap("processTimeout", "PT10M"));
 
-        try {
-            StartProcessResponse spr = start(input);
-            fail("exception expected");
-        } catch (ApiException e) {
-            // expected
-        }
+        StartProcessResponse spr = start(input);
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(StatusEnum.FAILED, pe.getStatus());
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Maximum processTimeout value exceeded.*", ab);
     }
 
     private String createOrg() throws ApiException {

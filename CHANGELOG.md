@@ -9,6 +9,10 @@
 
 ### Changed
 
+- concord-server: process start requests are now handled
+asynchronously. The process queue entry is created as soon as
+possible with the `NEW` status and processes in a separate thread
+pool;
 - ansible: fixed passing of `--ssh-extra-args` parameters;
 - concord-agent, queue-client: replace `maxWebSocketInactivity`
 parameter with `websocketPingInterval` and

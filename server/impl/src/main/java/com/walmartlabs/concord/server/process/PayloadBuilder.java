@@ -42,6 +42,10 @@ import java.util.function.Function;
 
 public final class PayloadBuilder {
 
+    public static PayloadBuilder start(ProcessKey processKey) {
+        return new PayloadBuilder(processKey);
+    }
+
     public static PayloadBuilder start(PartialProcessKey processKey) {
         ProcessKey pk = new ProcessKey(processKey.getInstanceId(), new Timestamp(System.currentTimeMillis()));
         return new PayloadBuilder(pk);

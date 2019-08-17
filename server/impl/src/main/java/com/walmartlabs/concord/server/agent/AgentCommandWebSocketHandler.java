@@ -57,11 +57,11 @@ public class AgentCommandWebSocketHandler extends PeriodicTask {
     }
 
     @Override
-    protected void performTask() {
+    protected boolean performTask() {
         Map<WebSocketChannel, CommandRequest> requests = this.channelManager.getRequests(MessageType.COMMAND_REQUEST);
 
         if (requests.isEmpty()) {
-            return;
+            return false;
         }
 
         // currently it assumes that all commands are CANCEL_JOB commands
@@ -77,5 +77,7 @@ public class AgentCommandWebSocketHandler extends PeriodicTask {
                 log.error("response ['{}'] -> send error", cmd);
             }
         }));
+
+        return false;
     }
 }
