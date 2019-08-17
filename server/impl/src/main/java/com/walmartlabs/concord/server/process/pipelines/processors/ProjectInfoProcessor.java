@@ -90,6 +90,8 @@ public class ProjectInfoProcessor implements PayloadProcessor {
             m.put("repoId", r.getId());
             m.put("repoName", r.getName());
             m.put("repoUrl", r.getUrl());
+            m.put("repoBranch", r.getBranch());
+            m.put("repoPath", r.getPath());
             RepositoryProcessor.CommitInfo ci = r.getCommitInfo();
             if (ci != null) {
                 m.put("repoCommitId", ci.getId());
