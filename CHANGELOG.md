@@ -9,6 +9,8 @@
 
 ### Changed
 
+- http: skip certificate validation for all certificates (not only
+for self-signed);
 - concord-server: process start requests are now handled
 asynchronously. The process queue entry is created as soon as
 possible with the `NEW` status and processes in a separate thread

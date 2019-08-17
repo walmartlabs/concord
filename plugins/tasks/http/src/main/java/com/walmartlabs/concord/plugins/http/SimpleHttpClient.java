@@ -36,7 +36,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -343,7 +343,7 @@ public class SimpleHttpClient {
      */
     private static HttpClientConnectionManager buildConnectionManager() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
         SSLContextBuilder builder = new SSLContextBuilder();
-        builder.loadTrustMaterial(new TrustSelfSignedStrategy());
+        builder.loadTrustMaterial(new TrustAllStrategy());
         SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
                 builder.build(), NoopHostnameVerifier.INSTANCE);
 
