@@ -24,6 +24,7 @@ import { ColumnDefinition } from '../org';
 import 'url-search-params-polyfill';
 
 export enum ProcessStatus {
+    NEW = 'NEW',
     PREPARING = 'PREPARING',
     ENQUEUED = 'ENQUEUED',
     STARTING = 'STARTING',
@@ -38,6 +39,7 @@ export enum ProcessStatus {
 
 export const getStatusSemanticColor = (status: ProcessStatus): SemanticCOLORS => {
     switch (status) {
+        case ProcessStatus.NEW:
         case ProcessStatus.PREPARING:
         case ProcessStatus.RUNNING:
         case ProcessStatus.STARTING:

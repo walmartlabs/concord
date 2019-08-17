@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.form.ConcordFormService;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
-import com.walmartlabs.concord.server.process.pipelines.ProcessPipeline;
+import com.walmartlabs.concord.server.process.pipelines.NewProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
@@ -78,8 +78,9 @@ public class ProcessManager {
     private final Chain forkPipeline;
 
     private static final List<ProcessStatus> SERVER_PROCESS_STATUSES = Arrays.asList(
-            ProcessStatus.ENQUEUED,
+            ProcessStatus.NEW,
             ProcessStatus.PREPARING,
+            ProcessStatus.ENQUEUED,
             ProcessStatus.SUSPENDED);
 
     private static final List<ProcessStatus> TERMINATED_PROCESS_STATUSES = Arrays.asList(
@@ -110,7 +111,7 @@ public class ProcessManager {
                           ProcessCheckpointManager checkpointManager,
                           PayloadManager payloadManager,
                           RepositoryDao repositoryDao,
-                          ProcessPipeline processPipeline,
+                          NewProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
 

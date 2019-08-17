@@ -41,6 +41,7 @@ export const CheckpointNode = styled.div`
 
 export const getStatusColor = (status: string): string => {
     switch (status) {
+        case ProcessStatus.NEW:
         case ProcessStatus.PREPARING:
         case ProcessStatus.RUNNING:
         case ProcessStatus.STARTING:
@@ -61,6 +62,7 @@ export const getStatusColor = (status: string): string => {
 
 export const getStatusButtonColor = (status: string): SemanticCOLORS => {
     switch (status) {
+        case ProcessStatus.NEW:
         case ProcessStatus.PREPARING:
         case ProcessStatus.RUNNING:
         case ProcessStatus.STARTING:

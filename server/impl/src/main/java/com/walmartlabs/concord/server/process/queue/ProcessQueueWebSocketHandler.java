@@ -68,10 +68,10 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
     }
 
     @Override
-    protected void performTask() {
+    protected boolean performTask() {
         Map<WebSocketChannel, ProcessRequest> requests = this.channelManager.getRequests(MessageType.PROCESS_REQUEST);
         if (requests.isEmpty()) {
-            return;
+            return false;
         }
 
         // TODO group by capabilities to reduce the number of queries?
@@ -100,5 +100,7 @@ public class ProcessQueueWebSocketHandler extends PeriodicTask {
                             item.imports()));
             logManager.info(item.key(), "Acquired by: " + channel.getInfo());
         });
+
+        return false;
     }
 }

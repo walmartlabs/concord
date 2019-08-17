@@ -27,11 +27,14 @@ import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
-import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertNotEquals;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
+import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
 
 public class GeneralTriggerIT extends AbstractServerIT {
 

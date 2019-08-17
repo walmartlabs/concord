@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProjectEntry;
 import com.walmartlabs.concord.client.ProjectsApi;
+import com.walmartlabs.concord.client.StartProcessResponse;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -51,7 +52,8 @@ public class RawPayloadProjectIT extends AbstractServerIT {
             input.put("org", orgName);
             input.put("project", projectName);
             input.put("archive", payload);
-            start(input);
+            StartProcessResponse process = start(input);
+            System.out.println("process: " + process);
             fail("should fail");
         } catch (ApiException e) {
         }

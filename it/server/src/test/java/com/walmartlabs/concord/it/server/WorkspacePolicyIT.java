@@ -31,7 +31,7 @@ import java.util.Map;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
 
 public class WorkspacePolicyIT extends AbstractServerIT {
 
@@ -67,29 +67,29 @@ public class WorkspacePolicyIT extends AbstractServerIT {
         input.put("project", projectName);
         input.put("archive", payload);
 
-        try {
-            start(input);
-            fail("Should fail");
-        } catch (Exception e) {
-        }
+        ProcessApi processApi = new ProcessApi(getApiClient());
 
+        StartProcessResponse spr = start(input);
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Workspace policy violation.*", ab);
         // ---
 
         policyResource.createOrUpdate(new PolicyEntry().setName(policyName).setRules(readPolicy("workspacePolicy/test-policy-relaxed.json")));
 
         // ---
 
-        StartProcessResponse spr = start(input);
+        spr = start(input);
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        byte[] ab = getLog(pir.getLogFileName());
+        ab = getLog(pir.getLogFileName());
 
         assertLog(".*Hello!.*", ab);
     }
 
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> readPolicy(String file) throws Exception {
         URL url = WorkspacePolicyIT.class.getResource(file);
         return fromJson(new File(url.toURI()));

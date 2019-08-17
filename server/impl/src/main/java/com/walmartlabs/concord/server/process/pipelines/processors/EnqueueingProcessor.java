@@ -152,7 +152,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
         }
 
         if (v instanceof String) {
-            return Boolean.valueOf((String) v);
+            return Boolean.parseBoolean((String) v);
         }
 
         if (v instanceof Boolean) {

@@ -18,7 +18,7 @@
  * =====
  */
 import * as React from 'react';
-import { ProcessHistoryEntry, ProcessStatus } from '../../../api/process';
+import { isFinal, ProcessHistoryEntry, ProcessStatus } from '../../../api/process';
 import { Table } from 'semantic-ui-react';
 import { formatDuration } from '../../../utils';
 import { LocalTimestamp } from '../index';
@@ -26,12 +26,6 @@ import { LocalTimestamp } from '../index';
 interface Props {
     data: ProcessHistoryEntry[];
 }
-
-const isFinal = (s: ProcessStatus) =>
-    s === ProcessStatus.FINISHED ||
-    s === ProcessStatus.FAILED ||
-    s === ProcessStatus.CANCELLED ||
-    s === ProcessStatus.TIMED_OUT;
 
 class ProcessHistoryList extends React.PureComponent<Props> {
     renderTableHeader = () => {

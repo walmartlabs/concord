@@ -33,7 +33,7 @@ import java.util.Map;
 @Singleton
 public class ConcordObjectMapper {
 
-    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
+    public static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
     };
 
     private final ObjectMapper delegate;

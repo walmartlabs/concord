@@ -86,10 +86,10 @@ public class ProcessQueueDao extends AbstractDao {
 
     @Inject
     public ProcessQueueDao(@MainDB Configuration cfg,
-                              List<ProcessQueueEntryFilter> filters,
-                              EventDao eventDao,
-                              ProcessQueueLock queueLock,
-                              ConcordObjectMapper objectMapper) {
+                           List<ProcessQueueEntryFilter> filters,
+                           EventDao eventDao,
+                           ProcessQueueLock queueLock,
+                           ConcordObjectMapper objectMapper) {
         super(cfg);
         this.filters = filters;
         this.eventDao = eventDao;
@@ -104,6 +104,41 @@ public class ProcessQueueDao extends AbstractDao {
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .fetchOne(r -> new ProcessKey(instanceId, r.value1()));
         }
+    }
+    public void insertNew(ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
+                              UUID projectId, UUID repoId, UUID initiatorId, Map<String, Object> meta,
+                              String exclusiveGroup, TriggeredByEntry triggeredBy) {
+
+        tx(tx -> {
+            tx.insertInto(PROCESS_QUEUE)
+                    .columns(PROCESS_QUEUE.INSTANCE_ID,
+                            PROCESS_QUEUE.PROCESS_KIND,
+                            PROCESS_QUEUE.PARENT_INSTANCE_ID,
+                            PROCESS_QUEUE.PROJECT_ID,
+                            PROCESS_QUEUE.REPO_ID,
+                            PROCESS_QUEUE.CREATED_AT,
+                            PROCESS_QUEUE.INITIATOR_ID,
+                            PROCESS_QUEUE.CURRENT_STATUS,
+                            PROCESS_QUEUE.LAST_UPDATED_AT,
+                            PROCESS_QUEUE.META,
+                            PROCESS_QUEUE.EXCLUSIVE_GROUP,
+                            PROCESS_QUEUE.TRIGGERED_BY)
+                    .values(value(processKey.getInstanceId()),
+                            value(kind.toString()),
+                            value(parentInstanceId),
+                            value(projectId),
+                            value(repoId),
+                            value(processKey.getCreatedAt()),
+                            value(initiatorId),
+                            value(ProcessStatus.NEW.toString()),
+                            currentTimestamp(),
+                            field("?::jsonb", objectMapper.serialize(meta)),
+                            value(exclusiveGroup),
+                            field("?::jsonb", objectMapper.serialize(triggeredBy)))
+                    .execute();
+
+            insertStatusHistory(tx, processKey, ProcessStatus.NEW);
+        });
     }
 
     public void insertInitial(ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
@@ -135,7 +170,6 @@ public class ProcessQueueDao extends AbstractDao {
                             value(exclusiveGroup),
                             field("?::jsonb", objectMapper.serialize(triggeredBy)))
                     .execute();
-
 
             insertStatusHistory(tx, processKey, ProcessStatus.PREPARING);
         });
@@ -262,7 +296,7 @@ public class ProcessQueueDao extends AbstractDao {
         tx(tx -> updateStatus(tx, processKey, status, statusPayload));
     }
 
-    private void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
+    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
         updateStatus(tx, processKey, status, Collections.emptyMap());
     }
 

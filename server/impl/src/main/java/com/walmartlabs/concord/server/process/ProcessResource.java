@@ -817,7 +817,7 @@ public class ProcessResource implements Resource {
 
         if (data.isEmpty()) {
             int actualStart = start != null ? start : 0;
-            int actualEnd = end != null ? end : start;
+            int actualEnd = end != null ? end : actualStart;
             return Response.ok()
                     .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                     .build();

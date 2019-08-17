@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.sdk;
+package com.walmartlabs.concord.server.cfg;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,29 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
+import com.walmartlabs.ollie.config.Config;
 
-public enum ProcessStatus {
-    NEW,
-    PREPARING,
-    ENQUEUED,
-    STARTING,
-    RUNNING,
-    SUSPENDED,
-    RESUMING,
-    FINISHED,
-    FAILED,
-    CANCELLED,
-    TIMED_OUT
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+@Named
+@Singleton
+public class EnqueueWorkersConfiguration {
+
+    @Inject
+    @Config("queue.enqueueWorkerCount")
+    private int workersCount;
+
+    @Inject
+    @Config("queue.enqueuePollInterval")
+    private long interval;
+
+    public int getWorkersCount() {
+        return workersCount;
+    }
+
+    public long getInterval() {
+        return interval;
+    }
 }
