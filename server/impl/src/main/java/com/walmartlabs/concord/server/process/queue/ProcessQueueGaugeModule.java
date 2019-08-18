@@ -41,46 +41,48 @@ public class ProcessQueueGaugeModule extends AbstractModule {
         Provider<ProcessQueueDao> queueDaoProvider = getProvider(ProcessQueueDao.class);
 
         // create the base gauge that caches all individual values
-        Gauge<Map<ProcessStatus, Integer>> base = new CachedGauge<Map<ProcessStatus, Integer>>(15, TimeUnit.SECONDS) {
+        Gauge<Map<String, Integer>> base = new CachedGauge<Map<String, Integer>>(15, TimeUnit.SECONDS) {
             @Override
-            protected Map<ProcessStatus, Integer> loadValue() {
+            protected Map<String, Integer> loadValue() {
                 return queueDaoProvider.get().getStatistics();
             }
         };
 
         Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
         gauges.addBinding().toInstance(createBaseProvider(base));
+
         for (ProcessStatus s : ProcessStatus.values()) {
-            gauges.addBinding().toInstance(create(base, s));
+            gauges.addBinding().toInstance(create(base, s.toString()));
         }
+        gauges.addBinding().toInstance(create(base, ProcessQueueDao.ENQUEUED_NOW_METRIC));
     }
 
-    private static GaugeProvider<Map<ProcessStatus, Integer>> createBaseProvider(Gauge<Map<ProcessStatus, Integer>> base) {
-        return new GaugeProvider<Map<ProcessStatus, Integer>>() {
+    private static GaugeProvider<Map<String, Integer>> createBaseProvider(Gauge<Map<String, Integer>> base) {
+        return new GaugeProvider<Map<String, Integer>>() {
             @Override
             public String name() {
                 return "process-queue-statistics";
             }
 
             @Override
-            public Gauge<Map<ProcessStatus, Integer>> gauge() {
+            public Gauge<Map<String, Integer>> gauge() {
                 return base;
             }
         };
     }
 
-    private static GaugeProvider<Integer> create(Gauge<Map<ProcessStatus, Integer>> base, ProcessStatus status) {
+    private static GaugeProvider<Integer> create(Gauge<Map<String, Integer>> base, String status) {
         return new GaugeProvider<Integer>() {
             @Override
             public String name() {
-                return "process-queue-" + status.toString().toLowerCase();
+                return "process-queue-" + status.toLowerCase();
             }
 
             @Override
             public Gauge<Integer> gauge() {
-                return new DerivativeGauge<Map<ProcessStatus, Integer>, Integer>(base) {
+                return new DerivativeGauge<Map<String, Integer>, Integer>(base) {
                     @Override
-                    protected Integer transform(Map<ProcessStatus, Integer> value) {
+                    protected Integer transform(Map<String, Integer> value) {
                         return value.getOrDefault(status, 0);
                     }
                 };

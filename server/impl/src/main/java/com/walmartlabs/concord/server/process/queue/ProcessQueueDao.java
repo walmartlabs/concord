@@ -65,6 +65,8 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class ProcessQueueDao extends AbstractDao {
 
+    public static final String ENQUEUED_NOW_METRIC = "ENQUEUED_NOW";
+
     private static final Set<ProcessDataInclude> DEFAULT_INCLUDES = Collections.singleton(ProcessDataInclude.CHILDREN_IDS);
 
     private static final TypeReference<List<ProcessCheckpointEntry>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessCheckpointEntry>>() {
@@ -105,9 +107,10 @@ public class ProcessQueueDao extends AbstractDao {
                     .fetchOne(r -> new ProcessKey(instanceId, r.value1()));
         }
     }
+
     public void insertNew(ProcessKey processKey, ProcessKind kind, UUID parentInstanceId,
-                              UUID projectId, UUID repoId, UUID initiatorId, Map<String, Object> meta,
-                              String exclusiveGroup, TriggeredByEntry triggeredBy) {
+                          UUID projectId, UUID repoId, UUID initiatorId, Map<String, Object> meta,
+                          String exclusiveGroup, TriggeredByEntry triggeredBy) {
 
         tx(tx -> {
             tx.insertInto(PROCESS_QUEUE)
@@ -528,11 +531,14 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public Map<ProcessStatus, Integer> getStatistics() {
+    public Map<String, Integer> getStatistics() {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_QUEUE.CURRENT_STATUS, count(asterisk())).from(PROCESS_QUEUE)
                     .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
-                    .fetchMap(r -> ProcessStatus.valueOf(r.value1()), Record2::value2);
+                    .union(select(value(ENQUEUED_NOW_METRIC), count(asterisk())).from(PROCESS_QUEUE)
+                            .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
+                            .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentTimestamp()))))
+                    .fetchMap(Record2::value1, Record2::value2);
         }
     }
 
