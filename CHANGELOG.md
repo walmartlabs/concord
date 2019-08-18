@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: expose "the number of enqueued processes that must
+be executed now" as a separate metric (i.e. without `startAt` or with
+`startAt` in the past);
 - concord-server: expose `repoBranch` and `repoPath` in
 the `projectInfo` variable;
 - concord-console: show the process' timeout of the status page;
