@@ -17,6 +17,7 @@ spec:
     agent:
       flavor: "k8s-test"
 
+  autoScale: false
   minSize: 1
   maxSize: 10
   size: 1

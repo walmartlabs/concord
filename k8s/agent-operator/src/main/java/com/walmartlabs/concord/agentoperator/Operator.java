@@ -36,7 +36,7 @@ public class Operator {
 
     private static final Logger log = LoggerFactory.getLogger(Operator.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         // TODO support overloading the CRD with an external file?
 
         String namespace = System.getenv("WATCH_NAMESPACE");
@@ -47,8 +47,11 @@ public class Operator {
         KubernetesClient client = new DefaultKubernetesClient()
                 .inNamespace(namespace);
 
+        String baseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address
+        String apiToken = getEnv("CONCORD_API_TOKEN", null);
+
         // TODO use secrets for the token?
-        Scheduler.Configuration cfg = new Scheduler.Configuration(System.getenv("CONCORD_BASE_URL"), System.getenv("CONCORD_API_TOKEN"));
+        Scheduler.Configuration cfg = new Scheduler.Configuration(baseUrl, apiToken);
         Scheduler scheduler = new Scheduler(client, cfg);
         scheduler.start();
 
@@ -56,5 +59,14 @@ public class Operator {
         log.info("main -> my watch begins... (namespace={})", namespace);
         client.customResources(AgentPoolCRD.SERVICE_DEFINITION, AgentPool.class, AgentPoolList.class, DoneableAgentPool.class)
                 .watch(new ClusterWatcher(scheduler));
+    }
+
+    private static String getEnv(String key, String defaultValue) {
+        String s = System.getenv(key);
+        if (s == null) {
+            return defaultValue;
+        }
+
+        return s;
     }
 }
