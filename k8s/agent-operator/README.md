@@ -21,6 +21,7 @@ $ ../../mvnw clean compile jib:dockerBuild
 2. Start `com.walmartlabs.concord.agentoperator.Operator` in your IDE;
 3. Create the service:
   ```
+  $ kubectl create -f deploy/crds/crd.yml
   $ kubectl create -f deploy/crds/cr.yml
   ```
 
