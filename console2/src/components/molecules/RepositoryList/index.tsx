@@ -24,7 +24,8 @@ import { Icon, Table, Popup } from 'semantic-ui-react';
 
 import { ConcordKey } from '../../../api/common';
 import { RepositoryEntry } from '../../../api/org/project/repository';
-import { GitHubLink, RepositoryActionDropdown } from '../../molecules';
+import { GitHubLink } from '../../molecules';
+import { RepositoryActionDropdown } from '../../organisms';
 
 interface Props {
     orgName: ConcordKey;

@@ -19,8 +19,9 @@
  */
 
 import * as React from 'react';
+import ReactJson from 'react-json-view';
 import { Link } from 'react-router-dom';
-import { Grid, Popup, Table } from 'semantic-ui-react';
+import { Button, Grid, Header, Modal, Popup, Table } from 'semantic-ui-react';
 
 import {
     getStatusSemanticColor,
@@ -28,8 +29,8 @@ import {
     ProcessKind,
     ProcessStatus
 } from '../../../api/process';
-import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../index';
 import { formatDuration } from '../../../utils';
+import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../index';
 
 interface Props {
     data: ProcessEntry;
@@ -53,7 +54,7 @@ const kindToDescription = (k: ProcessKind): string => {
 class ProcessStatusTable extends React.PureComponent<Props> {
     static renderCommitId(data: ProcessEntry) {
         if (!data.commitId) {
-            return '-';
+            return ' - ';
         }
 
         const link = (
@@ -88,7 +89,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
 
     static renderTags({ tags }: ProcessEntry) {
         if (!tags || tags.length === 0) {
-            return '-';
+            return ' - ';
         }
 
         const items = tags.map((t) => <Link to={`/process?tags=${t}`}>{t}</Link>);
@@ -104,13 +105,41 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         return result;
     }
 
+    static renderTriggeredBy({ triggeredBy }: ProcessEntry) {
+        if (!triggeredBy || !triggeredBy.trigger) {
+            return ' - ';
+        }
+
+        const type = triggeredBy.trigger.eventSource;
+        const icon = type === 'github' ? 'github' : 'question';
+        const title = type === 'github' ? 'GitHub' : type;
+
+        return (
+            <Modal dimmer="inverted" trigger={<Button icon={icon} basic={true} content={title} />}>
+                <Header icon={icon} content={`${title} Trigger`} />
+                <Modal.Content>
+                    <ReactJson
+                        src={triggeredBy}
+                        collapsed={false}
+                        name={null}
+                        enableClipboard={false}
+                        displayDataTypes={false}
+                    />
+                </Modal.Content>
+            </Modal>
+        );
+    }
+
     render() {
         const { data } = this.props;
 
         return (
             <Grid columns={2}>
                 <Grid.Column>
-                    <Table definition={true} color={getStatusSemanticColor(data.status)}>
+                    <Table
+                        definition={true}
+                        color={getStatusSemanticColor(data.status)}
+                        style={{ height: '100%' }}>
                         <Table.Body>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
@@ -128,7 +157,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
-                                    Started by
+                                    Initiator
                                 </Table.Cell>
                                 <Table.Cell>{data.initiator}</Table.Cell>
                             </Table.Row>
@@ -162,7 +191,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                     <LocalTimestamp value={data.lastUpdatedAt} />
                                 </Table.Cell>
                             </Table.Row>
-                            <Table.Row>
+                            <Table.Row style={{ height: '100%' }}>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Timeout
                                 </Table.Cell>
@@ -183,10 +212,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                     </Table>
                 </Grid.Column>
                 <Grid.Column>
-                    <Table
-                        definition={true}
-                        color={getStatusSemanticColor(data.status)}
-                        style={{ height: '100%' }}>
+                    <Table definition={true} color={getStatusSemanticColor(data.status)}>
                         <Table.Body style={{ wordBreak: 'break-all' }}>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
@@ -252,11 +278,19 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                 </Table.Cell>
                                 <Table.Cell>{ProcessStatusTable.renderCommitId(data)}</Table.Cell>
                             </Table.Row>
-                            <Table.Row style={{ height: '100%' }}>
+                            <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Process Tags
                                 </Table.Cell>
                                 <Table.Cell>{ProcessStatusTable.renderTags(data)}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell collapsing={true} singleLine={true}>
+                                    Triggered By
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {ProcessStatusTable.renderTriggeredBy(data)}
+                                </Table.Cell>
                             </Table.Row>
                         </Table.Body>
                     </Table>

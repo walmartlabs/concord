@@ -53,7 +53,6 @@ export { default as ProcessStatusIcon } from './ProcessStatusIcon';
 export { default as ProcessStatusTable } from './ProcessStatusTable';
 export { default as ProcessToolbar } from './ProcessToolbar';
 export { default as ProcessWaitList } from './ProcessWaitList';
-export { default as RepositoryActionDropdown } from './RepositoryActionDropdown';
 export { default as RepositoryForm } from './RepositoryForm';
 export { default as RepositoryList } from './RepositoryList';
 export { default as RequestErrorMessage } from './RequestErrorMessage';
