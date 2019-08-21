@@ -22,7 +22,6 @@ package com.walmartlabs.concord.common;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 
 public interface FileVisitor {
 

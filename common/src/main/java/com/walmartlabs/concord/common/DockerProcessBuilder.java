@@ -49,6 +49,7 @@ public class DockerProcessBuilder {
                 .labels(spec.labels())
                 .debug(spec.debug())
                 .forcePull(spec.forcePull())
+                .stdOutFilePath(spec.stdOutFilePath())
                 .redirectErrorStream(spec.redirectErrorStream());
 
         DockerContainerSpec.Options options = spec.options();
@@ -84,6 +85,7 @@ public class DockerProcessBuilder {
     private String entryPoint;
     private String cpu;
     private String memory;
+    private String stdOutFilePath;
 
     private List<String> args = new ArrayList<>();
     private Map<String, String> env;
@@ -227,6 +229,10 @@ public class DockerProcessBuilder {
         if (args != null) {
             args.forEach(a -> c.add(q(a)));
         }
+        if (stdOutFilePath != null) {
+            c.add("| tee ");
+            c.add(stdOutFilePath);
+        }
         return String.join(" ", c);
     }
 
@@ -237,6 +243,11 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder memory(String memory) {
         this.memory = memory;
+        return this;
+    }
+
+    public DockerProcessBuilder stdOutFilePath(String stdOutFilePath) {
+        this.stdOutFilePath = stdOutFilePath;
         return this;
     }
 
