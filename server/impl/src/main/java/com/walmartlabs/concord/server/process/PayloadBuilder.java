@@ -59,8 +59,6 @@ public final class PayloadBuilder {
         return new PayloadBuilder(payload);
     }
 
-    private static final String INPUT_ARCHIVE_NAME = "_input.zip";
-
     private Payload payload;
 
     private PayloadBuilder(Payload payload) {
@@ -135,6 +133,21 @@ public final class PayloadBuilder {
         return this;
     }
 
+    public PayloadBuilder workspace(InputStream in) throws IOException {
+        if (in == null) {
+            return this;
+        }
+
+        Path baseDir = ensureBaseDir();
+
+        Path archive = baseDir.resolve(Payload.WORKSPACE_ARCHIVE.name());
+        Files.copy(in, archive);
+
+        payload = payload.putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
+
+        return this;
+    }
+
     public PayloadBuilder imports(Imports imports) {
         if (imports != null && !imports.isEmpty()) {
             payload = payload.putHeader(Payload.IMPORTS, imports);
@@ -146,21 +159,6 @@ public final class PayloadBuilder {
         if (group != null) {
             payload = payload.putHeader(Payload.EXCLUSIVE_GROUP, group);
         }
-        return this;
-    }
-
-    public PayloadBuilder workspace(InputStream in) throws IOException {
-        if (in == null) {
-            return this;
-        }
-
-        Path baseDir = ensureBaseDir();
-
-        Path archive = baseDir.resolve(INPUT_ARCHIVE_NAME);
-        Files.copy(in, archive);
-
-        payload = payload.putAttachment(Payload.WORKSPACE_ARCHIVE, archive);
-
         return this;
     }
 

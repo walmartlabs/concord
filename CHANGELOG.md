@@ -7,6 +7,12 @@
 - concord-console: display trigger information on the process status
 page.
 
+### Changed
+
+- concord-server: fixed an issue preventing the "payload archive"
+endpoint (the one that accepts ZIP archives as
+`application/octet-stream`) from working.
+
 
 
 ## [1.30.0] - 2019-08-18

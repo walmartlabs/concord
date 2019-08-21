@@ -109,12 +109,6 @@ public class Payload {
         return new Payload(this, m, this.attachments);
     }
 
-    public Payload removeHeader(HeaderKey<?> key) {
-        Map<String, Object> m = new HashMap<>(headers);
-        m.remove(key.name());
-        return new Payload(this, m, this.attachments);
-    }
-
     @SuppressWarnings("unchecked")
     public Payload mergeValues(HeaderKey<Map> key, Map values) {
         Map o = getHeader(key);

@@ -28,6 +28,9 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+/**
+ * Handles processes in the ENQUEUED status.
+ */
 @Named
 public class EnqueueProcessPipeline extends Pipeline {
 
