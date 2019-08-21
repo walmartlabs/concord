@@ -29,7 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 /**
- * Handles processes in the ENQUEUED status.
+ * Handles NEW processes. Puts the processes into the ENQUEUED status.
  */
 @Named
 public class EnqueueProcessPipeline extends Pipeline {

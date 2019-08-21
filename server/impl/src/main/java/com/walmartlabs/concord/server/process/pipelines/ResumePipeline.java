@@ -26,9 +26,13 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+/**
+ * Resumes the execution of previously suspended processes.
+ */
 @Named
 public class ResumePipeline extends Pipeline {
 
+    private final ExceptionProcessor exceptionProcessor;
     private final FinalizerProcessor finalizerProcessor;
 
     @Inject
@@ -39,12 +43,19 @@ public class ResumePipeline extends Pipeline {
                 ResumeStateStoringProcessor.class,
                 FormFilesStoringProcessor.class,
                 ResumeDataMergingProcessor.class,
+                ClearStartAtProcessor.class,
                 RequestDataStoringProcessor.class,
                 DependencyVersionsExportProcessor.class,
                 StateImportingProcessor.class,
                 EnqueueingProcessor.class);
 
+        this.exceptionProcessor = injector.getInstance(FailProcessor.class);
         this.finalizerProcessor = injector.getInstance(CleanupProcessor.class);
+    }
+
+    @Override
+    protected ExceptionProcessor getExceptionProcessor() {
+        return exceptionProcessor;
     }
 
     @Override

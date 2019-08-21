@@ -587,6 +587,15 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public void clearStartAt(PartialProcessKey processKey) {
+        tx(tx -> {
+            tx.update(PROCESS_QUEUE)
+                    .set(PROCESS_QUEUE.START_AT, val((Timestamp) null))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .execute();
+        });
+    }
+
     private Field<Object> historyEntryToJsonb(ProcessEvents pe) {
         return function("jsonb_strip_nulls", Object.class,
                 function("jsonb_build_object", Object.class,

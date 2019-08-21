@@ -9,6 +9,8 @@ page.
 
 ### Changed
 
+- concord-server: fixed an issue preventing processes that were
+scheduled for future (using `startAt`) from resuming correctly;
 - docker-tasks: now `stdout` output is captured without Docker system
 messages (i.e. without the image download messages);
 - concord-console: relax validation rules for `git+ssh` repository
