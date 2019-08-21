@@ -31,6 +31,7 @@ public final class ITConstants {
     public static final String SMTP_SERVER_HOST;
     public static final String DOCKER_ANSIBLE_IMAGE;
     public static final Integer GIT_WEBHOOK_MOCK_PORT;
+    public static final String CUSTOM_GIT_SERVER_URL_PATTERN;
 
     static {
         PROJECT_VERSION = env("IT_PROJECT_VERSION", "LATEST");
@@ -41,6 +42,8 @@ public final class ITConstants {
         String dockerAddr = env("IT_DOCKER_HOST_ADDR", "127.0.0.1");
         String gitHost = dockerAddr != null ? dockerAddr : "localhost";
         GIT_SERVER_URL_PATTERN = "ssh://git@" + gitHost + ":%d/";
+
+        CUSTOM_GIT_SERVER_URL_PATTERN = "ssh://user@" + gitHost + ":%d/";
 
         SMTP_SERVER_HOST = dockerAddr;
 

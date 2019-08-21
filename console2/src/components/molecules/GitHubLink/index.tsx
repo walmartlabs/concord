@@ -19,6 +19,7 @@
  */
 import * as React from 'react';
 import { Icon } from 'semantic-ui-react';
+import { REPOSITORY_SSH_URL_PATTERN } from '../../../validation';
 
 interface Props {
     url: string;
@@ -28,14 +29,10 @@ interface Props {
 }
 
 const gitUrlParse = (s: string): string | undefined => {
-    if (s.startsWith('git')) {
-        // git@github.example.com:devtools/concord.git
-        const regex = /git@(.*):(.*)/;
-        const match = regex.exec(s);
-        if (!match || match.length !== 3) {
-            return;
-        }
-        return `https://${match[1]}/${match[2]}`;
+    const match = REPOSITORY_SSH_URL_PATTERN.exec(s);
+    if (match && match.length === 6) {
+        const path = match[4] !== undefined ? `/${match[4]}` : '';
+        return `https://${match[3]}${path}`;
     } else if (s.startsWith('http')) {
         // https://github.example.com/devtools/concord.git
         const regex = /http[s]?:\/\/(.*)/;

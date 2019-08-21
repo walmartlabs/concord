@@ -9,6 +9,8 @@ page.
 
 ### Changed
 
+- concord-console: relax validation rules for `git+ssh` repository
+URLs. Allows usage of non-GitHub GIT URLs;
 - concord-server: fixed an issue preventing the "payload archive"
 endpoint (the one that accepts ZIP archives as
 `application/octet-stream`) from working.
