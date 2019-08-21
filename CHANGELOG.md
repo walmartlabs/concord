@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: display trigger information on the process status
+page.
+
+
+
 ## [1.30.0] - 2019-08-18
 
 ### Added

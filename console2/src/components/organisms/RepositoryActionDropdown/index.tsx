@@ -19,20 +19,23 @@
  */
 
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Dropdown, Icon } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { RepositoryEntry, RepositoryMeta, TriggerEntry } from '../../../api/org/project/repository';
+import {
+    listTriggersV2 as apiListTriggers,
+    RepositoryEntry,
+    RepositoryMeta,
+    TriggerEntry
+} from '../../../api/org/project/repository';
 import {
     DeleteRepositoryPopup,
     RefreshRepositoryPopup,
+    RepositoryTriggersPopup,
     StartRepositoryPopup,
-    ValidateRepositoryPopup,
-    RepositoryTriggersPopup
+    ValidateRepositoryPopup
 } from '../../organisms';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { listTriggersV2 as apiListTriggers } from '../../../api/org/project/repository';
 
 interface ExternalProps {
     orgName: ConcordKey;

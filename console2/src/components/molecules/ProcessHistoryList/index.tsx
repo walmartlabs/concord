@@ -17,9 +17,11 @@
  * limitations under the License.
  * =====
  */
+
 import * as React from 'react';
-import { isFinal, ProcessHistoryEntry, ProcessStatus } from '../../../api/process';
 import { Table } from 'semantic-ui-react';
+
+import { isFinal, ProcessHistoryEntry } from '../../../api/process';
 import { formatDuration } from '../../../utils';
 import { LocalTimestamp } from '../index';
 
