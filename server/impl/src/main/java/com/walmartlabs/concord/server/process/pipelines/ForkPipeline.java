@@ -26,6 +26,9 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+/**
+ * Handles processes forked from a parent.
+ */
 @Named
 public class ForkPipeline extends Pipeline {
 

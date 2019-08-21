@@ -27,7 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 /**
- * Creates processes in the NEW status.
+ * Initial handling of processes. Creates queue entries in the NEW status.
  */
 @Named
 public class NewProcessPipeline extends Pipeline {
