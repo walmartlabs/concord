@@ -23,7 +23,6 @@ package com.walmartlabs.concord.sdk;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +48,9 @@ public interface DockerContainerSpec {
 
     @Nullable
     String memory();
+
+    @Nullable
+    String stdOutFilePath();
 
     @Nullable
     List<String> args();

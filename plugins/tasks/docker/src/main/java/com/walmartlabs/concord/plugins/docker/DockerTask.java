@@ -34,8 +34,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 @Named("docker")
 public class DockerTask implements Task {
@@ -54,9 +52,6 @@ public class DockerTask implements Task {
     public static final String FORCE_PULL_KEY = "forcePull";
     public static final String DEBUG_KEY = "debug";
     public static final String STDOUT_KEY = "stdout";
-
-    @Inject
-    private ExecutorService executor;
 
     @Inject
     private DockerService dockerService;
@@ -88,58 +83,54 @@ public class DockerTask implements Task {
             envFile = p.toAbsolutePath().toString();
         }
 
-            String entryPoint = null;
-            if (cmd != null) {
-                // create a script containing the specified "cmd"
-                Path runScript = createRunScript(baseDir, cmd);
-                entryPoint = containerDir.resolve(baseDir.relativize(runScript))
-                        .toAbsolutePath()
-                        .toString();
-            }
+        String stdOutFilePath = null;
+        if (stdOutVar != null) {
+            Path logFile = createTmpFile(baseDir, "stdout", ".log");
+            stdOutFilePath = baseDir.relativize(logFile).toString();
+        }
 
-            Process p = dockerService.start(ctx, DockerContainerSpec.builder()
-                    .image(image)
-                    .env(stringify(env))
-                    .envFile(envFile)
-                    .entryPoint(entryPoint)
-                    .forcePull(forcePull)
-                    .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
-                    .debug(debug)
-                    .redirectErrorStream(stdOutVar == null)
-                    .build());
+        String entryPoint = null;
+        if (cmd != null) {
+            // create a script containing the specified "cmd"
+            Path runScript = createRunScript(baseDir, cmd);
+            entryPoint = containerDir.resolve(baseDir.relativize(runScript))
+                    .toAbsolutePath()
+                    .toString();
+        }
 
-            // if stdout is being stored into a var, then stderr must be streamed into the log...
-            InputStream in = stdOutVar == null ? p.getInputStream() : p.getErrorStream();
+        Process p = dockerService.start(ctx, DockerContainerSpec.builder()
+                .image(image)
+                .env(stringify(env))
+                .envFile(envFile)
+                .entryPoint(entryPoint)
+                .forcePull(forcePull)
+                .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
+                .debug(debug)
+                .redirectErrorStream(stdOutVar == null)
+                .stdOutFilePath(stdOutFilePath)
+                .build());
 
-            // ...and a separate stdin-reading thread must be started
-            Future<String> stdout = null;
-            if (stdOutVar != null) {
-                stdout = executor.submit(() -> {
-                    try {
-                        return toString(p.getInputStream());
-                    } catch (IOException e) {
-                        throw new RuntimeException("Error while saving Docker output", e);
-                    }
-                });
-            }
+        // if stdout is being stored into a var, then stderr must be streamed into the log...
+        InputStream in = stdOutVar == null ? p.getInputStream() : p.getErrorStream();
 
-            // copy the output into the log
-            streamToLog(in);
+        // copy the output into the log
+        streamToLog(in);
 
-            // wait for the process to end
-            int code = p.waitFor();
-            if (code != SUCCESS_EXIT_CODE) {
-                log.warn("call ['{}', '{}', '{}'] -> finished with code {}", image, cmd, workDir, code);
-                throw new RuntimeException("Docker process finished with with exit code " + code);
-            }
+        // wait for the process to end
+        int code = p.waitFor();
+        if (code != SUCCESS_EXIT_CODE) {
+            log.warn("call ['{}', '{}', '{}'] -> finished with code {}", image, cmd, workDir, code);
+            throw new RuntimeException("Docker process finished with with exit code " + code);
+        }
 
-            // retrieve the saved stdout value if needed
-            if (stdOutVar != null) {
-                String s = stdout.get();
-                ctx.setVariable(stdOutVar, s);
-            }
+        // retrieve the saved stdout value if needed
+        if (stdOutVar != null) {
+            InputStream inputStream = Files.newInputStream(Paths.get(stdOutFilePath));
+            String stdOut = toString(inputStream);
+            ctx.setVariable(stdOutVar, stdOut);
+        }
 
-            log.info("call ['{}', '{}', '{}', '{}'] -> done", image, cmd, workDir, hosts);
+        log.info("call ['{}', '{}', '{}', '{}'] -> done", image, cmd, workDir, hosts);
     }
 
     private static void streamToLog(InputStream in) throws IOException {
@@ -151,12 +142,7 @@ public class DockerTask implements Task {
     }
 
     private static Path createRunScript(Path workDir, String cmd) throws IOException {
-        Path tmpDir = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME);
-        if (!Files.exists(tmpDir)) {
-            Files.createDirectories(tmpDir);
-        }
-
-        Path p = Files.createTempFile(tmpDir, "docker", ".sh");
+        Path p = createTmpFile(workDir, "docker", ".sh");
 
         String script = "#!/bin/sh\n" +
                 "cd " + VOLUME_CONTAINER_DEST + "\n" +
@@ -166,6 +152,15 @@ public class DockerTask implements Task {
         updateScriptPermissions(p);
 
         return p;
+    }
+
+    private static Path createTmpFile(Path workDir, String prefix, String suffix) throws IOException {
+        Path tmpDir = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME);
+        if (!Files.exists(tmpDir)) {
+            Files.createDirectories(tmpDir);
+        }
+
+        return Files.createTempFile(tmpDir, prefix, suffix);
     }
 
     private static void updateScriptPermissions(Path p) throws IOException {

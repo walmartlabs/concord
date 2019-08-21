@@ -9,6 +9,8 @@ page.
 
 ### Changed
 
+- docker-tasks: now `stdout` output is captured without Docker system
+messages (i.e. without the image download messages);
 - concord-console: relax validation rules for `git+ssh` repository
 URLs. Allows usage of non-GitHub GIT URLs;
 - concord-server: fixed an issue preventing the "payload archive"
