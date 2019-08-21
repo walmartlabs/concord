@@ -44,7 +44,6 @@ public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
     @Inject
     public WorkspaceArchiveProcessor(LogManager logManager) {
-
         this.logManager = logManager;
     }
 

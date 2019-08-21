@@ -26,6 +26,9 @@ import com.walmartlabs.concord.server.process.pipelines.processors.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+/**
+ * Creates processes in the NEW status.
+ */
 @Named
 public class NewProcessPipeline extends Pipeline {
 
