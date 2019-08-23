@@ -17,14 +17,14 @@
  * limitations under the License.
  * =====
  */
-import { format as formatDate, parse as parseDate } from 'date-fns';
+import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 export const formatDateTime = (useLocalTime: boolean, showDate: boolean, s: string): string => {
     if (!useLocalTime) {
         return s;
     }
 
-    // we expect the runtime to use "YYYY-MM-dd'T'HH:mm:ss.SSSZ" format for timestamps
+    // we expect the runtime to use "yyyy-MM-dd'T'HH:mm:ss.SSSZ" format for timestamps
     // see also /common/src/main/java/com/walmartlabs/concord/common/LogUtils.java
     const re = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}.\d{4})\s.*/gm;
 
@@ -43,7 +43,7 @@ export const formatDateTime = (useLocalTime: boolean, showDate: boolean, s: stri
 
     timestamps.forEach((src) => {
         const d = parseDate(src);
-        const dst = formatDate(src, `${showDate ? 'YYYY-MM-DD ' : ''}HH:mm:ss`);
+        const dst = formatDate(d, `${showDate ? 'yyyy-MM-dd ' : ''}HH:mm:ss`);
         s = s.replace(src, dst);
     });
 

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { distanceInWordsToNow, parse as parseDate } from 'date-fns';
+import { formatDistanceToNow, parseISO as parseDate } from 'date-fns';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Divider, Icon } from 'semantic-ui-react';
@@ -93,7 +93,7 @@ export default ({ project, process }: Props) => {
                 {/* Last update time, tooltip on mouse hover */}
                 <div title={process.lastUpdatedAt}>
                     <Label>Last update: </Label>
-                    <Status>{distanceInWordsToNow(parseDate(process.lastUpdatedAt))}</Status>
+                    <Status>{formatDistanceToNow(parseDate(process.lastUpdatedAt))}</Status>
                 </div>
             </ListItem>
         </LeftWrap>
