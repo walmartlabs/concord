@@ -19,7 +19,7 @@
  */
 
 import { default as AnsiUp } from 'ansi_up';
-import { format as formatDate, getTime } from 'date-fns';
+import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 interface HasName {
     name: string;
@@ -72,12 +72,12 @@ export const notEmpty = (x: {}) => {
     return false;
 };
 
-export const formatTimestamp = (t?: Date | string): string | undefined => {
+export const formatTimestamp = (t?: string): string | undefined => {
     if (!t) {
         return;
     }
 
-    return formatDate(t, 'YYYY-MM-DD HH:mm:ss');
+    return formatDate(parseDate(t), 'yyyy-MM-dd HH:mm:ss');
 };
 
 const second2Ms = 1000;
@@ -128,14 +128,6 @@ export const formatDuration = (ms?: number): string | undefined => {
     }
 
     return s;
-};
-
-export const timestampDiffMs = (t1?: Date | string, t2?: Date | string): number | undefined => {
-    if (!t1 || !t2) {
-        return;
-    }
-
-    return getTime(t1) - getTime(t2);
 };
 
 export const escapeHtml = (s: string): string =>

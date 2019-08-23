@@ -18,23 +18,13 @@
  * =====
  */
 
+import { addMinutes, isBefore, parseISO as parseDate } from 'date-fns';
 import * as React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Route } from 'react-router';
 import { Divider } from 'semantic-ui-react';
 
 import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
-import { FormListEntry, list as apiListForms } from '../../../api/process/form';
-import {
-    AnsibleStats,
-    ProcessActionList,
-    ProcessStatusTable,
-    ProcessToolbar
-} from '../../molecules';
-
-import './styles.css';
-import { useEffect, useRef, useState } from 'react';
-import { useCallback } from 'react';
-import { usePolling } from '../../../api/usePolling';
-import RequestErrorActivity from '../RequestErrorActivity';
 import {
     AnsibleHost,
     AnsibleStatsEntry,
@@ -42,9 +32,19 @@ import {
     listAnsibleHosts as apiListAnsibleHosts,
     SearchFilter
 } from '../../../api/process/ansible';
-import { addMinutes, isBefore } from 'date-fns';
-import { Route } from 'react-router';
+import { FormListEntry, list as apiListForms } from '../../../api/process/form';
+
+import { usePolling } from '../../../api/usePolling';
+import {
+    AnsibleStats,
+    ProcessActionList,
+    ProcessStatusTable,
+    ProcessToolbar
+} from '../../molecules';
 import ProcessCheckpointActivity from '../ProcessCheckpointActivity';
+import RequestErrorActivity from '../RequestErrorActivity';
+
+import './styles.css';
 
 interface ExternalProps {
     process: ProcessEntry;
@@ -99,7 +99,10 @@ const ProcessStatusActivity = (props: ExternalProps) => {
 
         // because Ansible stats are calculated by an async process on the backend, we poll for
         // additional 10 minutes after the process finishes to make sure we got everything
-        const changedRecently = isBefore(Date.now(), addMinutes(process.lastUpdatedAt, 10));
+        const changedRecently = isBefore(
+            Date.now(),
+            addMinutes(parseDate(process.lastUpdatedAt), 10)
+        );
 
         return !isFinal(process.status) || changedRecently;
     }, [props.process.instanceId, fetchAnsibleHosts]);

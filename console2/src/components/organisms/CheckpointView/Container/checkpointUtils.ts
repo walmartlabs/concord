@@ -18,7 +18,7 @@
  * =====
  */
 
-import { isAfter, isBefore, parse as parseDate } from 'date-fns';
+import { isAfter, isBefore, parseISO as parseDate } from 'date-fns';
 
 import {
     ProcessCheckpointEntry,

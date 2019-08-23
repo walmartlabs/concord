@@ -39,7 +39,7 @@ import {
 } from '../../../api/process/form';
 import { RequestErrorMessage } from '../index';
 import { DropdownWithAddition } from '../../molecules';
-import { format as formatDate, parse as parseDate } from 'date-fns';
+import { format as formatDate, parseISO as parseDate } from 'date-fns';
 
 import { DateInput, DateTimeInput } from 'semantic-ui-calendar-react';
 
@@ -103,7 +103,7 @@ class ProcessForm extends React.Component<Props, State> {
             ) {
                 // Append the client zone information for date format consistency
                 const d = parseDate(values[k]);
-                values[k] = formatDate(d, 'YYYY-MM-DDTHH:mm:ss.SSSZ');
+                values[k] = formatDate(d, 'yyyy-MM-ddTHH:mm:ss.SSSZ');
             }
         }
 
@@ -362,11 +362,11 @@ class ProcessForm extends React.Component<Props, State> {
                 <DateInput
                     name={name}
                     placeholder="Date"
-                    value={value !== '' ? formatDate(date, 'YYYY-MM-DD') : value}
+                    value={value !== '' ? formatDate(date, 'yyyy-MM-dd') : value}
                     iconPosition="left"
                     closable={true}
                     popupPosition={popupPosition}
-                    dateFormat={'YYYY-MM-DD'}
+                    dateFormat={'yyyy-MM-dd'}
                     autoComplete={'off'}
                     clearable={!required}
                     onChange={this.handleDateInput(name)}
@@ -406,11 +406,11 @@ class ProcessForm extends React.Component<Props, State> {
                 <DateTimeInput
                     name={name}
                     placeholder="Date Time"
-                    value={value !== '' ? formatDate(date, 'YYYY-MM-DDTHH:mm:ss') : value}
+                    value={value !== '' ? formatDate(date, 'yyyy-MM-ddTHH:mm:ss') : value}
                     iconPosition="left"
                     closable={true}
                     popupPosition={popupPosition}
-                    dateFormat={'YYYY-MM-DD'}
+                    dateFormat={'yyyy-MM-dd'}
                     autoComplete={'off'}
                     clearable={!required}
                     onChange={this.handleDateInput(name)}

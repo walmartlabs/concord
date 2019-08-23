@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { format as formatDate, parse as parseDate } from 'date-fns';
+import { format as formatDate, parseISO as parseDate } from 'date-fns';
 import { escapeHtml, highlight } from '../../../../utils';
 import { LogSegment, LogSegmentType, TagData } from './types';
 
@@ -111,7 +111,7 @@ const colorize = (value: string): string => {
     return highlight(value, colorizeProps);
 };
 
-// we expect the runtime to use "YYYY-MM-dd'T'HH:mm:ss.SSSZ" format for timestamps
+// we expect the runtime to use "yyyy-MM-dd'T'HH:mm:ss.SSSZ" format for timestamps
 // see also /common/src/main/java/com/walmartlabs/concord/common/LogUtils.java
 const DATE_PATTERN = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}.\d{4})/;
 const DATE_LENGTH = '2019-04-11T19:41:24.839+0000'.length;
@@ -127,7 +127,7 @@ const processDate = (value: string, useLocalTime?: boolean, showDate?: boolean):
         const dt = l.substring(0, DATE_LENGTH);
         if (DATE_PATTERN.test(dt)) {
             const d = parseDate(dt);
-            const dst = formatDate(d, `${showDate ? 'YYYY-MM-DD ' : ''}HH:mm:ss`);
+            const dst = formatDate(d, `${showDate ? 'yyyy-MM-dd ' : ''}HH:mm:ss`);
             lines[i] = dst + l.substring(DATE_LENGTH);
         }
     }
