@@ -19,8 +19,7 @@
  */
 import { push as pushHistory, replace as replaceHistory } from 'connected-react-router';
 import { combineReducers } from 'redux';
-import { delay } from 'redux-saga';
-import { all, call, put, takeLatest } from 'redux-saga/effects';
+import { all, call, put, takeLatest, delay } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../api/common';
 import { isFinal, get as apiGetProcess } from '../../../api/process';

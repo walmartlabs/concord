@@ -18,7 +18,7 @@
  * =====
  */
 import React from 'react';
-import { render } from 'react-testing-library';
+import { render } from '@testing-library/react';
 import Message from './';
 
 test('Renders a message describing there are no checkpoints', () => {

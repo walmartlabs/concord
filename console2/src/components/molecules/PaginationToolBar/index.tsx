@@ -65,8 +65,7 @@ class PaginationToolBar extends React.Component<Props, State> {
                             value,
                             disabled: maxValue ? value >= maxValue : false
                         }))}
-                        value={this.state.filterState.limit}
-                        defaultValue={dropDownValues[0]}
+                        defaultValue={this.state.filterState.limit || dropDownValues[0]}
                         selection={true}
                         basic={true}
                         fluid={false}

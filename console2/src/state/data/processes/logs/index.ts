@@ -19,8 +19,7 @@
  */
 
 import { combineReducers, Reducer } from 'redux';
-import { delay } from 'redux-saga';
-import { all, call, cancel, fork, put, race, take, takeLatest } from 'redux-saga/effects';
+import { all, call, cancel, fork, put, race, take, takeLatest, delay } from 'redux-saga/effects';
 
 import { ConcordId } from '../../../../api/common';
 import { get as apiGet, isFinal, ProcessEntry } from '../../../../api/process';
