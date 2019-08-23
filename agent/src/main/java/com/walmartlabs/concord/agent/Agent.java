@@ -312,6 +312,7 @@ public class Agent {
                 cfg.getServerApiBaseUrl(),
                 cfg.getAgentJavaCmd(),
                 cfg.getDependencyListsDir(),
+                cfg.getDependencyCacheDir(),
                 cfg.getRunnerPath(),
                 cfg.getRunnerCfgDir(),
                 cfg.isRunnerSecurityManagerEnabled(),
