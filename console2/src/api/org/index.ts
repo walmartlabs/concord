@@ -18,7 +18,15 @@
  * =====
  */
 
-import { fetchJson, ConcordKey, ConcordId, OperationResult, EntityOwner, Owner } from '../common';
+import {
+    fetchJson,
+    ConcordKey,
+    ConcordId,
+    OperationResult,
+    EntityOwner,
+    Owner,
+    queryParams
+} from '../common';
 
 export enum OrganizationVisibility {
     PUBLIC = 'PUBLIC',
@@ -86,8 +94,40 @@ export interface OrganizationOperationResult {
     result: OperationResult;
 }
 
-export const list = (onlyCurrent: boolean): Promise<OrganizationEntry[]> =>
-    fetchJson(`/api/v1/org?onlyCurrent=${onlyCurrent}`);
+export interface PaginatedOrganizationEntries {
+    items: OrganizationEntry[];
+    next: boolean;
+}
+
+export const list = async (
+    onlyCurrent: boolean,
+    page: number,
+    limit: number,
+    filter?: string
+): Promise<PaginatedOrganizationEntries> => {
+    const offsetParam = page > 0 && limit > 0 ? page * limit : page;
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: OrganizationEntry[] = await fetchJson(
+        `/api/v1/org?${queryParams({
+            onlyCurrent: onlyCurrent,
+            offset: offsetParam,
+            limit: limitParam,
+            filter
+        })}`
+    );
+
+    const hasMoreElements: boolean = limit > 0 && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data,
+        next: hasMoreElements
+    };
+};
 
 export const get = (orgName: ConcordKey): Promise<OrganizationEntry> =>
     fetchJson<OrganizationEntry>(`/api/v1/org/${orgName}`);

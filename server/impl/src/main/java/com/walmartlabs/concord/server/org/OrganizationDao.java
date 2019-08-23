@@ -155,7 +155,7 @@ public class OrganizationDao extends AbstractDao {
         q.execute();
     }
 
-    public List<OrganizationEntry> list(UUID userId) {
+    public List<OrganizationEntry> list(UUID userId, int offset, int limit, String filter) {
         try (DSLContext tx = DSL.using(cfg)) {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
@@ -183,6 +183,19 @@ public class OrganizationDao extends AbstractDao {
                         .where(TEAMS.TEAM_ID.in(teamIds));
 
                 q.where(o.ORG_ID.in(orgIds));
+            }
+
+            if (filter != null) {
+                q.where(o.ORG_NAME.containsIgnoreCase(filter));
+
+            }
+
+            if (offset >= 0) {
+                q.offset(offset);
+            }
+
+            if (limit > 0) {
+                q.limit(limit);
             }
 
             return q.orderBy(o.ORG_NAME)

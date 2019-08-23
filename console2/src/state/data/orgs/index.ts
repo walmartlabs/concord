@@ -20,13 +20,12 @@
 
 import { combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
-import { list as apiList, get as apiGet, changeOwner as apiChangeOwner } from '../../../api/org';
+import { get as apiGet, changeOwner as apiChangeOwner } from '../../../api/org';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
 import {
     ChangeOrganizationOwnerRequest,
     ChangeOwnerState,
     GetOrganizationRequest,
-    ListOrganizationsRequest,
     ListOrganizationsResponse,
     Organizations,
     State
@@ -39,7 +38,6 @@ export * from './types';
 const NAMESPACE = 'orgs';
 
 const actionTypes = {
-    LIST_ORGANIZATIONS_REQUEST: `${NAMESPACE}/list/request`,
     LIST_ORGANIZATIONS_RESPONSE: `${NAMESPACE}/list/response`,
 
     GET_ORGANIZATION_REQUEST: `${NAMESPACE}/get/request`,
@@ -50,10 +48,6 @@ const actionTypes = {
 };
 
 export const actions = {
-    listOrgs: (onlyCurrent: boolean): ListOrganizationsRequest => ({
-        type: actionTypes.LIST_ORGANIZATIONS_REQUEST,
-        onlyCurrent
-    }),
     getOrg: (orgName: ConcordKey): GetOrganizationRequest => ({
         type: actionTypes.GET_ORGANIZATION_REQUEST,
         orgName
@@ -91,12 +85,12 @@ const orgById: Reducer<Organizations> = (
 };
 
 const loading = makeLoadingReducer(
-    [actionTypes.LIST_ORGANIZATIONS_REQUEST, actionTypes.GET_ORGANIZATION_REQUEST],
+    [actionTypes.GET_ORGANIZATION_REQUEST],
     [actionTypes.LIST_ORGANIZATIONS_RESPONSE]
 );
 
 const listError = makeErrorReducer(
-    [actionTypes.LIST_ORGANIZATIONS_REQUEST, actionTypes.GET_ORGANIZATION_REQUEST],
+    [actionTypes.GET_ORGANIZATION_REQUEST],
     [actionTypes.LIST_ORGANIZATIONS_RESPONSE]
 );
 
@@ -135,18 +129,6 @@ export const selectors = {
     }
 };
 
-function* onList({ onlyCurrent }: ListOrganizationsRequest) {
-    try {
-        const response = yield call(apiList, onlyCurrent);
-        yield put({
-            type: actionTypes.LIST_ORGANIZATIONS_RESPONSE,
-            items: response
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.LIST_ORGANIZATIONS_RESPONSE, e);
-    }
-}
-
 function* onGet({ orgName }: GetOrganizationRequest) {
     try {
         const response = yield call(apiGet, orgName);
@@ -174,7 +156,6 @@ function* onChangeOwner({ orgId, orgName, owner }: ChangeOrganizationOwnerReques
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_ORGANIZATION_REQUEST, onGet),
-        takeLatest(actionTypes.LIST_ORGANIZATIONS_REQUEST, onList),
         takeLatest(actionTypes.CHANGE_ORGANIZATION_OWNER_REQUEST, onChangeOwner)
     ]);
 };

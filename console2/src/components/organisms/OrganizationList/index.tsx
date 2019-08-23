@@ -19,71 +19,120 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Icon, List, Loader } from 'semantic-ui-react';
+import { Input, List, Loader, Menu, Radio } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
 import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
-import { actions, State } from '../../../state/data/orgs';
-import { Organizations } from '../../../state/data/orgs';
-import { comparators } from '../../../utils';
-import { RequestErrorMessage } from '../../molecules';
+import { list as getPaginatedOrgList } from '../../../api/org/index';
+import { Pagination } from '../../../state/data/orgs';
+import { PaginationToolBar, RequestErrorMessage } from '../../molecules';
 
-interface ExternalProps {
-    filter?: string;
-    onlyCurrent: boolean;
-}
+const OrganizationList = () => {
+    const [data, setData] = useState<OrganizationEntry[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<RequestError>();
 
-interface StateProps {
-    data: OrganizationEntry[];
-    loading: boolean;
-    error: RequestError;
-}
+    const [paginationFilter, setPaginationFilter] = useState<Pagination>({ page: 0, limit: 50 });
+    const [next, setNext] = useState<boolean>(false);
+    const oldFilter = useRef<string>();
+    const oldOnlyCurrent = useRef<boolean>(true);
 
-interface DispatchProps {
-    load: (onlyCurrent: boolean) => void;
-}
+    const [filter, setFilter] = useState<string>();
+    const [onlyCurrent, setOnlyCurrent] = useState(true);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
 
-class OrganizationList extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.update();
-    }
+            if (filter && oldFilter.current !== filter) {
+                oldFilter.current = filter;
+                setPaginationFilter({ page: 0, limit: paginationFilter.limit });
+            }
 
-    componentDidUpdate(prepProps: Props) {
-        if (this.props.onlyCurrent !== prepProps.onlyCurrent) {
-            this.update();
+            if (oldOnlyCurrent.current !== onlyCurrent) {
+                oldOnlyCurrent.current = onlyCurrent;
+                setPaginationFilter({ page: 0, limit: paginationFilter.limit });
+            }
+
+            const paginatedOrgList = await getPaginatedOrgList(
+                onlyCurrent,
+                paginationFilter.page,
+                paginationFilter.limit,
+                filter
+            );
+            setData(paginatedOrgList.items);
+            setNext(paginatedOrgList.next);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setLoading(false);
         }
-    }
+    }, [onlyCurrent, filter, paginationFilter.page, paginationFilter.limit]);
 
-    update() {
-        const { load, onlyCurrent } = this.props;
-        load(onlyCurrent);
-    }
+    useEffect(() => {
+        fetchData();
+    }, [onlyCurrent, filter, paginationFilter.page, paginationFilter.limit]);
 
-    render() {
-        const { loading, data, error } = this.props;
+    const handleLimitChange = (limit: any) => {
+        setPaginationFilter({ page: 0, limit });
+    };
 
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
+    const handleNext = () => {
+        const nextPage = paginationFilter.page + 1;
+        setPaginationFilter({ page: nextPage, limit: paginationFilter.limit });
+    };
 
-        if (loading) {
-            return <Loader active={true} />;
-        }
+    const handlePrev = () => {
+        const prevPage = paginationFilter.page - 1;
+        setPaginationFilter({ page: prevPage, limit: paginationFilter.limit });
+    };
 
-        if (data.length === 0) {
-            return <h3>No organizations found</h3>;
-        }
+    const handleFirst = () => {
+        setPaginationFilter({ page: 0, limit: paginationFilter.limit });
+    };
 
-        return (
+    return (
+        <>
+            <Menu secondary={true}>
+                <Menu.Item>
+                    <Input
+                        icon="search"
+                        placeholder="Filter..."
+                        onChange={(ev, data) => setFilter(data.value)}
+                    />
+                </Menu.Item>
+
+                <Menu.Item position="right">
+                    <Radio
+                        label="Show only user's organizations"
+                        toggle={true}
+                        checked={onlyCurrent}
+                        onChange={(ev, { checked }) => setOnlyCurrent(checked!)}
+                    />
+                </Menu.Item>
+
+                <PaginationToolBar
+                    filterProps={paginationFilter}
+                    handleLimitChange={(limit) => handleLimitChange(limit)}
+                    handleNext={handleNext}
+                    handlePrev={handlePrev}
+                    handleFirst={handleFirst}
+                    disablePrevious={paginationFilter.page === 0}
+                    disableNext={!next}
+                    disableFirst={paginationFilter.page === 0}
+                />
+            </Menu>
+
+            {error && <RequestErrorMessage error={error} />}
+            {loading && <Loader active={true} />}
+            {data.length === 0 && <h3>No organizations found</h3>}
+
             <List divided={true} relaxed={true} size="large">
-                {data.map((org: OrganizationEntry, index: number) => (
-                    <List.Item key={index}>
-                        <Icon
+                {data.map((org, idx) => (
+                    <List.Item key={idx}>
+                        <List.Icon
                             name={
                                 org.visibility === OrganizationVisibility.PRIVATE
                                     ? 'lock'
@@ -92,35 +141,18 @@ class OrganizationList extends React.PureComponent<Props> {
                             color="grey"
                         />
                         <List.Content>
-                            <List.Header>
-                                <Link to={`/org/${org.name}`}>{org.name}</Link>
+                            <List.Header as={Link} to={`/org/${org.name}`}>
+                                {org.name}
                             </List.Header>
+                            <List.Description>
+                                {org.owner ? `Owner: ${org.owner.username}` : ''}
+                            </List.Description>
                         </List.Content>
                     </List.Item>
                 ))}
             </List>
-        );
-    }
-}
+        </>
+    );
+};
 
-// TODO refactor as a selector?
-const makeOrgList = (data: Organizations, filter?: string): OrganizationEntry[] =>
-    Object.keys(data)
-        .map((k) => data[k])
-        .filter((e) => (filter ? e.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 : true))
-        .sort(comparators.byName);
-
-const mapStateToProps = ({ orgs }: { orgs: State }, { filter }: ExternalProps): StateProps => ({
-    data: makeOrgList(orgs.orgById, filter),
-    loading: orgs.loading,
-    error: orgs.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (onlyCurrent: boolean) => dispatch(actions.listOrgs(onlyCurrent))
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(OrganizationList);
+export default OrganizationList;

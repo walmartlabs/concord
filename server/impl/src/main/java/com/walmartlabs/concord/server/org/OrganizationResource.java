@@ -87,7 +87,19 @@ public class OrganizationResource implements Resource {
     @GET
     @ApiOperation(value = "List organizations", responseContainer = "list", response = OrganizationEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     public List<OrganizationEntry> list(@ApiParam @QueryParam("onlyCurrent") @DefaultValue("false") boolean onlyCurrent) {
+        // keep the original method for backward compatibility
+        return find(onlyCurrent, 0, -1, null);
+    }
+
+    @GET
+    @ApiOperation(value = "List organizations", responseContainer = "list", response = OrganizationEntry.class)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<OrganizationEntry> find(@QueryParam("onlyCurrent") @DefaultValue("false") boolean onlyCurrent,
+                                        @QueryParam("offset") int offset,
+                                        @QueryParam("limit") int limit,
+                                        @QueryParam("filter") String filter) {
         UUID userId = null;
 
         if (onlyCurrent) {
@@ -97,7 +109,7 @@ public class OrganizationResource implements Resource {
             }
         }
 
-        return orgDao.list(userId);
+        return orgDao.list(userId, offset, limit, filter);
     }
 
     @DELETE
