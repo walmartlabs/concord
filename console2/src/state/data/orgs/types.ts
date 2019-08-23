@@ -24,8 +24,9 @@ import { ConcordId, ConcordKey, Owner, RequestError } from '../../../api/common'
 import { OrganizationEntry, OrganizationOperationResult } from '../../../api/org';
 import { RequestState } from '../common';
 
-export interface ListOrganizationsRequest extends Action {
-    onlyCurrent: boolean;
+export interface Pagination {
+    limit: number;
+    page: number;
 }
 
 export interface ListOrganizationsResponse extends Action {

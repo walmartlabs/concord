@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Breadcrumb } from 'semantic-ui-react';
 
 import { BreadcrumbSegment } from '../../molecules';
-import { OrganizationListActivity } from '../../organisms';
+import { OrganizationList } from '../../organisms';
 
 export default class extends React.PureComponent {
     render() {
@@ -32,7 +32,7 @@ export default class extends React.PureComponent {
                     <Breadcrumb.Section active={true}>Organizations</Breadcrumb.Section>
                 </BreadcrumbSegment>
 
-                <OrganizationListActivity />
+                <OrganizationList />
             </>
         );
     }

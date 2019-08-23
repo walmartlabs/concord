@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: add pagination and server-side filtering to
+the organization list page;
 - concord-console: display trigger information on the process status
 page.
 
