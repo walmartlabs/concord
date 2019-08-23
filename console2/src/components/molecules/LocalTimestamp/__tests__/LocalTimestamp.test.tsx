@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { render } from 'react-testing-library';
+import { render } from '@testing-library/react';
 import React from 'react';
 import LocalTimeStamp from '..';
 
