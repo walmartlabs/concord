@@ -43,6 +43,7 @@ import org.eclipse.aether.util.artifact.JavaScopes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,6 +54,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -175,7 +177,7 @@ public class DependencyManager {
         boolean skipCache = shouldSkipCache(uri);
         String name = getLastPart(uri);
 
-        Path baseDir = cacheDir.resolve(FILES_CACHE_DIR);
+        Path baseDir = cacheDir.resolve(FILES_CACHE_DIR).resolve(hash(uri.toString()));
         if (!Files.exists(baseDir)) {
             Files.createDirectories(baseDir);
         }
@@ -183,12 +185,25 @@ public class DependencyManager {
         Path p = baseDir.resolve(name);
 
         synchronized (mutex) {
-            if (skipCache || !Files.exists(p)) {
-                log.info("resolveFile -> downloading {}...", uri);
-                download(uri, p);
+            if (!skipCache && Files.exists(p)) {
+                log.info("resolveFile -> using a cached copy of {}...", uri);
+                return p;
             }
 
+            log.info("resolveFile -> downloading {}...", uri);
+            download(uri, p);
+
             return p;
+        }
+    }
+
+    private static String hash(String s) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(s.getBytes());
+            return DatatypeConverter.printHexBinary(md.digest()).toUpperCase();
+        } catch (Exception e) {
+            throw new RuntimeException("Hash error", e);
         }
     }
 

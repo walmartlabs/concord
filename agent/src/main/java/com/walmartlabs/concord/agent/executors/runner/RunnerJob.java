@@ -29,10 +29,7 @@ import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJo
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.runner.model.ApiConfiguration;
-import com.walmartlabs.concord.runner.model.DockerConfiguration;
-import com.walmartlabs.concord.runner.model.ImmutableRunnerConfiguration;
-import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.runner.model.*;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
@@ -165,6 +162,9 @@ public class RunnerJob {
                         .build())
                 .docker(DockerConfiguration.builder().from(dockerCfgSrc)
                         .extraVolumes(execCfg.getExtraDockerVolumes())
+                        .build())
+                .dependencyManager(DependencyManagerConfiguration.builder()
+                        .cacheDir(execCfg.getDependencyCacheDir().toAbsolutePath().toString())
                         .build())
                 .build();
     }

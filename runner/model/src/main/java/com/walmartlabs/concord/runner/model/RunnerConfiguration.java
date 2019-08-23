@@ -74,11 +74,19 @@ public interface RunnerConfiguration {
     }
 
     /**
-     * List of dependencies (JAR file paths).
+     * List of the process' dependencies (JAR file paths).
      */
     @Value.Default
     default Collection<String> dependencies() {
         return Collections.emptyList();
+    }
+
+    /**
+     * Dependency Manager configuration.
+     */
+    @Value.Default
+    default DependencyManagerConfiguration dependencyManager() {
+        return DependencyManagerConfiguration.builder().build();
     }
 
     /**

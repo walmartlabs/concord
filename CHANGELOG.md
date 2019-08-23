@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-runner, concord-sdk: expose the `DependencyManager` to
+plugins. Allows plugins to download external artifacts using a
+persistent cache directory;
 - concord-console: add pagination and server-side filtering to
 the organization list page;
 - concord-console: display trigger information on the process status

@@ -503,6 +503,7 @@ public class RunnerJobExecutor {
         private final String serverApiBaseUrl;
         private final String agentJavaCmd;
         private final Path dependencyListDir;
+        private final Path dependencyCacheDir;
         private final Path runnerPath;
         private final Path runnerCfgDir;
         private final boolean runnerSecurityManagerEnabled;
@@ -513,7 +514,7 @@ public class RunnerJobExecutor {
                                               String serverApiBaseUrl,
                                               String agentJavaCmd,
                                               Path dependencyListDir,
-                                              Path runnerPath,
+                                              Path dependencyCacheDir, Path runnerPath,
                                               Path runnerCfgDir,
                                               boolean isRunnerSecurityManagerEnabled,
                                               List<String> extraDockerVolumes,
@@ -523,6 +524,7 @@ public class RunnerJobExecutor {
             this.serverApiBaseUrl = serverApiBaseUrl;
             this.agentJavaCmd = agentJavaCmd;
             this.dependencyListDir = dependencyListDir;
+            this.dependencyCacheDir = dependencyCacheDir;
             this.runnerPath = runnerPath;
             this.runnerCfgDir = runnerCfgDir;
             this.runnerSecurityManagerEnabled = isRunnerSecurityManagerEnabled;
@@ -553,6 +555,10 @@ public class RunnerJobExecutor {
 
         public Path getDependencyListDir() {
             return dependencyListDir;
+        }
+
+        public Path getDependencyCacheDir() {
+            return dependencyCacheDir;
         }
 
         public List<String> getExtraDockerVolumes() {
