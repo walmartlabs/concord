@@ -20,6 +20,7 @@
         </addColumn>
     </changeSet>
 
+    <!-- deprecated in 1.31.0+
     <changeSet id="87200" author="ybrigo@gmail.com">
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
             select
@@ -64,6 +65,7 @@
                 USERS users on users.user_id = q1.INITIATOR_ID
         </createView>
     </changeSet>
+    -->
 
     <changeSet id="87300" author="muhammad.wasi@walmart.com">
         <sql>

@@ -103,6 +103,7 @@
                                  onDelete="SET NULL"/>
     </changeSet>
 
+    <!-- deprecated in 1.31.0+
     <changeSet id="79210" author="ibodrov@gmail.com">
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
             select
@@ -142,4 +143,5 @@
             on repos.REPO_ID = q1.REPO_ID
         </createView>
     </changeSet>
+    -->
 </databaseChangeLog>

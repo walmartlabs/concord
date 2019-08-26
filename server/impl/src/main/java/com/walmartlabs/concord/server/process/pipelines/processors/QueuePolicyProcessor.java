@@ -44,7 +44,7 @@ import java.util.*;
 
 import static com.walmartlabs.concord.policyengine.QueueProcessPolicy.ProcessRule;
 import static com.walmartlabs.concord.policyengine.QueueProcessPolicy.QueueMetrics;
-import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -92,7 +92,7 @@ public class QueuePolicyProcessor implements PayloadProcessor {
 
     private static String buildErrorMessage(List<CheckResult.Item<ProcessRule, Integer>> errors) {
         StringBuilder sb = new StringBuilder();
-        for(CheckResult.Item<ProcessRule, Integer> e : errors) {
+        for (CheckResult.Item<ProcessRule, Integer> e : errors) {
             ProcessRule r = e.getRule();
 
             String msg = r.getMsg() != null ? r.getMsg() : DEFAULT_POLICY_MESSAGE;
@@ -119,18 +119,20 @@ public class QueuePolicyProcessor implements PayloadProcessor {
 
                 SelectConditionStep<Record4<Integer, Integer, Integer, String>> q = tx.select(
                         field("1", Integer.class).as("count_process"),
-                        when(V_PROCESS_QUEUE.ORG_ID.eq(orgId), 1).otherwise(0).as("count_per_org"),
-                        when(V_PROCESS_QUEUE.PROJECT_ID.eq(prjId), 1).otherwise(0).as("count_per_project"),
-                        V_PROCESS_QUEUE.CURRENT_STATUS.as("status"))
-                        .from(V_PROCESS_QUEUE)
-                        .where(V_PROCESS_QUEUE.CURRENT_STATUS.in(statuses));
+                        when(PROJECTS.ORG_ID.eq(orgId), 1).otherwise(0).as("count_per_org"),
+                        when(PROJECTS.PROJECT_ID.eq(prjId), 1).otherwise(0).as("count_per_project"),
+                        PROCESS_QUEUE.CURRENT_STATUS.as("status")
+                ).from(PROCESS_QUEUE)
+                        .innerJoin(PROJECTS)
+                        .on(PROCESS_QUEUE.PROJECT_ID.eq(PROJECTS.PROJECT_ID))
+                        .where(PROCESS_QUEUE.CURRENT_STATUS.in(statuses));
 
                 List<Record4<BigDecimal, BigDecimal, BigDecimal, String>> result = tx.select(
                         sum(q.field("count_process", Integer.class)),
                         sum(q.field("count_per_org", Integer.class)),
                         sum(q.field("count_per_project", Integer.class)),
-                        q.field("status", String.class))
-                        .from(q)
+                        q.field("status", String.class)
+                ).from(q)
                         .groupBy(q.field("status", String.class))
                         .fetch();
 

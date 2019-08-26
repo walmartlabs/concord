@@ -38,7 +38,8 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="65200" author="ibodrov@gmail.com">
+   <!-- deprecated in 1.31.0+
+   <changeSet id="65200" author="ibodrov@gmail.com">
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
             select
                 q1.INSTANCE_ID,
@@ -66,4 +67,5 @@
             on prj.PROJECT_ID = q1.PROJECT_ID
         </createView>
     </changeSet>
+    -->
 </databaseChangeLog>
