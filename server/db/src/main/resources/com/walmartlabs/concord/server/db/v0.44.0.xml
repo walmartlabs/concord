@@ -69,6 +69,7 @@
     </changeSet>
 
     <!-- create a PROCESS_QUEUE view to simplify queries -->
+    <!-- deprecated in 1.31.0+
     <changeSet id="44025" author="ibodrov@gmail.com">
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
             select
@@ -86,6 +87,7 @@
             from PROCESS_QUEUE
         </createView>
     </changeSet>
+    -->
 
     <!-- migrate PROJECT_KV_STORE to the new PROJECTS FK -->
     <changeSet id="44030" author="ibodrov@gmail.com">

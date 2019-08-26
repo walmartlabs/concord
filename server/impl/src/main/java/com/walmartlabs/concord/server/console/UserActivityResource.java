@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.console;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.console.UserActivityResponse.ProjectProcesses;
-import static com.walmartlabs.concord.server.jooq.Tables.V_PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
+import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.sdk.ProcessStatus.*;
 import static org.jooq.impl.DSL.*;
@@ -116,15 +117,15 @@ public class UserActivityResource implements Resource {
                         .where(PROJECTS.ORG_ID.in(orgIds));
 
                 SelectConditionStep<Record5<Integer, Integer, Integer, Integer, Integer>> q = tx.select(
-                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
-                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
-                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
-                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
-                        when(V_PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
-                        .from(V_PROCESS_QUEUE)
-                        .where(V_PROCESS_QUEUE.INITIATOR_ID.eq(initiatorId)
-                                .and(V_PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
-                                .and(or(V_PROCESS_QUEUE.PROJECT_ID.in(projectIds), V_PROCESS_QUEUE.PROJECT_ID.isNull())));
+                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(RUNNING.name()), 1).otherwise(0).as(RUNNING.name()),
+                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(SUSPENDED.name()), 1).otherwise(0).as(SUSPENDED.name()),
+                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(FINISHED.name()), 1).otherwise(0).as(FINISHED.name()),
+                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(FAILED.name()), 1).otherwise(0).as(FAILED.name()),
+                        when(PROCESS_QUEUE.CURRENT_STATUS.eq(ENQUEUED.name()), 1).otherwise(0).as(ENQUEUED.name()))
+                        .from(PROCESS_QUEUE)
+                        .where(PROCESS_QUEUE.INITIATOR_ID.eq(initiatorId)
+                                .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                                .and(or(PROCESS_QUEUE.PROJECT_ID.in(projectIds), PROCESS_QUEUE.PROJECT_ID.isNull())));
 
                 Record5<BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal> r = tx.select(
                         sum(q.field(RUNNING.name(), Integer.class)),
@@ -153,15 +154,20 @@ public class UserActivityResource implements Resource {
             Set<String> statuses = processStatuses.stream().map(Enum::name).collect(Collectors.toSet());
 
             try (DSLContext tx = DSL.using(cfg)) {
-                WindowRowsStep<Integer> rnField = rowNumber().over().partitionBy(V_PROCESS_QUEUE.ORG_NAME).orderBy(V_PROCESS_QUEUE.ORG_NAME);
+                WindowRowsStep<Integer> rnField = rowNumber().over().partitionBy(ORGANIZATIONS.ORG_NAME).orderBy(ORGANIZATIONS.ORG_NAME);
 
                 SelectHavingStep<Record4<String, String, Integer, Integer>> a =
-                        tx.select(V_PROCESS_QUEUE.ORG_NAME, V_PROCESS_QUEUE.PROJECT_NAME, count(), rnField)
-                            .from(V_PROCESS_QUEUE)
-                                .where(V_PROCESS_QUEUE.ORG_ID.in(orgIds)
-                                        .and(V_PROCESS_QUEUE.CURRENT_STATUS.in(statuses))
-                                        .and(V_PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt)))
-                            .groupBy(V_PROCESS_QUEUE.ORG_NAME, V_PROCESS_QUEUE.PROJECT_NAME);
+                        tx.select(ORGANIZATIONS.ORG_NAME, PROJECTS.PROJECT_NAME, count(), rnField)
+                                .from(PROCESS_QUEUE)
+                                .innerJoin(PROJECTS)
+                                .on(PROCESS_QUEUE.PROJECT_ID.eq(PROJECTS.PROJECT_ID)
+                                        .and(PROCESS_QUEUE.CURRENT_STATUS.in(statuses))
+                                        .and(PROCESS_QUEUE.LAST_UPDATED_AT.greaterOrEqual(fromUpdatedAt))
+                                        .and(PROJECTS.ORG_ID.in(orgIds))
+                                )
+                                .innerJoin(ORGANIZATIONS)
+                                .on(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID))
+                                .groupBy(ORGANIZATIONS.ORG_NAME, PROJECTS.PROJECT_NAME);
 
                 Result<Record3<String, String, Integer>> r = tx.select(a.field(0, String.class), a.field(1, String.class), a.field(2, Integer.class))
                         .from(a)

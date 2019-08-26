@@ -13,6 +13,8 @@
     </changeSet>
 
     <changeSet id="86200" author="muhammad.wasi@walmart.com">
+        <validCheckSum>7:d93133941dc7620cf83d20401d17cd57</validCheckSum>
+
         <preConditions onFail="MARK_RAN">
             <columnExists tableName="PROCESS_QUEUE" columnName="INITIATOR"/>
         </preConditions>
@@ -63,6 +65,7 @@
             create trigger UPDATE_PROCESS_QUEUE_INITIATOR_ID before insert on PROCESS_QUEUE for each row execute procedure UPDATE_PROCESS_QUEUE_INITIATOR_ID();
         </sql>
 
+        <!-- deprecated in 1.31.0+
         <createView viewName="V_PROCESS_QUEUE" replaceIfExists="true">
             select
                 q1.INSTANCE_ID,
@@ -104,6 +107,7 @@
             left join
                 USERS users on users.user_id = q1.INITIATOR_ID
         </createView>
+        -->
 
         <sql>
             update process_queue p
