@@ -48,7 +48,6 @@ public class Payload {
     public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
-    public static final HeaderKey<Map<String, Object>> REQUIREMENTS = HeaderKey.registerMap("_requirements");
     public static final HeaderKey<PolicyRules> POLICY = HeaderKey.register("_policy", PolicyRules.class);
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
