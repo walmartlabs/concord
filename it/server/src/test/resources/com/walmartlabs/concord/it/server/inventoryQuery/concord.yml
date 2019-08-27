@@ -1,0 +1,5 @@
+flows:
+  default:
+  - set:
+      result: ${inventory.query(inventoryName, queryName, null)}
+  - log: "Inventory Item_data: ${result.get(0).data}"

@@ -16,6 +16,8 @@ page.
 
 ### Changed
 
+- inventory: the `query` method now automatically retries in case of
+network or intermittent backend errors; 
 - concord-server: fixed an issue preventing processes that were
 scheduled for future (using `startAt`) from resuming correctly;
 - docker-tasks: now `stdout` output is captured without Docker system
