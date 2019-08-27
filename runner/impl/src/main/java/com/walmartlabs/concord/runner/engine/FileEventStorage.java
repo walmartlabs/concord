@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.runner.SerializationUtils;
 import io.takari.bpm.event.Event;
 import io.takari.bpm.event.EventStorage;
 import io.takari.bpm.event.ExpiredEvent;
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -56,8 +57,8 @@ public class FileEventStorage implements EventStorage {
 
         try {
             Path tmp = IOUtils.createTempFile(event.getId().toString(), "event");
-            try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
-                out.writeObject(event);
+            try (OutputStream out = Files.newOutputStream(tmp)) {
+                SerializationUtils.serialize(out, event);
             }
             Files.move(tmp, p, REPLACE_EXISTING);
         } catch (IOException e) {

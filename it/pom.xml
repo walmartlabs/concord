@@ -16,6 +16,7 @@
     <modules>
         <module>tasks/broken-deps</module>
         <module>tasks/dependency-manager-test</module>
+        <module>tasks/serialization-test</module>
         <module>tasks/suspend-test</module>
 
         <module>common</module>

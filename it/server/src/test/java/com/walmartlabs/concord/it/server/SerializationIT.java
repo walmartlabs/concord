@@ -21,12 +21,13 @@ package com.walmartlabs.concord.it.server;
  */
 
 
-
 import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
@@ -66,5 +67,25 @@ public class SerializationIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
 
         assertLog(".*hello.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testNonSerializable() throws Exception {
+        byte[] payload = archive(DependencyManagerIT.class.getResource("nonSerializableTest").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("request", Collections.singletonMap("dependencies",
+                new String[]{"mvn://com.walmartlabs.concord.it.tasks:serialization-test:" + ITConstants.PROJECT_VERSION}));
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Not serializable value: test.*", ab);
     }
 }

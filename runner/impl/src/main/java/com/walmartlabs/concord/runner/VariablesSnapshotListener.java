@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,9 +58,8 @@ public class VariablesSnapshotListener implements EngineListener {
 
         try {
             Path dst = stateDir.resolve(InternalConstants.Files.LAST_KNOWN_VARIABLES_FILE_NAME);
-            try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-                 ObjectOutputStream oos = new ObjectOutputStream(out)) {
-                oos.writeObject(vars);
+            try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                SerializationUtils.serialize(out, vars);
             }
         } catch (IOException e) {
             log.error("Can't save a snapshot of the process variables. Process forks (including onError, onCancel and " +

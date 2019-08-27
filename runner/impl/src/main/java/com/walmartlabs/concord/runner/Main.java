@@ -51,7 +51,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -600,10 +603,8 @@ public class Main {
         Path dst = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
                 .resolve(InternalConstants.Files.LAST_ERROR_FILE_NAME);
 
-        try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-             ObjectOutputStream oos = new ObjectOutputStream(out)) {
-
-            oos.writeObject(t);
+        try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            SerializationUtils.serialize(out, t);
         } catch (Throwable e) {
             log.error("Can't save the last unhandled error: {}", e.getMessage());
         }
