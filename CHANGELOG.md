@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: move some of the system log messages to the `debug`
+level;
+- concord-server: additional logging when the process is enqueued.
+
+
+
 ## [1.31.1] - 2019-08-27
 
 ### Changed

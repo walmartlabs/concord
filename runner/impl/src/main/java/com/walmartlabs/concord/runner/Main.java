@@ -87,7 +87,7 @@ public class Main {
     }
 
     public void run(RunnerConfiguration runnerCfg, Path baseDir) throws Exception {
-        log.info("run -> working directory: {}", baseDir.toAbsolutePath());
+        log.debug("run -> working directory: {}", baseDir.toAbsolutePath());
 
         long t1 = System.currentTimeMillis();
 

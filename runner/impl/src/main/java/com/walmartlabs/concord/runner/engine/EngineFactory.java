@@ -56,8 +56,6 @@ import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.task.JavaDelegateHandler;
 import io.takari.bpm.task.ServiceTaskRegistry;
 import io.takari.bpm.task.UserTaskHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.el.CompositeELResolver;
 import javax.el.ELResolver;
@@ -70,8 +68,6 @@ import java.util.*;
 
 @Named
 public class EngineFactory {
-
-    private static final Logger log = LoggerFactory.getLogger(EngineFactory.class);
 
     private final ApiClientFactory apiClientFactory;
     private final ServiceTaskRegistry taskRegistry;
@@ -92,8 +88,6 @@ public class EngineFactory {
                          Path baseDir,
                          Collection<String> activeProfiles,
                          Set<String> metaVariables) {
-
-        log.info("create -> using profiles: {}", activeProfiles);
 
         Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
         Path stateDir = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
