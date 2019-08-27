@@ -27,6 +27,7 @@ type IconSizeProp = 'mini' | 'tiny' | 'small' | 'large' | 'big' | 'huge' | 'mass
 const statusToIcon: {
     [status: string]: { name: SemanticICONS; color?: SemanticCOLORS; loading?: boolean };
 } = {
+    NEW: { name: 'inbox', color: 'grey' },
     PREPARING: { name: 'info', color: 'blue' },
     ENQUEUED: { name: 'block layout', color: 'grey' },
     RESUMING: { name: 'circle notched', color: 'grey', loading: true },
