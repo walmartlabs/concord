@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-runner: additional diagnostic when the process state
+contains non serializable variables;
 - concord-runner, concord-sdk: expose the `DependencyManager` to
 plugins. Allows plugins to download external artifacts using a
 persistent cache directory;

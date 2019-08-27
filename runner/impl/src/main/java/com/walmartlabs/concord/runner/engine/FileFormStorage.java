@@ -21,13 +21,14 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.runner.SerializationUtils;
 import io.takari.bpm.api.ExecutionException;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.form.FormStorage;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -48,8 +49,8 @@ public class FileFormStorage implements FormStorage {
         Path p = dir.resolve(form.getFormDefinition().getName());
         try {
             Path tmp = IOUtils.createTempFile(id.toString(), "form");
-            try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(tmp))) {
-                out.writeObject(form);
+            try (OutputStream out = Files.newOutputStream(tmp)) {
+                SerializationUtils.serialize(out, form);
             }
             Files.move(tmp, p, REPLACE_EXISTING);
         } catch (IOException e) {
