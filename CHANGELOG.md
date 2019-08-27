@@ -16,6 +16,7 @@ page.
 
 ### Changed
 
+- concord-server: allow overriding of `requirements` with `profiles`;
 - inventory: the `query` method now automatically retries in case of
 network or intermittent backend errors; 
 - concord-server: fixed an issue preventing processes that were

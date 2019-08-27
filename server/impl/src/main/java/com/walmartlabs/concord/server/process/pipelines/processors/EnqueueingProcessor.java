@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
@@ -70,8 +71,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }
 
-        Map<String, Object> requirements = payload.getHeader(Payload.REQUIREMENTS);
-
+        Map<String, Object> requirements = getRequirements(payload);
         Instant startAt = getStartAt(payload);
         Long processTimeout = getProcessTimeout(payload);
         boolean exclusive = isExclusive(payload);
@@ -166,5 +166,11 @@ public class EnqueueingProcessor implements PayloadProcessor {
     private static Map<String, Object> getMeta(Payload p) {
         Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
         return (Map<String, Object>) cfg.get(Constants.Request.META);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getRequirements(Payload p) {
+        Map<String, Object> req = p.getHeader(Payload.REQUEST_DATA_MAP);
+        return (Map<String, Object>) req.get(InternalConstants.Request.REQUIREMENTS);
     }
 }

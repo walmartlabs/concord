@@ -44,7 +44,6 @@ public class ForkPipeline extends Pipeline {
                 ForkPolicyProcessor.class,
                 ForkCleanupProcessor.class,
                 RequestDataMergingProcessor.class,
-                RequirementsProcessor.class,
                 ProjectInfoProcessor.class,
                 ProcessInfoProcessor.class,
                 ForkDataMergingProcessor.class,
