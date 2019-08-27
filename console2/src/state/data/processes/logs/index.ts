@@ -230,7 +230,7 @@ function* doPoll(instanceId: ConcordId, opts: LogProcessorOptions, range: LogRan
             }
 
             yield race({
-                delay: call(delay, 5000), // TODO constant
+                delay: delay(5000), // TODO constant
                 forceRefresh: take(actionTypes.FORCE_PROCESS_LOG_REFRESH)
             });
         }

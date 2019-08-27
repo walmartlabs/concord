@@ -218,7 +218,7 @@ function* onStartProcessWizard({ processInstanceId }: StartProcessWizard) {
                 return;
             }
 
-            yield call(delay, 1000);
+            yield delay(1000);
         }
 
         const f = forms[0];
