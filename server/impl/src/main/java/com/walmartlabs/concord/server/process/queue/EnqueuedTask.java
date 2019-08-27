@@ -89,7 +89,7 @@ public class EnqueuedTask extends PeriodicTask {
 
         int limit = Math.min(freeWorkersCount.get(), cfg.getWorkersCount());
         List<ProcessKey> keys = dao.poll(limit);
-        log.info("performTask ['{}'] -> size: {}", limit, keys.size());
+        log.debug("performTask ['{}'] -> size: {}", limit, keys.size());
         if (keys.isEmpty()) {
             return false;
         }

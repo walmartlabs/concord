@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -49,10 +50,12 @@ import java.util.Set;
 public class EnqueueingProcessor implements PayloadProcessor {
 
     private final ProcessQueueDao queueDao;
+    private final LogManager logManager;
 
     @Inject
-    public EnqueueingProcessor(ProcessQueueDao queueDao) {
+    public EnqueueingProcessor(ProcessQueueDao queueDao, LogManager logManager) {
         this.queueDao = queueDao;
+        this.logManager = logManager;
     }
 
     @Override
@@ -80,6 +83,12 @@ public class EnqueueingProcessor implements PayloadProcessor {
         Map<String, Object> meta = getMeta(payload);
         Imports imports = payload.getHeader(Payload.IMPORTS);
         queueDao.enqueue(processKey, tags, startAt, requirements, processTimeout, handlers, meta, exclusive, imports);
+
+        if (startAt == null) {
+            logManager.info(processKey, "Enqueued. Waiting for an agent (requirements={})...", requirements);
+        } else {
+            logManager.info(processKey, "Enqueued. Starting at {} (requirements={})...", startAt, requirements);
+        }
 
         return chain.process(payload);
     }

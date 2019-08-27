@@ -58,7 +58,7 @@ public class ProcessHeartbeat {
         }
 
         worker = new Thread(() -> {
-            log.info("start ['{}'] -> running every {}ms, max interval: {}ms", instanceId, HEARTBEAT_INTERVAL, maxPingInterval);
+            log.debug("start ['{}'] -> running every {}ms, max interval: {}ms", instanceId, HEARTBEAT_INTERVAL, maxPingInterval);
 
             ApiClient client = apiClientFactory.create(ApiClientConfiguration.builder()
                     .sessionToken(sessionToken)

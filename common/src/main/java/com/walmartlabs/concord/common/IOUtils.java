@@ -57,7 +57,7 @@ public final class IOUtils {
             if (!Files.exists(TMP_DIR)) {
                 Files.createDirectories(TMP_DIR);
             }
-            log.info("Using {} as CONCORD_TMP_DIR", TMP_DIR);
+            log.debug("Using {} as CONCORD_TMP_DIR", TMP_DIR);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

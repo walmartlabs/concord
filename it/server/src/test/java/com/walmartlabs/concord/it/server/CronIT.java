@@ -85,12 +85,12 @@ public class CronIT extends AbstractServerIT {
             Thread.sleep(1000);
 
             List<ProcessEntry> processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
-            for (ProcessEntry e : processes) {
-                assertNotEquals(ProcessEntry.StatusEnum.FAILED, e.getStatus());
-            }
-
             if (processes.size() != 2) {
                 continue;
+            }
+
+            for (ProcessEntry e : processes) {
+                assertNotEquals(ProcessEntry.StatusEnum.FAILED, e.getStatus());
             }
 
             Set<String> patterns = new HashSet<>(expectedPatterns);

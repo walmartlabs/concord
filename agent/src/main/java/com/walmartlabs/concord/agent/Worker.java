@@ -74,8 +74,6 @@ public class Worker implements Runnable {
             // ...and download the saved process state from the server
             downloadState(jobRequest);
 
-            jobRequest.getLog().info("Starting...");
-
             // execute the job
             jobInstance = executor.exec(jobRequest);
             jobInstance.waitForCompletion();
@@ -157,7 +155,7 @@ public class Worker implements Runnable {
     }
 
     private void downloadState(JobRequest r) throws Exception {
-        r.getLog().info("Downloading the process state {}...", r.getInstanceId());
+        r.getLog().info("Downloading the process state...");
 
         long dt;
         try {
