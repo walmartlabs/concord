@@ -37,6 +37,9 @@ public class InventoryTask extends AbstractConcordTask {
 
     private static final Logger log = LoggerFactory.getLogger(InventoryTask.class);
 
+    private static final int RETRY_COUNT = 3;
+    private static final long RETRY_INTERVAL = 5000;
+
     public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
                                        String inventoryName,
                                        String hostGroupName, String queryName, Map<String, Object> params) throws Exception {
@@ -127,10 +130,10 @@ public class InventoryTask extends AbstractConcordTask {
     }
 
     private List<Object> execQuery(Context ctx, String orgName, String inventoryName, String queryName, Map<String, Object> params) throws Exception {
-        return withClient(ctx, client -> {
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> withClient(ctx, client -> {
             InventoryQueriesApi api = new InventoryQueriesApi(client);
             return api.exec(orgName, inventoryName, queryName, params);
-        });
+        }));
     }
 
     @SuppressWarnings("unchecked")
