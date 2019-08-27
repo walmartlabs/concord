@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-console: new icon for the `NEW` process status;
 - concord-console: fix the process status page refresh.
 
 
