@@ -1,5 +1,13 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-console: fix the process status page refresh.
+
+
+
 ## [1.31.0] - 2019-08-27
 
 ### Added
