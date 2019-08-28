@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-console: hide form actions on the process status page if
+the process is stopped;
 - concord-agent: move some of the system log messages to the `debug`
 level;
 - concord-server: additional logging when the process is enqueued.
