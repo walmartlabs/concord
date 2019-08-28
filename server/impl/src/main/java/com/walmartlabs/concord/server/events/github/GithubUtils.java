@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.events;
+package com.walmartlabs.concord.server.events.github;
 
 /*-
  * *****
@@ -52,9 +52,10 @@ public final class GithubUtils {
         return result;
     }
 
+    // TODO: remove me when triggers v1 removed
     public static boolean isRepositoryUrl(String repo, String url, String githubDomain) {
         // TODO necessary for tests
-        if (repo.equals(url)) {
+        if (repo.equals(url) || (url.startsWith("/") && url.endsWith(repo))) {
             return true;
         }
 
@@ -63,16 +64,36 @@ public final class GithubUtils {
     }
 
     public static String getRepositoryName(String repoUrl) {
+        GithubRepoInfo info = getRepositoryInfo(repoUrl);
+        if (info == null) {
+            return null;
+        }
+        return info.owner() + "/" + info.name();
+    }
+
+    public static GithubRepoInfo getRepositoryInfo(String repoUrl) {
         String repoPath = getRepoPath(repoUrl);
 
         String[] u = repoPath.split("/");
         if(u.length < 2) {
             return null;
         }
-        return owner(u[0]) + "/" + name(u[1]);
+        return GithubRepoInfo.builder()
+                .owner(owner(u[0]))
+                .name(name(u[1]))
+                .build();
     }
 
     private static String getRepoPath(String repoUrl) {
+        // tests support
+        if (repoUrl.startsWith("/")) {
+            String[] folders = repoUrl.split("/");
+            if (folders.length < 2) {
+                return repoUrl;
+            }
+            return folders[folders.length - 2] + "/" + folders[folders.length - 1];
+        }
+
         String u = removeSchema(repoUrl);
         u = removeHost(u);
         return u;

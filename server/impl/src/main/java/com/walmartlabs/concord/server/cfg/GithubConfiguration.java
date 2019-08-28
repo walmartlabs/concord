@@ -57,6 +57,7 @@ public class GithubConfiguration {
         return secret;
     }
 
+    // TODO: remove me when triggers v1 removed
     public String getGithubDomain() {
         return githubDomain;
     }

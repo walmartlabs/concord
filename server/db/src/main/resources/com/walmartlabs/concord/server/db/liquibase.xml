@@ -71,5 +71,6 @@
     <include file="v1.24.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.27.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.28.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.32.0.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

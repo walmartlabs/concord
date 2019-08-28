@@ -47,7 +47,7 @@ public class CronTriggerProcessor implements TriggerProcessor {
     }
 
     @Override
-    public void process(DSLContext tx, UUID triggerId, Trigger t) {
+    public void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t) {
         if (t.getParams() == null) {
             log.warn("process ['{}'] -> cron trigger without params, ignore", triggerId);
             return;

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server, project-model: initial version of the new
+streamlined GitHub trigger implementation (opt-in).
+
 ### Changed
 
 - concord-console: hide form actions on the process status page if

@@ -25,7 +25,6 @@ import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
-
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;

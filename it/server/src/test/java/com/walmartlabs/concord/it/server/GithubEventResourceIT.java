@@ -196,7 +196,7 @@ public class GithubEventResourceIT extends AbstractServerIT {
         while (!Thread.currentThread().isInterrupted()) {
             List<TriggerEntry> triggers = triggersApi.list(orgName, projectName, repoName);
             if (!triggers.isEmpty()) {
-                return null;
+                break;
             }
 
             Thread.sleep(1000);

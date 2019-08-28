@@ -20,14 +20,12 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
-import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -41,50 +39,30 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class AbstractEventResource {
-
-    private static final TriggerDefinitionEnricher AS_IS_ENRICHER = entry -> entry;
 
     private final Logger log;
     private final ExternalEventsConfiguration eventsCfg;
     private final ProcessManager processManager;
-    private final TriggersDao triggersDao;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
-    private final TriggerDefinitionEnricher triggerDefinitionEnricher;
     private final TriggersConfiguration triggersCfg;
     private final UserManager userManager;
     private final ProcessSecurityContext processSecurityContext;
 
     public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
                                  ProcessManager processManager,
-                                 TriggersDao triggersDao,
                                  ProjectDao projectDao,
                                  RepositoryDao repositoryDao,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
                                  ProcessSecurityContext processSecurityContext) {
 
-        this(eventsCfg, processManager, triggersDao, projectDao, repositoryDao, AS_IS_ENRICHER, triggersCfg, userManager, processSecurityContext);
-    }
-
-    public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
-                                 ProcessManager processManager,
-                                 TriggersDao triggersDao, ProjectDao projectDao,
-                                 RepositoryDao repositoryDao,
-                                 TriggerDefinitionEnricher enricher,
-                                 TriggersConfiguration triggersCfg,
-                                 UserManager userManager,
-                                 ProcessSecurityContext processSecurityContext) {
-
         this.eventsCfg = eventsCfg;
         this.processManager = processManager;
-        this.triggersDao = triggersDao;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
-        this.triggerDefinitionEnricher = enricher;
         this.processSecurityContext = processSecurityContext;
         this.triggersCfg = triggersCfg;
         this.userManager = userManager;
@@ -92,33 +70,21 @@ public abstract class AbstractEventResource {
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
-    /**
-     * Processes the event and starts new processes with triggers that are
-     * matching the specified event.
-     *
-     * @return a list of IDs of started processes
-     */
     protected List<PartialProcessKey> process(String eventId,
                                               String eventName,
-                                              Map<String, Object> conditions,
                                               Map<String, Object> event,
+                                              List<TriggerEntry> triggers,
                                               ProcessConfigurationEnricher cfgEnricher) {
+        if (isDisabled(eventName)) {
+            log.warn("process ['{}'] event '{}' disabled", eventId, eventName);
+            return Collections.emptyList();
+        }
 
         assertRoles(eventName);
-
-        List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
-                .map(triggerDefinitionEnricher::enrich)
-                .filter(t -> filter(conditions, t))
-                .collect(Collectors.toList());
 
         List<PartialProcessKey> processKeys = new ArrayList<>(triggers.size());
 
         for (TriggerEntry t : triggers) {
-            if (isDisabled(eventName)) {
-                log.warn("process ['{}'] - disabled, skipping (triggered by {})", eventId, t);
-                continue;
-            }
-
             if (isRepositoryDisabled(t)) {
                 log.warn("Repository is disabled, skipping -> ['{}'] ", t);
                 continue;
@@ -180,7 +146,7 @@ public abstract class AbstractEventResource {
         });
     }
 
-    private boolean isDisabled(String eventName) {
+    protected boolean isDisabled(String eventName) {
         return triggersCfg.isDisableAll() || triggersCfg.getDisabled().contains(eventName);
     }
 
@@ -198,15 +164,6 @@ public abstract class AbstractEventResource {
         // TODO make sure all event resources perform the user lookup correctly, e.g. using correct input data
         String author = event.getOrDefault("author", "").toString();
         return userManager.getOrCreate(author, null, UserType.LDAP);
-    }
-
-    private boolean filter(Map<String, Object> conditions, TriggerEntry t) {
-        try {
-            return MapMatcher.matches(conditions, t.getConditions());
-        } catch (Exception e) {
-            log.warn("filter [{}, {}] -> error while matching events: {}", conditions, t, e.getMessage());
-            return false;
-        }
     }
 
     private PartialProcessKey startProcess(String eventId,
@@ -236,10 +193,6 @@ public abstract class AbstractEventResource {
         });
 
         return processKey;
-    }
-
-    public interface TriggerDefinitionEnricher {
-        TriggerEntry enrich(TriggerEntry entry);
     }
 
     public interface ProcessConfigurationEnricher {

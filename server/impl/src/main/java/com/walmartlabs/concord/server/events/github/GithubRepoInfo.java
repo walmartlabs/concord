@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.org.triggers;
+package com.walmartlabs.concord.server.events.github;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,16 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.Trigger;
-import org.jooq.DSLContext;
+import org.immutables.value.Value;
 
-import java.util.UUID;
+@Value.Immutable
+public interface GithubRepoInfo {
 
-/**
- * Processes triggers when they are updated, i.e. when the repository is updated.
- */
-public interface TriggerProcessor {
+    String owner();
 
-    void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t);
+    String name();
+
+    static ImmutableGithubRepoInfo.Builder builder() {
+        return ImmutableGithubRepoInfo.builder();
+    }
 }

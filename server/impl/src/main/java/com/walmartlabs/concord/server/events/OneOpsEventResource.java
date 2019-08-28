@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -50,6 +51,7 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -74,6 +76,7 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     private static final String IPS_KEY = "ips";
     private static final String AUTHOR_KEY = "author";
 
+    private final TriggersDao triggersDao;
     private final ObjectMapper objectMapper;
 
     @Inject
@@ -84,10 +87,13 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
                                RepositoryDao repositoryDao,
                                TriggersConfiguration triggersCfg,
                                UserManager userManager,
-                               ProcessSecurityContext processSecurityContext) {
+                               ProcessSecurityContext processSecurityContext,
+                               ObjectMapper objectMapper) {
 
-        super(cfg, processManager, triggersDao, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
-        this.objectMapper = new ObjectMapper();
+        super(cfg, processManager, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
+
+        this.triggersDao = triggersDao;
+        this.objectMapper = objectMapper;
     }
 
     @POST
@@ -95,6 +101,11 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response event(Map<String, Object> event) {
+        if (isDisabled(EVENT_SOURCE)) {
+            log.warn("event ['{}'] disabled", EVENT_SOURCE);
+            return Response.ok().build();
+        }
+
         if (event == null || event.isEmpty()) {
             return Response.status(Status.BAD_REQUEST).build();
         }
@@ -103,9 +114,15 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
 
         String eventId = String.valueOf(event.get("cmsId"));
-        List<PartialProcessKey> processKeys = process(eventId, EVENT_SOURCE, triggerConditions, triggerEvent, null);
+
+        List<TriggerEntry> triggers = triggersDao.list(EVENT_SOURCE).stream()
+                .filter(t -> DefaultEventFilter.filter(triggerConditions, t))
+                .collect(Collectors.toList());
+
+        List<PartialProcessKey> processKeys = process(eventId, EVENT_SOURCE, triggerEvent, triggers, null);
 
         log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, processKeys.size());
+
         return Response.ok().build();
     }
 
@@ -185,7 +202,6 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         return nsPath.split("/");
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, Object> getCis(Map<String, Object> event) {
         List<Map<String, Object>> cisItems = getCisItems(event);
         if (cisItems.isEmpty()) {

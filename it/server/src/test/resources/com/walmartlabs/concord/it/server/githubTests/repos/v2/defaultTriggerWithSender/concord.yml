@@ -4,5 +4,6 @@ flows:
 
 triggers:
   - github:
-      author: ".*some.*dude.*"
+      sender: ".*some.*dude.*"
       entryPoint: "onPush"
+      version: 2

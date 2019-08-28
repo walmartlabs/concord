@@ -44,7 +44,8 @@ import java.util.*;
 
 import static com.walmartlabs.concord.policyengine.QueueProcessPolicy.ProcessRule;
 import static com.walmartlabs.concord.policyengine.QueueProcessPolicy.QueueMetrics;
-import static com.walmartlabs.concord.server.jooq.Tables.*;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
+import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
 import static org.jooq.impl.DSL.*;
 
 @Named
