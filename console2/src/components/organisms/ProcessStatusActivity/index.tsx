@@ -149,7 +149,7 @@ const ProcessStatusActivity = (props: ExternalProps) => {
             <Divider content="Process Details" horizontal={true} />
             <ProcessStatusTable data={process} />
 
-            {forms.length > 0 && (
+            {forms.length > 0 && !isFinal(process.status) && (
                 <>
                     <Divider content="Required Actions" horizontal={true} />
                     <Route
