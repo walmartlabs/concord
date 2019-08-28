@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Repositories;
-import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -38,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.db.PgUtils.jsonText;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.*;
@@ -77,27 +77,12 @@ public class TriggersDao extends AbstractDao {
                 .getTriggerId();
     }
 
-    public void update(UUID id, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
-        tx(tx -> update(tx, id, projectId, repositoryId, eventSource, activeProfiles, args, conditions, config));
-    }
-
-    private void update(DSLContext tx, UUID id, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
+    public void update(DSLContext tx, UUID triggerId, Map<String, Object> conditions, int version) {
         tx.update(TRIGGERS)
-                .set(TRIGGERS.PROJECT_ID, projectId)
-                .set(TRIGGERS.REPO_ID, repositoryId)
-                .set(TRIGGERS.EVENT_SOURCE, eventSource)
-                .set(TRIGGERS.ACTIVE_PROFILES, Utils.toArray(activeProfiles))
-                .set(TRIGGERS.ARGUMENTS, field("?::jsonb", String.class, objectMapper.serialize(args)))
+                .set(TRIGGERS.TRIGGER_VERSION, value(version))
                 .set(TRIGGERS.CONDITIONS, field("?::jsonb", String.class, objectMapper.serialize(conditions)))
-                .set(TRIGGERS.TRIGGER_CFG, field("?::jsonb", String.class, objectMapper.serialize(config)))
-                .where(TRIGGERS.TRIGGER_ID.eq(id))
+                .where(TRIGGERS.TRIGGER_ID.eq(triggerId))
                 .execute();
-    }
-
-    public void delete(UUID id) {
-        tx(tx -> tx.delete(TRIGGERS)
-                .where(TRIGGERS.TRIGGER_ID.eq(id))
-                .execute());
     }
 
     public void delete(DSLContext tx, UUID projectId, UUID repositoryId) {
@@ -117,20 +102,29 @@ public class TriggersDao extends AbstractDao {
 
     public List<TriggerEntry> list(String eventSource) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, eventSource, null);
+            return list(tx, null, eventSource, null, null);
         }
     }
 
-    public List<TriggerEntry> list(String eventSource, Map<String, String> conditions) {
+    public List<TriggerEntry> list(UUID projectId, String eventSource, Integer version, Map<String, String> conditions) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, eventSource, conditions);
+            return list(tx, projectId, eventSource, version, conditions);
         }
     }
 
-    public List<TriggerEntry> list(DSLContext tx, String eventSource, Map<String, String> conditions) {
+    private List<TriggerEntry> list(DSLContext tx, UUID projectId, String eventSource, Integer version, Map<String, String> conditions) {
         SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String>> query = selectTriggers(tx);
 
-        return query.where(buildConditionClause(TRIGGERS, eventSource, conditions))
+        Condition w = TRIGGERS.EVENT_SOURCE.eq(eventSource);
+        if (projectId != null) {
+            w = w.and(TRIGGERS.PROJECT_ID.eq(projectId));
+        }
+
+        if (version != null) {
+            w = w.and(TRIGGERS.TRIGGER_VERSION.eq(version));
+        }
+
+        return query.where(appendConditionClause(conditions, w))
                 .fetch(this::toEntity);
     }
 
@@ -186,23 +180,18 @@ public class TriggersDao extends AbstractDao {
                 .leftJoin(r).on(r.REPO_ID.eq(TRIGGERS.REPO_ID));
     }
 
-    private Condition buildConditionClause(Triggers t, String eventSource, Map<String, String> conditions) {
-        Condition result = t.EVENT_SOURCE.eq(eventSource);
+    private Condition appendConditionClause(Map<String, String> conditions, Condition w) {
         if (conditions == null) {
-            return result;
+            return w;
         }
 
         for (Map.Entry<String, String> e : conditions.entrySet()) {
-            result = result.and(
-                    jsonText(t.CONDITIONS, e.getKey()).isNull()
+            w = w.and(
+                    jsonText(TRIGGERS.CONDITIONS, e.getKey()).isNull()
                             .or(
-                                    value(e.getValue()).likeRegex(jsonText(t.CONDITIONS, e.getKey()).cast(String.class))));
+                                    value(e.getValue()).likeRegex(jsonText(TRIGGERS.CONDITIONS, e.getKey()).cast(String.class))));
         }
-        return result;
-    }
-
-    private static Field<Object> jsonText(Field<?> field, String name) {
-        return field("{0}->>{1}", Object.class, field, inline(name));
+        return w;
     }
 
     private TriggerEntry toEntity(Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], String, String, String> item) {

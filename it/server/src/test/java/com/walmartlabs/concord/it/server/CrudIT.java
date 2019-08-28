@@ -26,7 +26,9 @@ import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 

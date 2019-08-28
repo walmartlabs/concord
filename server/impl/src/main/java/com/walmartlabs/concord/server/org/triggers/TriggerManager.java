@@ -79,7 +79,7 @@ public class TriggerManager extends AbstractDao {
 
                 TriggerProcessor processor = triggerProcessors.get(t.getName());
                 if (processor != null) {
-                    processor.process(tx, triggerId, t);
+                    processor.process(tx, repoId, triggerId, t);
                 }
             });
         });

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
@@ -51,6 +52,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -59,6 +61,8 @@ import java.util.UUID;
 public class ExternalEventResource extends AbstractEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ExternalEventResource.class);
+
+    private final TriggersDao triggersDao;
 
     @Inject
     public ExternalEventResource(ExternalEventsConfiguration cfg,
@@ -70,7 +74,9 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
                                  UserManager userManager,
                                  ProcessSecurityContext processSecurityContext) {
 
-        super(cfg, processManager, triggersDao, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
+        super(cfg, processManager, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
+
+        this.triggersDao = triggersDao;
     }
 
     @POST
@@ -79,20 +85,25 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response event(@ApiParam @PathParam("eventName") String eventName,
-                          @ApiParam Map<String, Object> event) {
+                          @ApiParam Map<String, Object> data) {
 
-        if (event == null) {
-            event = Collections.emptyMap();
+        if (isDisabled(eventName)) {
+            log.warn("event ['{}'] disabled", eventName);
+            return Response.ok().build();
         }
 
-        String eventId = (String) event.get("id");
-        if (eventId == null) {
-            eventId = UUID.randomUUID().toString();
-        }
+        Map<String, Object> event = data != null ? data : Collections.emptyMap();
 
-        List<PartialProcessKey> processKeys = process(eventId, eventName, event, event, null);
+        String eventId = (String) event.computeIfAbsent("id", s -> UUID.randomUUID().toString());
+
+        List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
+                .filter(t -> DefaultEventFilter.filter(event, t))
+                .collect(Collectors.toList());
+
+        List<PartialProcessKey> processKeys = process(eventId, eventName, event, triggers, null);
 
         log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, processKeys.size());
+
         return Response.ok().build();
     }
 }

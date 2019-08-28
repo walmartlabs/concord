@@ -36,7 +36,10 @@ public final class GitUtils {
 
     public static Path createBareRepository(Path data, String commitMessage) throws Exception {
         // init bare repository
-        Path repo = createTempDir();
+        Path tmp = createTempDir();
+        Path repo = tmp.resolve("test");
+        Files.createDirectories(repo);
+
         Git.init().setBare(true).setDirectory(repo.toFile()).call();
 
         // clone the repository into a new directory

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.server.events.github.GithubUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

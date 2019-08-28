@@ -20,8 +20,11 @@ package com.walmartlabs.concord.server.security;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
+import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.security.github.GithubKey;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -41,8 +44,13 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 public class GithubAuthenticatingFilter extends AuthenticatingFilter {
@@ -56,10 +64,14 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
     public static final String HOOK_REPO_TOKEN = "hookRepoToken";
 
     private final GithubConfiguration cfg;
+    private final EncryptedProjectValueManager encryptedValueManager;
+    private final ObjectMapper objectMapper;
 
     @Inject
-    public GithubAuthenticatingFilter(GithubConfiguration cfg) {
+    public GithubAuthenticatingFilter(GithubConfiguration cfg, EncryptedProjectValueManager encryptedValueManager, ObjectMapper objectMapper) {
         this.cfg = cfg;
+        this.encryptedValueManager = encryptedValueManager;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -72,11 +84,13 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
         CachingRequestWrapper req = (CachingRequestWrapper) request;
 
+        final byte[] payload = req.getPayload();
+
         // support for hooks restricted to a specific repository
         UUID projectId = getUUID(req, HOOK_PROJECT_ID);
         String repoToken = getString(req, HOOK_REPO_TOKEN);
         if (projectId != null && repoToken != null) {
-            return new GithubKey(null, projectId, repoToken);
+            return processSpecificRepo(projectId, repoToken, payload);
         }
 
         String h = req.getHeader(SIGNATURE_HEADER);
@@ -96,7 +110,6 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             return new UsernamePasswordToken();
         }
 
-        final byte[] payload = req.getPayload();
         SecretKeySpec signingKey = new SecretKeySpec(cfg.getSecret().getBytes(), HMAC_SHA1_ALGORITHM);
         try {
             Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
@@ -114,6 +127,35 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             log.error("createToken -> internal error", e);
             throw e;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private AuthenticationToken processSpecificRepo(UUID projectId, String repoToken, byte[] rawPayload) throws IOException {
+        Map<String, Object> payload = objectMapper.readValue(rawPayload, ConcordObjectMapper.MAP_TYPE);
+
+        Map<String, Object> repo = (Map<String, Object>) payload.getOrDefault("repository", Collections.emptyMap());
+        String repoFullName = (String) repo.get("full_name");
+        if (repoFullName == null) {
+            log.error("processSpecificRepo -> repository name not found in payload");
+            return new UsernamePasswordToken();
+        }
+
+        String[] orgRepo = repoFullName.split("/");
+        if (orgRepo.length != 2) {
+            log.error("processSpecificRepo -> invalid repo name '{}', expected org/repo format", repoFullName);
+            return new UsernamePasswordToken();
+        }
+
+        byte[] decodedHash = Base64.getDecoder().decode(repoToken);
+        byte[] decryptedHash = encryptedValueManager.decrypt(projectId, decodedHash);
+        String userHash = new String(decryptedHash, StandardCharsets.UTF_8);
+
+        String repoHash = hash(orgRepo[1]);
+        if (!repoHash.equals(userHash)) {
+            log.error("processSpecificRepo -> invalid repo token");
+            return new UsernamePasswordToken();
+        }
+        return new GithubKey(null, projectId, repoToken);
     }
 
     @Override
@@ -142,6 +184,19 @@ public class GithubAuthenticatingFilter extends AuthenticatingFilter {
             return null;
         }
         return UUID.fromString(s);
+    }
+
+    private static String hash(String value) {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        byte[] ab = md.digest(value.getBytes(StandardCharsets.UTF_8));
+
+        return Base64.getEncoder().withoutPadding().encodeToString(ab);
     }
 
     static class CachingRequestWrapper extends HttpServletRequestWrapper {

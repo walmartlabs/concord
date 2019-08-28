@@ -90,6 +90,12 @@ public class RepositoryDao extends AbstractDao {
                 .fetchOne(this::toEntry));
     }
 
+    public RepositoryEntry get(DSLContext tx, UUID repoId) {
+        return selectRepositoryEntry(tx)
+                .where(REPOSITORIES.REPO_ID.eq(repoId))
+                .fetchOne(this::toEntry);
+    }
+
     public UUID insert(UUID projectId, String repositoryName, String url, String branch, String commitId, String path, UUID secretId, boolean disabled, Map<String, Object> meta) {
         return txResult(tx -> insert(tx, projectId, repositoryName, url, branch, commitId, path, secretId, disabled, meta));
     }
@@ -170,11 +176,16 @@ public class RepositoryDao extends AbstractDao {
         return query.fetch(this::toEntry);
     }
 
-    public List<RepositoryEntry> find(String repoUrl) {
+    public List<RepositoryEntry> find(UUID projectId, String repoUrl) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return selectRepositoryEntry(tx)
-                    .where(REPOSITORIES.REPO_URL.contains(repoUrl))
-                    .fetch(this::toEntry);
+            SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, String, UUID, String, String>> select = selectRepositoryEntry(tx)
+                    .where(REPOSITORIES.REPO_URL.contains(repoUrl));
+
+            if (projectId != null) {
+                select.and(REPOSITORIES.PROJECT_ID.eq(projectId));
+            }
+
+            return select.fetch(this::toEntry);
         }
     }
 

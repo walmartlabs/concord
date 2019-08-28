@@ -1,0 +1,14 @@
+flows:
+  onPush:
+    - log: "onPush: ${event}"
+
+triggers:
+  - github:
+      entryPoint: "onPush"
+      type: "push"
+      githubOrg: "devtools"
+      githubRepo: "concord"
+#      githubHost: ""
+      branch: "master"
+      sender: "vasia"
+      version: 2
