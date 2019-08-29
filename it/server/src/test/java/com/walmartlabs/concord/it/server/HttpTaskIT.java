@@ -63,6 +63,7 @@ public class HttpTaskIT extends AbstractServerIT {
     private static final String mockHttpPathUnauthorized = "/unauthorized";
     private static final String mockHttpPathEmpty = "/empty";
     private static final String mockHttpPathFormUrlEncoded = "/formUrlEncode";
+    private static final String mockHttpPathFollowRedirects = "/followRedirects";
 
     private static final String SERVER_URL;
 
@@ -89,6 +90,7 @@ public class HttpTaskIT extends AbstractServerIT {
         stubForUnAuthorizedRequestEndpoint(mockHttpPathUnauthorized);
         stubForEmptyResponse(mockHttpPathEmpty);
         stubForFormUrlEncodedEndpoint(mockHttpPathFormUrlEncoded);
+        stubForRedirects(mockHttpPathFollowRedirects);
     }
 
     @After
@@ -414,6 +416,26 @@ public class HttpTaskIT extends AbstractServerIT {
         assertLog(".*Content is NULL: true.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testFollowRedirects() throws Exception {
+        URI dir = HttpTaskIT.class.getResource("httpFollowRedirects").toURI();
+        byte[] payload = archive(dir);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.authToken", mockHttpAuthToken);
+        input.put("arguments.url", mockHttpBaseUrl + rule.port() + mockHttpPathFollowRedirects);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Response status code: 302.*", ab);
+    }
+
     private void stubForGetAsStringEndpoint(String url) {
         rule.stubFor(get(urlEqualTo(url))
                 .willReturn(aResponse()
@@ -526,6 +548,11 @@ public class HttpTaskIT extends AbstractServerIT {
                         .withBody("{\n" +
                                 "  \"Success\": \"true\"\n" +
                                 "}")));
+    }
+
+    private void stubForRedirects(String url) {
+        rule.stubFor(get(urlEqualTo(url))
+                .willReturn(temporaryRedirect("/temporaryRedirect")));
     }
 
     public static class RequestHeaders extends ResponseDefinitionTransformer {

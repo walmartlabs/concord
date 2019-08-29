@@ -45,7 +45,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status.Family;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -114,11 +114,12 @@ public class SimpleHttpClient {
 
             Map<String, Object> response = new HashMap<>();
 
-            boolean isSuccess = false;
-            if (Response.Status.Family.SUCCESSFUL == Response.Status.Family.familyOf(httpResponse.getStatusLine().getStatusCode())) {
+            Family statusCodeFamily = Family.familyOf(httpResponse.getStatusLine().getStatusCode());
+
+            boolean isSuccess = Family.SUCCESSFUL == statusCodeFamily;
+            if (isSuccess) {
                 content = processResponse(httpResponse, config);
                 response.put("content", content);
-                isSuccess = true;
             } else {
                 content = EntityUtils.toString(httpResponse.getEntity());
                 // for backward compatibility
@@ -320,7 +321,8 @@ public class SimpleHttpClient {
     private static CloseableHttpClient createClient(Configuration cfg) throws Exception {
         RequestConfig.Builder c = RequestConfig.custom()
                 .setConnectTimeout(cfg.getConnectTimeout())
-                .setSocketTimeout(cfg.getSocketTimeout());
+                .setSocketTimeout(cfg.getSocketTimeout())
+                .setRedirectsEnabled(cfg.isFollowRedirects());
 
         String proxy = cfg.getProxy();
         if (proxy != null) {
