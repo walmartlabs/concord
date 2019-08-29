@@ -55,7 +55,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return chain.process(payload);
         }

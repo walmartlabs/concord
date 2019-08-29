@@ -92,7 +92,7 @@ public final class PayloadBuilder {
         Map<String, Path> attachments = payload.getAttachments();
         attachments = new HashMap<>(attachments != null ? attachments : Collections.emptyMap());
 
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         cfg = new HashMap<>(cfg != null ? cfg : Collections.emptyMap());
 
         ProcessKey pk = payload.getProcessKey();
@@ -120,7 +120,7 @@ public final class PayloadBuilder {
             }
         }
 
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, cfg)
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg)
                 .putAttachments(attachments);
 
         return this;
@@ -168,12 +168,12 @@ public final class PayloadBuilder {
             cfg = Collections.emptyMap();
         }
 
-        Map<String, Object> prev = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> prev = payload.getHeader(Payload.CONFIGURATION);
         if (prev != null) {
             cfg = ConfigurationUtils.deepMerge(prev, cfg);
         }
 
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, cfg);
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
         return this;
     }
 
@@ -195,7 +195,7 @@ public final class PayloadBuilder {
             meta = Collections.emptyMap();
         }
 
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             cfg = new HashMap<>();
         }
@@ -212,7 +212,7 @@ public final class PayloadBuilder {
             cfg.put(Constants.Request.META, meta);
         }
 
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, cfg);
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
         return this;
     }

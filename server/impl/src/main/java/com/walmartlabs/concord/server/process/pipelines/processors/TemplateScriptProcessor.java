@@ -71,7 +71,7 @@ public class TemplateScriptProcessor implements PayloadProcessor {
 
         ProcessKey processKey = payload.getProcessKey();
 
-        Map<String, Object> in = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> in = payload.getHeader(Payload.CONFIGURATION);
         Map<String, Object> out = processScript(processKey, in, scriptPath);
 
         Map<String, Object> merged = ConfigurationUtils.deepMerge(in, out);
@@ -81,7 +81,7 @@ public class TemplateScriptProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Found cycle in " + REQUEST_DATA_TEMPLATE_FILE_NAME + ": " +
                     result.getNode1() + " <-> " + result.getNode2() );
         }
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, merged);
+        payload = payload.putHeader(Payload.CONFIGURATION, merged);
 
         return chain.process(payload);
     }

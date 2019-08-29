@@ -80,12 +80,12 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private static boolean getBoolean(Payload payload, String key) {
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
-        if (req == null) {
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
+        if (cfg == null) {
             return false;
         }
 
-        Object v = req.get(key);
+        Object v = cfg.get(key);
         if (v == null) {
             return false;
         }

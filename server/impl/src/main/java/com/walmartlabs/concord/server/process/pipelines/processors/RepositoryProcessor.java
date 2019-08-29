@@ -126,7 +126,7 @@ public class RepositoryProcessor implements PayloadProcessor {
             return null;
         }
 
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg != null) {
             String branchOrTag = (String) cfg.getOrDefault(Constants.Request.REPO_BRANCH_OR_TAG, repo.getBranch());
             String commitId = (String) cfg.getOrDefault(Constants.Request.REPO_COMMIT_ID, repo.getCommitId());

@@ -42,7 +42,7 @@ public class ResumeDataMergingProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         // configuration from the user's request
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
 
         // _main.json file in the workspace
         Map<String, Object> workspaceCfg = getWorkspaceCfg(payload);
@@ -51,8 +51,8 @@ public class ResumeDataMergingProcessor implements PayloadProcessor {
         workspaceCfg.remove(InternalConstants.Request.ARGUMENTS_KEY);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, req);
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg);
+        payload = payload.putHeader(Payload.CONFIGURATION, m);
 
         return chain.process(payload);
     }

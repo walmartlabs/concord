@@ -31,27 +31,27 @@ import java.util.*;
 
 public class Payload {
 
-    public static final HeaderKey<UUID> PARENT_INSTANCE_ID = HeaderKey.register("_parentInstanceId", UUID.class);
-    public static final HeaderKey<UUID> ORGANIZATION_ID = HeaderKey.register("_orgId", UUID.class);
-    public static final HeaderKey<UUID> PROJECT_ID = HeaderKey.register("_projectId", UUID.class);
-    public static final HeaderKey<UUID> REPOSITORY_ID = HeaderKey.register("_repoId", UUID.class);
+    public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
+    public static final HeaderKey<List<String>> ACTIVE_PROFILES = HeaderKey.registerList("_activeProfiles");
+    public static final HeaderKey<Map> CONFIGURATION = HeaderKey.register("_cfg", Map.class);
+    public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
+    public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
+    public static final HeaderKey<PolicyRules> POLICY = HeaderKey.register("_policy", PolicyRules.class);
+    public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
+    public static final HeaderKey<ProjectDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProjectDefinition.class);
+    public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
+    public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
+    public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
     public static final HeaderKey<String> EXCLUSIVE_GROUP = HeaderKey.register("_exclusiveGroup", String.class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
-    public static final HeaderKey<UUID> INITIATOR_ID = HeaderKey.register("_initiatorId", UUID.class);
-    public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
-    public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
-    public static final HeaderKey<Map> REQUEST_DATA_MAP = HeaderKey.register("_meta", Map.class);
     public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
-    public static final HeaderKey<ProjectDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProjectDefinition.class);
-    public static final HeaderKey<List<String>> ACTIVE_PROFILES = HeaderKey.registerList("_activeProfiles");
-    public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
-    public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
-    public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
-    public static final HeaderKey<PolicyRules> POLICY = HeaderKey.register("_policy", PolicyRules.class);
-    public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
-    public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
     public static final HeaderKey<TriggeredByEntry> TRIGGERED_BY = HeaderKey.register("_triggeredBy", TriggeredByEntry.class);
+    public static final HeaderKey<UUID> INITIATOR_ID = HeaderKey.register("_initiatorId", UUID.class);
+    public static final HeaderKey<UUID> ORGANIZATION_ID = HeaderKey.register("_orgId", UUID.class);
+    public static final HeaderKey<UUID> PARENT_INSTANCE_ID = HeaderKey.register("_parentInstanceId", UUID.class);
+    public static final HeaderKey<UUID> PROJECT_ID = HeaderKey.register("_projectId", UUID.class);
+    public static final HeaderKey<UUID> REPOSITORY_ID = HeaderKey.register("_repoId", UUID.class);
 
     public static final AttachmentKey WORKSPACE_ARCHIVE = AttachmentKey.register("archive");
 

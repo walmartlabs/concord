@@ -54,13 +54,13 @@ public class ClearStartAtProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private static Payload clearConfiguration(Payload payload) {
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return payload;
         }
 
         Map<String, Object> m = new HashMap<>(cfg);
         m.remove(Constants.Request.START_AT_KEY);
-        return payload.putHeader(Payload.REQUEST_DATA_MAP, m);
+        return payload.putHeader(Payload.CONFIGURATION, m);
     }
 }

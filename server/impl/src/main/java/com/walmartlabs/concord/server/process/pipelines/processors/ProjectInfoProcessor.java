@@ -49,20 +49,20 @@ public class ProjectInfoProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> m = createProjectInfo(payload);
 
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
-        if (req == null) {
-            req = new HashMap<>();
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
+        if (cfg == null) {
+            cfg = new HashMap<>();
         }
 
-        Map<String, Object> args = (Map<String, Object>) req.get(Constants.Request.ARGUMENTS_KEY);
+        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
         if (args == null) {
             args = new HashMap<>();
-            req.put(Constants.Request.ARGUMENTS_KEY, args);
+            cfg.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
         args.put(Constants.Request.PROJECT_INFO_KEY, m);
 
-        return chain.process(payload.putHeader(Payload.REQUEST_DATA_MAP, req));
+        return chain.process(payload.putHeader(Payload.CONFIGURATION, cfg));
     }
 
     public Map<String, Object> createProjectInfo(Payload p) {

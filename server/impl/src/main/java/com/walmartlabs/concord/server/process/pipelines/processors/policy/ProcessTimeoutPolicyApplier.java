@@ -57,7 +57,7 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
     public void apply(Payload payload, Map<String, Object> policy) {
         ProcessKey processKey = payload.getProcessKey();
 
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return;
         }

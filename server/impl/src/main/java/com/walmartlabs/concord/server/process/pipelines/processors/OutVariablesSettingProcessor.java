@@ -40,13 +40,13 @@ public class OutVariablesSettingProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
-        if (req == null) {
-            req = new HashMap<>();
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
+        if (cfg == null) {
+            cfg = new HashMap<>();
         }
 
-        req.put(InternalConstants.Request.OUT_EXPRESSIONS_KEY, outExpr);
-        payload = payload.mergeValues(Payload.REQUEST_DATA_MAP,
+        cfg.put(InternalConstants.Request.OUT_EXPRESSIONS_KEY, outExpr);
+        payload = payload.mergeValues(Payload.CONFIGURATION,
                 Collections.singletonMap(InternalConstants.Request.OUT_EXPRESSIONS_KEY, outExpr));
 
         return chain.process(payload);

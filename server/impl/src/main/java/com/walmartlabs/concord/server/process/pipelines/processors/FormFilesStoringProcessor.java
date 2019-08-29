@@ -39,7 +39,6 @@ import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES
 @Named
 public class FormFilesStoringProcessor implements PayloadProcessor {
 
-
     private final LogManager logManager;
 
     @Inject
@@ -52,12 +51,12 @@ public class FormFilesStoringProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        Map<String, Object> data = payload.getHeader(Payload.REQUEST_DATA_MAP);
-        if (data == null) {
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
+        if (cfg == null) {
             return chain.process(payload);
         }
 
-        Map<String, String> formFiles = (Map<String, String>) data.get(FORM_FILES);
+        Map<String, String> formFiles = (Map<String, String>) cfg.get(FORM_FILES);
         if (formFiles == null) {
             return chain.process(payload);
         }

@@ -95,7 +95,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private static Instant getStartAt(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return null;
         }
@@ -126,7 +126,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private static Long getProcessTimeout(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return null;
         }
@@ -150,7 +150,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private static boolean isExclusive(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return false;
         }
@@ -173,13 +173,13 @@ public class EnqueueingProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getMeta(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
+        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
         return (Map<String, Object>) cfg.get(Constants.Request.META);
     }
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getRequirements(Payload p) {
-        Map<String, Object> req = p.getHeader(Payload.REQUEST_DATA_MAP);
-        return (Map<String, Object>) req.get(InternalConstants.Request.REQUIREMENTS);
+        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
+        return (Map<String, Object>) cfg.get(InternalConstants.Request.REQUIREMENTS);
     }
 }

@@ -53,10 +53,10 @@ public class DependenciesProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
-        // get a list of dependencies from the req data
-        Collection<String> deps = deps(processKey, req);
+        // get a list of dependencies from the cfg data
+        Collection<String> deps = deps(processKey, cfg);
         if (deps == null) {
             return chain.process(payload);
         }
@@ -75,8 +75,8 @@ public class DependenciesProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Invalid dependency list");
         }
 
-        req.put(InternalConstants.Request.DEPENDENCIES_KEY, deps);
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, req);
+        cfg.put(InternalConstants.Request.DEPENDENCIES_KEY, deps);
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
         log.info("process -> done");
         return chain.process(payload);

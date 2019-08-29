@@ -35,9 +35,9 @@ public class TagsExtractingProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
-        Object v = req.get(InternalConstants.Request.TAGS_KEY);
+        Object v = cfg.get(InternalConstants.Request.TAGS_KEY);
         if (v == null) {
             return chain.process(payload);
         }

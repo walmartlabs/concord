@@ -59,7 +59,7 @@ public class SerializationUtils {
                     continue;
                 }
 
-                if (!isSerializable(e.getValue())) {
+                if (!isSerializable(v)) {
                     Class k = v.getClass();
                     log.warn("Not serializable value: {} -> {} = {}", e.getKey(), k, v);
                 }
