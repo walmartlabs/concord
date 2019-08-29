@@ -38,7 +38,15 @@ public class ExternalEventsConfiguration implements Serializable {
     @Nullable
     private Map<String, String> requiredRoles;
 
+    @Inject
+    @Config("externalEvents.workerThreads")
+    private int workerThreads;
+
     public Map<String, String> getRequiredRoles() {
         return requiredRoles;
+    }
+
+    public int getWorkerThreads() {
+        return workerThreads;
     }
 }

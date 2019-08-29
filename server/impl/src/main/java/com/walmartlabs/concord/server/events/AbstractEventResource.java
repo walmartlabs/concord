@@ -39,10 +39,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractEventResource {
 
     private final Logger log;
+    private final ExecutorService executor;
+
     private final ExternalEventsConfiguration eventsCfg;
     private final ProcessManager processManager;
     private final ProjectDao projectDao;
@@ -68,6 +72,8 @@ public abstract class AbstractEventResource {
         this.userManager = userManager;
 
         this.log = LoggerFactory.getLogger(this.getClass());
+        this.executor = createExecutor(eventsCfg.getWorkerThreads());
+
     }
 
     protected List<PartialProcessKey> process(String eventId,
@@ -82,14 +88,21 @@ public abstract class AbstractEventResource {
 
         assertRoles(eventName);
 
-        List<PartialProcessKey> processKeys = new ArrayList<>(triggers.size());
+        return triggers.stream()
+                .filter(t -> !isRepositoryDisabled(t))
+                .map(t -> process(eventId, eventName, t, event, cfgEnricher))
+                .map(AbstractEventResource::resolve)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
 
-        for (TriggerEntry t : triggers) {
-            if (isRepositoryDisabled(t)) {
-                log.warn("Repository is disabled, skipping -> ['{}'] ", t);
-                continue;
-            }
+    private Future<PartialProcessKey> process(String eventId,
+                                              String eventName,
+                                              TriggerEntry t,
+                                              Map<String, Object> event,
+                                              ProcessConfigurationEnricher cfgEnricher) {
 
+        return executor.submit(() -> {
             Map<String, Object> args = new HashMap<>();
             if (t.getArguments() != null) {
                 args.putAll(t.getArguments());
@@ -116,14 +129,13 @@ public abstract class AbstractEventResource {
                 UUID orgId = projectDao.getOrgId(t.getProjectId());
 
                 PartialProcessKey pk = startProcess(eventId, orgId, t, cfg, initiator);
-                processKeys.add(pk);
                 log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, pk, t);
+                return pk;
             } catch (Exception e) {
                 log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
+                return null;
             }
-        }
-
-        return processKeys;
+        });
     }
 
     private boolean isRepositoryDisabled(TriggerEntry t) {
@@ -193,6 +205,20 @@ public abstract class AbstractEventResource {
         });
 
         return processKey;
+    }
+
+    private static <T> T resolve(Future<T> f) {
+        try {
+            return f.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static ExecutorService createExecutor(int poolSize) {
+        ThreadPoolExecutor p = new ThreadPoolExecutor(1, poolSize, 30, TimeUnit.SECONDS, new SynchronousQueue<>());
+        p.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        return p;
     }
 
     public interface ProcessConfigurationEnricher {
