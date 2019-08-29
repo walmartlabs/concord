@@ -1,0 +1,13 @@
+flows:
+  default:
+  - task: http
+    in:
+      method: GET
+      url: ${url}
+      response: string
+      followRedirects: false
+      out: rsp
+
+configuration:
+  arguments:
+    url: "http://localhost:8001"

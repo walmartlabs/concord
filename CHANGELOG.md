@@ -4,6 +4,8 @@
 
 ### Added
 
+- http-tasks: option to disable automatic redirect follow with
+`followRedirects: false`;
 - concord-server, project-model: initial version of the new
 streamlined GitHub trigger implementation (opt-in).
 
@@ -71,7 +73,7 @@ the `projectInfo` variable;
 
 ### Changed
 
-- http: skip certificate validation for all certificates (not only
+- http-tasks: skip certificate validation for all certificates (not only
 for self-signed);
 - concord-server: process start requests are now handled
 asynchronously. The process queue entry is created as soon as
@@ -98,7 +100,7 @@ sequence ID in the `/api/v1/process/{id}/events` endpoint.
 of the project's processes;
 - concord-server: record `github` events before starting any
 processes;
-- http: use `UTF-8` for string and JSON requests by default;
+- http-tasks: use `UTF-8` for string and JSON requests by default;
 - concord-server, concord-ansible: use the event's timestamp instead
 of the DB's timestamp when recording events (if available);
 - concord-console: fix the project payload settings being applied
@@ -114,7 +116,7 @@ process page.
 
 - concord-server: use MDC to log process ID in the pipeline
 processors;
-- http: improved input parameter validation, additional validation
+- http-tasks: improved input parameter validation, additional validation
 for JSON responses;
 - concord-console, concord-runner: fixed displayed duration for
 Ansible and process events;
@@ -180,7 +182,7 @@ startup errors (e.g. bad syntax).
 
 ### Added
 
-- http: support for `application/x-www-form-urlencoded`
+- http-tasks: support for `application/x-www-form-urlencoded`
 (`request: form` type);
 - concord-server, concord-console: pagination for the secret list;
 - concord-server: support for "exclusive" triggers and "exclusive"
@@ -271,7 +273,7 @@ configuration.
 
 - concord-server: automatic reload of `defaultConfiguration` file
 without restart;
-- http: support for query parameters;
+- http-tasks: support for query parameters;
 - concord-server: option to disable automatic user creation for
 the LDAP realm;
 - concord-console: display error details for `FAILED` processes;
@@ -285,7 +287,7 @@ triggers;
 
 ### Changed
 
-- http: make `method: GET` default;
+- http-tasks: make `method: GET` default;
 - concord-server: drop the `process_checkpoint` to `process_queue`
 FK, use a cleaning job instead. Enabled usage of partitioning for
 the `process_checkpoints` table;
@@ -780,7 +782,7 @@ page;
 - concord-server: new process configuration option `exclusiveExec`:
 restricts the process execution to one process at the time per
 project;
-- http: proxy support via `proxy` parameter;
+- http-tasks: proxy support via `proxy` parameter;
 - concord-server: option to restrict the external events endpoint
 `/api/v1/events/{eventName}` to users with specific roles.
 
@@ -922,7 +924,7 @@ correctly calculated when importing the state.
 
 ### Added
 
-- http: support for `PATCH` method.
+- http-tasks: support for `PATCH` method.
 
 ### Changed
 
@@ -1024,7 +1026,7 @@ start a process with the override of the configured
 branch/tag/commitId values;
 - concord-console: pagination for the Ansible host list on the
 process status page;
-- http: new parameter `ignoreErrors` - instead of throwing exceptions
+- http-tasks: new parameter `ignoreErrors` - instead of throwing exceptions
 on unauthorized requests, the task returns the result object with the
 error;
 - slack: new `slackChannel` task for creating and archiving channels
@@ -1492,7 +1494,7 @@ description;
 - concord-server: improved support for multi-select fields in custom
 forms;
 - ansible: option to save Ansible host statistics as a flow variable;
-- http: support for `DELETE` method;
+- http-tasks: support for `DELETE` method;
 - project-model: support for `activeProfiles` in trigger definitions;
 - concord-server: option to disable triggers (specific or all);
 - concord-server: the Prometheus metrics endpoint now proxied by the
@@ -1654,7 +1656,7 @@ exceptions.
 ### Added
 
 - concord-server: project-scoped secrets;
-- http: support for custom headers.
+- http-tasks: support for custom headers.
 
 ### Changed
 
@@ -1872,7 +1874,7 @@ getting secrets from the UI.
 
 ### Added
 
-- http: support for `PUT` requests;
+- http-tasks: support for `PUT` requests;
 - concord-server: new LDAP configuration property `usernameProperty`.
 Defaults to `sAMAccountName`.
 STRDTORC-507
@@ -1966,8 +1968,8 @@ ingestion;
 
 - ansible: deprecate `configuration.ansible`, `inventory` and
 `dynamicInventory` request parameters;
-- http: parse JSON responses;
-- http: use `${response}` as the default out variable.
+- http-tasks: parse JSON responses;
+- http-tasks: use `${response}` as the default out variable.
 
 
 
