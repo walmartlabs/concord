@@ -44,7 +44,7 @@ public class EntryPointProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         String s = payload.getHeader(Payload.ENTRY_POINT);
 
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             cfg = new HashMap<>();
         }
@@ -58,7 +58,7 @@ public class EntryPointProcessor implements PayloadProcessor {
         }
 
         cfg.put(Constants.Request.ENTRY_POINT_KEY, s);
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, cfg);
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
         logManager.info(payload.getProcessKey(), "Using entry point: {}", s);
 

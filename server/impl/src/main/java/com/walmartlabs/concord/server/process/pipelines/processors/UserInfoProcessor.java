@@ -62,7 +62,7 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
         Map<String, BaseUserInfo> m = new HashMap<>();
         m.put(key, info);
 
-        payload = payload.mergeValues(Payload.REQUEST_DATA_MAP, m);
+        payload = payload.mergeValues(Payload.CONFIGURATION, m);
 
         log.info("process -> done");
         return chain.process(payload);

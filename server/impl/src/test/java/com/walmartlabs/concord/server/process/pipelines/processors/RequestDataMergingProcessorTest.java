@@ -93,7 +93,7 @@ public class RequestDataMergingProcessorTest {
 
         Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
         payload = payload
-                .putHeader(Payload.REQUEST_DATA_MAP, req)
+                .putHeader(Payload.CONFIGURATION, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)
                 .putHeader(Payload.PROJECT_ID, prjId)
                 .putHeader(Payload.WORKSPACE_DIR, workDir)
@@ -143,7 +143,7 @@ public class RequestDataMergingProcessorTest {
 
         Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
         payload = payload
-                .putHeader(Payload.REQUEST_DATA_MAP, req)
+                .putHeader(Payload.CONFIGURATION, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)
                 .putHeader(Payload.PROJECT_ID, prjId)
                 .putHeader(Payload.WORKSPACE_DIR, workDir);
@@ -164,7 +164,7 @@ public class RequestDataMergingProcessorTest {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> process(Payload payload) {
-        return processPayload(payload).getHeader(Payload.REQUEST_DATA_MAP);
+        return processPayload(payload).getHeader(Payload.CONFIGURATION);
     }
 
     private Payload processPayload(Payload payload) {

@@ -55,7 +55,7 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
         UUID initiatorId = payload.getHeader(Payload.INITIATOR_ID);
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
         Map<String, Object> meta = getMeta(cfg);
         String exclusiveGroup = payload.getHeader(Payload.EXCLUSIVE_GROUP);
         TriggeredByEntry triggeredBy = payload.getHeader(Payload.TRIGGERED_BY);

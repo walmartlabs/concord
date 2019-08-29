@@ -71,9 +71,9 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
-        Object s = req.get(InternalConstants.Request.TEMPLATE_KEY);
+        Object s = cfg.get(InternalConstants.Request.TEMPLATE_KEY);
         if (!(s instanceof String)) {
             return chain.process(payload);
         }

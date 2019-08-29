@@ -45,7 +45,7 @@ public class ChangeUserProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        Map<String, Object> cfg = payload.getHeader(Payload.REQUEST_DATA_MAP);
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return chain.process(payload);
         }

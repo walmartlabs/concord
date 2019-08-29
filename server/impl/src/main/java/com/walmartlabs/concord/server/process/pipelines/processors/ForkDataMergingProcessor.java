@@ -47,14 +47,14 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         // configuration from the user's request
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
 
         // _main.json file in the workspace
         Map<String, Object> workspaceCfg = getWorkspaceCfg(payload);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, req, createForkCfg(payload));
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg, createForkCfg(payload));
+        payload = payload.putHeader(Payload.CONFIGURATION, m);
 
         return chain.process(payload);
     }

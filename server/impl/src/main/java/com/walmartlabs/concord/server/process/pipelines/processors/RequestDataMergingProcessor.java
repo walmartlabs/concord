@@ -70,7 +70,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> policyCfg = getPolicyCfg(payload);
 
         // configuration from the user's request
-        Map<String, Object> req = payload.getHeader(Payload.REQUEST_DATA_MAP, Collections.emptyMap());
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
 
         // org configuration
         Map<String, Object> orgCfg = getOrgCfg(payload);
@@ -85,17 +85,17 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> attachedCfg = getAttachedCfg(payload);
 
         // determine the active profile names
-        List<String> activeProfiles = getActiveProfiles(ImmutableList.of(req, attachedCfg, workspaceCfg, projectCfg, orgCfg));
+        List<String> activeProfiles = getActiveProfiles(ImmutableList.of(cfg, attachedCfg, workspaceCfg, projectCfg, orgCfg));
         payload = payload.putHeader(Payload.ACTIVE_PROFILES, activeProfiles);
 
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, req, policyCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, cfg, policyCfg);
         m.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
-        payload = payload.putHeader(Payload.REQUEST_DATA_MAP, m);
+        payload = payload.putHeader(Payload.CONFIGURATION, m);
 
         return chain.process(payload);
     }
