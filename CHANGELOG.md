@@ -11,6 +11,7 @@ streamlined GitHub trigger implementation (opt-in).
 
 ### Changed
 
+- concord-server: parallel processing of external event triggers; 
 - concord-console: hide form actions on the process status page if
 the process is stopped;
 - concord-agent: move some of the system log messages to the `debug`
