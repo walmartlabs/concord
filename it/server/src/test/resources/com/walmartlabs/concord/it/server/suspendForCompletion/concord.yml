@@ -1,0 +1,24 @@
+flows:
+  default:
+  - set:
+      children: []
+
+  - task: concord
+    in:
+      action: start
+      payload: payload
+
+  - ${children.addAll(jobs)}
+
+  - task: concord
+    in:
+      action: start
+      payload: payload
+
+  - ${children.addAll(jobs)}
+
+  - log: "children: ${children}"
+
+  - ${concord.suspendForCompletion(children)}
+
+  - log: "process is resumed."

@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-tasks: `suspend` support for `action: fork`;
+- concord-tasks: new method `suspendForCompletion` - suspends
+the parent process until the specified processes are done;
 - http-tasks: option to disable automatic redirect follow with
 `followRedirects: false`;
 - concord-server, project-model: initial version of the new
@@ -2183,8 +2186,8 @@ GIT repository urls registered in different projects;
 - inventory: the ansible wrapper now able to produce inventories with
 per-host variables;
 - crypto: a method to export a single value secret as a file;
-- concord: make the organization name parameter optional for the
-inventory task; 
+- concord-tasks: make the organization name parameter optional for
+the inventory task;
 - concord-server: an endpoint to export binary data secrets;
 - ansible: add a lookup plugin for retrieving "single value" secrets;
 - ansible: make the org parameter optional for the inventory lookup

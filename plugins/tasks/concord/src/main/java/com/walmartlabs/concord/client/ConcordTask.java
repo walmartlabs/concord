@@ -161,6 +161,10 @@ public class ConcordTask extends AbstractConcordTask {
         });
     }
 
+    public void suspendForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
+        suspend(ctx, ids, false);
+    }
+
     public Map<String, ProcessEntry> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids) throws Exception {
         return waitForCompletion(ctx, ids, -1);
     }
@@ -310,7 +314,7 @@ public class ConcordTask extends AbstractConcordTask {
             boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
             if (suspend) {
                 log.info("Suspending the process until the child process ({}) is completed...", processInstanceId);
-                suspend(ctx, jobs);
+                suspend(ctx, jobs, true);
                 return;
             }
 
@@ -352,7 +356,7 @@ public class ConcordTask extends AbstractConcordTask {
         ctx.removeVariable(SUSPEND_MARKER);
     }
 
-    private void suspend(Context ctx, List<String> jobs) throws ApiException {
+    private void suspend(Context ctx, List<String> jobs, boolean resumeFromSameStep) throws ApiException {
         Map<String, Object> condition = new HashMap<>();
         condition.put("type", "PROCESS_COMPLETION");
         condition.put("reason", "Waiting for a child process to end");
@@ -365,9 +369,11 @@ public class ConcordTask extends AbstractConcordTask {
             return null;
         }));
 
-        ctx.setVariable(SUSPEND_MARKER, true);
+        if(resumeFromSameStep) {
+            ctx.setVariable(SUSPEND_MARKER, true);
+        }
 
-        ctx.suspend(RESUME_EVENT_NAME, null, true);
+        ctx.suspend(RESUME_EVENT_NAME, null, resumeFromSameStep);
     }
 
     private static void handleResults(Map<String, Object> cfg, Map<String, ProcessEntry> m) {
@@ -464,6 +470,17 @@ public class ConcordTask extends AbstractConcordTask {
             }
         }
 
+        Map<String, Object> cfg = createJobCfg(ctx, defaults);
+        boolean sync = getBoolean(cfg, SYNC_KEY, false);
+        if(sync) {
+            boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
+            if (suspend) {
+                log.info("Suspending the process until the fork processes ({}) are completed...", ids);
+                suspend(ctx, ids, false);
+                return ids;
+            }
+        }
+
         return ids;
     }
 
@@ -491,6 +508,10 @@ public class ConcordTask extends AbstractConcordTask {
         });
 
         if (sync) {
+            boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
+            if(suspend) {
+                return id;
+            }
             waitForCompletion(ctx, Collections.singletonList(id.toString()));
         }
 
