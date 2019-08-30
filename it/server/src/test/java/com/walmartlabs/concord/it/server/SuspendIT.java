@@ -28,7 +28,9 @@ import org.junit.Test;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -67,5 +69,55 @@ public class SuspendIT extends AbstractServerIT {
 
         waitForLog(pir.getLogFileName(), ".*bbbb.*");
         waitForLog(pir.getLogFileName(), ".*" + Pattern.quote(testValue) + ".*");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSuspendForCompletion() throws Exception {
+
+        // ---
+        byte[] payload = archive(SuspendIT.class.getResource("suspendForCompletion").toURI());
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse parentSpr = start(payload);
+
+        // ---
+
+        ProcessEntry p = waitForStatus(processApi, parentSpr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        List<UUID> childrenIds = p.getChildrenIds();
+        assertEquals(2, childrenIds.size());
+
+        for(UUID childId : childrenIds) {
+            waitForCompletion(processApi, childId);
+        }
+
+        ProcessEntry pir = waitForCompletion(processApi, parentSpr.getInstanceId());
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*process is resumed.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSuspendForForkedProcess() throws Exception {
+
+        // ---
+        byte[] payload = archive(SuspendIT.class.getResource("suspendForForkedProcesses").toURI());
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse parentSpr = start(payload);
+
+        // ---
+
+        ProcessEntry p = waitForStatus(processApi, parentSpr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        List<UUID> childrenIds = p.getChildrenIds();
+        assertEquals(3, childrenIds.size());
+
+        for(UUID childId : childrenIds) {
+            waitForCompletion(processApi, childId);
+        }
+
+        ProcessEntry pir = waitForCompletion(processApi, parentSpr.getInstanceId());
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*task completed.*", ab);
     }
 }

@@ -1,0 +1,17 @@
+flows:
+  default:
+  - task: concord
+    in:
+      action: fork
+      forks:
+        - entryPoint: sayHello
+        - entryPoint: sayHello
+        - entryPoint: sayHello
+      suspend: true
+      sync: true
+  - log: "task completed"
+  - log: "jobs ${jobs}"
+
+  sayHello:
+    - log: "Hello from a subprocess!"
+    - ${sleep.ms(3000)}
