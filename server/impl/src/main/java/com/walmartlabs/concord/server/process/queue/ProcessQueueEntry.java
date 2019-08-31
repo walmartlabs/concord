@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.queueclient.message.Imports;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
@@ -60,6 +61,9 @@ public interface ProcessQueueEntry {
 
     @Nullable
     Imports imports();
+
+    @Nullable
+    Map<String, Object> requirements();
 
     static ImmutableProcessQueueEntry.Builder builder() {
         return ImmutableProcessQueueEntry.builder();

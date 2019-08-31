@@ -420,51 +420,6 @@ public class ConcordTaskIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testForkWithRequirements() throws Exception {
-        String orgName = "org_" + randomString();
-
-        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
-        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
-
-        String projectName = "project_" + randomString();
-
-        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
-                .setName(projectName)
-                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
-                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
-
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithRequirements").toURI());
-        Map<String, Object> input = new HashMap<>();
-        input.put("archive", payload);
-        input.put("org", orgName);
-        input.put("project", projectName);
-
-        StartProcessResponse parentSpr = start(input);
-
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pprocess = waitForCompletion(processApi, parentSpr.getInstanceId());
-        assertNotNull(pprocess.getRequirements());
-        assertFalse(pprocess.getRequirements().isEmpty());
-
-        ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
-        assertEquals(1, processEntry.getChildrenIds().size());
-
-        ProcessEntry child = processApi.get(processEntry.getChildrenIds().get(0));
-        assertNotNull(child);
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
-
-        // ---
-
-        byte[] ab = getLog(child.getLogFileName());
-        assertLog(".*Hello from a subprocess.*", ab);
-
-        // ---
-        assertNotNull(child.getRequirements());
-        assertEquals(pprocess.getRequirements(), child.getRequirements());
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testForkWithForm() throws Exception {
         String orgName = "org_" + randomString();
 

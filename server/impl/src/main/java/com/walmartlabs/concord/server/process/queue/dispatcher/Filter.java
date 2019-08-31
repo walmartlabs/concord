@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.queue.dispatcher;
 
 /*-
  * *****
@@ -20,9 +20,10 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import org.jooq.DSLContext;
 
-public interface ProcessQueueEntryFilter {
+public interface Filter {
 
-    boolean filter(DSLContext tx, ProcessQueueEntry item);
+    boolean apply(DSLContext tx, ProcessQueueEntry e);
 }

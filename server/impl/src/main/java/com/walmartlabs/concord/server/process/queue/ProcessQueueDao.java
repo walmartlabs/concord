@@ -31,7 +31,6 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
@@ -80,22 +79,15 @@ public class ProcessQueueDao extends AbstractDao {
 
     private static final Field<?>[] PROCESS_QUEUE_FIELDS = allFieldsWithFixedMeta();
 
-    private final List<ProcessQueueEntryFilter> filters;
-
     private final EventDao eventDao;
-    private final ProcessQueueLock queueLock;
     private final ConcordObjectMapper objectMapper;
 
     @Inject
     public ProcessQueueDao(@MainDB Configuration cfg,
-                           List<ProcessQueueEntryFilter> filters,
                            EventDao eventDao,
-                           ProcessQueueLock queueLock,
                            ConcordObjectMapper objectMapper) {
         super(cfg);
-        this.filters = filters;
         this.eventDao = eventDao;
-        this.queueLock = queueLock;
         this.objectMapper = objectMapper;
     }
 
@@ -488,16 +480,6 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    @WithTimer
-    public ProcessQueueEntry poll(Map<String, Object> capabilities) {
-        while (true) {
-            FindResult result = findEntry(capabilities);
-            if (result.isDone()) {
-                return result.item;
-            }
-        }
-    }
-
     public List<ProcessEntry> list(ProcessFilter filter) {
         return list(filter, -1, -1);
     }
@@ -655,84 +637,6 @@ public class ProcessQueueDao extends AbstractDao {
 
         Map<String, Object> eventData = objectMapper.convertToMap(waits != null ? waits : new NoneCondition());
         eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), null, eventData);
-    }
-
-    private FindResult findEntry(Map<String, Object> capabilities) {
-        return txResult(tx -> {
-            ProcessQueueEntry entry = nextEntry(tx, capabilities);
-            if (entry == null) {
-                return FindResult.notFound();
-            }
-
-            if (entry.projectId() != null) {
-                boolean locked = queueLock.tryLock(tx);
-                if (!locked) {
-                    return FindResult.findNext();
-                }
-
-                for (ProcessQueueEntryFilter f : filters) {
-                    if (!f.filter(tx, entry)) {
-                        return FindResult.findNext();
-                    }
-                }
-            }
-
-            updateStatus(tx, entry.key(), ProcessStatus.STARTING);
-            return FindResult.done(entry);
-        });
-    }
-
-    private ProcessQueueEntry nextEntry(DSLContext tx, Map<String, Object> capabilities) {
-        ProcessQueue q = PROCESS_QUEUE.as("q");
-
-        Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
-
-        SelectJoinStep<Record12<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, Boolean, Object>> s =
-                tx.select(
-                        q.INSTANCE_ID,
-                        q.CREATED_AT,
-                        q.PROJECT_ID,
-                        orgIdField,
-                        q.INITIATOR_ID,
-                        q.PARENT_INSTANCE_ID,
-                        q.REPO_PATH,
-                        q.REPO_URL,
-                        q.COMMIT_ID,
-                        q.REPO_ID,
-                        q.IS_EXCLUSIVE,
-                        q.IMPORTS)
-                        .from(q);
-
-        s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
-                .and(or(q.START_AT.isNull(),
-                        q.START_AT.le(currentTimestamp())))
-                .and(q.WAIT_CONDITIONS.isNull()));
-
-        if (capabilities != null && !capabilities.isEmpty()) {
-            Field<Object> agentReqField = field("{0}->'agent'", Object.class, q.REQUIREMENTS);
-            Field<Object> capabilitiesField = field("?::jsonb", Object.class, value(objectMapper.serialize(capabilities)));
-            s.where(q.REQUIREMENTS.isNull()
-                    .or(field("{0} <@ {1}", Boolean.class, agentReqField, capabilitiesField)));
-        }
-
-        return s.orderBy(q.CREATED_AT)
-                .limit(1)
-                .forUpdate()
-                .of(q)
-                .skipLocked()
-                .fetchOne(r -> ProcessQueueEntry.builder()
-                        .key(new ProcessKey(r.value1(), r.value2()))
-                        .projectId(r.value3())
-                        .orgId(r.value4())
-                        .initiatorId(r.value5())
-                        .parentInstanceId(r.value6())
-                        .repoPath(r.value7())
-                        .repoUrl(r.value8())
-                        .commitId(r.value9())
-                        .repoId(r.value10())
-                        .exclusive(r.value11())
-                        .imports(objectMapper.deserialize(r.value12(), Imports.class))
-                        .build());
     }
 
     private void insertStatusHistory(DSLContext tx, ProcessKey processKey, ProcessStatus status) {

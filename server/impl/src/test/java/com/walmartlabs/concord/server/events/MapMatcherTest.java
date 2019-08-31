@@ -141,5 +141,4 @@ public class MapMatcherTest {
         boolean result = MapMatcher.matches(event, conditions);
         assertFalse(result);
     }
-
 }

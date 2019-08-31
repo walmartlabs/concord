@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: regexes are now supported in the process'
+`requirements`;
 - concord-tasks: `suspend` support for `action: fork`;
 - concord-tasks: new method `suspendForCompletion` - suspends
 the parent process until the specified processes are done;
@@ -14,6 +16,8 @@ streamlined GitHub trigger implementation (opt-in).
 
 ### Changed
 
+- concord-server: optimize the process dispatching, perform filtering
+on the server's side;
 - concord-server: parallel processing of external event triggers; 
 - concord-console: hide form actions on the process status page if
 the process is stopped;
