@@ -25,12 +25,10 @@ import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.project.yaml.converter.StepConverter;
 import com.walmartlabs.concord.project.yaml.model.YamlTrigger;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import io.takari.bpm.model.SourceMap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class YamlTriggersConverter {
 
@@ -40,6 +38,7 @@ public final class YamlTriggersConverter {
     private static Map<String, TriggerConverter> createConverters() {
         Map<String, TriggerConverter> converters = new HashMap<>();
         converters.put("manual", new ManualTriggerConverter());
+        converters.put("github", new GithubTriggerConverter());
         return converters;
     }
 
@@ -72,7 +71,7 @@ public final class YamlTriggersConverter {
 
     private static class DefaultTriggerConverter extends AbstractTriggerConverter {
 
-        private static final String[] TRIGGER_CONFIG_KEYS = {
+        protected static final String[] TRIGGER_CONFIG_KEYS = {
                 Constants.Trigger.USE_INITIATOR,
                 Constants.Trigger.USE_EVENT_COMMIT_ID,
                 Constants.Request.ENTRY_POINT_KEY,
@@ -81,6 +80,35 @@ public final class YamlTriggersConverter {
 
         public DefaultTriggerConverter() {
             super(TRIGGER_CONFIG_KEYS);
+        }
+    }
+
+    private static class GithubTriggerConverter extends DefaultTriggerConverter {
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Trigger convert(YamlTrigger trigger) {
+            Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(trigger.getOptions());
+            int version = MapUtils.getInt(opts, "version", 1);
+            if (version == 1) {
+                return super.convert(trigger);
+            }
+
+            Map<String, Object> cfg = new HashMap<>();
+            for (String key : TRIGGER_CONFIG_KEYS) {
+                Object v = opts.remove(key);
+                if (v != null) {
+                    cfg.put(key, v);
+                }
+            }
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("version", version);
+            params.putAll(MapUtils.getMap(opts, "conditions", Collections.emptyMap()));
+            List<String> activeProfiles = MapUtils.getList(opts, Constants.Request.ACTIVE_PROFILES_KEY, null);
+            Map<String, Object> arguments = MapUtils.getMap(opts, Constants.Request.ARGUMENTS_KEY, null);
+
+            return new Trigger("github", activeProfiles, arguments, params, cfg, convertSourceMap(trigger));
         }
     }
 
@@ -112,21 +140,21 @@ public final class YamlTriggersConverter {
 
             return new Trigger(name, activeProfiles, arguments, opts, cfg, convertSourceMap(trigger));
         }
-
-        private static SourceMap convertSourceMap(YamlTrigger t) {
-            String name = t.getName();
-            JsonLocation l = t.getLocation();
-            return new SourceMap(SourceMap.Significance.HIGH,
-                    String.valueOf(l.getSourceRef()),
-                    l.getLineNr(),
-                    l.getColumnNr(),
-                    "Trigger: " + name);
-        }
     }
 
     private interface TriggerConverter {
 
         Trigger convert(YamlTrigger trigger);
+    }
+
+    private static SourceMap convertSourceMap(YamlTrigger t) {
+        String name = t.getName();
+        JsonLocation l = t.getLocation();
+        return new SourceMap(SourceMap.Significance.HIGH,
+                String.valueOf(l.getSourceRef()),
+                l.getLineNr(),
+                l.getColumnNr(),
+                "Trigger: " + name);
     }
 
     private YamlTriggersConverter() {
