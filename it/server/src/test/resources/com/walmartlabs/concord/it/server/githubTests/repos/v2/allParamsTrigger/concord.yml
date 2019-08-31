@@ -5,10 +5,12 @@ flows:
 triggers:
   - github:
       entryPoint: "onPush"
-      type: "push"
-      githubOrg: "devtools"
-      githubRepo: "concord"
-#      githubHost: ""
-      branch: "master"
-      sender: "vasia"
       version: 2
+      conditions:
+        type: "push"
+        githubOrg: "devtools"
+        githubRepo: "concord"
+        #      githubHost: ""
+        branch: "master"
+        sender: "vasia"
+
