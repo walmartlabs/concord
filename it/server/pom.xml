@@ -207,6 +207,7 @@
                         <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
                         <IT_LDAP_URL>ldap://localhost:${it.ldap.port}</IT_LDAP_URL>
+                        <IT_CUSTOM_AGENTS>true</IT_CUSTOM_AGENTS>
                     </environmentVariables>
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
@@ -494,6 +495,8 @@
                                         </network>
                                         <volumes>
                                             <bind>
+                                                <!-- provide the agents's cfg -->
+                                                <volume>${base.dir}/src/test/resources/agent.conf:/opt/concord/conf/agent.conf:ro</volume>
                                                 <!-- to share files between process containers -->
                                                 <volume>${tmp.dir.src.mount}:${tmp.dir}</volume>
                                                 <!-- allows the agent to pick up local dependencies -->
@@ -504,6 +507,7 @@
                                             </bind>
                                         </volumes>
                                         <env>
+                                            <CONCORD_CFG_FILE>/opt/concord/conf/agent.conf</CONCORD_CFG_FILE>
                                             <CONCORD_DOCKER_LOCAL_MODE>false</CONCORD_DOCKER_LOCAL_MODE>
                                             <CONCORD_MAVEN_CFG>/opt/concord/conf/mvn.json</CONCORD_MAVEN_CFG>
                                             <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>

@@ -81,8 +81,10 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
     @Override
     public ProcessCompletionCondition process(UUID instanceId, ProcessStatus processStatus, ProcessCompletionCondition wait) {
         Set<ProcessStatus> finishedStatuses = DEFAULT_FINISHED_STATUSES;
-        if (wait.finalStatuses() != null && !wait.finalStatuses().isEmpty()) {
-            finishedStatuses = wait.finalStatuses();
+
+        Set<ProcessStatus> finalStatuses = wait.finalStatuses();
+        if (finalStatuses != null && !finalStatuses.isEmpty()) {
+            finishedStatuses = finalStatuses;
         }
 
         Set<UUID> awaitProcesses = wait.processes();

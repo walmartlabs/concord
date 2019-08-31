@@ -26,7 +26,7 @@ import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.server.agent.AgentCommandWebSocketHandler;
 import com.walmartlabs.concord.server.metrics.MetricModule;
 import com.walmartlabs.concord.server.process.queue.EnqueuedTask;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueWebSocketHandler;
+import com.walmartlabs.concord.server.process.queue.dispatcher.Dispatcher;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 
 public class ServerModule extends AbstractModule {
@@ -38,7 +38,7 @@ public class ServerModule extends AbstractModule {
 
         Multibinder<BackgroundTask> tasks = Multibinder.newSetBinder(binder(), BackgroundTask.class);
         tasks.addBinding().to(AgentCommandWebSocketHandler.class);
-        tasks.addBinding().to(ProcessQueueWebSocketHandler.class);
+        tasks.addBinding().to(Dispatcher.class);
         tasks.addBinding().to(EnqueuedTask.class);
         tasks.addBinding().to(TaskScheduler.class);
     }

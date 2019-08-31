@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.queue;
+package com.walmartlabs.concord.server.process.queue.dispatcher;
 
 /*-
  * *****
@@ -21,6 +21,9 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.google.common.collect.ImmutableSet;
+import com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
@@ -31,7 +34,7 @@ import java.util.UUID;
 /**
  * Base class for all filters that are implementing process wait conditions.
  */
-public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter {
+public abstract class WaitProcessFinishFilter implements Filter {
 
     private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
             ProcessStatus.FINISHED,
@@ -46,13 +49,13 @@ public abstract class WaitProcessFinishFilter implements ProcessQueueEntryFilter
     }
 
     @Override
-    public boolean filter(DSLContext tx, ProcessQueueEntry item) {
-        List<UUID> processes = findProcess(tx, item);
+    public boolean apply(DSLContext tx, ProcessQueueEntry e) {
+        List<UUID> processes = findProcess(tx, e);
         if (processes.isEmpty()) {
             return true;
         }
 
-        processQueueDao.updateWait(tx, item.key(), ProcessCompletionCondition.builder()
+        processQueueDao.updateWait(tx, e.key(), ProcessCompletionCondition.builder()
                 .processes(processes)
                 .reason(getReason())
                 .finalStatuses(getFinalStatuses())

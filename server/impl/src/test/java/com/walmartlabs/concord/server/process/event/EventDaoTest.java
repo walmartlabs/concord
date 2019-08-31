@@ -25,7 +25,6 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.TestObjectMapper;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueLock;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -45,7 +44,7 @@ public class EventDaoTest extends AbstractDaoTest {
 
     @Before
     public void setUp() {
-        processQueueDao = new ProcessQueueDao(getConfiguration(), Collections.emptyList(), mock(EventDao.class), mock(ProcessQueueLock.class), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
+        processQueueDao = new ProcessQueueDao(getConfiguration(), mock(EventDao.class), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
         eventDao = new EventDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
     }
 

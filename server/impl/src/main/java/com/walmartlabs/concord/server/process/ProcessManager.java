@@ -35,7 +35,6 @@ import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -128,10 +127,6 @@ public class ProcessManager {
         this.processPipeline = processPipeline;
         this.resumePipeline = resumePipeline;
         this.forkPipeline = forkPipeline;
-    }
-
-    public ProcessQueueEntry nextProcess(Map<String, Object> capabilities) {
-        return queueDao.poll(capabilities);
     }
 
     public ProcessResult start(Payload payload) {
