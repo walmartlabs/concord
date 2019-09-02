@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ExclusiveGroupLock;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -49,15 +50,20 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     private final LogManager logManager;
+    private final ProcessQueueManager queueManager;
     private final ProcessQueueDao queueDao;
     private final ExclusiveProcessDao exclusiveProcessDao;
     private final ExclusiveGroupLock exclusiveGroupLock;
 
     @Inject
-    public ExclusiveGroupProcessor(LogManager logManager, ProcessQueueDao queueDao,
+    public ExclusiveGroupProcessor(LogManager logManager,
+                                   ProcessQueueManager queueManager,
+                                   ProcessQueueDao queueDao,
                                    ExclusiveProcessDao exclusiveProcessDao,
                                    ExclusiveGroupLock exclusiveGroupLock) {
+
         this.logManager = logManager;
+        this.queueManager = queueManager;
         this.queueDao = queueDao;
         this.exclusiveProcessDao = exclusiveProcessDao;
         this.exclusiveGroupLock = exclusiveGroupLock;
@@ -87,7 +93,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
                 logManager.warn(processKey, "Process(es) with exclusive group '" + exclusiveGroup + "' is already in the queue. " +
                         "Current process has been cancelled");
 
-                queueDao.updateStatus(processKey, ProcessStatus.CANCELLED);
+                queueManager.updateStatus(processKey, ProcessStatus.CANCELLED);
                 return false;
             }
 

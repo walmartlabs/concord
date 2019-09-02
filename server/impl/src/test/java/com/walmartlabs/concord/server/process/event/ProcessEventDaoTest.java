@@ -34,18 +34,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.Mockito.mock;
-
 @Ignore
-public class EventDaoTest extends AbstractDaoTest {
+public class ProcessEventDaoTest extends AbstractDaoTest {
 
     private ProcessQueueDao processQueueDao;
-    private EventDao eventDao;
+    private ProcessEventDao eventDao;
 
     @Before
     public void setUp() {
-        processQueueDao = new ProcessQueueDao(getConfiguration(), mock(EventDao.class), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
-        eventDao = new EventDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
+        processQueueDao = new ProcessQueueDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
+        eventDao = new ProcessEventDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE));
     }
 
     @Test

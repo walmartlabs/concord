@@ -20,62 +20,26 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.RequestId;
-import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.ProcessKind;
-import com.walmartlabs.concord.server.process.TriggeredByEntry;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 @Named
 public class NewQueueEntryProcessor implements PayloadProcessor {
 
-    private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager queueManager;
 
     @Inject
-    public NewQueueEntryProcessor(ProcessQueueDao queueDao) {
-        this.queueDao = queueDao;
+    public NewQueueEntryProcessor(ProcessQueueManager queueManager) {
+        this.queueManager = queueManager;
     }
 
     @Override
-    @WithTimer
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
-        ProcessKey processKey = payload.getProcessKey();
-        ProcessKind kind = payload.getHeader(Payload.PROCESS_KIND, ProcessKind.DEFAULT);
-        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-        UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
-        UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
-        UUID initiatorId = payload.getHeader(Payload.INITIATOR_ID);
-        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
-        Map<String, Object> meta = getMeta(cfg);
-        String exclusiveGroup = payload.getHeader(Payload.EXCLUSIVE_GROUP);
-        TriggeredByEntry triggeredBy = payload.getHeader(Payload.TRIGGERED_BY);
-
-        queueDao.insertNew(processKey, kind, parentInstanceId, projectId, repoId, initiatorId, meta, exclusiveGroup, triggeredBy);
-
+        queueManager.insert(payload, ProcessStatus.NEW);
         return chain.process(payload);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getMeta(Map<String, Object> cfg) {
-        Map<String, Object> m = (Map<String, Object>) cfg.get(Constants.Request.META);
-        if (m == null) {
-            m = Collections.emptyMap();
-        }
-
-        m = new HashMap<>(m);
-        m.put(Constants.Meta.SYSTEM_GROUP, Collections.singletonMap(Constants.Meta.REQUEST_ID, RequestId.get()));
-
-        return m;
     }
 }

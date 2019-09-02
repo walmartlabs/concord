@@ -37,7 +37,7 @@ import static org.junit.Assume.assumeNotNull;
 public class RequirementsIT extends AbstractServerIT {
 
     @BeforeClass
-    public static void createLdapStructure() {
+    public static void setUp() {
         assumeNotNull(System.getenv("IT_CUSTOM_AGENTS"));
     }
 
@@ -65,9 +65,9 @@ public class RequirementsIT extends AbstractServerIT {
         StartProcessResponse parentSpr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        ProcessEntry pprocess = waitForCompletion(processApi, parentSpr.getInstanceId());
-        assertNotNull(pprocess.getRequirements());
-        assertFalse(pprocess.getRequirements().isEmpty());
+        ProcessEntry pe = waitForCompletion(processApi, parentSpr.getInstanceId());
+        assertNotNull(pe.getRequirements());
+        assertFalse(pe.getRequirements().isEmpty());
 
         ProcessEntry processEntry = processApi.get(parentSpr.getInstanceId());
         assertEquals(1, processEntry.getChildrenIds().size());
@@ -83,6 +83,6 @@ public class RequirementsIT extends AbstractServerIT {
 
         // ---
         assertNotNull(child.getRequirements());
-        assertEquals(pprocess.getRequirements(), child.getRequirements());
+        assertEquals(pe.getRequirements(), child.getRequirements());
     }
 }

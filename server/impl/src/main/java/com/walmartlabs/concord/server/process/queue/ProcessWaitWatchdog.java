@@ -60,13 +60,18 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     private final WatchdogDao dao;
     private final ProcessQueueDao processQueueDao;
+    private final ProcessQueueManager queueManager;
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
 
     @Inject
     @SuppressWarnings("unchecked")
-    public ProcessWaitWatchdog(WatchdogDao dao, ProcessQueueDao processQueueDao, Set<ProcessWaitHandler> handlers) {
+    public ProcessWaitWatchdog(WatchdogDao dao,
+                               ProcessQueueDao processQueueDao,
+                               Set<ProcessWaitHandler> handlers, ProcessQueueManager queueManager) {
+
         this.dao = dao;
         this.processQueueDao = processQueueDao;
+        this.queueManager = queueManager;
         this.processWaitHandlers = new HashMap<>();
 
         handlers.forEach(h -> this.processWaitHandlers.put(h.getType(), h));
@@ -103,7 +108,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         if (!handler.getProcessStatuses().contains(p.status())) {
             // clear wait conditions for finished processes
             if (FINAL_STATUSES.contains(p.status())) {
-                processQueueDao.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), null);
+                queueManager.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), null);
             }
             return;
         }
@@ -112,7 +117,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             AbstractWaitCondition originalWaits = p.waits();
             AbstractWaitCondition processedWaits = handler.process(p.instanceId(), p.status(), originalWaits);
             if (!originalWaits.equals(processedWaits)) {
-                processQueueDao.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
+                queueManager.updateWait(new ProcessKey(p.instanceId(), p.instanceCreatedAt()), processedWaits);
             }
         } catch (Exception e) {
             log.info("processHandler ['{}', '{}'] -> error", type, p, e);

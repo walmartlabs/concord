@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +43,13 @@ public class AgentManager {
 
     private final ProcessQueueDao queueDao;
     private final AgentCommandsDao commandQueue;
+    private final ProcessQueueManager queueManager;
 
     @Inject
-    public AgentManager(ProcessQueueDao queueDao, AgentCommandsDao commandQueue) {
+    public AgentManager(ProcessQueueDao queueDao, AgentCommandsDao commandQueue, ProcessQueueManager queueManager) {
         this.queueDao = queueDao;
         this.commandQueue = commandQueue;
+        this.queueManager = queueManager;
     }
 
     public void killProcess(ProcessKey processKey) {
@@ -58,7 +61,7 @@ public class AgentManager {
         String agentId = e.lastAgentId();
         if (agentId == null) {
             log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", processKey);
-            queueDao.updateStatus(processKey, ProcessStatus.CANCELLED);
+            queueManager.updateStatus(processKey, ProcessStatus.CANCELLED);
             return;
         }
 
@@ -78,7 +81,7 @@ public class AgentManager {
 
         if (!withoutAgent.isEmpty()) {
             withoutAgent.forEach(p -> log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", p));
-            queueDao.updateStatus(processKeys, ProcessStatus.CANCELLED, null);
+            queueManager.updateExpectedStatus(processKeys, null, ProcessStatus.CANCELLED);
         }
 
         List<AgentCommand> commands = l.stream()

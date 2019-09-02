@@ -56,7 +56,7 @@ public class ProcessEventResource implements Resource {
     // TODO this should be a common constant (in SDK maybe)
     private static final String ELEMENT_EVENT_TYPE = "ELEMENT";
 
-    private final EventDao eventDao;
+    private final ProcessEventDao eventDao;
     private final ProcessKeyCache processKeyCache;
     private final ProcessQueueDao queueDao;
     private final ProjectAccessManager projectAccessManager;
@@ -64,7 +64,7 @@ public class ProcessEventResource implements Resource {
     private final Histogram batchInsertHistogram;
 
     @Inject
-    public ProcessEventResource(EventDao eventDao,
+    public ProcessEventResource(ProcessEventDao eventDao,
                                 ProcessKeyCache processKeyCache,
                                 ProcessQueueDao queueDao,
                                 ProjectAccessManager projectAccessManager,
