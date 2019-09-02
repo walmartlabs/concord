@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessLockCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,11 +50,13 @@ import java.util.UUID;
 public class ProcessLocksResource implements Resource {
 
     private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager queueManager;
     private final ProcessLocksDao dao;
 
     @Inject
-    public ProcessLocksResource(ProcessQueueDao queueDao, ProcessLocksDao dao) {
+    public ProcessLocksResource(ProcessQueueDao queueDao, ProcessQueueManager queueManager, ProcessLocksDao dao) {
         this.queueDao = queueDao;
+        this.queueManager = queueManager;
         this.dao = dao;
     }
 
@@ -75,7 +78,7 @@ public class ProcessLocksResource implements Resource {
         LockEntry lock = dao.tryLock(e.instanceId(), e.orgId(), e.projectId(), scope, lockName);
         boolean acquired = lock.instanceId().equals(instanceId);
         AbstractWaitCondition waitCondition = acquired ? null : ProcessLockCondition.from(lock);
-        queueDao.updateWait(ProcessKey.from(e), waitCondition);
+        queueManager.updateWait(ProcessKey.from(e), waitCondition);
         return LockResult.builder()
                 .acquired(acquired)
                 .info(lock)

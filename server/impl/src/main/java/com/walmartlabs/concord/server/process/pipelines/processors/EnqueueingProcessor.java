@@ -20,69 +20,42 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.queueclient.message.Imports;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.xml.bind.DatatypeConverter;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * Moves the process into ENQUEUED status, filling in the necessary attributed.
+ * Moves the process into ENQUEUED status, filling in the necessary attributes.
  */
 @Named
 public class EnqueueingProcessor implements PayloadProcessor {
 
-    private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager queueManager;
     private final LogManager logManager;
 
     @Inject
-    public EnqueueingProcessor(ProcessQueueDao queueDao, LogManager logManager) {
-        this.queueDao = queueDao;
+    public EnqueueingProcessor(ProcessQueueManager queueManager, LogManager logManager) {
+        this.queueManager = queueManager;
         this.logManager = logManager;
     }
 
     @Override
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
+        queueManager.enqueue(payload);
+
         ProcessKey processKey = payload.getProcessKey();
 
-        Set<String> tags = payload.getHeader(Payload.PROCESS_TAGS);
-
-        ProcessStatus s = queueDao.getStatus(processKey.getInstanceId());
-        if (s == null) {
-            throw new ProcessException(processKey, "Process not found: " + processKey);
-        }
-
-        if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
-            throw new ProcessException(processKey, "Invalid process status: " + s);
-        }
-
-        Map<String, Object> requirements = getRequirements(payload);
-        Instant startAt = getStartAt(payload);
-        Long processTimeout = getProcessTimeout(payload);
-        boolean exclusive = isExclusive(payload);
-
-        Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
-        Map<String, Object> meta = getMeta(payload);
-        Imports imports = payload.getHeader(Payload.IMPORTS);
-        queueDao.enqueue(processKey, tags, startAt, requirements, processTimeout, handlers, meta, exclusive, imports);
+        Map<String, Object> requirements = PayloadUtils.getRequirements(payload);
+        Instant startAt = PayloadUtils.getStartAt(payload);
 
         if (startAt == null) {
             logManager.info(processKey, "Enqueued. Waiting for an agent (requirements={})...", requirements);
@@ -91,95 +64,5 @@ public class EnqueueingProcessor implements PayloadProcessor {
         }
 
         return chain.process(payload);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Instant getStartAt(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
-        if (cfg == null) {
-            return null;
-        }
-
-        String k = Constants.Request.START_AT_KEY;
-        Object v = cfg.get(k);
-        if (v == null) {
-            return null;
-        }
-
-        if (v instanceof String) {
-            Calendar c;
-            try {
-                c = DatatypeConverter.parseDateTime((String) v);
-            } catch (DateTimeParseException e) {
-                throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' format, expected an ISO-8601 value, got: " + v);
-            }
-
-            if (c.before(Calendar.getInstance())) {
-                throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, can't be in the past: " + v);
-            }
-
-            return c.toInstant();
-        }
-
-        throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, expected an ISO-8601 value, got: " + v);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Long getProcessTimeout(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
-        if (cfg == null) {
-            return null;
-        }
-
-        Object processTimeout = cfg.get(Constants.Request.PROCESS_TIMEOUT);
-        if (processTimeout == null) {
-            return null;
-        }
-
-        if (processTimeout instanceof String) {
-            Duration duration = Duration.parse((CharSequence) processTimeout);
-            return duration.get(ChronoUnit.SECONDS);
-        }
-
-        if (processTimeout instanceof Number) {
-            return ((Number) processTimeout).longValue();
-        }
-
-        throw new IllegalArgumentException("Invalid '" + Constants.Request.PROCESS_TIMEOUT + "' value: expected an ISO-8601 value, got: " + processTimeout);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static boolean isExclusive(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
-        if (cfg == null) {
-            return false;
-        }
-
-        Object v = cfg.get(Constants.Request.EXCLUSIVE_EXEC);
-        if (v == null) {
-            return false;
-        }
-
-        if (v instanceof String) {
-            return Boolean.parseBoolean((String) v);
-        }
-
-        if (v instanceof Boolean) {
-            return (boolean) v;
-        }
-
-        throw new IllegalArgumentException("Invalid '" + Constants.Request.EXCLUSIVE_EXEC + "' value: expected a boolean value, got: " + v);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getMeta(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
-        return (Map<String, Object>) cfg.get(Constants.Request.META);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> getRequirements(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
-        return (Map<String, Object>) cfg.get(InternalConstants.Request.REQUIREMENTS);
     }
 }

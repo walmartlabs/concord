@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.process.form.ConcordFormService;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.NewProcessPipeline;
@@ -35,6 +34,7 @@ import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.IdAndStatus;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.process.state.ProcessCheckpointManager;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -66,11 +66,11 @@ public class ProcessManager {
     private final ProcessStateManager stateManager;
     private final AgentManager agentManager;
     private final LogManager logManager;
-    private final ConcordFormService formService;
     private final ProjectAccessManager projectAccessManager;
     private final ProcessCheckpointManager checkpointManager;
     private final PayloadManager payloadManager;
     private final RepositoryDao repositoryDao;
+    private final ProcessQueueManager queueManager;
 
     private final Chain processPipeline;
     private final Chain resumePipeline;
@@ -105,11 +105,11 @@ public class ProcessManager {
                           ProcessStateManager stateManager,
                           AgentManager agentManager,
                           LogManager logManager,
-                          ConcordFormService formService,
                           ProjectAccessManager projectAccessManager,
                           ProcessCheckpointManager checkpointManager,
                           PayloadManager payloadManager,
                           RepositoryDao repositoryDao,
+                          ProcessQueueManager queueManager,
                           NewProcessPipeline processPipeline,
                           ResumePipeline resumePipeline,
                           ForkPipeline forkPipeline) {
@@ -118,7 +118,7 @@ public class ProcessManager {
         this.stateManager = stateManager;
         this.agentManager = agentManager;
         this.logManager = logManager;
-        this.formService = formService;
+        this.queueManager = queueManager;
         this.projectAccessManager = projectAccessManager;
         this.checkpointManager = checkpointManager;
         this.payloadManager = payloadManager;
@@ -189,7 +189,7 @@ public class ProcessManager {
         while (!updated) {
             l = queueDao.getCascade(processKey);
             List<ProcessKey> keys = filterProcessKeys(l, SERVER_PROCESS_STATUSES);
-            updated = keys.isEmpty() || queueDao.updateStatus(keys, ProcessStatus.CANCELLED, SERVER_PROCESS_STATUSES);
+            updated = keys.isEmpty() || queueManager.updateExpectedStatus(keys, SERVER_PROCESS_STATUSES, ProcessStatus.CANCELLED);
         }
 
         List<ProcessKey> keys = filterProcessKeys(l, AGENT_PROCESS_STATUSES);
@@ -229,7 +229,7 @@ public class ProcessManager {
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
-        queueDao.updateStatus(processKey, ProcessStatus.SUSPENDED, Collections.singletonMap("checkpointId", checkpointId));
+        queueManager.updateStatus(processKey, ProcessStatus.SUSPENDED, Collections.singletonMap("checkpointId", checkpointId));
 
         resume(payload);
     }
@@ -247,7 +247,7 @@ public class ProcessManager {
             return;
         }
 
-        queueDao.updateAgentId(processKey, agentId, status);
+        queueManager.updateAgentId(processKey, agentId, status);
         logManager.info(processKey, "Process status: {}", status);
 
         log.info("updateStatus [{}, '{}', {}] -> done", processKey, agentId, status);
@@ -255,7 +255,7 @@ public class ProcessManager {
 
     public void setWaitCondition(ProcessKey processKey, AbstractWaitCondition condition) {
         assertUpdateRights(processKey);
-        queueDao.updateWait(processKey, condition);
+        queueManager.updateWait(processKey, condition);
     }
 
     public ProcessEntry assertProcess(UUID instanceId) {
@@ -323,7 +323,7 @@ public class ProcessManager {
             }
         }
 
-        return found && queueDao.updateStatus(processKey, current, ProcessStatus.CANCELLED);
+        return found && queueManager.updateExpectedStatus(processKey, current, ProcessStatus.CANCELLED);
     }
 
     private void assertKillOrDisableRights(ProcessEntry e) {

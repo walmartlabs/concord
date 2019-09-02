@@ -112,6 +112,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private final UserDao userDao;
     private final PayloadManager payloadManager;
     private final ProcessManager processManager;
+    private final ProcessQueueManager queueManager;
 
     @Inject
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
@@ -121,7 +122,8 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                                 WatchdogDao watchdogDao,
                                 UserDao userDao,
                                 PayloadManager payloadManager,
-                                ProcessManager processManager) {
+                                ProcessManager processManager,
+                                ProcessQueueManager queueManager) {
         this.cfg = cfg;
 
         this.queueDao = queueDao;
@@ -131,6 +133,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         this.userDao = userDao;
         this.payloadManager = payloadManager;
         this.processManager = processManager;
+        this.queueManager = queueManager;
     }
 
     @Override
@@ -195,7 +198,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
                 for (ProcessKey pk : pks) {
-                    queueDao.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
                     logManager.warn(pk, "Process stalled, no heartbeat for more than '{}'", maxAge);
                     log.info("processStalled -> marked as failed: {}", pk);
                 }
@@ -213,7 +216,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (ProcessKey pk : pks) {
-                    queueDao.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
+                    queueManager.updateAgentId(tx, pk, null, ProcessStatus.FAILED);
                     logManager.warn(pk, "Process failed to start for more than '{}'", maxAge);
                     log.info("processStartFailures -> marked as failed: {}", pk);
                 }
@@ -227,7 +230,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             watchdogDao.transaction(tx -> {
                 List<TimedOutEntry> items = watchdogDao.pollExpired(tx, 1);
                 for (TimedOutEntry i : items) {
-                    queueDao.updateAgentId(tx, i.processKey, null, ProcessStatus.TIMED_OUT);
+                    queueManager.updateAgentId(tx, i.processKey, null, ProcessStatus.TIMED_OUT);
 
                     // TODO should AgentManager be used instead?
                     // TODO toString()? It should be typed

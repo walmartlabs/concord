@@ -23,10 +23,12 @@ package com.walmartlabs.concord.server.process.event;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
+import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEventStats;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessEventsRecord;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -46,12 +48,12 @@ import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENT_STATS;
 import static org.jooq.impl.DSL.*;
 
 @Named
-public class EventDao extends AbstractDao {
+public class ProcessEventDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
 
     @Inject
-    public EventDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+    public ProcessEventDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;
     }
@@ -165,6 +167,21 @@ public class EventDao extends AbstractDao {
                 updateStats(tx, toStatItems(ps, processKeys::get));
             }
         });
+    }
+
+    public void insertStatusHistory(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("status", status.name());
+        payload.putAll(statusPayload);
+
+        insert(tx, processKey, EventType.PROCESS_STATUS.name(), null, objectMapper.convertToMap(payload));
+    }
+
+    public void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("status", status.name());
+
+        insert(tx, processKeys, EventType.PROCESS_STATUS.name(), objectMapper.convertToMap(payload));
     }
 
     private void insert(DSLContext tx, ProcessKey processKey, List<ProcessEventRequest> entries) {
