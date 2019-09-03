@@ -16,6 +16,7 @@ streamlined GitHub trigger implementation (opt-in).
 
 ### Changed
 
+- ansible: callback plugins now send a custom `User-Agent` header;
 - concord-server: optimize the process dispatching, perform filtering
 on the server's side;
 - concord-server: parallel processing of external event triggers; 

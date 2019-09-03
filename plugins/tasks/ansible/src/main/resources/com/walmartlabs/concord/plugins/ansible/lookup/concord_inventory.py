@@ -47,9 +47,12 @@ class LookupModule(LookupBase):
             queryParams = terms[3]
 
         concordBaseUrl = os.environ['CONCORD_BASE_URL']
+        concordInstanceId = os.environ['CONCORD_INSTANCE_ID']
         concordSessionToken = os.environ['CONCORD_SESSION_TOKEN']
 
-        headers = {'X-Concord-SessionToken': concordSessionToken, 'Content-type': 'application/json'}
+        headers = {'X-Concord-SessionToken': concordSessionToken,
+                   'Content-type': 'application/json',
+                   'User-Agent': 'ansible (txId: ' + concordInstanceId + ')'}
         url = concordBaseUrl + '/api/v1/org/' + orgName + '/inventory/' + inventoryName + '/query/' + queryName + "/exec"
 
         r = requests.post(url, headers=headers, data=json.dumps(queryParams))

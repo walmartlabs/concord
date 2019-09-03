@@ -43,7 +43,7 @@ class CallbackModule(CallbackModule_default):
         for k, v in task_args.iteritems():
            if any(s in enc(v).lower() for s in self.secret_list):
              print "*********** THIS TASK CONTAINS SENSITIVE INFORMATION. ENABLING NO_LOG ******************"
-             task.no_log = True     
+             task.no_log = True
     
     def _dump_results(self, result,  indent=None, sort_keys=True, keep_invocation=False):
          return super(CallbackModule, self)._dump_results(self.hide_password(result), indent, sort_keys, keep_invocation)
