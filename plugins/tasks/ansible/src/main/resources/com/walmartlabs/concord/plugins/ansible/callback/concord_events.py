@@ -119,7 +119,7 @@ class CallbackModule(CallbackBase):
         host_uuid = host._uuid
         host_group = self.play.get_name()
         correlation_id = self._host_correlation_id(host_group, host_uuid)
-        self.hostStatus.pop(correlation_id)
+        self.hostStatus.pop(correlation_id, None)
 
     def _mark_host_running(self, host):
         host_uuid = host._uuid
