@@ -16,6 +16,8 @@ streamlined GitHub trigger implementation (opt-in).
 
 ### Changed
 
+- ansible: fixed an issue preventing the host status callback from
+working correctly when the host is unreachable;
 - ansible: callback plugins now send a custom `User-Agent` header;
 - concord-server: optimize the process dispatching, perform filtering
 on the server's side;
