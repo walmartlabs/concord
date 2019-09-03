@@ -27,9 +27,11 @@ class LookupModule(LookupBase):
             storePassword = terms[2]
 
         concordBaseUrl = os.environ['CONCORD_BASE_URL']
+        concordInstanceId = os.environ['CONCORD_INSTANCE_ID']
         concordSessionToken = os.environ['CONCORD_SESSION_TOKEN']
 
-        headers = {'X-Concord-SessionToken': concordSessionToken}
+        headers = {'X-Concord-SessionToken': concordSessionToken,
+                   'User-Agent': 'ansible (txId: ' + concordInstanceId + ')'}
         url = concordBaseUrl + '/api/v1/org/' + orgName + '/secret/' + secretName + '/data'
         multipartInputDict = {}
         if storePassword is not None:
