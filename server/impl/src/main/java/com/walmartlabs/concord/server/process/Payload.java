@@ -45,7 +45,7 @@ public class Payload {
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
     public static final HeaderKey<String> EXCLUSIVE_GROUP = HeaderKey.register("_exclusiveGroup", String.class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
-    public static final HeaderKey<String> RESUME_EVENT_NAME = HeaderKey.register("_resumeEventName", String.class);
+    public static final HeaderKey<String> EVENT_NAME = HeaderKey.register("_eventName", String.class);
     public static final HeaderKey<TriggeredByEntry> TRIGGERED_BY = HeaderKey.register("_triggeredBy", TriggeredByEntry.class);
     public static final HeaderKey<UUID> INITIATOR_ID = HeaderKey.register("_initiatorId", UUID.class);
     public static final HeaderKey<UUID> ORGANIZATION_ID = HeaderKey.register("_orgId", UUID.class);

@@ -47,7 +47,7 @@ public class ResumeStateStoringProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        String eventName = payload.getHeader(Payload.RESUME_EVENT_NAME);
+        String eventName = payload.getHeader(Payload.EVENT_NAME);
         if (eventName == null) {
             return chain.process(payload);
         }
