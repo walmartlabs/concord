@@ -18,16 +18,19 @@
  * =====
  */
 
+import { format as formatDate, parseISO as parseDate } from 'date-fns';
 import * as React from 'react';
+
+import { DateInput, DateTimeInput } from 'semantic-ui-calendar-react';
 import {
     Button,
     Checkbox,
+    CheckboxProps,
+    DropdownProps,
     Form,
     Header,
     Input,
-    Label,
-    CheckboxProps,
-    DropdownProps
+    Label
 } from 'semantic-ui-react';
 
 import { RequestError } from '../../../api/common';
@@ -37,11 +40,15 @@ import {
     FormFieldType,
     FormInstanceEntry
 } from '../../../api/process/form';
-import { RequestErrorMessage } from '../index';
 import { DropdownWithAddition } from '../../molecules';
-import { format as formatDate, parseISO as parseDate } from 'date-fns';
+import { RequestErrorMessage } from '../index';
 
-import { DateInput, DateTimeInput } from 'semantic-ui-calendar-react';
+// date-fns format patterns
+const DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+
+// moment.js format patterns
+const MOMENT_DATE_FORMAT = 'YYYY-MM-DD';
+const MOMENT_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
 
 interface State {
     [name: string]: any;
@@ -103,7 +110,7 @@ class ProcessForm extends React.Component<Props, State> {
             ) {
                 // Append the client zone information for date format consistency
                 const d = parseDate(values[k]);
-                values[k] = formatDate(d, 'yyyy-MM-ddTHH:mm:ss.SSSZ');
+                values[k] = formatDate(d, DATE_TIME_FORMAT);
             }
         }
 
@@ -354,19 +361,18 @@ class ProcessForm extends React.Component<Props, State> {
             cardinality === Cardinality.AT_LEAST_ONE ||
             cardinality === Cardinality.ONE_AND_ONLY_ONE;
 
-        const date = parseDate(value);
         return (
             <Form.Field key={name} error={!!error} required={required}>
                 <label>{label}</label>
 
                 <DateInput
                     name={name}
-                    placeholder="Date"
-                    value={value !== '' ? formatDate(date, 'yyyy-MM-dd') : value}
+                    placeholder={`Date (${MOMENT_DATE_FORMAT})`}
+                    value={value}
                     iconPosition="left"
                     closable={true}
                     popupPosition={popupPosition}
-                    dateFormat={'yyyy-MM-dd'}
+                    dateFormat={MOMENT_DATE_FORMAT}
                     autoComplete={'off'}
                     clearable={!required}
                     onChange={this.handleDateInput(name)}
@@ -398,19 +404,19 @@ class ProcessForm extends React.Component<Props, State> {
             cardinality === Cardinality.AT_LEAST_ONE ||
             cardinality === Cardinality.ONE_AND_ONLY_ONE;
 
-        const date = parseDate(value);
         return (
             <Form.Field key={name} error={!!error} required={required}>
                 <label>{label}</label>
 
                 <DateTimeInput
                     name={name}
-                    placeholder="Date Time"
-                    value={value !== '' ? formatDate(date, 'yyyy-MM-ddTHH:mm:ss') : value}
+                    placeholder={`Date/Time (${MOMENT_DATE_TIME_FORMAT})`}
+                    value={value}
                     iconPosition="left"
                     closable={true}
                     popupPosition={popupPosition}
-                    dateFormat={'yyyy-MM-dd'}
+                    dateFormat={MOMENT_DATE_FORMAT}
+                    dateTimeFormat={MOMENT_DATE_TIME_FORMAT}
                     autoComplete={'off'}
                     clearable={!required}
                     onChange={this.handleDateInput(name)}
@@ -468,6 +474,7 @@ class ProcessForm extends React.Component<Props, State> {
                         />
                     ) : (
                         <Button
+                            id="formSubmitButton"
                             type="submit"
                             primary={true}
                             disabled={submitting}

@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -46,7 +47,7 @@ public class CustomFormsIT {
     public ConcordConsoleRule consoleRule = new ConcordConsoleRule();
 
     @SuppressWarnings("unchecked")
-    @Test(timeout = 60000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         ApiClient client = serverRule.getClient();
 

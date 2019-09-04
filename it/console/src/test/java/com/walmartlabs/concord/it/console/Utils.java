@@ -22,6 +22,8 @@ package com.walmartlabs.concord.it.console;
 
 public final class Utils {
 
+    public static final long DEFAULT_TEST_TIMEOUT = 120000;
+
     public static String env(String k, String def) {
         String v = System.getenv(k);
         if (v == null) {

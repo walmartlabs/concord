@@ -16,6 +16,8 @@ streamlined GitHub trigger implementation (opt-in).
 
 ### Changed
 
+- concord-console: fixed a date-formatting bug preventing `date` and
+`dateTime` process form fields from working correctly; 
 - ansible: fixed an issue preventing the host status callback from
 working correctly when the host is unreachable;
 - ansible: callback plugins now send a custom `User-Agent` header;

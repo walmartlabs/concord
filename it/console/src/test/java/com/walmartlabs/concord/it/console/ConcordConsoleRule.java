@@ -91,14 +91,12 @@ public class ConcordConsoleRule extends WebDriverRule {
     }
 
     public void waitForLoad() throws InterruptedException {
-        ExpectedCondition<Boolean> expectation = new
-                ExpectedCondition<Boolean>() {
-                    public Boolean apply(WebDriver driver) {
-                        return executeJavaScript("return document.readyState").toString().equals("complete");
-                    }
-                };
+        ExpectedCondition<Boolean> expectation = driver -> executeJavaScript("return document.readyState")
+                .toString()
+                .equals("complete");
 
         Thread.sleep(500);
+
         WebDriverWait wait = new WebDriverWait(getDriver(), 30);
         wait.until(expectation);
     }

@@ -322,7 +322,12 @@ public final class FormUtils {
                         return null;
                     }
 
-                    return ZonedDateTime.parse(s).withZoneSameInstant(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+                    // adjust the value to the default system timezone
+                    // on the process level those values are represented as java.util.Date (i.e. no TZ info retained)
+                    // so we assume all Date values are in the default system TZ (which is typically UTC)
+                    return ZonedDateTime.parse(s)
+                            .withZoneSameInstant(ZoneId.systemDefault())
+                            .format(DATE_TIME_FORMATTER);
                 }
             }
         } else if (v instanceof List) {

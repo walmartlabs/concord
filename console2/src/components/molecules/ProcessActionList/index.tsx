@@ -93,13 +93,18 @@ class ProcessActionList extends React.PureComponent<Props> {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
+                    {/* TODO there should be only one Wizard button */}
                     {forms.map(({ name, runAs }) => (
                         <Table.Row key={name}>
                             <Table.Cell singleLine={true}>
                                 <Link to={`/process/${instanceId}/form/${name}/step`}>{name}</Link>
                             </Table.Cell>
                             <Table.Cell singleLine={true}>
-                                <Button onClick={() => onOpenWizard()} content="Wizard" />
+                                <Button
+                                    id="formWizardButton"
+                                    onClick={() => onOpenWizard()}
+                                    content="Wizard"
+                                />
                             </Table.Cell>
                             <Table.Cell>
                                 Form

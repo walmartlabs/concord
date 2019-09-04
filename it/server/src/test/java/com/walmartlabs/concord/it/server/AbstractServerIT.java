@@ -38,7 +38,7 @@ import java.util.Map;
 
 public abstract class AbstractServerIT {
 
-    protected final long DEFAULT_TEST_TIMEOUT = 120000;
+    protected static final long DEFAULT_TEST_TIMEOUT = 120000;
 
     private ServerClient serverClient;
 
