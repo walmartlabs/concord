@@ -1,0 +1,9 @@
+flows:
+  default:
+  - log: "Starting the process..."
+  - checkpoint: "first"
+  - log: "Continuing the process..."
+  - checkpoint: "second"
+  - log: "Done!"
+
+  - log: "Event Name: ${eventName}"

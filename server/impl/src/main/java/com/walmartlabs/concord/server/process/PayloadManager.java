@@ -203,7 +203,7 @@ public class PayloadManager {
         return PayloadBuilder.resume(processKey)
                 .workspace(tmpDir)
                 .configuration(req)
-                .resumeEventName(eventName)
+                .eventName(eventName)
                 .build();
     }
 

@@ -192,6 +192,11 @@ public class Constants {
          * Exclusive process.
          */
         public static final String EXCLUSIVE_EXEC = "exclusiveExec";
+
+        /**
+         * Event name.
+         */
+        public static final String EVENT_NAME_KEY = "eventName";
     }
 
     public static class Trigger {

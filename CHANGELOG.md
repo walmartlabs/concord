@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server: the process resume event name is now exposed as
+`eventName` variable. It can be used to detect when the process is
+restored from a checkpoint or resumed after suspension;
 - concord-server: regexes are now supported in the process'
 `requirements`;
 - concord-tasks: `suspend` support for `action: fork`;

@@ -34,7 +34,6 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.console.Utils.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.assertNotNull;
 
