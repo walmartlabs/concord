@@ -86,7 +86,12 @@ public class GithubTriggerProcessor implements TriggerProcessor {
         Map<String, Object> newParams = new HashMap<>(t.getParams());
         newParams.putIfAbsent(GITHUB_ORG_KEY, githubRepoInfo.owner());
         newParams.putIfAbsent(GITHUB_REPO_KEY, githubRepoInfo.name());
-        newParams.putIfAbsent(REPO_BRANCH_KEY, repo.getBranch() != null ? repo.getBranch() : GitCliRepositoryProvider.DEFAULT_BRANCH);
+
+        Object eventType = params.get(TYPE_KEY);
+        if (PULL_REQUEST_EVENT.equals(eventType) || PUSH_EVENT.equals(eventType)) {
+            String defaultBranch = repo.getBranch() != null ? repo.getBranch() : GitCliRepositoryProvider.DEFAULT_BRANCH;
+            newParams.putIfAbsent(REPO_BRANCH_KEY, defaultBranch);
+        }
         return newParams;
     }
 }
