@@ -82,6 +82,11 @@ To automatically start and stop the server and the agent using docker, use the
 ./mvnw verify -Pit -Pdocker
 ```
 
+To run UI ITs in an IDE using the UI's dev mode:
+- start the UI's dev mode with `cd console2 && npm start`;
+- set up `IT_CONSOLE_BASE_URL=http://localhost:3000` environment variable before running
+any UI tests.
+
 ## Examples
 
 See the [examples](examples) directory.

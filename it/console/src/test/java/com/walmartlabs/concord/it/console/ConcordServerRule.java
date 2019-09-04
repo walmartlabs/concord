@@ -20,6 +20,8 @@ package com.walmartlabs.concord.it.console;
  * =====
  */
 
+import com.google.gson.reflect.TypeToken;
+import com.squareup.okhttp.Call;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
@@ -33,7 +35,11 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static com.walmartlabs.concord.it.console.Utils.env;
 
@@ -73,9 +79,16 @@ public class ConcordServerRule implements TestRule {
         return resp.getData();
     }
 
-    private void setUp() {
-        this.client = new ConcordApiClient(baseUrl)
-                .setApiKey(Concord.ADMIN_API_KEY);
+    public byte[] getLog(String logFileName) throws ApiException {
+        Set<String> auths = client.getAuthentications().keySet();
+        String[] authNames = auths.toArray(new String[0]);
+
+        Call c = client.buildCall("/logs/" + logFileName, "GET", new ArrayList<>(), new ArrayList<>(),
+                null, new HashMap<>(), new HashMap<>(), authNames, null);
+
+        Type t = new TypeToken<byte[]>() {
+        }.getType();
+        return client.<byte[]>execute(c, t).getData();
     }
 
     @Override
@@ -87,5 +100,10 @@ public class ConcordServerRule implements TestRule {
                 base.evaluate();
             }
         };
+    }
+
+    private void setUp() {
+        this.client = new ConcordApiClient(baseUrl)
+                .setApiKey(Concord.ADMIN_API_KEY);
     }
 }

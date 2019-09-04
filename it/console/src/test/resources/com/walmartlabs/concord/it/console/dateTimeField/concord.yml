@@ -1,0 +1,7 @@
+flows:
+  default:
+    - form: myForm
+      fields:
+        - dateField: { type: "date" }
+        - dateTimeField: { type: "dateTime" }
+    - log: "myForm: ${myForm}"
