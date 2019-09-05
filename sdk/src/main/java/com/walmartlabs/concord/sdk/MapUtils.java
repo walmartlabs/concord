@@ -141,7 +141,7 @@ public final class MapUtils {
     public static <T> T get(Map<String, Object> m, String name, T defaultValue, Class<T> type) {
         Object value = get(m, name, defaultValue);
         if (value == null) {
-            return null;
+            return defaultValue;
         }
 
         if (type.isInstance(value)) {

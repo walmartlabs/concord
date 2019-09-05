@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: new `exclusive` syntax for triggers and regular
+processes.
+
 ### Changed
 
 - concord-server: fixed an issue preventing the process wait

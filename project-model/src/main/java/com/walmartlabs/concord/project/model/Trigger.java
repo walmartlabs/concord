@@ -69,27 +69,6 @@ public class Trigger implements Serializable {
         return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
     }
 
-    @JsonIgnore
-    public boolean isUseInitiator() {
-        if (cfg == null) {
-            return false;
-        }
-        Boolean v = (Boolean) cfg.get(Constants.Trigger.USE_INITIATOR);
-        if (v == null) {
-            return false;
-        }
-
-        return v;
-    }
-
-    @JsonIgnore
-    public String getExclusiveGroup() {
-        if (cfg == null) {
-            return null;
-        }
-        return (String)cfg.get(Constants.Trigger.EXCLUSIVE_GROUP);
-    }
-
     public List<String> getActiveProfiles() {
         return activeProfiles;
     }

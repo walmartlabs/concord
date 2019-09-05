@@ -130,30 +130,6 @@ public class TriggerEntry implements Serializable {
         return eventSource;
     }
 
-    @JsonIgnore
-    public String getEntryPoint() {
-        if (cfg == null) {
-            return null;
-        }
-
-        return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
-    }
-
-    @JsonIgnore
-    public boolean isUseInitiator() {
-        return MapUtils.getBoolean(cfg, Constants.Trigger.USE_INITIATOR, false);
-    }
-
-    @JsonIgnore
-    public boolean isUseEventCommitId() {
-        return MapUtils.getBoolean(cfg, Constants.Trigger.USE_EVENT_COMMIT_ID, false);
-    }
-
-    @JsonIgnore
-    public String getExclusiveGroup() {
-        return MapUtils.getString(cfg, Constants.Trigger.EXCLUSIVE_GROUP, null);
-    }
-
     public List<String> getActiveProfiles() {
         return activeProfiles;
     }

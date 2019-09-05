@@ -189,9 +189,9 @@ public class Constants {
         public static final String REPO_BRANCH_OR_TAG = "repoBranchOrTag";
 
         /**
-         * Exclusive process.
+         * Exclusive params.
          */
-        public static final String EXCLUSIVE_EXEC = "exclusiveExec";
+        public static final String EXCLUSIVE = "exclusive";
 
         /**
          * Event name.
@@ -225,11 +225,6 @@ public class Constants {
          * Use the trigger's commit id to start the process.
          */
         public static final String USE_EVENT_COMMIT_ID = "useEventCommitId";
-
-        /**
-         * Exclusive group.
-         */
-        public static final String EXCLUSIVE_GROUP = "exclusive";
     }
 
     /**

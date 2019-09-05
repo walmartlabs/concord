@@ -288,13 +288,12 @@ public class Dispatcher extends PeriodicTask {
         }
 
         @WithTimer
-        @SuppressWarnings("unchecked")
         public List<ProcessQueueEntry> next(DSLContext tx) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record13<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, Boolean, Object, Object>> s =
+            SelectJoinStep<Record13<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, Object, Object, Object>> s =
                     tx.select(
                             q.INSTANCE_ID,
                             q.CREATED_AT,
@@ -306,9 +305,9 @@ public class Dispatcher extends PeriodicTask {
                             q.REPO_URL,
                             q.COMMIT_ID,
                             q.REPO_ID,
-                            q.IS_EXCLUSIVE,
                             q.IMPORTS,
-                            q.REQUIREMENTS)
+                            q.REQUIREMENTS,
+                            q.EXCLUSIVE)
                             .from(q);
 
             s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
@@ -331,9 +330,9 @@ public class Dispatcher extends PeriodicTask {
                             .repoUrl(r.value8())
                             .commitId(r.value9())
                             .repoId(r.value10())
-                            .exclusive(r.value11())
-                            .imports(objectMapper.deserialize(r.value12(), Imports.class))
-                            .requirements(objectMapper.deserialize(r.value13(), Map.class))
+                            .imports(objectMapper.deserialize(r.value11(), Imports.class))
+                            .requirements(objectMapper.deserialize(r.value12()))
+                            .exclusive(objectMapper.deserialize(r.value13()))
                             .build());
         }
 

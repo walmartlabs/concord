@@ -33,7 +33,7 @@ public class Payload {
 
     public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
     public static final HeaderKey<List<String>> ACTIVE_PROFILES = HeaderKey.registerList("_activeProfiles");
-    public static final HeaderKey<Map> CONFIGURATION = HeaderKey.register("_cfg", Map.class);
+    public static final HeaderKey<Map<String, Object>> CONFIGURATION = HeaderKey.registerMap("_cfg");
     public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
     public static final HeaderKey<PolicyRules> POLICY = HeaderKey.register("_policy", PolicyRules.class);
@@ -43,7 +43,6 @@ public class Payload {
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
-    public static final HeaderKey<String> EXCLUSIVE_GROUP = HeaderKey.register("_exclusiveGroup", String.class);
     public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<String> EVENT_NAME = HeaderKey.register("_eventName", String.class);
     public static final HeaderKey<TriggeredByEntry> TRIGGERED_BY = HeaderKey.register("_triggeredBy", TriggeredByEntry.class);
@@ -108,10 +107,9 @@ public class Payload {
         return new Payload(this, m, this.attachments);
     }
 
-    @SuppressWarnings("unchecked")
-    public Payload mergeValues(HeaderKey<Map> key, Map values) {
-        Map o = getHeader(key);
-        Map n = new HashMap(o != null ? o : Collections.emptyMap());
+    public Payload mergeValues(HeaderKey<Map<String, Object>> key, Map<String, ?> values) {
+        Map<String, Object> o = getHeader(key);
+        Map<String, Object> n = new HashMap<>(o != null ? o : Collections.emptyMap());
         n.putAll(values);
         return putHeader(key, n);
     }

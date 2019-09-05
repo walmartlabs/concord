@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.events.github.Payload;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
+import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
@@ -141,7 +142,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             process(deliveryId, EVENT_SOURCE, r.event(), r.triggers(), (t, cfg) -> {
                 // if `useEventCommitId` is true then the process is forced to use the specified commit ID
                 String commitId = payload.getString(COMMIT_ID_KEY);
-                if (commitId != null && t.isUseEventCommitId()) {
+                if (commitId != null && TriggerUtils.isUseEventCommitId(t)) {
                     cfg.put(Constants.Request.REPO_COMMIT_ID, commitId);
                 }
                 return cfg;

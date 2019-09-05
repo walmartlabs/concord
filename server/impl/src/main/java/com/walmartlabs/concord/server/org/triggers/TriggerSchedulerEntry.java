@@ -21,12 +21,10 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class TriggerSchedulerEntry implements Serializable {
 
@@ -105,13 +103,6 @@ public class TriggerSchedulerEntry implements Serializable {
         }
 
         return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
-    }
-
-    public String getExclusiveGroup() {
-        if (cfg == null) {
-            return null;
-        }
-        return (String) cfg.get(Constants.Trigger.EXCLUSIVE_GROUP);
     }
 
     @Override

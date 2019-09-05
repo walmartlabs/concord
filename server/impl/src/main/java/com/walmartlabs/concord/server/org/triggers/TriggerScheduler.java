@@ -117,10 +117,10 @@ public class TriggerScheduler implements ScheduledTask {
             cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
         }
 
-        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), t.getExclusiveGroup(), cfg);
+        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), cfg);
     }
 
-    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String entryPoint, String exclusiveGroup, Map<String, Object> cfg) {
+    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String entryPoint, Map<String, Object> cfg) {
         PartialProcessKey processKey = PartialProcessKey.create();
 
         Payload payload;
@@ -131,7 +131,6 @@ public class TriggerScheduler implements ScheduledTask {
                     .project(projectId)
                     .repository(repoId)
                     .entryPoint(entryPoint)
-                    .exclusiveGroup(exclusiveGroup)
                     .configuration(cfg)
                     .build();
         } catch (Exception e) {

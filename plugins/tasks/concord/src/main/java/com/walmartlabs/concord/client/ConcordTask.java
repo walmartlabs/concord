@@ -68,7 +68,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
     private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
     private static final String ENTRY_POINT_KEY = "entryPoint";
-    private static final String EXCLUSIVE_EXEC_KEY = "exclusiveExec";
+    private static final String EXCLUSIVE_KEY = "exclusive";
     private static final String FORKS_KEY = "forks";
     private static final String IGNORE_FAILURES_KEY = "ignoreFailures";
     private static final String INSTANCE_ID_KEY = "instanceId";
@@ -554,7 +554,7 @@ public class ConcordTask extends AbstractConcordTask {
                 DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY,
                 ENTRY_POINT_KEY,
-                EXCLUSIVE_EXEC_KEY,
+                EXCLUSIVE_KEY,
                 IGNORE_FAILURES_KEY,
                 INSTANCE_ID_KEY,
                 ORG_KEY,
@@ -669,9 +669,9 @@ public class ConcordTask extends AbstractConcordTask {
             req.put(Constants.Request.ENTRY_POINT_KEY, entryPoint);
         }
 
-        if (cfg.get(EXCLUSIVE_EXEC_KEY) != null) {
-            boolean exclusiveExec = getBoolean(cfg, EXCLUSIVE_EXEC_KEY, false);
-            req.put(Constants.Request.EXCLUSIVE_EXEC, exclusiveExec);
+        if (cfg.get(EXCLUSIVE_KEY) != null) {
+            Map<String, Object> exclusive = MapUtils.getMap(cfg, EXCLUSIVE_KEY, null);
+            req.put(Constants.Request.EXCLUSIVE, exclusive);
         }
 
         Set<String> tags = getSet(cfg, TAGS_KEY);

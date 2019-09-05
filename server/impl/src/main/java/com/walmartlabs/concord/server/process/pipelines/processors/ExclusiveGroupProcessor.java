@@ -22,49 +22,53 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ExclusiveGroupLock;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
+import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.db.PgUtils.jsonText;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
+import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.name;
 
 /**
- * If the process has an "exclusive group" assigned to it, this processor
+ * If the process has an "exclusive group and mode cancel" assigned to it, this processor
  * determines whether the process can continue to run or should be cancelled.
  * The processor uses a global (DB) lock {@link ExclusiveGroupLock}.
  */
 @Named
 public class ExclusiveGroupProcessor implements PayloadProcessor {
 
+    private static final String CANCEL_MODE = "cancel";
+
     private final LogManager logManager;
     private final ProcessQueueManager queueManager;
-    private final ProcessQueueDao queueDao;
     private final ExclusiveProcessDao exclusiveProcessDao;
     private final ExclusiveGroupLock exclusiveGroupLock;
 
     @Inject
     public ExclusiveGroupProcessor(LogManager logManager,
                                    ProcessQueueManager queueManager,
-                                   ProcessQueueDao queueDao,
                                    ExclusiveProcessDao exclusiveProcessDao,
                                    ExclusiveGroupLock exclusiveGroupLock) {
 
         this.logManager = logManager;
         this.queueManager = queueManager;
-        this.queueDao = queueDao;
         this.exclusiveProcessDao = exclusiveProcessDao;
         this.exclusiveGroupLock = exclusiveGroupLock;
     }
@@ -73,9 +77,15 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     @WithTimer
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
+        UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
 
-        String exclusiveGroup = payload.getHeader(Payload.EXCLUSIVE_GROUP);
-        if (exclusiveGroup == null) {
+        Map<String, Object> exclusive = PayloadUtils.getExclusive(payload);
+        if (exclusive.isEmpty()) {
+            return chain.process(payload);
+        }
+
+        String mode = MapUtils.getString(exclusive, "mode", CANCEL_MODE);
+        if (!CANCEL_MODE.equals(mode)) {
             return chain.process(payload);
         }
 
@@ -84,18 +94,21 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(processKey, "Process' exclusive group: {}", exclusiveGroup);
+        String group = MapUtils.getString(exclusive, "group");
+        logManager.info(processKey, "Process' exclusive group: {}", group);
 
         boolean canContinue = exclusiveProcessDao.txResult(tx -> {
             exclusiveGroupLock.lock(tx);
 
-            if (exclusiveProcessDao.exists(tx, processKey.getInstanceId(), projectId, exclusiveGroup)) {
-                logManager.warn(processKey, "Process(es) with exclusive group '" + exclusiveGroup + "' is already in the queue. " +
+            if (exclusiveProcessDao.exists(tx, processKey.getInstanceId(), parentInstanceId, projectId, group)) {
+                logManager.warn(processKey, "Process(es) with exclusive group '" + group + "' is already in the queue. " +
                         "Current process has been cancelled");
 
                 queueManager.updateStatus(processKey, ProcessStatus.CANCELLED);
                 return false;
             }
+
+            queueManager.updateExclusive(tx, processKey, exclusive);
 
             return true;
         });
@@ -109,11 +122,14 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
     @Named
     static class ExclusiveProcessDao extends AbstractDao  {
 
-        private static final List<ProcessStatus> FINISHED_STATUSES = Arrays.asList(
-                ProcessStatus.FINISHED,
-                ProcessStatus.FAILED,
-                ProcessStatus.CANCELLED,
-                ProcessStatus.TIMED_OUT);
+        private static final List<ProcessStatus> RUNNING_STATUSES = Arrays.asList(
+                ProcessStatus.NEW,
+                ProcessStatus.PREPARING,
+                ProcessStatus.ENQUEUED,
+                ProcessStatus.STARTING,
+                ProcessStatus.RUNNING,
+                ProcessStatus.SUSPENDED,
+                ProcessStatus.RESUMING);
 
         @Inject
         protected ExclusiveProcessDao(@MainDB Configuration cfg) {
@@ -125,14 +141,32 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
             return super.txResult(t);
         }
 
-        public boolean exists(DSLContext tx, UUID currentInstanceId, UUID projectId, String exclusiveGroup) {
-            return tx.fetchExists(
-                    tx.selectOne()
+        public boolean exists(DSLContext tx, UUID currentInstanceId, UUID parentInstanceId, UUID projectId, String exclusiveGroup) {
+            SelectConditionStep<Record1<Integer>> s = tx.selectOne()
                             .from(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.EXCLUSIVE_GROUP.eq(exclusiveGroup)
+                            .where(jsonText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
                                     .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
                                             .and(PROCESS_QUEUE.INSTANCE_ID.notEqual(currentInstanceId)
-                                                    .and(PROCESS_QUEUE.CURRENT_STATUS.notIn(FINISHED_STATUSES))))));
+                                                    .and(PROCESS_QUEUE.CURRENT_STATUS.in(RUNNING_STATUSES)))));
+
+            // parent's
+            if (parentInstanceId != null) {
+                SelectJoinStep<Record1<UUID>> parents = tx.withRecursive("parents").as(
+                        select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID).from(ProcessQueue.PROCESS_QUEUE)
+                                .where(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(parentInstanceId))
+                                .unionAll(
+                                        select(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID, ProcessQueue.PROCESS_QUEUE.PARENT_INSTANCE_ID)
+                                                .from(ProcessQueue.PROCESS_QUEUE)
+                                                .join(name("parents"))
+                                                .on(ProcessQueue.PROCESS_QUEUE.INSTANCE_ID.eq(
+                                                        field(name("parents", "PARENT_INSTANCE_ID"), UUID.class)))))
+                        .select(field("parents.INSTANCE_ID", UUID.class))
+                        .from(name("parents"));
+
+                s.and(PROCESS_QUEUE.INSTANCE_ID.notIn(parents));
+            }
+
+            return tx.fetchExists(s);
         }
     }
 }

@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.queueclient.message.Imports;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,7 +46,8 @@ public interface ProcessQueueEntry {
     @Nullable
     UUID initiatorId();
 
-    boolean exclusive();
+    @Nullable
+    Map<String, Object> exclusive();
 
     @Nullable
     UUID repoId();
