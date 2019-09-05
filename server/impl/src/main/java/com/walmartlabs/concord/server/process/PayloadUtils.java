@@ -22,14 +22,21 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.xml.bind.DatatypeConverter;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Map;
 
 public final class PayloadUtils {
+
+    public static Map<String, Object> getExclusive(Payload p) {
+        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
+        return MapUtils.getMap(cfg, Constants.Request.EXCLUSIVE, Collections.emptyMap());
+    }
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> getRequirements(Payload p) {
@@ -37,7 +44,6 @@ public final class PayloadUtils {
         return (Map<String, Object>) cfg.get(InternalConstants.Request.REQUIREMENTS);
     }
 
-    @SuppressWarnings("unchecked")
     public static Instant getStartAt(Payload p) {
         Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {

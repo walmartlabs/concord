@@ -16,6 +16,7 @@
         <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_CURR_STAT"/>
     </changeSet>
 
+    <!-- replaced with `exclusive` in 1.33.0+
     <changeSet id="1270200" author="ybrigo@gmail.com">
         <addColumn tableName="PROCESS_QUEUE">
             <column name="EXCLUSIVE_GROUP" type="varchar(512)">
@@ -23,4 +24,5 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 </databaseChangeLog>

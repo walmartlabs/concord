@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
+import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -112,13 +113,15 @@ public abstract class AbstractEventResource {
             Map<String, Object> cfg = new HashMap<>();
             cfg.put(Constants.Request.ARGUMENTS_KEY, args);
 
-            if (t.getEntryPoint() != null) {
-                cfg.put(Constants.Request.ENTRY_POINT_KEY, t.getEntryPoint());
+            if (TriggerUtils.getEntryPoint(t) != null) {
+                cfg.put(Constants.Request.ENTRY_POINT_KEY, TriggerUtils.getEntryPoint(t));
             }
 
             if (t.getActiveProfiles() != null) {
                 cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
             }
+
+            cfg.put(Constants.Request.EXCLUSIVE, TriggerUtils.getExclusive(t));
 
             if (cfgEnricher != null) {
                 cfg = cfgEnricher.enrich(t, cfg);
@@ -163,7 +166,7 @@ public abstract class AbstractEventResource {
     }
 
     private UserEntry getInitiator(TriggerEntry trigger, Map<String, Object> event) {
-        boolean isUseInitiator = trigger.isUseInitiator();
+        boolean isUseInitiator = TriggerUtils.isUseInitiator(trigger);
         if (!isUseInitiator) {
             UserPrincipal initiator = UserPrincipal.assertCurrent();
             return initiator.getUser();
@@ -193,7 +196,6 @@ public abstract class AbstractEventResource {
                     .project(t.getProjectId())
                     .repository(t.getRepositoryId())
                     .configuration(cfg)
-                    .exclusiveGroup(t.getExclusiveGroup())
                     .triggeredBy(TriggeredByEntry.builder()
                             .externalEventId(eventId)
                             .trigger(t)

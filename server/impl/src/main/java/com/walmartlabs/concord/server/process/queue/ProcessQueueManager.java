@@ -66,11 +66,10 @@ public class ProcessQueueManager {
         UUID initiatorId = payload.getHeader(Payload.INITIATOR_ID);
         Map<String, Object> cfg = getCfg(payload);
         Map<String, Object> meta = getMeta(cfg);
-        String exclusiveGroup = payload.getHeader(Payload.EXCLUSIVE_GROUP);
         TriggeredByEntry triggeredBy = payload.getHeader(Payload.TRIGGERED_BY);
 
         queueDao.tx(tx -> {
-            queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, initiatorId, meta, exclusiveGroup, triggeredBy);
+            queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, initiatorId, meta, triggeredBy);
             eventDao.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
         });
     }
@@ -96,11 +95,11 @@ public class ProcessQueueManager {
         Long processTimeout = getProcessTimeout(payload);
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);
         Map<String, Object> meta = getMeta(getCfg(payload));
-        boolean exclusive = isExclusive(payload);
         Imports imports = payload.getHeader(Payload.IMPORTS);
+        Map<String, Object> exclusive = PayloadUtils.getExclusive(payload);
 
         queueDao.tx(tx -> {
-            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, exclusive, imports);
+            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive);
             eventDao.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
         });
     }
@@ -181,7 +180,13 @@ public class ProcessQueueManager {
         eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), null, eventData);
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * @see #updateStatus(ProcessKey, ProcessStatus, Map)
+     */
+    public void updateExclusive(DSLContext tx, ProcessKey processKey, Map<String, Object> exclusive) {
+        queueDao.updateExclusive(tx, processKey, exclusive);
+    }
+
     private static Map<String, Object> getCfg(Payload payload) {
         return payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
     }
@@ -221,28 +226,5 @@ public class ProcessQueueManager {
         }
 
         throw new IllegalArgumentException("Invalid '" + Constants.Request.PROCESS_TIMEOUT + "' value: expected an ISO-8601 value, got: " + processTimeout);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static boolean isExclusive(Payload p) {
-        Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
-        if (cfg == null) {
-            return false;
-        }
-
-        Object v = cfg.get(Constants.Request.EXCLUSIVE_EXEC);
-        if (v == null) {
-            return false;
-        }
-
-        if (v instanceof String) {
-            return Boolean.parseBoolean((String) v);
-        }
-
-        if (v instanceof Boolean) {
-            return (boolean) v;
-        }
-
-        throw new IllegalArgumentException("Invalid '" + Constants.Request.EXCLUSIVE_EXEC + "' value: expected a boolean value, got: " + v);
     }
 }

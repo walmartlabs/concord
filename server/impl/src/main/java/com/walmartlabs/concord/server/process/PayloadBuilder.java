@@ -87,7 +87,6 @@ public final class PayloadBuilder {
         return f.apply(this);
     }
 
-    @SuppressWarnings("unchecked")
     public PayloadBuilder with(MultipartInput input) throws IOException {
         Map<String, Path> attachments = payload.getAttachments();
         attachments = new HashMap<>(attachments != null ? attachments : Collections.emptyMap());
@@ -155,14 +154,6 @@ public final class PayloadBuilder {
         return this;
     }
 
-    public PayloadBuilder exclusiveGroup(String group) {
-        if (group != null) {
-            payload = payload.putHeader(Payload.EXCLUSIVE_GROUP, group);
-        }
-        return this;
-    }
-
-    @SuppressWarnings("unchecked")
     public PayloadBuilder configuration(Map<String, Object> cfg) {
         if (cfg == null) {
             cfg = Collections.emptyMap();

@@ -33,7 +33,6 @@ import java.util.Set;
 public class OutVariablesSettingProcessor implements PayloadProcessor {
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Set<String> outExpr = payload.getHeader(Payload.OUT_EXPRESSIONS);
         if (outExpr == null) {

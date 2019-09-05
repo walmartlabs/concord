@@ -107,7 +107,7 @@ public class ProcessQueueDao extends AbstractDao {
 
     public void insert(DSLContext tx, ProcessKey processKey, ProcessStatus status, ProcessKind kind,
                        UUID parentInstanceId, UUID projectId, UUID repoId, UUID initiatorId,
-                       Map<String, Object> meta, String exclusiveGroup, TriggeredByEntry triggeredBy) {
+                       Map<String, Object> meta, TriggeredByEntry triggeredBy) {
 
         tx.insertInto(PROCESS_QUEUE)
                 .columns(PROCESS_QUEUE.INSTANCE_ID,
@@ -120,7 +120,6 @@ public class ProcessQueueDao extends AbstractDao {
                         PROCESS_QUEUE.CURRENT_STATUS,
                         PROCESS_QUEUE.LAST_UPDATED_AT,
                         PROCESS_QUEUE.META,
-                        PROCESS_QUEUE.EXCLUSIVE_GROUP,
                         PROCESS_QUEUE.TRIGGERED_BY)
                 .values(value(processKey.getInstanceId()),
                         value(kind.toString()),
@@ -132,7 +131,6 @@ public class ProcessQueueDao extends AbstractDao {
                         value(status.toString()),
                         currentTimestamp(),
                         field("?::jsonb", objectMapper.serialize(meta)),
-                        value(exclusiveGroup),
                         field("?::jsonb", objectMapper.serialize(triggeredBy)))
                 .execute();
     }
@@ -161,7 +159,7 @@ public class ProcessQueueDao extends AbstractDao {
 
     public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, Instant startAt,
                         Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
-                        Map<String, Object> meta, boolean exclusive, Imports imports) {
+                        Map<String, Object> meta, Imports imports, Map<String, Object> exclusive) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
@@ -195,7 +193,9 @@ public class ProcessQueueDao extends AbstractDao {
             q.set(PROCESS_QUEUE.IMPORTS, field("?::jsonb", String.class, objectMapper.serialize(imports)));
         }
 
-        q.set(PROCESS_QUEUE.IS_EXCLUSIVE, exclusive);
+        if (exclusive != null && !exclusive.isEmpty()) {
+            q.set(PROCESS_QUEUE.EXCLUSIVE, field("?::jsonb", String.class, objectMapper.serialize(exclusive)));
+        }
 
         int i = q
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
@@ -486,7 +486,6 @@ public class ProcessQueueDao extends AbstractDao {
                             .and(pe.EVENT_TYPE.eq(EventType.PROCESS_WAIT.name())))
                     .orderBy(pe.EVENT_DATE.desc())
                     .fetch(r -> objectMapper.deserialize(r.value1(), WAIT_HISTORY_ENTRY));
-
         }
     }
 
@@ -565,6 +564,13 @@ public class ProcessQueueDao extends AbstractDao {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", String.class, objectMapper.serialize(waits)))
                 .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
+                .execute();
+    }
+
+    public void updateExclusive(DSLContext tx, ProcessKey key, Map<String, Object> exclusive) {
+        tx.update(PROCESS_QUEUE)
+                .set(PROCESS_QUEUE.EXCLUSIVE, field("?::jsonb", String.class, objectMapper.serialize(exclusive)))
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
                 .execute();
     }
@@ -809,38 +815,6 @@ public class ProcessQueueDao extends AbstractDao {
 
         public ProcessStatus getStatus() {
             return status;
-        }
-    }
-
-    private static class FindResult {
-
-        enum Status {
-            DONE,
-            NEXT_ITEM
-        }
-
-        private final Status status;
-        private final ProcessQueueEntry item;
-
-        private FindResult(Status status, ProcessQueueEntry item) {
-            this.status = status;
-            this.item = item;
-        }
-
-        private boolean isDone() {
-            return status == Status.DONE;
-        }
-
-        public static FindResult done(ProcessQueueEntry item) {
-            return new FindResult(Status.DONE, item);
-        }
-
-        static FindResult notFound() {
-            return done(null);
-        }
-
-        static FindResult findNext() {
-            return new FindResult(Status.NEXT_ITEM, null);
         }
     }
 }

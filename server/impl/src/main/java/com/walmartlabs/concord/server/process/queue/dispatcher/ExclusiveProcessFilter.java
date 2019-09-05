@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
@@ -36,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.db.PgUtils.jsonText;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
@@ -46,6 +48,8 @@ import static org.jooq.impl.DSL.*;
  */
 @Named
 public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
+
+    private static final String WAIT_MODE = "wait";
 
     private static final List<ProcessStatus> RUNNING_PROCESS_STATUSES = Arrays.asList(
             ProcessStatus.STARTING,
@@ -64,15 +68,18 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
             return Collections.emptyList();
         }
 
+        boolean isWaitMode = WAIT_MODE.equals(MapUtils.getString(item.exclusive(), "mode"));
+        String group = MapUtils.getString(item.exclusive(), "group");
+        if (group == null || !isWaitMode) {
+            return Collections.emptyList();
+        }
+
         ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
         SelectConditionStep<Record1<UUID>> s = tx.select(q.INSTANCE_ID)
                 .from(q)
                 .where(q.PROJECT_ID.eq(item.projectId())
-                        .and(q.CURRENT_STATUS.in(RUNNING_PROCESS_STATUSES)));
-
-        if (!item.exclusive()) {
-            s.and(q.IS_EXCLUSIVE.eq(true));
-        }
+                        .and(q.CURRENT_STATUS.in(RUNNING_PROCESS_STATUSES)
+                                .and( jsonText(q.EXCLUSIVE, "group").eq(group))));
 
         // parent's
         if (item.parentInstanceId() != null) {
