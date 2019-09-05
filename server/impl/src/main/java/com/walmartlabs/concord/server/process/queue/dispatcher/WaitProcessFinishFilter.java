@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 
@@ -42,10 +43,10 @@ public abstract class WaitProcessFinishFilter implements Filter {
             ProcessStatus.CANCELLED,
             ProcessStatus.TIMED_OUT);
 
-    private final ProcessQueueDao processQueueDao;
+    private final ProcessQueueManager processQueueManager;
 
-    protected WaitProcessFinishFilter(ProcessQueueDao processQueueDao) {
-        this.processQueueDao = processQueueDao;
+    protected WaitProcessFinishFilter(ProcessQueueManager processQueueManager) {
+        this.processQueueManager = processQueueManager;
     }
 
     @Override
@@ -55,7 +56,7 @@ public abstract class WaitProcessFinishFilter implements Filter {
             return true;
         }
 
-        processQueueDao.updateWait(tx, e.key(), ProcessCompletionCondition.builder()
+        processQueueManager.updateWait(tx, e.key(), ProcessCompletionCondition.builder()
                 .processes(processes)
                 .reason(getReason())
                 .finalStatuses(getFinalStatuses())
