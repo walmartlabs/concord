@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  */
 
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
 import org.jooq.Record1;
@@ -54,8 +54,8 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
             ProcessStatus.RESUMING);
 
     @Inject
-    public ExclusiveProcessFilter(ProcessQueueDao processQueueDao) {
-        super(processQueueDao);
+    public ExclusiveProcessFilter(ProcessQueueManager processQueueManager) {
+        super(processQueueManager);
     }
 
     @Override
