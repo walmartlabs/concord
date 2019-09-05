@@ -21,13 +21,10 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;

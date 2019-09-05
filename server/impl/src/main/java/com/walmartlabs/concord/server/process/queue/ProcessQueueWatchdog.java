@@ -341,12 +341,12 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                             .and(PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
-        private ProcessEntry toEntry(Record5<UUID, Timestamp, UUID, UUID, Object> r) {
+        private ProcessEntry toEntry(Record5<UUID, Timestamp, UUID, UUID, JSONB> r) {
             ProcessKey processKey = new ProcessKey(r.get(PROCESS_QUEUE.INSTANCE_ID), r.get(PROCESS_QUEUE.CREATED_AT));
             return new ProcessEntry(processKey,
                     r.get(PROCESS_QUEUE.PROJECT_ID),
                     r.get(PROCESS_QUEUE.INITIATOR_ID),
-                    objectMapper.deserialize(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
+                    objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
         }
 
         private static TimedOutEntry toExpiredEntry(Record4<UUID, Timestamp, String, Long> r) {

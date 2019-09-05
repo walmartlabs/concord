@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
+import org.jooq.JSONB;
 import org.jooq.Record5;
 import org.jooq.SelectConditionStep;
 import org.slf4j.Logger;
@@ -157,7 +158,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
-                SelectConditionStep<Record5<UUID, String, Timestamp, Timestamp, Object>> s = tx.select(
+                SelectConditionStep<Record5<UUID, String, Timestamp, Timestamp, JSONB>> s = tx.select(
                         q.INSTANCE_ID,
                         q.CURRENT_STATUS,
                         q.CREATED_AT,
@@ -177,7 +178,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                                 .status(ProcessStatus.valueOf(r.value2()))
                                 .instanceCreatedAt(r.value3())
                                 .lastUpdatedAt(r.value4())
-                                .waits(objectMapper.deserialize(r.value5(), AbstractWaitCondition.class))
+                                .waits(objectMapper.fromJSONB(r.value5(), AbstractWaitCondition.class))
                                 .build());
             });
         }

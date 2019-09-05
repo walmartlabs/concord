@@ -41,7 +41,8 @@ import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.selectDistinct;
 
 @Named
 public class OrganizationDao extends AbstractDao {
@@ -65,8 +66,7 @@ public class OrganizationDao extends AbstractDao {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
 
-            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY,
-                    o.META.cast(String.class), o.ORG_CFG.cast(String.class))
+            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY, o.META, o.ORG_CFG)
                     .from(o)
                     .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
                     .where(o.ORG_ID.eq(id))
@@ -88,8 +88,7 @@ public class OrganizationDao extends AbstractDao {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
 
-            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY,
-                    o.META.cast(String.class), o.ORG_CFG.cast(String.class))
+            return tx.select(o.ORG_ID, o.ORG_NAME, o.OWNER_ID, u.USERNAME, u.DOMAIN, u.DISPLAY_NAME, u.USER_TYPE, o.VISIBILITY, o.META, o.ORG_CFG)
                     .from(o)
                     .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID))
                     .where(o.ORG_NAME.eq(name))
@@ -99,10 +98,10 @@ public class OrganizationDao extends AbstractDao {
 
     public Map<String, Object> getConfiguration(UUID orgId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(ORGANIZATIONS.ORG_CFG.cast(String.class))
+            return tx.select(ORGANIZATIONS.ORG_CFG)
                     .from(ORGANIZATIONS)
                     .where(ORGANIZATIONS.ORG_ID.eq(orgId))
-                    .fetchOne(e -> objectMapper.deserialize(e.value1()));
+                    .fetchOne(e -> objectMapper.fromJSONB(e.value1()));
         }
     }
 
@@ -116,9 +115,16 @@ public class OrganizationDao extends AbstractDao {
         }
 
         return tx.insertInto(ORGANIZATIONS)
-                .columns(ORGANIZATIONS.ORG_NAME, ORGANIZATIONS.OWNER_ID, ORGANIZATIONS.VISIBILITY, ORGANIZATIONS.META, ORGANIZATIONS.ORG_CFG)
-                .values(value(name), value(ownerId), value(visibility.toString()),
-                        field("?::jsonb", objectMapper.serialize(meta)), field("?::jsonb", objectMapper.serialize(cfg)))
+                .columns(ORGANIZATIONS.ORG_NAME,
+                        ORGANIZATIONS.OWNER_ID,
+                        ORGANIZATIONS.VISIBILITY,
+                        ORGANIZATIONS.META,
+                        ORGANIZATIONS.ORG_CFG)
+                .values(name,
+                        ownerId,
+                        visibility.toString(),
+                        objectMapper.toJSONB(meta),
+                        objectMapper.toJSONB(cfg))
                 .returning()
                 .fetchOne()
                 .getOrgId();
@@ -144,11 +150,11 @@ public class OrganizationDao extends AbstractDao {
         }
 
         if (meta != null) {
-            q.addValue(ORGANIZATIONS.META, field("?::jsonb", String.class, objectMapper.serialize(meta)));
+            q.addValue(ORGANIZATIONS.META, objectMapper.toJSONB(meta));
         }
 
         if (cfg != null) {
-            q.addValue(ORGANIZATIONS.ORG_CFG, field("?::jsonb", String.class, objectMapper.serialize(cfg)));
+            q.addValue(ORGANIZATIONS.ORG_CFG, objectMapper.toJSONB(cfg));
         }
 
         q.addConditions(ORGANIZATIONS.ORG_ID.eq(id));
@@ -160,7 +166,7 @@ public class OrganizationDao extends AbstractDao {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
 
-            SelectOnConditionStep<Record10<UUID, String, UUID, String, String, String, String, String, String, String>> q = tx.select(o.ORG_ID,
+            SelectOnConditionStep<Record10<UUID, String, UUID, String, String, String, String, String, JSONB, JSONB>> q = tx.select(o.ORG_ID,
                     o.ORG_NAME,
                     o.OWNER_ID,
                     u.USERNAME,
@@ -168,8 +174,8 @@ public class OrganizationDao extends AbstractDao {
                     u.DISPLAY_NAME,
                     u.USER_TYPE,
                     o.VISIBILITY,
-                    o.META.cast(String.class),
-                    o.ORG_CFG.cast(String.class))
+                    o.META,
+                    o.ORG_CFG)
                     .from(o)
                     .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID));
 
@@ -224,9 +230,9 @@ public class OrganizationDao extends AbstractDao {
                 .execute());
     }
 
-    private OrganizationEntry toEntry(Record10<UUID, String, UUID, String, String, String, String, String, String, String> r) {
-        Map<String, Object> meta = objectMapper.deserialize(r.value9());
-        Map<String, Object> cfg = objectMapper.deserialize(r.value10());
+    private OrganizationEntry toEntry(Record10<UUID, String, UUID, String, String, String, String, String, JSONB, JSONB> r) {
+        Map<String, Object> meta = objectMapper.fromJSONB(r.value9());
+        Map<String, Object> cfg = objectMapper.fromJSONB(r.value10());
         return new OrganizationEntry(r.value1(), r.value2(),
                 toOwner(r.value3(), r.value4(), r.value5(), r.value6(), r.value7()),
                 OrganizationVisibility.valueOf(r.value8()), meta, cfg);

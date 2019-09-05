@@ -41,15 +41,6 @@ public class KvDao extends AbstractDao {
     @Inject
     public KvDao(@MainDB Configuration cfg) {
         super(cfg);
-
-        switch (cfg.dialect()) {
-            case POSTGRES:
-            case POSTGRES_9_5: {
-                break;
-            }
-            default:
-                throw new IllegalStateException("Unsupported DB dialect: " + cfg.dialect());
-        }
     }
 
     public void remove(UUID projectId, String key) {
