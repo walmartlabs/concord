@@ -21,10 +21,12 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class TriggerSchedulerEntry implements Serializable {
 

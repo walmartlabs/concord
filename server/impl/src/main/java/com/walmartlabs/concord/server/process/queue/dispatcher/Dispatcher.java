@@ -293,7 +293,7 @@ public class Dispatcher extends PeriodicTask {
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record13<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, Object, Object, Object>> s =
+            SelectJoinStep<Record13<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB>> s =
                     tx.select(
                             q.INSTANCE_ID,
                             q.CREATED_AT,
@@ -330,9 +330,9 @@ public class Dispatcher extends PeriodicTask {
                             .repoUrl(r.value8())
                             .commitId(r.value9())
                             .repoId(r.value10())
-                            .imports(objectMapper.deserialize(r.value11(), Imports.class))
-                            .requirements(objectMapper.deserialize(r.value12()))
-                            .exclusive(objectMapper.deserialize(r.value13()))
+                            .imports(objectMapper.fromJSONB(r.value11(), Imports.class))
+                            .requirements(objectMapper.fromJSONB(r.value12()))
+                            .exclusive(objectMapper.fromJSONB(r.value13()))
                             .build());
         }
 

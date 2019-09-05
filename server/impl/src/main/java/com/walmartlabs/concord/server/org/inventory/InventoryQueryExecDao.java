@@ -87,7 +87,7 @@ public class InventoryQueryExecDao extends AbstractDao {
             if (params == null) {
                 args = new QueryPart[]{val(q.getInventoryId())};
             } else {
-                args = new QueryPart[]{val(objectMapper.serialize(params)), val(q.getInventoryId())};
+                args = new QueryPart[]{val(objectMapper.toString(params)), val(q.getInventoryId())};
             }
 
             return tx.resultQuery(sql, args)
@@ -96,7 +96,7 @@ public class InventoryQueryExecDao extends AbstractDao {
     }
 
     private Object toExecResult(Record record) {
-        return objectMapper.deserialize((String) record.getValue(0));
+        return objectMapper.fromString((String) record.getValue(0));
     }
 
     private static String createQuery(String src) {

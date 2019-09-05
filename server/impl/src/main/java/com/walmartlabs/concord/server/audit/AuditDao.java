@@ -31,8 +31,6 @@ import javax.inject.Named;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.value;
 
 @Named
 public class AuditDao extends AbstractDao {
@@ -57,10 +55,10 @@ public class AuditDao extends AbstractDao {
                         AUDIT_LOG.ENTRY_OBJECT,
                         AUDIT_LOG.ENTRY_ACTION,
                         AUDIT_LOG.ENTRY_DETAILS)
-                .values(value(userId),
-                        value(object.toString()),
-                        value(action.toString()),
-                        field("?::jsonb", objectMapper.serialize(details)))
+                .values(userId,
+                        object.toString(),
+                        action.toString(),
+                        objectMapper.toJSONB(details))
                 .execute();
     }
 }

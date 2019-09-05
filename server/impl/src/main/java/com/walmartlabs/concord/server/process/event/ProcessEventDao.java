@@ -63,12 +63,12 @@ public class ProcessEventDao extends AbstractDao {
 
             ProcessKey processKey = filter.processKey();
 
-            SelectConditionStep<Record5<Long, UUID, String, Timestamp, String>> q = tx
+            SelectConditionStep<Record5<Long, UUID, String, Timestamp, JSONB>> q = tx
                     .select(PROCESS_EVENTS.EVENT_SEQ,
                             PROCESS_EVENTS.EVENT_ID,
                             PROCESS_EVENTS.EVENT_TYPE,
                             PROCESS_EVENTS.EVENT_DATE,
-                            function("jsonb_strip_nulls", Object.class, PROCESS_EVENTS.EVENT_DATA).cast(String.class))
+                            function("jsonb_strip_nulls", JSONB.class, PROCESS_EVENTS.EVENT_DATA))
                     .from(PROCESS_EVENTS)
                     .where(PROCESS_EVENTS.INSTANCE_ID.eq(processKey.getInstanceId())
                             .and(PROCESS_EVENTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())));
@@ -126,16 +126,11 @@ public class ProcessEventDao extends AbstractDao {
         Field<Timestamp> ts = eventDate != null ? value(Timestamp.from(eventDate.toInstant())) : currentTimestamp();
 
         ProcessEventsRecord r = tx.insertInto(PROCESS_EVENTS)
-                .columns(PROCESS_EVENTS.INSTANCE_ID,
-                        PROCESS_EVENTS.INSTANCE_CREATED_AT,
-                        PROCESS_EVENTS.EVENT_TYPE,
-                        PROCESS_EVENTS.EVENT_DATE,
-                        PROCESS_EVENTS.EVENT_DATA)
-                .values(value(processKey.getInstanceId()),
-                        value(processKey.getCreatedAt()),
-                        value(eventType),
-                        ts,
-                        field("?::jsonb", objectMapper.serialize(data)))
+                .set(PROCESS_EVENTS.INSTANCE_ID, processKey.getInstanceId())
+                .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, processKey.getCreatedAt())
+                .set(PROCESS_EVENTS.EVENT_TYPE, eventType)
+                .set(PROCESS_EVENTS.EVENT_DATE, ts)
+                .set(PROCESS_EVENTS.EVENT_DATA, objectMapper.toJSONB(data))
                 .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .fetchOne();
 
@@ -143,13 +138,12 @@ public class ProcessEventDao extends AbstractDao {
     }
 
     public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, Map<String, Object> data) {
-        String sql = tx.insertInto(PROCESS_EVENTS,
-                PROCESS_EVENTS.INSTANCE_ID,
-                PROCESS_EVENTS.INSTANCE_CREATED_AT,
-                PROCESS_EVENTS.EVENT_TYPE,
-                PROCESS_EVENTS.EVENT_DATE,
-                PROCESS_EVENTS.EVENT_DATA)
-                .values(value((UUID) null), null, null, currentTimestamp(), field("?::jsonb"))
+        String sql = tx.insertInto(PROCESS_EVENTS)
+                .set(PROCESS_EVENTS.INSTANCE_ID, (UUID) null)
+                .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, (Timestamp) null)
+                .set(PROCESS_EVENTS.EVENT_TYPE, (String) null)
+                .set(PROCESS_EVENTS.EVENT_DATE, currentTimestamp())
+                .set(PROCESS_EVENTS.EVENT_DATA, (JSONB) null)
                 .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .getSQL();
 
@@ -159,7 +153,7 @@ public class ProcessEventDao extends AbstractDao {
                     ps.setObject(1, pk.getInstanceId());
                     ps.setTimestamp(2, pk.getCreatedAt());
                     ps.setString(3, eventType);
-                    ps.setString(4, objectMapper.serialize(data));
+                    ps.setString(4, objectMapper.toString(data));
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -186,12 +180,11 @@ public class ProcessEventDao extends AbstractDao {
 
     private void insert(DSLContext tx, ProcessKey processKey, List<ProcessEventRequest> entries) {
         String sql = tx.insertInto(PROCESS_EVENTS)
-                .columns(PROCESS_EVENTS.INSTANCE_ID,
-                        PROCESS_EVENTS.INSTANCE_CREATED_AT,
-                        PROCESS_EVENTS.EVENT_TYPE,
-                        PROCESS_EVENTS.EVENT_DATE,
-                        PROCESS_EVENTS.EVENT_DATA)
-                .values((UUID)null, null, null, null, field("?::jsonb", "n/a"))
+                .set(PROCESS_EVENTS.INSTANCE_ID, (UUID) null)
+                .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, (Timestamp) null)
+                .set(PROCESS_EVENTS.EVENT_TYPE, (String) null)
+                .set(PROCESS_EVENTS.EVENT_DATE, (Timestamp) null)
+                .set(PROCESS_EVENTS.EVENT_DATA, (JSONB) null)
                 .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .getSQL();
 
@@ -204,7 +197,7 @@ public class ProcessEventDao extends AbstractDao {
                     ps.setTimestamp(2, processKey.getCreatedAt());
                     ps.setString(3, e.getEventType());
                     ps.setTimestamp(4, eventDate);
-                    ps.setString(5, objectMapper.serialize(e.getData()));
+                    ps.setString(5, objectMapper.toString(e.getData()));
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -235,13 +228,13 @@ public class ProcessEventDao extends AbstractDao {
         q.execute();
     }
 
-    private ProcessEventEntry toEntry(Record5<Long, UUID, String, Timestamp, String> r) {
+    private ProcessEventEntry toEntry(Record5<Long, UUID, String, Timestamp, JSONB> r) {
         return ImmutableProcessEventEntry.builder()
                 .seqId(r.value1())
                 .id(r.value2())
                 .eventType(r.value3())
                 .eventDate(r.value4())
-                .data(objectMapper.deserialize(r.value5()))
+                .data(objectMapper.fromJSONB(r.value5()))
                 .build();
     }
 

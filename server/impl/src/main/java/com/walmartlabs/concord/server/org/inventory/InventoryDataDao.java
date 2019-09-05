@@ -78,17 +78,17 @@ public class InventoryDataDao extends AbstractDao {
 
     public List<Map<String,Object>> list(UUID inventoryId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA.cast(String.class))
+            return tx.select(INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA)
                     .from(INVENTORY_DATA)
                     .where(INVENTORY_DATA.INVENTORY_ID.eq(inventoryId))
                     .fetch(this::toListItem);
         }
     }
 
-    private Map<String, Object> toListItem(Record2<String, String> r) {
+    private Map<String, Object> toListItem(Record2<String, JSONB> r) {
         Map<String, Object> result = new HashMap<>();
         result.put("path", r.value1());
-        result.put("data", objectMapper.deserialize(r.value2()));
+        result.put("data", objectMapper.fromJSONB(r.value2()));
         return result;
     }
 
@@ -107,9 +107,9 @@ public class InventoryDataDao extends AbstractDao {
                         .from(i2, nodes)
                         .where(i2.INVENTORY_ID.eq(INVENTORIES.as("nodes").PARENT_INVENTORY_ID));
 
-        SelectConditionStep<Record3<String, String, Integer>> s = tx.withRecursive("nodes", INVENTORIES.INVENTORY_ID.getName(), INVENTORIES.PARENT_INVENTORY_ID.getName(), "level")
+        SelectConditionStep<Record3<String, JSONB, Integer>> s = tx.withRecursive("nodes", INVENTORIES.INVENTORY_ID.getName(), INVENTORIES.PARENT_INVENTORY_ID.getName(), "level")
                 .as(s1.unionAll(s2))
-                .select(INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA.cast(String.class), level())
+                .select(INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA, level())
                 .from(INVENTORY_DATA, nodes)
                 .where(INVENTORY_DATA.INVENTORY_ID.eq(INVENTORIES.as("nodes").INVENTORY_ID)
                         .and(INVENTORY_DATA.ITEM_PATH.startsWith(path)));
@@ -119,9 +119,9 @@ public class InventoryDataDao extends AbstractDao {
     private void merge(DSLContext tx, UUID inventoryId, String itemPath, Object data) {
         tx.insertInto(INVENTORY_DATA)
                 .columns(INVENTORY_DATA.INVENTORY_ID, INVENTORY_DATA.ITEM_PATH, INVENTORY_DATA.ITEM_DATA)
-                .values(value(inventoryId), value(itemPath), field("?::jsonb", objectMapper.serialize(data)))
+                .values(inventoryId, itemPath, objectMapper.toJSONB(data))
                 .onDuplicateKeyUpdate()
-                .set(INVENTORY_DATA.ITEM_DATA, field("?::jsonb", String.class, objectMapper.serialize(data)))
+                .set(INVENTORY_DATA.ITEM_DATA, objectMapper.toJSONB(data))
                 .execute();
     }
 
@@ -132,7 +132,7 @@ public class InventoryDataDao extends AbstractDao {
                 .execute();
     }
 
-    private InventoryDataItem toEntry(Record3<String, String, Integer> r) {
-        return new InventoryDataItem(r.value1(), r.value3(), objectMapper.deserialize(r.value2()));
+    private InventoryDataItem toEntry(Record3<String, JSONB, Integer> r) {
+        return new InventoryDataItem(r.value1(), r.value3(), objectMapper.fromJSONB(r.value2()));
     }
 }

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jooq.JSONB;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,7 +44,15 @@ public class ConcordObjectMapper {
         this.delegate = objectMapper;
     }
 
-    public String serialize(Object m) {
+    public JSONB toJSONB(Object m) {
+        if (m == null) {
+            return null;
+        }
+
+        return JSONB.valueOf(toString(m));
+    }
+
+    public String toString(Object m) {
         if (m == null) {
             return null;
         }
@@ -55,23 +64,43 @@ public class ConcordObjectMapper {
         }
     }
 
-    public Map<String, Object> deserialize(Object s) {
+    public Map<String, Object> fromJSONB(JSONB o) {
+        return fromJSONB(o, MAP_TYPE);
+    }
+
+    public <T> T fromJSONB(JSONB o, TypeReference valueTypeRef) {
+        if (o == null) {
+            return null;
+        }
+
+        return deserialize(o.toString(), valueTypeRef);
+    }
+
+    public <T> T fromJSONB(JSONB o, Class<T> valueType) {
+        if (o == null) {
+            return null;
+        }
+
+        return deserialize(o.toString(), valueType);
+    }
+
+    public Map<String, Object> fromString(String s) {
         return deserialize(s, MAP_TYPE);
     }
 
-    public <T> T deserialize(Object o, TypeReference valueTypeRef) {
+    private <T> T deserialize(String o, TypeReference valueTypeRef) {
         if (o == null) {
             return null;
         }
 
         try {
-            return delegate.readValue(String.valueOf(o), valueTypeRef);
+            return delegate.readValue(o, valueTypeRef);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public <T> T deserialize(Object o, Class<T> valueType) {
+    private <T> T deserialize(Object o, Class<T> valueType) {
         if (o == null) {
             return null;
         }

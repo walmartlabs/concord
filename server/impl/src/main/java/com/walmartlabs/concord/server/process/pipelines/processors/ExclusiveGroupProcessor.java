@@ -44,7 +44,6 @@ import java.util.UUID;
 import static com.walmartlabs.concord.db.PgUtils.jsonText;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
-import static org.jooq.impl.DSL.name;
 
 /**
  * If the process has an "exclusive group and mode cancel" assigned to it, this processor

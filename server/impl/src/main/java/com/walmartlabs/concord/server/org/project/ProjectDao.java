@@ -106,18 +106,16 @@ public class ProjectDao extends AbstractDao {
         Projects p = PROJECTS.as("p");
         Users u = USERS.as("u");
 
-        Field<String> cfgField = p.PROJECT_CFG.cast(String.class);
         Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME).from(ORGANIZATIONS).where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID)).asField();
-        Field<String> metaField = p.META.cast(String.class);
 
         try (DSLContext tx = DSL.using(cfg)) {
-            Record14<UUID, String, String, UUID, String, String, String, UUID, String, String, String, String, RawPayloadMode, String> r = tx.select(
+            Record14<UUID, String, String, UUID, String, JSONB, String, UUID, String, String, String, String, RawPayloadMode, JSONB> r = tx.select(
                     p.PROJECT_ID,
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
                     p.ORG_ID,
                     orgNameField,
-                    cfgField,
+                    p.PROJECT_CFG,
                     p.VISIBILITY,
                     p.OWNER_ID,
                     u.USERNAME,
@@ -125,7 +123,7 @@ public class ProjectDao extends AbstractDao {
                     u.USER_TYPE,
                     u.DISPLAY_NAME,
                     p.RAW_PAYLOAD_MODE,
-                    metaField)
+                    p.META)
                     .from(p)
                     .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
                     .where(p.PROJECT_ID.eq(projectId))
@@ -135,7 +133,7 @@ public class ProjectDao extends AbstractDao {
                 return null;
             }
 
-            Result<Record12<UUID, UUID, String, String, String, String, String, Boolean, String, UUID, String, String>> repos = tx.select(
+            Result<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> repos = tx.select(
                     REPOSITORIES.REPO_ID,
                     REPOSITORIES.PROJECT_ID,
                     REPOSITORIES.REPO_NAME,
@@ -144,7 +142,7 @@ public class ProjectDao extends AbstractDao {
                     REPOSITORIES.REPO_COMMIT_ID,
                     REPOSITORIES.REPO_PATH,
                     REPOSITORIES.IS_DISABLED,
-                    REPOSITORIES.META.cast(String.class),
+                    REPOSITORIES.META,
                     SECRETS.SECRET_ID,
                     SECRETS.SECRET_NAME,
                     SECRETS.STORE_TYPE)
@@ -154,7 +152,7 @@ public class ProjectDao extends AbstractDao {
                     .fetch();
 
             Map<String, RepositoryEntry> m = new HashMap<>();
-            for (Record12<UUID, UUID, String, String, String, String, String, Boolean, String, UUID, String, String> repo : repos) {
+            for (Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String> repo : repos) {
                 m.put(repo.get(REPOSITORIES.REPO_NAME),
                         new RepositoryEntry(
                                 repo.get(REPOSITORIES.REPO_ID),
@@ -168,10 +166,10 @@ public class ProjectDao extends AbstractDao {
                                 repo.get(SECRETS.SECRET_ID),
                                 repo.get(SECRETS.SECRET_NAME),
                                 repo.get(SECRETS.STORE_TYPE),
-                                objectMapper.deserialize(repo.get(REPOSITORIES.META.cast(String.class)))));
+                                objectMapper.fromJSONB(repo.get(REPOSITORIES.META))));
             }
 
-            Map<String, Object> cfg = objectMapper.deserialize(r.get(cfgField));
+            Map<String, Object> cfg = objectMapper.fromJSONB(r.get(p.PROJECT_CFG));
 
             return new ProjectEntry(projectId,
                     r.get(p.PROJECT_NAME),
@@ -184,7 +182,7 @@ public class ProjectDao extends AbstractDao {
                     toOwner(r.get(p.OWNER_ID), r.get(u.USERNAME), r.get(u.DOMAIN), r.get(u.DISPLAY_NAME), r.get(u.USER_TYPE)),
                     r.get(p.RAW_PAYLOAD_MODE) != RawPayloadMode.DISABLED,
                     r.get(p.RAW_PAYLOAD_MODE),
-                    objectMapper.deserialize(r.get(metaField)));
+                    objectMapper.fromJSONB(r.get(p.META)));
         }
     }
 
@@ -211,15 +209,15 @@ public class ProjectDao extends AbstractDao {
                         PROJECTS.RAW_PAYLOAD_MODE,
                         PROJECTS.SECRET_KEY,
                         PROJECTS.META)
-                .values(value(name),
-                        value(description),
-                        value(orgId),
-                        field("?::jsonb", objectMapper.serialize(cfg)),
-                        value(visibility.toString()),
-                        value(ownerId),
-                        value(rawPayloadMode != null ? rawPayloadMode : RawPayloadMode.DISABLED),
-                        value(encryptedKey),
-                        field("?::jsonb", objectMapper.serialize(meta)))
+                .values(name,
+                        description,
+                        orgId,
+                        objectMapper.toJSONB(cfg),
+                        visibility.toString(),
+                        ownerId,
+                        rawPayloadMode != null ? rawPayloadMode : RawPayloadMode.DISABLED,
+                        encryptedKey,
+                        objectMapper.toJSONB(meta))
                 .returning(PROJECTS.PROJECT_ID)
                 .fetchOne()
                 .getProjectId();
@@ -240,7 +238,7 @@ public class ProjectDao extends AbstractDao {
         }
 
         if (cfg != null) {
-            q.set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, objectMapper.serialize(cfg)));
+            q.set(PROJECTS.PROJECT_CFG, objectMapper.toJSONB(cfg));
         }
 
         if (visibility != null) {
@@ -256,7 +254,7 @@ public class ProjectDao extends AbstractDao {
         }
 
         if (meta != null) {
-            q.set(PROJECTS.META, field("?::jsonb", String.class, objectMapper.serialize(meta)));
+            q.set(PROJECTS.META, objectMapper.toJSONB(meta));
         }
 
         q.set(PROJECTS.ORG_ID, orgId)
@@ -270,7 +268,7 @@ public class ProjectDao extends AbstractDao {
 
     public void updateCfg(DSLContext tx, UUID id, Map<String, Object> cfg) {
         tx.update(PROJECTS)
-                .set(PROJECTS.PROJECT_CFG, field("?::jsonb", String.class, objectMapper.serialize(cfg)))
+                .set(PROJECTS.PROJECT_CFG, objectMapper.toJSONB(cfg))
                 .where(PROJECTS.PROJECT_ID.eq(id))
                 .execute();
     }
@@ -344,10 +342,10 @@ public class ProjectDao extends AbstractDao {
 
     public Map<String, Object> getConfiguration(UUID projectId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROJECTS.PROJECT_CFG.cast(String.class))
+            return tx.select(PROJECTS.PROJECT_CFG)
                     .from(PROJECTS)
                     .where(PROJECTS.PROJECT_ID.eq(projectId))
-                    .fetchOne(e -> objectMapper.deserialize(e.value1()));
+                    .fetchOne(e -> objectMapper.fromJSONB(e.value1()));
         }
     }
 

@@ -24,10 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.jooq.tables.Triggers;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Record10;
+import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -77,7 +74,7 @@ public class TriggerScheduleDao extends AbstractDao {
             Field<String> specField = field("{0}->>'spec'", String.class, t.CONDITIONS);
             Field<String> timezoneField = field("{0}->>'timezone'", String.class, t.CONDITIONS);
 
-            Record10<UUID, UUID, UUID, UUID, String, String, String[], String, String, Timestamp> r = tx.select(
+            Record10<UUID, UUID, UUID, UUID, String, String, String[], JSONB, JSONB, Timestamp> r = tx.select(
                     t.TRIGGER_ID,
                     orgIdField,
                     t.PROJECT_ID,
@@ -85,8 +82,8 @@ public class TriggerScheduleDao extends AbstractDao {
                     specField,
                     timezoneField,
                     t.ACTIVE_PROFILES,
-                    t.ARGUMENTS.cast(String.class),
-                    t.TRIGGER_CFG.cast(String.class),
+                    t.ARGUMENTS,
+                    t.TRIGGER_CFG,
                     currentTimestamp())
                     .from(t)
                     .where(t.TRIGGER_ID.eq(id))
@@ -105,8 +102,8 @@ public class TriggerScheduleDao extends AbstractDao {
                     r.value5(),
                     r.value6(),
                     toList(r.value7()),
-                    objectMapper.deserialize(r.value8()),
-                    objectMapper.deserialize(r.value9()));
+                    objectMapper.fromJSONB(r.value8()),
+                    objectMapper.fromJSONB(r.value9()));
 
             ZoneId zoneId = null;
             if (result.getTimezone() != null) {

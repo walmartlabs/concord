@@ -66,7 +66,7 @@ public class PolicyDao extends AbstractDao {
             return tx.select(POLICIES.POLICY_ID,
                     POLICIES.PARENT_POLICY_ID,
                     POLICIES.POLICY_NAME,
-                    POLICIES.RULES.cast(String.class))
+                    POLICIES.RULES)
                     .from(POLICIES)
                     .where(POLICIES.POLICY_ID.eq(policyId))
                     .fetchOne(this::toEntry);
@@ -85,7 +85,7 @@ public class PolicyDao extends AbstractDao {
             return null;
         }
 
-        Result<Record3<String, String, Integer>> rules = tx.withRecursive("children").as(
+        Result<Record3<String, JSONB, Integer>> rules = tx.withRecursive("children").as(
                 select(POLICIES.POLICY_ID, POLICIES.PARENT_POLICY_ID, POLICIES.POLICY_NAME, POLICIES.RULES, field("1", Integer.class).as("level")).from(POLICIES)
                         .where(POLICIES.POLICY_ID.eq(entry.id()))
                         .unionAll(
@@ -93,16 +93,16 @@ public class PolicyDao extends AbstractDao {
                                         .join(name("children"))
                                         .on(POLICIES.POLICY_ID.eq(
                                                 field(name("children", "PARENT_POLICY_ID"), UUID.class)))))
-                .select(POLICIES.as("children").POLICY_NAME, POLICIES.as("children").RULES.cast(String.class), field("level", Integer.class))
+                .select(POLICIES.as("children").POLICY_NAME, POLICIES.as("children").RULES, field("level", Integer.class))
                 .from(name("children"))
                 .orderBy(field("level").desc())
                 .fetch();
 
         ImmutablePolicyRules.Builder result = ImmutablePolicyRules.builder();
         Map<String, Object> mergedRules = new HashMap<>();
-        for(Record3<String, String, Integer> r : rules) {
+        for(Record3<String, JSONB, Integer> r : rules) {
             result.addPolicyNames(r.value1());
-            mergedRules = ConfigurationUtils.deepMerge(mergedRules, objectMapper.deserialize(r.value2()));
+            mergedRules = ConfigurationUtils.deepMerge(mergedRules, objectMapper.fromJSONB(r.value2()));
         }
         return result
                 .rules(mergedRules)
@@ -116,11 +116,11 @@ public class PolicyDao extends AbstractDao {
     }
 
     public PolicyEntry getLinked(DSLContext tx, UUID orgId, UUID projectId, UUID userId) {
-        SelectOnConditionStep<Record7<UUID, UUID, String, String, UUID, UUID, UUID>> q =
+        SelectOnConditionStep<Record7<UUID, UUID, String, JSONB, UUID, UUID, UUID>> q =
                 tx.select(POLICIES.POLICY_ID,
                         POLICIES.PARENT_POLICY_ID,
                         POLICIES.POLICY_NAME,
-                        POLICIES.RULES.cast(String.class),
+                        POLICIES.RULES,
                         POLICY_LINKS.ORG_ID,
                         POLICY_LINKS.PROJECT_ID,
                         POLICY_LINKS.USER_ID)
@@ -158,7 +158,7 @@ public class PolicyDao extends AbstractDao {
     public UUID insert(String name, UUID parentId, Map<String, Object> rules) {
         return txResult(tx -> tx.insertInto(POLICIES)
                 .columns(POLICIES.POLICY_NAME, POLICIES.PARENT_POLICY_ID, POLICIES.RULES)
-                .values(value(name), value(parentId), field("?::jsonb", objectMapper.serialize(rules)))
+                .values(name, parentId, objectMapper.toJSONB(rules))
                 .returning(POLICIES.POLICY_ID)
                 .fetchOne()
                 .getPolicyId());
@@ -167,7 +167,7 @@ public class PolicyDao extends AbstractDao {
     public void update(UUID policyId, String name, UUID parentId, Map<String, Object> rules) {
         tx(tx -> tx.update(POLICIES)
                 .set(POLICIES.POLICY_NAME, name)
-                .set(POLICIES.RULES, field("?::jsonb", String.class, objectMapper.serialize(rules)))
+                .set(POLICIES.RULES, objectMapper.toJSONB(rules))
                 .set(POLICIES.PARENT_POLICY_ID, parentId)
                 .where(POLICIES.POLICY_ID.eq(policyId))
                 .execute());
@@ -210,7 +210,7 @@ public class PolicyDao extends AbstractDao {
             return tx.select(POLICIES.POLICY_ID,
                     POLICIES.PARENT_POLICY_ID,
                     POLICIES.POLICY_NAME,
-                    POLICIES.RULES.cast(String.class))
+                    POLICIES.RULES)
                     .from(POLICIES)
                     .fetch(this::toEntry);
         }
@@ -268,16 +268,16 @@ public class PolicyDao extends AbstractDao {
                 .build();
     }
 
-    private PolicyEntry toEntry(Record4<UUID, UUID, String, String> r) {
+    private PolicyEntry toEntry(Record4<UUID, UUID, String, JSONB> r) {
         return ImmutablePolicyEntry.builder()
                 .id(r.get(POLICIES.POLICY_ID))
                 .parentId(r.get(POLICIES.PARENT_POLICY_ID))
                 .name(r.get(POLICIES.POLICY_NAME))
-                .rules(objectMapper.deserialize(r.value4()))
+                .rules(objectMapper.fromJSONB(r.value4()))
                 .build();
     }
 
-    private PolicyRule toRule(Record7<UUID, UUID, String, String, UUID, UUID, UUID> r) {
+    private PolicyRule toRule(Record7<UUID, UUID, String, JSONB, UUID, UUID, UUID> r) {
         return new PolicyRule(
                 r.get(POLICY_LINKS.ORG_ID),
                 r.get(POLICY_LINKS.PROJECT_ID),
@@ -285,7 +285,7 @@ public class PolicyDao extends AbstractDao {
                 r.get(POLICIES.POLICY_ID),
                 r.get(POLICIES.PARENT_POLICY_ID),
                 r.get(POLICIES.POLICY_NAME),
-                objectMapper.deserialize(r.value4()));
+                objectMapper.fromJSONB(r.value4()));
     }
 
     private class PolicyRule {
