@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.agent.dispatcher;
  * =====
  */
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
@@ -58,9 +60,8 @@ public class Dispatcher extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
 
-    private static final int BATCH_SIZE = 10;
-    private static final int MAX_OFFSET = 100;
     private static final long ERROR_DELAY = 1 * 60 * 1000L; // 1 min
+    private static final int BATCH_SIZE = 10;
 
     private final DispatcherDao dao;
     private final WebSocketChannelManager channelManager;
@@ -111,11 +112,6 @@ public class Dispatcher extends PeriodicTask {
                 if (matches.isEmpty()) {
                     // no matches, try fetching the next N records
                     offset += BATCH_SIZE;
-                    if (offset > MAX_OFFSET) {
-                        log.warn("dispatch -> max batch size reached with no matches, something funky's happenning");
-                        break;
-                    }
-
                     continue;
                 }
 
@@ -176,11 +172,15 @@ public class Dispatcher extends PeriodicTask {
     public static class DispatcherDao extends AbstractDao {
 
         private final ObjectMapper objectMapper;
+        private final Histogram offsetHistogram;
 
         @Inject
-        public DispatcherDao(@MainDB Configuration cfg) {
+        public DispatcherDao(@MainDB Configuration cfg,
+                             MetricRegistry metricRegistry) {
+
             super(cfg);
             this.objectMapper = new ObjectMapper();
+            this.offsetHistogram = metricRegistry.histogram("agent-command-dispatcher-offset");
         }
 
         @Override
@@ -190,6 +190,8 @@ public class Dispatcher extends PeriodicTask {
 
         @WithTimer
         public List<AgentCommand> next(DSLContext tx, int offset, int limit) {
+            offsetHistogram.update(offset);
+
             return tx.selectFrom(AGENT_COMMANDS)
                     .where(AGENT_COMMANDS.COMMAND_STATUS.eq(AgentCommand.Status.CREATED.toString()))
                     .orderBy(AGENT_COMMANDS.CREATED_AT)
