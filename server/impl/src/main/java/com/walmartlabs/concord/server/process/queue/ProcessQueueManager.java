@@ -85,7 +85,7 @@ public class ProcessQueueManager {
             throw new ProcessException(processKey, "Process not found: " + processKey);
         }
 
-        if (s != ProcessStatus.ENQUEUED && s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
+        if (s != ProcessStatus.PREPARING && s != ProcessStatus.RESUMING && s != ProcessStatus.SUSPENDED) {
             throw new ProcessException(processKey, "Invalid process status: " + s);
         }
 

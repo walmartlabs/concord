@@ -9,6 +9,8 @@ processes.
 
 ### Changed
 
+- concord-server: fixed an issue with incorrect process status
+transition of forked processes;
 - concord-server: fixed an issue preventing the process wait
 condition history from being correctly filled in.
 

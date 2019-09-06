@@ -39,7 +39,7 @@ public class InitialQueueEntryProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        queueManager.insert(payload, ProcessStatus.ENQUEUED);
+        queueManager.insert(payload, ProcessStatus.PREPARING);
         return chain.process(payload);
     }
 }
