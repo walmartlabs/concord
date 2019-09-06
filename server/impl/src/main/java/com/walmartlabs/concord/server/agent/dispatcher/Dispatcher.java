@@ -1,0 +1,249 @@
+package com.walmartlabs.concord.server.agent.dispatcher;
+
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2019 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.CommandType;
+import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.agent.AgentCommand;
+import com.walmartlabs.concord.server.agent.Commands;
+import com.walmartlabs.concord.server.cfg.AgentConfiguration;
+import com.walmartlabs.concord.server.jooq.tables.records.AgentCommandsRecord;
+import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
+import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
+import com.walmartlabs.concord.server.queueclient.message.MessageType;
+import com.walmartlabs.concord.server.websocket.WebSocketChannel;
+import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
+
+/**
+ * Dispatches commands to agents.
+ */
+@Named
+@Singleton
+public class Dispatcher extends PeriodicTask {
+
+    private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
+
+    private static final int BATCH_SIZE = 10;
+    private static final int MAX_OFFSET = 100;
+    private static final long ERROR_DELAY = 1 * 60 * 1000L; // 1 min
+
+    private final DispatcherDao dao;
+    private final WebSocketChannelManager channelManager;
+
+    @Inject
+    public Dispatcher(AgentConfiguration cfg,
+                      DispatcherDao dao,
+                      WebSocketChannelManager channelManager) {
+
+        super(cfg.getCommandPollDelay(), ERROR_DELAY);
+        this.dao = dao;
+        this.channelManager = channelManager;
+    }
+
+    @Override
+    protected boolean performTask() {
+        Map<WebSocketChannel, CommandRequest> requests = this.channelManager.getRequests(MessageType.COMMAND_REQUEST);
+        if (requests.isEmpty()) {
+            return false;
+        }
+
+        List<Request> l = requests.entrySet().stream()
+                .map(e -> new Request(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+        dispatch(l);
+
+        return false;
+    }
+
+    private void dispatch(List<Request> requests) {
+        // we need it modifiable
+        List<Request> inbox = new ArrayList<>(requests);
+
+        // run everything in a single transaction
+        dao.tx(tx -> {
+            int offset = 0;
+
+            while (true) {
+                // fetch the next few CREATED commands from the DB
+                List<AgentCommand> candidates = new ArrayList<>(dao.next(tx, offset, BATCH_SIZE));
+                if (candidates.isEmpty() || inbox.isEmpty()) {
+                    // no potential candidates or no requests left to process
+                    break;
+                }
+
+                List<Match> matches = match(inbox, candidates);
+                if (matches.isEmpty()) {
+                    // no matches, try fetching the next N records
+                    offset += BATCH_SIZE;
+                    if (offset > MAX_OFFSET) {
+                        log.warn("dispatch -> max batch size reached with no matches, something funky's happenning");
+                        break;
+                    }
+
+                    continue;
+                }
+
+                for (Match m : matches) {
+                    sendResponse(m, m.command);
+                    dao.markAsSent(tx, m.command.getCommandId());
+
+                    inbox.remove(m.request);
+                }
+            }
+        });
+    }
+
+    private List<Match> match(List<Request> requests, List<AgentCommand> candidates) {
+        List<Match> results = new ArrayList<>();
+
+        for (Request req : requests) {
+            AgentCommand candidate = findCandidate(req.request, candidates);
+            if (candidate == null) {
+                continue;
+            }
+
+            // remove the matche from the list
+            candidates.remove(candidate);
+
+            results.add(new Match(req, candidate));
+        }
+
+        return results;
+    }
+
+    private AgentCommand findCandidate(CommandRequest req, List<AgentCommand> candidates) {
+        return candidates.stream()
+                .filter(c -> c.getAgentId().equals(req.getAgentId().toString()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void sendResponse(Match match, AgentCommand response) {
+        WebSocketChannel channel = match.request.channel;
+        long correlationId = match.request.request.getCorrelationId();
+
+        CommandType type = CommandType.valueOf((String) response.getData().remove(Commands.TYPE_KEY));
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", type.toString());
+        payload.putAll(response.getData());
+
+        boolean success = channelManager.sendResponse(channel.getChannelId(), CommandResponse.cancel(correlationId, payload));
+        if (success) {
+            log.info("sendResponse ['{}'] -> done", correlationId);
+        } else {
+            log.error("sendResponse ['{}'] -> failed", correlationId);
+        }
+    }
+
+    @Named
+    public static class DispatcherDao extends AbstractDao {
+
+        private final ObjectMapper objectMapper;
+
+        @Inject
+        public DispatcherDao(@MainDB Configuration cfg) {
+            super(cfg);
+            this.objectMapper = new ObjectMapper();
+        }
+
+        @Override
+        protected void tx(Tx t) {
+            super.tx(t);
+        }
+
+        @WithTimer
+        public List<AgentCommand> next(DSLContext tx, int offset, int limit) {
+            return tx.selectFrom(AGENT_COMMANDS)
+                    .where(AGENT_COMMANDS.COMMAND_STATUS.eq(AgentCommand.Status.CREATED.toString()))
+                    .orderBy(AGENT_COMMANDS.CREATED_AT)
+                    .offset(offset)
+                    .limit(limit)
+                    .forUpdate()
+                    .skipLocked()
+                    .fetch(this::convert);
+        }
+
+        public void markAsSent(DSLContext tx, UUID commandId) {
+            tx.update(AGENT_COMMANDS)
+                    .set(AGENT_COMMANDS.COMMAND_STATUS, AgentCommand.Status.SENT.toString())
+                    .where(AGENT_COMMANDS.COMMAND_ID.eq(commandId))
+                    .execute();
+        }
+
+        @SuppressWarnings("unchecked")
+        private AgentCommand convert(AgentCommandsRecord r) {
+            UUID commandId = r.getCommandId();
+            String agentId = r.getAgentId();
+            Date createdAt = r.getCreatedAt();
+            AgentCommand.Status status = AgentCommand.Status.valueOf(r.getCommandStatus());
+
+            Map<String, Object> data;
+            try {
+                data = objectMapper.readValue(r.get(AGENT_COMMANDS.COMMAND_DATA), Map.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            return new AgentCommand(commandId, agentId, status, createdAt, data);
+        }
+    }
+
+    private static final class Match {
+
+        private final Request request;
+        private final AgentCommand command;
+
+        private Match(Request request, AgentCommand command) {
+            this.request = request;
+            this.command = command;
+        }
+    }
+
+    private static final class Request {
+
+        private final WebSocketChannel channel;
+        private final CommandRequest request;
+
+        private Request(WebSocketChannel channel, CommandRequest request) {
+            this.channel = channel;
+            this.request = request;
+        }
+    }
+}

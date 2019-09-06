@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,6 +42,8 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -63,6 +65,8 @@ import static org.jooq.impl.DSL.*;
 @Named
 @Singleton
 public class Dispatcher extends PeriodicTask {
+
+    private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
 
     private static final long POLL_DELAY = TimeUnit.SECONDS.toMillis(1);
     private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(30);
@@ -263,7 +267,9 @@ public class Dispatcher extends PeriodicTask {
                 secret,
                 item.imports());
 
-        channelManager.sendResponse(channel.getChannelId(), resp);
+        if (!channelManager.sendResponse(channel.getChannelId(), resp)) {
+            log.warn("sendResponse ['{}'] -> failed", correlationId);
+        }
 
         logManager.info(item.key(), "Acquired by: " + channel.getInfo());
     }
