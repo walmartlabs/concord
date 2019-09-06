@@ -126,6 +126,9 @@ public class AnsibleConfig {
         // SSH timeout, default is 10 seconds and too slow for stores
         m.put("timeout", "120");
 
+        // Prepare for Ansible 2.8, ensure retry: continues to work
+        m.put("retry_files_enabled", true);
+
         // use a shorter path to store temporary files
         m.put("remote_tmp", "/tmp/${USER}/ansible");
 
