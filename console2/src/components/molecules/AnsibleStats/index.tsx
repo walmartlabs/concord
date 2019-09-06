@@ -106,7 +106,7 @@ class AnsibleStats extends React.PureComponent<Props, State> {
                     {
                         menuItem: 'Failures',
                         render: () => (
-                            <Tab.Pane attached={true}>
+                            <Tab.Pane attached={true} style={{ overflow: 'auto' }}>
                                 <AnsibleTaskListActivity
                                     showHosts={true}
                                     status={AnsibleStatus.FAILED}
