@@ -1,0 +1,23 @@
+flows:
+  default:
+    - task: concord
+      in:
+        action: fork
+        forks:
+          - entryPoint: onFork
+            arguments:
+              msg: "Hello"
+          - entryPoint: onFork
+            arguments:
+              msg: "Bye"
+        sync: true
+        suspend: true
+        outVars:
+          - varFromFork
+
+    - log: "${jobOut}"
+
+  onFork:
+    - log: "Running in a fork"
+    - set:
+        varFromFork: "${msg}, ${name}"

@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-task: support for `outVars` for `action: fork` when
+`suspend` is enabled;
 - concord-server: new `exclusive` syntax for triggers and regular
 processes.
 

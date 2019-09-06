@@ -123,7 +123,11 @@ public class ConcordTask extends AbstractConcordTask {
                 break;
             }
             case FORK: {
-                fork(ctx);
+                if (ContextUtils.getBoolean(ctx, SUSPEND_MARKER, false)) {
+                    continueAfterSuspend(ctx);
+                } else {
+                    fork(ctx);
+                }
                 break;
             }
             case KILL: {
@@ -332,28 +336,72 @@ public class ConcordTask extends AbstractConcordTask {
     @SuppressWarnings("unchecked")
     private void continueAfterSuspend(Context ctx) throws Exception {
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
-        List<String> jobs = (List<String>) ctx.getVariable(JOBS_KEY);
-        String childId = jobs.get(0);
 
+        List<String> jobs = (List<String>) ctx.getVariable(JOBS_KEY);
+
+        List<Result> results = new ArrayList<>();
+        for (String id : jobs) {
+            Result r = continueAfterSuspend(ctx, cfg, id);
+            results.add(r);
+        }
+
+        Map<String, ProcessEntry> instances = new HashMap<>();
+        for (Result r : results) {
+            String id = r.processEntry.getInstanceId().toString();
+            instances.put(id, r.processEntry);
+        }
+
+        handleResults(cfg, instances);
+
+        boolean single = jobs.size() == 1;
+        if (single) {
+            // if only one job was started put all variables at the top level of the jobOut object
+            // e.g. jobOut.someVar
+            Map<String, Object> out = results.get(0).out;
+            ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
+        } else {
+            // for multiple jobs save their variable into a nested map
+            // e.g. jobOut['PROCESSID'].someVar
+            Map<String, Map<String, Object>> vars = new HashMap<>();
+            for (Result r : results) {
+                String id = r.processEntry.getInstanceId().toString();
+                if (r.out != null) {
+                    vars.put(id, r.out);
+                }
+            }
+            ctx.setVariable(JOB_OUT_KEY, vars);
+        }
+
+        ctx.removeVariable(SUSPEND_MARKER);
+    }
+
+    private Result continueAfterSuspend(Context ctx, Map<String, Object> cfg, String id) throws Exception {
         ProcessEntry e = ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
-            return api.get(UUID.fromString(childId));
+            return api.get(UUID.fromString(id));
         }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
         if (!isFinalStatus(s)) {
-            throw new IllegalStateException("Process '" + childId + "' not finished");
+            throw new IllegalStateException("Process '" + id + "' not finished");
         }
 
-        Map<String, ProcessEntry> result = Collections.singletonMap(childId, e);
-        handleResults(cfg, result);
-
-        Object out = null;
         if (cfg.containsKey(OUT_VARS_KEY)) {
-            out = getOutVars(ctx, childId);
+            return new Result(e, getOutVars(ctx, id));
         }
-        ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
-        ctx.removeVariable(SUSPEND_MARKER);
+
+        return new Result(e, Collections.emptyMap());
+    }
+
+    private static class Result {
+
+        private final ProcessEntry processEntry;
+        private final Map<String, Object> out;
+
+        private Result(ProcessEntry processEntry, Map<String, Object> out) {
+            this.processEntry = processEntry;
+            this.out = out;
+        }
     }
 
     private void suspend(Context ctx, List<String> jobs, boolean resumeFromSameStep) throws ApiException {
@@ -369,7 +417,7 @@ public class ConcordTask extends AbstractConcordTask {
             return null;
         }));
 
-        if(resumeFromSameStep) {
+        if (resumeFromSameStep) {
             ctx.setVariable(SUSPEND_MARKER, true);
         }
 
@@ -421,7 +469,8 @@ public class ConcordTask extends AbstractConcordTask {
         return (Map<String, Object>) out.getOrDefault(Constants.Context.LAST_ERROR_KEY, Collections.emptyMap());
     }
 
-    private Object getOutVars(Context ctx, String childId) throws Exception {
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getOutVars(Context ctx, String childId) throws Exception {
         return withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
 
@@ -472,13 +521,16 @@ public class ConcordTask extends AbstractConcordTask {
 
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
         boolean sync = getBoolean(cfg, SYNC_KEY, false);
-        if(sync) {
+        if (sync) {
             boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
             if (suspend) {
                 log.info("Suspending the process until the fork processes ({}) are completed...", ids);
-                suspend(ctx, ids, false);
+                suspend(ctx, ids, true);
                 return ids;
             }
+
+            Map<String, ProcessEntry> result = waitForCompletion(ctx, ids);
+            handleResults(cfg, result);
         }
 
         return ids;
@@ -506,14 +558,6 @@ public class ConcordTask extends AbstractConcordTask {
             log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId().toString()));
             return resp.getInstanceId();
         });
-
-        if (sync) {
-            boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
-            if(suspend) {
-                return id;
-            }
-            waitForCompletion(ctx, Collections.singletonList(id.toString()));
-        }
 
         return id;
     }
@@ -601,6 +645,7 @@ public class ConcordTask extends AbstractConcordTask {
     /**
      * Processes a list of attachment parameters. An attachment may be a string which represents
      * the path to a file or a Map which specifies the destination filename (key) and current filename (value)
+     *
      * @param attachments List of attachments
      * @return Map of attachments. Key is the destination filename. Value is path to the local file.
      */
@@ -617,7 +662,7 @@ public class ConcordTask extends AbstractConcordTask {
                 result.put(key, Paths.get((String) o));
             } else if (o instanceof Map) {
                 Map m = (Map) o;
-                result.put((String)m.get("dest"), Paths.get((String)m.get("src")));
+                result.put((String) m.get("dest"), Paths.get((String) m.get("src")));
             } else {
                 throw new IllegalArgumentException("Unsupported attachment formatting provided. Must be a string or map. Received " + o.getClass());
             }
