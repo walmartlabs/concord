@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.agent.AgentCommand.Status;
-import com.walmartlabs.concord.server.jooq.tables.records.AgentCommandsRecord;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
 
@@ -32,7 +31,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
 import static org.jooq.impl.DSL.currentTimestamp;
@@ -74,49 +75,6 @@ public class AgentCommandsDao extends AbstractDao {
 
             q.execute();
         });
-    }
-
-    public Optional<AgentCommand> poll(String agentId) {
-        Optional<AgentCommandsRecord> o = txResult(tx -> {
-            AgentCommandsRecord r = tx.selectFrom(AGENT_COMMANDS)
-                    .where(AGENT_COMMANDS.AGENT_ID.eq(agentId)
-                            .and(AGENT_COMMANDS.COMMAND_STATUS.eq(Status.CREATED.toString())))
-                    .orderBy(AGENT_COMMANDS.CREATED_AT)
-                    .limit(1)
-                    .forUpdate()
-                    .skipLocked()
-                    .fetchOne();
-
-            if (r == null) {
-                return Optional.empty();
-            }
-
-            tx.update(AGENT_COMMANDS)
-                    .set(AGENT_COMMANDS.COMMAND_STATUS, Status.SENT.toString())
-                    .where(AGENT_COMMANDS.COMMAND_ID.eq(r.getCommandId()))
-                    .execute();
-
-            return Optional.of(r);
-        });
-
-        return o.map(this::convert);
-    }
-
-    @SuppressWarnings("unchecked")
-    private AgentCommand convert(AgentCommandsRecord r) {
-        UUID commandId = r.getCommandId();
-        String agentId = r.getAgentId();
-        Date createdAt = r.getCreatedAt();
-        Status status = Status.SENT;
-
-        Map<String, Object> data;
-        try {
-            data = objectMapper.readValue(r.getCommandData(), Map.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return new AgentCommand(commandId, agentId, status, createdAt, data);
     }
 
     private byte[] convert(Map<String, Object> m) {

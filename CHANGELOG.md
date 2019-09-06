@@ -13,6 +13,7 @@ processes.
 
 ### Changed
 
+- concord-server: optimize the agent command dispatching;
 - concord-console: fixed overflowing in the Ansible event list popup;
 - concord-server: fixed an issue with incorrect process status
 transition of forked processes;
