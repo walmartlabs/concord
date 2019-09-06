@@ -475,4 +475,42 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*Hello from a subprocess.*", ab);
         assertLog(".*Concord Fork Process 234.*", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testForkSuspend() throws Exception {
+        String nameVar = "name_" + randomString();
+
+        String orgName = "org_" + randomString();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
+
+        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkSuspend").toURI());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        input.put("arguments.name", nameVar);
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*\\{varFromFork=Hello, " + nameVar + "\\}.*", ab);
+        assertLog(".*\\{varFromFork=Bye, " + nameVar + "\\}.*", ab);
+    }
 }
