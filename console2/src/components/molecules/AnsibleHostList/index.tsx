@@ -73,7 +73,7 @@ class AnsibleHostList extends React.Component<Props, State> {
                         </Table.Cell>
                     </Table.Row>
                 }>
-                <Modal.Content>
+                <Modal.Content scrolling={true}>
                     <AnsibleTaskListActivity
                         instanceId={instanceId}
                         host={host}
