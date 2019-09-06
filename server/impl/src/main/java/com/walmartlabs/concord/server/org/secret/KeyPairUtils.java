@@ -33,17 +33,16 @@ import java.util.function.Consumer;
 
 public final class KeyPairUtils {
 
-    private static final int DEFAULT_KEY_SIZE = 2048;
     private static final int DEFAULT_KEY_TYPE = com.jcraft.jsch.KeyPair.RSA;
     private static final String DEFAULT_KEY_COMMENT = "concord-server";
 
     private static final JSch jsch = new JSch();
 
-    public static KeyPair create() {
+    public static KeyPair create(int keySize) {
         com.jcraft.jsch.KeyPair k;
         synchronized (jsch) {
             try {
-                k = com.jcraft.jsch.KeyPair.genKeyPair(jsch, DEFAULT_KEY_TYPE, DEFAULT_KEY_SIZE);
+                k = com.jcraft.jsch.KeyPair.genKeyPair(jsch, DEFAULT_KEY_TYPE, keySize);
             } catch (JSchException e) {
                 throw new SecurityException(e);
             }

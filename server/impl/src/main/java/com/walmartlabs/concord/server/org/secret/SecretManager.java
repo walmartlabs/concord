@@ -175,7 +175,7 @@ public class SecretManager {
 
         orgManager.assertAccess(orgId, true);
 
-        KeyPair k = KeyPairUtils.create();
+        KeyPair k = KeyPairUtils.create(secretCfg.getKeySize());
         UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
