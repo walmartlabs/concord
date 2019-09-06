@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  * =====
  */
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
@@ -70,6 +72,7 @@ public class Dispatcher extends PeriodicTask {
 
     private static final long POLL_DELAY = TimeUnit.SECONDS.toMillis(1);
     private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(30);
+    private static final int BATCH_SIZE = 10;
 
     private final DispatcherDao dao;
     private final WebSocketChannelManager channelManager;
@@ -78,6 +81,7 @@ public class Dispatcher extends PeriodicTask {
     private final RepositoryDao repositoryDao;
     private final ProcessQueueDao queueDao;
     private final Set<Filter> filters;
+    private final Histogram uniqueProjectsHistogram;
 
     @Inject
     public Dispatcher(DispatcherDao dao,
@@ -86,7 +90,8 @@ public class Dispatcher extends PeriodicTask {
                       OrganizationDao organizationDao,
                       RepositoryDao repositoryDao,
                       ProcessQueueDao queueDao,
-                      Set<Filter> filters) {
+                      Set<Filter> filters,
+                      MetricRegistry metricRegistry) {
 
         super(POLL_DELAY, ERROR_DELAY);
 
@@ -97,6 +102,7 @@ public class Dispatcher extends PeriodicTask {
         this.repositoryDao = repositoryDao;
         this.queueDao = queueDao;
         this.filters = filters;
+        this.uniqueProjectsHistogram = metricRegistry.histogram("process-queue-dispatcher-unique-projects");
     }
 
     @Override
@@ -124,52 +130,59 @@ public class Dispatcher extends PeriodicTask {
 
         // run everything in a single transaction
         dao.tx(tx -> {
-            // fetch the next few ENQUEUED processes from the DB
-            List<ProcessQueueEntry> candidates = new ArrayList<>(dao.next(tx));
-            if (candidates.isEmpty()) {
-                return;
-            }
-
+            int offset = 0;
             Set<UUID> projectsToSkip = new HashSet<>();
 
-            // filter out the candidates that shouldn't be dispatched at the moment
-            for (Iterator<ProcessQueueEntry> it = candidates.iterator(); it.hasNext(); ) {
-                ProcessQueueEntry e = it.next();
-
-                // currently there are no filters applicable to standalone (i.e. without a project) processes
-                if (e.projectId() == null) {
-                    continue;
-                }
-
-                // see below
-                if (projectsToSkip.contains(e.projectId())) {
-                    it.remove();
-                    continue;
-                }
-
-                // TODO sharded locks?
-                boolean locked = dao.tryLock(tx);
-                if (!locked || !pass(tx, e)) {
-                    // the candidate didn't pass the filter or can't lock the queue
-                    // skip to the next candidate (of a different project)
-                    it.remove();
-                }
-
-                // only one process per project can be dispatched at the time, currently the filters are not
-                // designed to run multiple times per dispatch "tick"
-                // TODO this can be improved if filters accepted a list of candidates and returned a list of those who passed
-                projectsToSkip.add(e.projectId());
-            }
-
             while (true) {
+                // fetch the next few ENQUEUED processes from the DB
+                List<ProcessQueueEntry> candidates = new ArrayList<>(dao.next(tx, offset, BATCH_SIZE));
                 if (candidates.isEmpty() || inbox.isEmpty()) {
                     // no potential candidates or no requests left to process
                     break;
                 }
 
+                uniqueProjectsHistogram.update(countUniqueProjects(candidates));
+
+                // filter out the candidates that shouldn't be dispatched at the moment
+                for (Iterator<ProcessQueueEntry> it = candidates.iterator(); it.hasNext(); ) {
+                    ProcessQueueEntry e = it.next();
+
+                    // currently there are no filters applicable to standalone (i.e. without a project) processes
+                    if (e.projectId() == null) {
+                        continue;
+                    }
+
+                    // see below
+                    if (projectsToSkip.contains(e.projectId())) {
+                        it.remove();
+                        continue;
+                    }
+
+                    // TODO sharded locks?
+                    boolean locked = dao.tryLock(tx);
+                    if (!locked || !pass(tx, e)) {
+                        // the candidate didn't pass the filter or can't lock the queue
+                        // skip to the next candidate (of a different project)
+                        it.remove();
+                    }
+
+                    // only one process per project can be dispatched at the time, currently the filters are not
+                    // designed to run multiple times per dispatch "tick"
+
+                    // TODO
+                    // this can be improved if filters accepted a list of candidates and returned a list of
+                    // those who passed. However, statistically each batch of candidates contains unique project IDs
+                    // so "multi-entry" filters are less effective and just complicate things
+                    // in the future we might need to consider batching up candidates by project IDs and using sharded
+                    // locks
+                    projectsToSkip.add(e.projectId());
+                }
+
                 List<Match> matches = match(inbox, candidates);
                 if (matches.isEmpty()) {
-                    break;
+                    // no matches, try fetching the next N records
+                    offset += BATCH_SIZE;
+                    continue;
                 }
 
                 for (Match m : matches) {
@@ -274,18 +287,33 @@ public class Dispatcher extends PeriodicTask {
         logManager.info(item.key(), "Acquired by: " + channel.getInfo());
     }
 
+    private static int countUniqueProjects(List<ProcessQueueEntry> candidates) {
+        if (candidates.isEmpty()) {
+            return 0;
+        }
+
+        return candidates.stream()
+                .map(ProcessQueueEntry::projectId)
+                .collect(Collectors.toSet())
+                .size();
+    }
+
     @Named
     public static class DispatcherDao extends AbstractDao {
 
         private static final long LOCK_KEY = 1552468327245L;
-        private static final int BATCH_SIZE = 10;
 
         private final ConcordObjectMapper objectMapper;
+        private final Histogram offsetHistogram;
 
         @Inject
-        public DispatcherDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
+        public DispatcherDao(@MainDB Configuration cfg,
+                             ConcordObjectMapper objectMapper,
+                             MetricRegistry metricRegistry) {
+
             super(cfg);
             this.objectMapper = objectMapper;
+            this.offsetHistogram = metricRegistry.histogram("process-queue-dispatcher-offset");
         }
 
         @Override
@@ -294,7 +322,9 @@ public class Dispatcher extends PeriodicTask {
         }
 
         @WithTimer
-        public List<ProcessQueueEntry> next(DSLContext tx) {
+        public List<ProcessQueueEntry> next(DSLContext tx, int offset, int limit) {
+            offsetHistogram.update(offset);
+
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
@@ -322,7 +352,8 @@ public class Dispatcher extends PeriodicTask {
                     .and(q.WAIT_CONDITIONS.isNull()));
 
             return s.orderBy(q.CREATED_AT)
-                    .limit(BATCH_SIZE)
+                    .offset(offset)
+                    .limit(limit)
                     .forUpdate()
                     .of(q)
                     .skipLocked()
