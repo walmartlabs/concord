@@ -21,30 +21,32 @@ package com.walmartlabs.concord.client;
  */
 
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Named;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-
-import static com.walmartlabs.concord.sdk.MapUtils.getString;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named("repositoryRefresh")
 public class RepositoryRefreshTask extends AbstractConcordTask implements Task {
 
-    private static final String ORG_KEY = "org";
-    private static final String REPOSITORY_KEY = "repository";
-    private static final String PROJECT_KEY = "project";
-
     @Override
     public void execute(Context ctx) throws Exception {
-        Map<String, Object> cfg = createCfg(ctx, ORG_KEY, REPOSITORY_KEY, PROJECT_KEY);
-        String orgName = getString(cfg, ORG_KEY);
-        String projectName = getString(cfg, PROJECT_KEY);
-        String repositoryName = getString(cfg, REPOSITORY_KEY);
+        List<Map<String, Object>> info = ContextUtils.getList(ctx, "repositoryInfo", Collections.emptyList());
+        if (info.isEmpty()) {
+            throw new RuntimeException("Invalid in parameters: no repository info");
+        }
+
+        List<UUID> ids = info.stream().map(v -> MapUtils.getUUID(v, "repositoryId")).collect(Collectors.toList());;
 
         withClient(ctx, client -> {
-            RepositoriesApi api = new RepositoriesApi(client);
-            api.refreshRepository(orgName, projectName, repositoryName, true);
+            RepositoriesV2Api api = new RepositoriesV2Api(client);
+            api.refreshRepository(ids);
             return null;
         });
     }

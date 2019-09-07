@@ -20,8 +20,12 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import static com.walmartlabs.concord.server.events.github.Constants.*;
 
 public class Events {
 
@@ -33,19 +37,22 @@ public class Events {
 
         public static final String REPOSITORY_UPDATED_EVENT = "repositoryUpdated";
 
-        public static Map<String, Object> repositoryCreated(String orgName, String project, String repository) {
-            return event(REPOSITORY_CREATED_EVENT, orgName, project, repository);
+        public static Map<String, Object> repositoryCreated(UUID projectId, UUID repositoryId, String repositoryName) {
+            return event(REPOSITORY_CREATED_EVENT, projectId, repositoryId, repositoryName);
         }
 
-        public static Map<String, Object> repositoryUpdated(String orgName, String project, String repository) {
-            return event(REPOSITORY_UPDATED_EVENT, orgName, project, repository);
+        public static Map<String, Object> repositoryUpdated(UUID projectId, UUID repositoryId, String repositoryName) {
+            return event(REPOSITORY_UPDATED_EVENT, projectId, repositoryId, repositoryName);
         }
 
-        private static Map<String, Object> event(String eventType, String orgName, String project, String repository) {
+        private static Map<String, Object> event(String eventType, UUID projectId, UUID repositoryId, String repositoryName) {
+            Map<String, Object> repositoryInfo = new HashMap<>();
+            repositoryInfo.put(PROJECT_ID_KEY, projectId);
+            repositoryInfo.put(REPO_ID_KEY, repositoryId);
+            repositoryInfo.put(REPO_NAME_KEY, repositoryName);
+
             Map<String, Object> event = new HashMap<>();
-            event.put("org", orgName);
-            event.put("project", project);
-            event.put("repository", repository);
+            event.put("repositoryInfo", Collections.singletonList(repositoryInfo));
             event.put("event", eventType);
             return event;
         }

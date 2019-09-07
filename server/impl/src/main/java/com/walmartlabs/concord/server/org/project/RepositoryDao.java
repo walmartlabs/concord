@@ -176,6 +176,10 @@ public class RepositoryDao extends AbstractDao {
         return query.fetch(this::toEntry);
     }
 
+    public List<RepositoryEntry> find(String repoUrl) {
+        return find(null, repoUrl);
+    }
+
     public List<RepositoryEntry> find(UUID projectId, String repoUrl) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectConditionStep<Record12<UUID, UUID, String, String, String, String, String, Boolean, JSONB, UUID, String, String>> select = selectRepositoryEntry(tx)

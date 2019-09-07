@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: the repository refresh process is updated to use
+GitHub triggers v2.
+
+
+
 ## [1.33.0] - 2019-09-07
 
 ### Added

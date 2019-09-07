@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1340000" author="ybrigo@gmail.com">
+        <sql>
+            update TRIGGERS set CONDITIONS = '{"githubOrg": ".*", "githubRepo": ".*", "branch": ".*", "version": 2, "repositoryInfo": [{"name": ".*"}]}'
+            where
+            PROJECT_ID = '${concordTriggersProjectId}'
+            and EVENT_SOURCE = 'github'
+        </sql>
+    </changeSet>
+</databaseChangeLog>
