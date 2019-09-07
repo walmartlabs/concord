@@ -6,4 +6,4 @@ flows:
   - checkpoint: "second"
   - log: "Done!"
 
-  - log: "Event Name: ${eventName}"
+  - log: "Event Name: ${resumeEventName}"
