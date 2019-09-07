@@ -8,6 +8,8 @@
 restored;
 - concord-server: configurable key size for generated key pairs;
 - concord-server: expose Jetty Sessions metrics;
+- concord-task: new method `getOutVars` to retrieve out variables of
+already running or finished processes;
 - concord-task: support for `outVars` for `action: fork` when
 `suspend` is enabled;
 - concord-server: new `exclusive` syntax for triggers and regular

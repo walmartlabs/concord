@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.client.Keys.ACTION_KEY;
@@ -174,7 +175,11 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     public Map<String, ProcessEntry> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout) {
-        Map<String, ProcessEntry> result = new HashMap<>();
+        return waitForCompletion(ctx, ids, timeout, p -> p);
+    }
+
+    public <T> Map<String, T> waitForCompletion(@InjectVariable("context") Context ctx, List<String> ids, long timeout, Function<ProcessEntry, T> processor) {
+        Map<String, T> result = new HashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
             log.info("Waiting for {}...", id);
@@ -190,7 +195,10 @@ public class ConcordTask extends AbstractConcordTask {
                     ProcessEntry.StatusEnum s = e.getStatus();
 
                     if (isFinalStatus(s)) {
-                        result.put(id.toString(), e);
+                        T t = processor.apply(e);
+                        if (t != null) {
+                            result.put(id.toString(), t);
+                        }
                         break;
                     } else {
                         long t2 = System.currentTimeMillis();
@@ -236,6 +244,22 @@ public class ConcordTask extends AbstractConcordTask {
         }
 
         killMany(ctx, cfg, ids);
+    }
+
+    public Map<String, Map<String, Object>> getOutVars(@InjectVariable("context") Context ctx, List<String> ids) {
+        return getOutVars(ctx, ids, -1);
+    }
+
+    public Map<String, Map<String, Object>> getOutVars(@InjectVariable("context") Context ctx, List<String> ids, long timeout) {
+        return waitForCompletion(ctx, ids, timeout, p -> {
+            try {
+                return getOutVars(ctx, p.getInstanceId());
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private void startExternalProcess(Context ctx) throws Exception {
@@ -307,17 +331,17 @@ public class ConcordTask extends AbstractConcordTask {
 
         StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
 
-        String processInstanceId = resp.getInstanceId().toString();
+        UUID processId = resp.getInstanceId();
 
-        log.info("Started a process: {}, URL: {}", processInstanceId, getProcessUrl(ctx, processInstanceId));
+        log.info("Started a process: {}, URL: {}", processId, getProcessUrl(ctx, processId));
 
-        List<String> jobs = Collections.singletonList(processInstanceId);
+        List<String> jobs = Collections.singletonList(processId.toString());
         ctx.setVariable(JOBS_KEY, jobs);
 
         if (sync) {
             boolean suspend = getBoolean(cfg, SUSPEND_KEY, false);
             if (suspend) {
-                log.info("Suspending the process until the child process ({}) is completed...", processInstanceId);
+                log.info("Suspending the process until the child process ({}) is completed...", processId);
                 suspend(ctx, jobs, true);
                 return;
             }
@@ -327,7 +351,7 @@ public class ConcordTask extends AbstractConcordTask {
 
             Object out = null;
             if (cfg.containsKey(OUT_VARS_KEY)) {
-                out = getOutVars(ctx, processInstanceId);
+                out = getOutVars(ctx, processId);
             }
             ctx.setVariable(JOB_OUT_KEY, out != null ? out : Collections.emptyMap());
         }
@@ -340,8 +364,8 @@ public class ConcordTask extends AbstractConcordTask {
         List<String> jobs = (List<String>) ctx.getVariable(JOBS_KEY);
 
         List<Result> results = new ArrayList<>();
-        for (String id : jobs) {
-            Result r = continueAfterSuspend(ctx, cfg, id);
+        for (String processId : jobs) {
+            Result r = continueAfterSuspend(ctx, cfg, UUID.fromString(processId));
             results.add(r);
         }
 
@@ -375,19 +399,19 @@ public class ConcordTask extends AbstractConcordTask {
         ctx.removeVariable(SUSPEND_MARKER);
     }
 
-    private Result continueAfterSuspend(Context ctx, Map<String, Object> cfg, String id) throws Exception {
+    private Result continueAfterSuspend(Context ctx, Map<String, Object> cfg, UUID processId) throws Exception {
         ProcessEntry e = ClientUtils.withRetry(3, 1000, () -> withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
-            return api.get(UUID.fromString(id));
+            return api.get(processId);
         }));
 
         ProcessEntry.StatusEnum s = e.getStatus();
         if (!isFinalStatus(s)) {
-            throw new IllegalStateException("Process '" + id + "' not finished");
+            throw new IllegalStateException("Process '" + processId + "' not finished");
         }
 
         if (cfg.containsKey(OUT_VARS_KEY)) {
-            return new Result(e, getOutVars(ctx, id));
+            return new Result(e, getOutVars(ctx, processId));
         }
 
         return new Result(e, Collections.emptyMap());
@@ -470,13 +494,13 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getOutVars(Context ctx, String childId) throws Exception {
+    private Map<String, Object> getOutVars(Context ctx, UUID processId) throws Exception {
         return withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
 
             File f = null;
             try {
-                f = api.downloadAttachment(UUID.fromString(childId), "out.json");
+                f = api.downloadAttachment(processId, "out.json");
                 ObjectMapper om = new ObjectMapper();
                 return om.readValue(f, Map.class);
             } catch (ApiException e) {
@@ -552,14 +576,12 @@ public class ConcordTask extends AbstractConcordTask {
         boolean sync = getBoolean(cfg, SYNC_KEY, false);
         log.info("Forking the current instance (sync={}, req={})...", sync, req);
 
-        UUID id = withClient(ctx, client -> {
+        return withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
             StartProcessResponse resp = api.fork(instanceId, req, false, null);
-            log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId().toString()));
+            log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId()));
             return resp.getInstanceId();
         });
-
-        return id;
     }
 
     private void kill(Context ctx) throws Exception {
@@ -622,7 +644,7 @@ public class ConcordTask extends AbstractConcordTask {
         return m;
     }
 
-    private String getProcessUrl(Context ctx, String processInstanceId) {
+    private String getProcessUrl(Context ctx, UUID processId) {
         Action action = getAction(ctx);
         if (action == Action.STARTEXTERNAL || uiLinks == null) {
             return "n/a";
@@ -632,7 +654,7 @@ public class ConcordTask extends AbstractConcordTask {
         if (processLinkTemplate == null) {
             return "n/a";
         }
-        return String.format(processLinkTemplate, processInstanceId);
+        return String.format(processLinkTemplate, processId);
     }
 
     private static void addIfNotNull(Map<String, Object> m, String k, Object v) {

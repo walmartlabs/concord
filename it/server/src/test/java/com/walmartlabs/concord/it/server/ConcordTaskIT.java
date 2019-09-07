@@ -83,7 +83,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         // start a new process using the project as the user A
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTask").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTask").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -102,7 +102,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testStartDirectory() throws Exception {
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordDirTask").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordDirTask").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
 
@@ -122,7 +122,7 @@ public class ConcordTaskIT extends AbstractServerIT {
     public void testCreateProject() throws Exception {
         String projectName = "project_" + randomString();
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordProjectTask").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordProjectTask").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
@@ -142,7 +142,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testStartAt() throws Exception {
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordDirTask").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordDirTask").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
 
@@ -164,7 +164,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOutVarsNotFound() throws Exception {
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordOutVars").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordOutVars").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
 
@@ -182,7 +182,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSubprocessFail() throws Exception {
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordSubFail").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordSubFail").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
 
@@ -201,7 +201,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testSubprocessIgnoreFail() throws Exception {
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordSubIgnoreFail").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordSubIgnoreFail").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
 
@@ -232,7 +232,7 @@ public class ConcordTaskIT extends AbstractServerIT {
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskFailChild").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskFailChild").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -264,7 +264,7 @@ public class ConcordTaskIT extends AbstractServerIT {
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithItemsWithOut").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithItemsWithOut").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -298,7 +298,7 @@ public class ConcordTaskIT extends AbstractServerIT {
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithItems").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithItems").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -332,7 +332,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskApiKey").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskApiKey").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.myApiKey", cakr.getKey());
@@ -363,7 +363,7 @@ public class ConcordTaskIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskSuspendParentProcess").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskSuspendParentProcess").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.myApiKey", cakr.getKey());
@@ -394,7 +394,7 @@ public class ConcordTaskIT extends AbstractServerIT {
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithArguments").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithArguments").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -434,7 +434,7 @@ public class ConcordTaskIT extends AbstractServerIT {
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkWithForm").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkWithForm").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -493,7 +493,7 @@ public class ConcordTaskIT extends AbstractServerIT {
                 .setVisibility(ProjectEntry.VisibilityEnum.PUBLIC)
                 .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.EVERYONE));
 
-        byte[] payload = archive(ProcessRbacIT.class.getResource("concordTaskForkSuspend").toURI());
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkSuspend").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("org", orgName);
@@ -512,5 +512,23 @@ public class ConcordTaskIT extends AbstractServerIT {
         byte[] ab = getLog(pe.getLogFileName());
         assertLog(".*\\{varFromFork=Hello, " + nameVar + "\\}.*", ab);
         assertLog(".*\\{varFromFork=Bye, " + nameVar + "\\}.*", ab);
+    }
+    
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testForkAsyncGrabOutVars() throws Exception {
+        byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkAsyncGrabOutVars").toURI());
+
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*\\{x=1, y=2, z=3\\}.*", ab);
+        assertLog(".*\\{a=4, b=5, c=6\\}.*", ab);
     }
 }
