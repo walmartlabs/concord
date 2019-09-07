@@ -1,0 +1,52 @@
+flows:
+  default:
+    # empty list to store fork IDs
+    - set:
+        children: []
+
+    # start the first fork
+    - task: concord
+      in:
+        action: fork
+        entryPoint: forkA
+        sync: false
+        outVars:
+          - x
+          - y
+          - z
+
+    # save the first fork's ID
+    - ${children.addAll(jobs)}
+
+    # start the second fork
+    - task: concord
+      in:
+        action: fork
+        entryPoint: forkB
+        sync: false
+        outVars:
+          - a
+          - b
+          - c
+
+    # save the second fork's ID
+    - ${children.addAll(jobs)}
+
+    # grab out vars of the forks
+    - expr: ${concord.getOutVars(children)}
+      out: forkOutVars
+
+    # print out out vars grouped by fork
+    - log: "${forkOutVars}"
+
+  forkA:
+    - set:
+        x: 1
+        y: 2
+        z: 3
+
+  forkB:
+    - set:
+        a: 4
+        b: 5
+        c: 6
