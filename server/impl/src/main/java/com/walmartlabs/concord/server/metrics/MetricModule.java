@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.metrics;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Named;
 

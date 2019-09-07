@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.metrics;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Suppliers;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 

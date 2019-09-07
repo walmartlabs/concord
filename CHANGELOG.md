@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server-sdk: now provides metrics annotations (e.g.
+`@WithTimer`).
+
 ### Changed
 
 - concord-server: the repository refresh process is updated to use

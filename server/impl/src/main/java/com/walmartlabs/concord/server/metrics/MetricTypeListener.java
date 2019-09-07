@@ -29,6 +29,8 @@ import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
+import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 
 import java.lang.reflect.Field;
 

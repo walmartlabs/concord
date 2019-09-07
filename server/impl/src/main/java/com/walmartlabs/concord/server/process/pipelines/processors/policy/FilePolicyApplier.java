@@ -24,7 +24,7 @@ import com.codahale.metrics.Counter;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.FileRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.server.metrics.InjectCounter;
+import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
