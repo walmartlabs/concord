@@ -12,4 +12,18 @@
             and EVENT_SOURCE = 'github'
         </sql>
     </changeSet>
+
+    <changeSet id="1340100" author="ibodrov@gmail.com">
+        <dropIndex tableName="API_KEYS" indexName="IDX_API_KEY"/>
+    </changeSet>
+
+    <changeSet id="1340110" author="ibodrov@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_PROC_Q_C_STATUS on PROCESS_QUEUE (CURRENT_STATUS)
+        </sql>
+    </changeSet>
+
+    <changeSet id="1340120" author="ibodrov@gmail.com">
+        <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_POLL"/>
+    </changeSet>
 </databaseChangeLog>
