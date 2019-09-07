@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-runner: additional logging when the process heartbeat is
+restored;
 - concord-server: configurable key size for generated key pairs;
 - concord-server: expose Jetty Sessions metrics;
 - concord-task: support for `outVars` for `action: fork` when
