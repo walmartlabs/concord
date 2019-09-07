@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,11 @@ public class EventNameProcessor implements PayloadProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        String eventName = payload.getHeader(Payload.EVENT_NAME);
+        if (eventName == null) {
+            return chain.process(payload);
+        }
+
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
         if (cfg == null) {
             cfg = new HashMap<>();
@@ -54,15 +59,17 @@ public class EventNameProcessor implements PayloadProcessor {
             cfg.put(Constants.Request.ARGUMENTS_KEY, args);
         }
 
-        // don't overwrite the existing value for backward-compatibility reasons
-        if (args.containsKey(Constants.Request.EVENT_NAME_KEY)) {
+        String old = (String) args.get(Constants.Request.EVENT_NAME_KEY);
+        if (old != null) {
+            // don't overwrite the existing value for backward-compatibility reasons
             logManager.warn(payload.getProcessKey(), "Can't overwrite the system variable '{}', the value already exists.", Constants.Request.EVENT_NAME_KEY);
             return chain.process(payload);
         }
 
-        String eventName = payload.getHeader(Payload.EVENT_NAME);
         args.put(Constants.Request.EVENT_NAME_KEY, eventName);
 
-        return chain.process(payload.putHeader(Payload.CONFIGURATION, cfg));
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
+
+        return chain.process(payload);
     }
 }

@@ -194,9 +194,9 @@ public class Constants {
         public static final String EXCLUSIVE = "exclusive";
 
         /**
-         * Event name.
+         * Resume event name. Filled in for processes resumed after being suspended.
          */
-        public static final String EVENT_NAME_KEY = "eventName";
+        public static final String EVENT_NAME_KEY = "resumeEventName";
     }
 
     public static class Trigger {
