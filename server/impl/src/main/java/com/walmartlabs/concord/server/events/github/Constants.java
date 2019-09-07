@@ -30,6 +30,7 @@ public final class Constants {
     public static final String COMMIT_ID_KEY = "commitId";
     public static final String ORG_NAME_KEY = "org";
     public static final String PAYLOAD_KEY = "payload";
+    public static final String PROJECT_ID_KEY = "projectId";
     public static final String PROJECT_NAME_KEY = "project";
     public static final String REPO_BRANCH_KEY = "branch";
     public static final String REPO_ID_KEY = "repositoryId";

@@ -33,6 +33,7 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.server.events.github.Constants.*;
 
+@Deprecated
 @Named
 @Singleton
 public class GithubTriggerDefinitionEnricher {

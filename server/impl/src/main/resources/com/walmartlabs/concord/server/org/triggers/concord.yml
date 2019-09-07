@@ -3,9 +3,7 @@ flows:
   - log: "Refreshing repository... ${event}"
   - task: repositoryRefresh
     in:
-      org: ${event.org}
-      repository: ${event.repository}
-      project: ${event.project}
+      repositoryInfo: ${event.repositoryInfo}
 
 triggers:
   - concord:
@@ -13,9 +11,13 @@ triggers:
       entryPoint: "onChange"
 
   - github:
-      org: ".*"
-      project: ".*"
-      repository: ".*"
+      version: 2
       type: "push"
-      unknownRepo: false
       entryPoint: "onChange"
+      conditions:
+        githubOrg: ".*"
+        githubRepo: ".*"
+        branch: ".*"
+        repositoryInfo:
+          # trigger only for registered repos (i.e. added to Concord)
+          - name: ".*"

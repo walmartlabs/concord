@@ -27,9 +27,7 @@ import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
-import com.walmartlabs.concord.server.org.project.ProjectEntry;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.repository.listeners.RepositoryRefreshListener;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import org.jooq.Configuration;
@@ -41,10 +39,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.org.project.RepositoryUtils.assertRepository;
 
@@ -58,6 +54,8 @@ public class RepositoryRefresher extends AbstractDao {
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryManager repositoryManager;
     private final ExternalEventResource externalEventResource;
+    private final RepositoryDao repositoryDao;
+    private final ProjectDao projectDao;
 
     @Inject
     public RepositoryRefresher(@MainDB Configuration cfg,
@@ -65,7 +63,9 @@ public class RepositoryRefresher extends AbstractDao {
                                OrganizationManager orgManager,
                                ProjectAccessManager projectAccessManager,
                                RepositoryManager repositoryManager,
-                               ExternalEventResource externalEventResource) {
+                               ExternalEventResource externalEventResource,
+                               RepositoryDao repositoryDao,
+                               ProjectDao projectDao) {
 
         super(cfg);
 
@@ -74,6 +74,16 @@ public class RepositoryRefresher extends AbstractDao {
         this.projectAccessManager = projectAccessManager;
         this.repositoryManager = repositoryManager;
         this.externalEventResource = externalEventResource;
+        this.repositoryDao = repositoryDao;
+        this.projectDao = projectDao;
+    }
+
+    public void refresh(List<UUID> repositoryIds) {
+        List<RepositoryEntry> repositories = repositoryIds.stream().map(repositoryDao::get).collect(Collectors.toList());
+        for(RepositoryEntry r : repositories) {
+            ProjectEntry project = projectDao.get(r.getProjectId());
+            refresh(project.getOrgName(), project.getName(), r.getName(), true);
+        }
     }
 
     public void refresh(String orgName, String projectName, String repositoryName, boolean sync) {
@@ -123,7 +133,7 @@ public class RepositoryRefresher extends AbstractDao {
         return projectAccessManager.assertAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
     }
 
-    private void cleanUp(Path repoPath) {
+    private static void cleanUp(Path repoPath) {
         try {
             IOUtils.deleteRecursively(repoPath);
         } catch (IOException e) {

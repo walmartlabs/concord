@@ -125,7 +125,7 @@ public class ProjectRepositoryManager {
                 trim(entry.getBranch()), trim(entry.getCommitId()),
                 trim(entry.getPath()), secretId, entry.isDisabled(), entry.getMeta());
 
-        Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
+        Map<String, Object> ev = Events.Repository.repositoryCreated(projectId, repoId, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
 
         if (doAuditLog) {
@@ -154,7 +154,7 @@ public class ProjectRepositoryManager {
                 trim(entry.getBranch()), trim(entry.getCommitId()),
                 trim(entry.getPath()), secretId, entry.isDisabled());
 
-        Map<String, Object> ev = Events.Repository.repositoryUpdated(orgName, projectName, entry.getName());
+        Map<String, Object> ev = Events.Repository.repositoryUpdated(projectId, repoId, entry.getName());
         externalEventResource.event(Events.CONCORD_EVENT, ev);
 
         if (doAuditLog) {

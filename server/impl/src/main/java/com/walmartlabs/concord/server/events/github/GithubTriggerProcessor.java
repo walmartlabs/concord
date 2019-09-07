@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.events.github;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 
 import javax.ws.rs.core.UriInfo;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +48,10 @@ public interface GithubTriggerProcessor {
 
         public List<TriggerEntry> triggers() {
             return triggers;
+        }
+
+        static Result from(Map<String, Object> event, TriggerEntry trigger) {
+            return new Result(event, Collections.singletonList(trigger));
         }
 
         static Result from(Map<String, Object> event, List<TriggerEntry> triggers) {
