@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.metrics;
  */
 
 import com.codahale.metrics.MetricRegistry;
+import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.dropwizard.DropwizardExports;
 import io.prometheus.client.hotspot.DefaultExports;

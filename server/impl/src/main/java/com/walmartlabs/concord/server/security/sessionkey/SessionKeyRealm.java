@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.security.sessionkey;
  */
 
 import com.google.common.collect.ImmutableSet;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;

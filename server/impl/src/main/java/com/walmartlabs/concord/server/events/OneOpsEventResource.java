@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;

@@ -289,8 +289,8 @@ public class Main {
             return null;
         }
 
-        // if a process error was succesfully handled by the engine, it will be saved as a `lastError` variable
-        // we shoudn't overwrite it with the Agent's version
+        // if a process error was successfully handled by the engine, it will be saved as a `lastError` variable
+        // we should't overwrite it with the Agent's version
         if (vars.hasVariable(Constants.Context.LAST_ERROR_KEY)) {
             return vars;
         }

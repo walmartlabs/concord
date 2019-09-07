@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.records.Ansibl
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -99,7 +100,7 @@ public class ProcessAnsibleResource implements Resource {
     @ApiOperation("Returns Ansible statistics of a specific process")
     @Path("/{processInstanceId}/ansible/stats")
     @Produces(MediaType.APPLICATION_JSON)
-//    @WithTimer
+    @WithTimer
     public AnsibleStatsEntry stats(@PathParam("processInstanceId") UUID processInstanceId) {
         ProcessKey key = processKeyCache.get(processInstanceId);
         if (key == null) {
@@ -116,7 +117,7 @@ public class ProcessAnsibleResource implements Resource {
     @ApiOperation("List Ansible events of a specific process")
     @Path("/{processInstanceId}/ansible/events")
     @Produces(MediaType.APPLICATION_JSON)
-//    @WithTimer
+    @WithTimer
     public List<ProcessEventEntry> listEvents(@PathParam("processInstanceId") UUID processInstanceId,
                                               @QueryParam("host") String host,
                                               @QueryParam("hostGroup") String hostGroup,

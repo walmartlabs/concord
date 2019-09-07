@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.security;
 import com.codahale.metrics.Meter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.metrics.InjectMeter;
+import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;

@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.server.ExtraStatus;
 import com.walmartlabs.concord.server.RateLimiter;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
 import javax.inject.Named;

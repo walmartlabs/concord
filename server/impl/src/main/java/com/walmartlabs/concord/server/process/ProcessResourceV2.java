@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.server.IsoDateParam;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;

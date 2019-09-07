@@ -25,7 +25,7 @@ import com.google.common.cache.CacheStats;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.server.metrics.GaugeProvider;
+import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
 import javax.inject.Named;
 import javax.inject.Singleton;

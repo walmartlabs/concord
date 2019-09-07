@@ -31,7 +31,7 @@ import com.walmartlabs.concord.server.agent.AgentCommand;
 import com.walmartlabs.concord.server.agent.Commands;
 import com.walmartlabs.concord.server.cfg.AgentConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.records.AgentCommandsRecord;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.queueclient.message.CommandRequest;
 import com.walmartlabs.concord.server.queueclient.message.CommandResponse;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;

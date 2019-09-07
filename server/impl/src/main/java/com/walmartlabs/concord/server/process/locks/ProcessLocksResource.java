@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.locks;
  */
 
 import com.walmartlabs.concord.server.jooq.enums.ProcessLockScope;
-import com.walmartlabs.concord.server.metrics.WithTimer;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
