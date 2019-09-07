@@ -67,13 +67,19 @@ public class ProcessHeartbeat {
 
             ProcessHeartbeatApi processHeartbeatApi = new ProcessHeartbeatApi(client);
 
+            boolean prevPingFailed = false;
             long lastSuccessPing = System.currentTimeMillis();
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     processHeartbeatApi.ping(instanceId);
                     lastSuccessPing = System.currentTimeMillis();
+                    if (prevPingFailed) {
+                        log.info("heartbeat: ok");
+                    }
+                    prevPingFailed = false;
                 } catch (Exception e) {
-                    log.warn("run -> heartbeat error: {}, last successful at {}", e.getMessage(), new Date(lastSuccessPing));
+                    prevPingFailed = true;
+                    log.warn("heartbeat: error: {}, last successful at {}", e.getMessage(), new Date(lastSuccessPing));
 
                     // check if we hadn't had a successful heartbeat request in a while
                     long pingInterval = System.currentTimeMillis() - lastSuccessPing;
@@ -90,7 +96,7 @@ public class ProcessHeartbeat {
                 }
             }
 
-            log.info("start ['{}'] -> stopped", instanceId);
+            log.debug("start ['{}'] -> stopped", instanceId);
         }, "process-heartbeat");
 
         worker.start();
