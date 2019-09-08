@@ -82,7 +82,7 @@ public final class PolicyUtils {
 
     public static Map<String, Object> toMap(UUID orgId, UUID projectId, Trigger trigger) {
         Map<String, Object> m = new HashMap<>();
-        m.put("name", trigger.getName());
+        m.put("eventSource", trigger.getName());
         m.put("orgId", orgId);
         m.put("projectId", projectId);
         m.put("arguments", trigger.getArguments() != null ? trigger.getArguments() : Collections.emptyList());

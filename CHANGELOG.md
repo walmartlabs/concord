@@ -12,6 +12,11 @@
 - concord-server: the repository refresh process is updated to use
 GitHub triggers v2.
 
+### Breaking
+
+- concord-server: the entity policy's attribute `trigger.name` is
+renamed to `trigger.eventSource`.
+
 
 
 ## [1.33.0] - 2019-09-07
