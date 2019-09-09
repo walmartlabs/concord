@@ -9,6 +9,8 @@
 
 ### Changed
 
+- concord-server: the `ping` endpoint now checks for the DB
+connection;
 - concord-server: the repository refresh process is updated to use
 GitHub triggers v2.
 
