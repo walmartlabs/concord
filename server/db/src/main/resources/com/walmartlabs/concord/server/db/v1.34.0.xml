@@ -26,4 +26,10 @@
     <changeSet id="1340120" author="ibodrov@gmail.com">
         <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_POLL"/>
     </changeSet>
+
+    <changeSet id="1340130" author="ibodrov@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_PROC_Q_PRJ_ID on PROCESS_QUEUE (PROJECT_ID)
+        </sql>
+    </changeSet>
 </databaseChangeLog>
