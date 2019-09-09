@@ -68,8 +68,8 @@
         <aopalliance.version>1.0</aopalliance.version>
         <aws.version>1.11.475</aws.version>
         <bpm.version>0.58.1</bpm.version>
-        <commons.beanutils.version>1.9.3</commons.beanutils.version>
-        <commons.compress.version>1.18</commons.compress.version>
+        <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <commons.compress.version>1.19</commons.compress.version>
         <commons.email.version>1.5</commons.email.version>
         <commons.io.version>2.6</commons.io.version> <!-- necessary for resteasy -->
         <commons.lang.version>3.9</commons.lang.version>
@@ -93,6 +93,7 @@
         <immutables.version>2.7.5</immutables.version>
         <ini4j.version>0.5.4</ini4j.version>
         <jackson.version>2.9.9</jackson.version>
+        <jackson.databind.version>2.9.9</jackson.databind.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.mail.version>1.6.2</javax.mail.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
@@ -167,7 +168,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson.databind.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
