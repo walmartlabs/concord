@@ -20,8 +20,13 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.sonatype.siesta.Resource;
 
 import javax.inject.Inject;
@@ -40,17 +45,23 @@ public class ServerResource implements Resource {
 
     private final TaskScheduler scheduler;
     private final WebSocketChannelManager webSocketChannelManager;
+    private final PingDao pingDao;
 
     @Inject
-    public ServerResource(TaskScheduler scheduler, WebSocketChannelManager webSocketChannelManager) {
+    public ServerResource(TaskScheduler scheduler,
+                          WebSocketChannelManager webSocketChannelManager,
+                          PingDao pingDao) {
+
         this.scheduler = scheduler;
         this.webSocketChannelManager = webSocketChannelManager;
+        this.pingDao = pingDao;
     }
 
     @GET
     @Path("/ping")
     @Produces(MediaType.APPLICATION_JSON)
     public PingResponse ping() {
+        pingDao.ping();
         return new PingResponse(true);
     }
 
@@ -67,5 +78,20 @@ public class ServerResource implements Resource {
     public void maintenanceMode() {
         scheduler.stop();
         webSocketChannelManager.shutdown();
+    }
+
+    @Named
+    public static class PingDao extends AbstractDao {
+
+        @Inject
+        public PingDao(@MainDB Configuration cfg) {
+            super(cfg);
+        }
+
+        public void ping() {
+            try (DSLContext tx = DSL.using(cfg)) {
+                tx.selectOne().execute();
+            }
+        }
     }
 }
