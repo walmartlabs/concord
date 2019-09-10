@@ -33,4 +33,6 @@ public interface DatabaseConfiguration {
     String password();
 
     int maxPoolSize();
+
+    long maxLifetime();
 }

@@ -49,6 +49,9 @@ public class InventoryDBConfiguration implements DatabaseConfiguration {
     @Config("db.maxPoolSize")
     private int maxPoolSize;
 
+    @Inject
+    @Config("db.maxLifetime")
+    private long maxLifetime;
 
     @Override
     public String url() {
@@ -68,5 +71,10 @@ public class InventoryDBConfiguration implements DatabaseConfiguration {
     @Override
     public int maxPoolSize() {
         return maxPoolSize;
+    }
+
+    @Override
+    public long maxLifetime() {
+        return maxLifetime;
     }
 }
