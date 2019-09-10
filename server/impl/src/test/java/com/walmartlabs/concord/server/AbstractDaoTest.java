@@ -102,5 +102,10 @@ public abstract class AbstractDaoTest {
         public int maxPoolSize() {
             return maxPoolSize;
         }
+
+        @Override
+        public long maxLifetime() {
+            return 30000;
+        }
     }
 }
