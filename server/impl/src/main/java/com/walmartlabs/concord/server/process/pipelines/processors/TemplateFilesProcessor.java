@@ -29,8 +29,6 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.template.TemplateAliasDao;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,14 +42,13 @@ import java.util.Optional;
 
 /**
  * Extracts template files into the workspace.
+ *
  * @deprecated old style "_main.js in an archive" are deprecated. Use {@link ImportProcessor}
  */
 @Named
 @Singleton
 @Deprecated
 public class TemplateFilesProcessor implements PayloadProcessor {
-
-    private static final Logger log = LoggerFactory.getLogger(TemplateFilesProcessor.class);
 
     private final LogManager logManager;
     private final DependencyManager dependencyManager;
@@ -68,7 +65,6 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
@@ -79,7 +75,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         }
 
         try {
-            URI uri = getUri(processKey, (String)s);
+            URI uri = getUri(processKey, (String) s);
             Path template = dependencyManager.resolveSingle(uri).getPath();
             extract(payload, template);
 
@@ -116,12 +112,9 @@ public class TemplateFilesProcessor implements PayloadProcessor {
     }
 
     private void extract(Payload payload, Path template) throws IOException {
-        ProcessKey processKey = payload.getProcessKey();
         Path workspacePath = payload.getHeader(Payload.WORKSPACE_DIR);
 
         // copy template's files to the payload, skipping the existing files
         IOUtils.unzip(template, workspacePath, true);
-
-        log.debug("process ['{}'] -> done", template);
     }
 }

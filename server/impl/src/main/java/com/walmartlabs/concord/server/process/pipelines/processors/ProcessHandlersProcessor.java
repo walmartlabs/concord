@@ -25,7 +25,6 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,6 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
     }
 
     private static void update(Payload payload, ProjectDefinition pd, Collection<String> profiles, Set<String> handlers, String flow, String disableFlag) {
-        ProcessKey processKey = payload.getProcessKey();
         if (hasFlow(pd, profiles, flow)) {
             boolean suppressed = getBoolean(payload, disableFlag);
             if (suppressed) {

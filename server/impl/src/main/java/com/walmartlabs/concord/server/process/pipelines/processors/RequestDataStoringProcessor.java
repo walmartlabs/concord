@@ -26,8 +26,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -40,8 +38,6 @@ import java.util.Map;
  * Stores payload's request data as a JSON file.
  */
 public class RequestDataStoringProcessor implements PayloadProcessor {
-
-    private static final Logger log = LoggerFactory.getLogger(RequestDataStoringProcessor.class);
 
     private final LogManager logManager;
 
@@ -71,7 +67,6 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
             throw new ProcessException(processKey, "Error while saving a metadata file: " + dst, e);
         }
 
-        log.info("process -> done");
         return chain.process(payload);
     }
 }

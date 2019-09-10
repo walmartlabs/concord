@@ -26,8 +26,6 @@ import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,8 +38,6 @@ import java.util.Map;
 @Named
 public class DependenciesProcessor implements PayloadProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(DependenciesProcessor.class);
-
     private final LogManager logManager;
 
     @Inject
@@ -50,7 +46,6 @@ public class DependenciesProcessor implements PayloadProcessor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
@@ -78,7 +73,6 @@ public class DependenciesProcessor implements PayloadProcessor {
         cfg.put(InternalConstants.Request.DEPENDENCIES_KEY, deps);
         payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
-        log.info("process -> done");
         return chain.process(payload);
     }
 
