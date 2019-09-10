@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,6 @@ import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.user.UserInfoProvider.BaseUserInfo;
 import com.walmartlabs.concord.server.user.UserManager;
 import org.immutables.value.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +36,6 @@ import java.util.Map;
  * Collects and stores the current user's data.
  */
 public abstract class UserInfoProcessor implements PayloadProcessor {
-
-    private static final Logger log = LoggerFactory.getLogger(UserInfoProcessor.class);
 
     private final String key;
     private final UserManager userManager;
@@ -64,7 +60,6 @@ public abstract class UserInfoProcessor implements PayloadProcessor {
 
         payload = payload.mergeValues(Payload.CONFIGURATION, m);
 
-        log.info("process -> done");
         return chain.process(payload);
     }
 

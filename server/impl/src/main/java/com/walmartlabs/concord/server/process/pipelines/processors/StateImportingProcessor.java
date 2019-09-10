@@ -21,10 +21,10 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.repository.Snapshot;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
 import javax.inject.Named;

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.Payload;
@@ -32,6 +31,7 @@ import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

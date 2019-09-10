@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
@@ -30,6 +29,7 @@ import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -29,8 +29,6 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
@@ -50,6 +48,8 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import io.swagger.annotations.Api;
@@ -969,8 +969,6 @@ public class ProcessResource implements Resource {
                 }
             }
         }
-
-        log.info("uploadAttachments ['{}'] -> done", processKey);
     }
 
     /**
