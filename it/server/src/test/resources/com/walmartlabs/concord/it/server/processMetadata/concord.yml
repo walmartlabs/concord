@@ -1,0 +1,13 @@
+configuration:
+  meta:
+    x: 0
+    y: "n/a"
+    z: "n/a"
+
+flows:
+  default:
+    - set:
+        x: 123
+        y: "xyz 234 abc"
+        z: "${myVar}"
+    - log: "Bye!"

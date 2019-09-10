@@ -40,7 +40,7 @@ public class ServerClient {
     /**
      * As defined in db/src/main/resources/com/walmartlabs/concord/server/db/v0.0.1.xml
      */
-    private static final String DEFAULT_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
+    public static final String DEFAULT_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
 
     private ApiClient client;
 
