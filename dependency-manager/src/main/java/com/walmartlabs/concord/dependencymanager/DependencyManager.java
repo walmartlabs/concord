@@ -21,6 +21,7 @@ package com.walmartlabs.concord.dependencymanager;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ExceptionUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.*;
 import org.eclipse.aether.artifact.Artifact;
@@ -36,6 +37,7 @@ import org.eclipse.aether.resolution.*;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
@@ -56,6 +58,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import static org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_IGNORE;
@@ -66,6 +69,9 @@ public class DependencyManager {
     private static final Logger log = LoggerFactory.getLogger(DependencyManager.class);
 
     private static final String CFG_FILE_KEY = "CONCORD_MAVEN_CFG";
+
+    private static final int RETRY_COUNT = 3;
+    private static final long RETRY_INTERVAL = 5000;
 
     private static final String FILES_CACHE_DIR = "files";
     public static final String MAVEN_SCHEME = "mvn";
@@ -100,6 +106,24 @@ public class DependencyManager {
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
+        return resolve(items, null);
+    }
+
+    public Collection<DependencyEntity> resolve(Collection<URI> items, ProgressListener listener) throws IOException {
+        ResolveExceptionConverter exceptionConverter = new ResolveExceptionConverter(items);
+        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolve(items), exceptionConverter, new ProgressNotifier(listener, exceptionConverter));
+    }
+
+    public DependencyEntity resolveSingle(URI item) throws IOException {
+        return resolveSingle(item, null);
+    }
+
+    public DependencyEntity resolveSingle(URI item, ProgressListener listener) throws IOException {
+        ResolveExceptionConverter exceptionConverter = new ResolveExceptionConverter(item);
+        return withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> tryResolveSingle(item), exceptionConverter, new ProgressNotifier(listener, exceptionConverter));
+    }
+
+    private Collection<DependencyEntity> tryResolve(Collection<URI> items) throws IOException {
         if (items == null || items.isEmpty()) {
             return Collections.emptySet();
         }
@@ -123,6 +147,17 @@ public class DependencyManager {
                 .collect(Collectors.toList()));
 
         return result;
+    }
+
+    private DependencyEntity tryResolveSingle(URI item) throws IOException {
+        String scheme = item.getScheme();
+        if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
+            String id = item.getAuthority();
+            Artifact artifact = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE));
+            return toDependency(artifact);
+        } else {
+            return new DependencyEntity(resolveFile(item), item);
+        }
     }
 
     private DependencyList categorize(List<URI> items) throws IOException {
@@ -152,17 +187,6 @@ public class DependencyManager {
         }
 
         return new DependencyList(mavenTransitiveDependencies, mavenSingleDependencies, directLinks);
-    }
-
-    public DependencyEntity resolveSingle(URI item) throws IOException {
-        String scheme = item.getScheme();
-        if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
-            String id = item.getAuthority();
-            Artifact artifact = resolveMavenSingle(new MavenDependency(new DefaultArtifact(id), JavaScopes.COMPILE));
-            return toDependency(artifact);
-        } else {
-            return new DependencyEntity(resolveFile(item), item);
-        }
     }
 
     private Collection<DependencyEntity> resolveDirectLinks(Collection<URI> items) throws IOException {
@@ -269,6 +293,7 @@ public class DependencyManager {
                 log.error("transferFailed -> {}", event);
             }
         });
+
         session.setRepositoryListener(new AbstractRepositoryListener() {
             @Override
             public void artifactResolving(RepositoryEvent event) {
@@ -434,6 +459,48 @@ public class DependencyManager {
         private MavenDependency(Artifact artifact, String scope) {
             this.artifact = artifact;
             this.scope = scope;
+        }
+    }
+
+    private static class ProgressNotifier implements RetryUtils.RetryListener {
+
+        private final ProgressListener listener;
+        private final ResolveExceptionConverter exceptionConverter;
+
+        private ProgressNotifier(ProgressListener listener, ResolveExceptionConverter exceptionConverter) {
+            this.listener = listener;
+            this.exceptionConverter = exceptionConverter;
+        }
+
+        @Override
+        public void onRetry(int tryCount, int retryCount, long retryInterval, Exception e) {
+            if (listener != null) {
+                DependencyManagerException ex = exceptionConverter.convert(e);
+                listener.onRetry(tryCount, retryCount, retryInterval, ex.getMessage());
+            }
+        }
+    }
+
+    public static <T> T withRetry(int retryCount, long retryInterval, Callable<T> c,
+                                  ResolveExceptionConverter exceptionConverter,
+                                  ProgressNotifier notifier) throws IOException {
+        try {
+            return RetryUtils.withRetry(retryCount, retryInterval, c, ResolveRetryStrategy.INSTANCE, notifier);
+        } catch (Exception e) {
+            log.error("resolve exception: ", e);
+            throw exceptionConverter.convert(e);
+        }
+    }
+
+    private static class ResolveRetryStrategy implements RetryUtils.RetryStrategy {
+
+        public static final ResolveRetryStrategy INSTANCE = new ResolveRetryStrategy();
+
+        @Override
+        public boolean canRetry(Exception e) {
+            List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
+            Throwable last = exceptions.get(exceptions.size() - 1);
+            return !(last instanceof ArtifactNotFoundException);
         }
     }
 }
