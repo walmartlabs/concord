@@ -4,6 +4,7 @@
 
 ### Added
 
+- dependency-manager: automatic retries, improved error reporting;
 - concord-server: the `/api/v2/process` endpoint now supports
 different types of metadata filters (`eq`, `startsWith`, etc);
 - concord-server-sdk: now provides metrics annotations (e.g.

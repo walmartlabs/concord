@@ -207,14 +207,19 @@ public class RunnerJobExecutor {
         }
     }
 
-    private Collection<String> resolveDeps(RunnerJob job) throws IOException, ExecutionException {
+    private Collection<String> resolveDeps(RunnerJob job) throws Exception {
+        job.getLog().info("Resolving process dependencies");
+
         long t1 = System.currentTimeMillis();
 
         // combine the default dependencies and the process' dependencies
         Collection<URI> uris = Stream.concat(defaultDependencies.getDependencies().stream(), JobDependencies.get(job).stream())
                 .collect(Collectors.toList());
 
-        Collection<DependencyEntity> deps = dependencyManager.resolve(uris);
+        Collection<DependencyEntity> deps = dependencyManager.resolve(uris, (retryCount, maxRetry, interval, cause) -> {
+            job.getLog().warn("Error while downloading dependencies: {}", cause);
+            job.getLog().info("Retrying in {}ms", interval);
+        });
 
         // check the resolved dependencies against the current policy
         validateDependencies(job, deps);

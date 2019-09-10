@@ -115,8 +115,8 @@
         <maven.api.version>3.0.5</maven.api.version>
         <maven.artifact.version>3.5.0</maven.artifact.version>
         <maven.prj.version>2.2.1</maven.prj.version>
-        <maven.resolver.provider.version>3.5.0</maven.resolver.provider.version>
-        <maven.resolver.version>1.1.0</maven.resolver.version>
+        <maven.resolver.provider.version>3.6.2</maven.resolver.provider.version>
+        <maven.resolver.version>1.4.1</maven.resolver.version>
         <metrics.version>4.1.0</metrics.version>
         <mockito.version>2.28.2</mockito.version>
         <mustache.version>0.9.6</mustache.version>
