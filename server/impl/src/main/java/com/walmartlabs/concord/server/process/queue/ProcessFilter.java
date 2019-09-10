@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.sql.Timestamp;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -73,9 +73,40 @@ public interface ProcessFilter {
     }
 
     @Nullable
-    Map<String, String> metaFilters();
+    List<MetadataFilter> metaFilters();
 
     static ImmutableProcessFilter.Builder builder() {
         return ImmutableProcessFilter.builder();
+    }
+
+    @Value.Immutable
+    interface MetadataFilter {
+
+        @Value.Default
+        default FilterType type() {
+            return FilterType.CONTAINS;
+        }
+
+        String key();
+
+        String value();
+
+        static ImmutableMetadataFilter.Builder builder() {
+            return ImmutableMetadataFilter.builder();
+        }
+    }
+
+    enum FilterType {
+        CONTAINS,
+        NOT_CONTAINS,
+
+        EQUALS,
+        NOT_EQUALS,
+
+        ENDS_WITH,
+        NOT_ENDS_WITH,
+
+        STARTS_WITH,
+        NOT_STARTS_WITH
     }
 }

@@ -21,16 +21,18 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.server.IsoDateParam;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.process.queue.MetadataUtils;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
+import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -55,7 +57,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -143,7 +144,8 @@ public class ProcessResourceV2 implements Resource {
         if (orgId != null) {
             // we got an org ID, use it as it is
             orgIds = Collections.singleton(effectiveOrgId);
-        } if (orgName != null) {
+        }
+        if (orgName != null) {
             // we got an org name, validate it first by resolving its ID
             OrganizationEntry org = orgManager.assertExisting(null, orgName);
             effectiveOrgId = org.getId();
@@ -176,14 +178,16 @@ public class ProcessResourceV2 implements Resource {
             orgManager.assertAccess(effectiveOrgId, null, false);
         } else {
             // we don't have to do the permissions check when neither the org or the project are specified
-            // it is done implicitly by calling getCurrentUserOrgIds for all non-adming users (see above)
+            // it is done implicitly by calling getCurrentUserOrgIds for all non-admin users (see above)
         }
 
-        // collect all metadata filters, we assume that they have "meta." prefix in ther query parameter names
-        Map<String, String> metaFilters = uriInfo.getQueryParameters().entrySet().stream()
-                .filter(e -> e.getKey().startsWith("meta."))
-                .filter(e -> e.getValue() != null && e.getValue().size() == 1)
-                .collect(Collectors.toMap(e -> e.getKey().substring("meta.".length()), e -> e.getValue().get(0)));
+        // collect all metadata filters, we assume that they have "meta." prefix in their query parameter names
+        List<MetadataFilter> metaFilters = MetadataUtils.parseMetadataFilters(uriInfo);
+
+        // can't allow seq scans, we don't index PROCESS_QUEUE.META (yet?)
+        if (!metaFilters.isEmpty() && effectiveProjectId == null) {
+            throw new ValidationErrorsException("Process metadata filters require a project name or an ID to be included in the query.");
+        }
 
         ProcessFilter filter = ProcessFilter.builder()
                 .parentId(parentId)

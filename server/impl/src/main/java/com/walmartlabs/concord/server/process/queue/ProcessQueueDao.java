@@ -49,7 +49,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonText;
 import static com.walmartlabs.concord.db.PgUtils.toChar;
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
@@ -523,16 +522,6 @@ public class ProcessQueueDao extends AbstractDao {
                         inline("payload"), field("{0} - 'type' - 'reason'", Object.class, pe.EVENT_DATA)));
     }
 
-    private void filterByMetaFilters(SelectQuery<Record> query, Map<String, String> filters) {
-        if (filters == null || filters.isEmpty()) {
-            return;
-        }
-
-        for (Map.Entry<String, String> e : filters.entrySet()) {
-            query.addConditions(jsonText(PROCESS_QUEUE.META, e.getKey()).contains(e.getValue()));
-        }
-    }
-
     private void filterByTags(SelectQuery<Record> query, Set<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return;
@@ -627,7 +616,7 @@ public class ProcessQueueDao extends AbstractDao {
             query.addConditions(PROCESS_QUEUE.PARENT_INSTANCE_ID.eq(filter.parentId()));
         }
 
-        filterByMetaFilters(query, filter.metaFilters());
+        MetadataUtils.apply(query, PROCESS_QUEUE.META, filter.metaFilters());
 
         filterByTags(query, filter.tags());
 
