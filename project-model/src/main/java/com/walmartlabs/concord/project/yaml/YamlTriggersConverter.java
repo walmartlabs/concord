@@ -49,7 +49,7 @@ public final class YamlTriggersConverter {
 
         List<Trigger> result = new ArrayList<>();
         for (YamlTrigger t : triggers) {
-            TriggerConverter converter = converters.getOrDefault(t.getName(), defaultConverter);
+            TriggerConverter converter = converters.getOrDefault(t.getEventSource(), defaultConverter);
             result.add(converter.convert(t));
         }
 
@@ -123,7 +123,7 @@ public final class YamlTriggersConverter {
         @SuppressWarnings("unchecked")
         @Override
         public Trigger convert(YamlTrigger trigger) {
-            String name = trigger.getName();
+            String name = trigger.getEventSource();
 
             Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(trigger.getOptions());
 
@@ -148,7 +148,7 @@ public final class YamlTriggersConverter {
     }
 
     private static SourceMap convertSourceMap(YamlTrigger t) {
-        String name = t.getName();
+        String name = t.getEventSource();
         JsonLocation l = t.getLocation();
         return new SourceMap(SourceMap.Significance.HIGH,
                 String.valueOf(l.getSourceRef()),
