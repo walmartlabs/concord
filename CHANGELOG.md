@@ -19,6 +19,9 @@ GitHub triggers v2.
 
 ### Breaking
 
+- concord-server: the `/api/2/process` endpoint now requires a
+project ID or a project name to be specified when metadata filters
+are used;
 - concord-server: the entity policy's attribute `trigger.name` is
 renamed to `trigger.eventSource`.
 

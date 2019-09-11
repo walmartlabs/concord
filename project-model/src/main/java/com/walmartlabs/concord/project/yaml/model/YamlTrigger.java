@@ -30,17 +30,17 @@ public class YamlTrigger implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final JsonLocation location;
-    private final String name;
+    private final String eventSource;
     private final Map<String, Object> options;
 
-    public YamlTrigger(JsonLocation location, String name, Map<String, Object> options) {
+    public YamlTrigger(JsonLocation location, String eventSource, Map<String, Object> options) {
         this.location = location;
-        this.name = name;
+        this.eventSource = eventSource;
         this.options = options;
     }
 
-    public String getName() {
-        return name;
+    public String getEventSource() {
+        return eventSource;
     }
 
     public Map<String, Object> getOptions() {
@@ -55,7 +55,7 @@ public class YamlTrigger implements Serializable {
     public String toString() {
         return "YamlTrigger{" +
                 "location=" + location +
-                ", name='" + name + '\'' +
+                ", eventSource='" + eventSource + '\'' +
                 ", options=" + options +
                 '}';
     }
