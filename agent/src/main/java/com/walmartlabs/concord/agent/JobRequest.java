@@ -48,7 +48,7 @@ public class JobRequest {
     private final Type type;
     private final UUID instanceId;
     private final Path payloadDir;
-    private final String orgName;
+    private final String orgName; // TODO rename to secretOrgName
     private final String repoUrl;
     private final String repoPath;
     private final String commitId;
@@ -56,8 +56,17 @@ public class JobRequest {
     private final ProcessLog log;
     private final Imports imports;
 
-    protected JobRequest(Type type, UUID instanceId, Path payloadDir, String orgName, String repoUrl, String repoPath, String commitId, String secretName, ProcessLog log,
+    protected JobRequest(Type type,
+                         UUID instanceId,
+                         Path payloadDir,
+                         String orgName,
+                         String repoUrl,
+                         String repoPath,
+                         String commitId,
+                         String secretName,
+                         ProcessLog log,
                          Imports imports) {
+
         this.type = type;
         this.instanceId = instanceId;
         this.payloadDir = payloadDir;
