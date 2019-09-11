@@ -28,7 +28,7 @@ import java.util.UUID;
 public class ProcessResponse extends Message {
 
     private final UUID processId;
-    private final String orgName;
+    private final String orgName; // TODO rename to secretOrgName
     private final String repoUrl;
     private final String repoPath;
     private final String commitId;
@@ -45,7 +45,9 @@ public class ProcessResponse extends Message {
             @JsonProperty("commitId") String commitId,
             @JsonProperty("secretName") String secretName,
             @JsonProperty("imports") Imports imports) {
+
         super(MessageType.PROCESS_RESPONSE);
+
         setCorrelationId(correlationId);
         this.processId = processId;
         this.orgName = orgName;

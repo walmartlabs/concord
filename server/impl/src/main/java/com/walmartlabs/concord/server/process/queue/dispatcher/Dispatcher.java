@@ -28,9 +28,6 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.org.OrganizationDao;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -44,6 +41,7 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.websocket.WebSocketChannel;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.*;
+import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +55,11 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
+import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
+import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
 import static org.jooq.impl.DSL.*;
 
 /**
@@ -77,8 +78,6 @@ public class Dispatcher extends PeriodicTask {
     private final DispatcherDao dao;
     private final WebSocketChannelManager channelManager;
     private final LogManager logManager;
-    private final OrganizationDao organizationDao;
-    private final RepositoryDao repositoryDao;
     private final ProcessQueueDao queueDao;
     private final Set<Filter> filters;
     private final Histogram uniqueProjectsHistogram;
@@ -87,8 +86,6 @@ public class Dispatcher extends PeriodicTask {
     public Dispatcher(DispatcherDao dao,
                       WebSocketChannelManager channelManager,
                       LogManager logManager,
-                      OrganizationDao organizationDao,
-                      RepositoryDao repositoryDao,
                       ProcessQueueDao queueDao,
                       Set<Filter> filters,
                       MetricRegistry metricRegistry) {
@@ -98,8 +95,6 @@ public class Dispatcher extends PeriodicTask {
         this.dao = dao;
         this.channelManager = channelManager;
         this.logManager = logManager;
-        this.organizationDao = organizationDao;
-        this.repositoryDao = repositoryDao;
         this.queueDao = queueDao;
         this.filters = filters;
         this.uniqueProjectsHistogram = metricRegistry.histogram("process-queue-dispatcher-unique-projects");
@@ -257,27 +252,18 @@ public class Dispatcher extends PeriodicTask {
 
         ProcessQueueEntry item = match.response;
 
-        // TODO this should be fetched in DispatcherDao#next
-        String orgName = null;
-        String secret = null;
+        SecretReference secret = null;
         if (item.repoId() != null) {
-            RepositoryEntry repository = repositoryDao.get(item.repoId());
-            if (repository != null) {
-                secret = repository.getSecretName();
-            }
-        }
-        if (item.orgId() != null) {
-            orgName = organizationDao.get(item.orgId()).getName();
+            secret = dao.getSecretReference(item.repoId());
         }
 
-        // TODO don't we need the secret's org as well?
         ProcessResponse resp = new ProcessResponse(correlationId,
                 item.key().getInstanceId(),
-                orgName,
+                secret != null ? secret.orgName : null,
                 item.repoUrl(),
                 item.repoPath(),
                 item.commitId(),
-                secret,
+                secret != null ? secret.secretName : null,
                 item.imports());
 
         if (!channelManager.sendResponse(channel.getChannelId(), resp)) {
@@ -385,6 +371,17 @@ public class Dispatcher extends PeriodicTask {
                 }
             });
         }
+
+        public SecretReference getSecretReference(UUID repoId) {
+            try (DSLContext tx = DSL.using(cfg)) {
+                return tx.select(ORGANIZATIONS.ORG_NAME, SECRETS.SECRET_NAME)
+                        .from(REPOSITORIES)
+                        .leftOuterJoin(SECRETS).on(REPOSITORIES.SECRET_ID.eq(SECRETS.SECRET_ID))
+                        .leftOuterJoin(ORGANIZATIONS).on(SECRETS.ORG_ID.eq(ORGANIZATIONS.ORG_ID))
+                        .where(REPOSITORIES.REPO_ID.eq(repoId))
+                        .fetchOne(r -> new SecretReference(r.value1(), r.value2()));
+            }
+        }
     }
 
     private static final class Request {
@@ -406,6 +403,17 @@ public class Dispatcher extends PeriodicTask {
         private Match(Request request, ProcessQueueEntry response) {
             this.request = request;
             this.response = response;
+        }
+    }
+
+    private static final class SecretReference {
+
+        private final String orgName;
+        private final String secretName;
+
+        private SecretReference(String orgName, String secretName) {
+            this.orgName = orgName;
+            this.secretName = secretName;
         }
     }
 }
