@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -105,20 +106,32 @@ public class ProcessQueueManager {
     }
 
     /**
-     * @see #updateStatus(ProcessKey, ProcessStatus, Map)
+     * @see #updateStatus(DSLContext, ProcessKey, ProcessStatus, Map)
      */
     public void updateStatus(ProcessKey processKey, ProcessStatus status) {
         updateStatus(processKey, status, Collections.emptyMap());
     }
 
     /**
-     * Updates the process' status. Adds a process status history event with an optional {@code statusPayload}.
+     * @see #updateStatus(DSLContext, ProcessKey, ProcessStatus, Map)
+     */
+    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status) {
+        updateStatus(tx, processKey, status, Collections.emptyMap());
+    }
+
+    /**
+     * @see #updateStatus(DSLContext, ProcessKey, ProcessStatus, Map)
      */
     public void updateStatus(ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
-        queueDao.tx(tx -> {
-            queueDao.updateStatus(tx, processKey, status);
-            eventDao.insertStatusHistory(tx, processKey, status, statusPayload);
-        });
+        queueDao.tx(tx -> updateStatus(tx, processKey, status, statusPayload));
+    }
+
+    /**
+     * Updates the process' status. Adds a process status history event with an optional {@code statusPayload}.
+     */
+    public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
+        queueDao.updateStatus(tx, processKey, status);
+        eventDao.insertStatusHistory(tx, processKey, status, statusPayload);
     }
 
     /**
