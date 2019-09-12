@@ -30,8 +30,8 @@ import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
@@ -78,7 +78,7 @@ public class Dispatcher extends PeriodicTask {
     private final DispatcherDao dao;
     private final WebSocketChannelManager channelManager;
     private final LogManager logManager;
-    private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager queueManager;
     private final Set<Filter> filters;
     private final Histogram uniqueProjectsHistogram;
 
@@ -86,8 +86,7 @@ public class Dispatcher extends PeriodicTask {
     public Dispatcher(DispatcherDao dao,
                       WebSocketChannelManager channelManager,
                       LogManager logManager,
-                      ProcessQueueDao queueDao,
-                      Set<Filter> filters,
+                      ProcessQueueManager queueManager, Set<Filter> filters,
                       MetricRegistry metricRegistry) {
 
         super(POLL_DELAY, ERROR_DELAY);
@@ -95,7 +94,7 @@ public class Dispatcher extends PeriodicTask {
         this.dao = dao;
         this.channelManager = channelManager;
         this.logManager = logManager;
-        this.queueDao = queueDao;
+        this.queueManager = queueManager;
         this.filters = filters;
         this.uniqueProjectsHistogram = metricRegistry.histogram("process-queue-dispatcher-unique-projects");
     }
@@ -184,8 +183,7 @@ public class Dispatcher extends PeriodicTask {
                     ProcessQueueEntry candidate = m.response;
 
                     // mark the process as STARTING and send it to the agent
-                    // TODO ProcessQueueDao#updateStatus should be moved to ProcessManager because it does two things (updates the record and inserts a status history entry)
-                    queueDao.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
+                    queueManager.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
 
                     sendResponse(m);
 

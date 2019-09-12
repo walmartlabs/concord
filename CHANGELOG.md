@@ -12,6 +12,8 @@ different types of metadata filters (`eq`, `startsWith`, etc);
 
 ### Changed
 
+- concord-server: fix `STARTING` statuses not being registered in
+the process history; 
 - concord-server: the `ping` endpoint now checks for the DB
 connection;
 - concord-server: the repository refresh process is updated to use
