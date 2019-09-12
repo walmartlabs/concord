@@ -70,7 +70,7 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
 
         String javaCmd = DockerCommandBuilder.getJavaCmd();
 
-        Path runnerPath = DockerCommandBuilder.getRunnerPath(runnerCfg.getRunnerPath());
+        Path runnerPath = DockerCommandBuilder.getRunnerPath(runnerCfg.runnerPath());
         Path runnerDir = DockerCommandBuilder.getWorkspaceDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
 
         // we can't use "preforks" anyway, so let's store the runner's cfg directly in the payload dir
@@ -86,15 +86,15 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
         return new DockerCommandBuilder(job.getLog(), dockerRunnerCfg.javaPath, containerCfg)
                 .procDir(procDir)
                 .instanceId(job.getInstanceId())
-                .dependencyListsDir(runnerCfg.getDependencyListDir())
+                .dependencyListsDir(runnerCfg.dependencyListDir())
                 .dependencyCacheDir(dockerRunnerCfg.dependencyCacheDir)
-                .runnerPath(runnerCfg.getRunnerPath())
+                .runnerPath(runnerCfg.runnerPath())
                 .args(runner.build())
                 .extraEnv(IOUtils.TMP_DIR_KEY, "/tmp")
                 .extraEnv("DOCKER_HOST", dockerRunnerCfg.dockerHost)
                 .extraEnv("HOST_PROC_DIR", procDir)
                 .extraEnv("CONCORD_TX_ID", job.getInstanceId())
-                .extraVolumes(runnerCfg.getExtraDockerVolumes())
+                .extraVolumes(runnerCfg.extraDockerVolumes())
                 .build();
     }
 

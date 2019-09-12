@@ -32,7 +32,6 @@ import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.Utils;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
-import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
@@ -42,6 +41,7 @@ import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +108,6 @@ public class RunnerJobExecutor {
             log.warn("exec ['{}'] -> process error: {}", job.getInstanceId(), e.getMessage());
 
             job.getLog().error("Process startup error: {}", e.getMessage());
-            job.getLog().flush();
 
             throw e;
         }
@@ -187,7 +186,7 @@ public class RunnerJobExecutor {
                 }
             } catch (ExecutionException e) {
                 log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
-                handleError(job, proc, e.getMessage());
+                job.getLog().error(e.getMessage());
             }
 
             try {
@@ -283,14 +282,14 @@ public class RunnerJobExecutor {
     }
 
     private String[] createCmd(RunnerJob job) throws IOException {
-        Path runnerCfgFile = storeRunnerCfg(cfg.getRunnerCfgDir(), job.getRunnerCfg());
+        Path runnerCfgFile = storeRunnerCfg(cfg.runnerCfgDir(), job.getRunnerCfg());
 
         RunnerCommandBuilder runner = new RunnerCommandBuilder()
-                .javaCmd(cfg.agentJavaCmd)
+                .javaCmd(cfg.agentJavaCmd())
                 .workDir(job.getPayloadDir())
                 .logLevel(getLogLevel(job))
                 .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
-                .runnerPath(cfg.runnerPath.toAbsolutePath())
+                .runnerPath(cfg.runnerPath().toAbsolutePath())
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath());
 
         return runner.build();
@@ -389,8 +388,8 @@ public class RunnerJobExecutor {
     }
 
     private Path createExtraDockerVolumesFile(RunnerJob job) throws IOException {
-        List<String> l = cfg.extraDockerVolumes;
-        if (l == null || l.isEmpty()) {
+        List<String> l = cfg.extraDockerVolumes();
+        if (l.isEmpty()) {
             return null;
         }
 
@@ -469,7 +468,7 @@ public class RunnerJobExecutor {
          * Starts the log streaming in a separate thread.
          */
         public void start() {
-            RedirectedProcessLog processLog = job.getLog();
+            RunnerLog processLog = job.getLog();
 
             f = executor.submit(() -> {
                 try {
@@ -502,76 +501,27 @@ public class RunnerJobExecutor {
         Files.write(idPath, instanceId.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.SYNC);
     }
 
-    public static class RunnerJobExecutorConfiguration {
+    @Value.Immutable
+    public interface RunnerJobExecutorConfiguration {
 
-        private final String agentId;
-        private final String serverApiBaseUrl;
-        private final String agentJavaCmd;
-        private final Path dependencyListDir;
-        private final Path dependencyCacheDir;
-        private final Path runnerPath;
-        private final Path runnerCfgDir;
-        private final boolean runnerSecurityManagerEnabled;
-        private final List<String> extraDockerVolumes;
-        private final long maxHeartbeatInterval;
+        String agentId();
+        String serverApiBaseUrl();
+        String agentJavaCmd();
+        Path dependencyListDir();
+        Path dependencyCacheDir();
+        Path runnerPath();
+        Path runnerCfgDir();
+        boolean runnerSecurityManagerEnabled();
 
-        public RunnerJobExecutorConfiguration(String agentId,
-                                              String serverApiBaseUrl,
-                                              String agentJavaCmd,
-                                              Path dependencyListDir,
-                                              Path dependencyCacheDir, Path runnerPath,
-                                              Path runnerCfgDir,
-                                              boolean isRunnerSecurityManagerEnabled,
-                                              List<String> extraDockerVolumes,
-                                              long maxHeartbeatInterval) {
-
-            this.agentId = agentId;
-            this.serverApiBaseUrl = serverApiBaseUrl;
-            this.agentJavaCmd = agentJavaCmd;
-            this.dependencyListDir = dependencyListDir;
-            this.dependencyCacheDir = dependencyCacheDir;
-            this.runnerPath = runnerPath;
-            this.runnerCfgDir = runnerCfgDir;
-            this.runnerSecurityManagerEnabled = isRunnerSecurityManagerEnabled;
-            this.extraDockerVolumes = extraDockerVolumes;
-            this.maxHeartbeatInterval = maxHeartbeatInterval;
+        @Value.Default
+        default List<String> extraDockerVolumes() {
+            return Collections.emptyList();
         }
 
-        public Path getRunnerPath() {
-            return runnerPath;
-        }
+        long maxHeartbeatInterval();
 
-        public Path getRunnerCfgDir() {
-            return runnerCfgDir;
-        }
-
-        public String getAgentId() {
-            return agentId;
-        }
-
-        public String getServerApiBaseUrl() {
-            return serverApiBaseUrl;
-        }
-
-        // TODO actually pass the parameter into the runner cfg
-        public boolean isRunnerSecurityManagerEnabled() {
-            return runnerSecurityManagerEnabled;
-        }
-
-        public Path getDependencyListDir() {
-            return dependencyListDir;
-        }
-
-        public Path getDependencyCacheDir() {
-            return dependencyCacheDir;
-        }
-
-        public List<String> getExtraDockerVolumes() {
-            return extraDockerVolumes;
-        }
-
-        public long getMaxNoHeartbeatInterval() {
-            return maxHeartbeatInterval;
+        static ImmutableRunnerJobExecutorConfiguration.Builder builder() {
+            return ImmutableRunnerJobExecutorConfiguration.builder();
         }
     }
 

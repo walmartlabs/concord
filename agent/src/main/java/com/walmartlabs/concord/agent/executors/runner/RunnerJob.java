@@ -27,7 +27,6 @@ import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
-import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.model.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -59,7 +58,9 @@ public class RunnerJob {
         }
 
         RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, cfg);
-        RedirectedProcessLog log = processLogFactory.createRedirectedLog(jobRequest.getInstanceId());
+        RunnerLog log = new RunnerLog(
+                processLogFactory.createRedirectedLog(jobRequest.getInstanceId()),
+                processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
 
         return new RunnerJob(jobRequest.getInstanceId(), payloadDir, cfg, runnerCfg, log);
     }
@@ -69,9 +70,9 @@ public class RunnerJob {
     private final Map<String, Object> processCfg;
     private final RunnerConfiguration runnerCfg;
     private final boolean debugMode;
-    private final RedirectedProcessLog log;
+    private final RunnerLog log;
 
-    private RunnerJob(UUID instanceId, Path payloadDir, Map<String, Object> processCfg, RunnerConfiguration runnerCfg, RedirectedProcessLog log) {
+    private RunnerJob(UUID instanceId, Path payloadDir, Map<String, Object> processCfg, RunnerConfiguration runnerCfg, RunnerLog log) {
         this.instanceId = instanceId;
         this.payloadDir = payloadDir;
         this.processCfg = processCfg;
@@ -100,7 +101,7 @@ public class RunnerJob {
         return debugMode;
     }
 
-    public RedirectedProcessLog getLog() {
+    public RunnerLog getLog() {
         return log;
     }
 
@@ -154,17 +155,17 @@ public class RunnerJob {
 
         // override system values
         // TODO simplify somehow?
-        return b.agentId(execCfg.getAgentId())
+        return b.agentId(execCfg.agentId())
                 .debug(debugMode(processCfg))
                 .api(ApiConfiguration.builder().from(apiCfgSrc)
-                        .baseUrl(execCfg.getServerApiBaseUrl())
-                        .maxNoHeartbeatInterval(execCfg.getMaxNoHeartbeatInterval())
+                        .baseUrl(execCfg.serverApiBaseUrl())
+                        .maxNoHeartbeatInterval(execCfg.maxHeartbeatInterval())
                         .build())
                 .docker(DockerConfiguration.builder().from(dockerCfgSrc)
-                        .extraVolumes(execCfg.getExtraDockerVolumes())
+                        .extraVolumes(execCfg.extraDockerVolumes())
                         .build())
                 .dependencyManager(DependencyManagerConfiguration.builder()
-                        .cacheDir(execCfg.getDependencyCacheDir().toAbsolutePath().toString())
+                        .cacheDir(execCfg.dependencyCacheDir().toAbsolutePath().toString())
                         .build())
                 .build();
     }

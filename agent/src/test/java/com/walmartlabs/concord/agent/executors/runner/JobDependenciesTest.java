@@ -67,7 +67,7 @@ public class JobDependenciesTest {
         when(j.getProcessCfg()).thenReturn(cfg);
         when(j.getPayloadDir()).thenReturn(payloadDir);
 
-        RedirectedProcessLog log = mock(RedirectedProcessLog.class);
+        RunnerLog log = mock(RunnerLog.class);
         when(j.getLog()).thenReturn(log);
 
         Collection<URI> uris = JobDependencies.get(j);
