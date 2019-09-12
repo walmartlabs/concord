@@ -58,10 +58,6 @@ public class RedirectedProcessLog implements ProcessLog {
         streamLog(localLog.logFile(), stopCondition, logSteamMaxDelay, sink);
     }
 
-    public void flush() throws Exception {
-        run(() -> true);
-    }
-
     @Override
     public void delete() {
         this.localLog.delete();

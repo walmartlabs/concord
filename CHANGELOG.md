@@ -12,6 +12,8 @@ different types of metadata filters (`eq`, `startsWith`, etc);
 
 ### Changed
 
+- concord-agent: dependency resolution logs are now correctly
+sent back to the server;
 - concord-server: fix `STARTING` statuses not being registered in
 the process history; 
 - concord-server: the `ping` endpoint now checks for the DB

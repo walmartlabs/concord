@@ -26,6 +26,7 @@ import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 
+import java.io.FileNotFoundException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -53,12 +54,16 @@ public final class ResolveExceptionConverter {
     private String getCause(List<Throwable> exceptions) {
         ArtifactResolutionException are = exceptions.stream()
                 .filter(ex -> ex instanceof ArtifactResolutionException)
-                .map(ex -> (ArtifactResolutionException)ex)
+                .map(ex -> (ArtifactResolutionException) ex)
                 .reduce((first, second) -> second)
                 .orElse(null);
 
         if (are == null || are.getCause() == null) {
-            return exceptions.get(0).getMessage();
+            Throwable t = exceptions.get(0);
+            if (t instanceof FileNotFoundException) {
+                return "not found " + t.getMessage();
+            }
+            return t.getMessage();
         }
 
         if (are.getCause() instanceof ArtifactNotFoundException) {

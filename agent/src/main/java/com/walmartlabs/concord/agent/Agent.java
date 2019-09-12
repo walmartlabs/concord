@@ -308,16 +308,18 @@ public class Agent {
                                                        DependencyManager dependencyManager,
                                                        ExecutorService executor) {
 
-        RunnerJobExecutorConfiguration runnerExecutorCfg = new RunnerJobExecutorConfiguration(cfg.getAgentId(),
-                cfg.getServerApiBaseUrl(),
-                cfg.getAgentJavaCmd(),
-                cfg.getDependencyListsDir(),
-                cfg.getDependencyCacheDir(),
-                cfg.getRunnerPath(),
-                cfg.getRunnerCfgDir(),
-                cfg.isRunnerSecurityManagerEnabled(),
-                cfg.getExtraDockerVolumes(),
-                cfg.getMaxNoHeartbeatInterval());
+        RunnerJobExecutorConfiguration runnerExecutorCfg = RunnerJobExecutorConfiguration.builder()
+                .agentId(cfg.getAgentId())
+                .serverApiBaseUrl(cfg.getServerApiBaseUrl())
+                .agentJavaCmd(cfg.getAgentJavaCmd())
+                .dependencyListDir(cfg.getDependencyListsDir())
+                .dependencyCacheDir(cfg.getDependencyCacheDir())
+                .runnerPath(cfg.getRunnerPath())
+                .runnerCfgDir(cfg.getRunnerCfgDir())
+                .runnerSecurityManagerEnabled(cfg.isRunnerSecurityManagerEnabled())
+                .extraDockerVolumes(cfg.getExtraDockerVolumes())
+                .maxHeartbeatInterval(cfg.getMaxNoHeartbeatInterval())
+                .build();
 
         DefaultDependencies defaultDependencies = new DefaultDependencies();
 
