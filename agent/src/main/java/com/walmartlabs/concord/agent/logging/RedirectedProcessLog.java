@@ -41,7 +41,7 @@ public class RedirectedProcessLog implements ProcessLog {
 
     private final LocalProcessLog localLog;
 
-    public RedirectedProcessLog(Path baseDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) {
+    public RedirectedProcessLog(Path baseDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
         this.instanceId = instanceId;
         this.appender = appender;
         this.logSteamMaxDelay = logSteamMaxDelay;

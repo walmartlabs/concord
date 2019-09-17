@@ -40,9 +40,11 @@ public class LocalProcessLog extends AbstractProcessLog {
     private final Path baseDir;
     private final UUID instanceId;
 
-    public LocalProcessLog(Path baseDir, UUID instanceId) {
+    public LocalProcessLog(Path baseDir, UUID instanceId) throws IOException {
         this.baseDir = baseDir;
         this.instanceId = instanceId;
+
+        Files.createFile(logFile());
     }
 
     @Override

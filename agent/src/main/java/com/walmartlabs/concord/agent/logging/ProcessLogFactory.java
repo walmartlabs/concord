@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ public class ProcessLogFactory {
         this.logAppender = logAppender;
     }
 
-    public RedirectedProcessLog createRedirectedLog(UUID instanceId) {
+    public RedirectedProcessLog createRedirectedLog(UUID instanceId) throws IOException {
         return new RedirectedProcessLog(logDir, instanceId, logAppender, logStreamMaxDelay);
     }
 
