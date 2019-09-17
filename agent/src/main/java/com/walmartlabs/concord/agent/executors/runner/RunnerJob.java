@@ -58,10 +58,14 @@ public class RunnerJob {
         }
 
         RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, cfg);
-        RunnerLog log = new RunnerLog(
-                processLogFactory.createRedirectedLog(jobRequest.getInstanceId()),
-                processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
-
+        RunnerLog log;
+        try {
+            log = new RunnerLog(
+                    processLogFactory.createRedirectedLog(jobRequest.getInstanceId()),
+                    processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
+        } catch (IOException e) {
+            throw new ExecutionException("Error while creating runner log", e);
+        }
         return new RunnerJob(jobRequest.getInstanceId(), payloadDir, cfg, runnerCfg, log);
     }
 
