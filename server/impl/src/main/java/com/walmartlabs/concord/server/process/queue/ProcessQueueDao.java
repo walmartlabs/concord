@@ -406,10 +406,6 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     public List<ProcessEntry> list(ProcessFilter filter) {
-        return list(filter, -1, -1);
-    }
-
-    public List<ProcessEntry> list(ProcessFilter filter, int limit, int offset) {
         try (DSLContext tx = DSL.using(cfg)) {
             SelectQuery<Record> query = buildSelect(tx, filter);
 
@@ -418,14 +414,6 @@ public class ProcessQueueDao extends AbstractDao {
                 query.addOrderBy(PROCESS_QUEUE.CREATED_AT.asc());
             } else {
                 query.addOrderBy(PROCESS_QUEUE.CREATED_AT.desc());
-            }
-
-            if (limit > 0) {
-                query.addLimit(limit);
-            }
-
-            if (offset >= 0) {
-                query.addOffset(offset);
             }
 
             List<ProcessEntry> processEntries = query.fetch(this::toEntry);
@@ -438,11 +426,19 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public int count(ProcessFilter filter) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectQuery<Record> query = buildSelect(tx, filter);
+            return tx.selectCount().from(query)
+                    .fetchOne().value1();
+        }
+    }
+
     public Map<String, Integer> getStatistics() {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.CURRENT_STATUS, count(asterisk())).from(PROCESS_QUEUE)
+            return tx.select(PROCESS_QUEUE.CURRENT_STATUS, DSL.count(asterisk())).from(PROCESS_QUEUE)
                     .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
-                    .union(select(value(ENQUEUED_NOW_METRIC), count(asterisk())).from(PROCESS_QUEUE)
+                    .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
                             .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
                             .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentTimestamp()))))
                     .fetchMap(Record2::value1, Record2::value2);
@@ -608,8 +604,9 @@ public class ProcessQueueDao extends AbstractDao {
             query.addConditions(PROCESS_QUEUE.CREATED_AT.lessThan(filter.beforeCreatedAt()));
         }
 
-        if (filter.status() != null) {
-            query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(filter.status().name()));
+        ProcessStatus status = filter.status();
+        if (status != null) {
+            query.addConditions(PROCESS_QUEUE.CURRENT_STATUS.eq(status.name()));
         }
 
         if (filter.parentId() != null) {
@@ -660,6 +657,16 @@ public class ProcessQueueDao extends AbstractDao {
                                     .and(pe.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))))
                     .asField("status_history");
             query.addSelect(history);
+        }
+
+        Integer limit = filter.limit();
+        if (limit != null && limit > 0) {
+            query.addLimit(limit);
+        }
+
+        Integer offset = filter.offset();
+        if (offset != null && offset > 0) {
+            query.addOffset(offset);
         }
 
         return query;

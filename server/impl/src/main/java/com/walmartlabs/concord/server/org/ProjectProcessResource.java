@@ -120,8 +120,11 @@ public class ProjectProcessResource implements Resource {
                 .status(processStatus)
                 .afterCreatedAt(toTimestamp(afterCreatedAt))
                 .beforeCreatedAt(toTimestamp(beforeCreatedAt))
+                .limit(limit)
+                .offset(offset)
                 .build();
-        return queueDao.list(filter, limit, offset);
+
+        return queueDao.list(filter);
     }
 
     @GET
@@ -150,8 +153,11 @@ public class ProjectProcessResource implements Resource {
                 .status(processStatus)
                 .afterCreatedAt(toTimestamp(afterCreatedAt))
                 .beforeCreatedAt(toTimestamp(beforeCreatedAt))
+                .limit(limit)
+                .offset(offset)
                 .build();
-        return queueDao.list(filter, limit, offset);
+
+        return queueDao.list(filter);
     }
 
     /**

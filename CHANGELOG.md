@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: new endpoint `/api/v2/process/count`. Returns
+the number of processes for the specified filters;
 - dependency-manager: automatic retries, improved error reporting;
 - concord-server: the `/api/v2/process` endpoint now supports
 different types of metadata filters (`eq`, `startsWith`, etc);

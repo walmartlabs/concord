@@ -113,7 +113,7 @@ public class ProcessResourceV2 implements Resource {
     }
 
     /**
-     * Returns a list of processes in the user's organizations.
+     * Returns a list of processes applying the specified filters.
      */
     @GET
     @ApiOperation(value = "List processes", responseContainer = "list", response = ProcessEntry.class)
@@ -137,6 +137,61 @@ public class ProcessResourceV2 implements Resource {
         if (limit <= 0) {
             throw new ValidationErrorsException("'limit' must be a positive number");
         }
+
+        if (offset < 0) {
+            throw new ValidationErrorsException("'offset' must be a positive number or zero");
+        }
+
+        ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, afterCreatedAt,
+                beforeCreatedAt, tags, processStatus, initiator, parentId, processData, limit, offset, uriInfo);
+
+        return queueDao.list(filter);
+    }
+
+    /**
+     * Counts processes applying the specified filters.
+     */
+    @GET
+    @ApiOperation(value = "Count processes")
+    @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public int count(@ApiParam @QueryParam("orgId") UUID orgId,
+                     @ApiParam @QueryParam("orgName") String orgName,
+                     @ApiParam @QueryParam("projectId") UUID projectId,
+                     @ApiParam @QueryParam("projectName") String projectName,
+                     @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
+                     @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                     @ApiParam @QueryParam("tags") Set<String> tags,
+                     @ApiParam @QueryParam("status") ProcessStatus processStatus,
+                     @ApiParam @QueryParam("initiator") String initiator,
+                     @ApiParam @QueryParam("parentInstanceId") UUID parentId,
+                     @Context UriInfo uriInfo) {
+
+        ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, afterCreatedAt,
+                beforeCreatedAt, tags, processStatus, initiator, parentId, Collections.emptySet(), null, null, uriInfo);
+
+        if (filter.projectId() == null) {
+            throw new ValidationErrorsException("A project ID or name is required");
+        }
+
+        return queueDao.count(filter);
+    }
+
+    private ProcessFilter createProcessFilter(UUID orgId,
+                                              String orgName,
+                                              UUID projectId,
+                                              String projectName,
+                                              IsoDateParam afterCreatedAt,
+                                              IsoDateParam beforeCreatedAt,
+                                              Set<String> tags,
+                                              ProcessStatus processStatus,
+                                              String initiator,
+                                              UUID parentId,
+                                              Set<ProcessDataInclude> processData,
+                                              Integer limit,
+                                              Integer offset,
+                                              UriInfo uriInfo) {
 
         UUID effectiveOrgId = orgId;
 
@@ -189,7 +244,7 @@ public class ProcessResourceV2 implements Resource {
             throw new ValidationErrorsException("Process metadata filters require a project name or an ID to be included in the query.");
         }
 
-        ProcessFilter filter = ProcessFilter.builder()
+        return ProcessFilter.builder()
                 .parentId(parentId)
                 .projectId(effectiveProjectId)
                 .orgIds(orgIds)
@@ -201,9 +256,9 @@ public class ProcessResourceV2 implements Resource {
                 .initiator(initiator)
                 .metaFilters(metaFilters)
                 .includes(processData)
+                .limit(limit)
+                .offset(offset)
                 .build();
-
-        return queueDao.list(filter, limit, offset);
     }
 
     private Set<UUID> getCurrentUserOrgIds() {
