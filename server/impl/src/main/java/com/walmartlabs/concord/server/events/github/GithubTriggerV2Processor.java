@@ -133,6 +133,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
                 repositoryInfos.add(repositoryInfo);
             }
+
             if (!repositoryInfos.isEmpty()) {
                 result.put("repositoryInfo", repositoryInfos);
             }

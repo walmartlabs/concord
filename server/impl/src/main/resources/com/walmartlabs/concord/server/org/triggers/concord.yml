@@ -20,4 +20,4 @@ triggers:
         branch: ".*"
         repositoryInfo:
           # trigger only for registered repos (i.e. added to Concord)
-          - name: ".*"
+          - repository: ".*"

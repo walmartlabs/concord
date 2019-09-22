@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;

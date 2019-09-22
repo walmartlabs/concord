@@ -5,8 +5,16 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="1340000" author="ybrigo@gmail.com">
+        <validCheckSum>7:c4f908aabae131fcc9bcb034b1289a06</validCheckSum>
+
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="TRIGGERS" columnName="TRIGGER_VERSION"/>
+        </preConditions>
+
         <sql>
-            update TRIGGERS set CONDITIONS = '{"githubOrg": ".*", "githubRepo": ".*", "branch": ".*", "version": 2, "repositoryInfo": [{"name": ".*"}]}'
+            update TRIGGERS set
+                CONDITIONS = '{"githubOrg": ".*", "githubRepo": ".*", "branch": ".*", "version": 2, "repositoryInfo": [{"repository": ".*"}]}',
+                TRIGGER_VERSION = 2
             where
             PROJECT_ID = '${concordTriggersProjectId}'
             and EVENT_SOURCE = 'github'
