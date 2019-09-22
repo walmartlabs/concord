@@ -67,7 +67,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
         int triggerVersion = MapUtils.getInt(params, VERSION, 1);
         if (triggerVersion == 2) {
             params = enrichTriggerConditions(tx, repoId, t);
-            triggersDao.update(tx, triggerId, params, 2);
+            triggersDao.update(tx, triggerId, params);
         }
     }
 

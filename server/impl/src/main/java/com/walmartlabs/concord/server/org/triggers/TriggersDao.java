@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.tables.Organizations;
@@ -78,9 +79,8 @@ public class TriggersDao extends AbstractDao {
                 .getTriggerId();
     }
 
-    public void update(DSLContext tx, UUID triggerId, Map<String, Object> conditions, int version) {
+    public void update(DSLContext tx, UUID triggerId, Map<String, Object> conditions) {
         tx.update(TRIGGERS)
-                .set(TRIGGERS.TRIGGER_VERSION, value(version))
                 .set(TRIGGERS.CONDITIONS, objectMapper.toJSONB(conditions))
                 .where(TRIGGERS.TRIGGER_ID.eq(triggerId))
                 .execute();
@@ -122,7 +122,11 @@ public class TriggersDao extends AbstractDao {
         }
 
         if (version != null) {
-            w = w.and(TRIGGERS.TRIGGER_VERSION.eq(version));
+            Condition v = jsonText(TRIGGERS.CONDITIONS, "version").eq(String.valueOf(version));
+            if (version == 1) {
+                v = v.or(PgUtils.jsonText(TRIGGERS.CONDITIONS, "version").isNull());
+            }
+            w = w.and(v);
         }
 
         return query.where(appendConditionClause(conditions, w))

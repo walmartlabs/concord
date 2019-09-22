@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed the system trigger definition. Now it
+correctly fires up on changes in all registered repositories.
+
+
+
 ## [1.34.0] - 2019-09-19
 
 ### Added
