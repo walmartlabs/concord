@@ -103,6 +103,8 @@ public abstract class AbstractEventResource {
                                               Map<String, Object> event,
                                               ProcessConfigurationEnricher cfgEnricher) {
 
+        UserEntry initiator = getInitiator(t, event);
+
         return executor.submit(() -> {
             Map<String, Object> args = new HashMap<>();
             if (t.getArguments() != null) {
@@ -128,7 +130,6 @@ public abstract class AbstractEventResource {
             }
 
             try {
-                UserEntry initiator = getInitiator(t, event);
                 UUID orgId = projectDao.getOrgId(t.getProjectId());
 
                 PartialProcessKey pk = startProcess(eventId, orgId, t, cfg, initiator);
