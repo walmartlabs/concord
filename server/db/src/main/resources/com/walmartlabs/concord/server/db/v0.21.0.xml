@@ -26,10 +26,12 @@
         </createTable>
     </changeSet>
 
+    <!-- removed in 1.35.0+
     <changeSet id="21010" author="ibodrov@gmail.com">
         <createIndex tableName="AGENT_COMMANDS" indexName="IDX_A_CMD_A_ID">
             <column name="AGENT_ID"/>
             <column name="COMMAND_STATUS"/>
         </createIndex>
     </changeSet>
+    -->
 </databaseChangeLog>
