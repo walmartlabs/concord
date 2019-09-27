@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-runner: update BPM to 0.58.2, enables interpolation of
+expressions in form field labels;
 - concord-server: fixed an issue preventing `useInitiator: false`
 from working correctly for GitHub triggers.
 

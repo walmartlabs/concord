@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 
 import com.walmartlabs.concord.client.*;
+import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import org.junit.Test;
 
 import java.util.*;
@@ -43,7 +44,7 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -63,7 +64,7 @@ public class FormIT extends AbstractServerIT {
         FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
 
-        ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*100223.*", ab);
@@ -87,7 +88,7 @@ public class FormIT extends AbstractServerIT {
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
@@ -111,7 +112,7 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -131,7 +132,7 @@ public class FormIT extends AbstractServerIT {
         FormSubmitResponse fsr = request("/api/v1/process/" + spr.getInstanceId() + "/form/" + formName + "/multipart", data, FormSubmitResponse.class);
         assertTrue(fsr.isOk());
 
-        ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry psr = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*100223.*", ab);
@@ -155,7 +156,7 @@ public class FormIT extends AbstractServerIT {
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
         psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
@@ -176,7 +177,7 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -194,7 +195,7 @@ public class FormIT extends AbstractServerIT {
         // ---
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*Hello, Concord.*", ab);
@@ -208,7 +209,7 @@ public class FormIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -224,7 +225,7 @@ public class FormIT extends AbstractServerIT {
         // ---
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*we got 123 hello 234.*", ab);
@@ -244,7 +245,7 @@ public class FormIT extends AbstractServerIT {
         // ---
 
         ProcessApi processApi = new ProcessApi(getApiClient());
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -279,7 +280,7 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -300,7 +301,7 @@ public class FormIT extends AbstractServerIT {
         // ---
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*(Skills ->) \\[(angular|react), (react|angular)\\].*", ab);
@@ -315,7 +316,7 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -335,7 +336,7 @@ public class FormIT extends AbstractServerIT {
         assertTrue(fsr.isOk());
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
@@ -352,7 +353,7 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -372,7 +373,7 @@ public class FormIT extends AbstractServerIT {
         assertTrue(fsr.isOk());
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         // ---
 
@@ -389,7 +390,7 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
@@ -409,10 +410,10 @@ public class FormIT extends AbstractServerIT {
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
 
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testFormCallWithExpression() throws Exception {
         byte[] payload = archive(FormIT.class.getResource("formCallWithExpression").toURI());
 
@@ -421,27 +422,58 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---
 
-        ProcessFormsApi formResource = new ProcessFormsApi(getApiClient());
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
 
-        List<FormListEntry> forms = formResource.list(spr.getInstanceId());
+        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
 
         FormListEntry f0 = forms.get(0);
         String formName = f0.getName();
 
         Map<String, Object> data = Collections.singletonMap("name", "Concord");
-        FormSubmitResponse fsr = formResource.submit(spr.getInstanceId(), formName, data);
+        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
         assertTrue(fsr.isOk());
 
         // ---
 
         ProcessEntry psr = waitForCompletion(processApi, spr.getInstanceId());
-        assertEquals(ProcessEntry.StatusEnum.FINISHED, psr.getStatus());
+        assertEquals(StatusEnum.FINISHED, psr.getStatus());
 
         byte[] ab = getLog(psr.getLogFileName());
         assertLog(".*Hello, Concord.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testFormLabelInterpolation() throws Exception {
+        String xValue = "x_" + randomString();
+
+        // ---
+
+        byte[] payload = archive(FormIT.class.getResource("formLabelExpression").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.x", xValue);
+
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+
+        // ---
+
+        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
+        List<FormListEntry> l = formsApi.list(spr.getInstanceId());
+        assertEquals(1, l.size());
+
+        FormInstanceEntry f = formsApi.get(spr.getInstanceId(), l.get(0).getName());
+        assertNotNull(f);
+
+        assertEquals(1, f.getFields().size());
+        Field field = f.getFields().get(0);
+        assertEquals(xValue, field.getLabel());
     }
 }
