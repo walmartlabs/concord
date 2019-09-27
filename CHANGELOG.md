@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed an issue preventing `useInitiator: false`
+from working correctly for GitHub triggers.
+
+
+
 ## [1.34.1] - 2019-09-22
 
 ### Changed
