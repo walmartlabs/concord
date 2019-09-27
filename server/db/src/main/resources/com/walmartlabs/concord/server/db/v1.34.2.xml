@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <changeSet id="1350000" author="ibodrov@gmail.com">
+    <changeSet id="1342000" author="ibodrov@gmail.com">
         <preConditions onFail="MARK_RAN">
             <indexExists tableName="AGENT_COMMANDS" indexName="IDX_A_CMD_A_ID"/>
         </preConditions>
@@ -12,7 +12,7 @@
         <dropIndex tableName="AGENT_COMMANDS" indexName="IDX_A_CMD_A_ID"/>
     </changeSet>
 
-    <changeSet id="1350010" author="ibodrov@gmail.com">
+    <changeSet id="1342010" author="ibodrov@gmail.com">
         <createIndex tableName="AGENT_COMMANDS" indexName="IDX_A_CMD_STATUS">
             <column name="COMMAND_STATUS"/>
         </createIndex>
