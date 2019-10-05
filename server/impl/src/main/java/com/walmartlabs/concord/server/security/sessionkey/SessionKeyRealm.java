@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.apache.shiro.authc.AuthenticationException;
@@ -51,7 +51,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
     public static final String REALM_NAME = "sessionkey";
 
     private final ProcessSecurityContext processSecurityContext;
-    private final ProcessQueueDao processQueueDao;
+    private final ProcessQueueManager processQueueManager;
 
     private static final Set<ProcessStatus> FINISHED_STATUSES = ImmutableSet.of(
             ProcessStatus.FINISHED,
@@ -61,9 +61,9 @@ public class SessionKeyRealm extends AuthorizingRealm {
 
     @Inject
     public SessionKeyRealm(ProcessSecurityContext processSecurityContext,
-                           ProcessQueueDao processQueueDao) {
+                           ProcessQueueManager processQueueManager) {
         this.processSecurityContext = processSecurityContext;
-        this.processQueueDao = processQueueDao;
+        this.processQueueManager = processQueueManager;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
         PartialProcessKey processKey = PartialProcessKey.from(t.getInstanceId());
 
         try {
-            ProcessEntry p = processQueueDao.get(processKey);
+            ProcessEntry p = processQueueManager.get(processKey);
             if (p == null) {
                 log.warn("doGetAuthenticationInfo -> process not found: {}", t.getInstanceId());
                 return null;

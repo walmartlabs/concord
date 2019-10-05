@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.walmartlabs.concord.server.org.project.KvDao;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,12 +49,12 @@ public class ProcessKvResource implements Resource {
 
     private static final UUID DEFAULT_PROJECT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
-    private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager processQueueManager;
     private final KvDao kvDao;
 
     @Inject
-    public ProcessKvResource(ProcessQueueDao queueDao, KvDao kvDao) {
-        this.queueDao = queueDao;
+    public ProcessKvResource(ProcessQueueManager processQueueManager, KvDao kvDao) {
+        this.processQueueManager = processQueueManager;
         this.kvDao = kvDao;
     }
 
@@ -129,7 +129,7 @@ public class ProcessKvResource implements Resource {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
         // TODO replace with getProjectId
-        ProcessEntry entry = queueDao.get(processKey);
+        ProcessEntry entry = processQueueManager.get(processKey);
         if (entry == null) {
             throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
         }

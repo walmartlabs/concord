@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -44,6 +45,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -91,7 +93,7 @@ public class ProcessEventResource implements Resource {
     public void event(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                       @ApiParam ProcessEventRequest req) {
 
-        ProcessKey processKey = processKeyCache.get(processInstanceId);
+        ProcessKey processKey = assertProcessKey(processInstanceId);
         eventDao.insert(processKey, req.getEventType(), req.getEventDate(), req.getData());
     }
 
@@ -109,7 +111,7 @@ public class ProcessEventResource implements Resource {
     public void batchEvent(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                            @ApiParam List<ProcessEventRequest> data) {
 
-        ProcessKey processKey = processKeyCache.get(processInstanceId);
+        ProcessKey processKey = assertProcessKey(processInstanceId);
         eventDao.insert(processKey, data);
 
         batchInsertHistogram.update(data.size());
@@ -135,7 +137,7 @@ public class ProcessEventResource implements Resource {
                                         @ApiParam @QueryParam("includeAll") @DefaultValue("false") boolean includeAll,
                                         @ApiParam @QueryParam("limit") @DefaultValue("-1") int limit) {
 
-        ProcessKey processKey = processKeyCache.get(processInstanceId);
+        ProcessKey processKey = assertProcessKey(processInstanceId);
 
         if (includeAll) {
             // verify that the user can access potentially sensitive data
@@ -163,6 +165,14 @@ public class ProcessEventResource implements Resource {
         }
 
         return l;
+    }
+
+    private ProcessKey assertProcessKey(UUID instanceId) {
+        ProcessKey processKey = processKeyCache.get(instanceId);
+        if (processKey == null) {
+            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+        }
+        return processKey;
     }
 
     private void assertAccessRights(PartialProcessKey processKey) {

@@ -41,10 +41,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
-import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
-import com.walmartlabs.concord.server.process.queue.ProcessFilter;
-import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -94,6 +91,7 @@ public class ProcessResource implements Resource {
 
     private final ProcessManager processManager;
     private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager processQueueManager;
     private final ProcessLogsDao logsDao;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
@@ -111,6 +109,7 @@ public class ProcessResource implements Resource {
     @Inject
     public ProcessResource(ProcessManager processManager,
                            ProcessQueueDao queueDao,
+                           ProcessQueueManager processQueueManager,
                            ProcessLogsDao logsDao,
                            PayloadManager payloadManager,
                            ProcessStateManager stateManager,
@@ -124,6 +123,7 @@ public class ProcessResource implements Resource {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
+        this.processQueueManager = processQueueManager;
         this.logsDao = logsDao;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
@@ -440,7 +440,7 @@ public class ProcessResource implements Resource {
             throw syncIsForbidden();
         }
 
-        ProcessEntry parent = queueDao.get(PartialProcessKey.from(parentInstanceId));
+        ProcessEntry parent = processQueueManager.get(PartialProcessKey.from(parentInstanceId));
         if (parent == null) {
             throw new ValidationErrorsException("Unknown parent instance ID: " + parentInstanceId);
         }
@@ -523,7 +523,7 @@ public class ProcessResource implements Resource {
     @WithTimer
     public void disable(@ApiParam @PathParam("id") UUID instanceId,
                         @ApiParam @PathParam("disabled") boolean disabled) {
-        ProcessKey processKey = processKeyCache.get(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
         processManager.disable(processKey, disabled);
     }
 
@@ -537,7 +537,7 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{id}")
     @WithTimer
     public void kill(@ApiParam @PathParam("id") UUID instanceId) {
-        ProcessKey processKey = processKeyCache.get(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
         processManager.kill(processKey);
     }
 
@@ -583,7 +583,7 @@ public class ProcessResource implements Resource {
     @Deprecated
     public ProcessEntry get(@ApiParam @PathParam("id") UUID instanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
-        ProcessEntry e = queueDao.get(processKey);
+        ProcessEntry e = processQueueManager.get(processKey);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
@@ -766,7 +766,7 @@ public class ProcessResource implements Resource {
                              @ApiParam(required = true) @QueryParam("agentId") String agentId,
                              @ApiParam(required = true) ProcessStatus status) {
 
-        ProcessKey processKey = processKeyCache.get(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
         processManager.updateStatus(processKey, agentId, status);
     }
 
@@ -851,7 +851,7 @@ public class ProcessResource implements Resource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public void appendLog(@PathParam("id") UUID instanceId, InputStream data) {
-        ProcessKey processKey = processKeyCache.get(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
 
         try {
             byte[] ab = ByteStreams.toByteArray(data);
@@ -1056,10 +1056,18 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response setWaitCondition(@ApiParam @PathParam("id") UUID instanceId, @ApiParam Map<String, Object> waitCondition) {
-        ProcessKey processKey = processKeyCache.get(instanceId);
+        ProcessKey processKey = assertProcessKey(instanceId);
         AbstractWaitCondition condition = objectMapper.convertValue(waitCondition, AbstractWaitCondition.class);
         processManager.setWaitCondition(processKey, condition);
         return Response.ok().build();
+    }
+
+    private ProcessKey assertProcessKey(UUID instanceId) {
+        ProcessKey processKey = processKeyCache.get(instanceId);
+        if (processKey == null) {
+            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+        }
+        return processKey;
     }
 
     private void assertProcessStateAccess(ProcessEntry p) {
@@ -1085,7 +1093,7 @@ public class ProcessResource implements Resource {
     }
 
     private ProcessEntry assertProcess(PartialProcessKey processKey) {
-        ProcessEntry p = queueDao.get(processKey);
+        ProcessEntry p = processQueueManager.get(processKey);
         if (p == null) {
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);
         }

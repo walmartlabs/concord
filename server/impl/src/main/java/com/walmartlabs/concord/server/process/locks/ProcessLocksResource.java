@@ -26,7 +26,6 @@ import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.AbstractWaitCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessLockCondition;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -49,13 +48,13 @@ import java.util.UUID;
 @Path("/api/v1/process")
 public class ProcessLocksResource implements Resource {
 
-    private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager processQueueManager;
     private final ProcessQueueManager queueManager;
     private final ProcessLocksDao dao;
 
     @Inject
-    public ProcessLocksResource(ProcessQueueDao queueDao, ProcessQueueManager queueManager, ProcessLocksDao dao) {
-        this.queueDao = queueDao;
+    public ProcessLocksResource(ProcessQueueManager processQueueManager, ProcessQueueManager queueManager, ProcessLocksDao dao) {
+        this.processQueueManager = processQueueManager;
         this.queueManager = queueManager;
         this.dao = dao;
     }
@@ -102,7 +101,7 @@ public class ProcessLocksResource implements Resource {
 
     private ProcessEntry assertProcess(UUID instanceId) {
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
-        ProcessEntry p = queueDao.get(processKey);
+        ProcessEntry p = processQueueManager.get(processKey);
 
         if (p == null) {
             throw new ConcordApplicationException("Process not found: " + instanceId, Response.Status.NOT_FOUND);

@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.process.form.ConcordFormService;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -77,6 +78,7 @@ public class ProjectProcessResource implements Resource {
     private final OrganizationManager orgManager;
     private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager processQueueManager;
     private final ConcordFormService formService;
     private final ResponseTemplates responseTemplates;
     private final ProjectDao projectDao;
@@ -86,6 +88,7 @@ public class ProjectProcessResource implements Resource {
     public ProjectProcessResource(ProcessManager processManager,
                                   OrganizationDao orgDao,
                                   ProcessQueueDao queueDao,
+                                  ProcessQueueManager processQueueManager,
                                   ConcordFormService formService,
                                   OrganizationManager orgManager,
                                   ProjectDao projectDao,
@@ -94,6 +97,7 @@ public class ProjectProcessResource implements Resource {
         this.processManager = processManager;
         this.orgDao = orgDao;
         this.queueDao = queueDao;
+        this.processQueueManager = processQueueManager;
         this.formService = formService;
         this.responseTemplates = new ResponseTemplates();
         this.orgManager = orgManager;
@@ -265,7 +269,7 @@ public class ProjectProcessResource implements Resource {
     }
 
     private Response proceed(PartialProcessKey processKey) {
-        ProcessEntry entry = queueDao.get(processKey);
+        ProcessEntry entry = processQueueManager.get(processKey);
         if (entry == null) {
             throw new ConcordApplicationException("Process not found: " + processKey, Status.NOT_FOUND);
         }
