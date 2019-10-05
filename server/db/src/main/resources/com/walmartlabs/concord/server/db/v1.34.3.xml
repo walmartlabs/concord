@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1344000" author="ibodrov@gmail.com">
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS "pg_trgm"
+        </sql>
+    </changeSet>
+
+    <changeSet id="1344010" author="ibodrov@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_PROC_INITIATOR_ID on PROCESS_QUEUE (INITIATOR_ID)
+        </sql>
+    </changeSet>
+
+    <changeSet id="1344020" author="ibodrov@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_USERS_USERNAME on USERS using gin (USERNAME gin_trgm_ops)
+        </sql>
+    </changeSet>
+</databaseChangeLog>
