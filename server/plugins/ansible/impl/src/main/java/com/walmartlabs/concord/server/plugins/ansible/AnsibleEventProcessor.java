@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.*;
 import org.slf4j.Logger;
@@ -125,6 +126,7 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
             return super.txResult(t);
         }
 
+        @WithTimer
         public List<EventItem> list(DSLContext tx, EventMarker marker, int count) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
             SelectConditionStep<Record11<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer, String>> q = tx.select(
@@ -175,6 +177,7 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
                     .build();
         }
 
+        @WithTimer
         public void insert(DSLContext tx, List<HostItem> items) {
             List<HostItem> hosts = removeInvalidItems(items);
             if (hosts.isEmpty()) {

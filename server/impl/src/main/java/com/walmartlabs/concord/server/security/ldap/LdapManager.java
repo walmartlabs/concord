@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.console.UserSearchResult;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,6 +128,7 @@ public class LdapManager {
         return result;
     }
 
+    @WithTimer
     public LdapPrincipal getPrincipal(String username, String domain) throws NamingException {
         LdapContext ctx = null;
         try {
