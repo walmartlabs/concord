@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: additional metrics for LDAP and Ansible event
+processing.
+
+
+
 ## [1.34.2] - 2019-09-27
 
 ### Changed
