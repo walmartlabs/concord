@@ -101,6 +101,11 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <version>1.0.2</version>
                 <configuration>
+                    <container>
+                        <jvmFlags>
+                            <jvmFlag>-Xmx128m</jvmFlag>
+                        </jvmFlags>
+                    </container>
                     <to>
                         <image>walmartlabs/concord-agent-operator</image>
                     </to>
