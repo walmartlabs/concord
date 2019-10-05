@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: some process queue fetching optimizations for
+partitioned tables;
 - concord-server: additional metrics for LDAP and Ansible event
 processing.
 

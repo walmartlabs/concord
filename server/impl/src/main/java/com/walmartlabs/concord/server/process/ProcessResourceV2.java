@@ -30,6 +30,7 @@ import com.walmartlabs.concord.server.process.queue.MetadataUtils;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -67,6 +68,7 @@ public class ProcessResourceV2 implements Resource {
     private static final Logger log = LoggerFactory.getLogger(ProcessResourceV2.class);
 
     private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager processQueueManager;
     private final ProjectDao projectDao;
     private final UserDao userDao;
     private final OrganizationManager orgManager;
@@ -74,12 +76,14 @@ public class ProcessResourceV2 implements Resource {
 
     @Inject
     public ProcessResourceV2(ProcessQueueDao queueDao,
+                             ProcessQueueManager processQueueManager,
                              ProjectDao projectDao,
                              UserDao userDao,
                              OrganizationManager orgManager,
                              ProjectAccessManager projectAccessManager) {
 
         this.queueDao = queueDao;
+        this.processQueueManager = processQueueManager;
         this.projectDao = projectDao;
         this.userDao = userDao;
         this.orgManager = orgManager;
@@ -99,7 +103,7 @@ public class ProcessResourceV2 implements Resource {
 
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
 
-        ProcessEntry e = queueDao.get(processKey, includes);
+        ProcessEntry e = processQueueManager.get(processKey, includes);
         if (e == null) {
             log.warn("get ['{}'] -> not found", instanceId);
             throw new ConcordApplicationException("Process instance not found", Status.NOT_FOUND);

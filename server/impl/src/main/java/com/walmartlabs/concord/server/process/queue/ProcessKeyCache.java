@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutionException;
 public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.ProcessKeyCache {
 
     private final ProcessQueueDao queueDao;
-    private final LoadingCache<UUID, ProcessKey> cache;
+    private final LoadingCache<UUID, Optional<ProcessKey>> cache;
 
     @Inject
     public ProcessKeyCache(ProcessQueueDao queueDao) {
@@ -47,10 +47,10 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
                 .maximumSize(10 * 1024L)
                 .concurrencyLevel(32)
                 .recordStats()
-                .build(new CacheLoader<UUID, ProcessKey>() {
+                .build(new CacheLoader<UUID, Optional<ProcessKey>>() {
                     @Override
-                    public ProcessKey load(UUID key) {
-                        return queueDao.getKey(key);
+                    public Optional<ProcessKey> load(UUID key) {
+                        return Optional.ofNullable(queueDao.getKey(key));
                     }
                 });
     }
@@ -62,7 +62,7 @@ public class ProcessKeyCache implements com.walmartlabs.concord.server.sdk.Proce
     @Override
     public ProcessKey get(UUID instanceId) {
         try {
-            return cache.get(instanceId);
+            return cache.get(instanceId).orElse(null);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }

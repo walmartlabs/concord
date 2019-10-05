@@ -25,6 +25,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
@@ -41,11 +42,11 @@ import static com.walmartlabs.concord.server.process.pipelines.processors.Reposi
 @Named
 public class ForkRepositoryInfoProcessor implements PayloadProcessor {
 
-    private final ProcessQueueDao queueDao;
+    private final ProcessQueueManager queueManager;
 
     @Inject
-    public ForkRepositoryInfoProcessor(ProcessQueueDao queueDao) {
-        this.queueDao = queueDao;
+    public ForkRepositoryInfoProcessor(ProcessQueueManager queueManager) {
+        this.queueManager = queueManager;
     }
 
     @Override
@@ -53,7 +54,7 @@ public class ForkRepositoryInfoProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
 
-        ProcessEntry parent = queueDao.get(PartialProcessKey.from(parentInstanceId));
+        ProcessEntry parent = queueManager.get(PartialProcessKey.from(parentInstanceId));
         if (parent == null) {
             throw new ProcessException(payload.getProcessKey(), "Parent process '" + parentInstanceId + "' not found");
         }

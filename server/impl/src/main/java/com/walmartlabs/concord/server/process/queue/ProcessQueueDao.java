@@ -339,11 +339,11 @@ public class ProcessQueueDao extends AbstractDao {
         });
     }
 
-    public ProcessEntry get(PartialProcessKey processKey) {
+    public ProcessEntry get(ProcessKey processKey) {
         return get(processKey, DEFAULT_INCLUDES);
     }
 
-    public ProcessEntry get(PartialProcessKey processKey, Set<ProcessDataInclude> includes) {
+    public ProcessEntry get(ProcessKey processKey, Set<ProcessDataInclude> includes) {
         return txResult(tx -> get(tx, processKey, includes));
     }
 
@@ -551,6 +551,10 @@ public class ProcessQueueDao extends AbstractDao {
     }
 
     private SelectQuery<Record> buildSelect(DSLContext tx, ProcessFilter filter) {
+        return buildSelect(tx, null, filter);
+    }
+
+    private SelectQuery<Record> buildSelect(DSLContext tx, ProcessKey key, ProcessFilter filter) {
         SelectQuery<Record> query = tx.selectQuery();
 
         // process_queue
@@ -632,7 +636,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         if (includes.contains(ProcessDataInclude.CHECKPOINTS)) {
             ProcessCheckpoints pc = PROCESS_CHECKPOINTS.as("pc");
-            Field<Object> checkpoints = tx.select(
+            SelectJoinStep<Record1<JSONB>> checkpoints = tx.select(
                     function("to_jsonb", JSONB.class,
                             function("array_agg", Object.class,
                                     function("jsonb_strip_nulls", JSONB.class,
@@ -640,23 +644,37 @@ public class ProcessQueueDao extends AbstractDao {
                                                     inline("id"), pc.CHECKPOINT_ID,
                                                     inline("name"), pc.CHECKPOINT_NAME,
                                                     inline("createdAt"), toJsonDate(pc.CHECKPOINT_DATE))))))
-                    .from(pc)
-                    .where(pc.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)
-                            .and(pc.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))).asField("checkpoints");
+                    .from(pc);
 
-            query.addSelect(checkpoints);
+            if (key != null) {
+                checkpoints.where(pc.INSTANCE_ID.eq(key.getInstanceId())
+                        .and(pc.INSTANCE_CREATED_AT.eq(key.getCreatedAt())));
+            } else {
+                checkpoints.where(pc.INSTANCE_ID.eq(PROCESS_QUEUE.INSTANCE_ID)
+                        .and(pc.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT)));
+            }
+
+            query.addSelect(checkpoints.asField("checkpoints"));
         }
 
         if (includes.contains(ProcessDataInclude.HISTORY)) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            Field<Object> history = tx.select(function("to_jsonb", JSONB.class,
+            SelectJoinStep<Record1<JSONB>> history = tx.select(function("to_jsonb", JSONB.class,
                     function("array_agg", Object.class, historyEntryToJsonb(pe))))
-                    .from(pe)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID)
-                            .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())
-                                    .and(pe.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))))
-                    .asField("status_history");
-            query.addSelect(history);
+                    .from(pe);
+
+            if (key != null) {
+                history.where(pe.INSTANCE_ID.eq(key.getInstanceId())
+                        .and(pe.INSTANCE_CREATED_AT.eq(key.getCreatedAt())
+                                .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))));
+            } else {
+                history.where(PROCESS_QUEUE.INSTANCE_ID.eq(pe.INSTANCE_ID)
+                        .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name())
+                                .and(pe.INSTANCE_CREATED_AT.eq(PROCESS_QUEUE.CREATED_AT))
+                                .and(pe.EVENT_TYPE.eq(EventType.PROCESS_STATUS.name()))));
+            }
+
+            query.addSelect(history.asField("status_history"));
         }
 
         Integer limit = filter.limit();
@@ -672,8 +690,8 @@ public class ProcessQueueDao extends AbstractDao {
         return query;
     }
 
-    private ProcessEntry get(DSLContext tx, PartialProcessKey key, Set<ProcessDataInclude> includes) {
-        SelectQuery<Record> query = buildSelect(tx, ProcessFilter.builder()
+    private ProcessEntry get(DSLContext tx, ProcessKey key, Set<ProcessDataInclude> includes) {
+        SelectQuery<Record> query = buildSelect(tx, key, ProcessFilter.builder()
                 .includes(includes)
                 .build());
 

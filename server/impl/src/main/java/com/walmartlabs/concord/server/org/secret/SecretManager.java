@@ -42,7 +42,7 @@ import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.process.ProcessEntry;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
@@ -72,7 +72,7 @@ public class SecretManager {
     private final PolicyManager policyManager;
     private final AuditLog auditLog;
     private final OrganizationManager orgManager;
-    private final ProcessQueueDao processQueueDao;
+    private final ProcessQueueManager processQueueManager;
     private final SecretDao secretDao;
     private final SecretStoreConfiguration secretCfg;
     private final SecretStoreProvider secretStoreProvider;
@@ -83,7 +83,7 @@ public class SecretManager {
     public SecretManager(PolicyManager policyManager,
                          AuditLog auditLog,
                          OrganizationManager orgManager,
-                         ProcessQueueDao processQueueDao,
+                         ProcessQueueManager processQueueManager,
                          SecretDao secretDao,
                          SecretStoreConfiguration secretCfg,
                          SecretStoreProvider secretStoreProvider,
@@ -91,13 +91,13 @@ public class SecretManager {
                          ProjectAccessManager projectAccessManager) {
 
         this.policyManager = policyManager;
+        this.processQueueManager = processQueueManager;
         this.secretDao = secretDao;
         this.secretCfg = secretCfg;
         this.orgManager = orgManager;
         this.userDao = userDao;
         this.secretStoreProvider = secretStoreProvider;
         this.auditLog = auditLog;
-        this.processQueueDao = processQueueDao;
         this.projectAccessManager = projectAccessManager;
     }
 
@@ -540,7 +540,7 @@ public class SecretManager {
             throw new UnauthorizedException("Project-scoped secrets can only be accessed within a running process. Secret: " + e.getName());
         }
 
-        ProcessEntry p = processQueueDao.get(session.getProcessKey());
+        ProcessEntry p = processQueueManager.get(session.getProcessKey());
         if (p == null) {
             throw new IllegalStateException("Process not found: " + session.getProcessKey());
         }

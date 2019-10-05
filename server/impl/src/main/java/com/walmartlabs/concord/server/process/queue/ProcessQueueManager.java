@@ -43,15 +43,18 @@ public class ProcessQueueManager {
     private final ProcessQueueDao queueDao;
     private final ProcessEventDao eventDao;
     private final ConcordObjectMapper objectMapper;
+    private final ProcessKeyCache keyCache;
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
                                ProcessEventDao eventDao,
-                               ConcordObjectMapper objectMapper) {
+                               ConcordObjectMapper objectMapper,
+                               ProcessKeyCache keyCache) {
 
         this.queueDao = queueDao;
         this.eventDao = eventDao;
         this.objectMapper = objectMapper;
+        this.keyCache = keyCache;
     }
 
     /**
@@ -199,6 +202,22 @@ public class ProcessQueueManager {
         queueDao.updateExclusive(tx, processKey, exclusive);
     }
 
+    public ProcessEntry get(PartialProcessKey partialProcessKey) {
+        ProcessKey key = keyCache.get(partialProcessKey.getInstanceId());
+        if (key == null) {
+            return null;
+        }
+        return queueDao.get(key);
+    }
+
+    public ProcessEntry get(PartialProcessKey partialProcessKey, Set<ProcessDataInclude> includes) {
+        ProcessKey key = keyCache.get(partialProcessKey.getInstanceId());
+        if (key == null) {
+            return null;
+        }
+        return queueDao.get(key, includes);
+    }
+
     private static Map<String, Object> getCfg(Payload payload) {
         return payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
     }
@@ -216,7 +235,6 @@ public class ProcessQueueManager {
         return m;
     }
 
-    @SuppressWarnings("unchecked")
     private static Long getProcessTimeout(Payload p) {
         Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
