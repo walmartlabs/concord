@@ -40,39 +40,30 @@ public abstract class AbstractEventProcessor<E extends AbstractEventProcessor.Ev
 
     @Override
     public void performTask() {
-        boolean continueProcess;
+        int processedEvents = 0;
 
         do {
-            continueProcess = false;
-
-            List<EventMarkerDao.EventMarker> markers = eventMarkerDao.get(processorName);
-            for (EventMarkerDao.EventMarker m : markers) {
-                int processedEvents = process(m, fetchLimit);
-                if (processedEvents >= fetchLimit) {
-                    continueProcess = true;
-                }
-            }
-        } while (continueProcess);
-
-        eventMarkerDao.cleanup(processorName);
+            EventMarkerDao.EventMarker m = eventMarkerDao.get(processorName);
+            processedEvents = process(m, fetchLimit);
+        } while (processedEvents >= fetchLimit);
     }
 
-    private int process(EventMarkerDao.EventMarker marker, int fetchLimit) {
+    private int process(EventMarkerDao.EventMarker m, int fetchLimit) {
         return eventMarkerDao.txResult(tx -> {
-            List<E> events = processEvents(tx, marker, fetchLimit);
+            List<E> events = processEvents(tx, m, fetchLimit);
             if (events.isEmpty()) {
-                eventMarkerDao.update(tx, processorName, marker.instanceCreatedStart(), marker.maxEventSeq());
+                eventMarkerDao.update(tx, processorName, m.maxEventSeq());
                 return 0;
             }
 
             E lastEvent = events.get(events.size() - 1);
-            eventMarkerDao.update(tx, processorName, marker.instanceCreatedStart(), lastEvent.eventSeq());
+            eventMarkerDao.update(tx, processorName, lastEvent.eventSeq());
 
             return events.size();
         });
     }
 
-    protected abstract List<E> processEvents(DSLContext tx, EventMarkerDao.EventMarker marker, int fetchLimit);
+    protected abstract List<E> processEvents(DSLContext tx, EventMarkerDao.EventMarker m, int fetchLimit);
 
     public interface Event {
         long eventSeq();

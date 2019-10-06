@@ -52,10 +52,6 @@ public class ProcessStateConfiguration implements Serializable {
     private boolean eventsCleanup;
 
     @Inject
-    @Config("process.eventStatsCleanup")
-    private boolean eventStatsCleanup;
-
-    @Inject
     @Config("process.logsCleanup")
     private boolean logsCleanup;
 
@@ -106,10 +102,6 @@ public class ProcessStateConfiguration implements Serializable {
 
     public boolean isEventsCleanup() {
         return eventsCleanup;
-    }
-
-    public boolean isEventStatsCleanup() {
-        return eventStatsCleanup;
     }
 
     public boolean isLogsCleanup() {

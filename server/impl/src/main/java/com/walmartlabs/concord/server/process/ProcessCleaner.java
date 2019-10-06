@@ -38,13 +38,11 @@ import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENT_STATS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessLogs.PROCESS_LOGS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
-import static org.jooq.impl.DSL.*;
 
 @Named("process-cleaner")
 @Singleton
@@ -77,7 +75,6 @@ public class ProcessCleaner implements ScheduledTask {
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cfg.getMaxStateAge());
         cleanerDao.deleteOldState(cutoff, cfg);
         cleanerDao.deleteOrphans(cfg);
-        cleanerDao.deleteOldEventStats(cfg);
     }
 
     @Named
@@ -138,28 +135,6 @@ public class ProcessCleaner implements ScheduledTask {
 
             long t2 = System.currentTimeMillis();
             log.info("deleteOldState -> took {}ms", (t2 - t1));
-        }
-
-        void deleteOldEventStats(ProcessStateConfiguration jobCfg) {
-            if (!jobCfg.isEventStatsCleanup()) {
-                return;
-            }
-
-            long t1 = System.currentTimeMillis();
-
-            tx(tx -> {
-                SelectJoinStep<Record1<Timestamp>> minProcessInQueue = tx.select(trunc(coalesce(min(PROCESS_QUEUE.CREATED_AT), currentTimestamp())))
-                        .from(PROCESS_QUEUE);
-
-                int stats = tx.deleteFrom(PROCESS_EVENT_STATS)
-                        .where(PROCESS_EVENT_STATS.INSTANCE_CREATED_DATE.lessThan(minProcessInQueue))
-                        .execute();
-
-                log.info("deleteOldEventStats -> removed {} stats item(s)", stats);
-            });
-
-            long t2 = System.currentTimeMillis();
-            log.info("deleteOldEventStats -> took {}ms", (t2 - t1));
         }
 
         void deleteOrphans(ProcessStateConfiguration jobCfg) {
