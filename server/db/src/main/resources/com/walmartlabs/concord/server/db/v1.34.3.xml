@@ -21,4 +21,10 @@
             create index concurrently IDX_USERS_USERNAME on USERS using gin (USERNAME gin_trgm_ops)
         </sql>
     </changeSet>
+
+    <changeSet id="1344030" author="ibodrov@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_PROC_META on PROCESS_QUEUE using gin (META jsonb_path_ops)
+        </sql>
+    </changeSet>
 </databaseChangeLog>

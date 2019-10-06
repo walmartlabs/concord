@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonText;
+import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.select;
@@ -122,9 +122,9 @@ public class TriggersDao extends AbstractDao {
         }
 
         if (version != null) {
-            Condition v = jsonText(TRIGGERS.CONDITIONS, "version").eq(String.valueOf(version));
+            Condition v = jsonbText(TRIGGERS.CONDITIONS, "version").eq(String.valueOf(version));
             if (version == 1) {
-                v = v.or(PgUtils.jsonText(TRIGGERS.CONDITIONS, "version").isNull());
+                v = v.or(PgUtils.jsonbText(TRIGGERS.CONDITIONS, "version").isNull());
             }
             w = w.and(v);
         }
@@ -192,9 +192,9 @@ public class TriggersDao extends AbstractDao {
 
         for (Map.Entry<String, String> e : conditions.entrySet()) {
             w = w.and(
-                    jsonText(TRIGGERS.CONDITIONS, e.getKey()).isNull()
+                    jsonbText(TRIGGERS.CONDITIONS, e.getKey()).isNull()
                             .or(
-                                    value(e.getValue()).likeRegex(jsonText(TRIGGERS.CONDITIONS, e.getKey()).cast(String.class))));
+                                    value(e.getValue()).likeRegex(jsonbText(TRIGGERS.CONDITIONS, e.getKey()).cast(String.class))));
         }
         return w;
     }

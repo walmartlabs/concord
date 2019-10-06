@@ -22,6 +22,7 @@ package com.walmartlabs.concord.db;
 
 import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.JSONB;
 import org.jooq.impl.DSL;
 
 import java.sql.Timestamp;
@@ -43,8 +44,12 @@ public final class PgUtils {
         return field("to_char({0}, {1})", String.class, date, inline(format));
     }
 
-    public static Field<String> jsonText(Field<?> field, String name) {
+    public static Field<String> jsonbText(Field<JSONB> field, String name) {
         return field("{0}::jsonb->>{1}", Object.class, field, inline(name)).cast(String.class);
+    }
+
+    public static Condition jsonbEq(Field<JSONB> field, String key, String value) {
+        return DSL.condition("{0} @> jsonb_build_object({1}, {2})", field, DSL.val(key), DSL.value(value));
     }
 
     private PgUtils() {

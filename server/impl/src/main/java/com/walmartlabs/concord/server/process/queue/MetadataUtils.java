@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter.FilterType;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
 import org.jooq.Field;
+import org.jooq.JSONB;
 import org.jooq.Record;
 import org.jooq.SelectQuery;
 
@@ -30,7 +31,8 @@ import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonText;
+import static com.walmartlabs.concord.db.PgUtils.jsonbEq;
+import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 
 public final class MetadataUtils {
 
@@ -55,7 +57,7 @@ public final class MetadataUtils {
                 .collect(Collectors.toList());
     }
 
-    public static void apply(SelectQuery<Record> q, Field<?> column, List<MetadataFilter> filters) {
+    public static void apply(SelectQuery<Record> q, Field<JSONB> column, List<MetadataFilter> filters) {
         if (filters == null || filters.isEmpty()) {
             return;
         }
@@ -63,35 +65,35 @@ public final class MetadataUtils {
         for (MetadataFilter f : filters) {
             switch (f.type()) {
                 case CONTAINS: {
-                    q.addConditions(jsonText(column, f.key()).contains(f.value()));
+                    q.addConditions(jsonbText(column, f.key()).contains(f.value()));
                     break;
                 }
                 case NOT_CONTAINS: {
-                    q.addConditions(jsonText(column, f.key()).notContains(f.value()));
+                    q.addConditions(jsonbText(column, f.key()).notContains(f.value()));
                     break;
                 }
                 case EQUALS: {
-                    q.addConditions(jsonText(column, f.key()).eq(f.value()));
+                    q.addConditions(jsonbEq(column, f.key(), f.value()));
                     break;
                 }
                 case NOT_EQUALS: {
-                    q.addConditions(jsonText(column, f.key()).notEqual(f.value()));
+                    q.addConditions(jsonbEq(column, f.key(), f.value()).not());
                     break;
                 }
                 case STARTS_WITH: {
-                    q.addConditions(jsonText(column, f.key()).startsWith(f.value()));
+                    q.addConditions(jsonbText(column, f.key()).startsWith(f.value()));
                     break;
                 }
                 case NOT_STARTS_WITH: {
-                    q.addConditions(jsonText(column, f.key()).startsWith(f.value()).not());
+                    q.addConditions(jsonbText(column, f.key()).startsWith(f.value()).not());
                     break;
                 }
                 case ENDS_WITH: {
-                    q.addConditions(jsonText(column, f.key()).endsWith(f.value()));
+                    q.addConditions(jsonbText(column, f.key()).endsWith(f.value()));
                     break;
                 }
                 case NOT_ENDS_WITH: {
-                    q.addConditions(jsonText(column, f.key()).endsWith(f.value()).not());
+                    q.addConditions(jsonbText(column, f.key()).endsWith(f.value()).not());
                     break;
                 }
             }

@@ -90,12 +90,12 @@ public class ProcessEventDao extends AbstractDao {
 
             UUID eventCorrelationId = filter.eventCorrelationId();
             if (eventCorrelationId != null) {
-                q.and(PgUtils.jsonText(PROCESS_EVENTS.EVENT_DATA, "correlationId").eq(eventCorrelationId.toString()));
+                q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "correlationId").eq(eventCorrelationId.toString()));
             }
 
             EventPhase eventPhase = filter.eventPhase();
             if (eventPhase != null) {
-                q.and(PgUtils.jsonText(PROCESS_EVENTS.EVENT_DATA, "phase").eq(eventPhase.getKey()));
+                q.and(PgUtils.jsonbText(PROCESS_EVENTS.EVENT_DATA, "phase").eq(eventPhase.getKey()));
             }
 
             int limit = filter.limit();

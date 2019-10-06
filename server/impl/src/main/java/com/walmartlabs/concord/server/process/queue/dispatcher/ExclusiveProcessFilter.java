@@ -37,7 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonText;
+import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
@@ -79,7 +79,7 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
                 .from(q)
                 .where(q.PROJECT_ID.eq(item.projectId())
                         .and(q.CURRENT_STATUS.in(RUNNING_PROCESS_STATUSES)
-                                .and( jsonText(q.EXCLUSIVE, "group").eq(group))));
+                                .and( jsonbText(q.EXCLUSIVE, "group").eq(group))));
 
         // parent's
         if (item.parentInstanceId() != null) {
