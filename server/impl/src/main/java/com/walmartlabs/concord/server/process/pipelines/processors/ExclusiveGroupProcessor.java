@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.db.PgUtils.jsonText;
+import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.*;
 
@@ -143,7 +143,7 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
         public boolean exists(DSLContext tx, UUID currentInstanceId, UUID parentInstanceId, UUID projectId, String exclusiveGroup) {
             SelectConditionStep<Record1<Integer>> s = tx.selectOne()
                             .from(PROCESS_QUEUE)
-                            .where(jsonText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
+                            .where(jsonbText(PROCESS_QUEUE.EXCLUSIVE, "group").eq(exclusiveGroup)
                                     .and(PROCESS_QUEUE.PROJECT_ID.eq(projectId)
                                             .and(PROCESS_QUEUE.INSTANCE_ID.notEqual(currentInstanceId)
                                                     .and(PROCESS_QUEUE.CURRENT_STATUS.in(RUNNING_STATUSES)))));

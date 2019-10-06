@@ -4,8 +4,8 @@
 
 ### Changed
 
-- concord-server: some process queue fetching optimizations for
-partitioned tables;
+- concord-server: optimize `GET /api/v2/process` endpoint, equality
+filter on metadata fields is now much faster;
 - concord-server: additional metrics for LDAP and Ansible event
 processing.
 
