@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: some optimizations for the Ansible event
+processing;
 - concord-server: optimize `GET /api/v2/process` endpoint, equality
 filter on metadata fields is now much faster;
 - concord-server: additional metrics for LDAP and Ansible event

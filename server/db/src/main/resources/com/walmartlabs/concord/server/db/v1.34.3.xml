@@ -27,4 +27,34 @@
             create index concurrently IDX_PROC_META on PROCESS_QUEUE using gin (META jsonb_path_ops)
         </sql>
     </changeSet>
+
+    <changeSet id="1344100" author="ybrigo@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="EVENT_PROCESSOR_MARKER"/>
+        </preConditions>
+
+        <dropTable tableName="EVENT_PROCESSOR_MARKER"/>
+    </changeSet>
+
+    <changeSet id="1344110" author="ybrigo@gmail.com">
+        <createTable tableName="EVENT_PROCESSOR_MARKER">
+            <column name="PROCESSOR_NAME" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="EVENT_SEQ" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1344120" author="ybrigo@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="EVENT_PROCESSOR_MARKERS"/>
+        </preConditions>
+
+        <sql>
+            insert into event_processor_marker(processor_name, event_seq)
+            select processor_name, max(event_seq) from event_processor_markers group by processor_name;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

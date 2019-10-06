@@ -12,6 +12,7 @@
         </addColumn>
     </changeSet>
 
+    <!-- removed in 1.34.3+
     <changeSet id="1280100" author="ybrigo@gmail.com">
         <createTable tableName="PROCESS_EVENT_STATS">
             <column name="INSTANCE_CREATED_DATE" type="timestamp">
@@ -22,7 +23,9 @@
             </column>
         </createTable>
     </changeSet>
+    -->
 
+    <!-- removed in 1.34.3+
     <changeSet id="1280200" author="ybrigo@gmail.com">
         <createTable tableName="EVENT_PROCESSOR_MARKERS">
             <column name="PROCESSOR_NAME" type="varchar(64)">
@@ -36,6 +39,7 @@
             </column>
         </createTable>
     </changeSet>
+    -->
 
     <changeSet id="1280200" author="ibodrov@gmail.com">
         <sql>

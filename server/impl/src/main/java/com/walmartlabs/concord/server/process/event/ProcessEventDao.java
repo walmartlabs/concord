@@ -25,7 +25,6 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.jooq.tables.ProcessEventStats;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessEventsRecord;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -34,17 +33,17 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.sql.*;
+import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENT_STATS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -133,8 +132,6 @@ public class ProcessEventDao extends AbstractDao {
                 .set(PROCESS_EVENTS.EVENT_DATA, objectMapper.toJSONB(data))
                 .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .fetchOne();
-
-        updateStats(tx, Collections.singletonList(new StatItem(startOfDay(processKey.getCreatedAt()), r.getEventSeq())));
     }
 
     public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, Map<String, Object> data) {
@@ -157,8 +154,6 @@ public class ProcessEventDao extends AbstractDao {
                     ps.addBatch();
                 }
                 ps.executeBatch();
-
-                updateStats(tx, toStatItems(ps, processKeys::get));
             }
         });
     }
@@ -201,31 +196,8 @@ public class ProcessEventDao extends AbstractDao {
                     ps.addBatch();
                 }
                 ps.executeBatch();
-
-                updateStats(tx, toStatItems(ps, index -> processKey));
             }
         });
-    }
-
-    private static void updateStats(DSLContext tx, List<StatItem> items) {
-        if (items.isEmpty()) {
-            return;
-        }
-
-        ProcessEventStats p = PROCESS_EVENT_STATS.as("p");
-        BatchBindStep q = tx.batch(
-                tx.insertInto(p)
-                        .columns(p.INSTANCE_CREATED_DATE, p.MAX_EVENT_SEQ)
-                        .values((Timestamp) null, null)
-                        .onDuplicateKeyUpdate()
-                        .set(p.MAX_EVENT_SEQ, when(p.MAX_EVENT_SEQ.lessThan((Long)null), value((Long)null)).otherwise(p.MAX_EVENT_SEQ))
-        );
-
-        for (StatItem i : items) {
-            q.bind(value(i.instanceCreatedDate), value(i.maxEventSeq), value(i.maxEventSeq), value(i.maxEventSeq), value(i.maxEventSeq));
-        }
-
-        q.execute();
     }
 
     private ProcessEventEntry toEntry(Record5<Long, UUID, String, Timestamp, JSONB> r) {
@@ -236,38 +208,5 @@ public class ProcessEventDao extends AbstractDao {
                 .eventDate(r.value4())
                 .data(objectMapper.fromJSONB(r.value5()))
                 .build();
-    }
-
-    private static List<StatItem> toStatItems(PreparedStatement ps, Function<Integer, ProcessKey> processKey) throws SQLException {
-        Map<Timestamp, Long> result = new HashMap<>();
-
-        int index = 0;
-        try (ResultSet rs = ps.getGeneratedKeys()) {
-            while (rs.next()) {
-                long eventSeq = rs.getLong(PROCESS_EVENTS.EVENT_SEQ.getName());
-                Timestamp createdDate = startOfDay(processKey.apply(index).getCreatedAt());
-                result.compute(createdDate, (k, v) -> (v == null) ? eventSeq : Math.max(eventSeq, v));
-                index++;
-            }
-        }
-        return result.entrySet().stream()
-                .map(e -> new StatItem(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    private static Timestamp startOfDay(Timestamp ts) {
-        return Timestamp.valueOf(ts.toLocalDateTime().toLocalDate().atTime(LocalTime.MIN));
-    }
-
-    private static class StatItem {
-
-        private final Timestamp instanceCreatedDate;
-
-        private final long maxEventSeq;
-
-        private StatItem(Timestamp instanceCreatedDate, long maxEventSeq) {
-            this.instanceCreatedDate = instanceCreatedDate;
-            this.maxEventSeq = maxEventSeq;
-        }
     }
 }

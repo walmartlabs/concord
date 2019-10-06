@@ -143,9 +143,7 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
                     field("{0}->>'hostStatus'", String.class, pe.EVENT_DATA))
                     .from(pe)
                     .where(pe.EVENT_TYPE.eq(Constants.EVENT_TYPE)
-                            .and(pe.INSTANCE_CREATED_AT.greaterOrEqual(marker.instanceCreatedStart())
-                                    .and(pe.INSTANCE_CREATED_AT.lessThan(marker.instanceCreatedEnd())
-                                            .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())))));
+                            .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));
 
             return q.orderBy(pe.EVENT_SEQ)
                     .limit(count)
