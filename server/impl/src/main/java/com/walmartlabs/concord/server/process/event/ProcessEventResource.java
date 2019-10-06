@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.event;
  */
 
 import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -30,6 +31,7 @@ import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -63,6 +65,9 @@ public class ProcessEventResource implements Resource {
     private final ProcessQueueDao queueDao;
     private final ProjectAccessManager projectAccessManager;
 
+    @InjectMeter
+    private final Meter eventsReceived;
+
     private final Histogram batchInsertHistogram;
 
     @Inject
@@ -70,12 +75,15 @@ public class ProcessEventResource implements Resource {
                                 ProcessKeyCache processKeyCache,
                                 ProcessQueueDao queueDao,
                                 ProjectAccessManager projectAccessManager,
+                                Meter eventsReceived,
                                 MetricRegistry metricRegistry) {
 
         this.eventDao = eventDao;
         this.processKeyCache = processKeyCache;
         this.queueDao = queueDao;
         this.projectAccessManager = projectAccessManager;
+        this.eventsReceived = eventsReceived;
+
         this.batchInsertHistogram = metricRegistry.histogram("process-events-batch-insert");
     }
 
@@ -95,6 +103,7 @@ public class ProcessEventResource implements Resource {
 
         ProcessKey processKey = assertProcessKey(processInstanceId);
         eventDao.insert(processKey, req.getEventType(), req.getEventDate(), req.getData());
+        eventsReceived.mark();
     }
 
     /**
@@ -111,9 +120,14 @@ public class ProcessEventResource implements Resource {
     public void batchEvent(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                            @ApiParam List<ProcessEventRequest> data) {
 
+        if (data.isEmpty()) {
+            return;
+        }
+
         ProcessKey processKey = assertProcessKey(processInstanceId);
         eventDao.insert(processKey, data);
 
+        eventsReceived.mark(data.size());
         batchInsertHistogram.update(data.size());
     }
 
