@@ -57,4 +57,10 @@
             select processor_name, max(event_seq) from event_processor_markers group by processor_name;
         </sql>
     </changeSet>
+
+    <changeSet id="1344200" author="ibodrov@gmail.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_PROC_ENQUEUED on PROCESS_QUEUE (CURRENT_STATUS) where CURRENT_STATUS = 'ENQUEUED';
+        </sql>
+    </changeSet>
 </databaseChangeLog>
