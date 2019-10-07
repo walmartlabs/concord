@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: ignore individual errors when refreshing multiple
+repositories at once;
 - concord-server-db: add missing index on
 `PROCESS_CHECKPOINTS (INSTANCE_ID)`;
 - concord-server: some optimizations for the Ansible event
