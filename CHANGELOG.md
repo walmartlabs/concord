@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server-db: add missing index on
+`PROCESS_CHECKPOINTS (INSTANCE_ID)`;
 - concord-server: some optimizations for the Ansible event
 processing;
 - concord-server: optimize `GET /api/v2/process` endpoint, equality

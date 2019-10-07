@@ -63,4 +63,22 @@
             create index concurrently IDX_PROC_ENQUEUED on PROCESS_QUEUE (CURRENT_STATUS) where CURRENT_STATUS = 'ENQUEUED';
         </sql>
     </changeSet>
+
+    <changeSet id="1344300" author="ibodrov@gmail.com" runInTransaction="false">
+        <!-- skip if the table is partitioned -->
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*)
+                from pg_inherits
+                    join pg_class parent ON pg_inherits.inhparent = parent.oid
+                    join pg_class child ON pg_inherits.inhrelid = child.oid
+                    join pg_namespace nmsp_parent ON nmsp_parent.oid = parent.relnamespace
+                    join pg_namespace nmsp_child ON nmsp_child.oid = child.relnamespace
+                where parent.relname = 'process_checkpoints'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            create index concurrently IDX_CHECKPOINTS_PROC_ID on PROCESS_CHECKPOINTS (INSTANCE_ID)
+        </sql>
+    </changeSet>
 </databaseChangeLog>
