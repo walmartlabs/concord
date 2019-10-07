@@ -79,11 +79,25 @@ public class RepositoryRefresher extends AbstractDao {
     }
 
     public void refresh(List<UUID> repositoryIds) {
-        List<RepositoryEntry> repositories = repositoryIds.stream().map(repositoryDao::get).collect(Collectors.toList());
+        List<RepositoryEntry> repositories = repositoryIds.stream()
+                .map(repositoryDao::get)
+                .collect(Collectors.toList());
         for(RepositoryEntry r : repositories) {
-            ProjectEntry project = projectDao.get(r.getProjectId());
-            refresh(project.getOrgName(), project.getName(), r.getName(), true);
+            try {
+                refresh(r);
+            } catch (Exception e) {
+                log.warn("refresh ['{}'] -> error: {}", r.getId(), e.getMessage());
+            }
         }
+    }
+
+    private void refresh(RepositoryEntry r) {
+        ProjectEntry project = projectDao.get(r.getProjectId());
+        if (project == null) {
+            log.warn("refresh ['{}'] -> project not found", r.getProjectId());
+            return;
+        }
+        refresh(project.getOrgName(), project.getName(), r.getName(), true);
     }
 
     public void refresh(String orgName, String projectName, String repositoryName, boolean sync) {
