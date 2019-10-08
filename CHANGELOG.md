@@ -4,6 +4,7 @@
 
 ### Added
 
+- http-tasks: support for `multipart/form-data` requests;
 - concord-agent: support for running processes with custom JVM
 parameters.
 

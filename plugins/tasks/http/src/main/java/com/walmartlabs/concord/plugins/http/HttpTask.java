@@ -114,7 +114,8 @@ public class HttpTask implements Task {
         JSON,
         FILE,
         STRING,
-        FORM;
+        FORM,
+        FORMDATA;
 
         public static boolean isMember(String aName) {
             RequestType[] requestTypes = RequestType.values();
@@ -147,7 +148,7 @@ public class HttpTask implements Task {
     /**
      * Http Task Constant Class.
      */
-    final class HttpTaskConstant {
+    static final class HttpTaskConstant {
 
         static final String AUTH_KEY = "auth";
         static final String BASIC_KEY = "basic";

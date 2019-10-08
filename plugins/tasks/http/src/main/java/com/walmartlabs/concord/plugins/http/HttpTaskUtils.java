@@ -28,6 +28,10 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.AbstractContentBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
@@ -42,6 +46,7 @@ import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
  * Utility class which contains helper methods for {@link HttpTask}
  */
 public final class HttpTaskUtils {
+
     /**
      * Method to get the basic authorization header entry using the basic authorization params provided in the concord.yml
      * file. It will use either the token key or the username and password key to generate the header entry. If token key
@@ -65,7 +70,7 @@ public final class HttpTaskUtils {
      * @param password password
      * @return Base64 encoded {@link String}
      */
-    static String getBasicAuthorization(String username, String password) {
+    private static String getBasicAuthorization(String username, String password) {
         return Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
     }
 
@@ -102,6 +107,8 @@ public final class HttpTaskUtils {
             });
 
             return new UrlEncodedFormEntity(params);
+        } else if ((RequestType.FORMDATA == requestType) && body instanceof Map) {
+            return createMultipartBody((Map<String, Object>) body);
         } else if ((RequestType.JSON == requestType)) {
             if (body instanceof String) {
                 String strBody = (String) body;
@@ -118,13 +125,61 @@ public final class HttpTaskUtils {
         throw new IllegalArgumentException("'" + REQUEST_KEY + ": " + requestType.toString().toLowerCase() + "' is not compatible with '" + BODY_KEY + "'");
     }
 
+    @SuppressWarnings("unchecked")
+    private static HttpEntity createMultipartBody(Map<String, Object> body) {
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+
+        for (Map.Entry<String, Object> e : body.entrySet()) {
+            String k = e.getKey();
+            Object v = e.getValue();
+
+            if (v instanceof String) {
+                String value = (String) v;
+                if (value.startsWith("@")) {
+                    builder.addPart(k, createContentBody(value, ContentType.APPLICATION_OCTET_STREAM));
+                } else {
+                    builder.addPart(k, createContentBody(value, ContentType.TEXT_PLAIN));
+                }
+            }
+
+            if (v instanceof Map) {
+                Map<String, String> field = (Map<String, String>) v;
+                String type = field.get("type");
+                String data = field.get("data");
+
+                if (data == null) {
+                    throw new IllegalArgumentException("field -> " + k + " missing request data");
+                }
+
+                builder.addPart(k, createContentBody(data, ContentType.parse(type)));
+            }
+        }
+
+        return builder.build();
+
+    }
+
+    private static AbstractContentBody createContentBody(String value, ContentType type) {
+        if (ContentType.APPLICATION_OCTET_STREAM.getMimeType().equals(type.getMimeType())) {
+            String filePath = value.substring(1);
+            File file = new File(filePath);
+            if (!file.exists()) {
+                throw new IllegalArgumentException("file -> " + filePath + " does not exists");
+            }
+
+            return new FileBody(file);
+        }
+
+        return new StringBody(value, type);
+    }
+
     /**
      * Method to validate the json string
      *
      * @param body json string
      * @return true if json is valid
      */
-    public static boolean isValidJSON(String body) {
+    private static boolean isValidJSON(String body) {
         ObjectMapper om = new ObjectMapper();
         try {
             om.readTree(body);
