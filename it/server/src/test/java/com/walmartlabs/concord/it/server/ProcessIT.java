@@ -641,21 +641,17 @@ public class ProcessIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testDisableProcess() throws Exception {
-
-        // prepare the payload
-
         byte[] payload = archive(ProcessIT.class.getResource("disableProcess").toURI());
 
-        // start the process
+        // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
         assertNotNull(spr.getInstanceId());
 
-        // wait for completion
+        // ---
 
+        ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-
         processApi.disable(pir.getInstanceId(), true);
 
         // avoid using deprecated get method
@@ -663,6 +659,22 @@ public class ProcessIT extends AbstractServerIT {
         pir = processV2Api.get(pir.getInstanceId(), null);
 
         assertTrue(pir.isDisabled());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCustomJvmArgs() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("customJvmArgs").toURI());
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Got: hello.*", ab);
     }
 
     @SuppressWarnings("unchecked")

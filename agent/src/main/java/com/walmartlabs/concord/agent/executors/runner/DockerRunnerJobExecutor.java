@@ -78,7 +78,6 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
 
         RunnerCommandBuilder runner = new RunnerCommandBuilder()
                 .javaCmd(javaCmd)
-                .workDir(job.getPayloadDir())
                 .procDir(runnerDir)
                 .runnerPath(runnerPath)
                 .runnerCfgPath(runnerCfgPath);

@@ -20,40 +20,25 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.project.InternalConstants;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class RunnerCommandBuilder {
 
-    private final ObjectMapper objectMapper;
-
     private String javaCmd;
-    private Path workDir;
     private Path procDir;
     private Path runnerPath;
     private Path runnerCfgPath;
     private String logLevel;
     private Path extraDockerVolumesFile;
+    private List<String> jvmParams;
 
     public RunnerCommandBuilder() {
-        this.objectMapper = new ObjectMapper();
     }
 
     public RunnerCommandBuilder javaCmd(String javaCmd) {
         this.javaCmd = javaCmd;
-        return this;
-    }
-
-    public RunnerCommandBuilder workDir(Path workDir) {
-        this.workDir = workDir;
         return this;
     }
 
@@ -82,28 +67,32 @@ public class RunnerCommandBuilder {
         return this;
     }
 
+    public RunnerCommandBuilder jvmParams(List<String> jvmParams) {
+        this.jvmParams = jvmParams;
+        return this;
+    }
+
     public String[] build() {
         List<String> l = new ArrayList<>();
 
         l.add(javaCmd);
 
         // JVM arguments
-
-        List<String> agentParams = getAgentJvmParams(workDir);
-        if (agentParams != null) {
-            l.addAll(agentParams);
+        if (jvmParams != null) {
+            l.addAll(jvmParams);
         } else {
-            // default JVM parameters
-            l.add("-noverify");
             l.add("-Xmx128m");
-            l.add("-Djavax.el.varArgs=true");
-            l.add("-Djava.security.egd=file:/dev/./urandom");
-            l.add("-Djava.net.preferIPv4Stack=true");
-
-            // workaround for JDK-8142508
-            l.add("-Dsun.zip.disableMemoryMapping=true");
         }
 
+        // default JVM parameters
+        l.add("-noverify");
+        l.add("-Djavax.el.varArgs=true");
+        l.add("-Djava.security.egd=file:/dev/./urandom");
+        l.add("-Djava.net.preferIPv4Stack=true");
+        // workaround for JDK-8142508
+        l.add("-Dsun.zip.disableMemoryMapping=true");
+
+        // working directory
         if (procDir != null) {
             l.add("-Duser.dir=" + procDir.toString());
         }
@@ -116,6 +105,7 @@ public class RunnerCommandBuilder {
             l.add("-DlogLevel=" + logLevel);
         }
 
+        // additional Docker volumes to mount when running containers inside the flow
         if (extraDockerVolumesFile != null) {
             // TODO move into RunnerConfiguration
             l.add("-Dconcord.dockerExtraVolumes=" + extraDockerVolumesFile);
@@ -134,20 +124,5 @@ public class RunnerCommandBuilder {
         l.add(runnerCfgPath.toString());
 
         return l.toArray(new String[0]);
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<String> getAgentJvmParams(Path workDir) {
-        Path p = workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME);
-        if (!Files.exists(p)) {
-            return null;
-        }
-
-        try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            return (List<String>) m.get(InternalConstants.Agent.JVM_ARGS_KEY);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
