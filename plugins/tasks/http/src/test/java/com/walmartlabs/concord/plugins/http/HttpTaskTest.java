@@ -105,6 +105,25 @@ public class HttpTaskTest extends AbstractHttpTaskTest {
         verify(postRequestedFor(urlEqualTo("/post"))
                 .withHeader("Content-Type", equalTo("application/json")));
     }
+    @Test
+    public void testExecutePostRequestForMultipart() throws Exception {
+        initCxtForRequest(mockContext, "POST", "formData", "json",
+                "http://localhost:" + rule.port() + "/post", false, 0);
+
+        HashMap<String, Object> formInput = new HashMap<>();
+        HashMap<String, Object> field = new HashMap<>();
+        field.put("type", "text/plain");
+        field.put("data", "\"string value\"");
+
+        formInput.put("field1", "string value");
+        formInput.put("field2", "src/test/resources/__files/file.bin");
+        formInput.put("field3", field);
+        when(mockContext.getVariable("body")).thenReturn(formInput);
+        task.execute(mockContext);
+
+        assertNotNull(response);
+        assertTrue((Boolean) response.get("success"));
+    }
 
     @Test(expected = Exception.class)
     public void testExecuteForException() throws Exception {
