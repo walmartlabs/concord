@@ -41,11 +41,13 @@ import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -127,17 +129,17 @@ public class RunnerJobExecutor {
     }
 
     protected ProcessEntry buildProcessEntry(RunnerJob job) throws Exception {
-        ProcessEntry pe;
-        if (canUsePrefork(job)) {
-            String[] cmd = createCmd(job);
-            pe = fork(job, cmd);
+        List<String> jvmParams = getAgentJvmParams(job.getPayloadDir(), job.getProcessCfg());
+        String[] cmd = createCmd(job, jvmParams);
+
+        boolean prefork = canUsePrefork(job);
+        if (prefork) {
+            return fork(job, cmd);
         } else {
             log.info("start ['{}'] -> can't use pre-forked instances", job.getInstanceId());
-            String[] cmd = createCmd(job);
             Path procDir = IOUtils.createTempDir("onetime");
-            pe = startOneTime(job, cmd, procDir);
+            return startOneTime(job, cmd, procDir);
         }
-        return pe;
     }
 
     private void exec(RunnerJob job, ProcessEntry pe) throws Exception {
@@ -281,16 +283,19 @@ public class RunnerJobExecutor {
         job.getLog().info("Dependencies: {}", b);
     }
 
-    private String[] createCmd(RunnerJob job) throws IOException {
+    private String[] createCmd(RunnerJob job, List<String> jvmParams) throws IOException {
         Path runnerCfgFile = storeRunnerCfg(cfg.runnerCfgDir(), job.getRunnerCfg());
 
         RunnerCommandBuilder runner = new RunnerCommandBuilder()
                 .javaCmd(cfg.agentJavaCmd())
-                .workDir(job.getPayloadDir())
                 .logLevel(getLogLevel(job))
                 .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
                 .runnerPath(cfg.runnerPath().toAbsolutePath())
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath());
+
+        if (jvmParams != null) {
+            runner.jvmParams(jvmParams);
+        }
 
         return runner.build();
     }
@@ -400,6 +405,43 @@ public class RunnerJobExecutor {
     }
 
     @SuppressWarnings("unchecked")
+    private List<String> getAgentJvmParams(Path workDir, Map<String, Object> processCfg) {
+        Path p = workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME);
+        if (!Files.exists(p)) {
+            // get jvm args from the process' configuration
+            return getJvmArgsFromConfig(processCfg);
+        }
+
+        try (InputStream in = Files.newInputStream(p)) {
+            Map<String, Object> m = objectMapper.readValue(in, Map.class);
+            return (List<String>) m.get(InternalConstants.Agent.JVM_ARGS_KEY);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static List<String> getJvmArgsFromConfig(Map<String, Object> processCfg) {
+        Map<String, Object> requirements = MapUtils.get(processCfg, InternalConstants.Request.REQUIREMENTS, null);
+        if (requirements == null) {
+            return null;
+        }
+
+        // TODO constants?
+        Map<String, Object> jvm = MapUtils.get(requirements, "jvm", null);
+        if (jvm == null) {
+            return null;
+        }
+
+        // TODO constants?
+        List<String> extraArgs = MapUtils.getList(jvm, "extraArgs", null);
+        if (extraArgs == null || extraArgs.isEmpty()) {
+            return null;
+        }
+
+        return extraArgs;
+    }
+
+    @SuppressWarnings("unchecked")
     private static Map<String, Object> readPolicyRules(RunnerJob job) throws IOException {
         Path workDir = job.getPayloadDir();
 
@@ -435,7 +477,13 @@ public class RunnerJobExecutor {
             return false;
         }
 
-        // the process supplied its own JVM parameters, can't use preforking
+        // the process supplied its own JVM parameters in concord.yml, can't use preforking
+        List<String> jvmExtraArgs = getJvmArgsFromConfig(job.getProcessCfg());
+        if (jvmExtraArgs != null) {
+            return false;
+        }
+
+        // the process supplied its own JVM parameters in _agent.json, can't use preforking
         return !Files.exists(workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME));
     }
 
@@ -505,12 +553,19 @@ public class RunnerJobExecutor {
     public interface RunnerJobExecutorConfiguration {
 
         String agentId();
+
         String serverApiBaseUrl();
+
         String agentJavaCmd();
+
         Path dependencyListDir();
+
         Path dependencyCacheDir();
+
         Path runnerPath();
+
         Path runnerCfgDir();
+
         boolean runnerSecurityManagerEnabled();
 
         @Value.Default

@@ -159,7 +159,7 @@ public class Constants {
         public static final String START_AT_KEY = "startAt";
 
         /**
-         * Requirements.
+         * Process requirements (e.g. agent flavor, JVM args, etc).
          */
         public static final String REQUIREMENTS = "requirements";
 

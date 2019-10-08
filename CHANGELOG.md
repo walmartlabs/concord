@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent: support for running processes with custom JVM
+parameters.
+
+
+
 ## [1.34.3] - 2019-10-07
 
 ### Changed

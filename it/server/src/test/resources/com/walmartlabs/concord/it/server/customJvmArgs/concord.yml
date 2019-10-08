@@ -1,0 +1,12 @@
+configuration:
+  requirements:
+    jvm:
+      extraArgs:
+        - "-DcustomProp=hello"
+
+flows:
+  default:
+    - script: js
+      body: |
+        var System = Java.type('java.lang.System');
+        print("Got: " + System.getProperty("customProp"));
