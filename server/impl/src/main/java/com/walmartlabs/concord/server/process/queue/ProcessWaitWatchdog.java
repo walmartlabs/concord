@@ -60,18 +60,16 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             ProcessStatus.TIMED_OUT));
 
     private final WatchdogDao dao;
-    private final ProcessQueueDao processQueueDao;
     private final ProcessQueueManager queueManager;
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
 
     @Inject
     @SuppressWarnings("unchecked")
     public ProcessWaitWatchdog(WatchdogDao dao,
-                               ProcessQueueDao processQueueDao,
-                               Set<ProcessWaitHandler> handlers, ProcessQueueManager queueManager) {
+                               ProcessQueueManager queueManager,
+                               Set<ProcessWaitHandler> handlers) {
 
         this.dao = dao;
-        this.processQueueDao = processQueueDao;
         this.queueManager = queueManager;
         this.processWaitHandlers = new HashMap<>();
 
@@ -171,8 +169,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                     s.and(q.LAST_UPDATED_AT.greaterThan(lastUpdatedAt));
                 }
 
-                return s.orderBy(q.LAST_UPDATED_AT)
-                        .limit(1)
+                return s.limit(1)
                         .fetchOne(r -> WaitingProcess.builder()
                                 .instanceId(r.value1())
                                 .status(ProcessStatus.valueOf(r.value2()))

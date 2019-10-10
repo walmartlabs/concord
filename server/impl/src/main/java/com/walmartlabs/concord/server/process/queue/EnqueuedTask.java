@@ -156,7 +156,7 @@ public class EnqueuedTask extends PeriodicTask {
                 List<ProcessKey> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
                         .from(PROCESS_QUEUE)
                         .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name()))
-                        .orderBy(PROCESS_QUEUE.CREATED_AT)
+                        .orderBy(PROCESS_QUEUE.LAST_UPDATED_AT)
                         .limit(limit)
                         .forUpdate()
                         .skipLocked()

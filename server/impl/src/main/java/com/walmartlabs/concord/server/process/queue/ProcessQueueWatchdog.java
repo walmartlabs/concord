@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
@@ -295,7 +294,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     .from(q)
                     .where(q.CURRENT_STATUS.in(Utils.toString(statuses))
                             .and(q.LAST_UPDATED_AT.lessThan(cutOff)))
-                    .orderBy(q.CREATED_AT)
                     .limit(maxEntries)
                     .forUpdate()
                     .skipLocked()
@@ -312,7 +310,6 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
                             .and(q.LAST_RUN_AT.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentTimestamp())))
-                    .orderBy(q.CREATED_AT)
                     .limit(maxEntries)
                     .forUpdate()
                     .skipLocked()
@@ -355,14 +352,14 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         }
     }
 
-    private static final class ProcessEntry implements Serializable {
+    private static final class ProcessEntry {
 
         private final ProcessKey processKey;
         private final UUID projectId;
         private final UUID initiatorId;
         private final Imports imports;
 
-        private ProcessEntry(ProcessKey processKey, UUID projectId, UUID initiatorId,  Imports imports) {
+        private ProcessEntry(ProcessKey processKey, UUID projectId, UUID initiatorId, Imports imports) {
             this.processKey = processKey;
             this.projectId = projectId;
             this.initiatorId = initiatorId;
