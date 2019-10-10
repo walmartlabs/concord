@@ -335,7 +335,7 @@ public class Dispatcher extends PeriodicTask {
                             q.START_AT.le(currentTimestamp())))
                     .and(q.WAIT_CONDITIONS.isNull()));
 
-            return s.orderBy(q.CREATED_AT)
+            return s.orderBy(q.LAST_UPDATED_AT)
                     .offset(offset)
                     .limit(limit)
                     .forUpdate()
