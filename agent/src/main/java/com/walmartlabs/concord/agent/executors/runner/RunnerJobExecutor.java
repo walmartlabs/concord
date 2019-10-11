@@ -30,6 +30,7 @@ import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.Utils;
+import com.walmartlabs.concord.agent.Worker;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
@@ -163,9 +164,14 @@ public class RunnerJobExecutor {
             try {
                 code = proc.waitFor();
             } catch (Exception e) {
+                // wait for the log to finish
+                logStream.waitForCompletion();
                 handleError(job, proc, e.getMessage());
                 throw new ExecutionException("Error while executing a job: " + e.getMessage());
             }
+
+            // wait for the log to finish
+            logStream.waitForCompletion();
 
             if (code != 0) {
                 log.warn("exec ['{}'] -> finished with {}", instanceId, code);
@@ -539,8 +545,12 @@ public class RunnerJobExecutor {
                 log.warn("waitForCompletion -> timeout waiting for the log stream of {}", job.getInstanceId());
             }
 
-            ProcessLog processLog = job.getLog();
-            processLog.delete();
+            try {
+                ProcessLog processLog = job.getLog();
+                processLog.delete();
+            } catch (Exception e) {
+                log.warn("waitForCompletion -> cleanup of {} error: {}", job.getInstanceId(), e.getMessage());
+            }
         }
     }
 
