@@ -6,6 +6,8 @@
 
 - concord-server: new `agent-workers-available` metric, shows how
 many Agent worker slots are available;
+- docker: support for capturing the command's `stderr` in addition to
+`stdout`;
 - http-tasks: support for `multipart/form-data` requests;
 - concord-agent: support for running processes with custom JVM
 parameters.

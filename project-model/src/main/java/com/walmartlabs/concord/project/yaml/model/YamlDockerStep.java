@@ -37,6 +37,7 @@ public class YamlDockerStep extends YamlStep {
     private final String envFile;
     private final List<String> hosts;
     private final String stdout;
+    private final String stderr;
 
     public YamlDockerStep(JsonLocation location,
                           String image,
@@ -46,7 +47,8 @@ public class YamlDockerStep extends YamlStep {
                           Map<String, Object> env,
                           String envFile,
                           List<String> hosts,
-                          String stdout) {
+                          String stdout,
+                          String stderr) {
 
         super(location);
 
@@ -58,6 +60,7 @@ public class YamlDockerStep extends YamlStep {
         this.envFile = envFile;
         this.hosts = hosts;
         this.stdout = stdout;
+        this.stderr = stderr;
     }
 
     public String getImage() {
@@ -92,6 +95,10 @@ public class YamlDockerStep extends YamlStep {
         return stdout;
     }
 
+    public String getStderr() {
+        return stderr;
+    }
+
     @Override
     public String toString() {
         return "YamlDockerStep{" +
@@ -103,6 +110,7 @@ public class YamlDockerStep extends YamlStep {
                 ", envFile='" + envFile + '\'' +
                 ", hosts=" + hosts +
                 ", stdout='" + stdout + '\'' +
+                ", stderr='" + stderr + '\'' +
                 "} " + super.toString();
     }
 }

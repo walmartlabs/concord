@@ -5,4 +5,4 @@ flows:
 
 configuration:
   arguments:
-    name: "world" 
+    name: "world"

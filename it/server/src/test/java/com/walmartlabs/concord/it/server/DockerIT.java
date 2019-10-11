@@ -29,8 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.assertNotNull;
 
 public class DockerIT extends AbstractServerIT {
@@ -84,7 +83,60 @@ public class DockerIT extends AbstractServerIT {
         assertNotNull(pir.getLogFileName());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*!! Hello, world !!.*", ab);
+        assertLog(".*!! Hello, world.*", ab);
         assertLog(".*DOCKER: STDERR STILL WORKS.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testNoLogWithStdOut() throws Exception {
+        byte[] payload = archive(DockerIT.class.getResource("dockerNoLogWithStdOut").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.image", ITConstants.DOCKER_ANSIBLE_IMAGE);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertNotNull(pir.getLogFileName());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertNoLog(".*!! Hello, world .*", ab);
+        assertNoLog(".*STDERR WORKS !!.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testLogWithoutStdOut() throws Exception {
+        byte[] payload = archive(DockerIT.class.getResource("dockerLogWithoutStdOut").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.image", ITConstants.DOCKER_ANSIBLE_IMAGE);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertNotNull(pir.getLogFileName());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*DOCKER: Hello, world.*", ab);
+        assertLog(".*DOCKER: STDERR WORKS.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testLogWithStdErr() throws Exception {
+        byte[] payload = archive(DockerIT.class.getResource("dockerLogWithStdErr").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.image", ITConstants.DOCKER_ANSIBLE_IMAGE);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertNotNull(pir.getLogFileName());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*STDERR: STDERR WORKS.*", ab);
     }
 }
