@@ -4,14 +4,14 @@ package com.walmartlabs.concord.server.cfg;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,41 +25,23 @@ import com.walmartlabs.ollie.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.Serializable;
 
 @Named
 @Singleton
-public class ProcessQueueConfiguration implements Serializable {
+public class LockingConfiguration {
 
     @Inject
-    @Config("queue.rateLimit")
-    private int rateLimit;
+    @Config("locking.maxAdvisoryLocks")
+    private int maxAdvisoryLocks;
 
-    @Inject
-    @Config("queue.maxRateTimeout")
-    private int maxRateTimeout;
-
-    @Inject
-    @Config("queue.dispatcher.pollDelay")
-    private long dispatcherPollDelay;
-
-    @Inject
-    @Config("queue.dispatcher.batchSize")
-    private int dispatcherBatchSize;
-
-    public int getRateLimit() {
-        return rateLimit;
+    public LockingConfiguration() {
     }
 
-    public int getMaxRateTimeout() {
-        return maxRateTimeout;
+    public LockingConfiguration(int maxAdvisoryLocks) {
+        this.maxAdvisoryLocks = maxAdvisoryLocks;
     }
 
-    public long getDispatcherPollDelay() {
-        return dispatcherPollDelay;
-    }
-
-    public int getDispatcherBatchSize() {
-        return dispatcherBatchSize;
+    public int getMaxAdvisoryLocks() {
+        return maxAdvisoryLocks;
     }
 }

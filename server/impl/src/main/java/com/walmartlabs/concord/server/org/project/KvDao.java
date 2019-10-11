@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.project;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.org.project;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.jooq.tables.ProjectKvStore;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -38,9 +39,12 @@ import static com.walmartlabs.concord.server.jooq.tables.ProjectKvStore.PROJECT_
 @Named
 public class KvDao extends AbstractDao {
 
+    private final Locks locks;
+
     @Inject
-    public KvDao(@MainDB Configuration cfg) {
+    public KvDao(@MainDB Configuration cfg, Locks locks) {
         super(cfg);
+        this.locks = locks;
     }
 
     public void remove(UUID projectId, String key) {
@@ -115,7 +119,7 @@ public class KvDao extends AbstractDao {
         ProjectKvStore kv = PROJECT_KV_STORE.as("kv");
         return txResult(tx -> {
             // grab a lock, it will be released when the transaction ends
-            tx.execute("select from pg_advisory_xact_lock(?)", hash(projectId, key));
+            locks.lock(tx, projectId + "/" + key);
 
             // "upsert" the record
             tx.insertInto(kv)
@@ -132,15 +136,5 @@ public class KvDao extends AbstractDao {
                             .and(kv.VALUE_KEY.eq(key)))
                     .fetchOne(kv.VALUE_LONG);
         });
-    }
-
-    private static long hash(UUID projectId, String key) {
-        // should be "good enough" (tm) for advisory locking
-        String s = projectId + "/" + key;
-        long hash = 7;
-        for (int i = 0; i < s.length(); i++) {
-            hash = hash * 31 + s.charAt(i);
-        }
-        return hash;
     }
 }

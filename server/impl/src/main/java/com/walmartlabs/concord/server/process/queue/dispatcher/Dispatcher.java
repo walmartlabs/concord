@@ -26,7 +26,9 @@ import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
+import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
@@ -48,9 +50,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.CallableStatement;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -71,32 +71,43 @@ public class Dispatcher extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
 
-    private static final long POLL_DELAY = TimeUnit.SECONDS.toMillis(1);
     private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(30);
-    private static final int BATCH_SIZE = 10;
+    private static final long LOCK_KEY = 1552468327245L;
 
+    private final Locks locks;
     private final DispatcherDao dao;
     private final WebSocketChannelManager channelManager;
     private final LogManager logManager;
     private final ProcessQueueManager queueManager;
     private final Set<Filter> filters;
+    private final int batchSize;
+
     private final Histogram uniqueProjectsHistogram;
+    private final Histogram dispatchedCountHistogram;
 
     @Inject
-    public Dispatcher(DispatcherDao dao,
+    public Dispatcher(Locks locks,
+                      DispatcherDao dao,
                       WebSocketChannelManager channelManager,
                       LogManager logManager,
-                      ProcessQueueManager queueManager, Set<Filter> filters,
+                      ProcessQueueManager queueManager,
+                      Set<Filter> filters,
+                      ProcessQueueConfiguration cfg,
                       MetricRegistry metricRegistry) {
 
-        super(POLL_DELAY, ERROR_DELAY);
+        super(cfg.getDispatcherPollDelay(), ERROR_DELAY);
 
+        this.locks = locks;
         this.dao = dao;
         this.channelManager = channelManager;
         this.logManager = logManager;
         this.queueManager = queueManager;
         this.filters = filters;
+
+        this.batchSize = cfg.getDispatcherBatchSize();
+
         this.uniqueProjectsHistogram = metricRegistry.histogram("process-queue-dispatcher-unique-projects");
+        this.dispatchedCountHistogram = metricRegistry.histogram("process-queue-dispatcher-dispatched-count");
     }
 
     @Override
@@ -113,84 +124,85 @@ public class Dispatcher extends PeriodicTask {
                 .map(e -> new Request(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
 
-        dispatch(l);
-
-        return false;
+        // run everything in a single transaction
+        // take a global lock to avoid races
+        return dao.txResult(tx -> {
+            locks.lock(tx, LOCK_KEY);
+            return dispatch(tx, l);
+        });
     }
 
-    private void dispatch(List<Request> requests) {
+    private boolean dispatch(DSLContext tx, List<Request> requests) {
         // we need it modifiable
         List<Request> inbox = new ArrayList<>(requests);
 
-        // run everything in a single transaction
-        dao.tx(tx -> {
-            int offset = 0;
-            Set<UUID> projectsToSkip = new HashSet<>();
+        int offset = 0;
+        Set<UUID> projectsToSkip = new HashSet<>();
 
-            while (true) {
-                // fetch the next few ENQUEUED processes from the DB
-                List<ProcessQueueEntry> candidates = new ArrayList<>(dao.next(tx, offset, BATCH_SIZE));
-                if (candidates.isEmpty() || inbox.isEmpty()) {
-                    // no potential candidates or no requests left to process
-                    break;
-                }
+        while (true) {
+            // fetch the next few ENQUEUED processes from the DB
+            List<ProcessQueueEntry> candidates = new ArrayList<>(dao.next(tx, offset, batchSize));
+            if (candidates.isEmpty() || inbox.isEmpty()) {
+                // no potential candidates or no requests left to process
+                return false;
+            }
 
-                uniqueProjectsHistogram.update(countUniqueProjects(candidates));
+            uniqueProjectsHistogram.update(countUniqueProjects(candidates));
 
-                // filter out the candidates that shouldn't be dispatched at the moment
-                for (Iterator<ProcessQueueEntry> it = candidates.iterator(); it.hasNext(); ) {
-                    ProcessQueueEntry e = it.next();
+            // filter out the candidates that shouldn't be dispatched at the moment
+            for (Iterator<ProcessQueueEntry> it = candidates.iterator(); it.hasNext(); ) {
+                ProcessQueueEntry e = it.next();
 
-                    // currently there are no filters applicable to standalone (i.e. without a project) processes
-                    if (e.projectId() == null) {
-                        continue;
-                    }
-
-                    // see below
-                    if (projectsToSkip.contains(e.projectId())) {
-                        it.remove();
-                        continue;
-                    }
-
-                    // TODO sharded locks?
-                    boolean locked = dao.tryLock(tx);
-                    if (!locked || !pass(tx, e)) {
-                        // the candidate didn't pass the filter or can't lock the queue
-                        // skip to the next candidate (of a different project)
-                        it.remove();
-                    }
-
-                    // only one process per project can be dispatched at the time, currently the filters are not
-                    // designed to run multiple times per dispatch "tick"
-
-                    // TODO
-                    // this can be improved if filters accepted a list of candidates and returned a list of
-                    // those who passed. However, statistically each batch of candidates contains unique project IDs
-                    // so "multi-entry" filters are less effective and just complicate things
-                    // in the future we might need to consider batching up candidates by project IDs and using sharded
-                    // locks
-                    projectsToSkip.add(e.projectId());
-                }
-
-                List<Match> matches = match(inbox, candidates);
-                if (matches.isEmpty()) {
-                    // no matches, try fetching the next N records
-                    offset += BATCH_SIZE;
+                // currently there are no filters applicable to standalone (i.e. without a project) processes
+                if (e.projectId() == null) {
                     continue;
                 }
 
-                for (Match m : matches) {
-                    ProcessQueueEntry candidate = m.response;
-
-                    // mark the process as STARTING and send it to the agent
-                    queueManager.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
-
-                    sendResponse(m);
-
-                    inbox.remove(m.request);
+                // see below
+                if (projectsToSkip.contains(e.projectId())) {
+                    it.remove();
+                    continue;
                 }
+
+                if (!pass(tx, e)) {
+                    // the candidate didn't pass the filter or can't lock the queue
+                    // skip to the next candidate (of a different project)
+                    it.remove();
+                }
+
+                // only one process per project can be dispatched at the time, currently the filters are not
+                // designed to run multiple times per dispatch "tick"
+
+                // TODO
+                // this can be improved if filters accepted a list of candidates and returned a list of
+                // those who passed. However, statistically each batch of candidates contains unique project IDs
+                // so "multi-entry" filters are less effective and just complicate things
+                // in the future we might need to consider batching up candidates by project IDs and using sharded
+                // locks
+                projectsToSkip.add(e.projectId());
             }
-        });
+
+            List<Match> matches = match(inbox, candidates);
+            if (matches.isEmpty()) {
+                // no matches, try fetching the next N records
+                offset += batchSize;
+                continue;
+            }
+
+            for (Match m : matches) {
+                ProcessQueueEntry candidate = m.response;
+
+                // mark the process as STARTING and send it to the agent
+                queueManager.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
+
+                sendResponse(m);
+
+                inbox.remove(m.request);
+            }
+
+            dispatchedCountHistogram.update(matches.size());
+            return true;
+        }
     }
 
     private List<Match> match(List<Request> requests, List<ProcessQueueEntry> candidates) {
@@ -285,8 +297,6 @@ public class Dispatcher extends PeriodicTask {
     @Named
     public static class DispatcherDao extends AbstractDao {
 
-        private static final long LOCK_KEY = 1552468327245L;
-
         private final ConcordObjectMapper objectMapper;
         private final Histogram offsetHistogram;
 
@@ -301,8 +311,8 @@ public class Dispatcher extends PeriodicTask {
         }
 
         @Override
-        public void tx(Tx t) {
-            super.tx(t);
+        protected <T> T txResult(TxResult<T> t) {
+            return super.txResult(t);
         }
 
         @WithTimer
@@ -355,19 +365,6 @@ public class Dispatcher extends PeriodicTask {
                             .requirements(objectMapper.fromJSONB(r.value12()))
                             .exclusive(objectMapper.fromJSONB(r.value13()))
                             .build());
-        }
-
-        public boolean tryLock(DSLContext tx) {
-            String sql = "{ ? = call pg_try_advisory_xact_lock(?) }";
-
-            return tx.connectionResult(conn -> {
-                try (CallableStatement cs = conn.prepareCall(sql)) {
-                    cs.registerOutParameter(1, Types.BOOLEAN);
-                    cs.setLong(2, LOCK_KEY);
-                    cs.execute();
-                    return cs.getBoolean(1);
-                }
-            });
         }
 
         public SecretReference getSecretReference(UUID repoId) {
