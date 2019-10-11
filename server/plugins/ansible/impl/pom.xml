@@ -17,17 +17,14 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
             <artifactId>concord-ansible-plugin-db</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-sdk</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-db</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -167,4 +164,3 @@
         </plugins>
     </build>
 </project>
-
