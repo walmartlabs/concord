@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server.template.kv;
  */
 
 import com.walmartlabs.concord.server.AbstractDaoTest;
+import com.walmartlabs.concord.server.Locks;
+import com.walmartlabs.concord.server.cfg.LockingConfiguration;
 import com.walmartlabs.concord.server.org.project.KvDao;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,7 +37,7 @@ public class KvDaoTest extends AbstractDaoTest {
 
     @Test(timeout = 10000)
     public void test() throws Exception {
-        KvDao kvDao = new KvDao(getConfiguration());
+        KvDao kvDao = new KvDao(getConfiguration(), new Locks(new LockingConfiguration(8)));
 
         UUID projectId = UUID.randomUUID();
         String key = "key_" + System.currentTimeMillis();
