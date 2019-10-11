@@ -1,0 +1,13 @@
+flows:
+  main:
+  - task: docker
+    in:
+      image: ${image}
+      debug: true
+      forcePull: false
+      cmd: echo "Hello, ${name}" && (>&2 echo "STDERR WORKS")
+
+variables:
+  entryPoint: main
+  arguments:
+    name: "world"

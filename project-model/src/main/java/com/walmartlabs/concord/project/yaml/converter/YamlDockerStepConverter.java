@@ -48,6 +48,7 @@ public class YamlDockerStepConverter implements StepConverter<YamlDockerStep> {
         args.put("envFile", s.getEnvFile());
         args.put("hosts", s.getHosts());
         args.put("stdout", s.getStdout());
+        args.put("stderr", s.getStderr());
 
         Set<VariableMapping> inVars = createVarsMapping(args);
 

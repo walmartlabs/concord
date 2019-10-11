@@ -333,7 +333,8 @@ public class Grammar {
                                     (Map<String, Object>) options.get("env"),
                                     (String) options.get("envFile"),
                                     toListOfStrings(a.location, options.get("hosts")),
-                                    (String) options.get("stdout")))));
+                                    (String) options.get("stdout"),
+                                    (String) options.get("stderr")))));
 
     // stepObject := START_OBJECT docker | group | ifExpr | exprFull | formCall | vars | taskFull | callFull | checkpoint | event | script | taskShort | vars END_OBJECT
     private static final Parser<Atom, YamlStep> stepObject = label("Process definition step (complex)",

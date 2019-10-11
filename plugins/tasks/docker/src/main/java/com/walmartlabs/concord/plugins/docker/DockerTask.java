@@ -52,6 +52,7 @@ public class DockerTask implements Task {
     public static final String FORCE_PULL_KEY = "forcePull";
     public static final String DEBUG_KEY = "debug";
     public static final String STDOUT_KEY = "stdout";
+    public static final String STDERR_KEY = "stderr";
 
     @Inject
     private DockerService dockerService;
@@ -71,6 +72,7 @@ public class DockerTask implements Task {
         boolean forcePull = ContextUtils.getBoolean(ctx, FORCE_PULL_KEY, true);
         boolean debug = ContextUtils.getBoolean(ctx, DEBUG_KEY, false);
         String stdOutVar = ContextUtils.getString(ctx, STDOUT_KEY);
+        String stdErrVar = ContextUtils.getString(ctx, STDERR_KEY);
 
         Path baseDir = Paths.get(workDir);
         Path containerDir = Paths.get(VOLUME_CONTAINER_DEST);
@@ -98,6 +100,7 @@ public class DockerTask implements Task {
                     .toString();
         }
 
+        boolean isRedirectErrorStream = stdErrVar == null && stdOutVar == null;
         Process p = dockerService.start(ctx, DockerContainerSpec.builder()
                 .image(image)
                 .env(stringify(env))
@@ -106,15 +109,15 @@ public class DockerTask implements Task {
                 .forcePull(forcePull)
                 .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
                 .debug(debug)
-                .redirectErrorStream(stdOutVar == null)
+                .redirectErrorStream(isRedirectErrorStream)
                 .stdOutFilePath(stdOutFilePath)
                 .build());
 
-        // if stdout is being stored into a var, then stderr must be streamed into the log...
-        InputStream in = stdOutVar == null ? p.getInputStream() : p.getErrorStream();
-
-        // copy the output into the log
-        streamToLog(in);
+        if (isRedirectErrorStream || stdOutVar == null) {
+            streamToLog(p.getInputStream());
+        } else if (stdErrVar == null) {
+            streamToLog(p.getErrorStream());
+        }
 
         // wait for the process to end
         int code = p.waitFor();
@@ -128,6 +131,11 @@ public class DockerTask implements Task {
             InputStream inputStream = Files.newInputStream(Paths.get(stdOutFilePath));
             String stdOut = toString(inputStream);
             ctx.setVariable(stdOutVar, stdOut);
+        }
+
+        if (stdErrVar != null) {
+            String error = toString(p.getErrorStream());
+            ctx.setVariable(stdErrVar, error);
         }
 
         log.info("call ['{}', '{}', '{}', '{}'] -> done", image, cmd, workDir, hosts);
