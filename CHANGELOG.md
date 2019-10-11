@@ -10,6 +10,11 @@ many Agent worker slots are available;
 - concord-agent: support for running processes with custom JVM
 parameters.
 
+### Changed
+
+- concord-agent: fix system log messages that may appear out of order
+in the process log. 
+
 
 
 ## [1.34.3] - 2019-10-07
