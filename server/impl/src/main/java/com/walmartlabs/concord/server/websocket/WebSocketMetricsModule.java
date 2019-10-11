@@ -23,10 +23,13 @@ package com.walmartlabs.concord.server.websocket;
 import com.codahale.metrics.Gauge;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.server.queueclient.message.MessageType;
+import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
 import javax.inject.Named;
 import javax.inject.Provider;
+import java.util.Map;
 
 @Named
 public class WebSocketMetricsModule extends AbstractModule {
@@ -37,6 +40,7 @@ public class WebSocketMetricsModule extends AbstractModule {
 
         Multibinder<GaugeProvider> gauges = Multibinder.newSetBinder(binder(), GaugeProvider.class);
         gauges.addBinding().toInstance(createGauge(channelManagerProvider));
+        gauges.addBinding().toInstance(create(channelManagerProvider));
     }
 
     private static GaugeProvider<Integer> createGauge(Provider<WebSocketChannelManager> channelManagerProvider) {
@@ -49,6 +53,20 @@ public class WebSocketMetricsModule extends AbstractModule {
             @Override
             public Gauge<Integer> gauge() {
                 return () -> channelManagerProvider.get().connectedClientsCount();
+            }
+        };
+    }
+
+    private static GaugeProvider<Integer> create(Provider<WebSocketChannelManager> channelManagerProvider) {
+        return new GaugeProvider<Integer>() {
+            @Override
+            public String name() {
+                return "agent-workers-available";
+            }
+
+            @Override
+            public Gauge<Integer> gauge() {
+                return () -> channelManagerProvider.get().getRequests(MessageType.PROCESS_REQUEST).size();
             }
         };
     }
