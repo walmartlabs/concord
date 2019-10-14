@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: the repository links that end with `.git` are now
+correctly displayed on the process status page;
 - concord-server: new `agent-workers-available` metric, shows how
 many Agent worker slots are available;
 - docker: support for capturing the command's `stderr` in addition to

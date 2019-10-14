@@ -29,14 +29,17 @@ interface Props {
 }
 
 const gitUrlParse = (s: string): string | undefined => {
-    const match = REPOSITORY_SSH_URL_PATTERN.exec(s);
+    const url = s.endsWith('.git') ? s : s + '.git';
+
+    const match = REPOSITORY_SSH_URL_PATTERN.exec(url);
+
     if (match && match.length === 6) {
         const path = match[4] !== undefined ? `/${match[4]}` : '';
         return `https://${match[3]}${path}`;
-    } else if (s.startsWith('http')) {
+    } else if (url.startsWith('http')) {
         // https://github.example.com/devtools/concord.git
         const regex = /http[s]?:\/\/(.*)/;
-        const match = regex.exec(s);
+        const match = regex.exec(url);
         if (!match || match.length !== 2) {
             return;
         }
