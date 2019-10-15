@@ -80,7 +80,6 @@ public class TriggerScheduler implements ScheduledTask {
             if (e == null) {
                 break;
             }
-
             if (e.getFireAt().after(startedAt)) {
                 startProcess(e);
             }
@@ -93,7 +92,7 @@ public class TriggerScheduler implements ScheduledTask {
             return;
         }
 
-        if(isRepositoryDisabled(t)){
+        if (isRepositoryDisabled(t)) {
             log.warn("startProcess ['{}'] -> repository is disabled, skipping", t);
             return;
         }
@@ -105,23 +104,17 @@ public class TriggerScheduler implements ScheduledTask {
             args.putAll(t.getArguments());
         }
         args.put("event", makeEvent(t));
+        log.info("Event: {}", args.get("event"));
 
-        Map<String, Object> cfg = new HashMap<>();
+        Map<String, Object> cfg = t.getCfg();
         cfg.put(Constants.Request.ARGUMENTS_KEY, args);
 
-        if (t.getEntryPoint() != null) {
-            cfg.put(Constants.Request.ENTRY_POINT_KEY, t.getEntryPoint());
-        }
-
-        if (t.getActiveProfiles() != null) {
-            cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
-        }
-
-        startProcess(t.getTriggerId(), t.getOrgId(), t.getProjectId(), t.getRepoId(), t.getEntryPoint(), cfg);
-    }
-
-    private void startProcess(UUID triggerId, UUID orgId, UUID projectId, UUID repoId, String entryPoint, Map<String, Object> cfg) {
         PartialProcessKey processKey = PartialProcessKey.create();
+        UUID triggerId = t.getTriggerId();
+        UUID orgId = t.getOrgId();
+        UUID projectId = t.getProjectId();
+        UUID repoId = t.getRepositoryId();
+        String entryPoint = t.getEntryPoint();
 
         Payload payload;
         try {
@@ -131,6 +124,7 @@ public class TriggerScheduler implements ScheduledTask {
                     .project(projectId)
                     .repository(repoId)
                     .entryPoint(entryPoint)
+                    .triggeredBy(TriggeredByEntry.builder().trigger(t).build())
                     .configuration(cfg)
                     .build();
         } catch (Exception e) {
@@ -147,11 +141,12 @@ public class TriggerScheduler implements ScheduledTask {
             return;
         }
 
-        log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started", triggerId, orgId, projectId, repoId, entryPoint, processKey);
+        log.info("startProcess ['{}', '{}', '{}', '{}', '{}'] -> process '{}' started",
+                triggerId, orgId, projectId, repoId, entryPoint, processKey);
     }
 
     private boolean isRepositoryDisabled(TriggerSchedulerEntry t) {
-        return repositoryDao.get(t.getRepoId()).isDisabled();
+        return repositoryDao.get(t.getRepositoryId()).isDisabled();
     }
 
     private boolean isDisabled(String eventName) {
@@ -160,13 +155,11 @@ public class TriggerScheduler implements ScheduledTask {
 
     private static Map<String, Object> makeEvent(TriggerSchedulerEntry t) {
         Map<String, Object> m = new HashMap<>();
-        m.put(Constants.Trigger.CRON_SPEC, t.getCronSpec());
-        m.put(Constants.Trigger.CRON_TIMEZONE, t.getTimezone());
-
+        m.put(Constants.Trigger.CRON_SPEC, t.getConditions().get(Constants.Trigger.CRON_SPEC));
+        m.put(Constants.Trigger.CRON_TIMEZONE, t.getConditions().get(Constants.Trigger.CRON_TIMEZONE));
         Calendar c = Calendar.getInstance();
         c.setTime(t.getFireAt());
         m.put(Constants.Trigger.CRON_EVENT_FIREAT, DatatypeConverter.printDateTime(c));
-
         return m;
     }
 }

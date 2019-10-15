@@ -111,7 +111,17 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         }
 
         const type = triggeredBy.trigger.eventSource;
-        const icon = type === 'github' ? 'github' : 'question';
+        let icon;
+        switch (type) {
+            case 'github':
+                icon = 'github';
+                break;
+            case 'cron':
+                icon = 'clock outline';
+                break;
+            default:
+                icon = 'question';
+        }
         const title = type === 'github' ? 'GitHub' : type;
 
         return (
