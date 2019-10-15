@@ -22,7 +22,11 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.jooq.tables.Organizations;
+import com.walmartlabs.concord.server.jooq.tables.Projects;
+import com.walmartlabs.concord.server.jooq.tables.Repositories;
 import com.walmartlabs.concord.server.jooq.tables.Triggers;
 import org.jooq.*;
 
@@ -33,7 +37,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.TriggerSchedule.TRIGGER_SCHEDULE;
 import static com.walmartlabs.concord.server.jooq.tables.Triggers.TRIGGERS;
 import static org.jooq.impl.DSL.*;
@@ -46,13 +50,14 @@ public class TriggerScheduleDao extends AbstractDao {
     @Inject
     public TriggerScheduleDao(@MainDB Configuration cfg,
                               ConcordObjectMapper objectMapper) {
-        super(cfg);
 
+        super(cfg);
         this.objectMapper = objectMapper;
     }
 
     public TriggerSchedulerEntry findNext() {
         return txResult(tx -> {
+            // TODO fetch everything in a single request?
             Map<String, Object> e = tx.select(TRIGGER_SCHEDULE.TRIGGER_ID, TRIGGER_SCHEDULE.FIRE_AT)
                     .from(TRIGGER_SCHEDULE)
                     .where(TRIGGER_SCHEDULE.FIRE_AT.le(currentTimestamp()))
@@ -69,48 +74,73 @@ public class TriggerScheduleDao extends AbstractDao {
             Date fireAt = (Date) e.get(TRIGGER_SCHEDULE.FIRE_AT.getName());
 
             Triggers t = TRIGGERS.as("t");
+            Projects p = PROJECTS.as("p");
+            Repositories r = REPOSITORIES.as("r");
+            Organizations o = ORGANIZATIONS.as("o");
 
-            Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(t.PROJECT_ID)).asField();
-            Field<String> specField = field("{0}->>'spec'", String.class, t.CONDITIONS);
-            Field<String> timezoneField = field("{0}->>'timezone'", String.class, t.CONDITIONS);
+            Field<UUID> orgIdField = select(p.ORG_ID).from(p).where(p.PROJECT_ID.eq(t.PROJECT_ID)).asField();
 
-            Record10<UUID, UUID, UUID, UUID, String, String, String[], JSONB, JSONB, Timestamp> r = tx.select(
+            Record13<UUID, UUID, String, UUID, String, UUID, String, String[], JSONB, JSONB, JSONB, Timestamp, String> record = tx.select(
                     t.TRIGGER_ID,
                     orgIdField,
+                    o.ORG_NAME,
                     t.PROJECT_ID,
+                    p.PROJECT_NAME,
                     t.REPO_ID,
-                    specField,
-                    timezoneField,
+                    r.REPO_NAME,
                     t.ACTIVE_PROFILES,
                     t.ARGUMENTS,
                     t.TRIGGER_CFG,
-                    currentTimestamp())
-                    .from(t)
-                    .where(t.TRIGGER_ID.eq(id))
+                    t.CONDITIONS,
+                    currentTimestamp(),
+                    t.EVENT_SOURCE)
+                    .from(t, p, r, o)
+                    .where(t.TRIGGER_ID.eq(id).
+                            and(t.PROJECT_ID.eq(p.PROJECT_ID)).
+                            and(p.PROJECT_ID.eq(r.PROJECT_ID)).
+                            and(p.ORG_ID.eq(o.ORG_ID)).
+                            and(t.REPO_ID.eq(r.REPO_ID)))
                     .fetchOne();
 
-            if (r == null) {
+            if (record == null) {
                 return null;
             }
 
+            UUID triggerId = record.value1();
+            UUID orgId = record.value2();
+            String organizationName = record.value3();
+            UUID projectId = record.value4();
+            String projectName = record.value5();
+            UUID repoId = record.value6();
+            String repositoryName = record.value7();
+            List<String> activeProfiles = toList(record.value8());
+            Map<String, Object> arguments = objectMapper.fromJSONB(record.value9());
+            Map<String, Object> cfg = objectMapper.fromJSONB(record.value10());
+            Map<String, Object> conditions = objectMapper.fromJSONB(record.value11());
+            Instant now = record.value12().toInstant();
+            String eventSource = record.value13();
+
             TriggerSchedulerEntry result = new TriggerSchedulerEntry(
                     fireAt,
-                    r.value1(),
-                    r.value2(),
-                    r.value3(),
-                    r.value4(),
-                    r.value5(),
-                    r.value6(),
-                    toList(r.value7()),
-                    objectMapper.fromJSONB(r.value8()),
-                    objectMapper.fromJSONB(r.value9()));
+                    triggerId,
+                    orgId,
+                    organizationName,
+                    projectId,
+                    projectName,
+                    repoId,
+                    repositoryName,
+                    conditions,
+                    cfg,
+                    activeProfiles,
+                    arguments,
+                    eventSource);
 
             ZoneId zoneId = null;
-            if (result.getTimezone() != null) {
-                zoneId = TimeZone.getTimeZone(result.getTimezone()).toZoneId();
+            if (conditions.get(Constants.Trigger.CRON_TIMEZONE) != null) {
+                zoneId = TimeZone.getTimeZone((String) conditions.get(Constants.Trigger.CRON_TIMEZONE)).toZoneId();
             }
-            Instant now = r.value10().toInstant();
-            updateFireAt(tx, id, CronUtils.nextExecution(now, result.getCronSpec(), zoneId));
+
+            updateFireAt(tx, id, CronUtils.nextExecution(now, (String) conditions.get(Constants.Trigger.CRON_SPEC), zoneId));
 
             return result;
         });

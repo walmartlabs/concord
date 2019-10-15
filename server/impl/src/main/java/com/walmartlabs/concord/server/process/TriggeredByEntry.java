@@ -26,12 +26,15 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableTriggeredByEntry.class)
 @JsonDeserialize(as = ImmutableTriggeredByEntry.class)
 public interface TriggeredByEntry {
 
+    @Nullable
     String externalEventId();
 
     TriggerEntry trigger();
