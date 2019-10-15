@@ -24,12 +24,10 @@ import com.codahale.metrics.Gauge;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
-import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
 
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.util.Map;
 
 @Named
 public class WebSocketMetricsModule extends AbstractModule {

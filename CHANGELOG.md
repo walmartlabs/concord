@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: the repository links that end with `.git` are now
+correctly displayed on the process status page;
 - concord-server: new `agent-workers-available` metric, shows how
 many Agent worker slots are available;
 - docker: support for capturing the command's `stderr` in addition to
@@ -14,6 +16,8 @@ parameters.
 
 ### Changed
 
+- concord-server, concord-console: fill-in the process status page's
+"Triggered By" for processes triggered by `cron`;
 - concord-agent: fix system log messages that may appear out of order
 in the process log. 
 

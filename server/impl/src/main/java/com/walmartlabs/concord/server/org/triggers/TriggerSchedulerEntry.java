@@ -22,41 +22,28 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.sdk.Constants;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class TriggerSchedulerEntry implements Serializable {
+public class TriggerSchedulerEntry extends TriggerEntry {
 
     private static final long serialVersionUID = 1L;
 
     private final Date fireAt;
     private final UUID triggerId;
-    private final UUID orgId;
-    private final UUID projectId;
-    private final UUID repoId;
-    private final String cronSpec;
-    private final String timezone;
-    private final List<String> activeProfiles;
-    private final Map<String, Object> arguments;
-    private final Map<String, Object> cfg;
 
-    public TriggerSchedulerEntry(Date fireAt, UUID triggerId, UUID orgId, UUID projectId, UUID repoId,
-                                 String cronSpec, String timezone, List<String> activeProfiles,
-                                 Map<String, Object> arguments, Map<String, Object> cfg) {
+    public TriggerSchedulerEntry(Date fireAt, UUID triggerId, UUID orgId, String orgName, UUID projectId,
+                                 String projectName, UUID repositoryId, String repositoryName,
+                                 Map<String, Object> conditions, Map<String, Object> cfg, List<String> activeProfiles,
+                                 Map<String, Object> arguments, String eventSource) {
+
+        super(null, orgId, orgName, projectId, projectName, repositoryId,
+                repositoryName, eventSource, activeProfiles, arguments, conditions, cfg);
 
         this.fireAt = fireAt;
         this.triggerId = triggerId;
-        this.orgId = orgId;
-        this.projectId = projectId;
-        this.repoId = repoId;
-        this.cronSpec = cronSpec;
-        this.timezone = timezone;
-        this.activeProfiles = activeProfiles;
-        this.arguments = arguments;
-        this.cfg = cfg;
     }
 
     public Date getFireAt() {
@@ -67,44 +54,12 @@ public class TriggerSchedulerEntry implements Serializable {
         return triggerId;
     }
 
-    public UUID getOrgId() {
-        return orgId;
-    }
-
-    public UUID getProjectId() {
-        return projectId;
-    }
-
-    public UUID getRepoId() {
-        return repoId;
-    }
-
-    public List<String> getActiveProfiles() {
-        return activeProfiles;
-    }
-
-    public Map<String, Object> getCfg() {
-        return cfg;
-    }
-
-    public String getCronSpec() {
-        return cronSpec;
-    }
-
-    public String getTimezone() {
-        return timezone;
-    }
-
-    public Map<String, Object> getArguments() {
-        return arguments;
-    }
-
     public String getEntryPoint() {
-        if (cfg == null) {
+        if (this.getCfg() == null) {
             return null;
         }
 
-        return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
+        return (String) this.getCfg().get(Constants.Request.ENTRY_POINT_KEY);
     }
 
     @Override
@@ -112,14 +67,14 @@ public class TriggerSchedulerEntry implements Serializable {
         return "TriggerSchedulerEntry{" +
                 "fireAt=" + fireAt +
                 ", triggerId=" + triggerId +
-                ", orgId=" + orgId +
-                ", projectId=" + projectId +
-                ", repoId=" + repoId +
-                ", cronSpec='" + cronSpec + '\'' +
-                ", timezone='" + timezone + '\'' +
-                ", activeProfiles=" + activeProfiles +
-                ", arguments=" + arguments +
-                ", cfg=" + cfg +
+                ", orgId=" + this.getOrgId() +
+                ", projectId=" + this.getProjectId() +
+                ", repoId=" + this.getRepositoryId() +
+                ", eventSource=" + this.getEventSource() +
+                ", activeProfiles=" + this.getActiveProfiles() +
+                ", arguments=" + this.getArguments() +
+                ", conditions=" + this.getConditions() +
+                ", cfg=" + this.getCfg() +
                 '}';
     }
 }
