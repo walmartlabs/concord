@@ -142,6 +142,7 @@ export function useQueryParams() {
      * On unmount the hashchange event listener is removed via a useEffect
      * cleanup function
      */
+    // TODO react-hooks/exhaustive-deps warning
     useEffect(() => {
         const eventName = 'hashchange';
 
@@ -150,14 +151,15 @@ export function useQueryParams() {
         return () => {
             window.removeEventListener(eventName, onHashChange, false);
         };
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     /**
      * Set queryParams on first render
      */
+    // TODO react-hooks/exhaustive-deps warning
     useLayoutEffect(() => {
         setQueryParams(getCurrentParams());
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     return {
         queryParams,

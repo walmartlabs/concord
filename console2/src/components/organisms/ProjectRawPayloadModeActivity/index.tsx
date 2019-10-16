@@ -54,6 +54,7 @@ export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED, re
     const [error, setError] = useState<RequestError>();
 
     const didMountRef = useRef(false);
+    // TODO react-hooks/exhaustive-deps warning
     useEffect(() => {
         const update = async () => {
             if (!didMountRef.current) {
@@ -77,7 +78,7 @@ export default ({ orgName, projectId, initialValue = RawPayloadMode.DISABLED, re
         };
 
         update();
-    }, [orgName, projectId, value]);
+    }, [orgName, projectId, value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <>
