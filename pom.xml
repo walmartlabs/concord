@@ -70,7 +70,6 @@
         <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <jooq.version>3.12.1</jooq.version>
         <node.version>10.11.0</node.version>
-
     </properties>
 
     <dependencyManagement>
