@@ -17,37 +17,30 @@
         <dependency>
             <groupId>com.walmartlabs.concord.runner</groupId>
             <artifactId>concord-runner-model</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-project-model</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-policy-engine</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-dependency-manager</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -125,57 +118,46 @@
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>log-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>locale-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>kv-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>misc-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>resource-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>sleep-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>variables-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>crypto-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>docker-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>throw-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>lock-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- JDK9+ compatibility -->
