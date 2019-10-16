@@ -215,7 +215,7 @@ public class RunnerJobExecutor {
     }
 
     private Collection<String> resolveDeps(RunnerJob job) throws Exception {
-        job.getLog().info("Resolving process dependencies");
+        job.getLog().info("Resolving process dependencies...");
 
         long t1 = System.currentTimeMillis();
 

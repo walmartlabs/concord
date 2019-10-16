@@ -427,6 +427,12 @@ public class Main {
 
             // load dependencies
             List<URL> deps = loadDependencyList(runnerCfg);
+            if (runnerCfg.debug()) {
+                log.info("Effective dependencies:\n\t{}", deps.stream()
+                        .map(URL::toString)
+                        .collect(Collectors.joining("\n\t")));
+            }
+
             URLClassLoader depsClassLoader = new URLClassLoader(deps.toArray(new URL[0]), Main.class.getClassLoader()); // NOSONAR
             Thread.currentThread().setContextClassLoader(depsClassLoader);
 
@@ -521,6 +527,7 @@ public class Main {
 
     private static List<URL> parseDeps(Collection<String> deps) throws IOException {
         List<URL> result = deps.stream()
+                .sorted()
                 .map(s -> {
                     if (!Files.exists(Paths.get(s))) {
                         throw new RuntimeException("Dependency file: " + s + " not found");
