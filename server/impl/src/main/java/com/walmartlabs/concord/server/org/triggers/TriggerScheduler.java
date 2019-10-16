@@ -115,6 +115,7 @@ public class TriggerScheduler implements ScheduledTask {
         UUID projectId = t.getProjectId();
         UUID repoId = t.getRepositoryId();
         String entryPoint = t.getEntryPoint();
+        Collection<String> activeProfiles = t.getActiveProfiles();
 
         Payload payload;
         try {
@@ -124,12 +125,13 @@ public class TriggerScheduler implements ScheduledTask {
                     .project(projectId)
                     .repository(repoId)
                     .entryPoint(entryPoint)
+                    .activeProfiles(activeProfiles)
                     .triggeredBy(TriggeredByEntry.builder().trigger(t).build())
                     .configuration(cfg)
                     .build();
         } catch (Exception e) {
-            log.error("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error creating a payload",
-                    triggerId, orgId, projectId, repoId, entryPoint, e);
+            log.error("startProcess ['{}', '{}', '{}', '{}', '{}', {}] -> error creating a payload",
+                    triggerId, orgId, projectId, repoId, entryPoint, activeProfiles, e);
             return;
         }
 

@@ -265,6 +265,19 @@ public final class PayloadBuilder {
         return this;
     }
 
+    public PayloadBuilder activeProfiles(Collection<String> activeProfiles) {
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
+        if (cfg == null) {
+            cfg = new HashMap<>();
+        }
+
+        cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+
+        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
+
+        return this;
+    }
+
     private Path ensureBaseDir() throws IOException {
         Path baseDir = payload.getHeader(Payload.BASE_DIR);
         if (baseDir == null) {
