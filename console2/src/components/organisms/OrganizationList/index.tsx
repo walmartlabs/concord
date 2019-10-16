@@ -71,9 +71,10 @@ const OrganizationList = () => {
         }
     }, [onlyCurrent, filter, paginationFilter.page, paginationFilter.limit]);
 
+    // TODO react-hooks/exhaustive-deps warning
     useEffect(() => {
         fetchData();
-    }, [onlyCurrent, filter, paginationFilter.page, paginationFilter.limit]);
+    }, [onlyCurrent, filter, paginationFilter.page, paginationFilter.limit]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleLimitChange = (limit: any) => {
         setPaginationFilter({ page: 0, limit });

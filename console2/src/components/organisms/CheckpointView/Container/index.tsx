@@ -278,6 +278,7 @@ export const useCheckpoint = (initial: InitialProps) => {
         refreshProcessData({ ...args, ...activeFilters });
     };
 
+    // TODO react-hooks/exhaustive-deps warning
     useEffect(() => {
         if (initial.refreshInterval !== undefined) {
             // Load initial dataset
@@ -292,7 +293,7 @@ export const useCheckpoint = (initial: InitialProps) => {
                 clearInterval(onPollInterval);
             };
         }
-    }, [activeFilters, currentPage]);
+    }, [activeFilters, currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // If activefilters change
     useEffect(() => {

@@ -2,19 +2,19 @@ sudo: required
 
 language: java
 jdk:
-- oraclejdk8
+  - openjdk8
 
-python:
-- 2.7
+node_js:
+  - "11"
 
 services:
-- docker
+  - docker
 
 cache:
   directories:
-  - $HOME/.m2
-  - console2/node_modules
+    - $HOME/.m2
+    - console2/node_modules
 
 install: true
 script:
-- mvn install -Pdocker -Pit -B
+  - mvn install -Pdocker -Pit -B
