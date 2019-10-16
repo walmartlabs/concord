@@ -23,7 +23,6 @@
         <agent.image>walmartlabs/concord-agent</agent.image>
         <console.image>walmartlabs/concord-console</console.image>
 
-        <selenium.version>3.141.59</selenium.version>
         <docker.daemon.addr>tcp://127.0.0.1:2375</docker.daemon.addr>
 
         <it.webdriver.type>local</it.webdriver.type>
@@ -35,13 +34,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>concord-common-it</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -52,31 +49,26 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-api</artifactId>
-            <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-remote-driver</artifactId>
-            <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-chrome-driver</artifactId>
-            <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-support</artifactId>
-            <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

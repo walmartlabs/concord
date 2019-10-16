@@ -26,12 +26,10 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-db</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

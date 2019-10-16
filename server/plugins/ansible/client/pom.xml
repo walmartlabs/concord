@@ -17,7 +17,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -35,7 +34,6 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>${gson.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
@@ -44,7 +42,6 @@
         <dependency>
             <groupId>io.gsonfire</groupId>
             <artifactId>gson-fire</artifactId>
-            <version>${gson.fire.version}</version>
         </dependency>
 
     </dependencies>
@@ -92,4 +89,3 @@
         </plugins>
     </build>
 </project>
-

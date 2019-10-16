@@ -17,14 +17,12 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-impl</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- plugins -->
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
             <artifactId>concord-ansible-plugin</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -34,7 +32,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
 
     </dependencies>
@@ -87,4 +84,3 @@
         </plugins>
     </build>
 </project>
-

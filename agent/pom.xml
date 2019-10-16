@@ -23,47 +23,38 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-imports</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-project-model</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-dependency-manager</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-policy-engine</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-queue-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-repository</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.runner</groupId>
             <artifactId>concord-runner-model</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

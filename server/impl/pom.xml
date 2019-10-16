@@ -28,42 +28,34 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-sdk</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-imports</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-dependency-manager</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-project-model</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-db</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-policy-engine</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-repository</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -100,7 +92,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.takari.bpm</groupId>
@@ -165,7 +156,6 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-rewrite</artifactId>
-            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.sisu</groupId>
@@ -198,7 +188,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -219,7 +208,6 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jetty9</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>aopalliance</groupId>
@@ -295,22 +283,18 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
-            <version>${prometheus.simpleclient.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_dropwizard</artifactId>
-            <version>${prometheus.simpleclient.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_servlet</artifactId>
-            <version>${prometheus.simpleclient.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_hotspot</artifactId>
-            <version>${prometheus.simpleclient.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-validator</groupId>
@@ -338,7 +322,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-queue-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -467,4 +450,3 @@
         </plugins>
     </build>
 </project>
-

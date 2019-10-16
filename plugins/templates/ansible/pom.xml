@@ -16,7 +16,6 @@
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>ansible-tasks</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
