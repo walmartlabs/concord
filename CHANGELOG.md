@@ -16,6 +16,8 @@ parameters.
 
 ### Changed
 
+- concord-runner: sort dependencies before loading to ensure
+consistent class loading;
 - concord-server, concord-console: fill-in the process status page's
 "Triggered By" for processes triggered by `cron`;
 - concord-agent: fix system log messages that may appear out of order
