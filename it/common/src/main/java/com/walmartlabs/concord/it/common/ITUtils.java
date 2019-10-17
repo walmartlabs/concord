@@ -57,7 +57,7 @@ public final class ITUtils {
     }
 
     public static Path createTempDir() throws IOException {
-        Path dir = Files.createTempDirectory("test");
+        Path dir = IOUtils.createTempDir("test");
         Files.setPosixFilePermissions(dir, PosixFilePermissions.fromString("rwxr-xr-x"));
         return dir;
     }

@@ -330,6 +330,7 @@
             </activation>
             <properties>
                 <tmp.dir>/tmp</tmp.dir>
+                <tmp.dir.src.mount>/tmp</tmp.dir.src.mount>
                 <docker.host.addr>host.docker.internal</docker.host.addr>
                 <skip.socat>false</skip.socat>
             </properties>
