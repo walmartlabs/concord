@@ -1,5 +1,16 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: improve the asynchronous processing of external
+events;
+- concord-server: fix a potential issue when GitHub triggers a
+process without a valid user account.
+
+
+
 ## [1.35.0] - 2019-10-16
 
 ### Added

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.google.common.util.concurrent.SettableFuture;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
@@ -92,6 +93,8 @@ public abstract class AbstractEventResource {
         return triggers.stream()
                 .filter(t -> !isRepositoryDisabled(t))
                 .map(t -> process(eventId, eventName, t, event, cfgEnricher))
+                .collect(Collectors.toList()) // collect all "futures"
+                .stream()
                 .map(AbstractEventResource::resolve)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -103,7 +106,15 @@ public abstract class AbstractEventResource {
                                               Map<String, Object> event,
                                               ProcessConfigurationEnricher cfgEnricher) {
 
-        UserEntry initiator = getInitiator(t, event);
+        UserEntry initiator;
+        try {
+            initiator = getInitiator(t, event);
+        } catch (Exception e) {
+            log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
+            SettableFuture<PartialProcessKey> f = SettableFuture.create();
+            f.set(null);
+            return f;
+        }
 
         return executor.submit(() -> {
             Map<String, Object> args = new HashMap<>();
