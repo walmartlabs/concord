@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: additional configuration settings for the handling
+of suspended processes;
 - concord-server: improve the asynchronous processing of external
 events;
 - concord-server: fix a potential issue when GitHub triggers a
