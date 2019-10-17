@@ -40,7 +40,7 @@
         <http.request.version>6.0</http.request.version>
         <httpclient.version>4.5.9</httpclient.version>
         <httpcore.version>4.4.10</httpcore.version>
-        <httpmime.version>4.3.1</httpmime.version>
+        <httpmime.version>4.5.10</httpmime.version>
         <immutables.version>2.7.5</immutables.version>
         <ini4j.version>0.5.4</ini4j.version>
         <jackson.databind.version>2.9.9</jackson.databind.version>
