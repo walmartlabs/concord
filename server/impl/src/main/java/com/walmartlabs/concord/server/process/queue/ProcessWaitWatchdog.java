@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.queue;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.cfg.ProcessWaitWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -59,16 +60,19 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             ProcessStatus.CANCELLED,
             ProcessStatus.TIMED_OUT));
 
+    private final ProcessWaitWatchdogConfiguration cfg;
     private final WatchdogDao dao;
     private final ProcessQueueManager queueManager;
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
 
     @Inject
     @SuppressWarnings("unchecked")
-    public ProcessWaitWatchdog(WatchdogDao dao,
+    public ProcessWaitWatchdog(ProcessWaitWatchdogConfiguration cfg,
+                               WatchdogDao dao,
                                ProcessQueueManager queueManager,
                                Set<ProcessWaitHandler> handlers) {
 
+        this.cfg = cfg;
         this.dao = dao;
         this.queueManager = queueManager;
         this.processWaitHandlers = new HashMap<>();
@@ -78,15 +82,14 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        // TODO cfg?
-        return 5;
+        return cfg.getPeriod();
     }
 
     @Override
     public void performTask() {
         Timestamp lastUpdatedAt = null;
         while (true) {
-            WaitingProcess p = dao.nextWaitItem(lastUpdatedAt);
+            WaitingProcess p = dao.nextWaitItem(lastUpdatedAt, cfg.getPollLimit());
             if (p == null) {
                 return;
             }
@@ -153,7 +156,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             this.objectMapper = objectMapper;
         }
 
-        public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt) {
+        public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt, int pollLimit) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
                 SelectConditionStep<Record5<UUID, String, Timestamp, Timestamp, JSONB>> s = tx.select(
@@ -169,7 +172,8 @@ public class ProcessWaitWatchdog implements ScheduledTask {
                     s.and(q.LAST_UPDATED_AT.greaterThan(lastUpdatedAt));
                 }
 
-                return s.limit(1)
+                return s.orderBy(q.LAST_UPDATED_AT)
+                        .limit(pollLimit)
                         .fetchOne(r -> WaitingProcess.builder()
                                 .instanceId(r.value1())
                                 .status(ProcessStatus.valueOf(r.value2()))
