@@ -230,6 +230,35 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*oh, handled.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithForks() throws Exception {
+        String repoUrl = initRepo("externalImportWithForks");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMainWithForks", repoUrl);
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        ProcessEntry child = waitForChild(processApi, pir.getInstanceId(), ProcessEntry.KindEnum.DEFAULT, ProcessEntry.StatusEnum.FINISHED);
+
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+        byte[] cd = getLog(child.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+        assertLog(".*Hello from Concord, imports!.*", cd);
+    }
+
     private static String initRepo(String resourceName) throws Exception {
         Path tmpDir = createTempDir();
 
