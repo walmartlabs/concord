@@ -482,6 +482,14 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public Imports getImports(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.IMPORTS).from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(r -> objectMapper.fromJSONB(r.value1(), Imports.class));
+        }
+    }
+
     public UUID getProjectId(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_QUEUE.PROJECT_ID).from(PROCESS_QUEUE)

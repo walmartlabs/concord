@@ -1,0 +1,17 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+
+flows:
+  default:
+  - log: "Hello, ${name}!"
+  - task: concord
+    in:
+      action: fork
+      entryPoint: forkWithImport
+      arguments:
+          name: "imports"
+
+configuration:
+  arguments:
+    name: "Concord"

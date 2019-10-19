@@ -43,6 +43,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChun
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
@@ -450,11 +451,12 @@ public class ProcessResource implements Resource {
 
         UUID projectId = parent.projectId();
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
+        Imports imports = queueDao.getImports(parentProcessKey);
 
         Payload payload;
         try {
             payload = payloadManager.createFork(processKey, parentProcessKey, ProcessKind.DEFAULT,
-                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out, null);
+                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out, imports);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", processKey, parentProcessKey, e);
             throw new ConcordApplicationException("Error creating a payload", e);
