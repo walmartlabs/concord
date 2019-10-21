@@ -117,6 +117,7 @@ public class QueueClient {
 
         private final AtomicLong requestIdGenerator = new AtomicLong();
 
+        private final String agentId;
         private final String userAgent;
         private final String apiToken;
         private final URI[] destUris;
@@ -133,6 +134,7 @@ public class QueueClient {
         private volatile State state;
 
         public Worker(QueueClientConfiguration cfg, List<RequestEntry> requests) throws URISyntaxException {
+            this.agentId = cfg.getAgentId();
             this.userAgent = cfg.getUserAgent();
             this.apiToken = cfg.getApiKey();
 
@@ -251,7 +253,8 @@ public class QueueClient {
             this.client.start();
 
             ClientUpgradeRequest request = new ClientUpgradeRequest();
-            request.setHeader(InternalConstants.Headers.AGENT, userAgent);
+            request.setHeader(InternalConstants.Headers.AGENT_ID, agentId);
+            request.setHeader(InternalConstants.Headers.AGENT_UA, userAgent);
             request.setHeader(HttpHeaders.AUTHORIZATION, apiToken);
             return client.connect(this, destUri, request).get(connectTimeout, TimeUnit.MILLISECONDS);
         }
