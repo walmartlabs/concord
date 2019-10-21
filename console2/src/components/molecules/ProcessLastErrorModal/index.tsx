@@ -21,6 +21,7 @@
 import * as React from 'react';
 import ReactJson from 'react-json-view';
 import { Icon, Modal } from 'semantic-ui-react';
+
 import { ProcessMeta } from '../../../api/process';
 
 interface Props {

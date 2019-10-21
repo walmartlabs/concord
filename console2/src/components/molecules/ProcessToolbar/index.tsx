@@ -62,7 +62,10 @@ const ProcessStatusToolbar = memo((props: ProcessStatusToolbarProps) => {
             <Header.Content>
                 {processStatus}
                 {processStatus === ProcessStatus.FAILED && (
-                    <ProcessLastErrorModal processMeta={processMeta} />
+                    <>
+                        &nbsp;
+                        <ProcessLastErrorModal processMeta={processMeta} />
+                    </>
                 )}
             </Header.Content>
         </Header>
@@ -173,6 +176,7 @@ const ProcessToolbar = memo((props: ExternalProps) => {
                         loading={loading}
                         refresh={refresh}
                         processStatus={process.status}
+                        processMeta={process.meta}
                     />
                 </Menu.Item>
 

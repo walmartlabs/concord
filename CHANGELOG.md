@@ -4,6 +4,7 @@
 
 ### Changed
 
+- concord-console: show the last error icon on the process status page;
 - concord-server: forks now re-use the parent process' `imports`.
 
 

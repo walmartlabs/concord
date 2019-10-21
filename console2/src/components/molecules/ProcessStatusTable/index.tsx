@@ -30,7 +30,7 @@ import {
     ProcessStatus
 } from '../../../api/process';
 import { formatDuration } from '../../../utils';
-import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../index';
+import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../../molecules';
 
 interface Props {
     data: ProcessEntry;
