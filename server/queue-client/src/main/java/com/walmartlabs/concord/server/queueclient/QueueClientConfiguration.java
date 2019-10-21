@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.queueclient;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,10 +21,12 @@ package com.walmartlabs.concord.server.queueclient;
  */
 
 import java.io.Serializable;
+import java.util.UUID;
 
 public class QueueClientConfiguration implements Serializable {
 
     private final String[] addresses;
+    private final String agentId;
     private final String apiKey;
     private final String userAgent;
     private final long connectTimeout;
@@ -33,6 +35,7 @@ public class QueueClientConfiguration implements Serializable {
 
     private QueueClientConfiguration(Builder b) {
         this.addresses = b.addresses;
+        this.agentId = b.agentId;
         this.apiKey = b.apiKey;
         this.userAgent = b.userAgent;
         this.connectTimeout = b.connectTimeout;
@@ -42,6 +45,10 @@ public class QueueClientConfiguration implements Serializable {
 
     public String[] getAddresses() {
         return addresses;
+    }
+
+    public String getAgentId() {
+        return agentId;
     }
 
     public String getApiKey() {
@@ -68,6 +75,7 @@ public class QueueClientConfiguration implements Serializable {
 
         private final String[] addresses;
 
+        private String agentId;
         private String apiKey;
         private String userAgent;
         private long connectTimeout = 30000;
@@ -76,6 +84,11 @@ public class QueueClientConfiguration implements Serializable {
 
         public Builder(String[] addresses) {
             this.addresses = addresses;
+        }
+
+        public Builder agentId(String agentId) {
+            this.agentId = agentId;
+            return this;
         }
 
         public Builder apiKey(String apiKey) {

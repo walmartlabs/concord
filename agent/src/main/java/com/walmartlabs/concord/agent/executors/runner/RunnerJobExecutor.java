@@ -30,7 +30,6 @@ import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.Utils;
-import com.walmartlabs.concord.agent.Worker;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;

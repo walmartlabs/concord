@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- concord-server: new endpoint `/api/v1/agent/all/workers` to
+retrieve the list of currently available agent workers;
+
 ### Changed
 
 - concord-console: show the last error icon on the process status page;

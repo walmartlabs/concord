@@ -36,12 +36,14 @@ public class WebSocketListener implements org.eclipse.jetty.websocket.api.WebSoc
     private final WebSocketChannelManager channelManager;
 
     private final UUID channelId;
-    private final String channelInfo;
+    private final String agentId;
+    private final String userAgent;
 
-    public WebSocketListener(WebSocketChannelManager channelManager, UUID channelId, String channelInfo) {
+    public WebSocketListener(WebSocketChannelManager channelManager, UUID channelId, String agentId, String userAgent) {
         this.channelManager = channelManager;
         this.channelId = channelId;
-        this.channelInfo = channelInfo;
+        this.agentId = agentId;
+        this.userAgent = userAgent;
     }
 
     @Override
@@ -74,8 +76,8 @@ public class WebSocketListener implements org.eclipse.jetty.websocket.api.WebSoc
 
     @Override
     public void onWebSocketConnect(Session session) {
-        channelManager.add(channelId, new WebSocketChannel(channelId, session, channelInfo));
-        log.debug("onWebSocketConnect ['{}'] -> '{}'", channelId, channelInfo);
+        channelManager.add(channelId, new WebSocketChannel(channelId, agentId, session, userAgent));
+        log.debug("onWebSocketConnect ['{}'] -> '{}'", channelId, userAgent);
     }
 
     @Override

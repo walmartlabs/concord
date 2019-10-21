@@ -37,23 +37,29 @@ public class WebSocketChannel {
     private static final Logger log = LoggerFactory.getLogger(WebSocketChannel.class);
 
     private final UUID channelId;
-    private final String channelInfo;
+    private final String agentId;
+    private final String userAgent;
     private final Session session;
 
     private final Map<Long, Message> requests = new ConcurrentHashMap<>();
 
-    public WebSocketChannel(UUID channelId, Session session, String channelInfo) {
+    public WebSocketChannel(UUID channelId, String agentId, Session session, String userAgent) {
         this.channelId = channelId;
+        this.agentId = agentId;
         this.session = session;
-        this.channelInfo = channelInfo;
+        this.userAgent = userAgent;
     }
 
     public UUID getChannelId() {
         return channelId;
     }
 
-    public String getInfo() {
-        return channelInfo;
+    public String getAgentId() {
+        return agentId;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
     }
 
     public void onRequest(Message request) {

@@ -25,15 +25,17 @@ import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.server.queueclient.message.MessageType;
+import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.websocket.WebSocketChannel;
+import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Named
@@ -44,12 +46,30 @@ public class AgentManager {
     private final ProcessQueueDao queueDao;
     private final AgentCommandsDao commandQueue;
     private final ProcessQueueManager queueManager;
+    private final WebSocketChannelManager channelManager;
 
     @Inject
-    public AgentManager(ProcessQueueDao queueDao, AgentCommandsDao commandQueue, ProcessQueueManager queueManager) {
+    public AgentManager(ProcessQueueDao queueDao,
+                        AgentCommandsDao commandQueue,
+                        ProcessQueueManager queueManager,
+                        WebSocketChannelManager channelManager) {
+
         this.queueDao = queueDao;
         this.commandQueue = commandQueue;
         this.queueManager = queueManager;
+        this.channelManager = channelManager;
+    }
+
+    public Collection<AgentWorkerEntry> getAvailableAgents() {
+        Map<WebSocketChannel, ProcessRequest> reqs = channelManager.getRequests(MessageType.PROCESS_REQUEST);
+        return reqs.entrySet().stream()
+                .map(r -> AgentWorkerEntry.builder()
+                        .channelId(r.getKey().getChannelId())
+                        .agentId(r.getKey().getAgentId())
+                        .userAgent(r.getKey().getUserAgent())
+                        .capabilities(r.getValue().getCapabilities())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public void killProcess(ProcessKey processKey) {

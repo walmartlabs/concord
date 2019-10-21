@@ -207,7 +207,9 @@ public final class InternalConstants extends Constants {
 
         public static final String SECRET_TYPE = "X-Concord-SecretType";
 
-        public static final String AGENT = "X-Concord-Agent";
+        public static final String AGENT_UA = "X-Concord-Agent";
+
+        public static final String AGENT_ID = "X-Concord-Agent-Id";
     }
 
     public static final class Policy {

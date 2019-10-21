@@ -280,7 +280,7 @@ public class Dispatcher extends PeriodicTask {
             log.warn("sendResponse ['{}'] -> failed", correlationId);
         }
 
-        logManager.info(item.key(), "Acquired by: " + channel.getInfo());
+        logManager.info(item.key(), "Acquired by: " + channel.getUserAgent());
     }
 
     private static int countUniqueProjects(List<ProcessQueueEntry> candidates) {
