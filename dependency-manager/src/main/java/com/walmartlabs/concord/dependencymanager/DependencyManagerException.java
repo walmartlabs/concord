@@ -27,4 +27,8 @@ public class DependencyManagerException extends IOException {
     public DependencyManagerException(String message) {
         super(message);
     }
+
+    public DependencyManagerException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -9,6 +9,8 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- dependency-manager: better handling of partially downloaded
+artifacts;
 - concord-console: show the last error icon on the process status page;
 - concord-server: forks now re-use the parent process' `imports`.
 

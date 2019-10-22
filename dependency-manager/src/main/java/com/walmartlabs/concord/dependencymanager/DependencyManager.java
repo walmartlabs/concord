@@ -52,10 +52,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -206,18 +203,28 @@ public class DependencyManager {
             Files.createDirectories(baseDir);
         }
 
-        Path p = baseDir.resolve(name);
+        Path dst = baseDir.resolve(name);
 
         synchronized (mutex) {
-            if (!skipCache && Files.exists(p)) {
+            if (!skipCache && Files.exists(dst)) {
                 log.info("resolveFile -> using a cached copy of {}...", uri);
-                return p;
+                return dst;
             }
 
             log.info("resolveFile -> downloading {}...", uri);
-            download(uri, p);
 
-            return p;
+            Path tmp = baseDir.resolve(name + ".tmp");
+            try {
+                download(uri, tmp);
+                Files.move(tmp, dst, StandardCopyOption.REPLACE_EXISTING);
+            } finally {
+                if (Files.exists(tmp)) {
+                    Files.delete(tmp);
+                }
+            }
+
+
+            return dst;
         }
     }
 
