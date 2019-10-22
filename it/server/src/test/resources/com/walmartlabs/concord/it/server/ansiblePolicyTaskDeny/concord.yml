@@ -11,6 +11,7 @@ flows:
             ansible_connection: "local"
       extraVars:
         greetings: "Hello, world"
+      enablePolicy: true
 
 variables:
   entryPoint: main

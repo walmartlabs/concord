@@ -4,11 +4,14 @@
 
 ### Added
 
+- ansible: new parameter `enablePolicy` to apply Concord policies to
+plays;
 - concord-server: new endpoint `/api/v1/agent/all/workers` to
 retrieve the list of currently available agent workers;
 
 ### Changed
 
+- ansible: disable Concord policies by default;
 - dependency-manager: better handling of partially downloaded
 artifacts;
 - concord-console: show the last error icon on the process status page;

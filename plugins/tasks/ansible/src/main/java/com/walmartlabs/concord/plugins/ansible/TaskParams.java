@@ -45,6 +45,8 @@ public enum TaskParams implements HasKey {
 
     DYNAMIC_INVENTORY_FILE_NAME("_dynamicInventory"),
 
+    ENABLE_POLICY("enablePolicy"),
+
     EXIT_CODE_KEY("exitCode"),
 
     EXTRA_ENV_KEY("extraEnv"),
