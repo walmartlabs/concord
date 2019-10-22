@@ -27,6 +27,7 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -46,6 +47,10 @@ public final class ResolveExceptionConverter {
     }
 
     public DependencyManagerException convert(Exception e) {
+        if (e instanceof IOException) {
+            return new DependencyManagerException(e);
+        }
+
         List<Throwable> exceptions = ExceptionUtils.getExceptionList(e);
         String cause = getCause(exceptions);
         return new DependencyManagerException(cause);
