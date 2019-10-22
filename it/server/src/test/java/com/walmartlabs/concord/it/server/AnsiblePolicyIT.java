@@ -79,7 +79,6 @@ public class AnsiblePolicyIT extends AbstractServerIT {
         assertLog(".*Task 'Copy a local file \\(copy\\)' is forbidden by the task policy.*", ab);
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> readPolicy(String file) throws Exception {
         URL url = AnsiblePolicyIT.class.getResource(file);
         return fromJson(new File(url.toURI()));

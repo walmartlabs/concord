@@ -51,13 +51,17 @@ public class AnsibleCallbacks {
     private static final String CALLBACK_PLUGINS_DIR = "_callbacks";
     private static final String[] CALLBACKS = new String[]{
             "concord_events.py", "concord_trace.py", "concord_protectdata.py",
-            "concord_strategy_patch.py", "concord_task_executor_patch.py", "concord_out_vars.py"};
+            "concord_strategy_patch.py", "concord_out_vars.py"};
+    private static final String[] POLICY_CALLBACKS = new String[] {
+            "concord_task_executor_patch.py"
+    };
 
     private final boolean debug;
     private final Path workDir;
     private final Path tmpDir;
 
     private boolean disabled = false;
+    private boolean policyEnabled = false;
 
     private Path eventsFile;
     private EventSender eventSender;
@@ -71,6 +75,7 @@ public class AnsibleCallbacks {
 
     public AnsibleCallbacks parse(Map<String, Object> args) {
         disabled = getBoolean(args, TaskParams.DISABLE_CONCORD_CALLBACKS_KEY, false);
+        policyEnabled = getBoolean(args, TaskParams.ENABLE_POLICY, false);
         return this;
     }
 
@@ -81,6 +86,9 @@ public class AnsibleCallbacks {
 
         try {
             Resources.copy(CALLBACK_LOCATION, CALLBACKS, getDir());
+            if (policyEnabled) {
+                Resources.copy(CALLBACK_LOCATION, POLICY_CALLBACKS, getDir());
+            }
         } catch (IOException e) {
             log.error("Error while adding Concord callback plugins: {}", e.getMessage(), e);
             throw new RuntimeException("Error while adding Concord callback plugins: " + e.getMessage());
