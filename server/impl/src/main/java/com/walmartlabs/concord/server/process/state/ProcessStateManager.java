@@ -24,7 +24,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
+import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
@@ -74,7 +74,7 @@ public class ProcessStateManager extends AbstractDao {
     @Inject
     protected ProcessStateManager(@MainDB Configuration cfg,
                                   SecretStoreConfiguration secretCfg,
-                                  ProcessStateConfiguration stateCfg) {
+                                  ProcessConfiguration stateCfg) {
         super(cfg);
         this.secretCfg = secretCfg;
 

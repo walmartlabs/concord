@@ -22,6 +22,8 @@ package com.walmartlabs.concord.server.process.logs;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgIntRange;
+import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogsRecord;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -49,11 +51,15 @@ public class ProcessLogsDao extends AbstractDao {
         super(cfg);
     }
 
-    public void append(ProcessKey processKey, byte[] data) {
+    /**
+     * Appends a chunk to the process log. Automatically calculates the chunk's range.
+     * @return the new chunk range.
+     */
+    public PgIntRange append(ProcessKey processKey, byte[] data) {
         UUID instanceId = processKey.getInstanceId();
         Timestamp createdAt = processKey.getCreatedAt();
 
-        tx(tx -> tx.insertInto(PROCESS_LOGS)
+        ProcessLogsRecord r = txResult(tx -> tx.insertInto(PROCESS_LOGS)
                 .columns(PROCESS_LOGS.INSTANCE_ID,
                         PROCESS_LOGS.INSTANCE_CREATED_AT,
                         PROCESS_LOGS.CHUNK_RANGE,
@@ -62,7 +68,10 @@ public class ProcessLogsDao extends AbstractDao {
                         value(createdAt),
                         processLogNextRange2(instanceId, createdAt, data.length),
                         value(data))
-                .execute());
+                .returning(PROCESS_LOGS.CHUNK_RANGE)
+                .fetchOne());
+
+        return PgIntRange.parse(r.getChunkRange().toString());
     }
 
     public ProcessLog get(ProcessKey processKey, Integer start, Integer end) {
