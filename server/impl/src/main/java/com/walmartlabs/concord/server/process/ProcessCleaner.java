@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
+import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
@@ -56,11 +56,11 @@ public class ProcessCleaner implements ScheduledTask {
             ProcessStatus.RESUMING.toString()
     };
 
-    private final ProcessStateConfiguration cfg;
+    private final ProcessConfiguration cfg;
     private final CleanerDao cleanerDao;
 
     @Inject
-    public ProcessCleaner(ProcessStateConfiguration cfg, CleanerDao cleanerDao) {
+    public ProcessCleaner(ProcessConfiguration cfg, CleanerDao cleanerDao) {
         this.cfg = cfg;
         this.cleanerDao = cleanerDao;
     }
@@ -85,7 +85,7 @@ public class ProcessCleaner implements ScheduledTask {
             super(cfg);
         }
 
-        void deleteOldState(Timestamp cutoff, ProcessStateConfiguration jobCfg) {
+        void deleteOldState(Timestamp cutoff, ProcessConfiguration jobCfg) {
             long t1 = System.currentTimeMillis();
 
             tx(tx -> {
@@ -137,7 +137,7 @@ public class ProcessCleaner implements ScheduledTask {
             log.info("deleteOldState -> took {}ms", (t2 - t1));
         }
 
-        void deleteOrphans(ProcessStateConfiguration jobCfg) {
+        void deleteOrphans(ProcessConfiguration jobCfg) {
             long t1 = System.currentTimeMillis();
 
             tx(tx -> {

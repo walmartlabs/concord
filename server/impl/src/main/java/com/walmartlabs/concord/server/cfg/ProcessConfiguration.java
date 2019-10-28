@@ -33,7 +33,7 @@ import java.util.List;
 
 @Named
 @Singleton
-public class ProcessStateConfiguration implements Serializable {
+public class ProcessConfiguration implements Serializable {
 
     @Inject
     @Config("process.cleanupInterval")
@@ -79,11 +79,15 @@ public class ProcessStateConfiguration implements Serializable {
     private Path signingKeyPath;
 
     @Inject
-    public ProcessStateConfiguration(@Config("process.signingKeyPath") @Nullable String signingKeyPath) {
+    @Config("process.logSizeLimit")
+    private int logSizeLimit;
+
+    @Inject
+    public ProcessConfiguration(@Config("process.signingKeyPath") @Nullable String signingKeyPath) {
         this.signingKeyPath = signingKeyPath != null ? Paths.get(signingKeyPath) : null;
     }
 
-    public ProcessStateConfiguration(long maxStateAge, List<String> secureFiles) {
+    public ProcessConfiguration(long maxStateAge, List<String> secureFiles) {
         this.maxStateAge = maxStateAge;
         this.secureFiles = secureFiles;
     }
@@ -130,5 +134,9 @@ public class ProcessStateConfiguration implements Serializable {
 
     public Path getSigningKeyPath() {
         return signingKeyPath;
+    }
+
+    public int getLogSizeLimit() {
+        return logSizeLimit;
     }
 }

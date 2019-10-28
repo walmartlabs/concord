@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors.signing;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
+import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,7 @@ public class Signing {
     private final PrivateKey privateKey;
 
     @Inject
-    public Signing(ProcessStateConfiguration cfg) throws Exception {
+    public Signing(ProcessConfiguration cfg) throws Exception {
         this.keyAlgorithm = cfg.getSigningKeyAlgorithm();
         this.signingAlgorithm = cfg.getSigningAlgorithm();
 

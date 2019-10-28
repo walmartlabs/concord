@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.state;
 import com.google.common.base.Charsets;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.AbstractDaoTest;
-import com.walmartlabs.concord.server.cfg.ProcessStateConfiguration;
+import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.junit.Ignore;
@@ -57,7 +57,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         writeTempFile(baseDir.resolve("file-2"), "456".getBytes());
 
         //
-        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(processKey, null, baseDir);
 
@@ -102,7 +102,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
             }
         }
 
-        ProcessStateConfiguration stateCfg = new ProcessStateConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(processKey, "/", baseDir);
     }

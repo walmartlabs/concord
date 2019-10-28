@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-server: configurable hard limit for the process log size;
 - ansible: new parameter `enablePolicy` to apply Concord policies to
 plays;
 - concord-server: new endpoint `/api/v1/agent/all/workers` to

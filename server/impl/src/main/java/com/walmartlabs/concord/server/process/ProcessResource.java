@@ -22,12 +22,13 @@ package com.walmartlabs.concord.server.process;
 
 import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -37,6 +38,7 @@ import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
+import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
@@ -101,6 +103,8 @@ public class ProcessResource implements Resource {
     private final ProcessKeyCache processKeyCache;
     private final ObjectMapper objectMapper;
     private final ProjectAccessManager projectAccessManager;
+    private final ProcessConfiguration processCfg;
+    private final LogManager logManager;
 
     @InjectCounter
     private final Counter logBytesAppended;
@@ -119,6 +123,8 @@ public class ProcessResource implements Resource {
                            ProjectAccessManager projectAccessManager,
                            ProcessKeyCache processKeyCache,
                            ObjectMapper objectMapper,
+                           ProcessConfiguration processCfg,
+                           LogManager logManager,
                            Counter logBytesAppended,
                            ProcessResourceV2 v2) {
 
@@ -133,6 +139,8 @@ public class ProcessResource implements Resource {
         this.projectAccessManager = projectAccessManager;
         this.processKeyCache = processKeyCache;
         this.objectMapper = objectMapper;
+        this.processCfg = processCfg;
+        this.logManager = logManager;
         this.logBytesAppended = logBytesAppended;
 
         this.v2 = v2;
@@ -856,13 +864,18 @@ public class ProcessResource implements Resource {
         ProcessKey processKey = assertProcessKey(instanceId);
 
         try {
-            byte[] ab = ByteStreams.toByteArray(data);
-            logsDao.append(processKey, ab);
+            byte[] ab = IOUtils.toByteArray(data);
+            PgIntRange r = logsDao.append(processKey, ab);
+
+            int logSizeLimit = processCfg.getLogSizeLimit();
+            if (r.getUpper() >= logSizeLimit) {
+                logManager.error(processKey, "Maximum log size reached: {}. Process cancelled.", logSizeLimit);
+                processManager.kill(processKey);
+            }
 
             logBytesAppended.inc(ab.length);
         } catch (IOException e) {
-            log.error("appendLog ['{}'] -> error", instanceId, e);
-            throw new ConcordApplicationException("append log error: " + e.getMessage());
+            throw new ConcordApplicationException("Error while appending a log: " + e.getMessage());
         }
     }
 
