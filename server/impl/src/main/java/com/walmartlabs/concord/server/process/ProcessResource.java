@@ -648,7 +648,9 @@ public class ProcessResource implements Resource {
     public Response downloadAttachment(@ApiParam @PathParam("id") UUID instanceId,
                                        @PathParam("name") @NotNull @Size(min = 1) String attachmentName) {
 
-        PartialProcessKey processKey = assertPartialKey(instanceId);
+        ProcessEntry processEntry = processManager.assertProcess(instanceId);
+        assertProcessAccess(processEntry, "attachment");
+        PartialProcessKey processKey = ProcessKey.from(processEntry);
 
         // TODO replace with javax.validation
         if (attachmentName.endsWith("/")) {
@@ -695,7 +697,11 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public List<String> listAttachments(@ApiParam @PathParam("id") UUID instanceId) {
-        PartialProcessKey processKey = assertPartialKey(instanceId);
+
+        ProcessEntry processEntry = processManager.assertProcess(instanceId);
+        assertProcessAccess(processEntry, "attachments");
+
+        PartialProcessKey processKey = ProcessKey.from(processEntry);
 
         String resource = InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
         List<String> l = stateManager.list(processKey, resource);
@@ -890,7 +896,7 @@ public class ProcessResource implements Resource {
         ProcessEntry entry = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = ProcessKey.from(entry);
 
-        assertProcessStateAccess(entry);
+        assertProcessAccess(entry, "attachments");
 
         StreamingOutput out = output -> {
             try (ZipArchiveOutputStream dst = new ZipArchiveOutputStream(output)) {
@@ -917,7 +923,7 @@ public class ProcessResource implements Resource {
         ProcessEntry p = assertProcess(PartialProcessKey.from(instanceId));
         ProcessKey processKey = ProcessKey.from(p);
 
-        assertProcessStateAccess(p);
+        assertProcessAccess(p, "state");
 
         StreamingOutput out = output -> {
             Path tmp = stateManager.get(processKey, fileName, ProcessResource::copyToTmp)
@@ -1085,7 +1091,7 @@ public class ProcessResource implements Resource {
         return processKey;
     }
 
-    private void assertProcessStateAccess(ProcessEntry p) {
+    private void assertProcessAccess(ProcessEntry p, String downloadEntity) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
 
         UUID initiatorId = p.initiatorId();
@@ -1104,7 +1110,7 @@ public class ProcessResource implements Resource {
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to the download the process state: " + p.instanceId());
+                "the necessary permissions to the download " + downloadEntity + " : " + p.instanceId());
     }
 
     private ProcessEntry assertProcess(PartialProcessKey processKey) {

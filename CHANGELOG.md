@@ -12,6 +12,9 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- concord-server: additional permission checks when downloading
+process attachments. Now only process initiators, project owners or
+admins can download attachments;
 - ansible: disable Concord policies by default;
 - dependency-manager: better handling of partially downloaded
 artifacts;
