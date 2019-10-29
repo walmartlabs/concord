@@ -64,16 +64,10 @@ public class TaskResolver extends ServiceTaskResolver {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private static String getAnnotationValue(Field f) {
         InjectVariable iv = f.getAnnotation(InjectVariable.class);
         if (iv != null) {
             return iv.value();
-        } else {
-            com.walmartlabs.concord.common.InjectVariable iv2 = f.getAnnotation(com.walmartlabs.concord.common.InjectVariable.class);
-            if (iv2 != null) {
-                return iv2.value();
-            }
         }
         return null;
     }
