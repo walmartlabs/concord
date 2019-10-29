@@ -64,17 +64,10 @@ public class TaskRegistry implements ServiceTaskRegistry, DynamicTaskRegistry {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void register(Class<? extends Task> taskClass) {
         Named n = taskClass.getAnnotation(Named.class);
         if (n == null) {
             throw new IllegalArgumentException("Tasks must be annotated with @Named");
-        }
-
-        if (com.walmartlabs.concord.common.Task.class.isAssignableFrom(taskClass)) {
-            log.warn("{}: '{}' is deprecated, please use '{}'", n,
-                    com.walmartlabs.concord.common.Task.class.getName(),
-                    Task.class.getName());
         }
 
         dynamicTasks.put(n.value(), taskClass);

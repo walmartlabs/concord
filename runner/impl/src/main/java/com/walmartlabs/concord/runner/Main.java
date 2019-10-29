@@ -351,7 +351,6 @@ public class Main {
 
         // workDir
         String dir = workDir.toAbsolutePath().toString();
-        m.put(InternalConstants.Context.LOCAL_PATH_KEY, dir);
         m.put(InternalConstants.Context.WORK_DIR_KEY, dir);
 
         // out variables

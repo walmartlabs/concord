@@ -173,48 +173,20 @@ public class EngineFactory {
 
         private final ProjectDefinition project;
         private final Collection<String> activeProfiles;
-        private final Map<String, String> attributes;
 
-        @SuppressWarnings("deprecation")
         private ProjectDefinitionAdapter(ProjectDefinition project, Collection<String> activeProfiles, Path baseDir) {
             this.project = project;
             this.activeProfiles = activeProfiles;
-
-            // for backward compatibility
-            String localPath = baseDir.toAbsolutePath().toString();
-            this.attributes = Collections.singletonMap(InternalConstants.Context.LOCAL_PATH_ATTR, localPath);
         }
 
         ProcessDefinitionProvider processes() {
             return id -> {
-                ProcessDefinition pd = ProjectDefinitionUtils.getFlow(project, activeProfiles, id);
-                if (pd == null) {
-                    return null;
-                }
-
-                return mergeAttr(pd, attributes);
+                return ProjectDefinitionUtils.getFlow(project, activeProfiles, id);
             };
         }
 
         FormDefinitionProvider forms() {
             return id -> ProjectDefinitionUtils.getForm(project, activeProfiles, id);
-        }
-
-        private static ProcessDefinition mergeAttr(ProcessDefinition pd, Map<String, String> attr) {
-            Map<String, String> current = pd.getAttributes();
-            if (current == null) {
-                current = Collections.emptyMap();
-            }
-
-            Map<String, String> m = new HashMap<>(current);
-            m.putAll(attr);
-
-            if (pd instanceof SourceAwareProcessDefinition) {
-                SourceAwareProcessDefinition spd = (SourceAwareProcessDefinition) pd;
-                return new SourceAwareProcessDefinition(pd.getId(), pd.getChildren(), m, spd.getSourceMaps());
-            } else {
-                return new ProcessDefinition(pd, m);
-            }
         }
     }
 

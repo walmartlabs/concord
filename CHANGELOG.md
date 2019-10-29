@@ -18,6 +18,14 @@ artifacts;
 - concord-console: show the last error icon on the process status page;
 - concord-server: forks now re-use the parent process' `imports`.
 
+### Breaking
+
+- concord-runner: remove deprecated process definition attributes:
+    - `__attr_localPath`;
+- concord-sdk: remove deprecated interfaces and annotations:
+    - `com.walmartlabs.concord.common.InjectVariable`;
+    - `com.walmartlabs.concord.common.Task`.
+
 
 
 ## [1.35.1] - 2019-10-17
