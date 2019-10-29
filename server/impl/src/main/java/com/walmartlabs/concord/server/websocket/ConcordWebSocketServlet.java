@@ -20,23 +20,29 @@ package com.walmartlabs.concord.server.websocket;
  * =====
  */
 
-import com.google.inject.Injector;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
-import javax.servlet.ServletContext;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.servlet.annotation.WebServlet;
 
+@Named
+@WebServlet("/websocket")
 public class ConcordWebSocketServlet extends WebSocketServlet {
+
+    private final WebSocketChannelManager channelManager;
+    private final ApiKeyDao apiKeyDao;
+
+    @Inject
+    public ConcordWebSocketServlet(WebSocketChannelManager channelManager, ApiKeyDao apiKeyDao) {
+        this.channelManager = channelManager;
+        this.apiKeyDao = apiKeyDao;
+    }
 
     @Override
     public void configure(WebSocketServletFactory factory) {
-        ServletContext ctx = getServletContext();
-        Injector injector = (Injector) ctx.getAttribute(Injector.class.getName());
-
-        WebSocketChannelManager channelManager = injector.getInstance(WebSocketChannelManager.class);
-        ApiKeyDao apiKeyDao = injector.getInstance(ApiKeyDao.class);
-
         factory.setCreator(new WebSocketCreator(channelManager, apiKeyDao));
     }
 }
