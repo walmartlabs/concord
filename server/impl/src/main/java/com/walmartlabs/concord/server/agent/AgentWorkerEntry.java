@@ -37,6 +37,7 @@ public interface AgentWorkerEntry {
 
     UUID channelId();
 
+    @Nullable // backward-compatibility with old agent versions
     String agentId();
 
     String userAgent();
