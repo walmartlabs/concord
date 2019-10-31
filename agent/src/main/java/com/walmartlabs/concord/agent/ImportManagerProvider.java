@@ -32,7 +32,7 @@ public class ImportManagerProvider {
     private final ImportManagerFactory factory;
 
     public ImportManagerProvider(RepositoryManager repositoryManager, DependencyManager dependencyManager) {
-        this.factory = new ImportManagerFactory(dependencyManager, (RepositoryExporter) (entry, workDir) -> {
+        this.factory = new ImportManagerFactory(dependencyManager, (entry, workDir) -> {
             Path dst = workDir;
             if (entry.dest() != null) {
                 dst = dst.resolve(entry.dest());

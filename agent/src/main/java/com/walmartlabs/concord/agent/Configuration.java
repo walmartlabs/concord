@@ -80,6 +80,8 @@ public class Configuration {
     private final int repositoryHttpLowSpeedTime;
     private final int repositorySshTimeout;
     private final int repositorySshTimeoutRetryCount;
+    private final long repositoryCacheMaxAge;
+    private final Path repositoryCacheInfoDir;
 
     private final Path runnerPath;
     private final Path runnerCfgDir;
@@ -149,6 +151,8 @@ public class Configuration {
         this.repositoryHttpLowSpeedTime = cfg.getInt("git.httpLowSpeedTime");
         this.repositorySshTimeout = cfg.getInt("git.sshTimeout");
         this.repositorySshTimeoutRetryCount = cfg.getInt("git.sshTimeoutRetryCount");
+        this.repositoryCacheMaxAge = cfg.getDuration("repositoryCache.maxAge", TimeUnit.MILLISECONDS);
+        this.repositoryCacheInfoDir = getDir(cfg, "repositoryCache.cacheInfoDir");
 
         String path = getStringOrDefault(cfg, "runner.path", () -> {
             try {
@@ -317,6 +321,14 @@ public class Configuration {
         return shallowClone;
     }
 
+    public Path getRepositoryCacheInfoDir() {
+        return repositoryCacheInfoDir;
+    }
+
+    public long getRepositoryCacheMaxAge() {
+        return repositoryCacheMaxAge;
+    }
+
     @Override
     public String toString() {
         return "Configuration{" +
@@ -351,6 +363,8 @@ public class Configuration {
                 ", repositoryHttpLowSpeedTime=" + repositoryHttpLowSpeedTime +
                 ", repositorySshTimeout=" + repositorySshTimeout +
                 ", repositorySshTimeoutRetryCount=" + repositorySshTimeoutRetryCount +
+                ", repositoryCacheInfoDir=" + repositoryCacheInfoDir +
+                ", repositoryCacheMaxAge=" + repositoryCacheMaxAge +
                 ", runnerPath=" + runnerPath +
                 ", runnerCfgDir=" + runnerCfgDir +
                 ", agentJavaCmd='" + agentJavaCmd + '\'' +

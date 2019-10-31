@@ -41,6 +41,8 @@ public class RepositoryConfiguration {
 
     private final Path cacheDir;
 
+    private final Path cacheInfoDir;
+
     @Inject
     @Config("repositoryCache.concordFileValidationEnabled")
     private boolean concordFileValidationEnabled;
@@ -50,10 +52,17 @@ public class RepositoryConfiguration {
     private long lockTimeout;
 
     @Inject
-    public RepositoryConfiguration(@Config("repositoryCache.cacheDir") @Nullable String cacheDir) throws IOException {
+    @Config("repositoryCache.maxAge")
+    private long maxAge;
+
+    @Inject
+    public RepositoryConfiguration(@Config("repositoryCache.cacheDir") @Nullable String cacheDir,
+                                   @Config("repositoryCache.cacheInfoDir") @Nullable String cacheInfoDir) throws IOException {
 
         this.cacheDir = getPath(cacheDir, "repoCache");
-        log.info("init -> using {} to cache repositories", this.cacheDir);
+        this.cacheInfoDir = getPath(cacheInfoDir, "repoCacheInfo");
+
+        log.info("init -> using {} ({}) to cache repositories", this.cacheDir, this.cacheInfoDir);
     }
 
     public Path getCacheDir() {
@@ -66,5 +75,13 @@ public class RepositoryConfiguration {
 
     public boolean isConcordFileValidationEnabled() {
         return concordFileValidationEnabled;
+    }
+
+    public long getMaxAge() {
+        return maxAge;
+    }
+
+    public Path getCacheInfoDir() {
+        return cacheInfoDir;
     }
 }
