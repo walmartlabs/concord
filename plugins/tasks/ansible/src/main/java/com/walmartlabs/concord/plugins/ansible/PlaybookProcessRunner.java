@@ -24,9 +24,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public interface PlaybookProcessBuilder {
+public interface PlaybookProcessRunner {
 
-    PlaybookProcessBuilder withDebug(boolean debug);
+    PlaybookProcessRunner withDebug(boolean debug);
 
-    Process build(List<String> args, Map<String, String> env) throws IOException;
+    int run(List<String> args, Map<String, String> env, LogCallback callback) throws IOException, InterruptedException;
+
+    interface LogCallback {
+
+        void onLog(String line);
+    }
 }

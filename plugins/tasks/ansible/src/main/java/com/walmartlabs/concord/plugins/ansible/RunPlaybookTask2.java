@@ -26,14 +26,15 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEventsApi;
-import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.*;
 import java.util.Collection;
 import java.util.HashMap;
@@ -87,14 +88,19 @@ public class RunPlaybookTask2 implements Task {
         Collection<String> extraHosts = DockerExtraHosts.getHosts(getMap(args, TaskParams.DOCKER_OPTS_KEY, null));
         log.info("Using extra /etc/hosts records: {}", extraHosts);
 
+        int pullRetryCount = MapUtils.getInt(args, TaskParams.DOCKER_PULL_RETRY_COUNT.getKey(), 0);
+        long pullRetryInterval = MapUtils.getInt(args, TaskParams.DOCKER_PULL_RETRY_INTERVAL.getKey(), 0);
+
         run(args, payloadPath,
-                new DockerPlaybookProcessBuilder(dockerService, context, dockerImageName)
+                new DockerPlaybookProcessRunner(dockerService, context, dockerImageName)
                         .withForcePull(getBoolean(args, TaskParams.FORCE_PULL_KEY, true))
+                        .withPullRetryCount(pullRetryCount)
+                        .withPullRetryInterval(pullRetryInterval)
                         .withHosts(extraHosts));
     }
 
     public void run(Map<String, Object> args, String payloadPath) throws Exception {
-        run(args, payloadPath, new DefaultPlaybookProcessBuilder(payloadPath));
+        run(args, payloadPath, new DefaultPlaybookProcessRunner(payloadPath));
     }
 
     @Override
@@ -121,7 +127,7 @@ public class RunPlaybookTask2 implements Task {
         }
     }
 
-    private void run(Map<String, Object> args, String payloadPath, PlaybookProcessBuilder playbookProcessBuilder) throws Exception {
+    private void run(Map<String, Object> args, String payloadPath, PlaybookProcessRunner playbookProcessRunner) throws Exception {
         String playbook = assertString(args, TaskParams.PLAYBOOK_KEY.getKey());
         log.info("Using a playbook: {}", playbook);
 
@@ -201,17 +207,10 @@ public class RunPlaybookTask2 implements Task {
 
             auth.prepare();
 
-            Process p = playbookProcessBuilder
+            int code = playbookProcessRunner
                     .withDebug(debug)
-                    .build(b.buildArgs(), b.buildEnv());
+                    .run(b.buildArgs(), b.buildEnv(), line -> processLog.info("ANSIBLE: {}", line));
 
-            BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                processLog.info("ANSIBLE: {}", line);
-            }
-
-            int code = p.waitFor();
             log.debug("execution -> done, code {}", code);
 
             updateAnsibleStats(workDir, code);

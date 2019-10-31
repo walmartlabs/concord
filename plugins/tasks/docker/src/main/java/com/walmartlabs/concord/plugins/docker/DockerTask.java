@@ -20,14 +20,15 @@ package com.walmartlabs.concord.plugins.docker;
  * =====
  */
 
-import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,6 +54,8 @@ public class DockerTask implements Task {
     public static final String DEBUG_KEY = "debug";
     public static final String STDOUT_KEY = "stdout";
     public static final String STDERR_KEY = "stderr";
+    public static final String PULL_RETRY_COUNT_KEY = "pullRetryCount";
+    public static final String PULL_RETRY_INTERVAL_KEY = "pullRetryInterval";
 
     @Inject
     private DockerService dockerService;
@@ -73,6 +76,8 @@ public class DockerTask implements Task {
         boolean debug = ContextUtils.getBoolean(ctx, DEBUG_KEY, false);
         String stdOutVar = ContextUtils.getString(ctx, STDOUT_KEY);
         String stdErrVar = ContextUtils.getString(ctx, STDERR_KEY);
+        int pullRetryCount = ContextUtils.getInt(ctx, PULL_RETRY_COUNT_KEY, 3);
+        long pullRetryInterval = ContextUtils.getInt(ctx, PULL_RETRY_INTERVAL_KEY, 10_000);
 
         Path baseDir = Paths.get(workDir);
         Path containerDir = Paths.get(VOLUME_CONTAINER_DEST);
@@ -101,7 +106,7 @@ public class DockerTask implements Task {
         }
 
         boolean isRedirectErrorStream = stdErrVar == null && stdOutVar == null;
-        Process p = dockerService.start(ctx, DockerContainerSpec.builder()
+        DockerContainerSpec spec = DockerContainerSpec.builder()
                 .image(image)
                 .env(stringify(env))
                 .envFile(envFile)
@@ -111,16 +116,22 @@ public class DockerTask implements Task {
                 .debug(debug)
                 .redirectErrorStream(isRedirectErrorStream)
                 .stdOutFilePath(stdOutFilePath)
-                .build());
+                .pullRetryCount(pullRetryCount)
+                .pullRetryInterval(pullRetryInterval)
+                .build();
+        boolean withInputStream = isRedirectErrorStream || stdOutVar == null;
+        boolean withErrorStream = !withInputStream || stdErrVar != null;
+        StringBuilder stdErr = new StringBuilder();
+        int code = dockerService.start(ctx, spec,
+                withInputStream ? line -> processLog.info("DOCKER: {}", line) : null,
+                withErrorStream ? line -> {
+                    if (stdErrVar == null) {
+                        processLog.info("DOCKER: {}", line);
+                    } else {
+                        stdErr.append(line).append("\n");
+                    }
+                } : null);
 
-        if (isRedirectErrorStream || stdOutVar == null) {
-            streamToLog(p.getInputStream());
-        } else if (stdErrVar == null) {
-            streamToLog(p.getErrorStream());
-        }
-
-        // wait for the process to end
-        int code = p.waitFor();
         if (code != SUCCESS_EXIT_CODE) {
             log.warn("call ['{}', '{}', '{}'] -> finished with code {}", image, cmd, workDir, code);
             throw new RuntimeException("Docker process finished with with exit code " + code);
@@ -134,19 +145,10 @@ public class DockerTask implements Task {
         }
 
         if (stdErrVar != null) {
-            String error = toString(p.getErrorStream());
-            ctx.setVariable(stdErrVar, error);
+            ctx.setVariable(stdErrVar, stdErr.toString());
         }
 
         log.info("call ['{}', '{}', '{}', '{}'] -> done", image, cmd, workDir, hosts);
-    }
-
-    private static void streamToLog(InputStream in) throws IOException {
-        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(in));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            processLog.info("DOCKER: {}", line);
-        }
     }
 
     private static Path createRunScript(Path workDir, String cmd) throws IOException {

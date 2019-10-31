@@ -139,4 +139,17 @@ public class DockerIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*STDERR: STDERR WORKS.*", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testPullRetry() throws Exception {
+        byte[] payload = archive(DockerIT.class.getResource("dockerPullRetry").toURI());
+
+        StartProcessResponse spr = start(payload);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLogAtLeast(".*Error pulling the image.*", 3, ab);
+    }
 }
