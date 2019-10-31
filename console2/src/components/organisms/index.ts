@@ -53,7 +53,6 @@ export { default as ProcessWaitActivity } from './ProcessWaitActivity';
 export { default as ProjectActivity } from './ProjectActivity';
 export { default as ProjectDeleteActivity } from './ProjectDeleteActivity';
 export { default as ProjectDropdown } from './ProjectDropdown';
-export { default as ProjectList } from './ProjectList';
 export { default as ProjectListActivity } from './ProjectListActivity';
 export { default as ProjectRenameActivity } from './ProjectRenameActivity';
 export { default as ProjectOwnerChangeActivity } from './ProjectOwnerChangeActivity';

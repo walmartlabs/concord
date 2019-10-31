@@ -102,25 +102,57 @@ public class ProjectDaoTest extends AbstractDaoTest {
     public void testList() throws Exception {
         UUID orgId = OrganizationManager.DEFAULT_ORG_ID;
 
-        assertEquals(0, projectDao.list(null, null, PROJECTS.PROJECT_NAME, true).size());
+        assertEquals(0, projectDao.list(null, null, PROJECTS.PROJECT_NAME, true, 0, -1, null).size());
 
         // ---
 
         String aName = "aProject#" + System.currentTimeMillis();
         String bName = "bProject#" + System.currentTimeMillis();
+        String cName = "cProject#" + System.currentTimeMillis();
 
         projectDao.insert(orgId, aName, "test", null, null, null, null, new byte[0], null);
         projectDao.insert(orgId, bName, "test", null, null, null, null, new byte[0], null);
+        projectDao.insert(orgId, cName, "test", null, null, null, null, new byte[0], null);
 
         // ---
 
-        List<ProjectEntry> l = projectDao.list(null, null, PROJECTS.PROJECT_NAME, false);
-        assertEquals(2, l.size());
+        List<ProjectEntry> l = projectDao.list(null, null, PROJECTS.PROJECT_NAME, false, 0, -1, null);
+        assertEquals(3, l.size());
 
-        ProjectEntry a = l.get(1);
+        ProjectEntry a = l.get(2);
         assertEquals(aName, a.getName());
 
-        ProjectEntry b = l.get(0);
+        ProjectEntry b = l.get(1);
         assertEquals(bName, b.getName());
+
+        ProjectEntry c = l.get(0);
+        assertEquals(cName, c.getName());
+
+        // ---
+
+        List<ProjectEntry> l2 = projectDao.list(null, null, PROJECTS.PROJECT_NAME, false, 1, -1, null);
+        assertEquals(2, l2.size());
+
+        ProjectEntry a2 = l2.get(1);
+        assertEquals(aName, a2.getName());
+
+        ProjectEntry b2 = l2.get(0);
+        assertEquals(bName, b2.getName());
+
+        // ---
+
+        List<ProjectEntry> l3 = projectDao.list(null, null, PROJECTS.PROJECT_NAME, false, 0, -1, "cProject");
+        assertEquals(1, l3.size());
+
+        ProjectEntry c3 = l3.get(0);
+        assertEquals(cName, c3.getName());
+
+        // ---
+
+        List<ProjectEntry> l4 = projectDao.list(null, null, PROJECTS.PROJECT_NAME, false, 0, 1, null);
+        assertEquals(1, l4.size());
+
+        ProjectEntry c4 = l4.get(0);
+        assertEquals(cName, c4.getName());
     }
 }

@@ -128,8 +128,21 @@ public class ProjectResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
     public List<ProjectEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
+        // keep the original method for backward compatibility
+        return find(orgName, 0, -1, null);
+    }
+
+    @GET
+    @ApiOperation(value = "List existing projects", responseContainer = "list", response = ProjectEntry.class)
+    @Path("/{orgName}/project")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Validate
+    public List<ProjectEntry> find(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
+                                   @QueryParam("offset") int offset,
+                                   @QueryParam("limit") int limit,
+                                   @QueryParam("filter") String filter) {
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return projectManager.list(org.getId());
+        return projectManager.list(org.getId(), offset, limit, filter);
     }
 
     @GET

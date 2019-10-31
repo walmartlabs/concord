@@ -26,7 +26,8 @@ import {
     fetchJson,
     GenericOperationResult,
     OperationResult,
-    Owner
+    Owner,
+    queryParams
 } from '../../common';
 import { RepositoryEntry } from './repository';
 
@@ -88,12 +89,43 @@ export interface UpdateProjectEntry {
     rawPayloadMode?: RawPayloadMode;
 }
 
+export interface PaginatedProjectEntries {
+    items: ProjectEntry[];
+    next: boolean;
+}
+
 export const get = (orgName: ConcordKey, projectName: ConcordKey): Promise<ProjectEntry> => {
     return fetchJson<ProjectEntry>(`/api/v1/org/${orgName}/project/${projectName}`);
 };
 
-export const list = (orgName: ConcordKey): Promise<ProjectEntry[]> =>
-    fetchJson<ProjectEntry[]>(`/api/v1/org/${orgName}/project`);
+export const list = async (
+    orgName: ConcordKey,
+    offset: number,
+    limit: number,
+    filter?: string
+): Promise<PaginatedProjectEntries> => {
+    const offsetParam = offset > 0 && limit > 0 ? offset * limit : offset;
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: ProjectEntry[] = await fetchJson(
+        `/api/v1/org/${orgName}/project?${queryParams({
+            offset: offsetParam,
+            limit: limitParam,
+            filter
+        })}`
+    );
+
+    const hasMoreElements: boolean = !!limit && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data,
+        next: hasMoreElements
+    };
+};
 
 export interface ProjectOperationResult {
     ok: boolean;

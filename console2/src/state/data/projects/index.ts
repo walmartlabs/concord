@@ -24,6 +24,7 @@ import { all, call, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey, Owner } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
+import { reducers as sessionReducers } from '../../../state/session';
 import {
     changeOwner as apiChangeOwner,
     createOrUpdate as apiCreateOrUpdate,
@@ -62,8 +63,9 @@ import {
     DeleteRepositoryState,
     GetProjectRequest,
     ListProjectsRequest,
+    Pagination,
+    PaginatedProjects,
     ProjectDataResponse,
-    Projects,
     ProjectTeamAccessRequest,
     ProjectTeamAccessState,
     RefreshRepositoryRequest,
@@ -137,9 +139,15 @@ export const actions = {
         projectName
     }),
 
-    listProjects: (orgName: ConcordKey): ListProjectsRequest => ({
+    listProjects: (
+        orgName: ConcordKey,
+        pagination: Pagination,
+        filter?: string
+    ): ListProjectsRequest => ({
         type: actionTypes.LIST_PROJECTS_REQUEST,
-        orgName
+        orgName,
+        pagination,
+        filter
     }),
 
     createProject: (orgName: ConcordKey, entry: NewProjectEntry): CreateProjectRequest => ({
@@ -264,20 +272,22 @@ export const actions = {
     })
 };
 
-const projectById: Reducer<Projects> = (state = {}, r: ProjectDataResponse) => {
-    switch (r.type) {
-        case actionTypes.PROJECT_DATA_RESPONSE: {
-            const a = r as ProjectDataResponse;
+const projectById: Reducer<PaginatedProjects> = (state = {}, action: ProjectDataResponse) => {
+    switch (action.type) {
+        case actionTypes.PROJECT_DATA_RESPONSE:
+            const a = action as ProjectDataResponse;
+
             if (a.error || !a.items) {
-                return {};
+                return state;
             }
 
             const result = {};
+
             a.items.forEach((o) => {
                 result[o.id] = o;
             });
-            return result;
-        }
+
+            return { items: result, next: a.next };
         default:
             return state;
     }
@@ -459,6 +469,8 @@ const updateTeamAccessReducers = combineReducers<UpdateProjectTeamAccessState>({
 
 export const reducers = combineReducers<State>({
     projectById, // TODO use makeEntityByIdReducer
+    session: sessionReducers,
+
     loading,
     error: errorMsg,
 
@@ -477,16 +489,27 @@ export const reducers = combineReducers<State>({
 });
 
 export const selectors = {
-    projectNames: (state: State, orgName: ConcordKey): ConcordKey[] =>
-        Object.keys(state.projectById)
-            .map((id) => state.projectById[id])
+    projectNames: (state: State, orgName: ConcordKey): ConcordKey[] => {
+        if (!state.projectById.items) {
+            return [];
+        }
+
+        const projectsById = state.projectById.items;
+
+        return Object.keys(projectsById)
+            .map((id) => projectsById[id])
             .filter((p) => p.orgName === orgName)
             .map((p) => p.name)
-            .sort(),
+            .sort();
+    },
 
     projectByName: (state: State, orgName: ConcordKey, projectName: ConcordKey) => {
-        for (const id of Object.keys(state.projectById)) {
-            const p = state.projectById[id];
+        if (!state.projectById.items) {
+            return;
+        }
+
+        for (const id of Object.keys(state.projectById.items)) {
+            const p = state.projectById.items[id];
             if (p.orgName === orgName && p.name === projectName) {
                 return p;
             }
@@ -513,12 +536,14 @@ function* onGet({ orgName, projectName }: GetProjectRequest) {
     }
 }
 
-function* onList({ orgName }: ListProjectsRequest) {
+function* onList({ orgName, pagination, filter }: ListProjectsRequest) {
     try {
-        const response = yield call(apiList, orgName);
+        const response = yield call(apiList, orgName, pagination.offset, pagination.limit, filter);
         yield put({
             type: actionTypes.PROJECT_DATA_RESPONSE,
-            items: response
+            items: response.items,
+            next: response.next,
+            prev: response.prev
         });
     } catch (e) {
         yield handleErrors(actionTypes.PROJECT_DATA_RESPONSE, e);

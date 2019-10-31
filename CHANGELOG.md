@@ -4,6 +4,7 @@
 
 ### Added
 
+- console: pagination for the project list;
 - docker, ansible: automatic retries when pulling images;
 - concord-server: configurable hard limit for the process log size;
 - ansible: new parameter `enablePolicy` to apply Concord policies to
