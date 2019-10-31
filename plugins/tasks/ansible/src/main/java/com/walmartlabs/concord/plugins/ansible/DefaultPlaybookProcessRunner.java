@@ -21,33 +21,36 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.walmartlabs.concord.common.PrivilegedAction;
+import com.walmartlabs.concord.common.TruncBufferedReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultPlaybookProcessBuilder implements PlaybookProcessBuilder {
+public class DefaultPlaybookProcessRunner implements PlaybookProcessRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultPlaybookProcessBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultPlaybookProcessRunner.class);
 
     private final String workDir;
 
     private boolean debug;
 
-    public DefaultPlaybookProcessBuilder(String workDir) {
+    public DefaultPlaybookProcessRunner(String workDir) {
         this.workDir = workDir;
     }
 
-    public DefaultPlaybookProcessBuilder withDebug(boolean debug) {
+    public DefaultPlaybookProcessRunner withDebug(boolean debug) {
         this.debug = debug;
         return this;
     }
 
     @Override
-    public Process build(List<String> args, Map<String, String> extraEnv) throws IOException {
+    public int run(List<String> args, Map<String, String> extraEnv, LogCallback logCallback) throws IOException, InterruptedException {
         File pwd = new File(workDir);
         if (!pwd.exists()) {
             throw new IOException("Working directory not found: " + pwd);
@@ -75,6 +78,14 @@ public class DefaultPlaybookProcessBuilder implements PlaybookProcessBuilder {
             log.info("build -> env: {}", env);
         }
 
-        return PrivilegedAction.perform("task", b::start);
+        Process p = PrivilegedAction.perform("task", b::start);
+
+        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(p.getInputStream()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            logCallback.onLog(line);
+        }
+
+        return p.waitFor();
     }
 }

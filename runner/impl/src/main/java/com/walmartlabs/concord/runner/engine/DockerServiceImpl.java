@@ -21,25 +21,40 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.common.DockerProcessBuilder;
+import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.DockerContainerSpec;
 import com.walmartlabs.concord.sdk.DockerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Named
 @Singleton
 public class DockerServiceImpl implements DockerService {
 
+    private static final Logger log = LoggerFactory.getLogger(DockerServiceImpl.class);
+
+    private static final int SUCCESS_EXIT_CODE = 0;
     private static final String WORKSPACE_TARGET_DIR = "/workspace";
+
+    private static final Pattern[] REGISTRY_ERROR_PATTERNS = {
+            Pattern.compile("Error response from daemon.*received unexpected HTTP status: 5.*"),
+            Pattern.compile("Error response from daemon.*Get.*connection refused.*")
+    };
 
     private final List<String> extraVolumes;
 
@@ -62,5 +77,93 @@ public class DockerServiceImpl implements DockerService {
         b.volumes((Collection<String>) ctx.interpolate(volumes));
 
         return b.build();
+    }
+
+    @Override
+    public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException {
+        int tryCount = 0;
+        int result;
+        int retryCount = Math.max(spec.pullRetryCount(), 0);
+        long retryInterval = spec.pullRetryInterval();
+
+        do {
+            Process p = start(ctx, spec);
+
+            LogCapture c = new LogCapture(outCallback);
+            streamToLog(p.getInputStream(), c);
+            if (errCallback != null) {
+                streamToLog(p.getErrorStream(), errCallback);
+            }
+
+            result = p.waitFor();
+            if (result == SUCCESS_EXIT_CODE || retryCount == 0 || tryCount >= retryCount) {
+                return result;
+            }
+
+            if (!needRetry(c.getLines())) {
+                return result;
+            }
+
+            log.info("Error pulling the image. Retry after {} sec", retryInterval / 1000);
+            sleep(retryInterval);
+            tryCount++;
+        } while (!Thread.currentThread().isInterrupted() && tryCount <= retryCount);
+
+        return result;
+    }
+
+    private static void streamToLog(InputStream in, LogCallback callback) throws IOException {
+        BufferedReader reader = new TruncBufferedReader(new InputStreamReader(in));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            callback.onLog(line);
+        }
+    }
+
+    private static boolean needRetry(List<String> lines) {
+        for (String l : lines) {
+            for (Pattern p : REGISTRY_ERROR_PATTERNS) {
+                if (p.matcher(l).matches()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static void sleep(long t) {
+        try {
+            Thread.sleep(t);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static class LogCapture implements LogCallback {
+
+        private static final int MAX_CAPTURE_LINES = 5;
+
+        private final LogCallback delegate;
+        private final List<String> lines;
+
+        private LogCapture(LogCallback delegate) {
+            this.delegate = delegate;
+            this.lines = new ArrayList<>();
+        }
+
+        @Override
+        public void onLog(String line) {
+            if (delegate != null) {
+                delegate.onLog(line);
+            }
+
+            if (lines.size() <= MAX_CAPTURE_LINES) {
+                lines.add(line);
+            }
+        }
+
+        List<String> getLines() {
+            return lines;
+        }
     }
 }

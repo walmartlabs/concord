@@ -41,6 +41,10 @@ public enum TaskParams implements HasKey {
 
     DOCKER_OPTS_KEY("dockerOpts"),
 
+    DOCKER_PULL_RETRY_COUNT("pullRetryCount"),
+
+    DOCKER_PULL_RETRY_INTERVAL("pullRetryInterval"),
+
     DYNAMIC_INVENTORY_FILE_KEY("dynamicInventoryFile"),
 
     DYNAMIC_INVENTORY_FILE_NAME("_dynamicInventory"),

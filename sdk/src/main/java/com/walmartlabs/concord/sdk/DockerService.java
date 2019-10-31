@@ -27,5 +27,14 @@ public interface DockerService {
     /**
      * Start a new Docker container using the provided specification.
      */
+    @Deprecated
     Process start(Context ctx, DockerContainerSpec spec) throws IOException;
+
+    int start(Context ctx, DockerContainerSpec spec,
+              LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException;
+
+    interface LogCallback {
+
+        void onLog(String line);
+    }
 }

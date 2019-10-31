@@ -68,6 +68,16 @@ public interface DockerContainerSpec {
     Options options();
 
     @Value.Default
+    default int pullRetryCount() {
+        return 3;
+    }
+
+    @Value.Default
+    default long pullRetryInterval() {
+        return 10_000;
+    }
+
+    @Value.Default
     default boolean debug() {
         return false;
     }

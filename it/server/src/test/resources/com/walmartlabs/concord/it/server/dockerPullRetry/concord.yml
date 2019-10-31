@@ -1,0 +1,5 @@
+flows:
+  default:
+    - docker: "localhost:12345/non-existing"
+      cmd: |
+        echo 'Hi!'

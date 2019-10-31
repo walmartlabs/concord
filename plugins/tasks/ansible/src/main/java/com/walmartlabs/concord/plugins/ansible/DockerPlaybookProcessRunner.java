@@ -29,7 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
+public class DockerPlaybookProcessRunner implements PlaybookProcessRunner {
 
     private final DockerService dockerService;
     private final Context ctx;
@@ -38,31 +38,43 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
     private Collection<String> hosts;
     private boolean debug = false;
     private boolean forcePull = true;
+    private int pullRetryCount = 0;
+    private long pullRetryInterval = 0;
 
-    public DockerPlaybookProcessBuilder(DockerService dockerService, Context ctx, String image) {
+    public DockerPlaybookProcessRunner(DockerService dockerService, Context ctx, String image) {
         this.dockerService = dockerService;
         this.ctx = ctx;
         this.image = image;
     }
 
     @Override
-    public PlaybookProcessBuilder withDebug(boolean debug) {
+    public PlaybookProcessRunner withDebug(boolean debug) {
         this.debug = debug;
         return this;
     }
 
-    public DockerPlaybookProcessBuilder withForcePull(boolean forcePull) {
+    public DockerPlaybookProcessRunner withForcePull(boolean forcePull) {
         this.forcePull = forcePull;
         return this;
     }
 
-    public DockerPlaybookProcessBuilder withHosts(Collection<String> hosts) {
+    public DockerPlaybookProcessRunner withHosts(Collection<String> hosts) {
         this.hosts = hosts;
         return this;
     }
 
+    public DockerPlaybookProcessRunner withPullRetryCount(int count) {
+        this.pullRetryCount = count;
+        return this;
+    }
+
+    public DockerPlaybookProcessRunner withPullRetryInterval(long interval) {
+        this.pullRetryInterval = interval;
+        return this;
+    }
+
     @Override
-    public Process build(List<String> args, Map<String, String> extraEnv) throws IOException {
+    public int run(List<String> args, Map<String, String> extraEnv, LogCallback logCallback) throws IOException, InterruptedException {
         return dockerService.start(ctx, DockerContainerSpec.builder()
                 .image(image)
                 .args(args)
@@ -71,6 +83,8 @@ public class DockerPlaybookProcessBuilder implements PlaybookProcessBuilder {
                 .forcePull(forcePull)
                 .options(DockerContainerSpec.Options.builder().hosts(hosts).build())
                 .workdir("/workspace") // TODO constants? move into the docker service as a default workdir value?
-                .build());
+                .pullRetryCount(pullRetryCount)
+                .pullRetryInterval(pullRetryInterval)
+                .build(), logCallback::onLog, null);
     }
 }
