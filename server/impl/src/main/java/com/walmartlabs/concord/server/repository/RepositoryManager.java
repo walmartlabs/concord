@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.repository;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.repository.*;
@@ -54,13 +55,15 @@ public class RepositoryManager {
     private final RepositoryProviders providers;
     private final ProjectDao projectDao;
     private final SecretManager secretManager;
-    private RepositoryConfiguration repoCfg;
+    private final RepositoryCache repositoryCache;
+    private final RepositoryConfiguration repoCfg;
 
     @Inject
-    public RepositoryManager(GitConfiguration gitCfg,
+    public RepositoryManager(ObjectMapper objectMapper,
+                             GitConfiguration gitCfg,
                              RepositoryConfiguration repoCfg,
                              ProjectDao projectDao,
-                             SecretManager secretManager) {
+                             SecretManager secretManager) throws IOException {
 
         GitClientConfiguration gitCliCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getOauthToken())
@@ -73,10 +76,15 @@ public class RepositoryManager {
 
         List<RepositoryProvider> providers = Arrays.asList(new ClasspathRepositoryProvider(), new GitCliRepositoryProvider(gitCliCfg));
 
-        this.providers = new RepositoryProviders(providers, repoCfg.getLockTimeout());
+        this.providers = new RepositoryProviders(providers);
         this.secretManager = secretManager;
         this.projectDao = projectDao;
         this.repoCfg = repoCfg;
+        this.repositoryCache = new RepositoryCache(repoCfg.getCacheDir(),
+                repoCfg.getCacheInfoDir(),
+                repoCfg.getLockTimeout(),
+                repoCfg.getMaxAge(),
+                objectMapper);
     }
 
     public void testConnection(UUID orgId, UUID projectId, String uri, String branch, String commitId, String path, String secretName) {
@@ -108,18 +116,19 @@ public class RepositoryManager {
     }
 
     public Repository fetch(String url, String branch, String commitId, String path, Secret secret) {
-        return providers.fetch(url, branch, commitId, path, secret, repoCfg.getCacheDir());
+        Path dest = repositoryCache.getPath(url);
+        return providers.fetch(url, branch, commitId, path, secret, dest);
     }
 
     public Repository fetch(UUID projectId, RepositoryEntry repository) {
         UUID orgId = getOrgId(projectId);
         Secret secret = getSecret(orgId, projectId, repository.getSecretName());
 
-        return providers.fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret, repoCfg.getCacheDir());
+        return fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret);
     }
 
     public <T> T withLock(String repoUrl, Callable<T> f) {
-        return providers.withLock(repoUrl, f);
+        return repositoryCache.withLock(repoUrl, f);
     }
 
     private UUID getOrgId(UUID projectId) {

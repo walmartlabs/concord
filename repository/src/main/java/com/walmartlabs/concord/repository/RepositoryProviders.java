@@ -20,57 +20,27 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import com.google.common.util.concurrent.Striped;
 import com.walmartlabs.concord.sdk.Secret;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 public class RepositoryProviders {
 
-    private final Striped<Lock> locks = Striped.lock(64);
-
     private final List<RepositoryProvider> providers;
-    private final long lockTimeout;
 
-    public RepositoryProviders(List<RepositoryProvider> providers, long lockTimeout) {
+    public RepositoryProviders(List<RepositoryProvider> providers) {
         this.providers = providers;
-        this.lockTimeout = lockTimeout;
     }
 
-    public Repository fetch(String uri, String branch, String commitId, String path, Secret secret, Path cacheDir) {
-        String encodedUrl = encodeUrl(uri);
-        Path localPath = cacheDir.resolve(encodedUrl);
+    public Repository fetch(String url, String branch, String commitId, String path, Secret secret, Path destDir) {
+        RepositoryProvider provider = getProvider(url);
+        provider.fetch(url, branch, commitId, secret, destDir);
 
-        RepositoryProvider provider = getProvider(uri);
-        provider.fetch(uri, branch, commitId, secret, localPath);
+        Path repoPath = repoPath(destDir, path);
 
-        Path repoPath = repoPath(localPath, path);
-
-        return new Repository(provider.getBranchOrDefault(branch), localPath, repoPath, provider);
-    }
-
-    public <T> T withLock(String repoUrl, Callable<T> f) {
-        Lock l = locks.get(repoUrl);
-        try {
-            if (!l.tryLock(lockTimeout, TimeUnit.MILLISECONDS)) {
-                throw new IllegalStateException("Timeout waiting for the repository lock. Repository url: " + repoUrl);
-            }
-            return f.call();
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            l.unlock();
-        }
+        return new Repository(provider.getBranchOrDefault(branch), destDir, repoPath, provider);
     }
 
     private RepositoryProvider getProvider(String url) {
@@ -114,16 +84,5 @@ public class RepositoryProviders {
         }
 
         return repoDir;
-    }
-
-    private static String encodeUrl(String url) {
-        String encodedUrl;
-        try {
-            encodedUrl = URLEncoder.encode(url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("Url encoding error", e);
-        }
-
-        return encodedUrl;
     }
 }

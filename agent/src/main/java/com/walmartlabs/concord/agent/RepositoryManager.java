@@ -20,10 +20,12 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -34,9 +36,9 @@ public class RepositoryManager {
 
     private final RepositoryProviders providers;
     private final SecretClient secretClient;
-    private final Path cacheDir;
+    private final RepositoryCache repositoryCache;
 
-    public RepositoryManager(Configuration cfg, SecretClient secretClient) {
+    public RepositoryManager(Configuration cfg, SecretClient secretClient, ObjectMapper objectMapper) throws IOException {
         GitClientConfiguration gitCfg = GitClientConfiguration.builder()
                 .oauthToken(cfg.getRepositoryOauthToken())
                 .shallowClone(cfg.isShallowClone())
@@ -47,10 +49,15 @@ public class RepositoryManager {
                 .build();
 
         List<RepositoryProvider> providers = Collections.singletonList(new GitCliRepositoryProvider(gitCfg));
-        this.providers = new RepositoryProviders(providers, cfg.getRepositoryLockTimeout());
+        this.providers = new RepositoryProviders(providers);
 
         this.secretClient = secretClient;
-        this.cacheDir = cfg.getRepositoryCacheDir();
+
+        this.repositoryCache = new RepositoryCache(cfg.getRepositoryCacheDir(),
+                cfg.getRepositoryCacheInfoDir(),
+                cfg.getRepositoryLockTimeout(),
+                cfg.getRepositoryCacheMaxAge(),
+                objectMapper);
     }
 
     public void export(String repoUrl, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition) throws ExecutionException {
@@ -60,7 +67,9 @@ public class RepositoryManager {
     public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition) throws ExecutionException {
         Secret secret = getSecret(secretDefinition);
 
-        providers.withLock(repoUrl, () -> {
+        Path cacheDir = repositoryCache.getPath(repoUrl);
+
+        repositoryCache.withLock(repoUrl, () -> {
             Repository repo = providers.fetch(repoUrl, branch, commitId, repoPath, secret, cacheDir);
             repo.export(dest);
             return null;

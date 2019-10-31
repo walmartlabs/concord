@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.Worker.CompletionCallback;
@@ -82,7 +83,7 @@ public class Agent {
         this.processApi = new ProcessApi(apiClient);
 
         SecretClient secretClient = new SecretClient(apiClient);
-        RepositoryManager repositoryManager = new RepositoryManager(cfg, secretClient);
+        RepositoryManager repositoryManager = new RepositoryManager(cfg, secretClient, new ObjectMapper());
 
         this.processLogFactory = new ProcessLogFactory(cfg.getLogDir(), cfg.getLogMaxDelay(), createLogAppender(processApi));
 

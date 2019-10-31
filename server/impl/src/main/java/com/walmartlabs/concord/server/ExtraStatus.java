@@ -31,7 +31,7 @@ public enum ExtraStatus implements Response.StatusType {
     private final Family family;
     private final String reasonPhrase;
 
-    private ExtraStatus(int statusCode, String reasonPhrase) {
+    ExtraStatus(int statusCode, String reasonPhrase) {
         this.statusCode = statusCode;
         this.family = Family.familyOf(statusCode);
         this.reasonPhrase = reasonPhrase;

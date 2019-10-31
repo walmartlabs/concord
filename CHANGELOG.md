@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server, concord-agent: configurable LRU cache for GIT
+repositories;
 - console: pagination for the project list;
 - docker, ansible: automatic retries when pulling images;
 - concord-server: configurable hard limit for the process log size;
