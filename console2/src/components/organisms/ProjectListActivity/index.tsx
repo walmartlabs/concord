@@ -19,17 +19,22 @@
  */
 
 import * as React from 'react';
-import { Input, Menu } from 'semantic-ui-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { Icon, Input, List, Loader, Menu } from 'semantic-ui-react';
 
-import { ConcordKey } from '../../../api/common';
-import { ProjectList, RedirectButton } from '../../organisms';
-import { connect, DispatchProp } from 'react-redux';
+import { ConcordKey, RequestError } from '../../../api/common';
+import { RedirectButton } from '../../organisms';
 import { State as SessionState } from '../../../state/session';
 import { Organizations } from '../../../state/data/orgs/types';
-
-interface State {
-    filter?: string;
-}
+import {
+    ProjectEntry,
+    list as getPaginatedProjectList,
+    ProjectVisibility
+} from '../../../api/org/project';
+import { Pagination } from '../../../state/data/projects';
+import { PaginationToolBar, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -39,16 +44,76 @@ interface UserProps {
     orgs: Organizations;
 }
 
-type Props = ExternalProps & UserProps & DispatchProp<any>;
+type Props = ExternalProps & UserProps;
 
-class ProjectListActivity extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
+const ProjectListActivity = ({ orgName, orgs }: Props) => {
+    const [data, setData] = useState<ProjectEntry[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<RequestError>();
 
-    isUserOrgMember = (orgName: string) => {
-        const userOrgs = this.props.orgs;
+    const [paginationFilter, setPaginationFilter] = useState<Pagination>({ offset: 0, limit: 50 });
+    const [next, setNext] = useState<boolean>(false);
+    const oldFilter = useRef<string>();
+
+    const [filter, setFilter] = useState<string>();
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+
+            if (filter && oldFilter.current !== filter) {
+                oldFilter.current = filter;
+                setPaginationFilter({ offset: 0, limit: paginationFilter.limit });
+            }
+
+            const paginatedProjectList = await getPaginatedProjectList(
+                orgName,
+                paginationFilter.offset,
+                paginationFilter.limit,
+                filter
+            );
+
+            setData(paginatedProjectList.items);
+            setNext(paginatedProjectList.next);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setLoading(false);
+        }
+    }, [orgName, filter, paginationFilter.offset, paginationFilter.limit]);
+
+    useEffect(() => {
+        fetchData();
+    }, [orgs, orgName, filter, paginationFilter.offset, paginationFilter.limit]);
+
+    const handleLimitChange = (limit: any) => {
+        setPaginationFilter({ offset: 0, limit });
+    };
+
+    const handleNext = () => {
+        const nextOffset = paginationFilter.offset + 1;
+        setPaginationFilter({ offset: nextOffset, limit: paginationFilter.limit });
+    };
+
+    const handlePrev = () => {
+        const prevOffset = paginationFilter.offset - 1;
+        setPaginationFilter({ offset: prevOffset, limit: paginationFilter.limit });
+    };
+
+    const handleFirst = () => {
+        setPaginationFilter({ offset: 0, limit: paginationFilter.limit });
+    };
+
+    const ProjectVisibilityIcon = ({ project }: { project: ProjectEntry }) => {
+        if (project.visibility === ProjectVisibility.PUBLIC) {
+            return <Icon name="unlock" size="large" />;
+        } else {
+            return <Icon name="lock" color="red" size="large" />;
+        }
+    };
+
+    const isUserOrgMember = (orgName: string) => {
+        const userOrgs = orgs;
 
         return (
             Object.keys(userOrgs)
@@ -57,23 +122,21 @@ class ProjectListActivity extends React.Component<Props, State> {
         );
     };
 
-    render() {
-        const { orgName } = this.props;
+    return (
+        <>
+            <Menu secondary={true}>
+                <Menu.Item>
+                    <Input
+                        icon="search"
+                        placeholder="Filter..."
+                        onChange={(ev, data) => setFilter(data.value)}
+                    />
+                </Menu.Item>
 
-        return (
-            <>
-                <Menu secondary={true}>
+                <Menu.Menu position={'right'}>
                     <Menu.Item>
-                        <Input
-                            icon="search"
-                            placeholder="Filter..."
-                            onChange={(ev, data) => this.setState({ filter: data.value })}
-                        />
-                    </Menu.Item>
-
-                    <Menu.Item position={'right'}>
                         <RedirectButton
-                            disabled={!this.isUserOrgMember(orgName)}
+                            disabled={!isUserOrgMember(orgName)}
                             icon="plus"
                             positive={true}
                             labelPosition="left"
@@ -81,14 +144,48 @@ class ProjectListActivity extends React.Component<Props, State> {
                             location={`/org/${orgName}/project/_new`}
                         />
                     </Menu.Item>
-                </Menu>
+                    <Menu.Item>
+                        <PaginationToolBar
+                            filterProps={paginationFilter}
+                            handleLimitChange={(limit) => handleLimitChange(limit)}
+                            handleNext={handleNext}
+                            handlePrev={handlePrev}
+                            handleFirst={handleFirst}
+                            disablePrevious={paginationFilter.offset <= 0}
+                            disableNext={!next}
+                            disableFirst={paginationFilter.offset <= 0}
+                        />
+                    </Menu.Item>
+                </Menu.Menu>
+            </Menu>
 
-                <ProjectList orgName={orgName} filter={this.state.filter} />
-            </>
-        );
-    }
-}
+            {error && <RequestErrorMessage error={error} />}
+            {loading && <Loader active={true} />}
+            {data.length === 0 && <h3>No projects found</h3>}
+
+            <List divided={true} relaxed={true} size="large">
+                {data.map((project, index) => (
+                    <List.Item key={index}>
+                        <ProjectVisibilityIcon project={project} />
+                        <List.Content>
+                            <List.Header>
+                                <Link to={`/org/${orgName}/project/${project.name}`}>
+                                    {project.name}
+                                </Link>
+                            </List.Header>
+                            <List.Description>
+                                {project.description ? project.description : 'No description'}
+                            </List.Description>
+                        </List.Content>
+                    </List.Item>
+                ))}
+            </List>
+        </>
+    );
+};
+
 const mapStateToProps = ({ session }: { session: SessionState }): UserProps => ({
     orgs: session.user.orgs ? session.user.orgs : {}
 });
+
 export default connect(mapStateToProps)(ProjectListActivity);

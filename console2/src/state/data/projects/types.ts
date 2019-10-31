@@ -28,6 +28,7 @@ import {
     RequestError
 } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
+import { State as SessionState } from '../../../state/session';
 import {
     NewProjectEntry,
     ProjectEntry,
@@ -40,6 +41,11 @@ import {
 } from '../../../api/org/project/repository';
 import { RequestState } from '../common';
 
+export interface Pagination {
+    limit: number;
+    offset: number;
+}
+
 export interface GetProjectRequest extends Action {
     orgName: ConcordKey;
     projectName: ConcordKey;
@@ -47,11 +53,14 @@ export interface GetProjectRequest extends Action {
 
 export interface ListProjectsRequest extends Action {
     orgName: ConcordKey;
+    pagination: Pagination;
+    filter?: string;
 }
 
 export interface ProjectDataResponse extends Action {
     error?: RequestError;
     items?: ProjectEntry[];
+    next?: boolean;
 }
 
 export interface CreateProjectRequest extends Action {
@@ -132,6 +141,11 @@ export interface Projects {
     [id: string]: ProjectEntry;
 }
 
+export interface PaginatedProjects {
+    items?: Projects;
+    next?: boolean;
+}
+
 export type ChangeProjectOwnerState = RequestState<ProjectOperationResult>;
 export type RenameProjectState = RequestState<ProjectOperationResult>;
 export type DeleteProjectState = RequestState<GenericOperationResult>;
@@ -145,7 +159,8 @@ export type ProjectTeamAccessState = RequestState<ProjectTeamAccessResponse>;
 export type UpdateProjectTeamAccessState = RequestState<ProjectTeamAccessResponse>;
 
 export interface State {
-    projectById: Projects;
+    projectById: PaginatedProjects;
+    session: SessionState;
 
     // TODO move into a RequestState field
     loading: boolean;

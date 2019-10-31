@@ -287,7 +287,8 @@ public class ProjectDao extends AbstractDao {
                 .execute();
     }
 
-    public List<ProjectEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField, boolean asc) {
+    public List<ProjectEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField,
+                                   boolean asc, int offset, int limit, String filter) {
         // TODO simplify
 
         Users u = USERS.as("u");
@@ -334,6 +335,18 @@ public class ProjectDao extends AbstractDao {
 
             if (sortField != null) {
                 q.orderBy(asc ? sortField.asc() : sortField.desc());
+            }
+
+            if (filter != null) {
+                q.where(p.PROJECT_NAME.containsIgnoreCase(filter));
+            }
+
+            if (offset > 0) {
+                q.offset(offset);
+            }
+
+            if (limit > 0) {
+                q.limit(limit);
             }
 
             return q.fetch(ProjectDao::toEntry);

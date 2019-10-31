@@ -187,7 +187,7 @@ public class ProjectManager {
                 null);
     }
 
-    public List<ProjectEntry> list(UUID orgId) {
+    public List<ProjectEntry> list(UUID orgId, int offset, int limit, String filter) {
         UserPrincipal p = UserPrincipal.assertCurrent();
         UUID userId = p.getId();
         if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
@@ -195,8 +195,7 @@ public class ProjectManager {
             userId = null;
         }
 
-        // TODO replace with queueDao#list?
-        return projectDao.list(orgId, userId, PROJECTS.PROJECT_NAME, true);
+        return projectDao.list(orgId, userId, PROJECTS.PROJECT_NAME, true, offset, limit, filter);
     }
 
     private UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
