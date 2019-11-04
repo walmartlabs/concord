@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,7 +16,7 @@
 
     <properties>
         <runner.path>
-            ${project.basedir}/../runner/impl/target/concord-runner-impl-${project.version}-jar-with-dependencies.jar
+            ${project.basedir}/../runtime/v1/impl/target/concord-runtime-impl-v1-${project.version}-jar-with-dependencies.jar
         </runner.path>
     </properties>
 
@@ -29,8 +30,8 @@
             <artifactId>concord-imports</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-project-model</artifactId>
+            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+            <artifactId>concord-project-model-v1</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -53,8 +54,8 @@
             <artifactId>concord-repository</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.runner</groupId>
-            <artifactId>concord-runner-model</artifactId>
+            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+            <artifactId>concord-runtime-model-v1</artifactId>
         </dependency>
 
         <dependency>
@@ -185,8 +186,8 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.walmartlabs.concord.runner</groupId>
-                                    <artifactId>concord-runner-impl</artifactId>
+                                    <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+                                    <artifactId>concord-runtime-impl-v1</artifactId>
                                     <version>${project.version}</version>
                                     <classifier>jar-with-dependencies</classifier>
                                     <destFileName>runner.jar</destFileName>

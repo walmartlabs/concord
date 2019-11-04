@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.walmartlabs.concord.runner</groupId>
+        <groupId>com.walmartlabs.concord.runtime.v1</groupId>
         <artifactId>parent</artifactId>
         <version>1.35.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>concord-runner-impl</artifactId>
+    <artifactId>concord-runtime-impl-v1</artifactId>
     <packaging>takari-jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.concord.runner</groupId>
-            <artifactId>concord-runner-model</artifactId>
+            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+            <artifactId>concord-runtime-model-v1</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
@@ -27,8 +28,8 @@
             <artifactId>concord-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-project-model</artifactId>
+            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+            <artifactId>concord-project-model-v1</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>

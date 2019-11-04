@@ -7,15 +7,16 @@
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
         <version>1.35.2-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.walmartlabs.concord.runner</groupId>
+    <groupId>com.walmartlabs.concord.runtime.v1</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
 
     <modules>
-        <module>model</module>
+        <module>project-model</module>
         <module>impl</module>
+        <module>model</module>
     </modules>
 </project>
