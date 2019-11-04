@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
@@ -141,7 +142,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         for (GithubTriggerProcessor.Result r : results) {
             process(deliveryId, EVENT_SOURCE, r.event(), r.triggers(), (t, cfg) -> {
                 // if `useEventCommitId` is true then the process is forced to use the specified commit ID
-                String commitId = payload.getString(COMMIT_ID_KEY);
+                String commitId = MapUtils.getString(r.event(), COMMIT_ID_KEY);
                 if (commitId != null && TriggerUtils.isUseEventCommitId(t)) {
                     cfg.put(Constants.Request.REPO_COMMIT_ID, commitId);
                 }
