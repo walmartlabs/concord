@@ -16,6 +16,8 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- concord-server: fixed an issue preventing the `github` trigger's
+`useEventCommitId` from working correctly;
 - concord-server: upgraded to Ollie 0.0.33;
 - concord-server: additional permission checks when downloading
 process attachments. Now only process initiators, project owners or
