@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -25,8 +26,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-project-model</artifactId>
+            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
+            <artifactId>concord-project-model-v1</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -128,7 +129,9 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.json</inputSpec>
+                            <inputSpec>
+                                ${project.basedir}/../server/impl/target/classes/com/walmartlabs/concord/server/swagger/swagger.json
+                            </inputSpec>
                             <language>java</language>
                             <languageSpecificPrimitives>
                                 <supportJava6>false</supportJava6>

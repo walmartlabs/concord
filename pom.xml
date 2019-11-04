@@ -41,12 +41,11 @@
         <module>common</module>
         <module>policy-engine</module>
         <module>dependency-manager</module>
-        <module>project-model</module>
         <module>repository</module>
         <module>imports</module>
         <module>server</module>
         <module>client</module>
-        <module>runner</module>
+        <module>runtime/v1</module>
         <module>plugins</module>
         <module>agent</module>
         <module>console2</module>
