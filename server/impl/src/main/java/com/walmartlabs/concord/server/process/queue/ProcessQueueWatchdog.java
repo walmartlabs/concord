@@ -99,6 +99,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     };
 
     private static final ProcessStatus[] FAILED_TO_START_STATUSES = {
+            ProcessStatus.PREPARING,
             ProcessStatus.STARTING,
             ProcessStatus.RESUMING
     };
