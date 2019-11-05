@@ -25,6 +25,7 @@ export { default as AnsibleTaskList } from './AnsibleTaskList';
 export { default as BreadcrumbSegment } from './BreadcrumbSegment';
 export { default as BulkProcessActionDropdown } from './BulkProcessActionDropdown';
 export { default as ButtonWithConfirmation } from './ButtonWithConfirmation';
+export { default as CreateNewEntityButton } from './CreateNewEntityButton';
 export { default as DonutChart } from './DonutChart';
 export { default as DropdownWithAddition } from './DropdownWithAddition';
 export { default as EditProjectForm } from './EditProjectForm';

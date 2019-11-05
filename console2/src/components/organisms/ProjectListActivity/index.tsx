@@ -24,17 +24,17 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Icon, Input, List, Loader, Menu } from 'semantic-ui-react';
 
-import { ConcordKey, RequestError } from '../../../api/common';
-import { RedirectButton } from '../../organisms';
+import { ConcordKey, EntityType, RequestError } from '../../../api/common';
 import { State as SessionState } from '../../../state/session';
-import { Organizations } from '../../../state/data/orgs/types';
+import { Organizations } from '../../../state/data/orgs';
+import { checkResult as apiCheckResult } from '../../../../src/api/org';
 import {
-    ProjectEntry,
     list as getPaginatedProjectList,
+    ProjectEntry,
     ProjectVisibility
 } from '../../../api/org/project';
 import { Pagination } from '../../../state/data/projects';
-import { PaginationToolBar, RequestErrorMessage } from '../../molecules';
+import { CreateNewEntityButton, PaginationToolBar, RequestErrorMessage } from '../../molecules';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -50,6 +50,7 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
     const [data, setData] = useState<ProjectEntry[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<RequestError>();
+    const [canCreate, setCanCreate] = useState<boolean>(false);
 
     const [paginationFilter, setPaginationFilter] = useState<Pagination>({ offset: 0, limit: 50 });
     const [next, setNext] = useState<boolean>(false);
@@ -85,6 +86,15 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
     useEffect(() => {
         fetchData();
     }, [orgs, orgName, filter, paginationFilter.offset, paginationFilter.limit]);
+
+    const fetchCanCreateStatus = useCallback(async () => {
+        const response = await apiCheckResult(EntityType.PROJECT, orgName);
+        setCanCreate(!!response);
+    }, [orgName]);
+
+    useEffect(() => {
+        fetchCanCreateStatus();
+    }, [orgName]);
 
     const handleLimitChange = (limit: any) => {
         setPaginationFilter({ offset: 0, limit });
@@ -135,13 +145,11 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
 
                 <Menu.Menu position={'right'}>
                     <Menu.Item>
-                        <RedirectButton
-                            disabled={!isUserOrgMember(orgName)}
-                            icon="plus"
-                            positive={true}
-                            labelPosition="left"
-                            content="New project"
-                            location={`/org/${orgName}/project/_new`}
+                        <CreateNewEntityButton
+                            entity="project"
+                            orgName={orgName}
+                            userInOrg={true}
+                            enabledInPolicy={canCreate}
                         />
                     </Menu.Item>
                     <Menu.Item>
