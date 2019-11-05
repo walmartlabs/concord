@@ -53,8 +53,7 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void apply(Payload payload, Map<String, Object> policy) {
+    public void apply(Payload payload, PolicyEngine policy) {
         ProcessKey processKey = payload.getProcessKey();
 
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
@@ -67,7 +66,7 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
             return;
         }
 
-        CheckResult<ProcessTimeoutRule, Object> result = new PolicyEngine(policy).getProcessTimeoutPolicy().check(processTimeout);
+        CheckResult<ProcessTimeoutRule, Object> result = policy.getProcessTimeoutPolicy().check(processTimeout);
 
         result.getDeny().forEach(i -> {
             policyDeny.inc();

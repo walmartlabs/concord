@@ -28,8 +28,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-public class QueueProcessRule  implements Serializable {
+public class QueueProcessRule implements Serializable {
 
     private final String msg;
     private final Map<String, Integer> max;
@@ -51,6 +52,20 @@ public class QueueProcessRule  implements Serializable {
 
     public String getMsg() {
         return msg;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        QueueProcessRule that = (QueueProcessRule) o;
+        return Objects.equals(msg, that.msg) &&
+                Objects.equals(max, that.max);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, max);
     }
 
     @Override

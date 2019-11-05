@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class ForkDepthRule implements Serializable {
 
@@ -34,7 +35,6 @@ public class ForkDepthRule implements Serializable {
     @JsonCreator
     public ForkDepthRule(@JsonProperty("msg") String msg,
                          @JsonProperty("max") int max) {
-
         this.msg = msg;
         this.max = max;
     }
@@ -45,6 +45,20 @@ public class ForkDepthRule implements Serializable {
 
     public int getMax() {
         return max;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ForkDepthRule that = (ForkDepthRule) o;
+        return max == that.max &&
+                Objects.equals(msg, that.msg);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, max);
     }
 
     @Override

@@ -20,10 +20,10 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
-import com.walmartlabs.concord.server.org.policy.ImmutablePolicyRules;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -84,8 +84,7 @@ public class RequestDataMergingProcessorTest {
         processCfgPolicy.put("a", "a-process-cfg-policy");
         processCfgPolicy.put("process-cfg-policy", "process-cfg-policy-value");
 
-        Map<String, Object> policy = new HashMap<>();
-        policy.put(InternalConstants.Policy.PROCESS_CFG, processCfgPolicy);
+        PolicyEngineRules policy = new PolicyEngineRules(null, null, null, null, null, null, null, null, processCfgPolicy);
 
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
@@ -97,10 +96,7 @@ public class RequestDataMergingProcessorTest {
                 .putHeader(Payload.ORGANIZATION_ID, orgId)
                 .putHeader(Payload.PROJECT_ID, prjId)
                 .putHeader(Payload.WORKSPACE_DIR, workDir)
-                .putHeader(Payload.POLICY, ImmutablePolicyRules.builder()
-                        .addPolicyNames("test")
-                        .rules(policy)
-                        .build());
+                .putHeader(Payload.POLICY, new PolicyEngine("test", policy));
 
         // ---
         Map<String, Object> expected = new HashMap<>();
@@ -162,7 +158,6 @@ public class RequestDataMergingProcessorTest {
         assertEquals(expected, result);
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> process(Payload payload) {
         return processPayload(payload).getHeader(Payload.CONFIGURATION);
     }

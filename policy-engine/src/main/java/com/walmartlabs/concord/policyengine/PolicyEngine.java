@@ -20,14 +20,13 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
 public class PolicyEngine {
 
-    private static final ObjectMapper objectMapper = createObjectMapper();
+    private final List<String> ruleNames;
+    private final PolicyEngineRules rules;
 
     private final DependencyPolicy dependencyPolicy;
     private final FilePolicy filePolicy;
@@ -40,12 +39,19 @@ public class PolicyEngine {
     private final ProcessTimeoutPolicy processTimeoutPolicy;
     private final ProtectedTasksPolicy protectedTasksPolicy;
     private final EntityPolicy entityPolicy;
-
-    public PolicyEngine(Map<String, Object> rules) {
-        this(objectMapper.convertValue(rules, PolicyEngineRules.class));
-    }
+    private final ProcessCfgPolicy processCfgPolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
+        this(Collections.emptyList(), rules);
+    }
+
+    public PolicyEngine(String ruleName, PolicyEngineRules rules) {
+        this(Collections.singletonList(ruleName), rules);
+    }
+
+    public PolicyEngine(List<String> ruleNames, PolicyEngineRules rules) {
+        this.ruleNames = ruleNames;
+        this.rules = rules;
         this.dependencyPolicy = new DependencyPolicy(rules.getDependencyRules());
         this.filePolicy = new FilePolicy(rules.getFileRules());
         this.taskPolicy = new TaskPolicy(rules.getTaskRules());
@@ -60,6 +66,15 @@ public class PolicyEngine {
 
         this.protectedTasksPolicy = new ProtectedTasksPolicy(rules.getProtectedTasksRules());
         this.entityPolicy = new EntityPolicy(rules.getEntityRules());
+        this.processCfgPolicy = new ProcessCfgPolicy(rules.getProcessCfgRules());
+    }
+
+    public List<String> policyNames() {
+        return ruleNames;
+    }
+
+    public PolicyEngineRules getRules() {
+        return rules;
     }
 
     public DependencyPolicy getDependencyPolicy() {
@@ -106,17 +121,24 @@ public class PolicyEngine {
         return entityPolicy;
     }
 
+    public ProcessCfgPolicy getProcessCfgPolicy() {
+        return processCfgPolicy;
+    }
+
+    @Override
+    public String toString() {
+        if (ruleNames == null) {
+            return null;
+        }
+
+        return String.join(", ", ruleNames);
+    }
+
     private static QueueRule getQueueRule(PolicyEngineRules rules) {
         if (rules.getQueueRules() == null) {
             return QueueRule.empty();
         }
 
         return rules.getQueueRules();
-    }
-
-    private static ObjectMapper createObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return om;
     }
 }

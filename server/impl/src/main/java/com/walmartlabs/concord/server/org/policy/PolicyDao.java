@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org.policy;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -30,14 +29,12 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.POLICIES;
 import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
-import static org.jooq.impl.DSL.*;
 
 @Named
 public class PolicyDao extends AbstractDao {
@@ -73,40 +70,16 @@ public class PolicyDao extends AbstractDao {
         }
     }
 
-    public PolicyRules getRules(UUID orgId, UUID projectId, UUID userId) {
+    public PolicyEntry get(String policyName) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return getRules(tx, orgId, projectId, userId);
+            return tx.select(POLICIES.POLICY_ID,
+                    POLICIES.PARENT_POLICY_ID,
+                    POLICIES.POLICY_NAME,
+                    POLICIES.RULES)
+                    .from(POLICIES)
+                    .where(POLICIES.POLICY_NAME.eq(policyName))
+                    .fetchOne(this::toEntry);
         }
-    }
-
-    public PolicyRules getRules(DSLContext tx, UUID orgId, UUID projectId, UUID userId) {
-        PolicyEntry entry = getLinked(tx, orgId, projectId, userId);
-        if (entry == null || entry.rules().isEmpty()) {
-            return null;
-        }
-
-        Result<Record3<String, JSONB, Integer>> rules = tx.withRecursive("children").as(
-                select(POLICIES.POLICY_ID, POLICIES.PARENT_POLICY_ID, POLICIES.POLICY_NAME, POLICIES.RULES, field("1", Integer.class).as("level")).from(POLICIES)
-                        .where(POLICIES.POLICY_ID.eq(entry.id()))
-                        .unionAll(
-                                select(POLICIES.POLICY_ID, POLICIES.PARENT_POLICY_ID, POLICIES.POLICY_NAME, POLICIES.RULES, field("children.level + 1", Integer.class).as("level")).from(POLICIES)
-                                        .join(name("children"))
-                                        .on(POLICIES.POLICY_ID.eq(
-                                                field(name("children", "PARENT_POLICY_ID"), UUID.class)))))
-                .select(POLICIES.as("children").POLICY_NAME, POLICIES.as("children").RULES, field("level", Integer.class))
-                .from(name("children"))
-                .orderBy(field("level").desc())
-                .fetch();
-
-        ImmutablePolicyRules.Builder result = ImmutablePolicyRules.builder();
-        Map<String, Object> mergedRules = new HashMap<>();
-        for(Record3<String, JSONB, Integer> r : rules) {
-            result.addPolicyNames(r.value1());
-            mergedRules = ConfigurationUtils.deepMerge(mergedRules, objectMapper.fromJSONB(r.value2()));
-        }
-        return result
-                .rules(mergedRules)
-                .build();
     }
 
     public PolicyEntry getLinked(UUID orgId, UUID projectId, UUID userId) {
@@ -156,21 +129,29 @@ public class PolicyDao extends AbstractDao {
     }
 
     public UUID insert(String name, UUID parentId, Map<String, Object> rules) {
-        return txResult(tx -> tx.insertInto(POLICIES)
+        return txResult(tx -> insert(tx, name, parentId, rules));
+    }
+
+    public UUID insert(DSLContext tx, String name, UUID parentId, Map<String, Object> rules) {
+        return tx.insertInto(POLICIES)
                 .columns(POLICIES.POLICY_NAME, POLICIES.PARENT_POLICY_ID, POLICIES.RULES)
                 .values(name, parentId, objectMapper.toJSONB(rules))
                 .returning(POLICIES.POLICY_ID)
                 .fetchOne()
-                .getPolicyId());
+                .getPolicyId();
     }
 
     public void update(UUID policyId, String name, UUID parentId, Map<String, Object> rules) {
-        tx(tx -> tx.update(POLICIES)
+        tx(tx -> update(tx, policyId, name, parentId, rules));
+    }
+
+    public void update(DSLContext tx, UUID policyId, String name, UUID parentId, Map<String, Object> rules) {
+        tx.update(POLICIES)
                 .set(POLICIES.POLICY_NAME, name)
                 .set(POLICIES.RULES, objectMapper.toJSONB(rules))
                 .set(POLICIES.PARENT_POLICY_ID, parentId)
                 .where(POLICIES.POLICY_ID.eq(policyId))
-                .execute());
+                .execute();
     }
 
     public void delete(UUID policyId) {

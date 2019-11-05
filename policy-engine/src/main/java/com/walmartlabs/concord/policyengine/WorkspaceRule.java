@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 
 public class WorkspaceRule implements Serializable {
@@ -53,6 +54,21 @@ public class WorkspaceRule implements Serializable {
 
     public Set<String> getIgnoredFiles() {
         return ignoredFiles;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WorkspaceRule that = (WorkspaceRule) o;
+        return Objects.equals(msg, that.msg) &&
+                Objects.equals(maxSizeInBytes, that.maxSizeInBytes) &&
+                Objects.equals(ignoredFiles, that.ignoredFiles);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, maxSizeInBytes, ignoredFiles);
     }
 
     @Override

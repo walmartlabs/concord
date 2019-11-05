@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.org.policy.PolicyRules;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.process.pipelines.processors.policy.Policy
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,18 +50,17 @@ public class PolicyProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        PolicyRules policy = payload.getHeader(Payload.POLICY);
-        if (policy == null || policy.rules() == null || policy.rules().isEmpty()) {
+        PolicyEngine policy = payload.getHeader(Payload.POLICY);
+        if (policy == null) {
             return chain.process(payload);
         }
 
         logManager.info(processKey, "Applying policies...");
-        Map<String, Object> rules = policy.rules();
 
         try {
             // TODO merge check results
             for (PolicyApplier a : appliers) {
-                a.apply(payload, rules);
+                a.apply(payload, policy);
             }
         } catch (ProcessException e) {
             throw e;

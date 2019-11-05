@@ -39,6 +39,7 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -250,8 +251,8 @@ public class RunnerJobExecutor {
     }
 
     private void validateDependencies(RunnerJob job, Collection<DependencyEntity> resolvedDepEntities) throws IOException, ExecutionException {
-        Map<String, Object> policyRules = readPolicyRules(job);
-        if (policyRules.isEmpty()) {
+        PolicyEngineRules policyRules = readPolicyRules(job);
+        if (policyRules == null) {
             return;
         }
 
@@ -446,18 +447,17 @@ public class RunnerJobExecutor {
         return extraArgs;
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> readPolicyRules(RunnerJob job) throws IOException {
+    private static PolicyEngineRules readPolicyRules(RunnerJob job) throws IOException {
         Path workDir = job.getPayloadDir();
 
         Path policyFile = workDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
                 .resolve(InternalConstants.Files.POLICY_FILE_NAME);
 
         if (!Files.exists(policyFile)) {
-            return Collections.emptyMap();
+            return null;
         }
 
-        return new ObjectMapper().readValue(policyFile.toFile(), Map.class);
+        return new ObjectMapper().readValue(policyFile.toFile(), PolicyEngineRules.class);
     }
 
     private static String getLogLevel(RunnerJob job) {

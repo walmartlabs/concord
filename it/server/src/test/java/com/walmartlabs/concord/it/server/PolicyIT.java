@@ -77,12 +77,7 @@ public class PolicyIT extends AbstractServerIT {
 
         // ---
 
-        Map<String, Object> input = new HashMap<>();
-        input.put("archive", payload);
-        input.put("org", orgName);
-        input.put("project", projectName);
-
-        spr = start(input);
+        spr = start(orgName, projectName, null, null, payload);
 
         pir = waitForCompletion(processApi, spr.getInstanceId());
 
@@ -107,12 +102,7 @@ public class PolicyIT extends AbstractServerIT {
         // ---
         byte[] payload = archive(ProcessIT.class.getResource("forkDepth").toURI());
 
-        Map<String, Object> input = new HashMap<>();
-        input.put("archive", payload);
-        input.put("org", orgName);
-        input.put("project", projectName);
-
-        StartProcessResponse spr = start(input);
+        StartProcessResponse spr = start(orgName, projectName, null, null, payload);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.RUNNING);

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 
 public class ProtectedTasksRule implements Serializable {
@@ -38,6 +39,19 @@ public class ProtectedTasksRule implements Serializable {
 
     public Set<String> getNames() {
         return names;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProtectedTasksRule that = (ProtectedTasksRule) o;
+        return Objects.equals(names, that.names);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(names);
     }
 
     @Override

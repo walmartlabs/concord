@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.ForkDepthRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -65,8 +64,8 @@ public class ForkPolicyProcessor implements PayloadProcessor {
         ProcessKey processKey = payload.getProcessKey();
         UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
 
-        PolicyRules policy = payload.getHeader(Payload.POLICY);
-        if (policy == null || policy.rules() == null || policy.rules().isEmpty()) {
+        PolicyEngine policy = payload.getHeader(Payload.POLICY);
+        if (policy == null) {
             return chain.process(payload);
         }
 
@@ -74,8 +73,7 @@ public class ForkPolicyProcessor implements PayloadProcessor {
 
         CheckResult<ForkDepthRule, Integer> result;
         try {
-            result = new PolicyEngine(policy.rules())
-                    .getForkDepthPolicy()
+            result = policy.getForkDepthPolicy()
                     .check(() -> forkDepthDao.getDepth(parentInstanceId));
         } catch (Exception e) {
             log.error("process -> error", e);
