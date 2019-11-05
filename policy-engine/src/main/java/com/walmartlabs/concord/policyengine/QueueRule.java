@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class QueueRule implements Serializable {
 
@@ -77,6 +78,24 @@ public class QueueRule implements Serializable {
 
     public ProcessTimeoutRule getProcessTimeoutRule() {
         return processTimeoutRule;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        QueueRule queueRule = (QueueRule) o;
+        return Objects.equals(concurrent, queueRule.concurrent) &&
+                Objects.equals(process, queueRule.process) &&
+                Objects.equals(processPerOrg, queueRule.processPerOrg) &&
+                Objects.equals(processPerProject, queueRule.processPerProject) &&
+                Objects.equals(forkDepthRule, queueRule.forkDepthRule) &&
+                Objects.equals(processTimeoutRule, queueRule.processTimeoutRule);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(concurrent, process, processPerOrg, processPerProject, forkDepthRule, processTimeoutRule);
     }
 
     @Override

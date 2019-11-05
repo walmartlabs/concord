@@ -23,12 +23,12 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
-import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -61,7 +61,6 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         // system-level default configuration
         Map<String, Object> defCfg = defaultCfg.getCfg();
@@ -120,25 +119,14 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         return m != null ? m : Collections.emptyMap();
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> getPolicyCfg(Payload payload) {
-        PolicyRules policy = payload.getHeader(Payload.POLICY);
+        PolicyEngine policy = payload.getHeader(Payload.POLICY);
 
         if (policy == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> rules = policy.rules();
-        Object v = rules.get(InternalConstants.Policy.PROCESS_CFG);
-        if (v == null) {
-            return Collections.emptyMap();
-        }
-
-        if (!(v instanceof Map)) {
-            throw new ProcessException(payload.getProcessKey(), "Invalid policy value. Expected a JSON object '" + InternalConstants.Policy.PROCESS_CFG + "', got: " + v);
-        }
-
-        return (Map<String, Object>) v;
+        return policy.getProcessCfgPolicy().get();
     }
 
     @SuppressWarnings("unchecked")

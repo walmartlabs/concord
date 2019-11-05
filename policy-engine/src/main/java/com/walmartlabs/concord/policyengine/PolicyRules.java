@@ -21,11 +21,13 @@ package com.walmartlabs.concord.policyengine;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class PolicyRules<E extends Serializable> implements Serializable {
@@ -57,8 +59,24 @@ public class PolicyRules<E extends Serializable> implements Serializable {
         return deny;
     }
 
+    @JsonIgnore
     public boolean isEmpty() {
         return allow.isEmpty() && deny.isEmpty() && warn.isEmpty();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PolicyRules<?> that = (PolicyRules<?>) o;
+        return Objects.equals(allow, that.allow) &&
+                Objects.equals(warn, that.warn) &&
+                Objects.equals(deny, that.deny);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(allow, warn, deny);
     }
 
     @Override

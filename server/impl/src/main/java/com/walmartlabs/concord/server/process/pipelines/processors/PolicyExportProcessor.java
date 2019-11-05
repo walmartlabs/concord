@@ -21,9 +21,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.server.org.policy.PolicyDao;
-import com.walmartlabs.concord.server.org.policy.PolicyRules;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -42,15 +42,15 @@ import java.util.UUID;
 @Named
 public class PolicyExportProcessor implements PayloadProcessor {
 
-    private final PolicyDao policyDao;
-    private final LogManager logManager;
     private final ObjectMapper objectMapper;
+    private final PolicyManager policyManager;
+    private final LogManager logManager;
 
     @Inject
-    public PolicyExportProcessor(PolicyDao policyDao, LogManager logManager) {
-        this.policyDao = policyDao;
+    public PolicyExportProcessor(ObjectMapper objectMapper, PolicyManager policyManager, LogManager logManager) {
+        this.objectMapper = objectMapper;
+        this.policyManager = policyManager;
         this.logManager = logManager;
-        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -61,7 +61,7 @@ public class PolicyExportProcessor implements PayloadProcessor {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID userId = payload.getHeader(Payload.INITIATOR_ID);
 
-        PolicyRules policy = policyDao.getRules(orgId, projectId, userId);
+        PolicyEngine policy = policyManager.get(orgId, projectId, userId);
         if (policy == null) {
             return chain.process(payload);
         }
@@ -72,8 +72,7 @@ public class PolicyExportProcessor implements PayloadProcessor {
 
         try {
             Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.rules());
-
+            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
         } catch (IOException e) {
             logManager.error(processKey, "Error while storing process policy: {}", e);
             throw new ProcessException(processKey, "Storing process policy error", e);

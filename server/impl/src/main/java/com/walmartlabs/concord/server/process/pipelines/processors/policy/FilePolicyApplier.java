@@ -33,7 +33,6 @@ import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
-import java.util.Map;
 
 @Named
 public class FilePolicyApplier implements PolicyApplier {
@@ -54,11 +53,11 @@ public class FilePolicyApplier implements PolicyApplier {
     }
 
     @Override
-    public void apply(Payload payload, Map<String, Object> policy) throws Exception {
+    public void apply(Payload payload, PolicyEngine policy) throws Exception {
         ProcessKey processKey = payload.getProcessKey();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
-        CheckResult<FileRule, Path> result = new PolicyEngine(policy).getFilePolicy().check(workDir);
+        CheckResult<FileRule, Path> result = policy.getFilePolicy().check(workDir);
 
         result.getWarn().forEach(i -> {
             policyWarn.inc();

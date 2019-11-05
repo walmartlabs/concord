@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 public class EntityRule implements Serializable {
 
@@ -63,6 +64,22 @@ public class EntityRule implements Serializable {
 
     public Map<String, Object> getConditions() {
         return conditions;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EntityRule that = (EntityRule) o;
+        return Objects.equals(msg, that.msg) &&
+                Objects.equals(entity, that.entity) &&
+                Objects.equals(action, that.action) &&
+                Objects.equals(conditions, that.conditions);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, entity, action, conditions);
     }
 
     @Override

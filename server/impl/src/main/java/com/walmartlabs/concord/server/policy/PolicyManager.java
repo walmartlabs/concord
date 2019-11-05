@@ -24,7 +24,7 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.EntityRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.org.policy.PolicyDao;
-import com.walmartlabs.concord.server.org.policy.PolicyRules;
+import com.walmartlabs.concord.server.org.policy.PolicyEntry;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
@@ -34,31 +34,69 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 @Singleton
 public class PolicyManager {
 
+    private final PolicyCache policyCache;
     private final PolicyDao policyDao;
     private final UserManager userManager;
 
     @Inject
-    public PolicyManager(PolicyDao policyDao, UserManager userManager) {
+    public PolicyManager(PolicyCache policyCache, PolicyDao policyDao, UserManager userManager) {
+        this.policyCache = policyCache;
         this.policyDao = policyDao;
         this.userManager = userManager;
     }
 
-    public PolicyEngine get(UUID orgId, UUID projectId, UUID userId) {
-        PolicyRules r = policyDao.getRules(orgId, projectId, userId);
-        if (r == null) {
-            return null;
-        }
+    public void refresh() {
+        policyCache.refresh();
+    }
 
-        return new PolicyEngine(r.rules());
+    public PolicyEngine get(UUID orgId, UUID projectId, UUID userId) {
+        return policyCache.get(orgId, projectId, userId);
+    }
+
+    public PolicyEntry get(String policyName) {
+        return policyDao.get(policyName);
+    }
+
+    public UUID getId(String policyName) {
+        return policyDao.getId(policyName);
+    }
+
+    public List<PolicyEntry> list() {
+        return policyDao.list();
+    }
+
+    public PolicyEntry getLinked(UUID orgId, UUID projectId, UUID userId) {
+        return policyDao.getLinked(orgId, projectId, userId);
+    }
+
+    public UUID insert(String name, UUID parentId, Map<String, Object> rules) {
+        return policyDao.insert(name, parentId, rules);
+    }
+
+    public void update(UUID id, String name, UUID parentId, Map<String, Object> rules) {
+        policyDao.update(id, name, parentId, rules);
+        policyCache.refresh();
+    }
+
+    public void delete(UUID id) {
+        policyDao.delete(id);
+        policyCache.refresh();
+    }
+
+    public void link(UUID policyId, UUID orgId, UUID projectId, UUID userId) {
+        policyDao.link(policyId, orgId, projectId, userId);
+        policyCache.refresh();
+    }
+
+    public void unlink(UUID policyId, UUID orgId, UUID projectId, UUID userId) {
+        policyDao.unlink(policyId, orgId, projectId, userId);
+        policyCache.refresh();
     }
 
     public void checkEntity(UUID orgId, UUID projectId,
@@ -102,6 +140,7 @@ public class PolicyManager {
         if (userInfo.attributes() != null) {
             attrs.putAll(userInfo.attributes());
         }
+
         return attrs;
     }
 }

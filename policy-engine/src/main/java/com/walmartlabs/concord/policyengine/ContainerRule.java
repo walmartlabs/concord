@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class ContainerRule implements Serializable {
 
@@ -52,6 +53,21 @@ public class ContainerRule implements Serializable {
 
     public Integer getMaxCpu() {
         return maxCpu;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ContainerRule that = (ContainerRule) o;
+        return Objects.equals(msg, that.msg) &&
+                Objects.equals(maxRam, that.maxRam) &&
+                Objects.equals(maxCpu, that.maxCpu);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, maxRam, maxCpu);
     }
 
     @Override

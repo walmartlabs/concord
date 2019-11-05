@@ -26,8 +26,7 @@ import com.walmartlabs.concord.policyengine.ConcurrentProcessRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
-import com.walmartlabs.concord.server.org.policy.PolicyDao;
-import com.walmartlabs.concord.server.org.policy.PolicyRules;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
@@ -59,12 +58,12 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
             ProcessStatus.CANCELLED,
             ProcessStatus.TIMED_OUT);
 
-    private final PolicyDao policyDao;
+    private final PolicyManager policyManager;
 
     @Inject
-    public ConcurrentProcessFilter(PolicyDao policyDao, ProcessQueueManager processQueueManager) {
+    public ConcurrentProcessFilter(PolicyManager policyManager, ProcessQueueManager processQueueManager) {
         super(processQueueManager);
-        this.policyDao = policyDao;
+        this.policyManager = policyManager;
     }
 
     @Override
@@ -109,13 +108,7 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
             return null;
         }
 
-        PolicyRules policy = policyDao.getRules(tx, orgId, prjId, userId);
-        if (policy == null) {
-            return null;
-        }
-
-        // TODO caching? use a global singleton?
-        return new PolicyEngine(policy.rules());
+        return policyManager.get(orgId, prjId, userId);
     }
 
     private List<UUID> processesPerOrg(DSLContext tx, UUID orgId) {

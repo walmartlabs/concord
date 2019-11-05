@@ -20,7 +20,13 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class PolicyEngineRules {
 
@@ -32,6 +38,8 @@ public class PolicyEngineRules {
     private final QueueRule queueRules;
     private final ProtectedTasksRule protectedTasksRules;
     private final PolicyRules<EntityRule> entityRules;
+    private final Map<String, Object> processCfg;
+    private final Map<String, Object> customRule;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -40,7 +48,8 @@ public class PolicyEngineRules {
                              @JsonProperty("container") ContainerRule containerRules,
                              @JsonProperty("queue") QueueRule queueRules,
                              @JsonProperty("protectedTask") ProtectedTasksRule protectedTasksRules,
-                             @JsonProperty("entity") PolicyRules<EntityRule> entityRules) {
+                             @JsonProperty("entity") PolicyRules<EntityRule> entityRules,
+                             @JsonProperty("processCfg") Map<String, Object> processCfg) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -50,6 +59,8 @@ public class PolicyEngineRules {
         this.queueRules = queueRules;
         this.protectedTasksRules = protectedTasksRules;
         this.entityRules = entityRules;
+        this.processCfg = processCfg;
+        this.customRule = new HashMap<>();
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -84,6 +95,43 @@ public class PolicyEngineRules {
         return entityRules;
     }
 
+    @JsonProperty("processCfg")
+    public Map<String, Object> getProcessCfgRules() {
+        return processCfg;
+    }
+
+    @JsonAnySetter
+    public void addCustomRule(String name, Object value) {
+        customRule.put(name, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getCustomRule() {
+        return customRule;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PolicyEngineRules that = (PolicyEngineRules) o;
+        return Objects.equals(dependencyRules, that.dependencyRules) &&
+                Objects.equals(fileRules, that.fileRules) &&
+                Objects.equals(taskRules, that.taskRules) &&
+                Objects.equals(workspaceRule, that.workspaceRule) &&
+                Objects.equals(containerRules, that.containerRules) &&
+                Objects.equals(queueRules, that.queueRules) &&
+                Objects.equals(protectedTasksRules, that.protectedTasksRules) &&
+                Objects.equals(entityRules, that.entityRules) &&
+                Objects.equals(processCfg, that.processCfg) &&
+                Objects.equals(customRule, that.customRule);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dependencyRules, fileRules, taskRules, workspaceRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule);
+    }
+
     @Override
     public String toString() {
         return "PolicyEngineRules{" +
@@ -95,6 +143,8 @@ public class PolicyEngineRules {
                 ", queueRules=" + queueRules +
                 ", protectedTasksRules=" + protectedTasksRules +
                 ", entityRules=" + entityRules +
+                ", processCfg=" + processCfg +
+                ", customRule=" + customRule +
                 '}';
     }
 }

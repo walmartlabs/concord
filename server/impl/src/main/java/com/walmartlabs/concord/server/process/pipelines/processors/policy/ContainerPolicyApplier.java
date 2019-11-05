@@ -66,7 +66,7 @@ public class ContainerPolicyApplier implements PolicyApplier {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void apply(Payload payload, Map<String, Object> policy) {
+    public void apply(Payload payload, PolicyEngine policy) {
         ProcessKey processKey = payload.getProcessKey();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
@@ -84,7 +84,7 @@ public class ContainerPolicyApplier implements PolicyApplier {
             throw new ProcessException(processKey, "Error while reading container configuration", e);
         }
 
-        CheckResult<ContainerRule, Object> result = new PolicyEngine(policy).getContainerPolicy().check(containerOptions);
+        CheckResult<ContainerRule, Object> result = policy.getContainerPolicy().check(containerOptions);
 
         result.getWarn().forEach(i -> {
             policyWarn.inc();

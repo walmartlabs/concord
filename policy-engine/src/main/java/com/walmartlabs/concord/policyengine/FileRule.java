@@ -21,12 +21,14 @@ package com.walmartlabs.concord.policyengine;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class FileRule implements Serializable {
@@ -56,6 +58,11 @@ public class FileRule implements Serializable {
         return msg;
     }
 
+    public String getMaxSize() {
+        return maxSize;
+    }
+
+    @JsonIgnore
     public Long getMaxSizeInBytes() {
         return maxSizeInBytes;
     }
@@ -66,6 +73,23 @@ public class FileRule implements Serializable {
 
     public List<String> getNames() {
         return names;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileRule fileRule = (FileRule) o;
+        return Objects.equals(msg, fileRule.msg) &&
+                Objects.equals(maxSizeInBytes, fileRule.maxSizeInBytes) &&
+                Objects.equals(maxSize, fileRule.maxSize) &&
+                type == fileRule.type &&
+                Objects.equals(names, fileRule.names);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, maxSizeInBytes, maxSize, type, names);
     }
 
     @Override

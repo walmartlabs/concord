@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class ConcurrentProcessRule implements Serializable {
 
@@ -53,6 +54,21 @@ public class ConcurrentProcessRule implements Serializable {
 
     public Integer getMaxPerProject() {
         return maxPerProject;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConcurrentProcessRule that = (ConcurrentProcessRule) o;
+        return Objects.equals(msg, that.msg) &&
+                Objects.equals(maxPerOrg, that.maxPerOrg) &&
+                Objects.equals(maxPerProject, that.maxPerProject);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, maxPerOrg, maxPerProject);
     }
 
     @Override

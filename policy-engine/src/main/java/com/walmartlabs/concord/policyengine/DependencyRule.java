@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class DependencyRule implements Serializable {
 
@@ -74,6 +75,24 @@ public class DependencyRule implements Serializable {
 
     public String getToVersion() {
         return toVersion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DependencyRule that = (DependencyRule) o;
+        return Objects.equals(msg, that.msg) &&
+                Objects.equals(scheme, that.scheme) &&
+                Objects.equals(groupId, that.groupId) &&
+                Objects.equals(artifactId, that.artifactId) &&
+                Objects.equals(fromVersion, that.fromVersion) &&
+                Objects.equals(toVersion, that.toVersion);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, scheme, groupId, artifactId, fromVersion, toVersion);
     }
 
     @Override

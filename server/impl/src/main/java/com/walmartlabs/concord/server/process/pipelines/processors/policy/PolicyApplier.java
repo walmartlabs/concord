@@ -20,13 +20,12 @@ package com.walmartlabs.concord.server.process.pipelines.processors.policy;
  * =====
  */
 
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.process.Payload;
-
-import java.util.Map;
 
 public interface PolicyApplier {
 
-    void apply(Payload payload, Map<String, Object> policy) throws Exception;
+    void apply(Payload payload, PolicyEngine policyEngine) throws Exception;
 
     static String appendMsg(String msg, String s) {
         if (s == null) {

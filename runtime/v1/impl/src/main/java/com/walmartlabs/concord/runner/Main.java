@@ -32,6 +32,7 @@ import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
@@ -108,7 +109,7 @@ public class Main {
         if (policy.isEmpty()) {
             PolicyEngineHolder.INSTANCE.setEngine(null);
         } else {
-            PolicyEngineHolder.INSTANCE.setEngine(new PolicyEngine(policy));
+            PolicyEngineHolder.INSTANCE.setEngine(new PolicyEngine(objectMapper.convertValue(policy, PolicyEngineRules.class)));
         }
 
         String sessionToken = getSessionToken(baseDir);

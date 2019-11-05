@@ -32,6 +32,7 @@ import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -41,6 +42,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
+import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.sonatype.siesta.Resource;
 
@@ -65,7 +67,7 @@ public class PolicyResource implements Resource {
     private final OrganizationManager orgManager;
     private final OrganizationDao orgDao;
     private final ProjectDao projectDao;
-    private final PolicyDao policyDao;
+    private final PolicyManager policyManager;
     private final UserManager userManager;
     private final AuditLog auditLog;
 
@@ -74,13 +76,13 @@ public class PolicyResource implements Resource {
                           OrganizationDao orgDao,
                           ProjectDao projectDao,
                           UserManager userManager,
-                          PolicyDao policyDao,
+                          PolicyManager policyManager,
                           AuditLog auditLog) {
 
         this.orgManager = orgManager;
         this.orgDao = orgDao;
         this.projectDao = projectDao;
-        this.policyDao = policyDao;
+        this.policyManager = policyManager;
         this.userManager = userManager;
         this.auditLog = auditLog;
     }
@@ -90,12 +92,12 @@ public class PolicyResource implements Resource {
     @Path("/{policyName}")
     @Produces(MediaType.APPLICATION_JSON)
     public PolicyEntry get(@ApiParam @PathParam("policyName") @ConcordKey String policyName) {
-        UUID id = policyDao.getId(policyName);
-        if (id == null) {
+        PolicyEntry p = policyManager.get(policyName);
+        if (p == null) {
             throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
         }
 
-        return policyDao.get(id);
+        return p;
     }
 
     @POST
@@ -107,11 +109,11 @@ public class PolicyResource implements Resource {
 
         UUID id = entry.id();
         if (id == null && entry.name() != null) {
-            id = policyDao.getId(entry.name());
+            id = policyManager.getId(entry.name());
         }
 
         if (id == null) {
-            id = policyDao.insert(entry.name(), entry.parentId(), entry.rules());
+            id = policyManager.insert(entry.name(), entry.parentId(), entry.rules());
 
             auditLog.add(AuditObject.POLICY, AuditAction.CREATE)
                     .field("id", id)
@@ -121,7 +123,7 @@ public class PolicyResource implements Resource {
 
             return new PolicyOperationResponse(id, OperationResult.CREATED);
         } else {
-            policyDao.update(id, entry.name(), entry.parentId(), entry.rules());
+            policyManager.update(id, entry.name(), entry.parentId(), entry.rules());
 
             auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
                     .field("id", id)
@@ -140,12 +142,12 @@ public class PolicyResource implements Resource {
     public GenericOperationResult delete(@ApiParam @PathParam("policyName") @ConcordKey String policyName) {
         assertAdmin();
 
-        UUID id = policyDao.getId(policyName);
+        UUID id = policyManager.getId(policyName);
         if (id == null) {
             throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
         }
 
-        policyDao.delete(id);
+        policyManager.delete(id);
 
         auditLog.add(AuditObject.POLICY, AuditAction.DELETE)
                 .field("id", id)
@@ -168,7 +170,7 @@ public class PolicyResource implements Resource {
         // TODO: add user type into request
         UserType userType = UserPrincipal.assertCurrent().getType();
         PolicyLink l = assertLink(policyName, entry.getOrgName(), entry.getProjectName(), entry.getUserName(), entry.getUserDomain(), userType);
-        policyDao.link(l.policyId, l.orgId, l.projectId, l.userId);
+        policyManager.link(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
                 .field("id", l.policyId)
@@ -197,7 +199,7 @@ public class PolicyResource implements Resource {
             userType = UserPrincipal.assertCurrent().getType();
         }
         PolicyLink l = assertLink(policyName, orgName, projectName, userName, domain, userType);
-        policyDao.unlink(l.policyId, l.orgId, l.projectId, l.userId);
+        policyManager.unlink(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
                 .field("id", l.policyId)
@@ -220,7 +222,7 @@ public class PolicyResource implements Resource {
                                   @ApiParam @QueryParam("userType") UserType userType) {
 
         if (orgName == null && projectName == null && userName == null) {
-            return policyDao.list();
+            return policyManager.list();
         }
 
         UUID orgId = null;
@@ -251,13 +253,23 @@ public class PolicyResource implements Resource {
             userId = assertUser(userName, userDomain, userType);
         }
 
-        PolicyEntry e = policyDao.getLinked(orgId, projectId, userId);
+        PolicyEntry e = policyManager.getLinked(orgId, projectId, userId);
         if (e == null) {
             return Collections.emptyList();
         }
 
         // TODO consider returning multiple entries?
         return Collections.singletonList(e);
+    }
+
+    @POST
+    @Path("/refresh")
+    public void refresh() {
+        if (!Roles.isAdmin()) {
+            throw new AuthorizationException("Only admins are allowed to refresh polices");
+        }
+
+        policyManager.refresh();
     }
 
     private UUID assertProject(UUID orgId, String projectName) {
@@ -274,7 +286,7 @@ public class PolicyResource implements Resource {
     }
 
     private PolicyLink assertLink(String policyName, String orgName, String projectName, String userName, String domain, UserType userType) {
-        UUID policyId = policyDao.getId(policyName);
+        UUID policyId = policyManager.getId(policyName);
         if (policyId == null) {
             throw new ConcordApplicationException("Policy not found: " + policyName, Status.NOT_FOUND);
         }

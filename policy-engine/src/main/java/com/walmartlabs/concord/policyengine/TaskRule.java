@@ -27,6 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class TaskRule implements Serializable {
@@ -53,6 +54,7 @@ public class TaskRule implements Serializable {
         return msg;
     }
 
+    @JsonProperty("name")
     public String getTaskName() {
         return taskName;
     }
@@ -63,6 +65,22 @@ public class TaskRule implements Serializable {
 
     public List<Param> getParams() {
         return params;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaskRule taskRule = (TaskRule) o;
+        return Objects.equals(msg, taskRule.msg) &&
+                Objects.equals(taskName, taskRule.taskName) &&
+                Objects.equals(method, taskRule.method) &&
+                Objects.equals(params, taskRule.params);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, taskName, method, params);
     }
 
     @Override
@@ -111,6 +129,22 @@ public class TaskRule implements Serializable {
 
         public List<Object> getValues() {
             return values;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Param param = (Param) o;
+            return index == param.index &&
+                    protectedVariable == param.protectedVariable &&
+                    Objects.equals(name, param.name) &&
+                    Objects.equals(values, param.values);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(index, name, protectedVariable, values);
         }
 
         @Override

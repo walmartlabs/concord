@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.org.policy;
+package com.walmartlabs.concord.policyengine;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,18 @@ package com.walmartlabs.concord.server.org.policy;
  * =====
  */
 
-import org.immutables.value.Value;
-
-import java.io.Serializable;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
-@Value.Immutable
-public interface PolicyRules extends Serializable {
+public class ProcessCfgPolicy {
 
-    List<String> policyNames();
+    private final Map<String, Object> rules;
 
-    Map<String, Object> rules();
+    public ProcessCfgPolicy(Map<String, Object> rules) {
+        this.rules = rules != null ? rules : Collections.emptyMap();
+    }
+
+    public Map<String, Object> get() {
+        return rules;
+    }
 }

@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.server.org.policy.PolicyRules;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 import com.walmartlabs.concord.server.queueclient.message.Imports;
@@ -36,7 +36,7 @@ public class Payload {
     public static final HeaderKey<Map<String, Object>> CONFIGURATION = HeaderKey.registerMap("_cfg");
     public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
-    public static final HeaderKey<PolicyRules> POLICY = HeaderKey.register("_policy", PolicyRules.class);
+    public static final HeaderKey<PolicyEngine> POLICY = HeaderKey.register("_policy", PolicyEngine.class);
     public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
     public static final HeaderKey<ProjectDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProjectDefinition.class);
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");

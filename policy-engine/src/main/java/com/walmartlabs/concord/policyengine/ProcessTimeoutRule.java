@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class ProcessTimeoutRule implements Serializable {
 
@@ -34,7 +35,6 @@ public class ProcessTimeoutRule implements Serializable {
     @JsonCreator
     public ProcessTimeoutRule(@JsonProperty("msg") String msg,
                               @JsonProperty("max") String max) {
-
         this.msg = msg;
         this.max = max;
     }
@@ -45,6 +45,20 @@ public class ProcessTimeoutRule implements Serializable {
 
     public String getMax() {
         return max;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProcessTimeoutRule that = (ProcessTimeoutRule) o;
+        return Objects.equals(msg, that.msg) &&
+                Objects.equals(max, that.max);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(msg, max);
     }
 
     @Override
