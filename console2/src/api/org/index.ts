@@ -24,6 +24,7 @@ import {
     ConcordId,
     OperationResult,
     EntityOwner,
+    EntityType,
     Owner,
     queryParams
 } from '../common';
@@ -62,6 +63,10 @@ export interface ColumnDefinition {
 
 export interface OrganizationEntryMetaUI {
     processList?: ColumnDefinition[];
+}
+
+export interface CheckResult {
+    result: boolean;
 }
 
 export interface OrganizationEntryMeta {
@@ -131,6 +136,13 @@ export const list = async (
 
 export const get = (orgName: ConcordKey): Promise<OrganizationEntry> =>
     fetchJson<OrganizationEntry>(`/api/v1/org/${orgName}`);
+
+export const checkResult = (entity: EntityType, orgName: ConcordKey): Promise<CheckResult> =>
+    fetchJson<CheckResult>(
+        `api/v1/${entity}/canCreate?${queryParams({
+            orgName
+        })}`
+    );
 
 export const changeOwner = (
     orgId: ConcordId,

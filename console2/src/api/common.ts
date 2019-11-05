@@ -285,3 +285,8 @@ export interface GenericOperationResult {
     ok: boolean;
     result: OperationResult;
 }
+
+export enum EntityType {
+    PROJECT = 'PROJECT',
+    SECRET = 'SECRET'
+}

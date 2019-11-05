@@ -4,6 +4,9 @@
 
 ### Added
 
+- concord-server, concord-console: the "new project" and the "new
+secret" buttons can now be disabled on the organization level using
+an `entity` policy;
 - concord-server, concord-agent: configurable LRU cache for GIT
 repositories;
 - console: pagination for the project list;

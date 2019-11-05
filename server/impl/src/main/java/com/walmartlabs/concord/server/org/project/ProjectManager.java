@@ -198,7 +198,7 @@ public class ProjectManager {
         return projectDao.list(orgId, userId, PROJECTS.PROJECT_NAME, true, offset, limit, filter);
     }
 
-    private UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
+    public UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {
         if (owner == null) {
             return defaultOwner;
         }

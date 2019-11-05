@@ -19,54 +19,55 @@
  */
 
 import * as React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Input, Menu } from 'semantic-ui-react';
 
-import { ConcordKey } from '../../../api/common';
-import { RedirectButton, SecretList } from '../../organisms';
-
-interface State {
-    filter?: string;
-}
+import { ConcordKey, EntityType } from '../../../api/common';
+import { SecretList } from '../../organisms';
+import { checkResult as apiCheckResult } from '../../../api/org';
+import { CreateNewEntityButton } from '../../molecules';
 
 interface Props {
     orgName: ConcordKey;
 }
 
-class SecretListActivity extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {};
-    }
+const SecretListActivity = ({ orgName }: Props) => {
+    const [filter, setFilter] = useState<string>();
+    const [canCreate, setCanCreate] = useState<boolean>(false);
 
-    render() {
-        const { orgName } = this.props;
+    const fetchCanCreateStatus = useCallback(async () => {
+        const response = await apiCheckResult(EntityType.SECRET, orgName);
+        setCanCreate(!!response);
+    }, [orgName]);
 
-        return (
-            <>
-                <Menu secondary={true}>
-                    <Menu.Item>
-                        <Input
-                            icon="search"
-                            placeholder="Filter..."
-                            onChange={(ev, data) => this.setState({ filter: data.value })}
-                        />
-                    </Menu.Item>
+    useEffect(() => {
+        fetchCanCreateStatus();
+    }, [orgName]);
 
-                    <Menu.Item position={'right'}>
-                        <RedirectButton
-                            icon="plus"
-                            positive={true}
-                            labelPosition="left"
-                            content="New secret"
-                            location={`/org/${orgName}/secret/_new`}
-                        />
-                    </Menu.Item>
-                </Menu>
+    return (
+        <>
+            <Menu secondary={true}>
+                <Menu.Item>
+                    <Input
+                        icon="search"
+                        placeholder="Filter..."
+                        onChange={(ev, data) => setFilter(data.value)}
+                    />
+                </Menu.Item>
 
-                <SecretList orgName={orgName} filter={this.state.filter} />
-            </>
-        );
-    }
-}
+                <Menu.Item position={'right'}>
+                    <CreateNewEntityButton
+                        entity="secret"
+                        orgName={orgName}
+                        userInOrg={true}
+                        enabledInPolicy={canCreate}
+                    />
+                </Menu.Item>
+            </Menu>
+
+            <SecretList orgName={orgName} filter={filter} />
+        </>
+    );
+};
 
 export default SecretListActivity;

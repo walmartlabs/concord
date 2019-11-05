@@ -388,7 +388,7 @@ public class ProjectResource implements Resource {
         return l.toArray(new String[0]);
     }
 
-    private static ProjectEntry normalize(ProjectEntry e) {
+    public static ProjectEntry normalize(ProjectEntry e) {
         Map<String, RepositoryEntry> repos = e.getRepositories();
         if (repos != null) {
             Map<String, RepositoryEntry> m = new HashMap<>(repos);
