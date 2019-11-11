@@ -136,6 +136,8 @@ public interface StepConverter<T extends YamlStep> {
             return;
         }
 
+        c.removeOutput(attachedRef);
+
         // retry init
         String initId = ctx.nextId();
         c.addFirstElement(new ServiceTask(initId, ExpressionType.SIMPLE, "${__retryUtils.init(execution)}", null, null, true));
@@ -182,6 +184,9 @@ public interface StepConverter<T extends YamlStep> {
         String endId = ctx.nextId();
         c.addElement(new EndEvent(endId));
         c.addElement(new SequenceFlow(ctx.nextId(), throwCallId, endId));
+
+        // cleanup after success execution
+        c.addElement(new SequenceFlow(ctx.nextId(), attachedRef, cleanupTaskId));
 
         c.addSourceMaps(c.getSourceMap());
     }

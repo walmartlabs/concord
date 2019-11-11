@@ -22,6 +22,7 @@ package com.walmartlabs.concord.project.yaml;
 
 import com.walmartlabs.concord.project.yaml.converter.StepConverter;
 import com.walmartlabs.concord.project.yaml.converter.YamlTaskStepConverter;
+import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
@@ -32,6 +33,7 @@ import io.takari.bpm.model.ProcessDefinition;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -2225,6 +2227,33 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verify(testBean, times(3)).throwBpmnError(anyString());
     }
 
+    @Test
+    public void test076() throws Exception {
+        deploy("076.yml");
+
+        MyLogger log = spy(new MyLogger());
+        register("log", log);
+
+        register("throw", new ThrowExceptionTask());
+
+        register("__retryUtils", new YamlTaskStepConverter.RetryUtilsTask());
+
+        // ---
+
+        String key = UUID.randomUUID().toString();
+        try {
+            start(key, "default");
+            fail("should fail");
+        } catch (ExecutionException e) {
+        }
+
+        // ---
+
+        verify(log, times(2)).log(eq("Here's calledFlow"));
+        verify(log, times(2)).log(eq("Here's nestedFlow called by calledFlow"));
+        verify(log, times(2)).log(eq("Error NOW!"));
+    }
+
     // FORMS (100 - 199)
 
     @Test
@@ -2656,4 +2685,18 @@ public class YamlParserTest extends AbstractYamlParserTest {
         }
     }
 
+    public class ThrowExceptionTask implements Task {
+
+        public void call(Object o) throws Exception {
+            if (o instanceof Exception) {
+                throw (Exception) o;
+            } else if (o instanceof String) {
+                throw new RuntimeException(o.toString());
+            } else if (o instanceof Serializable) {
+                throw new RuntimeException("Process error:" + o);
+            } else {
+                throw new RuntimeException(o != null ? o.toString() : "n/a");
+            }
+        }
+    }
 }

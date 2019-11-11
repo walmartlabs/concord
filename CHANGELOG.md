@@ -20,6 +20,7 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- runtime-v1: fixed an issue with nested `retry` blocks;
 - concord-server: handle processes stuck in the `PREPARING` status;
 - concord-server: fixed an issue preventing the `github` trigger's
 `useEventCommitId` from working correctly;
