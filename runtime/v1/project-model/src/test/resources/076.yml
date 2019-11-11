@@ -1,0 +1,18 @@
+default:
+  - call: calledFlow
+    retry:
+      times: 1
+      delay: 1
+
+calledFlow:
+  - log: "Here's calledFlow"
+  - call: nestedFlow
+    retry:
+      times: 1
+      delay: 1
+
+  - log: "Error NOW!"
+  - throw: "Pretend there's an error"
+
+nestedFlow:
+  - log: "Here's nestedFlow called by calledFlow"

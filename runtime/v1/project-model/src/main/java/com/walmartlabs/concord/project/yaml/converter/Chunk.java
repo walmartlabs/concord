@@ -50,6 +50,10 @@ public class Chunk implements Serializable {
         outputs.add(id);
     }
 
+    public void removeOutput(String id) {
+        outputs.remove(id);
+    }
+
     public void addOutputs(Set<String> s) {
         outputs.addAll(s);
     }
