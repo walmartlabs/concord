@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.repository;
+package com.walmartlabs.concord.cli;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,17 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
+import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.project.ImportsNormalizer;
 
-/**
- * Reflects the state of the process working directory while it is processed
- * by the Server. Allows the Server to know which files are updated during the
- * working directory preparation and which can be recreated using external
- * sources (i.e. SCM repositories).
- */
-public interface Snapshot {
+public class DummyImportsNormalizer implements ImportsNormalizer {
 
-    boolean isModified(Path path, BasicFileAttributes attrs);
+    @Override
+    public Imports normalize(Imports imports) {
+        if (imports != null && !imports.isEmpty()) {
+            System.out.println("WARN: Linting of 'imports' is not supported at the moment.");
+        }
 
-    boolean contains(Path path);
+        return Imports.builder().build();
+    }
 }

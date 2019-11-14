@@ -22,13 +22,10 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
-import com.walmartlabs.concord.server.queueclient.message.ImportEntry;
-import com.walmartlabs.concord.server.queueclient.message.Imports;
+import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 public class JobRequest {
@@ -76,7 +73,7 @@ public class JobRequest {
         this.commitId = commitId;
         this.secretName = secretName;
         this.log = log;
-        this.imports = imports;
+        this.imports = imports != null ? imports : Imports.builder().build();
     }
 
     public Type getType() {
@@ -115,11 +112,8 @@ public class JobRequest {
         return log;
     }
 
-    public List<ImportEntry> getImports() {
-        if (imports == null || imports.items() == null) {
-            return Collections.emptyList();
-        }
-        return imports.items();
+    public Imports getImports() {
+        return imports;
     }
 
     @Override

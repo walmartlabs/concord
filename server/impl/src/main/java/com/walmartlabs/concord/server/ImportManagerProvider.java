@@ -21,6 +21,8 @@ package com.walmartlabs.concord.server;
  */
 
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.imports.Import.GitDefinition;
+import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 import com.walmartlabs.concord.imports.RepositoryExporter;
@@ -36,9 +38,6 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.nio.file.Path;
 import java.util.UUID;
-
-import static com.walmartlabs.concord.project.model.Import.SecretDefinition;
-import static com.walmartlabs.concord.server.queueclient.message.ImportEntry.GitEntry;
 
 @Named
 public class ImportManagerProvider implements Provider<ImportManager> {
@@ -73,7 +72,7 @@ public class ImportManagerProvider implements Provider<ImportManager> {
         }
 
         @Override
-        public Snapshot export(GitEntry entry, Path workDir) {
+        public Snapshot export(GitDefinition entry, Path workDir) {
             Secret secret = getSecret(entry.secret());
             return repositoryManager.withLock(entry.url(), () -> {
                 Repository repository = repositoryManager.fetch(entry.url(), entry.version(), null, entry.path(), secret);

@@ -20,13 +20,12 @@ package com.walmartlabs.concord.imports;
  * =====
  */
 
+import com.walmartlabs.concord.imports.Import.GitDefinition;
 import com.walmartlabs.concord.repository.Snapshot;
 
 import java.nio.file.Path;
 
-import static com.walmartlabs.concord.server.queueclient.message.ImportEntry.GitEntry;
-
 public interface RepositoryExporter {
 
-    Snapshot export(GitEntry entry, Path workDir) throws Exception;
+    Snapshot export(GitDefinition entry, Path workDir) throws Exception;
 }

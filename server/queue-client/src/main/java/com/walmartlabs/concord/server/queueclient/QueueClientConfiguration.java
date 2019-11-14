@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.queueclient;
  */
 
 import java.io.Serializable;
-import java.util.UUID;
 
 public class QueueClientConfiguration implements Serializable {
 

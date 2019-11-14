@@ -102,6 +102,16 @@ public class ProjectDao extends AbstractDao {
         }
     }
 
+    public String getOrgName(UUID projectId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(ORGANIZATIONS.ORG_ID)
+                    .from(PROJECTS, ORGANIZATIONS)
+                    .where(ORGANIZATIONS.ORG_ID.eq(PROJECTS.ORG_ID)
+                            .and(PROJECTS.PROJECT_ID.eq(projectId)))
+                    .fetchOne(ORGANIZATIONS.ORG_NAME);
+        }
+    }
+
     public ProjectEntry get(UUID projectId) {
         Projects p = PROJECTS.as("p");
         Users u = USERS.as("u");

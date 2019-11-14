@@ -20,34 +20,37 @@ package com.walmartlabs.concord.project;
  * =====
  */
 
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.project.yaml.YamlParserException;
 import org.junit.Test;
 
 import java.nio.file.Paths;
 
+import static org.mockito.Mockito.mock;
+
 public class BrokenTest {
 
     @Test(expected = YamlParserException.class)
     public void testDir() throws Exception {
-        ProjectLoader l = new ProjectLoader();
-        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenMain").toURI()));
+        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
+        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenMain").toURI()), new NoopImportsNormalizer());
     }
 
     @Test(expected = YamlParserException.class)
     public void testStream() throws Exception {
-        ProjectLoader l = new ProjectLoader();
+        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
         l.loadProject(ClassLoader.getSystemResourceAsStream("brokenMain/concord.yml"));
     }
 
     @Test(expected = YamlParserException.class)
     public void testProfiles() throws Exception {
-        ProjectLoader l = new ProjectLoader();
-        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenProfiles").toURI()));
+        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
+        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenProfiles").toURI()), new NoopImportsNormalizer());
     }
 
     @Test(expected = YamlParserException.class)
     public void testFlows() throws Exception {
-        ProjectLoader l = new ProjectLoader();
-        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenFlows").toURI()));
+        ProjectLoader l = new ProjectLoader(mock(ImportManager.class));
+        l.loadProject(Paths.get(ClassLoader.getSystemResource("brokenFlows").toURI()), new NoopImportsNormalizer());
     }
 }

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
-import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;

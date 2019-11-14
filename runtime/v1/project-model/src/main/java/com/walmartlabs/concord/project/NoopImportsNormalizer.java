@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.repository;
+package com.walmartlabs.concord.project;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,12 @@ package com.walmartlabs.concord.repository;
  * =====
  */
 
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
+import com.walmartlabs.concord.imports.Imports;
 
-/**
- * Reflects the state of the process working directory while it is processed
- * by the Server. Allows the Server to know which files are updated during the
- * working directory preparation and which can be recreated using external
- * sources (i.e. SCM repositories).
- */
-public interface Snapshot {
+public class NoopImportsNormalizer implements ImportsNormalizer {
 
-    boolean isModified(Path path, BasicFileAttributes attrs);
-
-    boolean contains(Path path);
+    @Override
+    public Imports normalize(Imports imports) {
+        return imports;
+    }
 }

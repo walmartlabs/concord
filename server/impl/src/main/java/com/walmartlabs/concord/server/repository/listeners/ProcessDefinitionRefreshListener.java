@@ -24,6 +24,7 @@ import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,15 +40,24 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
     private static final Logger log = LoggerFactory.getLogger(ProcessDefinitionRefreshListener.class);
 
     private final RepositoryDao repositoryDao;
+    private final ProjectLoader projectLoader;
+    private final ImportsNormalizerFactory importsNormalizer;
 
     @Inject
-    public ProcessDefinitionRefreshListener(RepositoryDao repositoryDao) {
+    public ProcessDefinitionRefreshListener(RepositoryDao repositoryDao,
+                                            ProjectLoader projectLoader,
+                                            ImportsNormalizerFactory importsNormalizer) {
+
         this.repositoryDao = repositoryDao;
+        this.projectLoader = projectLoader;
+        this.importsNormalizer = importsNormalizer;
     }
 
     @Override
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
-        ProjectDefinition pd = new ProjectLoader().loadProject(repoPath);
+        ProjectDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()))
+                .getProjectDefinition();
+
         Set<String> entryPoints = pd.getFlows().keySet();
         List<String> profiles = new ArrayList<>(pd.getProfiles().keySet());
 

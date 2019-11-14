@@ -53,9 +53,8 @@ public final class ProjectDefinitionUtils {
         Map<String, Object> variables = project.getConfiguration();
         Map<String, Profile> profiles = project.getProfiles();
 
-        Map<String, Object> view = overlay(variables, profiles, activeProfiles, Profile::getConfiguration,
+        return overlay(variables, profiles, activeProfiles, Profile::getConfiguration,
                 ConfigurationUtils::deepMerge);
-        return view;
     }
 
     private static <T> Map<String, T> overlay(Map<String, T> initial,

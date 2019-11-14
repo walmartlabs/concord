@@ -20,7 +20,11 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.*;
+import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.project.model.Profile;
+import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.Resources;
+import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.project.yaml.model.YamlFormField;
 import com.walmartlabs.concord.project.yaml.model.YamlProfile;
 import com.walmartlabs.concord.project.yaml.model.YamlProject;
@@ -42,7 +46,7 @@ public final class YamlProjectConverter {
         Map<String, Object> cfg = project.getConfiguration();
         Map<String, Profile> profiles = convertProfiles(project.getProfiles());
         List<Trigger> triggers = YamlTriggersConverter.convert(project.getTriggers());
-        List<Import> imports = convertImports(project.getImports());
+        Imports imports = convertImports(project.getImports());
         Resources resources = convertResources(project.getResources());
         return new ProjectDefinition(flows, forms, cfg, profiles, triggers, imports, resources);
     }

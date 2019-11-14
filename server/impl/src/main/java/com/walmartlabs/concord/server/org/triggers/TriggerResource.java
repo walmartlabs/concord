@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
+import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
@@ -63,13 +64,14 @@ public class TriggerResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerResource.class);
 
-    private final ProjectLoader projectLoader = new ProjectLoader();
     private final RepositoryDao repositoryDao;
     private final TriggersDao triggersDao;
     private final RepositoryManager repositoryManager;
     private final ProjectAccessManager projectAccessManager;
     private final OrganizationManager orgManager;
     private final TriggerManager triggerManager;
+    private final ProjectLoader projectLoader;
+    private final ImportsNormalizerFactory importsNormalizerFactory;
 
     @Inject
     public TriggerResource(RepositoryDao repositoryDao,
@@ -77,7 +79,9 @@ public class TriggerResource implements Resource {
                            RepositoryManager repositoryManager,
                            ProjectAccessManager projectAccessManager,
                            OrganizationManager orgManager,
-                           TriggerManager triggerManager) {
+                           TriggerManager triggerManager,
+                           ProjectLoader projectLoader,
+                           ImportsNormalizerFactory importsNormalizerFactory) {
 
         this.repositoryDao = repositoryDao;
         this.triggersDao = triggersDao;
@@ -85,6 +89,8 @@ public class TriggerResource implements Resource {
         this.projectAccessManager = projectAccessManager;
         this.orgManager = orgManager;
         this.triggerManager = triggerManager;
+        this.projectLoader = projectLoader;
+        this.importsNormalizerFactory = importsNormalizerFactory;
     }
 
     /**
@@ -154,21 +160,22 @@ public class TriggerResource implements Resource {
         return Response.ok().build();
     }
 
-    private void refresh(RepositoryEntry r) {
+    private void refresh(RepositoryEntry repo) {
         ProjectDefinition pd;
         try {
-            pd = repositoryManager.withLock(r.getUrl(), () -> {
-                Repository repository = repositoryManager.fetch(r.getProjectId(), r);
-                return projectLoader.loadProject(repository.path());
+            pd = repositoryManager.withLock(repo.getUrl(), () -> {
+                Repository repository = repositoryManager.fetch(repo.getProjectId(), repo);
+                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()));
+                return result.getProjectDefinition();
             });
 
             ProjectValidator.validate(pd);
         } catch (Exception e) {
-            log.error("refresh ['{}'] -> project load error", r.getId(), e);
-            throw new ConcordApplicationException("Refresh failed (repository ID: " + r.getId() + "): " + e.getMessage(), e);
+            log.error("refresh ['{}'] -> project load error", repo.getId(), e);
+            throw new ConcordApplicationException("Refresh failed (repository ID: " + repo.getId() + "): " + e.getMessage(), e);
         }
 
-        triggerManager.refresh(r.getProjectId(), r.getId(), pd);
+        triggerManager.refresh(repo.getProjectId(), repo.getId(), pd);
     }
 
     private ProjectEntry assertProject(UUID orgId, String projectName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {

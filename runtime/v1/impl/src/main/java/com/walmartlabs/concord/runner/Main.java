@@ -31,9 +31,11 @@ import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.project.NoopImportsNormalizer;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
@@ -141,7 +143,7 @@ public class Main {
         Collection<String> activeProfiles = getActiveProfiles(req);
 
         // load the project
-        ProjectDefinition project = loadProject(baseDir);
+        ProjectDefinition project = loadProject(baseDir, req);
 
         // read the list of metadata variables
         Set<String> metaVariables = getMetaVariables(req);
@@ -249,10 +251,13 @@ public class Main {
         return (Collection<String>) v;
     }
 
-    private static ProjectDefinition loadProject(Path baseDir) throws ExecutionException {
+    private static ProjectDefinition loadProject(Path baseDir, Map<String, Object> configuration) throws ExecutionException {
         try {
-            return new ProjectLoader().loadProject(baseDir);
-        } catch (IOException e) {
+            // assume all imports were processed by the agent
+            return new ProjectLoader(new NoopImportManager())
+                    .loadProject(baseDir, new NoopImportsNormalizer(), configuration)
+                    .getProjectDefinition();
+        } catch (Exception e) {
             throw new ExecutionException("Error while loading a project", e);
         }
     }

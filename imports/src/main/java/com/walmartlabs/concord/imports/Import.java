@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.project.model;
+package com.walmartlabs.concord.imports;
 
 /*-
  * *****
@@ -22,6 +22,7 @@ package com.walmartlabs.concord.project.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -35,8 +36,10 @@ import java.io.Serializable;
         use = JsonTypeInfo.Id.NAME,
         property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = ImmutableGitDefinition.class, name = "git"),
-        @JsonSubTypes.Type(value = ImmutableMvnDefinition.class, name = "mvn"),
+        @Type(value = Import.GitDefinition.class, name = Import.GitDefinition.TYPE),
+        @Type(value = ImmutableGitDefinition.class, name = Import.GitDefinition.TYPE),
+        @Type(value = Import.MvnDefinition.class, name = Import.MvnDefinition.TYPE),
+        @Type(value = ImmutableMvnDefinition.class, name = Import.MvnDefinition.TYPE),
 })
 public interface Import extends Serializable {
 
@@ -49,6 +52,8 @@ public interface Import extends Serializable {
     @JsonSerialize(as = ImmutableGitDefinition.class)
     @JsonDeserialize(as = ImmutableGitDefinition.class)
     interface GitDefinition extends Import {
+
+        String TYPE = "git";
 
         @Nullable
         String name();
@@ -84,6 +89,8 @@ public interface Import extends Serializable {
     @JsonDeserialize(as = ImmutableMvnDefinition.class)
     interface MvnDefinition extends Import {
 
+        String TYPE = "mvn";
+
         String url();
 
         @Nullable
@@ -92,6 +99,10 @@ public interface Import extends Serializable {
         @Override
         default String type() {
             return "mvn";
+        }
+
+        static ImmutableMvnDefinition.Builder builder() {
+            return ImmutableMvnDefinition.builder();
         }
     }
 

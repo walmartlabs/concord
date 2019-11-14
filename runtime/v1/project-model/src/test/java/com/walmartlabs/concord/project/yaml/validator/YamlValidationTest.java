@@ -33,9 +33,10 @@ public class YamlValidationTest extends AbstractYamlParserTest {
         try {
             deploy("validator/002.yml");
             fail("exception expected");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().contains("checkpoint 'one'"));
-            assertTrue(e.getMessage().contains("already defined at"));
+        } catch (Exception e) {
+            Throwable t = e.getCause();
+            assertTrue(t.getMessage().contains("checkpoint 'one'"));
+            assertTrue(t.getMessage().contains("already defined at"));
         }
     }
 }
