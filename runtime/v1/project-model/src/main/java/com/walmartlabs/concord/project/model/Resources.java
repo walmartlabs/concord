@@ -21,9 +21,18 @@ package com.walmartlabs.concord.project.model;
  */
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import static com.walmartlabs.concord.sdk.Constants.Files.*;
+
 public class Resources implements Serializable {
+
+    public static final Resources DEFAULT = new Resources(Collections.singletonList(PROFILES_DIR_NAME),
+            Collections.singletonList(PROJECT_FILES_DIR_NAME),
+            Arrays.asList(DEFINITIONS_DIR_NAMES),
+            null);
 
     private static final long serialVersionUID = 1L;
 

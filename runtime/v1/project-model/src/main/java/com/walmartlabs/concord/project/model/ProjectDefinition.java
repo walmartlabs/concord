@@ -20,6 +20,7 @@ package com.walmartlabs.concord.project.model;
  * =====
  */
 
+import com.walmartlabs.concord.imports.Imports;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
@@ -31,26 +32,28 @@ public class ProjectDefinition extends Profile {
     private static final long serialVersionUID = 1L;
 
     private final Map<String, Profile> profiles;
-
     private final List<Trigger> triggers;
-
-    private final List<Import> imports;
-
+    private final Imports imports;
     private final Resources resources;
 
     public ProjectDefinition(Map<String, ProcessDefinition> flows,
                              Map<String, FormDefinition> forms,
-                             Map<String, Object> variables,
+                             Map<String, Object> configuration,
                              Map<String, Profile> profiles,
                              List<Trigger> triggers,
-                             List<Import> imports,
+                             Imports imports,
                              Resources resources) {
 
-        super(flows, forms, variables);
+        super(flows, forms, configuration);
+
         this.profiles = profiles;
         this.triggers = triggers;
         this.imports = imports;
         this.resources = resources;
+    }
+
+    public ProjectDefinition(ProjectDefinition src, Imports imports) {
+        this(src.getFlows(), src.getForms(), src.getConfiguration(), src.getProfiles(), src.getTriggers(), imports, src.getResources());
     }
 
     public Map<String, Profile> getProfiles() {
@@ -61,7 +64,7 @@ public class ProjectDefinition extends Profile {
         return triggers;
     }
 
-    public List<Import> getImports() {
+    public Imports getImports() {
         return imports;
     }
 

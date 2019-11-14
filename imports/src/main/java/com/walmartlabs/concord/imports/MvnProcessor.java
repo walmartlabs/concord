@@ -22,6 +22,7 @@ package com.walmartlabs.concord.imports;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.imports.Import.MvnDefinition;
 import com.walmartlabs.concord.repository.LastModifiedSnapshot;
 import com.walmartlabs.concord.repository.Snapshot;
 
@@ -30,9 +31,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-import static com.walmartlabs.concord.server.queueclient.message.ImportEntry.MvnEntry;
-
-public class MvnProcessor implements ImportProcessor<MvnEntry> {
+public class MvnProcessor implements ImportProcessor<MvnDefinition> {
 
     private final DependencyManager dependencyManager;
 
@@ -46,13 +45,13 @@ public class MvnProcessor implements ImportProcessor<MvnEntry> {
     }
 
     @Override
-    public Snapshot process(MvnEntry entry, Path workDir) throws Exception {
+    public Snapshot process(MvnDefinition entry, Path workDir) throws Exception {
         URI uri = new URI(entry.url());
         Path dependencyPath = dependencyManager.resolveSingle(uri).getPath();
         return extract(entry, workDir, dependencyPath);
     }
 
-    private Snapshot extract(MvnEntry entry, Path workDir, Path archivePath) throws IOException {
+    private Snapshot extract(MvnDefinition entry, Path workDir, Path archivePath) throws IOException {
         Path dest = workDir;
         if (entry.dest() != null) {
             dest = dest.resolve(entry.dest());

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.imports.ImportManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
-
-import static com.walmartlabs.concord.project.model.Import.SecretDefinition;
 
 public class Worker implements Runnable {
 

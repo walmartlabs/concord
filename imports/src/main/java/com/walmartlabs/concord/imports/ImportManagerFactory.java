@@ -39,6 +39,6 @@ public class ImportManagerFactory {
         List<ImportProcessor> processors = new ArrayList<>();
         processors.add(new RepositoryProcessor(repositoryExporter));
         processors.add(new MvnProcessor(dependencyManager));
-        return new ImportManager(processors);
+        return new DefaultImportManager(processors);
     }
 }

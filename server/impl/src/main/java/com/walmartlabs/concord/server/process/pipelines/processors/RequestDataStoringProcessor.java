@@ -47,7 +47,6 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 

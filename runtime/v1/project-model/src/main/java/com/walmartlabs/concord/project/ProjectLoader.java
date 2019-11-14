@@ -21,11 +21,17 @@ package com.walmartlabs.concord.project;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.project.model.*;
+import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.project.model.Profile;
+import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.project.model.Resources;
+import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.project.yaml.*;
 import com.walmartlabs.concord.project.yaml.model.*;
 import com.walmartlabs.concord.project.yaml.validator.Validator;
 import com.walmartlabs.concord.project.yaml.validator.ValidatorContext;
+import com.walmartlabs.concord.repository.Snapshot;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
@@ -38,45 +44,60 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-import static com.walmartlabs.concord.sdk.Constants.Files.*;
-
 public class ProjectLoader {
 
     public static final String[] PROJECT_FILE_NAMES = {".concord.yml", "concord.yml"}; // NOSONAR
 
+    private final ImportManager importManager;
     private final YamlParser parser = new YamlParser();
 
-    public ProjectDefinition loadProject(Path baseDir) throws IOException {
-        Resources r = getResources(baseDir);
-        if (r != null) {
-            return loadProject(baseDir, r);
-        }
-
-        return loadProject(baseDir,
-                Collections.singletonList(PROJECT_FILES_DIR_NAME),
-                Collections.singletonList(PROFILES_DIR_NAME),
-                Arrays.asList(DEFINITIONS_DIR_NAMES));
+    public ProjectLoader(ImportManager importManager) {
+        this.importManager = importManager;
     }
 
-    private ProjectDefinition loadProject(Path baseDir, Resources resources) throws IOException {
-        return loadProject(baseDir,
-                resources.getProjectFilePaths(),
-                resources.getProfilesPaths(),
-                resources.getDefinitionPaths());
+    /**
+     * Loads the project definition using the supplied stream. The stream is expected
+     * to contain the root project file (concord.yml).
+     */
+    public Result loadProject(InputStream in) throws Exception {
+        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
+        b.loadDefinitions(in);
+        return new Result(Collections.emptyList(), b.build());
     }
 
-    private ProjectDefinition loadProject(Path baseDir,
-                                          List<String> projectPaths,
-                                          List<String> profilesPaths,
-                                          List<String> definitionPaths) throws IOException {
+    /**
+     * Loads the project definition using the supplied path. Processes the configured
+     * imports, templates and extra directories with project files.
+     */
+    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer) throws Exception {
+        return loadProject(workDir, importsNormalizer, Collections.emptyMap());
+    }
+
+    /**
+     * Loads the project definition using the supplied path. Processes the configured
+     * imports, templates and extra directories with project files.
+     *
+     * @param workDir       the directory containing the project files. If {@code imports} are
+     *                      configured, the directory will be used as a target for repository
+     *                      checkouts.
+     * @param configuration additional project configuration. Can contain templates
+     *                      and/or resource paths.
+     */
+    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, Map<String, Object> configuration) throws Exception {
+        workDir = workDir.normalize().toAbsolutePath();
+
+        ProjectDefinition initial = initialLoad(workDir, configuration);
+        Resources resources = initial.getResources();
+
+        Imports imports = importsNormalizer.normalize(initial.getImports());
+        List<Snapshot> snapshots = importManager.process(imports, workDir);
 
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
-        baseDir = baseDir.normalize().toAbsolutePath();
-
+        List<String> projectPaths = resources.getProjectFilePaths();
         if (projectPaths != null) {
             for (String n : projectPaths) {
-                Path p = assertLocal(baseDir, baseDir.resolve(n));
+                Path p = assertLocal(workDir, workDir.resolve(n));
                 if (Files.exists(p)) {
                     b.addProjects(p);
                 }
@@ -84,36 +105,49 @@ public class ProjectLoader {
         }
 
         for (String n : PROJECT_FILE_NAMES) {
-            Path p = assertLocal(baseDir, baseDir.resolve(n));
+            Path p = assertLocal(workDir, workDir.resolve(n));
             if (Files.exists(p)) {
-                b.addProjectFile(baseDir, p);
+                b.addProjectFile(workDir, p);
                 break;
             }
         }
 
+        List<String> definitionPaths = resources.getDefinitionPaths();
         if (definitionPaths != null) {
             for (String n : definitionPaths) {
-                Path p = assertLocal(baseDir, baseDir.resolve(n));
+                Path p = assertLocal(workDir, workDir.resolve(n));
                 if (Files.exists(p)) {
                     b.addDefinitions(p);
                 }
             }
         }
 
+        List<String> profilesPaths = resources.getProfilesPaths();
         if (profilesPaths != null) {
             for (String n : profilesPaths) {
-                Path p = assertLocal(baseDir, baseDir.resolve(n));
+                Path p = assertLocal(workDir, workDir.resolve(n));
                 if (Files.exists(p)) {
                     b.addProfiles(p);
                 }
             }
         }
 
-        return b.build();
+        ProjectDefinition pd = b.build();
+
+        // save the normalized imports, so the exact same workDir structure
+        // can be re-created later (e.g. by the Agent)
+        pd = new ProjectDefinition(pd, imports);
+
+        return new Result(snapshots, pd);
     }
 
-    private Resources getResources(Path baseDir) throws IOException {
-        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
+    /**
+     * Performs the initial load of the project files. Loads only the root concord.yml
+     * (if available), doesn't process imports, templates, etc.
+     */
+    private ProjectDefinition initialLoad(Path baseDir, Map<String, Object> configurationDefaults) throws IOException {
+        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser)
+                .withConfigurationDefaults(configurationDefaults);
 
         for (String n : PROJECT_FILE_NAMES) {
             Path p = baseDir.resolve(n);
@@ -123,14 +157,6 @@ public class ProjectLoader {
             }
         }
 
-        ProjectDefinition pd = b.build();
-
-        return pd.getResources();
-    }
-
-    public ProjectDefinition loadProject(InputStream in) throws IOException {
-        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
-        b.loadDefinitions(in);
         return b.build();
     }
 
@@ -147,6 +173,7 @@ public class ProjectLoader {
 
         private final YamlParser parser;
 
+        private Map<String, Object> configuration;
         private Map<String, ProcessDefinition> flows;
         private Map<String, FormDefinition> forms;
         private Map<String, Profile> profiles;
@@ -156,7 +183,12 @@ public class ProjectLoader {
             this.parser = parser;
         }
 
-        public ProjectDefinitionBuilder addProjectFile(Path baseDir, Path file) throws IOException {
+        public ProjectDefinitionBuilder withConfigurationDefaults(Map<String, Object> configuration) {
+            this.configuration = configuration;
+            return this;
+        }
+
+        public void addProjectFile(Path baseDir, Path file) throws IOException {
             YamlProject yml = parser.parseProject(baseDir, file);
             if (yml == null) {
                 throw new IOException("Empty project definition: " + file);
@@ -171,7 +203,6 @@ public class ProjectLoader {
             }
             projectDefinitions.add(pd);
 
-            return this;
         }
 
         public void addDefinitions(Path path) throws IOException {
@@ -290,6 +321,10 @@ public class ProjectLoader {
         }
 
         public ProjectDefinition build() {
+            if (configuration == null) {
+                configuration = new HashMap<>();
+            }
+
             if (flows == null) {
                 flows = new HashMap<>();
             }
@@ -302,10 +337,12 @@ public class ProjectLoader {
                 profiles = new HashMap<>();
             }
 
-            Map<String, Object> variables = new LinkedHashMap<>();
+            Map<String, Object> variables = new LinkedHashMap<>(this.configuration);
             List<Trigger> triggers = new ArrayList<>();
-            List<Import> imports = new ArrayList<>();
-            Resources resources = null;
+            Imports imports = Imports.builder().build();
+
+            // default resource paths
+            Resources resources = Resources.DEFAULT;
 
             if (projectDefinitions != null) {
                 for (ProjectDefinition pd : projectDefinitions) {
@@ -332,12 +369,15 @@ public class ProjectLoader {
                     }
 
                     if (pd.getImports() != null) {
-                        imports.addAll(pd.getImports());
+                        imports = Imports.builder()
+                                .addAllItems(imports.items())
+                                .addAllItems(pd.getImports().items())
+                                .build();
                     }
 
                     if (pd.getResources() != null) {
+                        // TODO avoid multiple conflicting resources definitions
                         resources = pd.getResources();
-
                     }
                 }
             }
@@ -382,6 +422,25 @@ public class ProjectLoader {
             }
 
             profiles.put(k, new Profile(flows, forms, cfg));
+        }
+    }
+
+    public static class Result {
+
+        private final List<Snapshot> snapshots;
+        private final ProjectDefinition projectDefinition;
+
+        public Result(List<Snapshot> snapshots, ProjectDefinition projectDefinition) {
+            this.snapshots = snapshots;
+            this.projectDefinition = projectDefinition;
+        }
+
+        public List<Snapshot> getSnapshots() {
+            return snapshots;
+        }
+
+        public ProjectDefinition getProjectDefinition() {
+            return projectDefinition;
         }
     }
 }

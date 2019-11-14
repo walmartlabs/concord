@@ -21,37 +21,15 @@ package com.walmartlabs.concord.imports;
  */
 
 import com.walmartlabs.concord.repository.Snapshot;
-import com.walmartlabs.concord.server.queueclient.message.ImportEntry;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-public class ImportManager {
+public interface ImportManager {
 
-    private final Map<String, ImportProcessor<ImportEntry>> processors;
-
-    @SuppressWarnings("unchecked")
-    public ImportManager(List<ImportProcessor> processors) {
-        this.processors = processors.stream().collect(Collectors.toMap(ImportProcessor::type, o -> o));
-    }
-
-    public List<Snapshot> process(List<ImportEntry> imports, Path workDir) throws Exception {
-        List<Snapshot> result = new ArrayList<>();
-        for (ImportEntry i : imports) {
-            Snapshot s = assertProcessor(i.type()).process(i, workDir);
-            result.add(s);
-        }
-        return result;
-    }
-
-    private ImportProcessor<ImportEntry> assertProcessor(String type) {
-        ImportProcessor<ImportEntry> p = processors.get(type);
-        if (p != null) {
-            return p;
-        }
-        throw new RuntimeException("Unknown import type: '" + type + "'");
-    }
+    /**
+     * Process the specified imports and save the result into {@code dest}.
+     * Assumes all import definitions were normalized (i.e. contain valid URLs, secret/org names, etc).
+     */
+    List<Snapshot> process(Imports imports, Path dest) throws Exception;
 }

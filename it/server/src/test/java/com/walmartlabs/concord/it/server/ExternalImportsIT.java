@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -259,6 +260,33 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Concord, imports!.*", cd);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportValidation() throws Exception {
+        String importRepoUrl = initRepo("externalImport");
+
+        String userRepoUrl = initRepo("externalImportTriggerReference");
+        replace(Paths.get(userRepoUrl, "concord.yml"), "{{gitUrl}}", importRepoUrl);
+        commit(Paths.get(userRepoUrl).toFile());
+
+        // ---
+
+        String orgName = "org_" + randomString();
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "prj_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setUrl(userRepoUrl))));
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        repositoriesApi.validateRepository(orgName, projectName, repoName);
+    }
+
     private static String initRepo(String resourceName) throws Exception {
         Path tmpDir = createTempDir();
 
@@ -286,5 +314,11 @@ public class ExternalImportsIT extends AbstractServerIT {
                 .collect(Collectors.toList());
 
         Files.write(concord, fileContent, StandardCharsets.UTF_8);
+    }
+
+    private static void commit(File dir) throws Exception {
+        Git repo = Git.open(dir);
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
     }
 }

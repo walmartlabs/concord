@@ -9,9 +9,9 @@ package com.walmartlabs.concord.cli;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import com.walmartlabs.concord.cli.lint.LintResult;
 import com.walmartlabs.concord.cli.lint.LintResult.Type;
 import com.walmartlabs.concord.cli.lint.Linter;
 import com.walmartlabs.concord.cli.lint.TaskCallLinter;
+import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import io.takari.bpm.model.SourceMap;
@@ -64,8 +65,9 @@ public class Lint implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }
 
-        ProjectLoader loader = new ProjectLoader();
-        ProjectDefinition pd = loader.loadProject(targetDir);
+        ProjectLoader loader = new ProjectLoader(new NoopImportManager());
+        ProjectDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer())
+                .getProjectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();
         linters().forEach(l -> lintResults.addAll(l.apply(pd)));

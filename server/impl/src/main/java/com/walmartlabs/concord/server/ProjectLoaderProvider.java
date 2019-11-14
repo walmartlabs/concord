@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.imports;
+package com.walmartlabs.concord.server;
 
 /*-
  * *****
@@ -20,13 +20,25 @@ package com.walmartlabs.concord.imports;
  * =====
  */
 
-import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.project.ProjectLoader;
 
-import java.nio.file.Path;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
 
-public interface ImportProcessor<T extends Import> {
+@Named
+public class ProjectLoaderProvider implements Provider<ProjectLoader> {
 
-    String type();
+    private final ImportManager importManager;
 
-    Snapshot process(T importEntry, Path workDir) throws Exception;
+    @Inject
+    public ProjectLoaderProvider(ImportManager importManager) {
+        this.importManager = importManager;
+    }
+
+    @Override
+    public ProjectLoader get() {
+        return new ProjectLoader(importManager);
+    }
 }

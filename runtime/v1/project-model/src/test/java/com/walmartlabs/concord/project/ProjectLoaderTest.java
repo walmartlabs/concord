@@ -20,6 +20,7 @@ package com.walmartlabs.concord.project;
  * =====
  */
 
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.YamlParserException;
@@ -30,15 +31,17 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 public class ProjectLoaderTest {
 
     @Test
     public void testSimple() throws Exception {
-        ProjectLoader loader = new ProjectLoader();
+        ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("simple").toURI();
-        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer())
+                .getProjectDefinition();
 
         assertNotNull(pd);
 
@@ -50,19 +53,19 @@ public class ProjectLoaderTest {
 
     @Test(expected = YamlConverterException.class)
     public void testEmptyField() throws Exception {
-        ProjectLoader loader = new ProjectLoader();
+        ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("emptyField").toURI();
-        loader.loadProject(Paths.get(uri));
+        loader.loadProject(Paths.get(uri), new NoopImportsNormalizer());
     }
 
     @Test
     public void testDuplicateConfigurationSection() throws Exception {
-        ProjectLoader loader = new ProjectLoader();
+        ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("duplicateConfiguration").toURI();
         try {
-            loader.loadProject(Paths.get(uri));
+            loader.loadProject(Paths.get(uri), new NoopImportsNormalizer());
             fail("exception expected");
         } catch (YamlParserException e) {
             assertTrue(e.getMessage().contains("Duplicate field 'configuration'"));
@@ -71,11 +74,11 @@ public class ProjectLoaderTest {
 
     @Test
     public void testDuplicateConfigurationVariable() throws Exception {
-        ProjectLoader loader = new ProjectLoader();
+        ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("duplicateConfigurationVariable").toURI();
         try {
-            loader.loadProject(Paths.get(uri));
+            loader.loadProject(Paths.get(uri), new NoopImportsNormalizer());
             fail("exception expected");
         } catch (YamlParserException e) {
             assertTrue(e.getMessage().contains("Duplicate field 'x'"));
@@ -84,10 +87,10 @@ public class ProjectLoaderTest {
 
     @Test
     public void testComplex() throws Exception {
-        ProjectLoader loader = new ProjectLoader();
+        ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("complex").toURI();
-        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer()).getProjectDefinition();
         assertNotNull(pd);
 
         //--- triggers
@@ -99,8 +102,8 @@ public class ProjectLoaderTest {
 
         //--- imports
         assertNotNull(pd.getImports());
-        assertEquals(3, pd.getImports().size());
-        assertEquals("git", pd.getImports().get(0).type());
+        assertEquals(3, pd.getImports().items().size());
+        assertEquals("git", pd.getImports().items().get(0).type());
 
         assertNotNull(pd.getResources());
         assertEquals(1, pd.getResources().getDefinitionPaths().size());
@@ -114,10 +117,10 @@ public class ProjectLoaderTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testMultiProjectFiles() throws Exception {
-        ProjectLoader loader = new ProjectLoader();
+        ProjectLoader loader = new ProjectLoader(mock(ImportManager.class));
 
         URI uri = ClassLoader.getSystemResource("multiProjectFile").toURI();
-        ProjectDefinition pd = loader.loadProject(Paths.get(uri));
+        ProjectDefinition pd = loader.loadProject(Paths.get(uri), new NoopImportsNormalizer()).getProjectDefinition();
         assertNotNull(pd);
 
         assertNotNull(pd.getFlows().get("default"));

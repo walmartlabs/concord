@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
+import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -51,8 +52,8 @@ public class ProjectRepositoryManager {
     private final RepositoryDao repositoryDao;
     private final ExternalEventResource externalEventResource;
     private final AuditLog auditLog;
-
-    private final ProjectLoader loader = new ProjectLoader();
+    private final ProjectLoader projectLoader;
+    private final ImportsNormalizerFactory importsNormalizerFactory;
 
     @Inject
     public ProjectRepositoryManager(ProjectAccessManager projectAccessManager,
@@ -61,7 +62,9 @@ public class ProjectRepositoryManager {
                                     SecretDao secretDao,
                                     RepositoryDao repositoryDao,
                                     ExternalEventResource externalEventResource,
-                                    AuditLog auditLog) {
+                                    AuditLog auditLog,
+                                    ProjectLoader projectLoader,
+                                    ImportsNormalizerFactory importsNormalizerFactory) {
 
         this.projectAccessManager = projectAccessManager;
         this.secretManager = secretManager;
@@ -70,6 +73,8 @@ public class ProjectRepositoryManager {
         this.repositoryDao = repositoryDao;
         this.externalEventResource = externalEventResource;
         this.auditLog = auditLog;
+        this.projectLoader = projectLoader;
+        this.importsNormalizerFactory = importsNormalizerFactory;
     }
 
     public void createOrUpdate(UUID projectId, RepositoryEntry entry) {
@@ -170,15 +175,16 @@ public class ProjectRepositoryManager {
         }
     }
 
-    public void validateRepository(UUID projectId, RepositoryEntry repositoryEntry) {
+    public void validateRepository(UUID projectId, RepositoryEntry repo) {
         try {
-            ProjectDefinition pd = repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
-                Repository repository = repositoryManager.fetch(projectId, repositoryEntry);
-                return loader.loadProject(repository.path());
+            ProjectDefinition pd = repositoryManager.withLock(repo.getUrl(), () -> {
+                Repository repository = repositoryManager.fetch(projectId, repo);
+                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()));
+                return result.getProjectDefinition();
             });
             ProjectValidator.validate(pd);
         } catch (Exception e) {
-            throw new RepositoryValidationException("Validation failed: " + repositoryEntry.getName(), e);
+            throw new RepositoryValidationException("Validation failed: " + repo.getName(), e);
         }
     }
 

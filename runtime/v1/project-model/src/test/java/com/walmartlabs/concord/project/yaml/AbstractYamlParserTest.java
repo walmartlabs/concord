@@ -20,6 +20,7 @@ package com.walmartlabs.concord.project.yaml;
  * =====
  */
 
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import io.takari.bpm.Configuration;
@@ -38,11 +39,12 @@ import io.takari.bpm.resource.ResourceResolver;
 import io.takari.bpm.task.ServiceTaskRegistry;
 import org.junit.Before;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.mockito.Mockito.mock;
 
 public abstract class AbstractYamlParserTest {
 
@@ -173,7 +175,7 @@ public abstract class AbstractYamlParserTest {
 
     private static class TestWorkflowProvider {
 
-        private final ProjectLoader projectLoader = new ProjectLoader();
+        private final ProjectLoader projectLoader = new ProjectLoader(mock(ImportManager.class));
         private final Map<String, ProcessDefinition> processes = new HashMap<>();
         private final Map<String, FormDefinition> forms = new HashMap<>();
 
@@ -193,8 +195,8 @@ public abstract class AbstractYamlParserTest {
 
         private ProjectDefinition loadWorkflow(String resource) {
             try (InputStream in = ClassLoader.getSystemResourceAsStream(resource)) {
-                return projectLoader.loadProject(in);
-            } catch (IOException e) {
+                return projectLoader.loadProject(in).getProjectDefinition();
+            } catch (Exception e) {
                 throw new RuntimeException("Error while loading a definition", e);
             }
         }

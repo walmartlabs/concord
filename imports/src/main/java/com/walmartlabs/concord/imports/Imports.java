@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.queueclient.message;
+package com.walmartlabs.concord.imports;
 
 /*-
  * *****
@@ -28,6 +28,10 @@ import org.immutables.value.Value;
 
 import java.util.List;
 
+/**
+ * A collection of {@link Import}s.
+ * Necessary for correct serialization of {@code items} of different types.
+ */
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableImports.class)
@@ -35,14 +39,14 @@ import java.util.List;
 public interface Imports {
 
     @Value.Parameter
-    List<ImportEntry> items();
+    List<Import> items();
 
     @JsonIgnore
     default boolean isEmpty() {
         return items().isEmpty();
     }
 
-    static Imports of(List<ImportEntry> items) {
+    static Imports of(List<Import> items) {
         return builder().addAllItems(items).build();
     }
 

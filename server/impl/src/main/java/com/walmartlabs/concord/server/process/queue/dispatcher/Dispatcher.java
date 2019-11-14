@@ -25,16 +25,17 @@ import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Locks;
 import com.walmartlabs.concord.server.PeriodicTask;
 import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
+import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.LogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
-import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
@@ -80,6 +81,8 @@ public class Dispatcher extends PeriodicTask {
     private final LogManager logManager;
     private final ProcessQueueManager queueManager;
     private final Set<Filter> filters;
+    private final ImportsNormalizerFactory importsNormalizerFactory;
+
     private final int batchSize;
 
     private final Histogram uniqueProjectsHistogram;
@@ -92,6 +95,7 @@ public class Dispatcher extends PeriodicTask {
                       LogManager logManager,
                       ProcessQueueManager queueManager,
                       Set<Filter> filters,
+                      ImportsNormalizerFactory importsNormalizerFactory,
                       ProcessQueueConfiguration cfg,
                       MetricRegistry metricRegistry) {
 
@@ -103,6 +107,7 @@ public class Dispatcher extends PeriodicTask {
         this.logManager = logManager;
         this.queueManager = queueManager;
         this.filters = filters;
+        this.importsNormalizerFactory = importsNormalizerFactory;
 
         this.batchSize = cfg.getDispatcherBatchSize();
 
@@ -267,6 +272,10 @@ public class Dispatcher extends PeriodicTask {
             secret = dao.getSecretReference(item.repoId());
         }
 
+        // backward compatibility with old process queue entries that are not normalized
+        Imports imports = importsNormalizerFactory.forProject(item.projectId())
+                .normalize(item.imports());
+
         ProcessResponse resp = new ProcessResponse(correlationId,
                 item.key().getInstanceId(),
                 secret != null ? secret.orgName : null,
@@ -274,7 +283,7 @@ public class Dispatcher extends PeriodicTask {
                 item.repoPath(),
                 item.commitId(),
                 secret != null ? secret.secretName : null,
-                item.imports());
+                imports);
 
         if (!channelManager.sendResponse(channel.getChannelId(), resp)) {
             log.warn("sendResponse ['{}'] -> failed", correlationId);

@@ -20,6 +20,7 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- runtime-v1: move the processing of `imports` to the `ProjectLoader`;
 - concord-console: better handling of undefined process metadata
 values;
 - runtime-v1: fixed an issue with nested `retry` blocks;

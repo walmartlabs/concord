@@ -50,8 +50,6 @@ import io.takari.bpm.form.FormService;
 import io.takari.bpm.form.FormStorage;
 import io.takari.bpm.form.FormTaskHandler;
 import io.takari.bpm.lock.NoopLockManager;
-import io.takari.bpm.model.ProcessDefinition;
-import io.takari.bpm.model.SourceAwareProcessDefinition;
 import io.takari.bpm.persistence.PersistenceManager;
 import io.takari.bpm.task.JavaDelegateHandler;
 import io.takari.bpm.task.ServiceTaskRegistry;
@@ -64,7 +62,10 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 @Named
 public class EngineFactory {

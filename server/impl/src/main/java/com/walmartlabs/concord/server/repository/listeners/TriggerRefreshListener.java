@@ -25,6 +25,7 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.server.org.project.ProjectValidator;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerManager;
+import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,17 +40,26 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
     private static final Logger log = LoggerFactory.getLogger(TriggerRefreshListener.class);
 
     private final TriggerManager triggerManager;
+    private final ProjectLoader projectLoader;
+    private final ImportsNormalizerFactory importsNormalizer;
 
     @Inject
-    public TriggerRefreshListener(TriggerManager triggerManager) {
+    public TriggerRefreshListener(TriggerManager triggerManager,
+                                  ProjectLoader projectLoader,
+                                  ImportsNormalizerFactory importsNormalizer) {
+
         this.triggerManager = triggerManager;
+        this.projectLoader = projectLoader;
+        this.importsNormalizer = importsNormalizer;
     }
 
     @Override
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
         log.info("refresh ['{}'] ->  triggers", repo.getId());
 
-        ProjectDefinition pd = new ProjectLoader().loadProject(repoPath);
+        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()));
+
+        ProjectDefinition pd = result.getProjectDefinition();
         ProjectValidator.validate(pd);
 
         triggerManager.refresh(repo.getProjectId(), repo.getId(), pd);

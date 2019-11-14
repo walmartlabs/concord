@@ -24,6 +24,7 @@ import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.db.PgIntRange;
+import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.IsoDateParam;
@@ -45,7 +46,6 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChun
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
-import com.walmartlabs.concord.server.queueclient.message.Imports;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;

@@ -50,8 +50,6 @@ public class EnqueueProcessPipeline extends Pipeline {
                 InventoryProcessor.class,
                 AttachmentStoringProcessor.class,
                 ProjectDefinitionProcessor.class,
-                ImportProcessor.class,
-                ProjectDefinitionProcessor.class,
                 RequestDataMergingProcessor.class,
                 ExclusiveGroupProcessor.class,
                 EntryPointProcessor.class,
