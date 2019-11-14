@@ -132,7 +132,7 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
         const caption = v || e.instanceId;
         return <Link to={`/process/${e.instanceId}`}>{caption}</Link>;
     } else if (c.render === 'timestamp') {
-        return <LocalTimestamp value={v} />;
+        return (v === undefined ? '' : <LocalTimestamp value={v} />);
     } else if (c.render === 'project-link') {
         return <Link to={`/org/${e.orgName}/project/${e.projectName}`}>{v}</Link>;
     } else if (c.render === 'repo-link') {
@@ -144,7 +144,7 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
     } else if (c.render === 'process-status') {
         return <ProcessStatusIcon status={e.status} />;
     } else if (c.render === 'string-array') {
-        return v.join(', ');
+        return v === undefined ? '' : v.join(', ');
     }
 
     return v;
