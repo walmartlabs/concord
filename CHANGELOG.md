@@ -4,6 +4,7 @@
 
 ### Added
 
+- slack: new option to `ignoreErrors`;
 - concord-server: cache for policies;
 - concord-server, concord-console: the "new project" and the "new
 secret" buttons can now be disabled on the organization level using
@@ -20,6 +21,8 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- slack: better handling of invalid response codes, increase delay
+between retries;
 - concord-service: replace `WatchService` with simple polling to
 better support the reloading of the default process configuration in
 Docker environment;

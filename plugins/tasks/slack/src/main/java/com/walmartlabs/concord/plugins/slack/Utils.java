@@ -60,6 +60,20 @@ public final class Utils {
         return (String) v;
     }
 
+    public static Boolean getBoolean(Context ctx, String k, boolean defaultValue) {
+        Object v = ctx.getVariable(k);
+
+        if (v == null) {
+            return defaultValue;
+        }
+
+        if(!(v instanceof Boolean)) {
+            throw new IllegalArgumentException("Expected a boolean for '" + k + "', got " + v);
+        }
+
+        return (Boolean) v;
+    }
+
     public static String assertString(Context ctx, String k) {
         String s = getString(ctx, k, null);
         if (s == null) {
