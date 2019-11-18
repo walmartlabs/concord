@@ -20,6 +20,9 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- concord-service: replace `WatchService` with simple polling to
+better support the reloading of the default process configuration in
+Docker environment;
 - runtime-v1: move the processing of `imports` to the `ProjectLoader`;
 - concord-console: better handling of undefined process metadata
 values;

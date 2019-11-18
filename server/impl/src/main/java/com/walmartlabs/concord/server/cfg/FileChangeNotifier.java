@@ -23,11 +23,15 @@ package com.walmartlabs.concord.server.cfg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.*;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 public class FileChangeNotifier {
 
@@ -39,11 +43,14 @@ public class FileChangeNotifier {
     private static final Logger log = LoggerFactory.getLogger(FileChangeNotifier.class);
 
     private static final long ERROR_DELAY = TimeUnit.SECONDS.toMillis(30);
+    private static final long WATCH_INTERVAL = TimeUnit.MINUTES.toMillis(1);
 
     private final Path path;
     private final FileChangeListener listener;
 
     private Thread worker;
+
+    private byte[] prevFileDigest;
 
     public FileChangeNotifier(Path path, FileChangeListener listener) {
         this.path = path;
@@ -65,10 +72,10 @@ public class FileChangeNotifier {
     private void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                watchChanges(path, listener);
-            } catch (UnsupportedOperationException e) {
-                log.error("run -> error: watching not supported");
-                return;
+                if (isFileChanged(path)) {
+                    listener.onChange(path);
+                }
+                sleep(WATCH_INTERVAL);
             } catch (Exception e) {
                 log.warn("run -> error: {}. Will retry in {}ms...", e.getMessage(), ERROR_DELAY, e);
                 sleep(ERROR_DELAY);
@@ -76,39 +83,30 @@ public class FileChangeNotifier {
         }
     }
 
-    private static void watchChanges(Path file, FileChangeListener listener) throws IOException, InterruptedException {
-        Path dirPath = file.getParent();
-        String fileName = file.getFileName().toString();
+    private boolean isFileChanged(Path file) throws IOException, NoSuchAlgorithmException {
+        if (Files.notExists(file)) {
+            return false;
+        }
 
-        try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
-            WatchKey watchKey = dirPath.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
+        byte[] currentDigest = getMD5(file);
 
-            while (!Thread.currentThread().isInterrupted()) {
-                WatchKey wk = watcher.take();
-                boolean isChanged = false;
-                for (WatchEvent<?> event : wk.pollEvents()) {
-                    WatchEvent.Kind<?> kind = event.kind();
-                    if (kind == OVERFLOW) {
-                        continue;
-                    }
+        boolean result = !Arrays.equals(prevFileDigest, currentDigest);
+        this.prevFileDigest = currentDigest;
+        return result;
+    }
 
-                    Path changed = (Path) event.context();
-                    if (fileName.equals(changed.getFileName().toString())) {
-                        isChanged = true;
-                    }
-                }
+    private static byte[] getMD5(Path file) throws NoSuchAlgorithmException, IOException {
+        MessageDigest digest = MessageDigest.getInstance("MD5");
 
-                if (isChanged) {
-                    listener.onChange(file);
-                }
-
-                boolean valid = wk.reset();
-                if (!valid) {
-                    log.warn("watchChanges -> watch key has been unregistered");
-                    break;
-                }
+        byte[] buffer = new byte[8192];
+        int read;
+        try (InputStream is = Files.newInputStream(file)) {
+            while ((read = is.read(buffer)) > 0) {
+                digest.update(buffer, 0, read);
             }
-            watchKey.reset();
+            return digest.digest();
+        } catch (FileNotFoundException e) {
+            return null;
         }
     }
 
