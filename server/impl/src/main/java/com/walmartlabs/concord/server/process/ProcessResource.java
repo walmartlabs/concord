@@ -459,12 +459,13 @@ public class ProcessResource implements Resource {
 
         UUID projectId = parent.projectId();
         UserPrincipal userPrincipal = UserPrincipal.assertCurrent();
-        Imports imports = queueDao.getImports(parentProcessKey);
+        Set<String> handlers = parent.handlers();
+        Imports imports = parent.imports();
 
         Payload payload;
         try {
             payload = payloadManager.createFork(processKey, parentProcessKey, ProcessKind.DEFAULT,
-                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out, imports);
+                    userPrincipal.getId(), userPrincipal.getUsername(), projectId, req, out, handlers, imports);
         } catch (IOException e) {
             log.error("fork ['{}', '{}'] -> error creating a payload: {}", processKey, parentProcessKey, e);
             throw new ConcordApplicationException("Error creating a payload", e);

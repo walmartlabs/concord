@@ -45,10 +45,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -173,7 +170,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             try {
                 Payload payload = payloadManager.createFork(childKey, parent.processKey, entry.handlerKind,
                         parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null,
-                        parent.imports);
+                        null, parent.imports);
 
                 processManager.startFork(payload);
 

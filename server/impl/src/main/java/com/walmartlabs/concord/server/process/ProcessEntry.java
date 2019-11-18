@@ -20,13 +20,11 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
@@ -133,6 +131,10 @@ public interface ProcessEntry extends Serializable {
 
     @Nullable
     Long timeout();
+
+    @Nullable
+    @JsonIgnore // TODO swagger-codegen has some issues generating the client classes for this field
+    Imports imports();
 
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)

@@ -274,7 +274,15 @@ public final class PayloadBuilder {
         cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.CONFIGURATION, cfg);
+        return this;
+    }
 
+    public PayloadBuilder handlers(Set<String> handlers) {
+        if (handlers == null || handlers.isEmpty()) {
+            return this;
+        }
+
+        payload = payload.putHeader(Payload.PROCESS_HANDLERS, handlers);
         return this;
     }
 

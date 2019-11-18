@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -212,7 +213,7 @@ public class PayloadManager {
      */
     public Payload createFork(PartialProcessKey processKey, ProcessKey parentProcessKey, ProcessKind kind,
                               UUID initiatorId, String initiator, UUID projectId, Map<String, Object> req, String[] out,
-                              Imports imports) throws IOException {
+                              Set<String> handlers, Imports imports) throws IOException {
 
         Path tmpDir = IOUtils.createTempDir("payload");
 
@@ -229,6 +230,7 @@ public class PayloadManager {
                 .configuration(req)
                 .outExpressions(out)
                 .workspace(tmpDir)
+                .handlers(handlers)
                 .imports(imports)
                 .build();
     }

@@ -482,14 +482,6 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public Imports getImports(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.IMPORTS).from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(r -> objectMapper.fromJSONB(r.value1(), Imports.class));
-        }
-    }
-
     public UUID getProjectId(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_QUEUE.PROJECT_ID).from(PROCESS_QUEUE)
@@ -764,6 +756,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .statusHistory(objectMapper.fromJSONB(getOrNull(r, "status_history"), LIST_OF_STATUS_HISTORY))
                 .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
                 .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
+                .imports(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class))
                 .build();
     }
 
