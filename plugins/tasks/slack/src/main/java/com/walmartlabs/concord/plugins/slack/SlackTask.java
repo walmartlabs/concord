@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.walmartlabs.concord.plugins.slack.Utils.getBoolean;
+
 @Named("slack")
 public class SlackTask implements Task {
 
@@ -43,27 +45,29 @@ public class SlackTask implements Task {
         String text = (String) ctx.getVariable("text");
         String iconEmoji = (String) ctx.getVariable("iconEmoji");
         String username = (String) ctx.getVariable("username");
+        boolean ignoreErrors = getBoolean(ctx, "ignoreErrors", false);
         Collection<Object> attachments = (Collection) ctx.getVariable("attachments");
 
         // Optional and should be parent thread Id (ts)
         String ts = (String) ctx.getVariable("ts");
 
-        call(ctx, channelId, ts, text, iconEmoji, username, attachments);
+        call(ctx, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
     }
 
     public void call(@InjectVariable("context") Context ctx, String channelId, String text) {
-        call(ctx, channelId, null, text, null, null, null);
+        call(ctx, channelId, null, text, null, null, null, false);
     }
 
     public void call(@InjectVariable("context") Context ctx,
                      String channelId, String text,
                      String iconEmoji, String username, Collection<Object> attachments) {
-        call(ctx, channelId, null, text, null, null, null);
+        call(ctx, channelId, null, text, iconEmoji, username, attachments, false);
     }
 
     public void call(@InjectVariable("context") Context ctx,
                      String channelId, String ts, String text,
-                     String iconEmoji, String username, Collection<Object> attachments) {
+                     String iconEmoji, String username, Collection<Object> attachments,
+                     boolean ignoreErrors) {
 
         SlackConfiguration cfg = SlackConfiguration.from(ctx);
         try (SlackClient client = new SlackClient(cfg)) {
@@ -80,9 +84,17 @@ public class SlackTask implements Task {
             result.put("ts", r.getTs());
             ctx.setVariable("result", result);
         } catch (Exception e) {
-            log.error("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error",
-                    channelId, ts, text, iconEmoji, username, attachments, e);
-            throw new RuntimeException("slack task error: ", e);
+            if (!ignoreErrors) {
+                log.error("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error", channelId, ts, text, iconEmoji, username, attachments, e);
+                throw new RuntimeException("slack task error: ", e);
+            }
+
+            log.warn("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error (ignoreErrors=true)", channelId, ts, text, iconEmoji, username, attachments, e);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("ok", false);
+            result.put("error", e.getMessage());
+            ctx.setVariable("result", result);
         }
     }
 }

@@ -51,7 +51,7 @@ public class SlackConfiguration {
 
     private static final int DEFAULT_CONNECT_TIMEOUT = 30_000;
     private static final int DEFAULT_SO_TIMEOUT = 30_000;
-    private static final int DEFAULT_RETRY_COUNT = 5;
+    private static final int DEFAULT_RETRY_COUNT = 3;
 
     private final String authToken;
     private String proxyAddress;

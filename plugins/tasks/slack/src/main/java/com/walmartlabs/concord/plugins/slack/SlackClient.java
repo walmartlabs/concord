@@ -22,10 +22,7 @@ package com.walmartlabs.concord.plugins.slack;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -71,7 +68,7 @@ public class SlackClient implements AutoCloseable {
     private static final String ARCHIVE_GROUP_CMD = "groups.archive";
 
     private static final int TOO_MANY_REQUESTS_ERROR = 429;
-    private static final int DEFAULT_RETRY_AFTER = 1;
+    private static final int DEFAULT_RETRY_AFTER = 10;
 
     private final int retryCount;
     private final PoolingHttpClientConnectionManager connManager;
@@ -136,30 +133,60 @@ public class SlackClient implements AutoCloseable {
     }
 
     private Response exec(String command, Map<String, Object> params) throws IOException {
+        int retryAfter = DEFAULT_RETRY_AFTER;
+        IOException lastException = null;
+        Integer statusCode = null;
+
         HttpPost request = new HttpPost(SLACK_API_ROOT + command);
         request.setEntity(new StringEntity(objectMapper.writeValueAsString(params), ContentType.APPLICATION_JSON));
 
-        for (int i = 0; i < retryCount + 1; i++) {
-            try (CloseableHttpResponse response = client.execute(request)) {
-                if (response.getStatusLine().getStatusCode() == TOO_MANY_REQUESTS_ERROR) {
-                    int retryAfter = getRetryAfter(response);
-                    log.warn("exec ['{}', '{}'] -> too many requests, retry after {} sec", command, params, retryAfter);
-                    sleep(retryAfter * 1000L);
-                } else {
-                    if (response.getEntity() == null) {
-                        log.error("exec ['{}', '{}'] -> empty response", command, params);
-                        return new Response(false, null, "empty response");
-                    }
+        for (int attemptNo = 0; attemptNo <= retryCount; attemptNo++) {
+            if (attemptNo > 0) {
+                sleep(retryAfter * 1000L);
+                log.info("exec [{}, {}] -> attempt #{}. Retrying request after {} sec ...",
+                        command, params, attemptNo, retryAfter);
+            }
 
-                    String s = EntityUtils.toString(response.getEntity());
-                    Response r = objectMapper.readValue(s, Response.class);
-                    log.info("exec ['{}', '{}'] -> {}", command, params, r);
-                    return r;
+            try (CloseableHttpResponse response = client.execute(request)) {
+                statusCode = response.getStatusLine().getStatusCode();
+
+                if (statusCode == HttpStatus.SC_OK) {
+                    return parseReponse(response, command, params);
                 }
+
+                if (statusCode == TOO_MANY_REQUESTS_ERROR) {
+                    retryAfter = getRetryAfter(response);
+                }
+
+                log.warn("exec ['{}', '{}'] -> response code: {}", command, params, statusCode);
+            } catch (IOException ie) {
+                log.error("exec [{}, {}] -> {}", command, params, ie.getMessage());
+                lastException = ie;
             }
         }
 
-        return new Response(false, null, "too many requests");
+        if (lastException != null) {
+            throw lastException;
+        }
+
+        String error = "Slack request not successful after " + retryCount + " retries. Last response code: " + statusCode;
+        return new Response(false, null, error);
+    }
+
+    private Response parseReponse(CloseableHttpResponse response, String command,
+                                  Map<String, Object> params) throws IOException {
+        Response r;
+
+        if (response.getEntity() == null) {
+            log.error("exec ['{}', '{}'] -> empty response", command, params);
+            r = new Response(false, null, "empty response");
+        } else {
+            String s = EntityUtils.toString(response.getEntity());
+            r = objectMapper.readValue(s, Response.class);
+            log.info("exec ['{}', '{}'] -> {}", command, params, r);
+        }
+
+        return r;
     }
 
     private static int getRetryAfter(HttpResponse response) {
@@ -169,7 +196,7 @@ public class SlackClient implements AutoCloseable {
         }
 
         try {
-            return Integer.valueOf(h.getValue());
+            return Integer.parseInt(h.getValue());
         } catch (Exception e) {
             log.warn("getRetryAfter -> can't parse retry value '{}'", h.getValue());
             return DEFAULT_RETRY_AFTER;
