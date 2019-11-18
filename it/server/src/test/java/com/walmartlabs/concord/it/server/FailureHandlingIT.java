@@ -88,11 +88,11 @@ public class FailureHandlingIT extends AbstractServerIT {
         byte[] payload = archive(ProcessIT.class.getResource("failureHandlingError").toURI());
 
         StartProcessResponse spr = start(payload);
-        ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
+        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.FAILED);
 
         // find the child processes
 
-        ProcessEntry child = waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FAILED);
+        waitForChild(processApi, spr.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FAILED);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -220,5 +220,41 @@ public class FailureHandlingIT extends AbstractServerIT {
         // check the logs for the successful message
         byte[] ab = getLog(child.getLogFileName());
         assertLog(".*Hello!.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOnFailureForForks() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("forkOnFailure").toURI());
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        List<ProcessEntry> children = processApi.listSubprocesses(pe.getInstanceId(), null);
+        assertEquals(2, children.size());
+
+        ProcessEntry childWithOnFailure = children.stream().filter(p -> p.getHandlers() != null && p.getHandlers().contains("onFailure"))
+                .findFirst().orElseThrow(() -> new IllegalStateException("Can't find a child with an onFailure handler"));
+
+        ProcessEntry childWithoutOnFailure = children.stream().filter(p -> p.getHandlers() == null || p.getHandlers().isEmpty())
+                .findFirst().orElseThrow(() -> new IllegalStateException("Can't find a child without an onFailure handler"));
+
+        // ---
+
+        ProcessEntry onFailureProc = waitForChild(processApi, childWithOnFailure.getInstanceId(), ProcessEntry.KindEnum.FAILURE_HANDLER, StatusEnum.FINISHED);
+        byte[] ab = getLog(onFailureProc.getLogFileName());
+        assertLog(".*Got.*aFork!.*", ab);
+
+        // ---
+
+        List<ProcessEntry> childWithoutOnFailureChildren = processApi.listSubprocesses(childWithoutOnFailure.getInstanceId(), null);
+        assertEquals(0, childWithoutOnFailureChildren.size());
     }
 }

@@ -1,0 +1,27 @@
+flows:
+  default:
+    - task: concord
+      in:
+        action: fork
+        entryPoint: aFork
+        arguments:
+          msg: "aFork!"
+        sync: true
+        ignoreFailures: true
+
+    - task: concord
+      in:
+        action: fork
+        entryPoint: aFork
+        disableOnFailure: true
+        arguments:
+          msg: "aForkNoOnFailure!"
+        sync: true
+        ignoreFailures: true
+
+
+  aFork:
+    - throw: "${msg}!"
+
+  onFailure:
+    - log: "Got ${lastError}"

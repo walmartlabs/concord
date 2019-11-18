@@ -34,6 +34,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Determines whether the process has onFailure/onCancel/onTimeout/etc handlers
+ * configured. If there is a relevant flow defined and it is not disabled in
+ * the process arguments, it will be added to the list of the process' handlers.
+ */
 @Named
 public class ProcessHandlersProcessor implements PayloadProcessor {
 
@@ -45,7 +50,6 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
 
         ProjectDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
         if (pd == null) {
-            // TODO reload Payload.PROJECT_DEFINITION for forked instances
             return chain.process(payload);
         }
 
@@ -64,10 +68,10 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
         if (hasFlow(pd, profiles, flow)) {
             boolean suppressed = getBoolean(payload, disableFlag);
             if (suppressed) {
-                log.info("process -> {} is suppressed, skipping...", flow);
+                log.debug("process -> {} is suppressed, skipping...", flow);
             } else {
                 handlers.add(flow);
-                log.info("process -> added {} handler", flow);
+                log.debug("process -> added {} handler", flow);
             }
         }
     }
@@ -76,7 +80,6 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
         return ProjectDefinitionUtils.getFlow(pd, profiles, key) != null;
     }
 
-    @SuppressWarnings("unchecked")
     private static boolean getBoolean(Payload payload, String key) {
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {

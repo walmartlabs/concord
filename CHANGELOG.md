@@ -21,6 +21,8 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- concord-server: enabled support for `onFailure`, `onCancel` and
+other process handlers for forks;
 - slack: better handling of invalid response codes, increase delay
 between retries;
 - concord-service: replace `WatchService` with simple polling to
