@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.process.pipelines.processors;
+package com.walmartlabs.concord.server.cfg;
 
 /*-
  * *****
@@ -20,28 +20,34 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessRateLimiter;
+import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.io.Serializable;
 
-@Named
-@Singleton
-public class RateLimitProcessor implements PayloadProcessor {
-
-    private final ProcessRateLimiter limiter;
+public class QosConfiguration implements Serializable {
 
     @Inject
-    public RateLimitProcessor(ProcessRateLimiter limiter) {
-        this.limiter = limiter;
+    @Config("qos.maxRequests")
+    public int maxRequests;
+
+    @Inject
+    @Config("qos.maxWaitMs")
+    public int maxWaitMs;
+
+    @Inject
+    @Config("qos.suspendMs")
+    public int suspendMs;
+
+    public int getMaxRequests() {
+        return maxRequests;
     }
 
+    public int getMaxWaitMs() {
+        return maxWaitMs;
+    }
 
-    @Override
-    public Payload process(Chain chain, Payload payload) {
-        limiter.process(payload);
-        return chain.process(payload);
+    public int getSuspendMs() {
+        return suspendMs;
     }
 }

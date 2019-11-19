@@ -1,0 +1,194 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Building concord-server-impl 1.35.2-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ concord-server-impl ---
+[INFO] com.walmartlabs.concord.server:concord-server-impl:takari-jar:1.35.2-SNAPSHOT
+[INFO] +- com.walmartlabs.ollie:ollie:jar:0.0.35-SNAPSHOT:compile
+[INFO] |  +- org.eclipse.jetty:jetty-webapp:jar:9.4.19.v20190610:compile
+[INFO] |  |  \- org.eclipse.jetty:jetty-xml:jar:9.4.19.v20190610:compile
+[INFO] |  +- org.eclipse.jetty:jetty-security:jar:9.4.19.v20190610:compile
+[INFO] |  +- org.eclipse.jetty:jetty-deploy:jar:9.4.19.v20190610:compile
+[INFO] |  +- org.eclipse.jetty:jetty-client:jar:9.4.19.v20190610:compile
+[INFO] |  +- org.eclipse.jetty:jetty-jmx:jar:9.4.19.v20190610:compile
+[INFO] |  +- org.eclipse.jetty:jetty-annotations:jar:9.4.20.v20190813:compile
+[INFO] |  |  +- org.eclipse.jetty:jetty-plus:jar:9.4.20.v20190813:compile
+[INFO] |  |  |  \- org.eclipse.jetty:jetty-jndi:jar:9.4.20.v20190813:compile
+[INFO] |  |  +- javax.annotation:javax.annotation-api:jar:1.3:compile
+[INFO] |  |  +- org.ow2.asm:asm:jar:7.1:compile
+[INFO] |  |  \- org.ow2.asm:asm-commons:jar:7.1:compile
+[INFO] |  |     +- org.ow2.asm:asm-tree:jar:7.1:compile
+[INFO] |  |     \- org.ow2.asm:asm-analysis:jar:7.1:compile
+[INFO] |  +- javax.ws.rs:javax.ws.rs-api:jar:2.0:compile
+[INFO] |  +- org.jboss.resteasy:resteasy-yaml-provider:jar:3.1.4.Final:compile
+[INFO] |  +- io.swagger:swagger-models:jar:1.5.16:compile
+[INFO] |  +- io.swagger:swagger-jaxrs:jar:1.5.16:compile
+[INFO] |  |  \- io.swagger:swagger-core:jar:1.5.16:compile
+[INFO] |  +- org.reflections:reflections:jar:0.9.11:compile
+[INFO] |  |  \- org.javassist:javassist:jar:3.21.0-GA:compile
+[INFO] |  +- io.airlift:security:jar:0.171:compile
+[INFO] |  +- org.liquibase:liquibase-core:jar:3.5.1:compile
+[INFO] |  \- com.zaxxer:HikariCP:jar:3.3.1:compile
+[INFO] +- com.walmartlabs.concord.server:concord-server-sdk:jar:1.35.2-SNAPSHOT:compile
+[INFO] +- com.walmartlabs.concord:concord-imports:jar:1.35.2-SNAPSHOT:compile
+[INFO] +- com.walmartlabs.concord:concord-sdk:jar:1.35.2-SNAPSHOT:compile
+[INFO] +- com.walmartlabs.concord:concord-dependency-manager:jar:1.35.2-SNAPSHOT:compile
+[INFO] |  +- org.apache.maven.resolver:maven-resolver-api:jar:1.4.1:compile
+[INFO] |  +- org.apache.maven.resolver:maven-resolver-spi:jar:1.4.1:compile
+[INFO] |  +- org.apache.maven.resolver:maven-resolver-util:jar:1.4.1:compile
+[INFO] |  +- org.apache.maven.resolver:maven-resolver-impl:jar:1.4.1:compile
+[INFO] |  +- org.apache.maven.resolver:maven-resolver-connector-basic:jar:1.4.1:compile
+[INFO] |  +- org.apache.maven.resolver:maven-resolver-transport-file:jar:1.4.1:compile
+[INFO] |  +- org.apache.maven.resolver:maven-resolver-transport-http:jar:1.4.1:compile
+[INFO] |  \- org.apache.maven:maven-resolver-provider:jar:3.6.2:compile
+[INFO] |     +- org.apache.maven:maven-model:jar:3.6.2:compile
+[INFO] |     +- org.apache.maven:maven-model-builder:jar:3.6.2:compile
+[INFO] |     |  +- org.codehaus.plexus:plexus-interpolation:jar:1.25:compile
+[INFO] |     |  \- org.apache.maven:maven-builder-support:jar:3.6.2:compile
+[INFO] |     +- org.apache.maven:maven-repository-metadata:jar:3.6.2:compile
+[INFO] |     \- org.codehaus.plexus:plexus-utils:jar:3.2.1:compile
+[INFO] +- com.walmartlabs.concord.runtime.v1:concord-project-model-v1:jar:1.35.2-SNAPSHOT:compile
+[INFO] |  \- io.takari:parc:jar:0.1.2:compile
+[INFO] +- com.walmartlabs.concord.server:concord-server-db:jar:1.35.2-SNAPSHOT:compile
+[INFO] +- com.walmartlabs.concord:concord-policy-engine:jar:1.35.2-SNAPSHOT:compile
+[INFO] |  \- org.apache.maven:maven-artifact:jar:3.5.0:compile
+[INFO] +- com.walmartlabs.concord:concord-repository:jar:1.35.2-SNAPSHOT:compile
+[INFO] |  \- org.eclipse.jgit:org.eclipse.jgit:jar:5.2.0.201812061821-r:compile
+[INFO] |     +- com.jcraft:jzlib:jar:1.1.1:compile
+[INFO] |     \- com.googlecode.javaewah:JavaEWAH:jar:1.1.6:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-annotations:jar:2.9.9:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-databind:jar:2.9.9:compile
+[INFO] +- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.9.9:compile
+[INFO] +- com.google.guava:guava:jar:25.1-jre:compile
+[INFO] |  +- org.checkerframework:checker-qual:jar:2.0.0:compile
+[INFO] |  +- com.google.j2objc:j2objc-annotations:jar:1.1:compile
+[INFO] |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.14:compile
+[INFO] +- com.google.inject:guice:jar:4.2.2:compile
+[INFO] +- com.google.inject.extensions:guice-multibindings:jar:4.2.2:compile
+[INFO] +- com.google.inject.extensions:guice-servlet:jar:4.2.2:compile
+[INFO] +- com.jcraft:jsch:jar:0.1.55:compile
+[INFO] +- com.walmartlabs.concord:concord-common:jar:1.35.2-SNAPSHOT:compile
+[INFO] +- io.takari.bpm:bpm-engine-api:jar:0.58.2:compile
+[INFO] +- io.takari.bpm:bpm-engine-impl:jar:0.58.2:compile
+[INFO] |  +- io.takari.pcollections:pcollections:jar:2.1.3:compile
+[INFO] |  +- org.glassfish:javax.el:jar:3.0.1-b11:compile
+[INFO] |  \- joda-time:joda-time:jar:2.10.3:compile
+[INFO] +- io.takari.siesta:siesta-api:jar:2.3.2:compile
+[INFO] +- io.takari.siesta:siesta-server:jar:2.3.2:compile
+[INFO] |  +- org.slf4j:jcl-over-slf4j:jar:1.7.7:compile
+[INFO] |  +- org.jboss.resteasy:resteasy-validator-provider-11:jar:3.1.3.Final:compile
+[INFO] |  |  \- com.fasterxml:classmate:jar:1.3.3:compile
+[INFO] |  +- org.hibernate:hibernate-validator:jar:5.1.2.Final:compile
+[INFO] |  +- org.jboss.resteasy:resteasy-jaxb-provider:jar:3.1.3.Final:compile
+[INFO] |  \- org.jboss.resteasy:resteasy-atom-provider:jar:3.1.3.Final:compile
+[INFO] +- io.takari.siesta:siesta-jackson2:jar:2.3.2:compile
+[INFO] |  \- org.jboss.resteasy:resteasy-jackson2-provider:jar:3.1.4.Final:compile
+[INFO] |     \- com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:2.8.9:compile
+[INFO] |        +- com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:2.8.9:compile
+[INFO] |        \- com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:2.8.9:compile
+[INFO] +- javax.inject:javax.inject:jar:1:compile
+[INFO] +- javax.servlet:javax.servlet-api:jar:3.1.0:compile
+[INFO] +- org.apache.httpcomponents:httpclient:jar:4.5.9:compile
+[INFO] |  +- commons-logging:commons-logging:jar:1.2:compile
+[INFO] |  \- commons-codec:commons-codec:jar:1.11:compile
+[INFO] +- org.apache.httpcomponents:httpcore:jar:4.4.10:compile
+[INFO] +- org.apache.shiro:shiro-core:jar:1.4.1:compile
+[INFO] |  +- org.apache.shiro:shiro-lang:jar:1.4.1:compile
+[INFO] |  +- org.apache.shiro:shiro-cache:jar:1.4.1:compile
+[INFO] |  +- org.apache.shiro:shiro-crypto-hash:jar:1.4.1:compile
+[INFO] |  |  \- org.apache.shiro:shiro-crypto-core:jar:1.4.1:compile
+[INFO] |  +- org.apache.shiro:shiro-crypto-cipher:jar:1.4.1:compile
+[INFO] |  +- org.apache.shiro:shiro-config-core:jar:1.4.1:compile
+[INFO] |  +- org.apache.shiro:shiro-config-ogdl:jar:1.4.1:compile
+[INFO] |  \- org.apache.shiro:shiro-event:jar:1.4.1:compile
+[INFO] +- org.apache.shiro:shiro-guice:jar:1.4.1:compile
+[INFO] |  \- commons-beanutils:commons-beanutils:jar:1.9.4:compile
+[INFO] +- org.apache.shiro:shiro-web:jar:1.4.1:compile
+[INFO] +- org.eclipse.jetty:jetty-server:jar:9.4.19.v20190610:compile
+[INFO] |  +- org.eclipse.jetty:jetty-http:jar:9.4.19.v20190610:compile
+[INFO] |  \- org.eclipse.jetty:jetty-io:jar:9.4.19.v20190610:compile
+[INFO] +- org.eclipse.jetty:jetty-servlet:jar:9.4.19.v20190610:compile
+[INFO] +- org.eclipse.jetty:jetty-servlets:jar:9.4.19.v20190610:compile
+[INFO] |  \- org.eclipse.jetty:jetty-continuation:jar:9.4.19.v20190610:compile
+[INFO] +- org.eclipse.jetty:jetty-util:jar:9.4.19.v20190610:compile
+[INFO] +- org.eclipse.jetty:jetty-rewrite:jar:9.4.19.v20190610:compile
+[INFO] +- org.eclipse.sisu:org.eclipse.sisu.inject:jar:0.3.3:compile
+[INFO] +- org.jboss.resteasy:resteasy-guice:jar:3.1.4.Final:compile
+[INFO] |  +- org.jboss.resteasy:resteasy-client:jar:3.1.4.Final:compile
+[INFO] |  +- org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:jar:1.0.0.Final:compile
+[INFO] |  \- org.jboss.logging:jboss-logging:jar:3.3.0.Final:compile
+[INFO] +- org.jboss.resteasy:resteasy-jaxrs:jar:3.1.4.Final:compile
+[INFO] |  +- org.jboss.resteasy:resteasy-jaxrs-services:jar:3.1.4.Final:compile
+[INFO] |  +- javax.activation:activation:jar:1.1.1:compile
+[INFO] |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] +- org.jboss.resteasy:resteasy-multipart-provider:jar:3.1.4.Final:compile
+[INFO] |  \- org.apache.james:apache-mime4j:jar:0.6:compile
+[INFO] +- org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.0_spec:jar:1.0.1.Final:compile
+[INFO] +- org.jooq:jooq:jar:3.12.1:compile
+[INFO] |  \- org.reactivestreams:reactive-streams:jar:1.0.2:compile
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.25:compile
+[INFO] +- org.slf4j:jul-to-slf4j:jar:1.7.25:compile
+[INFO] +- ch.qos.logback:logback-classic:jar:1.2.3:compile
+[INFO] |  \- ch.qos.logback:logback-core:jar:1.2.3:compile
+[INFO] +- org.postgresql:postgresql:jar:42.2.5:compile
+[INFO] +- org.apache.commons:commons-lang3:jar:3.9:compile
+[INFO] +- io.dropwizard.metrics:metrics-core:jar:4.1.0:compile
+[INFO] +- io.dropwizard.metrics:metrics-jetty9:jar:4.1.0:compile
+[INFO] +- aopalliance:aopalliance:jar:1.0:compile
+[INFO] +- org.apache.commons:commons-compress:jar:1.19:compile
+[INFO] +- com.github.spullara.mustache.java:compiler:jar:0.9.6:compile
+[INFO] +- javax.validation:validation-api:jar:1.1.0.Final:compile
+[INFO] +- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.9.9:compile
+[INFO] |  \- org.yaml:snakeyaml:jar:1.23:compile
+[INFO] +- com.cronutils:cron-utils:jar:8.0.0:compile
+[INFO] +- com.typesafe:config:jar:1.3.4:compile
+[INFO] +- com.github.jsqlparser:jsqlparser:jar:2.0:compile
+[INFO] +- com.sun.mail:javax.mail:jar:1.6.2:compile
+[INFO] +- io.swagger:swagger-annotations:jar:1.5.20:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-core:jar:2.9.9:compile
+[INFO] +- org.immutables:value:jar:2.7.5:provided
+[INFO] +- com.fasterxml.jackson.datatype:jackson-datatype-guava:jar:2.9.9:compile
+[INFO] +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.9.9:compile
+[INFO] +- com.google.code.findbugs:jsr305:jar:3.0.2:provided
+[INFO] +- com.google.errorprone:error_prone_annotations:jar:2.3.2:provided
+[INFO] +- io.prometheus:simpleclient:jar:0.6.0:compile
+[INFO] +- io.prometheus:simpleclient_dropwizard:jar:0.6.0:compile
+[INFO] +- io.prometheus:simpleclient_servlet:jar:0.6.0:compile
+[INFO] |  \- io.prometheus:simpleclient_common:jar:0.6.0:compile
+[INFO] +- io.prometheus:simpleclient_hotspot:jar:0.6.0:compile
+[INFO] +- commons-validator:commons-validator:jar:1.6:compile
+[INFO] |  +- commons-digester:commons-digester:jar:1.8.1:compile
+[INFO] |  \- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] +- org.javers:javers-core:jar:3.11.1:compile
+[INFO] |  +- com.google.code.gson:gson:jar:2.8.5:compile
+[INFO] |  +- org.picocontainer:picocontainer:jar:2.15:compile
+[INFO] |  \- io.github.lukehutch:fast-classpath-scanner:jar:2.18.1:compile
+[INFO] +- org.eclipse.jetty.websocket:websocket-api:jar:9.4.19.v20190610:compile
+[INFO] +- org.eclipse.jetty.websocket:websocket-server:jar:9.4.19.v20190610:compile
+[INFO] |  +- org.eclipse.jetty.websocket:websocket-common:jar:9.4.19.v20190610:compile
+[INFO] |  \- org.eclipse.jetty.websocket:websocket-client:jar:9.4.19.v20190610:compile
+[INFO] +- org.eclipse.jetty.websocket:websocket-servlet:jar:9.4.19.v20190610:compile
+[INFO] +- com.walmartlabs.concord.server:concord-queue-client:jar:1.35.2-SNAPSHOT:compile
+[INFO] +- com.nimbusds:nimbus-jose-jwt:jar:7.2.1:compile
+[INFO] |  \- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] +- net.minidev:json-smart:jar:2.3:compile
+[INFO] |  \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] +- javax.xml.bind:jaxb-api:jar:2.3.0:compile
+[INFO] +- com.sun.xml.bind:jaxb-core:jar:2.3.0.1:compile
+[INFO] +- com.sun.xml.bind:jaxb-impl:jar:2.3.2:compile
+[INFO] +- junit:junit:jar:4.12:test
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:test
+[INFO] \- org.mockito:mockito-core:jar:2.28.2:test
+[INFO]    +- net.bytebuddy:byte-buddy:jar:1.9.10:test
+[INFO]    +- net.bytebuddy:byte-buddy-agent:jar:1.9.10:test
+[INFO]    \- org.objenesis:objenesis:jar:2.6:test
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2.821 s
+[INFO] Finished at: 2019-11-16T15:53:56+03:00
+[INFO] Final Memory: 35M/540M
+[INFO] ------------------------------------------------------------------------

@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: optional rate limit for the process start
+endpoints;
 - slack: new option to `ignoreErrors`;
 - concord-server: cache for policies;
 - concord-server, concord-console: the "new project" and the "new
