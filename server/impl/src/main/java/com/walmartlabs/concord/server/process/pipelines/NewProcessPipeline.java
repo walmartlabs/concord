@@ -39,7 +39,6 @@ public class NewProcessPipeline extends Pipeline {
     public NewProcessPipeline(Injector injector) {
         super(injector,
                 LoggingMDCProcessor.class,
-                RateLimitProcessor.class,
                 AuthorizationProcessor.class,
                 AssertWorkspaceArchiveProcessor.class,
                 PolicyExportProcessor.class,

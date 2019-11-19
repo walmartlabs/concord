@@ -32,28 +32,12 @@ import java.io.Serializable;
 public class ProcessQueueConfiguration implements Serializable {
 
     @Inject
-    @Config("queue.rateLimit")
-    private int rateLimit;
-
-    @Inject
-    @Config("queue.maxRateTimeout")
-    private int maxRateTimeout;
-
-    @Inject
     @Config("queue.dispatcher.pollDelay")
     private long dispatcherPollDelay;
 
     @Inject
     @Config("queue.dispatcher.batchSize")
     private int dispatcherBatchSize;
-
-    public int getRateLimit() {
-        return rateLimit;
-    }
-
-    public int getMaxRateTimeout() {
-        return maxRateTimeout;
-    }
 
     public long getDispatcherPollDelay() {
         return dispatcherPollDelay;
