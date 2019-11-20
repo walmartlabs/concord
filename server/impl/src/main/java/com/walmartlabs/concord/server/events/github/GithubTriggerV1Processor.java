@@ -42,7 +42,8 @@ import static com.walmartlabs.concord.repository.GitCliRepositoryProvider.DEFAUL
 import static com.walmartlabs.concord.server.events.github.Constants.*;
 
 /**
- * Handler the V1 GitHub trigger definitions.
+ * Handles the V1 GitHub trigger definitions.
+ *
  * @deprecated superseded by {@link GithubTriggerV2Processor}
  */
 @Named
@@ -51,6 +52,7 @@ import static com.walmartlabs.concord.server.events.github.Constants.*;
 public class GithubTriggerV1Processor implements GithubTriggerProcessor {
 
     private static final RepositoryItem UNKNOWN_REPO = new RepositoryItem(null, null, null);
+    private static final int VERSION_ID = 1;
 
     private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
@@ -104,7 +106,7 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
     }
 
     private List<TriggerEntry> listTriggers(UUID projectId) {
-        return triggersDao.list(projectId, EVENT_SOURCE, 1, null);
+        return triggersDao.list(projectId, EVENT_SOURCE, VERSION_ID, null);
     }
 
     private List<RepositoryItem> findRepos(String repoName, String branch, UUID hookProjectId) {
@@ -178,6 +180,7 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
                                                        String repoName, String branch,
                                                        ProjectEntry project, String eventName) {
         Map<String, Object> result = new HashMap<>();
+
         if (project != null) {
             result.put(ORG_NAME_KEY, project.getOrgName());
             result.put(PROJECT_NAME_KEY, project.getName());
@@ -189,11 +192,16 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
             result.put(REPO_NAME_KEY, "n/a");
             result.put(UNKNOWN_REPO_KEY, true);
         }
+
         result.put(REPO_BRANCH_KEY, branch);
         result.put(AUTHOR_KEY, payload.getSender());
         result.put(TYPE_KEY, eventName);
         result.put(STATUS_KEY, payload.getAction());
         result.put(PAYLOAD_KEY, payload.raw());
+
+        // match only with v1 triggers
+        result.put(VERSION_KEY, VERSION_ID);
+
         return result;
     }
 

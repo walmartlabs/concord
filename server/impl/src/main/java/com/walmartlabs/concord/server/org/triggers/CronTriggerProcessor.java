@@ -48,12 +48,12 @@ public class CronTriggerProcessor implements TriggerProcessor {
 
     @Override
     public void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t) {
-        if (t.getParams() == null) {
+        if (t.getConditions() == null) {
             log.warn("process ['{}'] -> cron trigger without params, ignore", triggerId);
             return;
         }
 
-        String spec = (String) t.getParams().get(Constants.Trigger.CRON_SPEC);
+        String spec = (String) t.getConditions().get(Constants.Trigger.CRON_SPEC);
 
         if (spec == null) {
             log.warn("process ['{}'] -> cron trigger without spec, ignore", triggerId);
@@ -61,7 +61,7 @@ public class CronTriggerProcessor implements TriggerProcessor {
         }
 
         ZoneId zoneId = null;
-        String timezone = (String) t.getParams().get(Constants.Trigger.CRON_TIMEZONE);
+        String timezone = (String) t.getConditions().get(Constants.Trigger.CRON_TIMEZONE);
         if (timezone != null) {
             if (!validTimeZone(timezone)) {
                 log.warn("process ['{}'] -> cron trigger invalid timezone, ignore", triggerId);

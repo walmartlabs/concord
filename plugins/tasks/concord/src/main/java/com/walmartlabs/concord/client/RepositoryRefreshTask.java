@@ -20,10 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
-import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Named;
 import java.util.Collections;
@@ -37,7 +34,7 @@ public class RepositoryRefreshTask extends AbstractConcordTask implements Task {
 
     @Override
     public void execute(Context ctx) throws Exception {
-        List<Map<String, Object>> info = ContextUtils.getList(ctx, "repositoryInfo", Collections.emptyList());
+        List<Map<String, Object>> info = ContextUtils.getList(ctx, Constants.Trigger.REPOSITORY_INFO, Collections.emptyList());
         if (info.isEmpty()) {
             throw new RuntimeException("Invalid in parameters: no repository info");
         }

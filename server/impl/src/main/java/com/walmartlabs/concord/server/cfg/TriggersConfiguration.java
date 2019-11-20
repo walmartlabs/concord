@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.List;
+import java.util.Map;
 
 @Named
 @Singleton
@@ -39,6 +40,14 @@ public class TriggersConfiguration {
     @Config("triggers.disabled")
     private List<String> disabled;
 
+    @Inject
+    @Config("triggers.defaultConditions")
+    private Map<String, Object> defaultConditions;
+
+    @Inject
+    @Config("triggers.defaultConfiguration")
+    private Map<String, Object> defaultConfiguration;
+
     public boolean isDisableAll() {
         return disableAll;
     }
@@ -46,4 +55,13 @@ public class TriggersConfiguration {
     public List<String> getDisabled(){
         return disabled;
     }
+
+    public Map<String, Object> getDefaultConditions() {
+        return defaultConditions;
+    }
+
+    public Map<String, Object> getDefaultConfiguration() {
+        return defaultConfiguration;
+    }
+
 }

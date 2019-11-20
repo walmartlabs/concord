@@ -86,7 +86,7 @@ public final class PolicyUtils {
         m.put("orgId", orgId);
         m.put("projectId", projectId);
         m.put("arguments", trigger.getArguments() != null ? trigger.getArguments() : Collections.emptyList());
-        m.put("params", trigger.getParams() != null ? trigger.getParams() : Collections.emptyList());
+        m.put("params", trigger.getConditions() != null ? trigger.getConditions() : Collections.emptyList());
         m.put("cfg", trigger.getCfg() != null ? trigger.getCfg() : Collections.emptyList());
         return m;
     }

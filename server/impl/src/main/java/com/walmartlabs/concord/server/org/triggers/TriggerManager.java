@@ -20,10 +20,12 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
@@ -34,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,19 +51,22 @@ public class TriggerManager extends AbstractDao {
     private final ProjectDao projectDao;
     private final TriggersDao triggersDao;
     private final PolicyManager policyManager;
+    private final TriggersConfiguration triggersCfg;
 
     @Inject
     public TriggerManager(@MainDB Configuration cfg,
                           Map<String, TriggerProcessor> triggerProcessors,
                           ProjectDao projectDao,
                           TriggersDao triggersDao,
-                          PolicyManager policyManager) {
+                          PolicyManager policyManager,
+                          TriggersConfiguration triggersCfg) {
 
         super(cfg);
         this.triggerProcessors = triggerProcessors;
         this.projectDao = projectDao;
         this.triggersDao = triggersDao;
         this.policyManager = policyManager;
+        this.triggersCfg = triggersCfg;
     }
 
     public void refresh(UUID projectId, UUID repoId, ProjectDefinition pd) {
@@ -73,9 +79,17 @@ public class TriggerManager extends AbstractDao {
             triggersDao.delete(tx, projectId, repoId);
 
             pd.getTriggers().forEach(t -> {
+                Map<String, Object> conditions = merge(triggersCfg.getDefaultConditions(), t.getName(), t.getConditions());
+                Map<String, Object> cfg = merge(triggersCfg.getDefaultConfiguration(), t.getName(), t.getCfg());
+
                 UUID triggerId = triggersDao.insert(tx,
-                        projectId, repoId, t.getName(),
-                        t.getActiveProfiles(), t.getArguments(), t.getParams(), t.getCfg());
+                        projectId,
+                        repoId,
+                        t.getName(),
+                        t.getActiveProfiles(),
+                        t.getArguments(),
+                        conditions,
+                        cfg);
 
                 TriggerProcessor processor = triggerProcessors.get(t.getName());
                 if (processor != null) {
@@ -85,5 +99,15 @@ public class TriggerManager extends AbstractDao {
         });
 
         log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.getTriggers().size());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> merge(Map<String, Object> cfg, String key, Map<String, Object> original) {
+        if (cfg == null) {
+            return original;
+        }
+
+        Map<String, Object> defaults = (Map<String, Object>) cfg.getOrDefault(key, Collections.emptyMap());
+        return ConfigurationUtils.deepMerge(defaults, original);
     }
 }

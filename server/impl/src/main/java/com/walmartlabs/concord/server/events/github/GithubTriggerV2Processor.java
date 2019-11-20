@@ -58,7 +58,6 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
         List<TriggerEntry> triggers = listTriggers(projectId, payload.getOrg(), payload.getRepo());
         for (TriggerEntry t : triggers) {
-
             Map<String, Object> event = buildEvent(eventName, payload);
             enrichEventConditions(payload, t, event);
 
@@ -96,7 +95,10 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         result.put(TYPE_KEY, eventName);
         result.put(STATUS_KEY, payload.getAction());
         result.put(PAYLOAD_KEY, payload.raw());
-        result.put(VERSION, VERSION_ID);
+
+        // match only with v2 triggers
+        result.put(VERSION_KEY, VERSION_ID);
+
         return result;
     }
 
@@ -105,6 +107,10 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result);
     }
 
+    /**
+     * Adds {@link com.walmartlabs.concord.sdk.Constants.Trigger#REPOSITORY_INFO} property to
+     * the event, but only if the trigger's conditions contained the clause with the same key.
+     */
     @Named
     private static class RepositoryInfoEnricher implements EventEnricher {
 
@@ -117,7 +123,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
         @Override
         public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
-            Object projectInfoConditions = trigger.getConditions().get("repositoryInfo");
+            Object projectInfoConditions = trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
             if (projectInfoConditions == null) {
                 return;
             }
@@ -135,7 +141,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
             }
 
             if (!repositoryInfos.isEmpty()) {
-                result.put("repositoryInfo", repositoryInfos);
+                result.put(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO, repositoryInfos);
             }
         }
     }

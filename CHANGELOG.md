@@ -49,6 +49,10 @@ artifacts;
 
 ### Breaking
 
+- concord-server: make the v2 the default version for `github`
+triggers. The existing projects must update their `github` trigger
+definitions or set the default version in the server configuration
+file;
 - concord-runner: remove deprecated process definition attributes:
     - `__attr_localPath`;
 - concord-sdk: remove deprecated interfaces and annotations:

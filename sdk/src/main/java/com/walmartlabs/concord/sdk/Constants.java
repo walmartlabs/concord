@@ -225,6 +225,11 @@ public class Constants {
          * Use the trigger's commit id to start the process.
          */
         public static final String USE_EVENT_COMMIT_ID = "useEventCommitId";
+
+        /**
+         * Used to match on the registered repositories in GitHub triggers.
+         */
+        public static final String REPOSITORY_INFO = "repositoryInfo";
     }
 
     /**

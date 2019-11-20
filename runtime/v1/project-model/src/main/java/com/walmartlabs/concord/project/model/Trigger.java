@@ -35,15 +35,15 @@ public class Trigger implements Serializable {
     private final String name;
     private final List<String> activeProfiles;
     private final Map<String, Object> arguments;
-    private final Map<String, Object> params;
+    private final Map<String, Object> conditions;
     private final SourceMap sourceMap;
     private final Map<String, Object> cfg;
 
-    public Trigger(String name, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> params, Map<String, Object> cfg, SourceMap sourceMap) {
+    public Trigger(String name, List<String> activeProfiles, Map<String, Object> arguments, Map<String, Object> conditions, Map<String, Object> cfg, SourceMap sourceMap) {
         this.name = name;
         this.activeProfiles = activeProfiles;
         this.arguments = arguments;
-        this.params = params;
+        this.conditions = conditions;
         this.sourceMap = sourceMap;
         this.cfg = cfg;
     }
@@ -52,8 +52,8 @@ public class Trigger implements Serializable {
         return name;
     }
 
-    public Map<String, Object> getParams() {
-        return params;
+    public Map<String, Object> getConditions() {
+        return conditions;
     }
 
     public Map<String, Object> getCfg() {
@@ -87,7 +87,7 @@ public class Trigger implements Serializable {
                 "name='" + name + '\'' +
                 ", activeProfiles=" + activeProfiles +
                 ", arguments=" + arguments +
-                ", params=" + params +
+                ", conditions=" + conditions +
                 ", sourceMap=" + sourceMap +
                 ", cfg=" + cfg +
                 '}';

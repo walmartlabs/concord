@@ -41,7 +41,7 @@ public final class Constants {
     public static final String TYPE_KEY = "type";
     public static final String PULL_REQUEST_EVENT = "pull_request";
     public static final String PUSH_EVENT = "push";
-    public static final String VERSION = "version";
+    public static final String VERSION_KEY = "version";
 
     public static final String GITHUB_ORG_KEY = "githubOrg";
     public static final String GITHUB_REPO_KEY = "githubRepo";

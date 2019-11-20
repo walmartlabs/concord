@@ -57,11 +57,11 @@ public class ProjectValidator {
 
         validateTimezone(t, errors);
 
-        if (Objects.isNull(t.getParams())) {
+        if (Objects.isNull(t.getConditions())) {
             return;
         }
 
-        t.getParams().entrySet().stream()
+        t.getConditions().entrySet().stream()
                 .filter(v -> v.getValue() instanceof String)
                 .filter(v -> !Constants.Trigger.CRON_SPEC.equals(v.getKey()))
                 .forEach(v -> validateRegex(t, errors, v));
@@ -86,12 +86,12 @@ public class ProjectValidator {
 
         String k = Constants.Trigger.CRON_SPEC;
 
-        if (Objects.isNull(t.getParams())) {
+        if (Objects.isNull(t.getConditions())) {
             errors.add(makeErrorMessage(t, k, "is missing"));
             return;
         }
 
-        Object spec = t.getParams().get(k);
+        Object spec = t.getConditions().get(k);
         if (Objects.isNull(spec)) {
             errors.add(makeErrorMessage(t, k, "is missing"));
             return;
@@ -110,11 +110,11 @@ public class ProjectValidator {
             return;
         }
 
-        if (Objects.isNull(t.getParams())) {
+        if (Objects.isNull(t.getConditions())) {
             return;
         }
 
-        Object timezone = t.getParams().get("timezone");
+        Object timezone = t.getConditions().get("timezone");
         if (Objects.isNull(timezone)) {
             return;
         }
