@@ -23,6 +23,11 @@
             <artifactId>concord-server-sdk</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-sdk</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-db</artifactId>
         </dependency>

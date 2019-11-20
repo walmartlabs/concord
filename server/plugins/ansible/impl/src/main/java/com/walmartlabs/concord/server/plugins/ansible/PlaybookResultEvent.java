@@ -20,14 +20,31 @@ package com.walmartlabs.concord.server.plugins.ansible;
  * =====
  */
 
-public final class Constants {
+import com.walmartlabs.concord.sdk.MapUtils;
 
-    public static final String ANSIBLE_EVENT_TYPE = "ANSIBLE";
+import java.util.UUID;
 
-    public static final String ANSIBLE_PLAYBOOK_INFO = "ANSIBLE_PLAYBOOK_INFO";
+public class PlaybookResultEvent {
 
-    public static final String ANSIBLE_PLAYBOOK_RESULT = "ANSIBLE_PLAYBOOK_RESULT";
+    public static PlaybookResultEvent from(EventProcessor.Event e) {
+        if (!e.eventType().equals(Constants.ANSIBLE_PLAYBOOK_RESULT)) {
+            return null;
+        }
 
-    private Constants() {
+        return new PlaybookResultEvent(e);
+    }
+
+    private final EventProcessor.Event e;
+
+    private PlaybookResultEvent(EventProcessor.Event e) {
+        this.e = e;
+    }
+
+    public UUID getPlaybookId() {
+        return MapUtils.assertUUID(e.payload(), "parentCorrelationId");
+    }
+
+    public String getStatus() {
+        return MapUtils.assertString(e.payload(), "status");
     }
 }

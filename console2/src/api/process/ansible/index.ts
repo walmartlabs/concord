@@ -27,6 +27,8 @@ export interface SearchFilter {
     host?: string;
     hostGroup?: string;
     status?: AnsibleStatus;
+    statuses?: AnsibleStatus[];
+    playbookId?: ConcordId;
 }
 
 export enum AnsibleStatus {
@@ -64,8 +66,14 @@ export interface AnsibleHost {
     duration: number;
 }
 
+export interface AnsibleHostListResponse {
+    hostGroups: string[];
+    items: AnsibleHost[];
+}
+
 export interface PaginatedAnsibleHostEntries {
     items: AnsibleHost[];
+    hostGroups: string[];
     next?: number;
     prev?: number;
 }
@@ -90,6 +98,48 @@ export interface AnsibleEvent {
     correlationId: string;
 }
 
+export interface PlaybookInfo {
+    id: ConcordId;
+    name: string;
+    startedAt: string;
+    hostsCount: number;
+    failedHostsCount: number;
+    playsCount: number;
+    failedTasksCount: number;
+    progress: number;
+    status: string;
+}
+
+export interface PlayInfo {
+    playId: ConcordId;
+    playName: string;
+    playOrder: number;
+    hostCount: number;
+    taskCount: number;
+    taskStats: TaskStats;
+    finishedTaskCount: number;
+    flowEventCorrelationId: ConcordId;
+}
+
+export interface TaskInfo {
+    taskName: string;
+    type: string;
+    taskOrder: number;
+    okCount: number;
+    failedCount: number;
+    unreachableCount: number;
+    skippedCount: number;
+    runningCount: number;
+}
+
+export interface TaskStats {
+    ok: number;
+    failed: number;
+    unreachable: number;
+    skipped: number;
+    running: number;
+}
+
 export const listAnsibleHosts = (
     instanceId: ConcordId,
     filters?: SearchFilter
@@ -101,10 +151,12 @@ export const listAnsibleHosts = (
 
     const qp = filters ? '?' + queryParams(filters) : '';
 
-    const data: Promise<AnsibleHost[]> = fetchJson(
+    const data: Promise<AnsibleHostListResponse> = fetchJson(
         `/api/v1/process/${instanceId}/ansible/hosts${qp}`
     );
-    return data.then((hosts: AnsibleHost[]) => {
+    return data.then((resp: AnsibleHostListResponse) => {
+        const hosts = resp.items;
+
         const hasMoreElements = limit && hosts.length > limit;
         const offset: number = filters && filters.offset ? filters.offset : 0;
 
@@ -121,6 +173,7 @@ export const listAnsibleHosts = (
 
         return {
             items: hosts,
+            hostGroups: resp.hostGroups,
             next: nextPage,
             prev: prevPage
         };
@@ -141,5 +194,39 @@ export const listAnsibleEvents = (
             host,
             hostGroup,
             status
+        })}`
+    );
+
+export const listAnsiblePlaybooks = (instanceId: ConcordId): Promise<PlaybookInfo[]> =>
+    fetchJson(`/api/v1/process/${instanceId}/ansible/playbooks`);
+
+export const listAnsiblePlays = (
+    instanceId: ConcordId,
+    playbookId: ConcordId
+): Promise<PlayInfo[]> => fetchJson(`/api/v1/process/${instanceId}/ansible/${playbookId}/plays`);
+
+export const listAnsibleTaskStats = (
+    instanceId: ConcordId,
+    playId: ConcordId
+): Promise<TaskInfo[]> =>
+    fetchJson(
+        `/api/v1/process/${instanceId}/ansible/tasks?${queryParams({
+            playId
+        })}`
+    );
+
+export const listAnsibleTasks = (
+    instanceId: ConcordId,
+    playbookId: ConcordId,
+    host?: string,
+    hostGroup?: string,
+    status?: string
+): Promise<ProcessEventEntry<AnsibleEvent>[]> =>
+    fetchJson(
+        `/api/v1/process/${instanceId}/ansible/events?${queryParams({
+            host,
+            hostGroup,
+            status,
+            playbookId
         })}`
     );

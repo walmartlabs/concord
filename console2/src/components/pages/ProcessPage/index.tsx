@@ -32,6 +32,8 @@ interface Props {
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/status')) {
         return 'status';
+    } else if (s.endsWith('/ansible')) {
+        return 'ansible';
     } else if (s.endsWith('/log')) {
         return 'log';
     } else if (s.endsWith('/history')) {

@@ -21,10 +21,10 @@
 import * as React from 'react';
 import { Dropdown, DropdownItemProps, Grid, Input, Modal, Table } from 'semantic-ui-react';
 
-import { AnsibleHost, SearchFilter } from '../../../api/process/ansible';
-import { HumanizedDuration, PaginationToolBar } from '../index';
-import { ConcordId } from '../../../api/common';
-import { AnsibleTaskListActivity } from '../../organisms';
+import { AnsibleHost, AnsibleStatus, SearchFilter } from '../../../../api/process/ansible';
+import { HumanizedDuration, PaginationToolBar } from '../../../molecules';
+import { ConcordId } from '../../../../api/common';
+import { AnsibleTaskListActivity } from '../../../organisms';
 
 interface State {
     hostFilter?: string;
@@ -55,6 +55,7 @@ class AnsibleHostList extends React.Component<Props, State> {
         instanceId: ConcordId,
         host: string,
         hostGroup: string,
+        hostStatus: AnsibleStatus,
         duration: number,
         idx: number
     ) {
@@ -65,9 +66,10 @@ class AnsibleHostList extends React.Component<Props, State> {
                 size="fullscreen"
                 dimmer="inverted"
                 trigger={
-                    <Table.Row>
+                    <Table.Row error={hostStatus === AnsibleStatus.FAILED}>
                         <Table.Cell>{host}</Table.Cell>
                         <Table.Cell>{hostGroup}</Table.Cell>
+                        <Table.Cell>{hostStatus}</Table.Cell>
                         <Table.Cell>
                             <HumanizedDuration value={duration !== 0 ? duration : undefined} />
                         </Table.Cell>
@@ -188,11 +190,18 @@ class AnsibleHostList extends React.Component<Props, State> {
                     </Grid.Column>
                 </Grid>
 
-                <Table celled={true} attached="bottom" selectable={true}>
+                <Table
+                    celled={true}
+                    attached="bottom"
+                    selectable={true}
+                    basic={true}
+                    compact={true}
+                    style={{ cursor: 'pointer' }}>
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell singleLine={true}>Host</Table.HeaderCell>
                             <Table.HeaderCell singleLine={true}>Host Group</Table.HeaderCell>
+                            <Table.HeaderCell singleLine={true}>Host Status</Table.HeaderCell>
                             <Table.HeaderCell singleLine={true}>Duration</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
@@ -203,9 +212,16 @@ class AnsibleHostList extends React.Component<Props, State> {
                                 instanceId,
                                 host.host,
                                 host.hostGroup,
+                                host.status,
                                 host.duration,
                                 idx
                             )
+                        )}
+
+                        {hosts.length === 0 && (
+                            <tr style={{ fontWeight: 'bold' }}>
+                                <Table.Cell colSpan={4}>No data available</Table.Cell>
+                            </tr>
                         )}
                     </Table.Body>
                 </Table>

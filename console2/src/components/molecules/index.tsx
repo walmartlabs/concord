@@ -18,10 +18,11 @@
  * =====
  */
 
-export { default as AnsibleHostList } from './AnsibleHostList';
-export { default as AnsibleStatChart } from './AnsibleStatChart';
-export { default as AnsibleStats } from './AnsibleStats';
-export { default as AnsibleTaskList } from './AnsibleTaskList';
+export { default as AnsibleHostList } from './ansible/AnsibleHostList';
+export { default as AnsibleStatChart } from './ansible/AnsibleStatChart';
+export { default as AnsibleStats } from './ansible/AnsibleStats';
+export { default as AnsibleTaskList } from './ansible/AnsibleTaskList';
+export { default as AnsibleViewToggle } from './ansible/AnsibleViewToggle';
 export { default as BreadcrumbSegment } from './BreadcrumbSegment';
 export { default as BulkProcessActionDropdown } from './BulkProcessActionDropdown';
 export { default as ButtonWithConfirmation } from './ButtonWithConfirmation';
@@ -57,12 +58,12 @@ export { default as ProcessWaitList } from './ProcessWaitList';
 export { default as RepositoryForm } from './RepositoryForm';
 export { default as RepositoryList } from './RepositoryList';
 export { default as RequestErrorMessage } from './RequestErrorMessage';
-export { default as SingleOperationPopup } from './SingleOperationPopup';
 export { default as SecretProjectForm } from './SecretProjectForm';
+export { default as SingleOperationPopup } from './SingleOperationPopup';
 export { default as TeamAccessDropdown } from './TeamAccessDropdown';
 export { default as TeamAccessList } from './TeamAccessList';
-export { default as TeamMemberList } from './TeamMemberList';
 export { default as TeamLdapGroupList } from './TeamLdapGroupList';
+export { default as TeamMemberList } from './TeamMemberList';
 export { default as TeamRoleDropdown } from './TeamRoleDropdown';
 export { default as UserProcessByOrgCards } from './UserProcessByOrgCards';
 export { default as UserProcessStats } from './UserProcessStats';

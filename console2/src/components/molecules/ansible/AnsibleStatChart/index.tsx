@@ -19,9 +19,9 @@
  */
 
 import * as React from 'react';
-import { AnsibleStatus, getStatusColor } from '../../../api/process/ansible';
-import { ChartEntry } from '../DonutChart';
-import { DonutChart } from '../index';
+import { AnsibleStatus, getStatusColor } from '../../../../api/process/ansible';
+import { ChartEntry } from '../../DonutChart';
+import { DonutChart } from '../../../molecules';
 
 export interface AnsibleStatChartEntry {
     status: AnsibleStatus;

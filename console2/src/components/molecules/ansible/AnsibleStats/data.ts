@@ -18,9 +18,9 @@
  * =====
  */
 
-import { AnsibleEvent, AnsibleStatsEntry, AnsibleStatus } from '../../../api/process/ansible';
+import { AnsibleEvent, AnsibleStatsEntry, AnsibleStatus } from '../../../../api/process/ansible';
 import { AnsibleStatChartEntry } from '../AnsibleStatChart';
-import { ProcessEventEntry } from '../../../api/process/event';
+import { ProcessEventEntry } from '../../../../api/process/event';
 
 export const makeStats = (stats: AnsibleStatsEntry): AnsibleStatChartEntry[] => {
     return Object.keys(AnsibleStatus)

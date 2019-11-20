@@ -22,32 +22,38 @@ import * as React from 'react';
 import ReactJson from 'react-json-view';
 import { Header, Table } from 'semantic-ui-react';
 
-import { AnsibleEvent, AnsibleStatus } from '../../../api/process/ansible';
-import { ProcessEventEntry } from '../../../api/process/event';
-import { HumanizedDuration, LocalTimestamp } from '../../molecules';
+import { AnsibleEvent, AnsibleStatus } from '../../../../api/process/ansible';
+import { ProcessEventEntry } from '../../../../api/process/event';
+import { HumanizedDuration, LocalTimestamp } from '../../../molecules';
 
 interface Props {
     title?: string;
     showHosts?: boolean;
+    hideStatus?: boolean;
+    hidePlaybook?: boolean;
     tasks: Array<ProcessEventEntry<AnsibleEvent>>;
 }
 
 class AnsibleTaskList extends React.Component<Props> {
     renderTaskList = () => {
-        const { tasks, showHosts } = this.props;
+        const { tasks, showHosts, hideStatus, hidePlaybook } = this.props;
 
         return (
-            <Table celled={true} attached="bottom">
+            <Table celled={true} attached="bottom" basic={true} compact={true}>
                 <Table.Header>
                     <Table.Row>
                         {showHosts && <Table.HeaderCell collapsing={true}>Host</Table.HeaderCell>}
                         <Table.HeaderCell collapsing={true}>Ansible Task</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Action</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
+                        {!hideStatus && (
+                            <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
+                        )}
                         <Table.HeaderCell collapsing={true}>Event Time</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Duration</Table.HeaderCell>
                         <Table.HeaderCell>Results</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Playbook</Table.HeaderCell>
+                        {!hidePlaybook && (
+                            <Table.HeaderCell collapsing={true}>Playbook</Table.HeaderCell>
+                        )}
                     </Table.Row>
                 </Table.Header>
 
@@ -76,7 +82,7 @@ class AnsibleTaskList extends React.Component<Props> {
                                     <Table.Cell singleLine={true}>
                                         {value.data.action ? value.data.action : '-'}
                                     </Table.Cell>
-                                    <Table.Cell>{statusString}</Table.Cell>
+                                    {!hideStatus && <Table.Cell>{statusString}</Table.Cell>}
                                     <Table.Cell singleLine={true}>
                                         <LocalTimestamp value={value.eventDate} />
                                     </Table.Cell>
@@ -91,10 +97,19 @@ class AnsibleTaskList extends React.Component<Props> {
                                             enableClipboard={false}
                                         />
                                     </Table.Cell>
-                                    <Table.Cell singleLine={true}>{value.data.playbook}</Table.Cell>
+                                    {!hidePlaybook && (
+                                        <Table.Cell singleLine={true}>
+                                            {value.data.playbook}
+                                        </Table.Cell>
+                                    )}
                                 </Table.Row>
                             );
                         })}
+                    {tasks.length === 0 && (
+                        <tr style={{ fontWeight: 'bold' }}>
+                            <Table.Cell colSpan={8}>No data available</Table.Cell>
+                        </tr>
+                    )}
                 </Table.Body>
             </Table>
         );
@@ -106,20 +121,22 @@ class AnsibleTaskList extends React.Component<Props> {
         return (
             <>
                 <Table style={{ border: 'none', padding: '0' }}>
-                    <Table.Row>
-                        <Table.Cell style={{ padding: '0', border: 'none' }}>
-                            {title && (
-                                <Header as="h3" attached="top">
-                                    {title}
-                                </Header>
-                            )}
-                        </Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                        <Table.Cell style={{ padding: '0', border: 'none' }}>
-                            {this.renderTaskList()}
-                        </Table.Cell>
-                    </Table.Row>
+                    <Table.Body>
+                        <Table.Row>
+                            <Table.Cell style={{ padding: '0', border: 'none' }}>
+                                {title && (
+                                    <Header as="h3" attached="top">
+                                        {title}
+                                    </Header>
+                                )}
+                            </Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell style={{ padding: '0', border: 'none' }}>
+                                {this.renderTaskList()}
+                            </Table.Cell>
+                        </Table.Row>
+                    </Table.Body>
                 </Table>
             </>
         );
