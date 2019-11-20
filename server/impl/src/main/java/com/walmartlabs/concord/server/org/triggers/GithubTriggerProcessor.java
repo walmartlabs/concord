@@ -56,7 +56,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
 
     @Override
     public void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t) {
-        Map<String, Object> params = t.getParams();
+        Map<String, Object> params = t.getConditions();
         if (params == null) {
             return;
         }
@@ -64,7 +64,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
         // determine the trigger definition's version
         // version 1 is the original implementation
         // version 2 is a streamlined implementation that doesn't support some of the corner cases of v1
-        int triggerVersion = MapUtils.getInt(params, VERSION, 1);
+        int triggerVersion = MapUtils.getInt(params, VERSION_KEY, 1);
         if (triggerVersion == 2) {
             params = enrichTriggerConditions(tx, repoId, t);
             triggersDao.update(tx, triggerId, params);
@@ -72,7 +72,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
     }
 
     private Map<String, Object> enrichTriggerConditions(DSLContext tx, UUID repoId, Trigger t) {
-        Map<String, Object> params = t.getParams();
+        Map<String, Object> params = t.getConditions();
         if (params.containsKey(GITHUB_ORG_KEY) && params.containsKey(GITHUB_REPO_KEY) && params.containsKey(REPO_BRANCH_KEY)) {
             return params;
         }
@@ -83,7 +83,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
             return params;
         }
 
-        Map<String, Object> newParams = new HashMap<>(t.getParams());
+        Map<String, Object> newParams = new HashMap<>(t.getConditions());
         newParams.putIfAbsent(GITHUB_ORG_KEY, githubRepoInfo.owner());
         newParams.putIfAbsent(GITHUB_REPO_KEY, githubRepoInfo.name());
 

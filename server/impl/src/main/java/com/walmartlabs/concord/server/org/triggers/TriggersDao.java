@@ -66,10 +66,6 @@ public class TriggersDao extends AbstractDao {
         }
     }
 
-    public UUID insert(UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
-        return txResult(tx -> insert(tx, projectId, repositoryId, eventSource, activeProfiles, args, conditions, config));
-    }
-
     public UUID insert(DSLContext tx, UUID projectId, UUID repositoryId, String eventSource, List<String> activeProfiles, Map<String, Object> args, Map<String, Object> conditions, Map<String, Object> config) {
         return tx.insertInto(TRIGGERS)
                 .columns(TRIGGERS.PROJECT_ID, TRIGGERS.REPO_ID, TRIGGERS.EVENT_SOURCE, TRIGGERS.ACTIVE_PROFILES, TRIGGERS.ARGUMENTS, TRIGGERS.CONDITIONS, TRIGGERS.TRIGGER_CFG)

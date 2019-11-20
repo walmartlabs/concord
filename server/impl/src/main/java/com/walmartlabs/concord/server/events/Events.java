@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +54,7 @@ public class Events {
             repositoryInfo.put(REPO_NAME_KEY, repositoryName);
 
             Map<String, Object> event = new HashMap<>();
-            event.put("repositoryInfo", Collections.singletonList(repositoryInfo));
+            event.put(Constants.Trigger.REPOSITORY_INFO, Collections.singletonList(repositoryInfo));
             event.put("event", eventType);
             return event;
         }
