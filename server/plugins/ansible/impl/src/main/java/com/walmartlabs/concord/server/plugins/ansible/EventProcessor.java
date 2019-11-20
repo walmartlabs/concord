@@ -20,14 +20,31 @@ package com.walmartlabs.concord.server.plugins.ansible;
  * =====
  */
 
-public final class Constants {
+import org.immutables.value.Value;
+import org.jooq.DSLContext;
 
-    public static final String ANSIBLE_EVENT_TYPE = "ANSIBLE";
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-    public static final String ANSIBLE_PLAYBOOK_INFO = "ANSIBLE_PLAYBOOK_INFO";
+public interface EventProcessor {
 
-    public static final String ANSIBLE_PLAYBOOK_RESULT = "ANSIBLE_PLAYBOOK_RESULT";
+    @Value.Immutable
+    interface Event extends AbstractEventProcessor.Event {
 
-    private Constants() {
+        UUID instanceId();
+
+        Timestamp instanceCreatedAt();
+
+        Timestamp eventDate();
+
+        String eventType();
+
+        long eventSeq();
+
+        Map<String, Object> payload();
     }
+
+    void process(DSLContext tx, List<Event> events);
 }

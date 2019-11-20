@@ -4,6 +4,7 @@
 
 ### Added
 
+- ansible, concord-console: new view for Ansible runtime statistics;
 - concord-server: optional rate limit for the process start
 endpoints;
 - slack: new option to `ignoreErrors`;

@@ -19,16 +19,16 @@
  */
 
 import * as React from 'react';
-import { Loader } from 'semantic-ui-react';
-
-import { AnsibleEvent, AnsibleStatus } from '../../../api/process/ansible';
-import { ProcessEventEntry } from '../../../api/process/event';
-import { AnsibleTaskList, RequestErrorMessage } from '../../molecules';
-import { ConcordId, RequestError } from '../../../api/common';
-import { actions, State, AnsibleEvents } from '../../../state/data/processes/events';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
-import { combinePrePostEvents } from '../ProcessEventsActivity';
+import { Loader } from 'semantic-ui-react';
+
+import { AnsibleEvent, AnsibleStatus } from '../../../../api/process/ansible';
+import { ProcessEventEntry } from '../../../../api/process/event';
+import { AnsibleTaskList, RequestErrorMessage } from '../../../molecules';
+import { ConcordId, RequestError } from '../../../../api/common';
+import { actions, AnsibleEvents, State } from '../../../../state/data/processes/events';
+import { combinePrePostEvents } from '../../ProcessEventsActivity';
 
 interface ExternalProps {
     instanceId: ConcordId;

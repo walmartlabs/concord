@@ -36,11 +36,13 @@ import {
     ProcessChildrenActivity,
     ProcessAttachmentsActivity,
     ProcessEventsActivity,
-    ProcessWaitActivity
+    ProcessWaitActivity,
+    ProcessAnsibleActivitySwitcher
 } from '../index';
 
 export type TabLink =
     | 'status'
+    | 'ansible'
     | 'log'
     | 'events'
     | 'history'
@@ -117,7 +119,11 @@ class ProcessActivity extends React.PureComponent<Props> {
                     </Link>
                 </Breadcrumb.Section>
                 <Breadcrumb.Divider />
-                <Breadcrumb.Section active={true}>{data.instanceId}</Breadcrumb.Section>
+                <Breadcrumb.Section active={true}>
+                    <WithCopyToClipboard value={data.instanceId}>
+                        {data.instanceId}
+                    </WithCopyToClipboard>
+                </Breadcrumb.Section>
             </BreadcrumbSegment>
         );
     }
@@ -145,6 +151,10 @@ class ProcessActivity extends React.PureComponent<Props> {
                     <Menu.Item active={activeTab === 'status'}>
                         <Icon name="hourglass half" />
                         <Link to={`${baseUrl}/status`}>Status</Link>
+                    </Menu.Item>
+                    <Menu.Item active={activeTab === 'ansible'}>
+                        <Icon name="chart area" />
+                        <Link to={`${baseUrl}/ansible`}>Ansible</Link>
                     </Menu.Item>
                     <Menu.Item active={activeTab === 'events'}>
                         <Icon name="content" />
@@ -178,6 +188,9 @@ class ProcessActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/status`}>
                         <ProcessStatusActivity process={data} />
+                    </Route>
+                    <Route path={`${baseUrl}/ansible`}>
+                        <ProcessAnsibleActivitySwitcher process={data} />
                     </Route>
                     <Route path={`${baseUrl}/events`}>
                         <ProcessEventsActivity process={data} />

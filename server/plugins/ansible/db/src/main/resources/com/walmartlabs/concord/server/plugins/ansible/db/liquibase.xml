@@ -41,4 +41,159 @@
             </column>
         </createTable>
     </changeSet>
+
+    <changeSet id="ansible-10001" author="ybrigo@gmail.com">
+        <createTable tableName="ANSIBLE_PLAYBOOK_STATS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAYBOOK_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME" type="varchar(1024)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STARTED_AT" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="HOST_COUNT" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAY_COUNT" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TOTAL_WORK" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="ansible-10002" author="ybrigo@gmail.com">
+        <createTable tableName="ANSIBLE_PLAYBOOK_RESULT">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAYBOOK_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STATUS" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="ansible-10003" author="ybrigo@gmail.com">
+        <createTable tableName="ANSIBLE_PLAY_STATS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAYBOOK_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAY_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAY_NAME" type="varchar(1024)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PLAY_ORDER" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="HOST_COUNT" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TASK_COUNT" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FINISHED_TASK_COUNT" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="ansible-10004" author="ybrigo@gmail.com">
+        <createTable tableName="ANSIBLE_TASK_STATS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAYBOOK_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PLAY_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TASK_ID" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TASK_NAME" type="varchar(1024)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TASK_ORDER" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TASK_TYPE" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="OK_COUNT" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FAILED_COUNT" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UNREACHABLE_COUNT" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SKIPPED_COUNT" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="RUNNING_COUNT" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="ansible-10005" author="ybrigo@gmail.com">
+        <addColumn tableName="ANSIBLE_HOSTS">
+            <column name="PLAYBOOK_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="ansible-10006" author="ybrigo@gmail.com">
+        <createIndex tableName="ANSIBLE_PLAYBOOK_STATS" indexName="IDX_A_PLAYBOOK_STATS">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+        </createIndex>
+
+        <createIndex tableName="ANSIBLE_PLAYBOOK_RESULT" indexName="IDX_A_PLAYBOOK_RESULT">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+            <column name="PLAYBOOK_ID"/>
+        </createIndex>
+
+        <createIndex tableName="ANSIBLE_PLAY_STATS" indexName="IDX_A_PLAY_STATS">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+            <column name="PLAYBOOK_ID"/>
+        </createIndex>
+
+        <createIndex tableName="ANSIBLE_TASK_STATS" indexName="IDX_A_TASK_STATS">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+            <column name="PLAY_ID"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

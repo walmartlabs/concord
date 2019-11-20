@@ -60,7 +60,7 @@ public class EventDao extends AbstractDao {
                     .where(PROCESS_EVENTS.INSTANCE_ID.eq(processKey.getInstanceId())
                             .and(PROCESS_EVENTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())));
 
-            q.and(PROCESS_EVENTS.EVENT_TYPE.eq(Constants.EVENT_TYPE));
+            q.and(PROCESS_EVENTS.EVENT_TYPE.eq(Constants.ANSIBLE_EVENT_TYPE));
 
             if (dataFilter != null) {
                 dataFilter.forEach((k, v) -> {

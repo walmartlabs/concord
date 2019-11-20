@@ -18,29 +18,16 @@
  * =====
  */
 
-import { addMinutes, isBefore, parseISO as parseDate } from 'date-fns';
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Route } from 'react-router';
 import { Divider } from 'semantic-ui-react';
 
 import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
-import {
-    AnsibleHost,
-    AnsibleStatsEntry,
-    getAnsibleStats as apiGetAnsibleStats,
-    listAnsibleHosts as apiListAnsibleHosts,
-    SearchFilter
-} from '../../../api/process/ansible';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 import { usePolling } from '../../../api/usePolling';
-import {
-    AnsibleStats,
-    ProcessActionList,
-    ProcessStatusTable,
-    ProcessToolbar
-} from '../../molecules';
+import { ProcessActionList, ProcessStatusTable, ProcessToolbar } from '../../molecules';
 import ProcessCheckpointActivity from '../ProcessCheckpointActivity';
 import RequestErrorActivity from '../RequestErrorActivity';
 
@@ -51,39 +38,12 @@ interface ExternalProps {
 }
 
 const DATA_FETCH_INTERVAL = 5000;
-const ANSIBLE_HOST_LIMIT = 10;
 
 const ProcessStatusActivity = (props: ExternalProps) => {
     const stickyRef = useRef(null);
-    const isInitialMount = useRef(true);
-
-    const sharedAnsibleHostsFilter = useRef<SearchFilter>({});
 
     const [process, setProcess] = useState<ProcessEntry>(props.process);
     const [forms, setForms] = useState<FormListEntry[]>([]);
-    const [ansibleStats, setAnsibleStats] = useState<AnsibleStatsEntry>({
-        uniqueHosts: 0,
-        hostGroups: [],
-        stats: {}
-    });
-    const [ansibleHosts, setAnsibleHosts] = useState<AnsibleHost[]>([]);
-    const [ansibleHostsNext, setAnsibleHostsNext] = useState<number>();
-    const [ansibleHostsPrev, setAnsibleHostsPrev] = useState<number>();
-    const [ansibleHostsFilter, setAnsibleHostsFilter] = useState();
-
-    const fetchAnsibleHosts = useCallback(
-        async (filter: SearchFilter) => {
-            const limit = filter.limit || ANSIBLE_HOST_LIMIT;
-            const ansibleHosts = await apiListAnsibleHosts(props.process.instanceId, {
-                ...filter,
-                limit
-            });
-            setAnsibleHosts(ansibleHosts.items);
-            setAnsibleHostsNext(ansibleHosts.next);
-            setAnsibleHostsPrev(ansibleHosts.prev);
-        },
-        [props.process.instanceId]
-    );
 
     const fetchData = useCallback(async () => {
         const process = await apiGet(props.process.instanceId, ['checkpoints', 'history']);
@@ -92,32 +52,10 @@ const ProcessStatusActivity = (props: ExternalProps) => {
         const forms = await apiListForms(props.process.instanceId);
         setForms(forms);
 
-        const ansibleStats = await apiGetAnsibleStats(props.process.instanceId);
-        setAnsibleStats(ansibleStats);
-
-        fetchAnsibleHosts(sharedAnsibleHostsFilter.current);
-
-        // because Ansible stats are calculated by an async process on the backend, we poll for
-        // additional 10 minutes after the process finishes to make sure we got everything
-        const changedRecently = isBefore(
-            Date.now(),
-            addMinutes(parseDate(process.lastUpdatedAt), 10)
-        );
-
-        return !isFinal(process.status) || changedRecently;
-    }, [props.process.instanceId, fetchAnsibleHosts]);
+        return !isFinal(process.status);
+    }, [props.process.instanceId]);
 
     const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
-
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-
-        sharedAnsibleHostsFilter.current = ansibleHostsFilter;
-        fetchAnsibleHosts(ansibleHostsFilter);
-    }, [ansibleHostsFilter, fetchAnsibleHosts]);
 
     if (error) {
         return (
@@ -178,20 +116,6 @@ const ProcessStatusActivity = (props: ExternalProps) => {
                         checkpoints={process.checkpoints!}
                         statusHistory={process.statusHistory!}
                         onRestoreComplete={refresh}
-                    />
-                </>
-            )}
-
-            {ansibleStats.uniqueHosts > 0 && (
-                <>
-                    <Divider content="Ansible Stats" horizontal={true} />
-                    <AnsibleStats
-                        instanceId={props.process.instanceId}
-                        hosts={ansibleHosts}
-                        stats={ansibleStats}
-                        next={ansibleHostsNext}
-                        prev={ansibleHostsPrev}
-                        refresh={setAnsibleHostsFilter}
                     />
                 </>
             )}

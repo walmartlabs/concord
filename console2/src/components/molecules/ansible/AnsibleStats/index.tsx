@@ -20,17 +20,18 @@
 
 import * as React from 'react';
 import { Grid, Tab } from 'semantic-ui-react';
+
 import {
     AnsibleHost,
     AnsibleStatsEntry,
     AnsibleStatus,
     SearchFilter
-} from '../../../api/process/ansible';
+} from '../../../../api/process/ansible';
 
-import { AnsibleHostList, AnsibleStatChart } from '../../molecules';
+import { AnsibleHostList, AnsibleStatChart } from '../../../molecules';
 import { makeStats } from './data';
-import { ConcordId } from '../../../api/common';
-import { AnsibleTaskListActivity } from '../../organisms';
+import { ConcordId } from '../../../../api/common';
+import { AnsibleTaskListActivity } from '../../../organisms';
 
 interface State {
     filter: SearchFilter;

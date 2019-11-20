@@ -22,13 +22,14 @@ package com.walmartlabs.concord.server.plugins.ansible;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.immutables.value.Value;
-import org.jooq.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jooq.CaseValueStep;
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.Field;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -39,50 +40,63 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
-import static com.walmartlabs.concord.server.plugins.ansible.EventMarkerDao.EventMarker;
 import static com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleHosts.ANSIBLE_HOSTS;
 import static org.jooq.impl.DSL.*;
 
-@Named("ansible-event-processor")
+@Named
 @Singleton
-public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventProcessor.EventItem> {
+public class AnsibleEventProcessor implements EventProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(AnsibleEventProcessor.class);
-
-    private static final String PROCESSOR_NAME = "ansible-event-processor";
-
-    private final AnsibleEventsConfiguration cfg;
-    private final AnsibleEventDao dao;
+    private final Dao dao;
 
     @Inject
-    public AnsibleEventProcessor(AnsibleEventsConfiguration cfg, EventMarkerDao eventMarkerDao, AnsibleEventDao dao) {
-        super(PROCESSOR_NAME, eventMarkerDao, cfg.getFetchLimit());
-        this.cfg = cfg;
+    public AnsibleEventProcessor(Dao dao) {
         this.dao = dao;
     }
 
     @Override
-    public long getIntervalInSec() {
-        return cfg.getPeriod();
-    }
-
-    @Override
-    protected List<EventItem> processEvents(DSLContext tx, EventMarker marker, int fetchLimit) {
-        List<EventItem> events = dao.list(tx, marker, fetchLimit);
-        if (events.isEmpty()) {
-            return Collections.emptyList();
+    public void process(DSLContext tx, List<Event> events) {
+        List<EventItem> eventItems = new ArrayList<>();
+        for (Event e : events) {
+            if (e.eventType().equals(Constants.ANSIBLE_EVENT_TYPE)) {
+                eventItems.add(toEventItem(e));
+            }
         }
 
-        List<HostItem> result = combineEvents(events);
+        List<HostItem> result = combineEvents(eventItems);
         dao.insert(tx, result);
-        return events;
+    }
+
+    private EventItem toEventItem(Event e) {
+        boolean ignoreErrors = MapUtils.getBoolean(e.payload(), "ignore_errors", false);
+        String status = MapUtils.getString(e.payload(), "status");
+        if (ignoreErrors && Status.FAILED.name().equals(status)) {
+            status = Status.OK.name();
+        }
+
+        String hostStatus = MapUtils.getString(e.payload(), "hostStatus");
+        if (hostStatus != null) {
+            status = hostStatus;
+        }
+
+        return ImmutableEventItem.builder()
+                .instanceId(e.instanceId())
+                .instanceCreatedAt(e.instanceCreatedAt())
+                .playbookId(MapUtils.getUUID(e.payload(), "parentCorrelationId"))
+                .eventSeq(e.eventSeq())
+                .eventDate(e.eventDate())
+                .host(MapUtils.assertString(e.payload(), "host"))
+                .hostGroup(MapUtils.getString(e.payload(), "hostGroup", "-"))
+                .status(status)
+                .duration(MapUtils.getNumber(e.payload(), "duration", 0L).longValue())
+                .retryCount(MapUtils.getNumber(e.payload(), "currentRetryCount", 0).intValue())
+                .build();
     }
 
     private static List<HostItem> combineEvents(List<EventItem> events) {
         Map<HostItem.Key, HostItem> result = new HashMap<>();
         for (EventItem e : events) {
-            result.compute(ImmutableKey.of(e.instanceId(), e.instanceCreatedAt(), e.host(), e.hostGroup()),
+            result.compute(ImmutableKey.of(e.instanceId(), e.instanceCreatedAt(), e.playbookId(), e.host(), e.hostGroup()),
                     (k, v) -> (v == null) ? HostItem.from(e) : combine(v, e));
         }
         return new ArrayList<>(result.values());
@@ -114,10 +128,10 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
     }
 
     @Named
-    public static class AnsibleEventDao extends AbstractDao {
+    public static class Dao extends AbstractDao {
 
         @Inject
-        public AnsibleEventDao(@MainDB Configuration cfg) {
+        public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
@@ -126,77 +140,16 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
             return super.txResult(t);
         }
 
-        @WithTimer
-        public List<EventItem> list(DSLContext tx, EventMarker marker, int count) {
-            ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            SelectConditionStep<Record11<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer, String>> q = tx.select(
-                    pe.INSTANCE_ID,
-                    pe.INSTANCE_CREATED_AT,
-                    pe.EVENT_SEQ,
-                    pe.EVENT_DATE,
-                    field("{0}->>'host'", String.class, pe.EVENT_DATA),
-                    coalesce(field("{0}->>'hostGroup'", String.class, pe.EVENT_DATA), value("-")),
-                    field("{0}->>'status'", String.class, pe.EVENT_DATA),
-                    coalesce(field("{0}->>'duration'", Long.class, pe.EVENT_DATA), value("0")),
-                    coalesce(field("{0}->>'ignore_errors'", Boolean.class, pe.EVENT_DATA), value("false")),
-                    coalesce(field("{0}->>'currentRetryCount'", Integer.class, pe.EVENT_DATA), value("0")),
-                    field("{0}->>'hostStatus'", String.class, pe.EVENT_DATA))
-                    .from(pe)
-                    .where(pe.EVENT_TYPE.eq(Constants.EVENT_TYPE)
-                            .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));
-
-            return q.orderBy(pe.EVENT_SEQ)
-                    .limit(count)
-                    .fetch(AnsibleEventDao::toEntity);
-        }
-
-        private static EventItem toEntity(Record11<UUID, Timestamp, Long, Timestamp, String, String, String, Long, Boolean, Integer, String> r) {
-            boolean ignoreErrors = Boolean.TRUE.equals(r.value9());
-            String status = r.value7();
-            if (ignoreErrors && Status.FAILED.name().equals(status)) {
-                status = Status.OK.name();
-            }
-
-            String hostStatus = r.value11();
-            if (hostStatus != null) {
-                status = hostStatus;
-            }
-
-            return ImmutableEventItem.builder()
-                    .instanceId(r.value1())
-                    .instanceCreatedAt(r.value2())
-                    .eventSeq(r.value3())
-                    .eventDate(r.value4())
-                    .host(r.value5())
-                    .hostGroup(r.value6())
-                    .status(status)
-                    .duration(r.value8())
-                    .retryCount(r.value10())
-                    .build();
-        }
-
-        @WithTimer
         public void insert(DSLContext tx, List<HostItem> items) {
             List<HostItem> hosts = removeInvalidItems(items);
             if (hosts.isEmpty()) {
                 return;
             }
-            tx.connection(conn -> {
-                int[] updated = update(tx, conn, hosts);
-                List<HostItem> hostsForInsert = new ArrayList<>();
-                for (int i = 0; i < updated.length; i++) {
-                    if (updated[i] < 1) {
-                        hostsForInsert.add(hosts.get(i));
-                    }
-                }
-                if (!hostsForInsert.isEmpty()) {
-                    insert(tx, conn, hostsForInsert);
-                }
-                log.debug("insert -> updated: {}, inserted: {}", hosts.size() - hostsForInsert.size(), hostsForInsert.size());
-            });
+
+            DbUtils.upsert(tx, items, Dao::update, Dao::insert);
         }
 
-        private int[] update(DSLContext tx, Connection conn, List<HostItem> hosts) throws SQLException {
+        private static int[] update(DSLContext tx, Connection conn, List<HostItem> hosts) throws SQLException {
             Field<Integer> currentStatusWeight = decodeStatus(choose(ANSIBLE_HOSTS.STATUS));
             Field<Integer> newStatusWeight = decodeStatus(choose(value((String) null)));
 
@@ -244,29 +197,31 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
             }
         }
 
-        private void insert(DSLContext tx, Connection conn, List<HostItem> hosts) throws SQLException {
+        private static void insert(DSLContext tx, Connection conn, List<HostItem> hosts) throws SQLException {
             String insert = tx.insertInto(ANSIBLE_HOSTS)
                     .columns(ANSIBLE_HOSTS.INSTANCE_ID,
                             ANSIBLE_HOSTS.INSTANCE_CREATED_AT,
+                            ANSIBLE_HOSTS.PLAYBOOK_ID,
                             ANSIBLE_HOSTS.HOST,
                             ANSIBLE_HOSTS.HOST_GROUP,
                             ANSIBLE_HOSTS.STATUS,
                             ANSIBLE_HOSTS.DURATION,
                             ANSIBLE_HOSTS.EVENT_SEQ,
                             ANSIBLE_HOSTS.RETRY_COUNT)
-                    .values(value((UUID) null), null, null, null, null, null, null, null)
+                    .values(value((UUID) null), null, null, null, null, null, null, null, null)
                     .getSQL();
 
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
                 for (HostItem h : hosts) {
                     ps.setObject(1, h.key().instanceId());
                     ps.setTimestamp(2, h.key().instanceCreatedAt());
-                    ps.setString(3, h.key().host());
-                    ps.setString(4, h.key().hostGroup());
-                    ps.setString(5, h.status());
-                    ps.setLong(6, h.duration());
-                    ps.setLong(7, h.eventSeq());
-                    ps.setLong(8, h.retryCount());
+                    ps.setObject(3, h.key().playbookId());
+                    ps.setString(4, h.key().host());
+                    ps.setString(5, h.key().hostGroup());
+                    ps.setString(6, h.status());
+                    ps.setLong(7, h.duration());
+                    ps.setLong(8, h.eventSeq());
+                    ps.setLong(9, h.retryCount());
 
                     ps.addBatch();
                 }
@@ -274,7 +229,7 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
             }
         }
 
-        private Field<Integer> decodeStatus(CaseValueStep<String> choose) {
+        private static Field<Integer> decodeStatus(CaseValueStep<String> choose) {
             return choose
                     .when(inline(Status.FAILED.name()), inline(Status.FAILED.weight()))
                     .when(inline(Status.UNREACHABLE.name()), inline(Status.UNREACHABLE.weight()))
@@ -335,6 +290,10 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
             Timestamp instanceCreatedAt();
 
             @Value.Parameter
+            @Nullable
+            UUID playbookId();
+
+            @Value.Parameter
             String host();
 
             @Value.Parameter
@@ -353,7 +312,7 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
 
         static HostItem from(EventItem event) {
             return ImmutableHostItem.builder()
-                    .key(ImmutableKey.of(event.instanceId(), event.instanceCreatedAt(), event.host(), event.hostGroup()))
+                    .key(ImmutableKey.of(event.instanceId(), event.instanceCreatedAt(), event.playbookId(), event.host(), event.hostGroup()))
                     .status(event.status())
                     .duration(event.duration())
                     .eventSeq(event.eventSeq())
@@ -368,6 +327,9 @@ public class AnsibleEventProcessor extends AbstractEventProcessor<AnsibleEventPr
         UUID instanceId();
 
         Timestamp instanceCreatedAt();
+
+        @Nullable
+        UUID playbookId();
 
         Timestamp eventDate();
 

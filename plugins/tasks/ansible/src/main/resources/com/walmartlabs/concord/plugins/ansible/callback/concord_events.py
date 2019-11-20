@@ -3,12 +3,15 @@ __metaclass__ = type
 
 from ansible.plugins.callback import CallbackBase
 from ansible.module_utils.six import string_types
+from ansible.playbook.block import Block
+from ansible.playbook.handler import Handler
 
 import time
 import datetime
 
 import os
 import ujson as json
+from sets import Set
 
 def to_millis(t):
     return int(round(t * 1000))
@@ -46,15 +49,18 @@ class CallbackModule(CallbackBase):
         self.taskDurations = {}
         self.hostStatus = {}
 
-    def handle_event(self, event):
+    def _handle_event(self, type, event):
         self.outFile.write(json.dumps({
-            'eventType': 'ANSIBLE',
+            'eventType': type,
             'eventDate': datetime.datetime.utcnow().isoformat() + 'Z',
             'data': dict(event, **{'parentCorrelationId': self.eventCorrelationId,
                                    'currentRetryCount': self.currentRetryCount})
         }))
         self.outFile.write('<~EOL~>\n')
         self.outFile.flush()
+
+    def handle_event(self, event):
+        self._handle_event('ANSIBLE', event)
 
     def _record_host_statuses(self):
         for v in self.hostStatus.values():
@@ -145,9 +151,12 @@ class CallbackModule(CallbackBase):
             'status': "RUNNING",
             'hostStatus': "RUNNING",
             'playbook': self.playbook._file_name,
+            'playId': self.play._uuid,
             'host': host.name,
             'hostGroup': self.play.get_name(),
+            'taskId': task._uuid,
             'task': task.get_name(),
+            'isHandler': isinstance(task, Handler),
             'action': task.action,
             'correlationId': task_correlation_id,
             'phase': "pre"
@@ -161,9 +170,12 @@ class CallbackModule(CallbackBase):
         data = {
             'status': 'SKIPPED',
             'playbook': self.playbook._file_name,
+            'playId': self.play._uuid,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
+            'taskId': result._task._uuid,
             'task': result._task.get_name(),
+            'isHandler': isinstance(result._task, Handler),
             'action': result._task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
@@ -173,14 +185,91 @@ class CallbackModule(CallbackBase):
 
         self.handle_event(data)
 
+    def handle_playbook_start(self, playbook):
+        def _process_task(task):
+            result = []
+            if isinstance(task, Block):
+                result.extend(_process_block(task))
+            else:
+                if task.action == 'meta':
+                    return []
+
+                result.append({
+                    'id': task._uuid,
+                    'task': task.get_name()
+                })
+
+            return result
+
+        def _process_block(b):
+            result = []
+            for task in b.block:
+                result.extend(_process_task(task))
+
+            for task in b.rescue:
+                result.extend(_process_task(task))
+
+            for task in b.always:
+                result.extend(_process_task(task))
+
+            return result
+
+        def _collect_tasks(play):
+            result = []
+            for block in play.compile():
+                if not block.has_tasks():
+                    continue
+                tasks = _process_block(block)
+
+                for x in tasks:
+                    if x not in result:
+                        result.append(x)
+
+            return result
+
+        total_work = 0
+        hosts = Set()
+        info = []
+        for p in playbook.get_plays():
+            play_hosts = p.get_variable_manager()._inventory.get_hosts(p.hosts)
+            play_hosts_count = len(play_hosts)
+            play_task = _collect_tasks(p)
+
+            play_info = {
+                'id': p._uuid,
+                'play': p.get_name(),
+                'hosts': play_hosts_count,
+                'tasks': play_task
+            }
+            info.append(play_info)
+            hosts.update(play_hosts)
+            total_work += play_hosts_count * len(play_task)
+
+        self._handle_event('ANSIBLE_PLAYBOOK_INFO', {'playbook':playbook._file_name,
+                                                     'uniqueHosts': len(hosts),
+                                                     'totalWork': total_work,
+                                                     'plays': info})
+
+    @staticmethod
+    def _get_playbook_status(stats):
+        if len(stats.failures) > 0 or len(stats.dark) > 0:
+            return 'FAILED'
+        return 'OK'
+
     ### Ansible callbacks ###
 
     def v2_playbook_on_start(self, playbook):
         self.playbook = playbook
+        self.handle_playbook_start(playbook)
         self.playbook_on_start()
 
     def playbook_on_stats(self, stats):
         self._record_host_statuses()
+
+        status = self._get_playbook_status(stats)
+        self._handle_event('ANSIBLE_PLAYBOOK_RESULT', {'playbook': self.playbook._file_name,
+                                                       'status': status})
+
         self.outFile.close()
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
@@ -189,9 +278,12 @@ class CallbackModule(CallbackBase):
         data = {
             'status': "FAILED",
             'playbook': self.playbook._file_name,
+            'playId': self.play._uuid,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
+            'taskId': result._task._uuid,
             'task': result._task.get_name(),
+            'isHandler': isinstance(result._task, Handler),
             'action': result._task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
@@ -215,9 +307,12 @@ class CallbackModule(CallbackBase):
             'status': "OK",
             'hostStatus': 'RUNNING',
             'playbook': self.playbook._file_name,
+            'playId': self.play._uuid,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
+            'taskId': result._task._uuid,
             'task': result._task.get_name(),
+            'isHandler': isinstance(result._task, Handler),
             'action': result._task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
@@ -236,9 +331,12 @@ class CallbackModule(CallbackBase):
             'status': 'UNREACHABLE',
             'hostStatus': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
+            'playId': self.play._uuid,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
+            'taskId': result._task._uuid,
             'task': result._task.get_name(),
+            'isHandler': isinstance(result._task, Handler),
             'action': result._task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
@@ -257,9 +355,12 @@ class CallbackModule(CallbackBase):
             'status': 'UNREACHABLE',
             'hostStatus': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
+            'playId': self.play._uuid,
             'host': result._host.name,
             'hostGroup': self.play.get_name(),
+            'taskId': result._task._uuid,
             'task': result._task.get_name(),
+            'isHandler': isinstance(result._task, Handler),
             'action': result._task.action,
             'correlationId': task_correlation_id,
             'phase': "post",
@@ -273,9 +374,6 @@ class CallbackModule(CallbackBase):
         self._on_task_start(host, task)
 
     def v2_runner_on_skipped(self, result):
-        self._on_task_skipped(result)
-
-    def v2_runner_item_on_skipped(self, result):
         self._on_task_skipped(result)
 
     def v2_playbook_on_play_start(self, play):
