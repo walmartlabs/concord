@@ -111,7 +111,7 @@
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
                         <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
-                        <IT_CONSOLE_BASE_URL>http://console-node:8080</IT_CONSOLE_BASE_URL>
+                        <IT_CONSOLE_BASE_URL>http://server-node:8001</IT_CONSOLE_BASE_URL>
                         <IT_SERVER_BASE_URL>http://localhost:${it.server.port}</IT_SERVER_BASE_URL>
                         <IT_SCREENSHOTS_DIR>${project.build.directory}/screenshots</IT_SCREENSHOTS_DIR>
                         <IT_SELENIUM_PORT>${it.selenium.port}</IT_SELENIUM_PORT>
@@ -247,31 +247,6 @@
                                             <SERVER_API_BASE_URL>http://server-node:8001</SERVER_API_BASE_URL>
                                             <SERVER_WEBSOCKET_URL>ws://server-node:8001/websocket</SERVER_WEBSOCKET_URL>
                                         </env>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${console.image}</name>
-                                    <alias>console</alias>
-                                    <run>
-                                        <ports>
-                                            <port>it.console.port:8080</port>
-                                        </ports>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>${network}</name>
-                                            <alias>console-node</alias>
-                                        </network>
-                                        <volumes>
-                                            <bind>
-                                                <volume>${basedir}/src/test/resources/console.conf:/opt/concord/console/nginx/app.conf:ro</volume>
-                                            </bind>
-                                        </volumes>
-                                        <wait>
-                                            <http>
-                                                <url>http://localhost:${it.console.port}/index.html</url>
-                                            </http>
-                                            <time>60000</time>
-                                        </wait>
                                     </run>
                                 </image>
                                 <image>

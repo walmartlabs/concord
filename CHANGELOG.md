@@ -56,6 +56,8 @@ artifacts;
 triggers. The existing projects must update their `github` trigger
 definitions or set the default version in the server configuration
 file;
+- concord-console: the image is removed. The Console files are
+now served by the Server itself;
 - concord-runner: remove deprecated process definition attributes:
     - `__attr_localPath`;
 - concord-sdk: remove deprecated interfaces and annotations:

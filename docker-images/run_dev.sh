@@ -23,7 +23,7 @@ if grep 'AD_' "${CONCORD_CFG_FILE}"; then
 fi
 
 echo "Removing old containers..."
-docker rm -f db dind agent server console > /dev/null
+docker rm -f db dind agent server > /dev/null
 
 docker run -d \
 --name db \
@@ -71,11 +71,3 @@ docker run -d \
 -e 'SERVER_WEBSOCKET_URL=ws://server:8001/websocket' \
 -e 'DOCKER_HOST=tcp://dind:6666' \
 "${DOCKER_PREFIX}/concord-agent:${VERSION}"
-
-docker run -d \
---name console \
---link server \
--p 8080:8080 \
--v /tmp/concord/console/logs:/opt/concord/logs \
--v "${BASE_DIR}/console.conf:/opt/concord/console/nginx/app.conf:ro" \
-"${DOCKER_PREFIX}/concord-console:${VERSION}"

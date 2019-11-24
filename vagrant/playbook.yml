@@ -18,13 +18,13 @@
 
   - name: Get local images digests
     delegate_to: localhost
-    shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
+    shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-agent
     register: local_image_ids
     when: use_local_images
 
   - name: Get target images digests (if exist)
     become: true
-    shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
+    shell: docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}' walmartlabs/concord-server walmartlabs/concord-agent
     register: target_image_ids
     no_log: true
     ignore_errors: yes
@@ -32,7 +32,7 @@
     
   - name: Export local Docker images
     delegate_to: localhost
-    shell: docker save -o /tmp/images.tar walmartlabs/concord-server walmartlabs/concord-console walmartlabs/concord-agent
+    shell: docker save -o /tmp/images.tar walmartlabs/concord-server walmartlabs/concord-agent
     when: use_local_images and (local_image_ids.stdout != target_image_ids.stdout)
 
   - name: Copy Docker images to the VM
@@ -73,7 +73,6 @@
     loop:
     - { src: "server.conf", dest: "/opt/concord/conf/server.conf" }
     - { src: "agent.conf", dest: "/opt/concord/conf/agent.conf" }
-    - { src: "console.conf", dest: "/opt/concord/conf/console.conf" }
 
   - name: Start the database
     become: true
@@ -116,20 +115,6 @@
       env:
         DB_URL: jdbc:postgresql://db:5432/postgres
         CONCORD_CFG_FILE: /opt/concord/conf/server.conf
-
-  - name: Start the Concord Console
-    become: true
-    docker_container:
-      name: console
-      image: "{{ image_prefix }}/concord-console"
-      restart: true
-      restart_policy: always
-      volumes:
-      - /opt/concord/conf/console.conf:/opt/concord/console/nginx/app.conf:ro
-      links:
-      - server
-      ports:
-      - 8080:8080
 
   - name: Start the Concord Agent
     become: true
