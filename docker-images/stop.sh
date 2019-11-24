@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker rm -f agent server console dind
+docker rm -f agent server dind

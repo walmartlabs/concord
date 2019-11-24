@@ -46,7 +46,7 @@ $ ./run.sh localhost:8001
 }
 ```
 
-5. open [the UI](http://localhost:8080), find the process entry and
+5. open [the UI](http://localhost:8001), find the process entry and
 open its log. You should see messages like this:
 ```
 12:00:55.817 [INFO ] c.w.c.runner.engine.LoggingTask - Public key file: .tmp/public1856673009465277934.key

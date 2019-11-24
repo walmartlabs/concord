@@ -40,14 +40,15 @@ import com.walmartlabs.ollie.OllieServerBuilder;
 import com.walmartlabs.ollie.SessionCookieOptions;
 import io.prometheus.client.exporter.MetricsServlet;
 import org.apache.shiro.web.filter.authc.AnonymousFilter;
+import org.eclipse.jetty.server.AsyncRequestLogWriter;
+import org.eclipse.jetty.server.CustomRequestLog;
+import org.eclipse.jetty.server.RequestLog;
+import org.eclipse.jetty.server.RequestLogWriter;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ConcordServer {
 
@@ -69,6 +70,7 @@ public class ConcordServer {
                 .realm(LdapRealm.class)
                 .realm(GithubRealm.class)
                 .realm(SsoRealm.class)
+                .requestLog(createRequestLog())
                 .filterChain("/api/v1/server/ping", AnonymousFilter.class)
                 .filterChain("/api/v1/server/version", AnonymousFilter.class)
                 .filterChain("/api/service/console/logout", AnonymousFilter.class)
@@ -79,13 +81,15 @@ public class ConcordServer {
                 .filterChain("/api/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/forms/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/events/github/**", GithubAuthenticatingFilter.class)
+                .at("/resources/console").resource("/com/walmartlabs/concord/server/console/static")
                 .serve("/forms/*").with(DefaultServlet.class, formsServletParams())
                 .serve("/metrics").with(MetricsServlet.class) // prometheus integration
-                .at("/resources/console").resource("/com/walmartlabs/concord/server/console/static")
+                .serve("/*").with(DefaultServlet.class, uiServletParams()) // must be the last entry
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
-                .sessionCookieOptions(getSessionCookieOptions())
+                .filter("/cfg.js").through(NoCacheFilter.class) // the UI's configuration
+                .sessionCookieOptions(sessionCookieOptions())
                 .sessionsEnabled(true)
                 .sessionMaxInactiveInterval(ServerConfiguration.sessionTimeout)
                 .jmxEnabled(true);
@@ -106,7 +110,25 @@ public class ConcordServer {
         return m;
     }
 
-    private static Set<SessionCookieOptions> getSessionCookieOptions() {
+    private static Map<String, String> uiServletParams() {
+        if (ServerConfiguration.baseResourcePath == null) {
+            log.warn("BASE_RESOURCE_PATH environment variable must point to the Console files in order for the UI to work.");
+            return Collections.emptyMap();
+        }
+
+        log.info("Serving {} as /...", ServerConfiguration.baseResourcePath);
+
+        Map<String, String> m = new HashMap<>();
+
+        m.put("dirAllowed", "false");
+        m.put("resourceBase", ServerConfiguration.baseResourcePath);
+        m.put("pathInfoOnly", "true");
+        m.put("redirectWelcome", "false");
+
+        return m;
+    }
+
+    private static Set<SessionCookieOptions> sessionCookieOptions() {
         Set<SessionCookieOptions> s = new HashSet<>();
         s.add(SessionCookieOptions.HTTP_ONLY);
         if (ServerConfiguration.secureCookies) {
@@ -115,4 +137,18 @@ public class ConcordServer {
         return s;
     }
 
+    private static RequestLog createRequestLog() {
+        if (ServerConfiguration.accessLogPath == null) {
+            log.warn("Access logs are not configured. Specify the ACCESS_LOG_PATH environment variable before starting the server.");
+            return null;
+        }
+
+        log.info("Saving access logs into {}", ServerConfiguration.accessLogPath);
+
+        RequestLogWriter writer = new AsyncRequestLogWriter(ServerConfiguration.accessLogPath);
+        writer.setAppend(true);
+        writer.setRetainDays(ServerConfiguration.accessLogRetainDays);
+
+        return new CustomRequestLog(writer, ServerConfiguration.ACCESS_LOG_FORMAT);
+    }
 }

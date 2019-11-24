@@ -18,7 +18,6 @@
         <module>ansible</module>
         <module>agent</module>
         <module>server</module>
-        <module>console</module>
     </modules>
 
     <properties>

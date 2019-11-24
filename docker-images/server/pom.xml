@@ -18,6 +18,16 @@
         <docker.file>oss/Dockerfile</docker.file>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-console2</artifactId>
+            <version>${project.version}</version>
+            <type>tar.gz</type>
+            <classifier>dist</classifier>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -31,6 +41,7 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
+                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.server</groupId>
@@ -38,8 +49,15 @@
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
                                     <classifier>dist</classifier>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                    <destFileName>dist.tar.gz</destFileName>
+                                    <destFileName>server.tar.gz</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord</groupId>
+                                    <artifactId>concord-console2</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>tar.gz</type>
+                                    <classifier>dist</classifier>
+                                    <destFileName>console.tar.gz</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

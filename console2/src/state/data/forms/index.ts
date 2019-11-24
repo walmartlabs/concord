@@ -144,7 +144,7 @@ export const reducers = combineReducers<State>({
 
 const updateForDev = (uri: string) => {
     if (process.env.NODE_ENV !== 'production') {
-        uri = 'http://localhost:8080' + uri;
+        uri = 'http://localhost:8001' + uri;
     }
     return uri;
 };
