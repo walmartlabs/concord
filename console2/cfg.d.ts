@@ -5,6 +5,7 @@ export interface ConcordEnvironment {
     loginUrl?: string;
     logoutUrl?: string;
     login?: LoginConfiguration;
+    extraProcessMenuLinks?: ExtraProcessMenuLinks;
 }
 
 export interface TopBarMeta {
@@ -12,6 +13,8 @@ export interface TopBarMeta {
 }
 
 export type SystemLinks = LinkMeta[];
+
+export type ExtraProcessMenuLinks = ExtraProcessMenuLink[];
 
 export interface LinkMeta {
     text: string;
@@ -22,6 +25,13 @@ export interface LinkMeta {
 export interface LoginConfiguration {
     usernameValidator?: (username: string) => string | undefined;
     usernameHint?: string;
+}
+
+export interface ExtraProcessMenuLink {
+    url: string;
+    label: string;
+    color: string;
+    icon: string;
 }
 
 declare global {

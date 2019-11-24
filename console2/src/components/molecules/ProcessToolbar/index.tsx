@@ -94,6 +94,10 @@ const ProcessSecondaryActions = memo((props: ProcessSecondaryActionsProps) => {
         [isProcessDisabled]
     );
 
+    const { extraProcessMenuLinks } = window.concord;
+
+    const getIcon = ({ props }: { props: any }) => <Icon color={props.color} name={props.icon} />;
+
     return (
         <Dropdown icon="ellipsis vertical" pointing={'top right'} error={false}>
             <Dropdown.Menu>
@@ -114,6 +118,22 @@ const ProcessSecondaryActions = memo((props: ProcessSecondaryActionsProps) => {
                         <span className="text">State</span>
                     </Dropdown.Item>
                 )}
+
+                {extraProcessMenuLinks &&
+                    extraProcessMenuLinks.map((x, idx) => (
+                        <Dropdown.Item
+                            key={idx}
+                            text={x.label}
+                            onClick={() =>
+                                window.open(
+                                    x.url + '?arguments.instanceId=' + `${instanceId}`,
+                                    '_blank'
+                                )
+                            }>
+                            {getIcon({ props: x })}
+                            <span className="text">{x.label}</span>
+                        </Dropdown.Item>
+                    ))}
             </Dropdown.Menu>
         </Dropdown>
     );
