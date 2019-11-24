@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: additional process menu links can now be specified
+using the `cfg.js` file;
 - ansible, concord-console: new view for Ansible runtime statistics;
 - concord-server: optional rate limit for the process start
 endpoints;
