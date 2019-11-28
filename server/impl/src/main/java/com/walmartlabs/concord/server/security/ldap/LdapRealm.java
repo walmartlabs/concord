@@ -107,7 +107,13 @@ public class LdapRealm extends AbstractLdapRealm {
 
         UsernamePasswordToken t = (UsernamePasswordToken) token;
 
-        LdapPrincipal ldapPrincipal = getPrincipal(t);
+        LdapPrincipal ldapPrincipal;
+        try {
+            ldapPrincipal = getPrincipal(t);
+        } catch (Exception e) {
+            throw new AuthenticationException("LDAP error while attempting to retrieve the user's principal: " + t.getUsername(), e);
+        }
+
         if (ldapPrincipal == null) {
             throw new AuthenticationException("LDAP data not found: " + t.getUsername());
         }
@@ -146,7 +152,7 @@ public class LdapRealm extends AbstractLdapRealm {
     }
 
     @SuppressWarnings("deprecation")
-    private LdapPrincipal getPrincipal(UsernamePasswordToken t) throws NamingException {
+    private LdapPrincipal getPrincipal(UsernamePasswordToken t) throws Exception {
         String username = t.getUsername();
         char[] password = t.getPassword();
         if (username == null || password == null) {

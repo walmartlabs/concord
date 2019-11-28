@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.naming.NamingException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,7 +58,7 @@ public class LdapUserInfoProvider implements UserInfoProvider {
         try {
             LdapPrincipal p = ldapManager.getPrincipal(username, userDomain);
             return buildInfo(id, p);
-        } catch (NamingException e) {
+        } catch (Exception e) {
             log.error("getInfo ['{}'] -> error", username, e);
             throw new ConcordApplicationException("Error while retrieving LDAP information for " + username, e);
         }
