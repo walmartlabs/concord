@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Route } from 'react-router';
 import { Divider } from 'semantic-ui-react';
 
@@ -27,78 +27,64 @@ import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
 import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 import { usePolling } from '../../../api/usePolling';
-import { ProcessActionList, ProcessStatusTable, ProcessToolbar } from '../../molecules';
+import { ProcessActionList, ProcessStatusTable } from '../../molecules';
 import ProcessCheckpointActivity from '../ProcessCheckpointActivity';
 import RequestErrorActivity from '../RequestErrorActivity';
 
 import './styles.css';
+import { ConcordId } from '../../../api/common';
 
 interface ExternalProps {
-    process: ProcessEntry;
+    instanceId: ConcordId;
+    forceRefresh: boolean;
+    loadingHandler: (inc: number) => void;
+    refreshHandler: () => void;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 
-const ProcessStatusActivity = (props: ExternalProps) => {
-    const stickyRef = useRef(null);
-
-    const [process, setProcess] = useState<ProcessEntry>(props.process);
+const ProcessStatusActivity = ({
+    instanceId,
+    loadingHandler,
+    forceRefresh,
+    refreshHandler
+}: ExternalProps) => {
+    const [process, setProcess] = useState<ProcessEntry>();
     const [forms, setForms] = useState<FormListEntry[]>([]);
 
     const fetchData = useCallback(async () => {
-        const process = await apiGet(props.process.instanceId, ['checkpoints', 'history']);
+        const process = await apiGet(instanceId, ['checkpoints', 'history']);
         setProcess(process);
 
-        const forms = await apiListForms(props.process.instanceId);
+        const forms = await apiListForms(instanceId);
         setForms(forms);
 
         return !isFinal(process.status);
-    }, [props.process.instanceId]);
+    }, [instanceId]);
 
-    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     if (error) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                />
-
-                <RequestErrorActivity error={error} />
-            </div>
-        );
+        return <RequestErrorActivity error={error} />;
     }
 
-    const hasCheckpoints = process.checkpoints && process.checkpoints.length > 0;
-    const hasStatusHistory = process.statusHistory && process.statusHistory.length > 0;
+    const hasCheckpoints = process && process.checkpoints && process.checkpoints.length > 0;
+    const hasStatusHistory = process && process.statusHistory && process.statusHistory.length > 0;
 
     return (
-        <div ref={stickyRef}>
-            <ProcessToolbar
-                stickyRef={stickyRef}
-                loading={loading}
-                refresh={refresh}
-                process={process}
-            />
+        <>
+            <ProcessStatusTable process={process} />
 
-            <Divider content="Process Details" horizontal={true} />
-            <ProcessStatusTable data={process} />
-
-            {forms.length > 0 && !isFinal(process.status) && (
+            {process && forms.length > 0 && !isFinal(process.status) && (
                 <>
                     <Divider content="Required Actions" horizontal={true} />
                     <Route
                         render={({ history }) => (
                             <ProcessActionList
-                                instanceId={props.process.instanceId}
+                                instanceId={instanceId}
                                 forms={forms}
                                 onOpenWizard={() =>
-                                    history.push(
-                                        `/process/${props.process.instanceId}/wizard?fullScreen=true`
-                                    )
+                                    history.push(`/process/${instanceId}/wizard?fullScreen=true`)
                                 }
                             />
                         )}
@@ -106,7 +92,7 @@ const ProcessStatusActivity = (props: ExternalProps) => {
                 </>
             )}
 
-            {hasCheckpoints && hasStatusHistory && (
+            {process && hasCheckpoints && hasStatusHistory && (
                 <>
                     <Divider content="Checkpoints" horizontal={true} />
                     <ProcessCheckpointActivity
@@ -115,11 +101,11 @@ const ProcessStatusActivity = (props: ExternalProps) => {
                         processDisabled={process.disabled}
                         checkpoints={process.checkpoints!}
                         statusHistory={process.statusHistory!}
-                        onRestoreComplete={refresh}
+                        onRestoreComplete={refreshHandler}
                     />
                 </>
             )}
-        </div>
+        </>
     );
 };
 

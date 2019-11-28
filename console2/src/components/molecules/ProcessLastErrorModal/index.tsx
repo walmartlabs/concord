@@ -44,6 +44,7 @@ export default ({ processMeta, title = 'Last error' }: Props) => {
                     name="question circle outline"
                     color="red"
                     title="Failure details"
+                    size={'large'}
                 />
             }>
             <Modal.Header>{title}</Modal.Header>

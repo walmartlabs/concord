@@ -27,6 +27,10 @@ import {
 } from './types';
 import { Grid } from 'semantic-ui-react';
 
+export interface ExternalProps {
+    loading: boolean;
+}
+
 const LEGEND_ITEMS = [
     { name: 'OK', color: OK_COLOR_HEX },
     { name: 'FAILED', color: FAILED_COLOR_HEX },
@@ -50,14 +54,12 @@ const renderLegendItem = (item: { color: string; name: string }) => {
     );
 };
 
-class TaskProgressLegend extends React.PureComponent {
-    render() {
-        return (
-            <Grid columns={7} centered={true}>
-                {LEGEND_ITEMS.map((item) => renderLegendItem(item))}
-            </Grid>
-        );
-    }
-}
+const TaskProgressLegend = ({ loading }: ExternalProps) => {
+    return (
+        <Grid columns={7} centered={true} className={loading ? 'loading' : ''}>
+            {LEGEND_ITEMS.map((item) => renderLegendItem(item))}
+        </Grid>
+    );
+};
 
 export default TaskProgressLegend;

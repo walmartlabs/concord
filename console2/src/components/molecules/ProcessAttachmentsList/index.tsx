@@ -21,53 +21,61 @@ import * as React from 'react';
 import { ConcordId } from '../../../api/common';
 import { Table } from 'semantic-ui-react';
 
-interface Props {
+interface ExternalProps {
     instanceId: ConcordId;
-    data: string[];
+    data?: string[];
 }
 
-class ProcessAttachmentsList extends React.PureComponent<Props> {
-    renderTableHeader = () => {
-        return (
-            <Table.Row>
-                <Table.HeaderCell collapsing={true}>Attached File(s)</Table.HeaderCell>
-            </Table.Row>
-        );
-    };
+const ProcessAttachmentsList = ({ instanceId, data }: ExternalProps) => {
+    return (
+        <Table celled={true} className={data ? '' : 'loading'}>
+            <Table.Header>{renderTableHeader()}</Table.Header>
+            <Table.Body>{renderElements(instanceId, data)}</Table.Body>
+        </Table>
+    );
+};
 
-    renderTableRow = (attachment: string) => {
-        const { instanceId } = this.props;
-        const attachmentName = attachment.substring(attachment.lastIndexOf('/'));
-        return (
-            <Table.Row key={attachment}>
-                <Table.Cell>
-                    <a
-                        href={'/api/v1/process/' + instanceId + '/attachment/' + attachment}
-                        download={attachmentName}>
-                        {attachment}
-                    </a>
-                </Table.Cell>
-            </Table.Row>
-        );
-    };
+const renderTableHeader = () => {
+    return (
+        <Table.Row>
+            <Table.HeaderCell collapsing={true}>Attached File(s)</Table.HeaderCell>
+        </Table.Row>
+    );
+};
 
-    render() {
-        const { data } = this.props;
+const renderTableRow = (instanceId: ConcordId, attachment: string) => {
+    const attachmentName = attachment.substring(attachment.lastIndexOf('/'));
+    return (
+        <Table.Row key={attachment}>
+            <Table.Cell>
+                <a
+                    href={'/api/v1/process/' + instanceId + '/attachment/' + attachment}
+                    download={attachmentName}>
+                    {attachment}
+                </a>
+            </Table.Cell>
+        </Table.Row>
+    );
+};
 
+const renderElements = (instanceId: ConcordId, data?: string[]) => {
+    if (!data) {
         return (
-            <Table celled={true}>
-                <Table.Header>{this.renderTableHeader()}</Table.Header>
-                <Table.Body>
-                    {data.length > 0 && data.map((p) => this.renderTableRow(p))}
-                    {data.length === 0 && (
-                        <tr style={{ fontWeight: 'bold' }}>
-                            <Table.Cell colSpan={3}>No data available</Table.Cell>
-                        </tr>
-                    )}
-                </Table.Body>
-            </Table>
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={3}>-</Table.Cell>
+            </tr>
         );
     }
-}
+
+    if (data.length === 0) {
+        return (
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={3}>No data available</Table.Cell>
+            </tr>
+        );
+    }
+
+    return data.map((p) => renderTableRow(instanceId, p));
+};
 
 export default ProcessAttachmentsList;

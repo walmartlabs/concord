@@ -1,0 +1,249 @@
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2019 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+import * as React from 'react';
+import {
+    canBeCancelled,
+    hasState,
+    isFinal,
+    ProcessEntry,
+    ProcessStatus
+} from '../../../api/process';
+import { Breadcrumb, Button, Dropdown, Icon, Label, Menu, MenuItem } from 'semantic-ui-react';
+import { Link } from 'react-router-dom';
+import { ProcessLastErrorModal, WithCopyToClipboard } from '../../molecules';
+
+import './styles.css';
+import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
+import { CancelProcessPopup, DisableProcessPopup } from '../index';
+import { ConcordId } from '../../../api/common';
+
+interface ExternalProps {
+    loading: boolean;
+    instanceId: ConcordId;
+    process?: ProcessEntry;
+    refresh: () => void;
+}
+
+const ProcessToolbar = (props: ExternalProps) => {
+    const { loading, refresh, process, instanceId } = props;
+
+    return (
+        <Menu tabular={false} secondary={true} borderless={true} className={'ProcessMainToolbar'}>
+            <MenuItem>
+                <Icon name="refresh" loading={loading} size={'large'} onClick={refresh} />
+            </MenuItem>
+
+            <MenuItem>{renderBreadcrumbs(instanceId, process)}</MenuItem>
+
+            <MenuItem>{renderProcessStatus(process)}</MenuItem>
+
+            <MenuItem position={'right'}>{renderProcessMainActions(refresh, process)}</MenuItem>
+
+            <MenuItem>{renderProcessSecondaryActions(refresh, process)}</MenuItem>
+        </Menu>
+    );
+};
+
+const renderBreadcrumbs = (instanceId: ConcordId, process?: ProcessEntry) => {
+    if (!process) {
+        return (
+            <Breadcrumb size="big">
+                <Breadcrumb.Section active={true}>{instanceId}</Breadcrumb.Section>
+            </Breadcrumb>
+        );
+    }
+
+    if (!process.orgName) {
+        return (
+            <Breadcrumb size="big">
+                <Breadcrumb.Section>
+                    <Link to={`/process`}>Processes</Link>
+                </Breadcrumb.Section>
+                <Breadcrumb.Divider />
+                <Breadcrumb.Section active={true}>
+                    <WithCopyToClipboard value={process.instanceId}>
+                        {process.instanceId}
+                    </WithCopyToClipboard>
+                </Breadcrumb.Section>
+            </Breadcrumb>
+        );
+    }
+
+    return (
+        <Breadcrumb size="big">
+            <Breadcrumb.Section>
+                <Link to={`/org/${process.orgName}`}>{process.orgName}</Link>
+            </Breadcrumb.Section>
+            <Breadcrumb.Divider />
+            <Breadcrumb.Section>
+                <Link to={`/org/${process.orgName}/project/${process.projectName}`}>
+                    {process.projectName}
+                </Link>
+            </Breadcrumb.Section>
+            <Breadcrumb.Divider />
+            <Breadcrumb.Section active={true}>
+                <WithCopyToClipboard value={process.instanceId}>
+                    {process.instanceId}
+                </WithCopyToClipboard>
+            </Breadcrumb.Section>
+        </Breadcrumb>
+    );
+};
+
+const renderProcessStatus = (process?: ProcessEntry) => {
+    if (!process) {
+        return;
+    }
+
+    return (
+        <>
+            <Label color={getStatusColor(process.status)}>{process.status}</Label>
+            {process.status === ProcessStatus.FAILED && (
+                <>
+                    &nbsp;
+                    <ProcessLastErrorModal processMeta={process.meta} />
+                </>
+            )}
+        </>
+    );
+};
+
+const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) => {
+    if (!process) {
+        return (
+            <Button.Group>
+                <Button
+                    attached={false}
+                    negative={true}
+                    icon="delete"
+                    content="Cancel"
+                    disabled={true}
+                    size={'small'}
+                />
+            </Button.Group>
+        );
+    }
+
+    const renderCancelProcessTrigger = (onClick: () => void) => {
+        return (
+            <Button
+                attached={false}
+                negative={true}
+                icon="delete"
+                content="Cancel"
+                disabled={!canBeCancelled(process.status)}
+                size={'small'}
+                onClick={onClick}
+            />
+        );
+    };
+
+    return (
+        <Button.Group>
+            <CancelProcessPopup
+                instanceId={process.instanceId}
+                refresh={refresh}
+                trigger={renderCancelProcessTrigger}
+            />
+        </Button.Group>
+    );
+};
+
+const renderProcessSecondaryActions = (refresh: () => void, process?: ProcessEntry) => {
+    if (!process) {
+        return (
+            <Dropdown
+                icon="ellipsis vertical"
+                pointing={'top right'}
+                error={false}
+                disabled={true}
+            />
+        );
+    }
+
+    const { instanceId, status, disabled } = process;
+
+    const renderDisableProcessTrigger = (onClick: () => void) => {
+        return (
+            <Dropdown.Item onClick={onClick}>
+                {disableIcon(disabled)}
+                <span className="text">{disabled ? 'Enable' : 'Disable'}</span>
+            </Dropdown.Item>
+        );
+    };
+
+    const { extraProcessMenuLinks } = window.concord;
+
+    const getIcon = ({ props }: { props: any }) => <Icon color={props.color} name={props.icon} />;
+
+    return (
+        <Dropdown icon="ellipsis vertical" pointing={'top right'} error={false}>
+            <Dropdown.Menu>
+                {isFinal(status) && (
+                    <DisableProcessPopup
+                        instanceId={instanceId}
+                        disabled={!disabled}
+                        refresh={refresh}
+                        trigger={renderDisableProcessTrigger}
+                    />
+                )}
+
+                {hasState(status) && (
+                    <Dropdown.Item
+                        href={`/api/v1/process/${instanceId}/state/snapshot`}
+                        download={`Concord_${status}_${instanceId}.zip`}>
+                        <Icon name="download" color={'blue'} />
+                        <span className="text">State</span>
+                    </Dropdown.Item>
+                )}
+
+                {extraProcessMenuLinks &&
+                    extraProcessMenuLinks.map((x, idx) => (
+                        <Dropdown.Item
+                            key={idx}
+                            text={x.label}
+                            onClick={() =>
+                                window.open(`${x.url}?arguments.instanceId=${instanceId}`, '_blank')
+                            }>
+                            {getIcon({ props: x })}
+                            <span className="text">{x.label}</span>
+                        </Dropdown.Item>
+                    ))}
+            </Dropdown.Menu>
+        </Dropdown>
+    );
+};
+
+const disableIcon = (disable: boolean) => {
+    return <Icon name="power" color={disable ? 'green' : 'grey'} />;
+};
+
+const getStatusColor = (status: string): SemanticCOLORS => {
+    switch (status) {
+        case ProcessStatus.FINISHED:
+            return 'green';
+        case ProcessStatus.FAILED:
+            return 'red';
+        default:
+            return 'grey';
+    }
+};
+
+export default ProcessToolbar;

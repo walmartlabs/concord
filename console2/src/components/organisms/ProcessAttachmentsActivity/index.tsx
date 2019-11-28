@@ -22,64 +22,44 @@ import * as React from 'react';
 
 import { list as apiList } from '../../../api/process/attachment';
 import { useState } from 'react';
-import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
-import { ProcessAttachmentsList, ProcessToolbar } from '../../molecules';
-import { useRef } from 'react';
+import { isFinal, ProcessStatus } from '../../../api/process';
+import { ProcessAttachmentsList } from '../../molecules';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback } from 'react';
 import { usePolling } from '../../../api/usePolling';
+import { ConcordId } from '../../../api/common';
 
 interface ExternalProps {
-    process: ProcessEntry;
+    instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    processStatus?: ProcessStatus;
+    forceRefresh: boolean;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 
-const ProcessAttachmentsActivity = (props: ExternalProps) => {
-    const stickyRef = useRef(null);
-
-    const [process, setProcess] = useState<ProcessEntry>(props.process);
-    const [data, setData] = useState<string[]>([]);
+const ProcessAttachmentsActivity = ({
+    instanceId,
+    processStatus,
+    loadingHandler,
+    forceRefresh
+}: ExternalProps) => {
+    const [data, setData] = useState<string[]>();
 
     const fetchData = useCallback(async () => {
-        const process = await apiGet(props.process.instanceId, ['history']);
-        setProcess(process);
-
-        const data = await apiList(props.process.instanceId);
+        const data = await apiList(instanceId);
         setData(makeAttachmentsList(data));
 
-        return !isFinal(process.status);
-    }, [props.process.instanceId]);
+        return !isFinal(processStatus);
+    }, [instanceId, processStatus]);
 
-    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     if (error) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                />
-
-                <RequestErrorActivity error={error} />
-            </div>
-        );
+        return <RequestErrorActivity error={error} />;
     }
 
-    return (
-        <div ref={stickyRef}>
-            <ProcessToolbar
-                stickyRef={stickyRef}
-                loading={loading}
-                refresh={refresh}
-                process={process}
-            />
-
-            <ProcessAttachmentsList instanceId={props.process.instanceId} data={data} />
-        </div>
-    );
+    return <ProcessAttachmentsList instanceId={instanceId} data={data} />;
 };
 
 const makeAttachmentsList = (data: string[]): string[] => {

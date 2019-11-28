@@ -19,63 +19,40 @@
  */
 
 import * as React from 'react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { ProcessHistoryEntry, ProcessEntry, get as apiGet, isFinal } from '../../../api/process';
-import { ProcessHistoryList, ProcessToolbar } from '../../molecules';
+import { ProcessHistoryList } from '../../molecules';
 import { useCallback } from 'react';
 import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
+import { ConcordId } from '../../../api/common';
 
 interface ExternalProps {
-    process: ProcessEntry;
+    instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    forceRefresh: boolean;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 
-const ProcessHistoryActivity = (props: ExternalProps) => {
-    const stickyRef = useRef(null);
-
-    const [process, setProcess] = useState<ProcessEntry>(props.process);
-    const [data, setData] = useState<ProcessHistoryEntry[]>(props.process.statusHistory || []);
+const ProcessHistoryActivity = ({ instanceId, loadingHandler, forceRefresh }: ExternalProps) => {
+    const [data, setData] = useState<ProcessHistoryEntry[]>();
 
     const fetchData = useCallback(async () => {
-        const process = await apiGet(props.process.instanceId, ['history']);
-        setProcess(process);
+        const process = await apiGet(instanceId, ['history']);
 
         setData(makeProcessHistoryList(process));
 
         return !isFinal(process.status);
-    }, [props.process.instanceId]);
+    }, [instanceId]);
 
-    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     if (error) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                />
-
-                <RequestErrorActivity error={error} />
-            </div>
-        );
+        return <RequestErrorActivity error={error} />;
     }
 
-    return (
-        <div ref={stickyRef}>
-            <ProcessToolbar
-                stickyRef={stickyRef}
-                loading={loading}
-                refresh={refresh}
-                process={process}
-            />
-
-            <ProcessHistoryList data={data} />
-        </div>
-    );
+    return <ProcessHistoryList data={data} />;
 };
 
 const makeProcessHistoryList = (process: ProcessEntry): ProcessHistoryEntry[] => {

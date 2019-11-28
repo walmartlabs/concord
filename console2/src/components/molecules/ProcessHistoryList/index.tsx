@@ -25,69 +25,73 @@ import { isFinal, ProcessHistoryEntry } from '../../../api/process';
 import { formatDuration } from '../../../utils';
 import { LocalTimestamp } from '../index';
 
-interface Props {
-    data: ProcessHistoryEntry[];
+interface ExternalProps {
+    data?: ProcessHistoryEntry[];
 }
 
-class ProcessHistoryList extends React.PureComponent<Props> {
-    renderTableHeader = () => {
+const renderTableHeader = () => {
+    return (
+        <Table.Row>
+            <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
+            <Table.HeaderCell collapsing={true}>Change Time </Table.HeaderCell>
+            <Table.HeaderCell collapsing={true}>Elapsed Time </Table.HeaderCell>
+        </Table.Row>
+    );
+};
+
+const renderTableRow = (data: ProcessHistoryEntry[], row: ProcessHistoryEntry, idx: number) => {
+    let elapsedTime: string | undefined;
+
+    if (idx === 0 && !isFinal(row.status)) {
+        const startTime: Date = new Date(data[idx].changeDate);
+        const currentTime: Date = new Date();
+        const duration = currentTime.getTime() - startTime.getTime();
+        elapsedTime = formatDuration(duration) + ' (so far)';
+    } else if (idx > 0) {
+        const endTime: Date = new Date(row.changeDate);
+        const startTime: Date = new Date(data[idx - 1].changeDate);
+        const duration = startTime.getTime() - endTime.getTime();
+        elapsedTime = formatDuration(duration);
+    }
+
+    return (
+        <Table.Row key={idx}>
+            <Table.Cell>{row.status}</Table.Cell>
+            <Table.Cell>
+                <LocalTimestamp value={row.changeDate} />
+            </Table.Cell>
+            <Table.Cell>{elapsedTime}</Table.Cell>
+        </Table.Row>
+    );
+};
+
+const renderElements = (data?: ProcessHistoryEntry[]) => {
+    if (!data) {
         return (
-            <Table.Row>
-                <Table.HeaderCell collapsing={true}>Status</Table.HeaderCell>
-                <Table.HeaderCell collapsing={true}>Change Time </Table.HeaderCell>
-                <Table.HeaderCell collapsing={true}>Elapsed Time </Table.HeaderCell>
-            </Table.Row>
-        );
-    };
-
-    renderTableRow = (row: ProcessHistoryEntry, idx: number) => {
-        const { data } = this.props;
-        if (!data) {
-            return;
-        }
-
-        let elapsedTime: string | undefined;
-
-        if (idx === 0 && !isFinal(row.status)) {
-            const startTime: Date = new Date(data[idx].changeDate);
-            const currentTime: Date = new Date();
-            const duration = currentTime.getTime() - startTime.getTime();
-            elapsedTime = formatDuration(duration) + ' (so far)';
-        } else if (idx > 0) {
-            const endTime: Date = new Date(row.changeDate);
-            const startTime: Date = new Date(data[idx - 1].changeDate);
-            const duration = startTime.getTime() - endTime.getTime();
-            elapsedTime = formatDuration(duration);
-        }
-
-        return (
-            <Table.Row key={idx}>
-                <Table.Cell>{row.status}</Table.Cell>
-                <Table.Cell>
-                    <LocalTimestamp value={row.changeDate} />
-                </Table.Cell>
-                <Table.Cell>{elapsedTime}</Table.Cell>
-            </Table.Row>
-        );
-    };
-
-    render() {
-        const { data } = this.props;
-
-        return (
-            <Table celled={true}>
-                <Table.Header>{this.renderTableHeader()}</Table.Header>
-                <Table.Body>
-                    {data.length > 0 && data.map((p, idx) => this.renderTableRow(p, idx))}
-                    {data.length === 0 && (
-                        <tr style={{ fontWeight: 'bold' }}>
-                            <Table.Cell colSpan={3}>No data available</Table.Cell>
-                        </tr>
-                    )}
-                </Table.Body>
-            </Table>
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={3}>&nbsp;</Table.Cell>
+            </tr>
         );
     }
-}
+
+    if (data.length === 0) {
+        return (
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={3}>No data available</Table.Cell>
+            </tr>
+        );
+    }
+
+    return data.map((p, idx) => renderTableRow(data, p, idx));
+};
+
+const ProcessHistoryList = ({ data }: ExternalProps) => {
+    return (
+        <Table celled={true} className={data ? '' : 'loading'}>
+            <Table.Header>{renderTableHeader()}</Table.Header>
+            <Table.Body>{renderElements(data)}</Table.Body>
+        </Table>
+    );
+};
 
 export default ProcessHistoryList;

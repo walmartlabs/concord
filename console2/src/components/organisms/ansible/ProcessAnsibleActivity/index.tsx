@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import { useCallback, useRef, useState } from 'react';
-import { Divider, Progress, Segment, SemanticCOLORS } from 'semantic-ui-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Divider, Progress, Segment } from 'semantic-ui-react';
 
 import {
     AnsibleEvent,
@@ -38,12 +38,7 @@ import {
     TaskInfo
 } from '../../../../api/process/ansible';
 
-import {
-    AnsibleHostList,
-    AnsibleTaskList,
-    AnsibleViewToggle,
-    ProcessToolbar
-} from '../../../molecules';
+import { AnsibleHostList, AnsibleTaskList } from '../../../molecules';
 import RequestErrorActivity from '../../RequestErrorActivity';
 import { PlayInfoEntry, TaskInfoEntry } from './types';
 import TaskProgressLegend from './TaskProgressLegend';
@@ -54,40 +49,42 @@ import { ConcordId } from '../../../../api/common';
 
 import './styles.css';
 import TaskStats from './TaskStats';
-import PlaybookChooser from './PlaybookChooser';
+import PlaybookChooser, { PlaybookEntry } from './PlaybookChooser';
 import PlaybookStats, { Blocks } from './PlaybookStats';
 import { ProcessEventEntry } from '../../../../api/process/event';
 import { addMinutes, isBefore, parseISO as parseDate } from 'date-fns';
 import { formatTimestamp } from '../../../../utils';
 
 interface ExternalProps {
-    process: ProcessEntry;
-    viewSwitchHandler: (checked: boolean) => void;
+    instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    forceRefresh: boolean;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 const ANSIBLE_HOST_LIMIT = 10;
 
 const ProcessAnsibleActivity = (props: ExternalProps) => {
-    const stickyRef = useRef(null);
+    const { instanceId, loadingHandler, forceRefresh } = props;
 
-    const [process, setProcess] = useState<ProcessEntry>(props.process);
-    const [playbooks, setPlaybooks] = useState<PlaybookInfo[]>([]);
+    const [process, setProcess] = useState<ProcessEntry>();
+    const [playbooks, setPlaybooks] = useState<PlaybookInfo[]>();
+    const [playbookOptions, setPlaybookOptions] = useState<PlaybookEntry[]>();
     const [selectedPlaybookId, setSelectedPlaybookId] = useState<ConcordId>();
     const [selectedBlock, setSelectedBlock] = useState<Blocks>();
-    const [ansibleHosts, setAnsibleHosts] = useState<AnsibleHost[]>([]);
+    const [ansibleHosts, setAnsibleHosts] = useState<AnsibleHost[]>();
     const [ansibleHostGroups, setAnsibleHostGroups] = useState<string[]>([]);
     const [ansibleHostsNext, setAnsibleHostsNext] = useState<number>();
     const [ansibleHostsPrev, setAnsibleHostsPrev] = useState<number>();
     const [ansibleHostsFilter, setAnsibleHostsFilter] = useState();
-    const [failedAnsibleHosts, setFailedAnsibleHosts] = useState<AnsibleHost[]>([]);
+    const [failedAnsibleHosts, setFailedAnsibleHosts] = useState<AnsibleHost[]>();
     const [failedAnsibleHostGroups, setFailedAnsibleHostGroups] = useState<string[]>([]);
     const [failedAnsibleHostsNext, setFailedAnsibleHostsNext] = useState<number>();
     const [failedAnsibleHostsPrev, setFailedAnsibleHostsPrev] = useState<number>();
     const [failedAnsibleHostsFilter, setFailedAnsibleHostsFilter] = useState();
-    const [failedTasks, setFailedTasks] = useState<ProcessEventEntry<AnsibleEvent>[]>([]);
-    const [playStats, setPlayStats] = useState<PlayInfoEntry[]>([]);
-    const [taskStats, setTaskStats] = useState<TaskInfoEntry[]>([]);
+    const [failedTasks, setFailedTasks] = useState<ProcessEventEntry<AnsibleEvent>[]>();
+    const [playStats, setPlayStats] = useState<PlayInfoEntry[]>();
+    const [taskStats, setTaskStats] = useState<TaskInfoEntry[]>();
 
     const [selectedPlayId, setSelectedPlayId] = useState<ConcordId>();
 
@@ -102,11 +99,12 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
     }, []);
 
     const fetchData = useCallback(async () => {
-        const process = await apiGet(props.process.instanceId, []);
+        const process = await apiGet(instanceId, []);
         setProcess(process);
 
-        const playbooks = await apiListAnsiblePlaybooks(props.process.instanceId);
+        const playbooks = await apiListAnsiblePlaybooks(instanceId);
         setPlaybooks(playbooks);
+        setPlaybookOptions((prevState) => buildPlaybookOptions(playbooks, prevState));
 
         if (playbooks.length > 0 && selectedBlock !== undefined) {
             const playbookId = selectedPlaybookId || playbooks[0].id;
@@ -114,7 +112,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
             switch (selectedBlock) {
                 case Blocks.hosts: {
                     const newFilter = { ...ansibleHostsFilter, playbookId };
-                    const hosts = await fetchAnsibleHosts(props.process.instanceId, newFilter);
+                    const hosts = await fetchAnsibleHosts(instanceId, newFilter);
                     setAnsibleHosts(hosts.items);
                     setAnsibleHostGroups(hosts.hostGroups);
                     setAnsibleHostsNext(hosts.next);
@@ -127,7 +125,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                         statuses: [AnsibleStatus.FAILED, AnsibleStatus.UNREACHABLE],
                         playbookId
                     };
-                    const hosts = await fetchAnsibleHosts(props.process.instanceId, newFilter);
+                    const hosts = await fetchAnsibleHosts(instanceId, newFilter);
                     setFailedAnsibleHosts(hosts.items);
                     setFailedAnsibleHostGroups(hosts.hostGroups);
                     setFailedAnsibleHostsNext(hosts.next);
@@ -135,21 +133,18 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     break;
                 }
                 case Blocks.plays: {
-                    const plays = await apiListAnsiblePlays(props.process.instanceId, playbookId);
+                    const plays = await apiListAnsiblePlays(instanceId, playbookId);
                     setPlayStats(makePlayStats(plays, playbook.status));
 
                     if (selectedPlayId !== undefined) {
-                        const tasks = await apiListAnsibleTaskStats(
-                            props.process.instanceId,
-                            selectedPlayId
-                        );
+                        const tasks = await apiListAnsibleTaskStats(instanceId, selectedPlayId);
                         setTaskStats(makeTaskStats(tasks));
                     }
                     break;
                 }
                 case Blocks.failedTasks: {
                     const tasks = await apiListAnsibleTasks(
-                        props.process.instanceId,
+                        instanceId,
                         playbookId,
                         undefined,
                         undefined,
@@ -176,7 +171,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
 
         return !isFinal(process.status) || changedRecently;
     }, [
-        props.process.instanceId,
+        instanceId,
         fetchAnsibleHosts,
         selectedPlaybookId,
         selectedBlock,
@@ -189,121 +184,65 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         setSelectedPlaybookId(playbookId);
         setSelectedBlock(undefined);
         setSelectedPlayId(undefined);
-        setTaskStats([]);
+        setTaskStats(undefined);
     }, []);
 
     const onBlockChangeHandler = useCallback((block: Blocks) => {
         setSelectedBlock(block);
         setSelectedPlayId(undefined);
-        setTaskStats([]);
+        setTaskStats(undefined);
     }, []);
 
     const playClickHandler = useCallback((playId: ConcordId) => {
         setSelectedPlayId(playId);
     }, []);
 
-    const viewSwitchHandler = props.viewSwitchHandler;
-    const switchHandler = useCallback(
-        (ev: any, { checked }: any) => {
-            viewSwitchHandler(checked === true);
-        },
-        [viewSwitchHandler]
-    );
+    useEffect(() => {
+        setTaskStats(undefined);
+    }, [selectedPlayId]);
 
-    const createToolbarActions = useCallback(() => {
-        return <AnsibleViewToggle checked={true} onChange={switchHandler} />;
-    }, [switchHandler]);
-
-    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     if (error) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                    additionalActions={createToolbarActions()}
-                />
+        return <RequestErrorActivity error={error} />;
+    }
 
-                <RequestErrorActivity error={error} />
-            </div>
+    if (playbooks && playbooks.length === 0) {
+        return (
+            <Segment basic={true} style={{ padding: 0 }}>
+                <div style={{ fontWeight: 'bold' }}>No data available</div>
+            </Segment>
         );
     }
 
-    if (playbooks.length === 0) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                    additionalActions={createToolbarActions()}
-                />
-
-                <Divider content="Ansible Stats" horizontal={true} />
-
-                <Segment basic={true} style={{ padding: 0 }}>
-                    <div style={{ fontWeight: 'bold' }}>No data available</div>
-                </Segment>
-            </div>
-        );
-    }
-
-    const playbookOptions = playbooks
-        .sort((a, b) => (a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0))
-        .map((s) => {
-            return { value: s.id, text: s.name + ' @ ' + formatTimestamp(s.startedAt) };
-        });
-    const selectedPlaybook =
-        selectedPlaybookId === undefined
-            ? playbooks[0]
-            : playbooks.find((p) => p.id === selectedPlaybookId) || playbooks[0];
-    const playbookProgress = selectedPlaybook.progress;
+    const selectedPlaybook = findPlaybookOrFirst(selectedPlaybookId, playbooks);
+    const playbookProgress = selectedPlaybook ? selectedPlaybook.progress : -1;
 
     let totalTaskWork = 0;
-    if (selectedPlayId !== undefined) {
+    if (selectedPlayId !== undefined && playStats !== undefined) {
         const p = playStats.find((p) => p.id === selectedPlayId);
         if (p !== undefined) {
             totalTaskWork = p.hostsCount;
         }
     }
 
-    const playbookStatus = selectedPlaybook.status;
-    let statusColor: SemanticCOLORS | undefined = undefined;
-    if (playbookStatus === 'OK') {
-        statusColor = 'green';
-    } else if (playbookStatus === 'FAILED') {
-        statusColor = 'red';
-    }
+    const statusColor = getStatusColor(selectedPlaybook && selectedPlaybook.status);
 
     return (
-        <div ref={stickyRef}>
-            <ProcessToolbar
-                stickyRef={stickyRef}
-                loading={loading}
-                refresh={refresh}
-                process={process}
-                additionalActions={createToolbarActions()}
-            />
-
-            <Divider content="Ansible Stats" horizontal={true} />
-
+        <>
             <Segment basic={true} style={{ padding: 0 }}>
                 <PlaybookChooser
-                    currentValue={selectedPlaybook.id}
+                    currentValue={selectedPlaybook ? selectedPlaybook.id : undefined}
                     options={playbookOptions}
                     onPlaybookChange={onPlaybookChangeHandler}
                 />
             </Segment>
 
             <PlaybookStats
-                hostsCount={selectedPlaybook.hostsCount}
-                failedHostsCount={selectedPlaybook.failedHostsCount}
-                playsCount={selectedPlaybook.playsCount}
-                failedTasksCount={selectedPlaybook.failedTasksCount}
+                hostsCount={selectedPlaybook ? selectedPlaybook.hostsCount : undefined}
+                failedHostsCount={selectedPlaybook ? selectedPlaybook.failedHostsCount : undefined}
+                playsCount={selectedPlaybook ? selectedPlaybook.playsCount : undefined}
+                failedTasksCount={selectedPlaybook ? selectedPlaybook.failedTasksCount : undefined}
                 selectedBlock={selectedBlock}
                 onBlockChange={onBlockChangeHandler}
             />
@@ -313,7 +252,9 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     size={'small'}
                     percent={playbookProgress}
                     progress={'percent'}
-                    active={!isFinal(process.status) && playbookProgress < 100}
+                    active={
+                        !isFinal(process ? process.status : undefined) && playbookProgress < 100
+                    }
                     color={statusColor}
                 />
             </Segment>
@@ -323,7 +264,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     <Divider content="Host Stats" horizontal={true} />
 
                     <AnsibleHostList
-                        instanceId={props.process.instanceId}
+                        instanceId={instanceId}
                         hosts={ansibleHosts}
                         hostGroups={ansibleHostGroups}
                         prev={ansibleHostsPrev}
@@ -338,7 +279,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     <Divider content="Failed Host Stats" horizontal={true} />
 
                     <AnsibleHostList
-                        instanceId={props.process.instanceId}
+                        instanceId={instanceId}
                         hosts={failedAnsibleHosts}
                         hostGroups={failedAnsibleHostGroups}
                         prev={failedAnsibleHostsPrev}
@@ -348,24 +289,24 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                 </>
             )}
 
-            {selectedBlock === Blocks.plays && (
+            {selectedBlock === Blocks.plays && selectedPlaybook && (
                 <>
                     <Divider content="Play Stats" horizontal={true} />
 
                     <PlayInfoList
                         stats={playStats}
                         playClickAction={playClickHandler}
-                        playbookStatus={playbookStatus}
+                        playbookStatus={selectedPlaybook.status}
                         selectedPlayId={selectedPlayId}
                     />
                 </>
             )}
 
-            {selectedBlock === Blocks.plays && taskStats.length > 0 && (
+            {selectedBlock === Blocks.plays && selectedPlayId && (
                 <>
                     <Divider content="Task Stats" horizontal={true} />
 
-                    <TaskProgressLegend />
+                    <TaskProgressLegend loading={taskStats === undefined} />
 
                     <TaskStats totalTaskWork={totalTaskWork} tasks={taskStats} />
                 </>
@@ -377,7 +318,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     <AnsibleTaskList showHosts={true} tasks={failedTasks} hidePlaybook={true} />
                 </>
             )}
-        </div>
+        </>
     );
 };
 
@@ -434,6 +375,38 @@ const makeTaskStats = (tasks: TaskInfo[]): TaskInfoEntry[] => {
             }
         };
     });
+};
+
+const getStatusColor = (status?: string) => {
+    if (status === 'OK') {
+        return 'green';
+    } else if (status === 'FAILED') {
+        return 'red';
+    }
+
+    return undefined;
+};
+
+const findPlaybookOrFirst = (id?: ConcordId, playbooks?: PlaybookInfo[]) => {
+    if (playbooks === undefined || playbooks.length === 0) {
+        return undefined;
+    }
+
+    return id === undefined ? playbooks[0] : playbooks.find((p) => p.id === id) || playbooks[0];
+};
+
+const buildPlaybookOptions = (playbooks: PlaybookInfo[], oldValues?: PlaybookEntry[]) => {
+    const result = playbooks
+        .sort((a, b) => (a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0))
+        .map((s) => {
+            return { value: s.id, text: s.name + ' @ ' + formatTimestamp(s.startedAt) };
+        });
+
+    if (!oldValues || oldValues.length === playbooks.length) {
+        return result;
+    }
+
+    return oldValues;
 };
 
 export default ProcessAnsibleActivity;

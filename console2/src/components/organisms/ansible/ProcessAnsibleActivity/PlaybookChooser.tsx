@@ -21,6 +21,7 @@ import * as React from 'react';
 import { Dropdown, Table } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../../api/common';
+import { memo } from 'react';
 
 export interface PlaybookEntry {
     value: ConcordId;
@@ -28,25 +29,29 @@ export interface PlaybookEntry {
 }
 
 export interface ExternalProps {
-    currentValue: ConcordId;
-    options: PlaybookEntry[];
+    currentValue?: ConcordId;
+    options?: PlaybookEntry[];
     onPlaybookChange: (flowCorrelationId: ConcordId) => void;
 }
 
-const PlaybookChooser = ({ currentValue, options, onPlaybookChange }: ExternalProps) => {
+const PlaybookChooser = memo(({ currentValue, options, onPlaybookChange }: ExternalProps) => {
     return (
         <Table basic={'very'} compact={true} singleLine={true}>
             <Table.Body>
                 <Table.Row>
-                    <Table.Cell style={{ fontWeight: 'bold' }} width={1}>
+                    <Table.Cell
+                        style={{ fontWeight: 'bold' }}
+                        width={1}
+                        className={currentValue ? '' : 'loading'}>
                         Playbook:
                     </Table.Cell>
                     <Table.Cell width={15}>
                         <Dropdown
-                            selection={true}
+                            selection={options !== undefined ? true : undefined}
                             value={currentValue}
                             options={options}
                             onChange={(ev, data) => onPlaybookChange(data.value as ConcordId)}
+                            disabled={currentValue === undefined}
                             style={{ width: '100%' }}
                         />
                     </Table.Cell>
@@ -54,6 +59,6 @@ const PlaybookChooser = ({ currentValue, options, onPlaybookChange }: ExternalPr
             </Table.Body>
         </Table>
     );
-};
+});
 
 export default PlaybookChooser;

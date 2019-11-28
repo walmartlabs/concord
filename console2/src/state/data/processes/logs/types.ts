@@ -18,34 +18,7 @@
  * =====
  */
 
-import { Action } from 'redux';
-import { ConcordId, RequestError } from '../../../../api/common';
-import { ProcessEntry } from '../../../../api/process';
-import { LogChunk, LogRange } from '../../../../api/process/log';
-import { RequestState } from '../../common';
-import { LogProcessorOptions } from './processors';
-
-export interface StartProcessLogPolling extends Action {
-    instanceId: ConcordId;
-    opts: LogProcessorOptions;
-    range: LogRange;
-    reset: boolean;
-}
-
-export interface LoadWholeProcessLog extends Action {
-    instanceId: ConcordId;
-    opts: LogProcessorOptions;
-}
-
-export interface GetProcessLogResponse extends Action {
-    process?: ProcessEntry;
-    error?: RequestError;
-    chunk?: LogChunk;
-    overwrite?: boolean;
-    opts?: LogProcessorOptions;
-}
-
-export type GetProcessLogState = RequestState<LogChunk>;
+import { ConcordId } from '../../../../api/common';
 
 export enum LogSegmentType {
     DATA,
@@ -61,13 +34,4 @@ export interface TagData {
 export interface LogSegment {
     data: string | TagData;
     type: LogSegmentType;
-}
-
-export interface State {
-    process: ProcessEntry | null;
-    data: LogSegment[];
-    length: number;
-    completed: boolean;
-
-    getLog: GetProcessLogState;
 }

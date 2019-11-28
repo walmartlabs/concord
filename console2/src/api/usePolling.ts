@@ -22,19 +22,17 @@ import { RequestError } from './common';
 
 export const usePolling = (
     request: () => Promise<boolean>,
-    interval: number
-): [boolean, (RequestError | undefined), () => void] => {
+    interval: number,
+    loadingHandler: (inc: number) => void,
+    refresh: boolean
+): RequestError | undefined => {
     const poll = useRef<number | undefined>(undefined);
     const currentTimeoutChainId = useRef(0);
-    const refreshRef = useRef(() => toggleRefresh((v) => !v));
-
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<RequestError>();
-    const [_refresh, toggleRefresh] = useState(false);
 
     useEffect(() => {
         const fetchData = async (timeoutChainId: number) => {
-            setLoading(true);
+            loadingHandler(1);
 
             let result = false;
             try {
@@ -51,14 +49,14 @@ export const usePolling = (
                     stopPolling();
                 }
 
-                setLoading(false);
+                loadingHandler(-1);
             }
         };
 
         fetchData(currentTimeoutChainId.current);
 
         return () => stopPolling();
-    }, [request, interval, _refresh]);
+    }, [request, interval, refresh, loadingHandler]);
 
     const stopPolling = () => {
         if (poll.current) {
@@ -68,5 +66,5 @@ export const usePolling = (
         currentTimeoutChainId.current += 1;
     };
 
-    return [loading, error, refreshRef.current];
+    return error;
 };

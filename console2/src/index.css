@@ -47,3 +47,7 @@ body {
 .ui.fullscreen.modal {
   left: auto !important;
 }
+
+.loading {
+  opacity: 0.5;
+}

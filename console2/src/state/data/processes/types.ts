@@ -30,8 +30,6 @@ import {
 } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as ChildrenState } from './children/types';
-import { State as EventsState } from './events/types';
-import { State as LogState } from './logs/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
@@ -76,15 +74,6 @@ export interface RestoreProcessRequest extends Action {
     checkpointId: ConcordKey;
 }
 
-export interface CancelProcessRequest extends Action {
-    instanceId: ConcordId;
-}
-
-export interface DisableProcessRequest extends Action {
-    instanceId: ConcordId;
-    disabled: boolean;
-}
-
 export interface CancelBulkProcessRequest extends Action {
     instanceIds: ConcordId[];
 }
@@ -100,8 +89,6 @@ export interface Processes {
 }
 
 export type StartProcessState = RequestState<StartProcessResponse>;
-export type DisableProcessState = RequestState<boolean>;
-export type CancelProcessState = RequestState<boolean>;
 export type RestoreProcessState = RequestState<RestoreProcessResponse>;
 export type CancelBullkProcessState = RequestState<boolean>;
 
@@ -117,7 +104,5 @@ export interface State {
     cancelBulkProcess: CancelBullkProcessState;
     restoreProcess: RestoreProcessState;
 
-    log: LogState;
     children: ChildrenState;
-    events: EventsState;
 }
