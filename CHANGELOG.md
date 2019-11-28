@@ -58,6 +58,9 @@ artifacts;
 
 ### Breaking
 
+- concord-server: the `/api/v1/process/{id}/kv/{key}/string` endpoint
+now returns `Content-Type: text/plain` instead of `application/json`.
+This fixes an issue with non JSON strings;
 - concord-server: make the v2 the default version for `github`
 triggers. The existing projects must update their `github` trigger
 definitions or set the default version in the server configuration

@@ -35,6 +35,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
@@ -46,19 +47,19 @@ public class KvServiceIT extends AbstractServerIT {
     public void testKv() throws Exception {
         String testKey = "key_" + randomString();
 
-        byte[] ab = test("main", testKey);
+        byte[] ab = test("kvInc", "main", testKey);
         assertLog(".*x=[0-9]+.*", ab);
         assertLog(".*abc123.*", ab);
         assertLog(".*Hello, world.*", ab);
 
         // ---
 
-        ab = test("verify", testKey);
+        ab = test("kvInc", "verify", testKey);
         assertLog(".*Hello again, world.*", ab);
 
         // ---
 
-        ab = test("verify2", testKey);
+        ab = test("kvInc", "verify2", testKey);
         assertLog(".*xyz.*", ab);
     }
 
@@ -66,7 +67,7 @@ public class KvServiceIT extends AbstractServerIT {
     public void testKvLong() throws Exception {
         String testKey = "key_" + randomString();
 
-        byte[] ab = test("testLong", testKey);
+        byte[] ab = test("kvInc", "testLong", testKey);
         assertLog(".*x=1.*", ab);
         assertLog(".*y=1.*", ab);
         assertLog(".*a=2.*", ab);
@@ -75,9 +76,18 @@ public class KvServiceIT extends AbstractServerIT {
         assertLog(".*d=235.*", ab);
     }
 
-    private byte[] test(String entryPoint, String testKey) throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testKvWithSpecialString() throws Exception {
+        String testKey = "key_" + randomString();
+
+        byte[] ab = test("kvSpecialString", "default", testKey);
+
+        assertLog(".*" + Pattern.quote("#aaa#bbb") + ".*", ab);
+    }
+
+    private byte[] test(String process, String entryPoint, String testKey) throws Exception {
         Map<String, Object> args = ImmutableMap.of("testKey", testKey);
-        byte[] payload = createPayload(entryPoint, args);
+        byte[] payload = createPayload(process, entryPoint, args);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
@@ -88,8 +98,8 @@ public class KvServiceIT extends AbstractServerIT {
         return getLog(pir.getLogFileName());
     }
 
-    private byte[] createPayload(String entryPoint, Map<String, Object> args) throws Exception {
-        Path src = Paths.get(KvServiceIT.class.getResource("kvInc").toURI());
+    private byte[] createPayload(String process, String entryPoint, Map<String, Object> args) throws Exception {
+        Path src = Paths.get(KvServiceIT.class.getResource(process).toURI());
 
         Path tmpDir = createTempDir();
         IOUtils.copy(src, tmpDir);
