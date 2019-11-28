@@ -4,6 +4,8 @@
 
 ### Added
 
+- http: default `User-Agent` value, contains the version of
+the plugin;
 - imports: ability to `exclude` files when importing external
 resources;
 - concord-console: additional process menu links can now be specified

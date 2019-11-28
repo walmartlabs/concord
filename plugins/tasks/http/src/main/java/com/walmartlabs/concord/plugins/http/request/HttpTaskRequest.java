@@ -22,6 +22,7 @@ package com.walmartlabs.concord.plugins.http.request;
 
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
+import com.walmartlabs.concord.plugins.http.Version;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.*;
@@ -38,6 +39,7 @@ public class HttpTaskRequest implements Request {
 
     private HttpTaskRequest(HttpUriRequest request) {
         this.request = request;
+        this.request.setHeader(HttpHeaders.USER_AGENT, "Concord (http-task version '" + Version.get() + "')");
     }
 
     /**
