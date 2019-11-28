@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: support for multiple profiles in the repository
+run dialog;
 - server: optional caching of LDAP query results;
 - http: default `User-Agent` value, contains the version of
 the plugin;
@@ -31,6 +33,8 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- concord-console: fixed missing support for `activeProfiles` for
+manual triggers;
 - concord-console: updated look of the process status toolbar;
 - concord-server: enabled support for `onFailure`, `onCancel` and
 other process handlers for forks;
