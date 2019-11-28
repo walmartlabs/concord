@@ -60,17 +60,17 @@ public class RepositoryManager {
     }
 
     public void export(String repoUrl, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition) throws ExecutionException {
-        export(repoUrl, null, commitId, repoPath, dest, secretDefinition);
+        export(repoUrl, null, commitId, repoPath, dest, secretDefinition, Collections.emptyList());
     }
 
-    public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition) throws ExecutionException {
+    public void export(String repoUrl, String branch, String commitId, String repoPath, Path dest, SecretDefinition secretDefinition, List<String> ignorePatterns) throws ExecutionException {
         Secret secret = getSecret(secretDefinition);
 
         Path cacheDir = repositoryCache.getPath(repoUrl);
 
         repositoryCache.withLock(repoUrl, () -> {
             Repository repo = providers.fetch(repoUrl, branch, commitId, repoPath, secret, cacheDir);
-            repo.export(dest);
+            repo.export(dest, ignorePatterns);
             return null;
         });
     }

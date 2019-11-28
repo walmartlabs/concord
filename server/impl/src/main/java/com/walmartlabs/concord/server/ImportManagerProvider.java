@@ -80,7 +80,7 @@ public class ImportManagerProvider implements Provider<ImportManager> {
                 if (entry.dest() != null) {
                     dst = dst.resolve(entry.dest());
                 }
-                return repository.export(dst);
+                return repository.export(dst, entry.exclude());
             });
         }
 

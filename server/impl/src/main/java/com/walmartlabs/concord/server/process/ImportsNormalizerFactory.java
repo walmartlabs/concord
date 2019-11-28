@@ -105,10 +105,9 @@ public class ImportsNormalizerFactory {
                     .build();
         }
 
-        return Import.GitDefinition.builder()
+        return Import.GitDefinition.builder().from(e)
                 .url(url)
                 .version(e.version() != null ? e.version() : DEFAULT_VERSION)
-                .path(e.path())
                 .dest(e.dest() != null ? e.dest() : DEFAULT_DEST)
                 .secret(secret)
                 .build();

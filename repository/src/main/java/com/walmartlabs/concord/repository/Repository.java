@@ -21,6 +21,8 @@ package com.walmartlabs.concord.repository;
  */
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 public class Repository {
 
@@ -42,7 +44,11 @@ public class Repository {
     }
 
     public Snapshot export(Path dst) throws IOException {
-        return provider.export(repoPath, dst);
+        return provider.export(repoPath, dst, Collections.emptyList());
+    }
+
+    public Snapshot export(Path dst, List<String> ignorePatterns) throws IOException {
+        return provider.export(repoPath, dst, ignorePatterns);
     }
 
     public Path path() {

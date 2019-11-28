@@ -30,6 +30,8 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(
@@ -72,6 +74,11 @@ public interface Import extends Serializable {
 
         @Nullable
         SecretDefinition secret();
+
+        @Value.Default
+        default List<String> exclude() {
+            return Collections.emptyList();
+        }
 
         @Override
         default String type() {

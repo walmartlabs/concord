@@ -4,6 +4,8 @@
 
 ### Added
 
+- imports: ability to `exclude` files when importing external
+resources;
 - concord-console: additional process menu links can now be specified
 using the `cfg.js` file;
 - ansible, concord-console: new view for Ansible runtime statistics;
