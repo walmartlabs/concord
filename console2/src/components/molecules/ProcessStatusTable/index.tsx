@@ -33,7 +33,7 @@ import { formatDuration } from '../../../utils';
 import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../../molecules';
 
 interface Props {
-    data: ProcessEntry;
+    process?: ProcessEntry;
 }
 
 const kindToDescription = (k: ProcessKind): string => {
@@ -52,34 +52,38 @@ const kindToDescription = (k: ProcessKind): string => {
 };
 
 class ProcessStatusTable extends React.PureComponent<Props> {
-    static renderCommitId(data: ProcessEntry) {
-        if (!data.commitId) {
+    static renderCommitId(process?: ProcessEntry) {
+        if (!process || !process.commitId) {
             return ' - ';
         }
 
         const link = (
             <GitHubLink
-                url={data.repoUrl!}
-                path={data.repoPath}
-                commitId={data.commitId}
-                text={data.commitId}
+                url={process.repoUrl!}
+                path={process.repoPath}
+                commitId={process.commitId}
+                text={process.commitId}
             />
         );
-        if (!data.commitMsg) {
+        if (!process.commitMsg) {
             return link;
         }
 
-        return <Popup trigger={<span>{link}</span>} content={data.commitMsg} />;
+        return <Popup trigger={<span>{link}</span>} content={process.commitMsg} />;
     }
 
-    static renderProcessKind(data: ProcessEntry) {
+    static renderProcessKind(process?: ProcessEntry) {
+        if (!process) {
+            return '-';
+        }
+
         return (
             <>
-                {kindToDescription(data.kind)}
-                {data.kind === ProcessKind.FAILURE_HANDLER &&
-                    data.status !== ProcessStatus.FAILED && (
+                {kindToDescription(process.kind)}
+                {process.kind === ProcessKind.FAILURE_HANDLER &&
+                    process.status !== ProcessStatus.FAILED && (
                         <ProcessLastErrorModal
-                            processMeta={data.meta}
+                            processMeta={process.meta}
                             title="Parent process' error"
                         />
                     )}
@@ -87,7 +91,12 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         );
     }
 
-    static renderTags({ tags }: ProcessEntry) {
+    static renderTags(process?: ProcessEntry) {
+        if (!process) {
+            return '-';
+        }
+
+        const tags = process.tags;
         if (!tags || tags.length === 0) {
             return ' - ';
         }
@@ -105,7 +114,12 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         return result;
     }
 
-    static renderTriggeredBy({ triggeredBy }: ProcessEntry) {
+    static renderTriggeredBy(process?: ProcessEntry) {
+        if (!process) {
+            return ' - ';
+        }
+
+        const triggeredBy = process.triggeredBy;
         if (!triggeredBy || !triggeredBy.trigger) {
             return ' - ';
         }
@@ -140,15 +154,112 @@ class ProcessStatusTable extends React.PureComponent<Props> {
         );
     }
 
-    render() {
-        const { data } = this.props;
+    static renderParentInstanceId(process?: ProcessEntry) {
+        if (!process || !process.parentInstanceId) {
+            return '-';
+        }
+
+        const parentId = process.parentInstanceId;
+        return <Link to={`/process/${parentId}`}>{parentId}</Link>;
+    }
+
+    static renderInitiator(process?: ProcessEntry) {
+        if (!process) {
+            return '-';
+        }
+
+        return process.initiator;
+    }
+
+    static renderCreatedAt(process?: ProcessEntry) {
+        if (!process) {
+            return '-';
+        }
+
+        return <LocalTimestamp value={process.createdAt} />;
+    }
+
+    static renderStartAt(process?: ProcessEntry) {
+        if (!process || !process.startAt) {
+            return '-';
+        }
+
+        return <LocalTimestamp value={process.startAt} />;
+    }
+
+    static renderLastUpdatedAt(process?: ProcessEntry) {
+        if (!process) {
+            return '-';
+        }
+
+        return <LocalTimestamp value={process.lastUpdatedAt} />;
+    }
+
+    static renderTimeout(process?: ProcessEntry) {
+        if (!process || !process.timeout) {
+            return '-';
+        }
 
         return (
-            <Grid columns={2}>
+            <Popup
+                trigger={<span>{formatDuration(process.timeout * 1000)}</span>}
+                content={`${process.timeout}s`}
+            />
+        );
+    }
+
+    static renderProject(process?: ProcessEntry) {
+        if (!process || !process.projectName) {
+            return '-';
+        }
+
+        return (
+            <Link to={`/org/${process.orgName}/project/${process.projectName}`}>
+                {process.projectName}
+            </Link>
+        );
+    }
+
+    static renderRepo(process?: ProcessEntry) {
+        if (!process || !process.repoName) {
+            return '-';
+        }
+
+        return (
+            <Link
+                to={`/org/${process.orgName}/project/${process.projectName}/repository/${process.repoName}`}>
+                {process.repoName}
+            </Link>
+        );
+    }
+
+    static renderRepoUrl(process?: ProcessEntry) {
+        if (!process || !process.repoUrl) {
+            return '-';
+        }
+
+        return <GitHubLink url={process.repoUrl} text={process.repoUrl} />;
+    }
+
+    static renderRepoPath(process?: ProcessEntry) {
+        if (!process || !process.repoPath) {
+            return '-';
+        }
+
+        return (
+            <GitHubLink url={process.repoUrl!} path={process.repoPath} text={process.repoPath} />
+        );
+    }
+
+    render() {
+        const { process } = this.props;
+
+        return (
+            <Grid columns={2} className={process ? '' : 'loading'}>
                 <Grid.Column>
                     <Table
                         definition={true}
-                        color={getStatusSemanticColor(data.status)}
+                        color={process ? getStatusSemanticColor(process.status) : 'grey'}
                         style={{ height: '100%' }}>
                         <Table.Body>
                             <Table.Row>
@@ -156,25 +267,21 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                     Parent ID
                                 </Table.Cell>
                                 <Table.Cell>
-                                    {data.parentInstanceId ? (
-                                        <Link to={`/process/${data.parentInstanceId}`}>
-                                            {data.parentInstanceId}
-                                        </Link>
-                                    ) : (
-                                        ' - '
-                                    )}
+                                    {ProcessStatusTable.renderParentInstanceId(process)}
                                 </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Initiator
                                 </Table.Cell>
-                                <Table.Cell>{data.initiator}</Table.Cell>
+                                <Table.Cell>
+                                    {ProcessStatusTable.renderInitiator(process)}
+                                </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Type</Table.Cell>
                                 <Table.Cell>
-                                    {ProcessStatusTable.renderProcessKind(data)}
+                                    {ProcessStatusTable.renderProcessKind(process)}
                                 </Table.Cell>
                             </Table.Row>
                             <Table.Row>
@@ -182,124 +289,84 @@ class ProcessStatusTable extends React.PureComponent<Props> {
                                     Created At
                                 </Table.Cell>
                                 <Table.Cell>
-                                    <LocalTimestamp value={data.createdAt} />
+                                    {ProcessStatusTable.renderCreatedAt(process)}
                                 </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Start At
                                 </Table.Cell>
-                                <Table.Cell>
-                                    {data.startAt ? <LocalTimestamp value={data.startAt} /> : ' - '}
-                                </Table.Cell>
+                                <Table.Cell>{ProcessStatusTable.renderStartAt(process)}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Last Update
                                 </Table.Cell>
                                 <Table.Cell>
-                                    <LocalTimestamp value={data.lastUpdatedAt} />
+                                    {ProcessStatusTable.renderLastUpdatedAt(process)}
                                 </Table.Cell>
                             </Table.Row>
                             <Table.Row style={{ height: '100%' }}>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Timeout
                                 </Table.Cell>
-                                <Table.Cell>
-                                    {data.timeout ? (
-                                        <Popup
-                                            trigger={
-                                                <span>{formatDuration(data.timeout * 1000)}</span>
-                                            }
-                                            content={`${data.timeout}s`}
-                                        />
-                                    ) : (
-                                        ' - '
-                                    )}
-                                </Table.Cell>
+                                <Table.Cell>{ProcessStatusTable.renderTimeout(process)}</Table.Cell>
                             </Table.Row>
                         </Table.Body>
                     </Table>
                 </Grid.Column>
                 <Grid.Column>
-                    <Table definition={true} color={getStatusSemanticColor(data.status)}>
+                    <Table
+                        definition={true}
+                        color={process ? getStatusSemanticColor(process.status) : 'grey'}
+                        style={{ height: '100%' }}>
                         <Table.Body style={{ wordBreak: 'break-all' }}>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Project
                                 </Table.Cell>
-                                <Table.Cell>
-                                    {data.projectName ? (
-                                        <Link
-                                            to={`/org/${data.orgName}/project/${data.projectName}`}>
-                                            {data.projectName}
-                                        </Link>
-                                    ) : (
-                                        ' - '
-                                    )}
-                                </Table.Cell>
+                                <Table.Cell>{ProcessStatusTable.renderProject(process)}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Concord Repository
                                 </Table.Cell>
-                                <Table.Cell>
-                                    {data.repoName ? (
-                                        <Link
-                                            to={`/org/${data.orgName}/project/${data.projectName}/repository/${data.repoName}`}>
-                                            {data.repoName}
-                                        </Link>
-                                    ) : (
-                                        ' - '
-                                    )}
-                                </Table.Cell>
+                                <Table.Cell>{ProcessStatusTable.renderRepo(process)}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Repository URL
                                 </Table.Cell>
-                                <Table.Cell>
-                                    {data.repoUrl ? (
-                                        <GitHubLink url={data.repoUrl} text={data.repoUrl} />
-                                    ) : (
-                                        ' - '
-                                    )}
-                                </Table.Cell>
+                                <Table.Cell>{ProcessStatusTable.renderRepoUrl(process)}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Repository Path
                                 </Table.Cell>
                                 <Table.Cell>
-                                    {data.repoPath ? (
-                                        <GitHubLink
-                                            url={data.repoUrl!}
-                                            path={data.repoPath}
-                                            text={data.repoPath}
-                                        />
-                                    ) : (
-                                        ' - '
-                                    )}
+                                    {ProcessStatusTable.renderRepoPath(process)}
                                 </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Commit ID
                                 </Table.Cell>
-                                <Table.Cell>{ProcessStatusTable.renderCommitId(data)}</Table.Cell>
+                                <Table.Cell>
+                                    {ProcessStatusTable.renderCommitId(process)}
+                                </Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Process Tags
                                 </Table.Cell>
-                                <Table.Cell>{ProcessStatusTable.renderTags(data)}</Table.Cell>
+                                <Table.Cell>{ProcessStatusTable.renderTags(process)}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell collapsing={true} singleLine={true}>
                                     Triggered By
                                 </Table.Cell>
                                 <Table.Cell>
-                                    {ProcessStatusTable.renderTriggeredBy(data)}
+                                    {ProcessStatusTable.renderTriggeredBy(process)}
                                 </Table.Cell>
                             </Table.Row>
                         </Table.Body>

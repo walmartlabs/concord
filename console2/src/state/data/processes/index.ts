@@ -31,9 +31,7 @@ import {
 } from '../../../api/process';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
-import { reducers as logReducers, sagas as logSagas } from './logs';
 import { reducers as childrenReducers, sagas as childrenSagas } from './children';
-import { reducers as eventsReducers, sagas as eventsSagas } from './events';
 
 import {
     CancelBulkProcessRequest,
@@ -239,9 +237,7 @@ export const reducers = combineReducers<State>({
     restoreProcess: restoreProcessReducers,
     cancelBulkProcess: cancelBulkProcessReducers,
 
-    log: logReducers,
-    children: childrenReducers,
-    events: eventsReducers
+    children: childrenReducers
 });
 
 function* onGetProcess({ instanceId, includes }: GetProcessRequest) {
@@ -323,8 +319,6 @@ export const sagas = function*() {
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),
-        fork(logSagas),
-        fork(childrenSagas),
-        fork(eventsSagas)
+        fork(childrenSagas)
     ]);
 };

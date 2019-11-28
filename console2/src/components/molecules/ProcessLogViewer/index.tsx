@@ -19,20 +19,18 @@
  */
 
 import * as React from 'react';
-import { Button, Divider, Icon, Loader, Popup, Radio, Transition } from 'semantic-ui-react';
+import { Button, Divider, Icon, Popup, Radio, Transition } from 'semantic-ui-react';
 
-import { ConcordId, RequestError } from '../../../api/common';
-import { ProcessEntry } from '../../../api/process';
+import { ConcordId } from '../../../api/common';
+import { ProcessStatus } from '../../../api/process';
 import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
 import { LogSegment, LogSegmentType, TagData } from '../../../state/data/processes/logs/types';
-import { RequestErrorMessage } from '../../molecules';
+import { ProcessToolbar } from '../../molecules';
 import { TaskCallDetails } from '../../organisms';
 
 import './styles.css';
-import ProcessToolbar from '../ProcessToolbar';
 
 interface State {
-    refreshStuck: boolean;
     scrollAnchorRef: boolean;
     opts: LogProcessorOptions;
     expandedItems: ConcordId[];
@@ -41,16 +39,14 @@ interface State {
 interface Props {
     instanceId: ConcordId;
 
-    loading: boolean;
-    process: ProcessEntry | null;
+    processStatus?: ProcessStatus;
     data: LogSegment[];
-    error: RequestError;
     completed: boolean;
+    opts: LogProcessorOptions;
 
-    startPolling: (opts: LogProcessorOptions) => void;
-    stopPolling: () => void;
+    optsHandler: (opts: LogProcessorOptions) => void;
+
     loadWholeLog: (opts: LogProcessorOptions) => void;
-    refresh: () => void;
 }
 
 interface LogContainerProps {
@@ -131,66 +127,29 @@ const LogContainer = ({ instanceId, data, onClick, expandedItems }: LogContainer
     </>
 );
 
-const DEFAULT_OPTS: LogProcessorOptions = {
-    useLocalTime: true,
-    showDate: false,
-    separateTasks: true
-};
-
-const getStoredOpts = (): LogProcessorOptions => {
-    const data = localStorage.getItem('logViewerOpts');
-    if (!data) {
-        return DEFAULT_OPTS;
-    }
-
-    return JSON.parse(data);
-};
-
-const storeOpts = (opts: LogProcessorOptions) => {
-    const data = JSON.stringify(opts);
-    localStorage.setItem('logViewerOpts', data);
-};
-
 class ProcessLogViewer extends React.Component<Props, State> {
-    private stickyRef: any;
     private scrollAnchorRef: any;
 
     constructor(props: Props) {
         super(props);
 
         this.state = {
-            refreshStuck: false,
             scrollAnchorRef: false,
-            opts: getStoredOpts(),
+            opts: props.opts,
             expandedItems: []
         };
 
         this.handleScroll = this.handleScroll.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.handleTagClick = this.handleTagClick.bind(this);
-
-        this.stickyRef = React.createRef();
-    }
-
-    componentDidMount() {
-        this.props.startPolling(getStoredOpts());
-    }
-
-    componentWillUnmount() {
-        this.props.stopPolling();
     }
 
     componentDidUpdate(prevProps: Props) {
-        const { instanceId, startPolling, stopPolling, data } = this.props;
-        const { scrollAnchorRef, opts } = this.state;
+        const { data } = this.props;
+        const { scrollAnchorRef } = this.state;
 
         if (prevProps.data !== data && scrollAnchorRef) {
             this.scrollToBottom();
-        }
-
-        if (instanceId !== prevProps.instanceId) {
-            stopPolling();
-            startPolling(opts);
         }
     }
 
@@ -205,16 +164,14 @@ class ProcessLogViewer extends React.Component<Props, State> {
     }
 
     handleOptionsChange(k: keyof LogProcessorOptions, v: boolean) {
-        const { startPolling, stopPolling } = this.props;
+        const { optsHandler } = this.props;
         const { opts } = this.state;
 
         const newOpts = { ...opts, [k]: v };
 
-        stopPolling();
-        startPolling(newOpts);
+        optsHandler(newOpts);
 
         this.setState({ opts: newOpts });
-        storeOpts(newOpts);
     }
 
     handleTagClick(correlationId: ConcordId) {
@@ -280,7 +237,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
     }
 
     createLogToolbarActions() {
-        const { loading, completed, loadWholeLog, instanceId, process } = this.props;
+        const { completed, loadWholeLog, instanceId, processStatus } = this.props;
         const { opts, scrollAnchorRef } = this.state;
 
         return (
@@ -289,6 +246,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                     label="Auto-Scroll"
                     toggle={true}
                     checked={scrollAnchorRef}
+                    disabled={processStatus === undefined}
                     onChange={this.handleScroll}
                     style={{ paddingRight: 20 }}
                 />
@@ -296,12 +254,11 @@ class ProcessLogViewer extends React.Component<Props, State> {
                 {this.renderSettingsMenu(opts)}
 
                 <Button.Group>
-                    {process!.status && !completed && (
-                        <Button disabled={loading} onClick={() => loadWholeLog(opts)}>
-                            Show the whole log
-                        </Button>
+                    {processStatus && !completed && (
+                        <Button onClick={() => loadWholeLog(opts)}>Show the whole log</Button>
                     )}
                     <Button
+                        disabled={process === undefined}
                         onClick={() => window.open(`/api/v1/process/${instanceId}/log`, '_blank')}>
                         Raw
                     </Button>
@@ -311,27 +268,13 @@ class ProcessLogViewer extends React.Component<Props, State> {
     }
 
     render() {
-        const { error, instanceId, data, loading, refresh, process } = this.props;
-
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        if (!process) {
-            return <Loader active={loading} />;
-        }
+        const { instanceId, data } = this.props;
 
         const { expandedItems } = this.state;
 
         return (
-            <div ref={this.stickyRef}>
-                <ProcessToolbar
-                    stickyRef={this.stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                    additionalActions={this.createLogToolbarActions()}
-                />
+            <>
+                <ProcessToolbar>{this.createLogToolbarActions()}</ProcessToolbar>
 
                 <LogContainer
                     instanceId={instanceId}
@@ -350,7 +293,7 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         <Icon name="chevron circle up" size="huge" />
                     </div>
                 </Transition>
-            </div>
+            </>
         );
     }
 }

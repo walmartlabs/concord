@@ -18,63 +18,204 @@
  * =====
  */
 
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-
 import { ConcordId, RequestError } from '../../../api/common';
-import { ProcessEntry } from '../../../api/process';
-import { actions } from '../../../state/data/processes/logs';
-import { LogProcessorOptions } from '../../../state/data/processes/logs/processors';
-import { LogSegment, State } from '../../../state/data/processes/logs/types';
+import { isFinal, ProcessStatus } from '../../../api/process';
+import { LogProcessorOptions, process } from '../../../state/data/processes/logs/processors';
+import { LogSegment, LogSegmentType } from '../../../state/data/processes/logs/types';
 import { ProcessLogViewer } from '../../molecules';
 
 import './styles.css';
+import {
+    default as React,
+    Dispatch,
+    MutableRefObject,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
+import RequestErrorActivity from '../RequestErrorActivity';
+import { getLog as apiGetLog, LogRange } from '../../../api/process/log';
 
 interface ExternalProps {
     instanceId: ConcordId;
+    processStatus?: ProcessStatus;
+    loadingHandler: (inc: number) => void;
+    forceRefresh: boolean;
 }
 
-interface StateProps {
-    process: ProcessEntry | null;
-    loading: boolean;
+interface FetchResponse {
     data: LogSegment[];
-    error: RequestError;
-    completed: boolean;
+    range: LogRange;
 }
 
-interface DispatchProps {
-    startPolling: (opts: LogProcessorOptions) => void;
-    stopPolling: () => void;
-    loadWholeLog: (opts: LogProcessorOptions) => void;
-    refresh: () => void;
-}
+const DATA_FETCH_INTERVAL = 5000;
+const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
 
-interface StateType {
-    processes: {
-        log: State;
+const ProcessLogActivity = ({
+    instanceId,
+    processStatus,
+    loadingHandler,
+    forceRefresh
+}: ExternalProps) => {
+    const didMountRef = useRef(false);
+    const range = useRef<LogRange>(DEFAULT_RANGE);
+    const [data, setData] = useState<LogSegment[]>([]);
+    const [opts, setOpts] = useState<LogProcessorOptions>(getStoredOpts());
+    const [refresh, setRefresh] = useState<boolean>(false);
+    const [stopPolling, setStopPolling] = useState<boolean>(isFinal(processStatus));
+    const [wholeLogLoading, setWholeLogLoading] = useState<boolean>(false);
+
+    const optsHandler = useCallback((o: LogProcessorOptions) => {
+        setData([]);
+        setOpts(o);
+        storeOpts(o);
+        setRefresh((prevState) => !prevState);
+    }, []);
+
+    const loadWholeLog = useCallback(async () => {
+        setData([]);
+        setWholeLogLoading(true);
+        setRefresh((prevState) => !prevState);
+    }, []);
+
+    useEffect(() => {
+        if (wholeLogLoading) {
+            range.current = { low: 0 };
+        } else {
+            range.current = DEFAULT_RANGE;
+        }
+    }, [wholeLogLoading, opts]);
+
+    useEffect(() => {
+        setStopPolling(isFinal(processStatus));
+    }, [processStatus]);
+
+    useEffect(() => {
+        if (!didMountRef.current) {
+            didMountRef.current = true;
+            return;
+        }
+
+        setRefresh((prevState) => !prevState);
+    }, [forceRefresh]);
+
+    const fetchData = useCallback(
+        async (range: LogRange) => {
+            const chunk = await apiGetLog(instanceId, range);
+
+            const data = chunk && chunk.data.length > 0 ? chunk.data : undefined;
+            const segment: LogSegment | undefined = data
+                ? { data, type: LogSegmentType.DATA }
+                : undefined;
+            const processedData = segment ? process(segment, opts ? opts : {}) : [];
+
+            return {
+                data: processedData,
+                range: chunk.range
+            };
+        },
+        [instanceId, opts]
+    );
+
+    const error = usePolling(fetchData, range, setData, loadingHandler, refresh, stopPolling);
+
+    if (error) {
+        return <RequestErrorActivity error={error} />;
+    }
+
+    return (
+        <ProcessLogViewer
+            instanceId={instanceId}
+            processStatus={processStatus}
+            data={data}
+            opts={opts}
+            completed={wholeLogLoading}
+            optsHandler={optsHandler}
+            loadWholeLog={loadWholeLog}
+        />
+    );
+};
+
+const DEFAULT_OPTS: LogProcessorOptions = {
+    useLocalTime: true,
+    showDate: false,
+    separateTasks: true
+};
+
+const getStoredOpts = (): LogProcessorOptions => {
+    const data = localStorage.getItem('logViewerOpts');
+    if (!data) {
+        return DEFAULT_OPTS;
+    }
+
+    return JSON.parse(data);
+};
+
+const storeOpts = (opts: LogProcessorOptions) => {
+    const data = JSON.stringify(opts);
+    localStorage.setItem('logViewerOpts', data);
+};
+
+const usePolling = (
+    request: (range: LogRange) => Promise<FetchResponse>,
+    rangeRef: MutableRefObject<LogRange>,
+    setData: Dispatch<SetStateAction<LogSegment[]>>,
+    loadingHandler: (inc: number) => void,
+    refresh: boolean,
+    stopPollingIndicator: boolean
+): RequestError | undefined => {
+    const poll = useRef<number | undefined>(undefined);
+    const [error, setError] = useState<RequestError>();
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchData = async (range: LogRange) => {
+            loadingHandler(1);
+
+            let r = range;
+            try {
+                const resp = await request(r);
+
+                r = { low: resp.range.high, high: undefined };
+                rangeRef.current = r;
+
+                setError(undefined);
+
+                if (!cancelled) {
+                    setData((prev) => [...prev, ...resp.data]);
+                }
+            } catch (e) {
+                setError(e);
+            } finally {
+                if (!stopPollingIndicator && !cancelled) {
+                    poll.current = setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
+                } else {
+                    stopPolling();
+                }
+
+                loadingHandler(-1);
+            }
+        };
+
+        fetchData(rangeRef.current);
+
+        return () => {
+            cancelled = true;
+            stopPolling();
+        };
+    }, [request, setData, rangeRef, refresh, loadingHandler, stopPollingIndicator]);
+
+    const stopPolling = () => {
+        if (poll.current) {
+            clearTimeout(poll.current);
+            poll.current = undefined;
+        }
     };
-}
 
-const mapStateToProps = ({ processes: { log } }: StateType): StateProps => ({
-    process: log.process,
-    loading: log.getLog.running,
-    error: log.getLog.error,
-    data: log.data,
-    completed: log.completed
-});
+    return error;
+};
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { instanceId }: ExternalProps
-): DispatchProps => ({
-    startPolling: (opts: LogProcessorOptions) =>
-        dispatch(actions.startProcessLogPolling(instanceId, opts)),
-    stopPolling: () => dispatch(actions.stopProcessLogPolling()),
-    loadWholeLog: (opts: LogProcessorOptions) => dispatch(actions.loadWholeLog(instanceId, opts)),
-    refresh: () => dispatch(actions.forceRefresh())
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessLogViewer);
+export default ProcessLogActivity;

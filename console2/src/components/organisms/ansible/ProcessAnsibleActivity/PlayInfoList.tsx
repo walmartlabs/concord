@@ -31,7 +31,7 @@ import {
 import { ConcordId } from '../../../../api/common';
 
 export interface PlayStatsProps {
-    stats: PlayInfoEntry[];
+    stats?: PlayInfoEntry[];
     playbookStatus: string;
     selectedPlayId?: ConcordId;
     playClickAction: (id: ConcordId) => void;
@@ -95,14 +95,40 @@ const renderPlayRow = (
     );
 };
 
-const PlayInfoList = ({
+const renderElements = ({
     stats,
     playbookStatus,
     playClickAction,
     selectedPlayId
 }: PlayStatsProps) => {
+    if (!stats) {
+        return (
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={4}>-</Table.Cell>
+            </tr>
+        );
+    }
+
+    if (stats.length === 0) {
+        return (
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={4}>No data available</Table.Cell>
+            </tr>
+        );
+    }
+
+    return stats.map((value, index) =>
+        renderPlayRow(value, playbookStatus === 'RUNNING', index, playClickAction, selectedPlayId)
+    );
+};
+
+const PlayInfoList = (props: PlayStatsProps) => {
     return (
-        <Table compact={true} basic={true} selectable={true}>
+        <Table
+            compact={true}
+            basic={true}
+            selectable={true}
+            className={props.stats ? '' : 'loading'}>
             <Table.Header>
                 <Table.Row>
                     <Table.HeaderCell>Play</Table.HeaderCell>
@@ -115,23 +141,7 @@ const PlayInfoList = ({
                     </Table.HeaderCell>
                 </Table.Row>
             </Table.Header>
-            <Table.Body>
-                {stats.length > 0 &&
-                    stats.map((value, index) =>
-                        renderPlayRow(
-                            value,
-                            playbookStatus === 'RUNNING',
-                            index,
-                            playClickAction,
-                            selectedPlayId
-                        )
-                    )}
-                {stats.length === 0 && (
-                    <tr style={{ fontWeight: 'bold' }}>
-                        <Table.Cell colSpan={4}>No data available</Table.Cell>
-                    </tr>
-                )}
-            </Table.Body>
+            <Table.Body>{renderElements(props)}</Table.Body>
         </Table>
     );
 };

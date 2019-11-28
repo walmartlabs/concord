@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { get as apiGet, isFinal, ProcessEntry } from '../../../../api/process';
+import { get as apiGet, isFinal } from '../../../../api/process';
 import { default as React, useCallback, useEffect, useRef, useState } from 'react';
 import {
     AnsibleHost,
@@ -28,25 +28,24 @@ import {
 } from '../../../../api/process/ansible';
 import { addMinutes, isBefore, parseISO as parseDate } from 'date-fns';
 import { usePolling } from '../../../../api/usePolling';
-import { AnsibleStats, AnsibleViewToggle, ProcessToolbar } from '../../../molecules';
+import { AnsibleStats } from '../../../molecules';
 import RequestErrorActivity from '../../RequestErrorActivity';
-import { Divider } from 'semantic-ui-react';
+import { ConcordId } from '../../../../api/common';
 
 interface ExternalProps {
-    process: ProcessEntry;
-    viewSwitchHandler: (checked: boolean) => void;
+    instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    forceRefresh: boolean;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 const ANSIBLE_HOST_LIMIT = 10;
 
-const ProcessAnsibleActivityOld = (props: ExternalProps) => {
-    const stickyRef = useRef(null);
+const ProcessAnsibleActivityOld = ({ instanceId, loadingHandler, forceRefresh }: ExternalProps) => {
     const isInitialMount = useRef(true);
 
     const sharedAnsibleHostsFilter = useRef<SearchFilter>({});
 
-    const [process, setProcess] = useState<ProcessEntry>(props.process);
     const [ansibleStats, setAnsibleStats] = useState<AnsibleStatsEntry>({
         uniqueHosts: 0,
         hostGroups: [],
@@ -57,22 +56,10 @@ const ProcessAnsibleActivityOld = (props: ExternalProps) => {
     const [ansibleHostsPrev, setAnsibleHostsPrev] = useState<number>();
     const [ansibleHostsFilter, setAnsibleHostsFilter] = useState();
 
-    const viewSwitchHandler = props.viewSwitchHandler;
-    const switchHandler = useCallback(
-        (ev: any, { checked }: any) => {
-            viewSwitchHandler(checked === true);
-        },
-        [viewSwitchHandler]
-    );
-
-    const createToolbarActions = useCallback(() => {
-        return <AnsibleViewToggle checked={false} onChange={switchHandler} />;
-    }, [switchHandler]);
-
     const fetchAnsibleHosts = useCallback(
         async (filter: SearchFilter) => {
             const limit = filter.limit || ANSIBLE_HOST_LIMIT;
-            const ansibleHosts = await apiListAnsibleHosts(props.process.instanceId, {
+            const ansibleHosts = await apiListAnsibleHosts(instanceId, {
                 ...filter,
                 limit
             });
@@ -80,14 +67,13 @@ const ProcessAnsibleActivityOld = (props: ExternalProps) => {
             setAnsibleHostsNext(ansibleHosts.next);
             setAnsibleHostsPrev(ansibleHosts.prev);
         },
-        [props.process.instanceId]
+        [instanceId]
     );
 
     const fetchData = useCallback(async () => {
-        const process = await apiGet(props.process.instanceId, []);
-        setProcess(process);
+        const process = await apiGet(instanceId, []);
 
-        const ansibleStats = await apiGetAnsibleStats(props.process.instanceId);
+        const ansibleStats = await apiGetAnsibleStats(instanceId);
         setAnsibleStats(ansibleStats);
 
         await fetchAnsibleHosts(sharedAnsibleHostsFilter.current);
@@ -100,9 +86,9 @@ const ProcessAnsibleActivityOld = (props: ExternalProps) => {
         );
 
         return !isFinal(process.status) || changedRecently;
-    }, [props.process.instanceId, fetchAnsibleHosts]);
+    }, [instanceId, fetchAnsibleHosts]);
 
-    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     useEffect(() => {
         if (isInitialMount.current) {
@@ -115,36 +101,15 @@ const ProcessAnsibleActivityOld = (props: ExternalProps) => {
     }, [ansibleHostsFilter, fetchAnsibleHosts]);
 
     if (error) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                    additionalActions={createToolbarActions()}
-                />
-
-                <RequestErrorActivity error={error} />
-            </div>
-        );
+        return <RequestErrorActivity error={error} />;
     }
 
     return (
-        <div ref={stickyRef}>
-            <ProcessToolbar
-                stickyRef={stickyRef}
-                loading={loading}
-                refresh={refresh}
-                process={process}
-                additionalActions={createToolbarActions()}
-            />
-
+        <>
             {ansibleStats.uniqueHosts > 0 && (
                 <>
-                    <Divider content="Ansible Stats" horizontal={true} />
                     <AnsibleStats
-                        instanceId={props.process.instanceId}
+                        instanceId={instanceId}
                         hosts={ansibleHosts}
                         stats={ansibleStats}
                         next={ansibleHostsNext}
@@ -153,7 +118,7 @@ const ProcessAnsibleActivityOld = (props: ExternalProps) => {
                     />
                 </>
             )}
-        </div>
+        </>
     );
 };
 

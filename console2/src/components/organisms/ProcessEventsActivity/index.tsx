@@ -20,14 +20,14 @@
 
 import * as React from 'react';
 
-import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
+import { isFinal, ProcessStatus } from '../../../api/process';
 import {
     listEvents as apiListEvents,
     ProcessElementEvent,
     ProcessEventEntry
 } from '../../../api/process/event';
 import { AnsibleEvent } from '../../../api/process/ansible';
-import { ProcessElementList, ProcessToolbar } from '../../molecules';
+import { ProcessElementList } from '../../molecules';
 import { useCallback, useRef } from 'react';
 import { useState } from 'react';
 import { usePolling } from '../../../api/usePolling';
@@ -35,24 +35,24 @@ import { ConcordId } from '../../../api/common';
 import RequestErrorActivity from '../RequestErrorActivity';
 
 interface ExternalProps {
-    process: ProcessEntry;
+    instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    forceRefresh: boolean;
+    processStatus?: ProcessStatus;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessEventsActivity = (props: ExternalProps) => {
-    let lastEventId = useRef<number>();
-    const stickyRef = useRef(null);
+    const { instanceId, processStatus, loadingHandler, forceRefresh } = props;
 
-    const [process, setProcess] = useState<ProcessEntry>(props.process);
-    const [events, setEvents] = useState<ProcessEventEntry<ProcessElementEvent>[]>([]);
+    const lastEventId = useRef<number>();
+
+    const [events, setEvents] = useState<ProcessEventEntry<ProcessElementEvent>[]>();
 
     const fetchData = useCallback(async () => {
-        const process = await apiGet(props.process.instanceId, []);
-        setProcess(process);
-
         const events = await apiListEvents<ProcessElementEvent>({
-            instanceId: props.process.instanceId,
+            instanceId: instanceId,
             type: 'ELEMENT',
             fromId: lastEventId.current,
             limit: 100
@@ -62,43 +62,19 @@ const ProcessEventsActivity = (props: ExternalProps) => {
             lastEventId.current = Math.max.apply(Math, events.map((e) => e.seqId));
         }
 
-        setEvents((prevEvents) => reduceEvents(prevEvents, events));
+        setEvents((prevEvents) => reduceEvents(prevEvents ? prevEvents : [], events));
 
-        return !(events.length === 0 && isFinal(process.status));
-    }, [props.process.instanceId]);
+        return !(events.length === 0 && isFinal(processStatus));
+    }, [instanceId, processStatus]);
 
-    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     if (error) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                />
-
-                <RequestErrorActivity error={error} />
-            </div>
-        );
+        return <RequestErrorActivity error={error} />;
     }
 
     return (
-        <div ref={stickyRef}>
-            <ProcessToolbar
-                stickyRef={stickyRef}
-                loading={loading}
-                refresh={refresh}
-                process={process}
-            />
-
-            <ProcessElementList
-                instanceId={process.instanceId}
-                events={events}
-                processStatus={process.status}
-            />
-        </div>
+        <ProcessElementList instanceId={instanceId} events={events} processStatus={processStatus} />
     );
 };
 

@@ -122,16 +122,6 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
         }
     };
 
-    const isUserOrgMember = (orgName: string) => {
-        const userOrgs = orgs;
-
-        return (
-            Object.keys(userOrgs)
-                .map((k) => userOrgs[k])
-                .filter((org) => org.name === orgName).length > 0
-        );
-    };
-
     return (
         <>
             <Menu secondary={true}>

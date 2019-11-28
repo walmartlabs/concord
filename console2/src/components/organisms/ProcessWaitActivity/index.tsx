@@ -19,71 +19,46 @@
  */
 
 import * as React from 'react';
-import {
-    get as apiGetProcess,
-    isFinal,
-    ProcessEntry,
-    ProcessWaitHistoryEntry
-} from '../../../api/process';
+import { isFinal, ProcessStatus, ProcessWaitHistoryEntry } from '../../../api/process';
 import { get as apiGetWaits } from '../../../api/process/wait';
-import { ProcessToolbar, ProcessWaitList } from '../../molecules';
+import { ProcessWaitList } from '../../molecules';
 import { useState } from 'react';
-import { useRef } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { useCallback } from 'react';
 import { usePolling } from '../../../api/usePolling';
+import { ConcordId } from '../../../api/common';
 
 interface ExternalProps {
-    process: ProcessEntry;
+    instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    processStatus?: ProcessStatus;
+    forceRefresh: boolean;
 }
 
 const DATA_FETCH_INTERVAL = 5000;
 
-const ProcessWaitActivity = (props: ExternalProps) => {
-    const stickyRef = useRef(null);
-
-    const [process, setProcess] = useState<ProcessEntry>(props.process);
-    const [data, setData] = useState<ProcessWaitHistoryEntry[]>([]);
+const ProcessWaitActivity = ({
+    instanceId,
+    processStatus,
+    loadingHandler,
+    forceRefresh
+}: ExternalProps) => {
+    const [data, setData] = useState<ProcessWaitHistoryEntry[]>();
 
     const fetchData = useCallback(async () => {
-        const process = await apiGetProcess(props.process.instanceId, []);
-        setProcess(process);
-
-        const result = await apiGetWaits(props.process.instanceId);
+        const result = await apiGetWaits(instanceId);
         setData(makeProcessWaitList(result));
 
-        return !isFinal(process.status);
-    }, [props.process.instanceId]);
+        return !isFinal(processStatus);
+    }, [instanceId, processStatus]);
 
-    const [loading, error, refresh] = usePolling(fetchData, DATA_FETCH_INTERVAL);
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
 
     if (error) {
-        return (
-            <div ref={stickyRef}>
-                <ProcessToolbar
-                    stickyRef={stickyRef}
-                    loading={loading}
-                    refresh={refresh}
-                    process={process}
-                />
-
-                <RequestErrorActivity error={error} />
-            </div>
-        );
+        return <RequestErrorActivity error={error} />;
     }
 
-    return (
-        <div ref={stickyRef}>
-            <ProcessToolbar
-                stickyRef={stickyRef}
-                loading={loading}
-                refresh={refresh}
-                process={process}
-            />
-
-            <ProcessWaitList data={data} />
-        </div>
-    );
+    return <ProcessWaitList data={data} />;
 };
 
 const makeProcessWaitList = (data?: ProcessWaitHistoryEntry[]): ProcessWaitHistoryEntry[] => {

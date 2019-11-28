@@ -34,7 +34,7 @@ interface State {
 
 interface Props {
     instanceId: ConcordId;
-    hosts: AnsibleHost[];
+    hosts?: AnsibleHost[];
     hostGroups: string[];
 
     next?: number;
@@ -83,6 +83,35 @@ class AnsibleHostList extends React.Component<Props, State> {
                     />
                 </Modal.Content>
             </Modal>
+        );
+    }
+
+    static renderHosts(instanceId: ConcordId, hosts?: AnsibleHost[]) {
+        if (!hosts) {
+            return (
+                <tr style={{ fontWeight: 'bold' }}>
+                    <Table.Cell colSpan={4}>-</Table.Cell>
+                </tr>
+            );
+        }
+
+        if (hosts.length === 0) {
+            return (
+                <Table.Row style={{ fontWeight: 'bold' }}>
+                    <Table.Cell colSpan={4}>No data available</Table.Cell>
+                </Table.Row>
+            );
+        }
+
+        return hosts.map((host, idx) =>
+            AnsibleHostList.renderHostItem(
+                instanceId,
+                host.host,
+                host.hostGroup,
+                host.status,
+                host.duration,
+                idx
+            )
         );
     }
 
@@ -156,6 +185,7 @@ class AnsibleHostList extends React.Component<Props, State> {
                 <Grid columns={3} style={{ marginBottom: '5px' }}>
                     <Grid.Column>
                         <Input
+                            disabled={hosts === undefined}
                             fluid={true}
                             type="text"
                             icon="filter"
@@ -166,6 +196,7 @@ class AnsibleHostList extends React.Component<Props, State> {
                     </Grid.Column>
                     <Grid.Column>
                         <Dropdown
+                            disabled={hosts === undefined}
                             clearable={true}
                             fluid={true}
                             placeholder="Host group"
@@ -196,7 +227,8 @@ class AnsibleHostList extends React.Component<Props, State> {
                     selectable={true}
                     basic={true}
                     compact={true}
-                    style={{ cursor: 'pointer' }}>
+                    style={{ cursor: 'pointer' }}
+                    className={hosts ? '' : 'loading'}>
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell singleLine={true}>Host</Table.HeaderCell>
@@ -206,24 +238,7 @@ class AnsibleHostList extends React.Component<Props, State> {
                         </Table.Row>
                     </Table.Header>
 
-                    <Table.Body>
-                        {hosts.map((host, idx) =>
-                            AnsibleHostList.renderHostItem(
-                                instanceId,
-                                host.host,
-                                host.hostGroup,
-                                host.status,
-                                host.duration,
-                                idx
-                            )
-                        )}
-
-                        {hosts.length === 0 && (
-                            <tr style={{ fontWeight: 'bold' }}>
-                                <Table.Cell colSpan={4}>No data available</Table.Cell>
-                            </tr>
-                        )}
-                    </Table.Body>
+                    <Table.Body>{AnsibleHostList.renderHosts(instanceId, hosts)}</Table.Body>
                 </Table>
             </>
         );

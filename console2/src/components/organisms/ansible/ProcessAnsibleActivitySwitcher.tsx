@@ -19,14 +19,17 @@
  */
 import * as React from 'react';
 
-import { ProcessEntry } from '../../../api/process';
 import ProcessAnsibleActivityOld from './ProcessAnsibleActivityOld';
 import ProcessAnsibleActivity from './ProcessAnsibleActivity';
 import { useCallback } from 'react';
 import { useState } from 'react';
+import { ConcordId } from '../../../api/common';
+import { AnsibleViewToggle, ProcessToolbar } from '../../molecules';
 
 interface ExternalProps {
-    process: ProcessEntry;
+    instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    forceRefresh: boolean;
 }
 
 const getViewMode = (): string => {
@@ -44,24 +47,35 @@ const storeViewMode = (mode: string) => {
 const ProcessAnsibleActivitySwitcher = (props: ExternalProps) => {
     const [oldLook, setOldLook] = useState<Boolean>(getViewMode() === 'OLD');
 
-    const viewSwitchHandler = useCallback((checked: boolean) => {
+    const switchHandler = useCallback((ev: any, { checked }: any) => {
         const oldLook = !checked;
         setOldLook(oldLook);
         storeViewMode(oldLook ? 'OLD' : 'NEW');
     }, []);
 
-    if (oldLook) {
-        return (
-            <ProcessAnsibleActivityOld
-                process={props.process}
-                viewSwitchHandler={viewSwitchHandler}
-            />
-        );
-    } else {
-        return (
-            <ProcessAnsibleActivity process={props.process} viewSwitchHandler={viewSwitchHandler} />
-        );
-    }
+    return (
+        <>
+            <ProcessToolbar>
+                <AnsibleViewToggle checked={!oldLook} onChange={switchHandler} />
+            </ProcessToolbar>
+
+            {oldLook && (
+                <ProcessAnsibleActivityOld
+                    instanceId={props.instanceId}
+                    loadingHandler={props.loadingHandler}
+                    forceRefresh={props.forceRefresh}
+                />
+            )}
+
+            {!oldLook && (
+                <ProcessAnsibleActivity
+                    instanceId={props.instanceId}
+                    loadingHandler={props.loadingHandler}
+                    forceRefresh={props.forceRefresh}
+                />
+            )}
+        </>
+    );
 };
 
 export default ProcessAnsibleActivitySwitcher;

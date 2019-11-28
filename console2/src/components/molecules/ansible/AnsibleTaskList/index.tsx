@@ -31,7 +31,7 @@ interface Props {
     showHosts?: boolean;
     hideStatus?: boolean;
     hidePlaybook?: boolean;
-    tasks: Array<ProcessEventEntry<AnsibleEvent>>;
+    tasks?: Array<ProcessEventEntry<AnsibleEvent>>;
 }
 
 class AnsibleTaskList extends React.Component<Props> {
@@ -105,7 +105,12 @@ class AnsibleTaskList extends React.Component<Props> {
                                 </Table.Row>
                             );
                         })}
-                    {tasks.length === 0 && (
+                    {!tasks && (
+                        <tr style={{ fontWeight: 'bold' }}>
+                            <Table.Cell colSpan={8}>-</Table.Cell>
+                        </tr>
+                    )}
+                    {tasks && tasks.length === 0 && (
                         <tr style={{ fontWeight: 'bold' }}>
                             <Table.Cell colSpan={8}>No data available</Table.Cell>
                         </tr>
@@ -120,7 +125,9 @@ class AnsibleTaskList extends React.Component<Props> {
 
         return (
             <>
-                <Table style={{ border: 'none', padding: '0' }}>
+                <Table
+                    style={{ border: 'none', padding: '0' }}
+                    className={this.props.tasks ? '' : 'loading'}>
                     <Table.Body>
                         <Table.Row>
                             <Table.Cell style={{ padding: '0', border: 'none' }}>

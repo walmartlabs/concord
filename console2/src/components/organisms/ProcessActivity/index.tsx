@@ -19,26 +19,28 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Link, Redirect, Route, Switch } from 'react-router-dom';
-import { Icon, Loader, Menu, Breadcrumb } from 'semantic-ui-react';
 
-import { ConcordId, RequestError } from '../../../api/common';
-import { ProcessEntry } from '../../../api/process';
-import { actions, State } from '../../../state/data/processes';
-import { BreadcrumbSegment, RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
+import { Link, Redirect, Route, Switch } from 'react-router-dom';
+import { Icon, Menu } from 'semantic-ui-react';
+
+import { ConcordId } from '../../../api/common';
+import { get as apiGet, isFinal, ProcessEntry } from '../../../api/process';
 import { NotFoundPage } from '../../pages';
 import {
+    ProcessAnsibleActivitySwitcher,
+    ProcessAttachmentsActivity,
+    ProcessChildrenActivity,
+    ProcessEventsActivity,
+    ProcessHistoryActivity,
     ProcessLogActivity,
     ProcessStatusActivity,
-    ProcessHistoryActivity,
-    ProcessChildrenActivity,
-    ProcessAttachmentsActivity,
-    ProcessEventsActivity,
-    ProcessWaitActivity,
-    ProcessAnsibleActivitySwitcher
+    ProcessWaitActivity
 } from '../index';
+import ProcessToolbar from './Toolbar';
+import { useCallback, useRef } from 'react';
+import { usePolling } from '../../../api/usePolling';
+import { useState } from 'react';
+import RequestErrorActivity from '../RequestErrorActivity';
 
 export type TabLink =
     | 'status'
@@ -56,182 +58,150 @@ interface ExternalProps {
     activeTab: TabLink;
 }
 
-interface StateProps {
-    data?: ProcessEntry;
-    error: RequestError;
-    loading: boolean;
-}
+const DATA_FETCH_INTERVAL = 5000;
 
-interface DispatchProps {
-    load: (instanceId: ConcordId) => void;
-}
+const ProcessActivity = (props: ExternalProps) => {
+    const [loading, setLoading] = useState<boolean>(false);
+    const loadingCounter = useRef<number>(0);
+    const [refresh, toggleRefresh] = useState<boolean>(false);
 
-type Props = ExternalProps & StateProps & DispatchProps;
+    const loadingHandler = useCallback((inc: number) => {
+        loadingCounter.current += inc;
+        setLoading(loadingCounter.current > 0);
+    }, []);
 
-class ProcessActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.init();
+    const [process, setProcess] = useState<ProcessEntry>();
+
+    const fetchData = useCallback(async () => {
+        const process = await apiGet(props.instanceId, []);
+        setProcess(process);
+        return !isFinal(process.status);
+    }, [props.instanceId]);
+
+    const refreshHandler = useCallback(() => {
+        toggleRefresh((prevState) => !prevState);
+    }, []);
+
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, refresh);
+
+    if (error) {
+        return <RequestErrorActivity error={error} />;
     }
 
-    componentDidUpdate(prevProps: Props) {
-        if (this.props.instanceId !== prevProps.instanceId) {
-            this.init();
-        }
-    }
+    const { instanceId, activeTab } = props;
 
-    init() {
-        const { instanceId, load } = this.props;
-        load(instanceId);
-    }
+    const baseUrl = `/process/${instanceId}`;
 
-    renderBreadcrumbs() {
-        const { data } = this.props;
+    return (
+        <>
+            <ProcessToolbar
+                loading={loading}
+                instanceId={instanceId}
+                process={process}
+                refresh={refreshHandler}
+            />
 
-        if (!data) {
-            return;
-        }
+            <Menu tabular={true}>
+                <Menu.Item active={activeTab === 'status'}>
+                    <Icon name="hourglass half" />
+                    <Link to={`${baseUrl}/status`}>Status</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'events'}>
+                    <Icon name="content" />
+                    <Link to={`${baseUrl}/events`}>Events</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'ansible'}>
+                    <Icon name="chart area" />
+                    <Link to={`${baseUrl}/ansible`}>Ansible</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'log'}>
+                    <Icon name="book" />
+                    <Link to={`${baseUrl}/log`}>Logs</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'history'}>
+                    <Icon name="history" />
+                    <Link to={`${baseUrl}/history`}>History</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'wait'}>
+                    <Icon name="wait" />
+                    <Link to={`${baseUrl}/wait`}>Wait Conditions</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'children'}>
+                    <Icon name="chain" />
+                    <Link to={`${baseUrl}/children`}>Child Processes</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'attachments'}>
+                    <Icon name="paperclip" />
+                    <Link to={`${baseUrl}/attachments`}>Attachments</Link>
+                </Menu.Item>
+            </Menu>
 
-        if (!data.orgName) {
-            return (
-                <BreadcrumbSegment>
-                    <Breadcrumb.Section>
-                        <Link to={`/process`}>Processes</Link>
-                    </Breadcrumb.Section>
-                    <Breadcrumb.Divider />
-                    <Breadcrumb.Section active={true}>
-                        <WithCopyToClipboard value={data.instanceId}>
-                            {data.instanceId}
-                        </WithCopyToClipboard>
-                    </Breadcrumb.Section>
-                </BreadcrumbSegment>
-            );
-        }
+            <Switch>
+                <Route path={baseUrl} exact={true}>
+                    <Redirect to={`${baseUrl}/status`} />
+                </Route>
+                <Route path={`${baseUrl}/status`}>
+                    <ProcessStatusActivity
+                        instanceId={instanceId}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                        refreshHandler={refreshHandler}
+                    />
+                </Route>
 
-        return (
-            <BreadcrumbSegment>
-                <Breadcrumb.Section>
-                    <Link to={`/org/${data.orgName}`}>{data.orgName}</Link>
-                </Breadcrumb.Section>
-                <Breadcrumb.Divider />
-                <Breadcrumb.Section>
-                    <Link to={`/org/${data.orgName}/project/${data.projectName}`}>
-                        {data.projectName}
-                    </Link>
-                </Breadcrumb.Section>
-                <Breadcrumb.Divider />
-                <Breadcrumb.Section active={true}>
-                    <WithCopyToClipboard value={data.instanceId}>
-                        {data.instanceId}
-                    </WithCopyToClipboard>
-                </Breadcrumb.Section>
-            </BreadcrumbSegment>
-        );
-    }
+                <Route path={`${baseUrl}/events`}>
+                    <ProcessEventsActivity
+                        instanceId={instanceId}
+                        processStatus={process ? process.status : undefined}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
+                </Route>
+                <Route path={`${baseUrl}/ansible`}>
+                    <ProcessAnsibleActivitySwitcher
+                        instanceId={instanceId}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
+                </Route>
+                <Route path={`${baseUrl}/log`} exact={true}>
+                    <ProcessLogActivity
+                        instanceId={instanceId}
+                        processStatus={process ? process.status : undefined}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
+                </Route>
+                <Route path={`${baseUrl}/history`} exact={true}>
+                    <ProcessHistoryActivity
+                        instanceId={instanceId}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
+                </Route>
+                <Route path={`${baseUrl}/wait`} exact={true}>
+                    <ProcessWaitActivity
+                        instanceId={instanceId}
+                        processStatus={process ? process.status : undefined}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
+                </Route>
+                <Route path={`${baseUrl}/children`} exact={true}>
+                    <ProcessChildrenActivity instanceId={instanceId} />
+                </Route>
+                <Route path={`${baseUrl}/attachments`} exact={true}>
+                    <ProcessAttachmentsActivity
+                        instanceId={instanceId}
+                        processStatus={process ? process.status : undefined}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
+                </Route>
+                <Route component={NotFoundPage} />
+            </Switch>
+        </>
+    );
+};
 
-    render() {
-        const { loading, error, data } = this.props;
-
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
-
-        if (loading || !data) {
-            return <Loader active={true} />;
-        }
-
-        const { instanceId, activeTab } = this.props;
-
-        const baseUrl = `/process/${instanceId}`;
-
-        return (
-            <>
-                {this.renderBreadcrumbs()}
-
-                <Menu tabular={true}>
-                    <Menu.Item active={activeTab === 'status'}>
-                        <Icon name="hourglass half" />
-                        <Link to={`${baseUrl}/status`}>Status</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'ansible'}>
-                        <Icon name="chart area" />
-                        <Link to={`${baseUrl}/ansible`}>Ansible</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'events'}>
-                        <Icon name="content" />
-                        <Link to={`${baseUrl}/events`}>Events</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'log'}>
-                        <Icon name="book" />
-                        <Link to={`${baseUrl}/log`}>Logs</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'history'}>
-                        <Icon name="history" />
-                        <Link to={`${baseUrl}/history`}>History</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'wait'}>
-                        <Icon name="wait" />
-                        <Link to={`${baseUrl}/wait`}>Wait Conditions</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'children'}>
-                        <Icon name="chain" />
-                        <Link to={`${baseUrl}/children`}>Child Processes</Link>
-                    </Menu.Item>
-                    <Menu.Item active={activeTab === 'attachments'}>
-                        <Icon name="paperclip" />
-                        <Link to={`${baseUrl}/attachments`}>Attachments</Link>
-                    </Menu.Item>
-                </Menu>
-
-                <Switch>
-                    <Route path={baseUrl} exact={true}>
-                        <Redirect to={`${baseUrl}/status`} />
-                    </Route>
-                    <Route path={`${baseUrl}/status`}>
-                        <ProcessStatusActivity process={data} />
-                    </Route>
-                    <Route path={`${baseUrl}/ansible`}>
-                        <ProcessAnsibleActivitySwitcher process={data} />
-                    </Route>
-                    <Route path={`${baseUrl}/events`}>
-                        <ProcessEventsActivity process={data} />
-                    </Route>
-                    <Route path={`${baseUrl}/log`} exact={true}>
-                        <ProcessLogActivity instanceId={instanceId} />
-                    </Route>
-                    <Route path={`${baseUrl}/history`} exact={true}>
-                        <ProcessHistoryActivity process={data} />
-                    </Route>
-                    <Route path={`${baseUrl}/wait`} exact={true}>
-                        <ProcessWaitActivity process={data} />
-                    </Route>
-                    <Route path={`${baseUrl}/children`} exact={true}>
-                        <ProcessChildrenActivity instanceId={instanceId} />
-                    </Route>
-                    <Route path={`${baseUrl}/attachments`} exact={true}>
-                        <ProcessAttachmentsActivity process={data} />
-                    </Route>
-
-                    <Route component={NotFoundPage} />
-                </Switch>
-            </>
-        );
-    }
-}
-
-const mapStateToProps = (
-    { processes }: { processes: State },
-    { instanceId }: ExternalProps
-): StateProps => ({
-    data: processes.processesById[instanceId],
-    loading: processes.loading,
-    error: processes.error
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (instanceId) => dispatch(actions.getProcess(instanceId, ['history', 'checkpoints']))
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessActivity);
+export default ProcessActivity;

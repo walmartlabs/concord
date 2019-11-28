@@ -21,7 +21,7 @@ secret" buttons can now be disabled on the organization level using
 an `entity` policy;
 - concord-server, concord-agent: configurable LRU cache for GIT
 repositories;
-- console: pagination for the project list;
+- concord-console: pagination for the project list;
 - docker, ansible: automatic retries when pulling images;
 - concord-server: configurable hard limit for the process log size;
 - ansible: new parameter `enablePolicy` to apply Concord policies to
@@ -31,6 +31,7 @@ retrieve the list of currently available agent workers;
 
 ### Changed
 
+- concord-console: updated look of the process status toolbar;
 - concord-server: enabled support for `onFailure`, `onCancel` and
 other process handlers for forks;
 - slack: better handling of invalid response codes, increase delay

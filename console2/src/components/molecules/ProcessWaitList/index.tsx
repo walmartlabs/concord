@@ -32,122 +32,129 @@ import { ConcordId } from '../../../api/common';
 import { Link } from 'react-router-dom';
 import { LocalTimestamp } from '../index';
 
-interface Props {
-    data: ProcessWaitHistoryEntry[];
+interface ExternalProps {
+    data?: ProcessWaitHistoryEntry[];
 }
 
-class ProcessWaitList extends React.PureComponent<Props> {
-    static renderTableHeader() {
+const ProcessWaitList = ({ data }: ExternalProps) => {
+    return (
+        <Table celled={true} className={data ? '' : 'loading'}>
+            <Table.Header>{renderTableHeader()}</Table.Header>
+            <Table.Body>{renderElements(data)}</Table.Body>
+        </Table>
+    );
+};
+
+const renderTableHeader = () => {
+    return (
+        <Table.Row>
+            <Table.HeaderCell collapsing={true}>Date</Table.HeaderCell>
+            <Table.HeaderCell collapsing={true}>Condition</Table.HeaderCell>
+            <Table.HeaderCell>Dependencies</Table.HeaderCell>
+        </Table.Row>
+    );
+};
+
+const renderElements = (data?: ProcessWaitHistoryEntry[]) => {
+    if (!data) {
         return (
-            <Table.Row>
-                <Table.HeaderCell collapsing={true}>Date</Table.HeaderCell>
-                <Table.HeaderCell collapsing={true}>Condition</Table.HeaderCell>
-                <Table.HeaderCell>Dependencies</Table.HeaderCell>
-            </Table.Row>
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={3}>&nbsp;</Table.Cell>
+            </tr>
         );
     }
 
-    static renderProcessLink = (id: ConcordId) => {
+    if (data.length === 0) {
         return (
-            <p>
-                <Link to={`/process/${id}`}>{id}</Link>
-            </p>
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell colSpan={3}>No data available</Table.Cell>
+            </tr>
         );
-    };
+    }
 
-    static renderCondition({ type, reason, payload }: ProcessWaitHistoryEntry) {
-        switch (type) {
-            case WaitType.NONE: {
-                return (
-                    <>
-                        <Icon name="check" /> No wait conditions
-                    </>
-                );
-            }
-            case WaitType.PROCESS_COMPLETION: {
-                return (
-                    <>
-                        <Icon name="hourglass half" />
-                        Waiting for the process to complete
-                        {reason && ` (${reason})`}
-                    </>
-                );
-            }
-            case WaitType.PROCESS_LOCK: {
-                const lockPayload = payload as ProcessLockPayload;
-                return (
-                    <>
-                        <Icon name="hourglass half" />
-                        Waiting for the lock ({lockPayload.name})
-                    </>
-                );
-            }
-            case WaitType.PROCESS_SLEEP: {
-                const sleepPayload = payload as ProcessSleepPayload;
-                return (
-                    <>
-                        <Icon name="hourglass half" />
-                        Waiting until ({<LocalTimestamp value={sleepPayload.until} />})
-                    </>
-                );
-            }
-            default:
-                return type;
+    return data.map((p) => renderTableRow(p));
+};
+
+const renderProcessLink = (id: ConcordId) => {
+    return (
+        <p>
+            <Link to={`/process/${id}`}>{id}</Link>
+        </p>
+    );
+};
+
+const renderCondition = ({ type, reason, payload }: ProcessWaitHistoryEntry) => {
+    switch (type) {
+        case WaitType.NONE: {
+            return (
+                <>
+                    <Icon name="check" /> No wait conditions
+                </>
+            );
         }
-    }
-
-    renderProcessWaitDetails = (payload: ProcessWaitPayload) => {
-        return payload.processes.map((p) => ProcessWaitList.renderProcessLink(p));
-    };
-
-    renderProcessLockDetails = (payload: ProcessLockPayload) => {
-        return ProcessWaitList.renderProcessLink(payload.instanceId);
-    };
-
-    renderDependencies = (type: WaitType, payload: WaitPayload) => {
-        switch (type) {
-            case WaitType.PROCESS_COMPLETION: {
-                return this.renderProcessWaitDetails(payload as ProcessWaitPayload);
-            }
-            case WaitType.PROCESS_LOCK: {
-                return this.renderProcessLockDetails(payload as ProcessLockPayload);
-            }
-            default:
-                return '';
+        case WaitType.PROCESS_COMPLETION: {
+            return (
+                <>
+                    <Icon name="hourglass half" />
+                    Waiting for the process to complete
+                    {reason && ` (${reason})`}
+                </>
+            );
         }
-    };
-
-    renderTableRow = (row: ProcessWaitHistoryEntry) => {
-        return (
-            <Table.Row key={row.id} verticalAlign="top">
-                <Table.Cell singleLine={true}>
-                    <LocalTimestamp value={row.eventDate} />
-                </Table.Cell>
-                <Table.Cell collapsing={true}>{ProcessWaitList.renderCondition(row)}</Table.Cell>
-                <Table.Cell>
-                    {row.payload && this.renderDependencies(row.type, row.payload)}
-                </Table.Cell>
-            </Table.Row>
-        );
-    };
-
-    render() {
-        const { data } = this.props;
-
-        return (
-            <Table celled={true}>
-                <Table.Header>{ProcessWaitList.renderTableHeader()}</Table.Header>
-                <Table.Body>
-                    {data && data.length > 0 && data.map((p) => this.renderTableRow(p))}
-                    {(!data || (data && data.length === 0)) && (
-                        <tr style={{ fontWeight: 'bold' }}>
-                            <Table.Cell colSpan={3}>No data available</Table.Cell>
-                        </tr>
-                    )}
-                </Table.Body>
-            </Table>
-        );
+        case WaitType.PROCESS_LOCK: {
+            const lockPayload = payload as ProcessLockPayload;
+            return (
+                <>
+                    <Icon name="hourglass half" />
+                    Waiting for the lock ({lockPayload.name})
+                </>
+            );
+        }
+        case WaitType.PROCESS_SLEEP: {
+            const sleepPayload = payload as ProcessSleepPayload;
+            return (
+                <>
+                    <Icon name="hourglass half" />
+                    Waiting until ({<LocalTimestamp value={sleepPayload.until} />})
+                </>
+            );
+        }
+        default:
+            return type;
     }
-}
+};
+
+const renderProcessWaitDetails = (payload: ProcessWaitPayload) => {
+    return payload.processes.map((p) => renderProcessLink(p));
+};
+
+const renderProcessLockDetails = (payload: ProcessLockPayload) => {
+    return renderProcessLink(payload.instanceId);
+};
+
+const renderDependencies = (type: WaitType, payload: WaitPayload) => {
+    switch (type) {
+        case WaitType.PROCESS_COMPLETION: {
+            return renderProcessWaitDetails(payload as ProcessWaitPayload);
+        }
+        case WaitType.PROCESS_LOCK: {
+            return renderProcessLockDetails(payload as ProcessLockPayload);
+        }
+        default:
+            return '';
+    }
+};
+
+const renderTableRow = (row: ProcessWaitHistoryEntry) => {
+    return (
+        <Table.Row key={row.id} verticalAlign="top">
+            <Table.Cell singleLine={true}>
+                <LocalTimestamp value={row.eventDate} />
+            </Table.Cell>
+            <Table.Cell collapsing={true}>{renderCondition(row)}</Table.Cell>
+            <Table.Cell>{row.payload && renderDependencies(row.type, row.payload)}</Table.Cell>
+        </Table.Row>
+    );
+};
 
 export default ProcessWaitList;

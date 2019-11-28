@@ -29,8 +29,8 @@ import { ProcessRestoreActivity } from '../../organisms';
 
 interface Props {
     instanceId: ConcordId;
-    processStatus: ProcessStatus;
-    events: ProcessEventEntry<ProcessElementEvent>[];
+    processStatus?: ProcessStatus;
+    events?: ProcessEventEntry<ProcessElementEvent>[];
 }
 
 const renderDefinitionId = (
@@ -120,11 +120,37 @@ const renderElementRow = (
     );
 };
 
+const renderElements = (
+    instanceId: ConcordId,
+    processStatus?: ProcessStatus,
+    events?: ProcessEventEntry<ProcessElementEvent>[]
+) => {
+    if (!events || !processStatus) {
+        return (
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell> </Table.Cell>
+                <Table.Cell colSpan={5}>-</Table.Cell>
+            </tr>
+        );
+    }
+
+    if (events.length === 0) {
+        return (
+            <tr style={{ fontWeight: 'bold' }}>
+                <Table.Cell> </Table.Cell>
+                <Table.Cell colSpan={5}>No data available</Table.Cell>
+            </tr>
+        );
+    }
+
+    return events.map((e, idx, arr) => renderElementRow(instanceId, processStatus, e, idx, arr));
+};
+
 class ProcessElementList extends React.PureComponent<Props> {
     render() {
         const { instanceId, processStatus, events } = this.props;
         return (
-            <Table celled={true} definition={true}>
+            <Table celled={true} definition={true} className={events ? '' : 'loading'}>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell width={1} />
@@ -141,18 +167,7 @@ class ProcessElementList extends React.PureComponent<Props> {
                     </Table.Row>
                 </Table.Header>
 
-                <Table.Body>
-                    {events.length > 0 &&
-                        events.map((e, idx, arr) =>
-                            renderElementRow(instanceId, processStatus, e, idx, arr)
-                        )}
-                    {events.length === 0 && (
-                        <tr style={{ fontWeight: 'bold' }}>
-                            <Table.Cell> </Table.Cell>
-                            <Table.Cell colSpan={5}>No data available</Table.Cell>
-                        </tr>
-                    )}
-                </Table.Body>
+                <Table.Body>{renderElements(instanceId, processStatus, events)}</Table.Body>
             </Table>
         );
     }

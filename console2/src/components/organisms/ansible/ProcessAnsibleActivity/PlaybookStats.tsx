@@ -20,7 +20,7 @@
 import * as React from 'react';
 import { Card, SemanticCOLORS, Statistic } from 'semantic-ui-react';
 
-import { useCallback } from 'react';
+import { memo } from 'react';
 
 export enum Blocks {
     'hosts',
@@ -30,36 +30,33 @@ export enum Blocks {
 }
 
 export interface PlaybookStatsProps {
-    hostsCount: number;
-    failedHostsCount: number;
-    playsCount: number;
-    failedTasksCount: number;
+    hostsCount?: number;
+    failedHostsCount?: number;
+    playsCount?: number;
+    failedTasksCount?: number;
     selectedBlock?: Blocks;
     onBlockChange: (block: Blocks) => void;
 }
 
 const activeBlockColor: SemanticCOLORS = 'green';
 
-const PlaybookStats = ({
-    hostsCount,
-    failedHostsCount,
-    playsCount,
-    failedTasksCount,
-    selectedBlock,
-    onBlockChange
-}: PlaybookStatsProps) => {
-    const onBlockToggle = useCallback(
-        (block: Blocks) => {
-            onBlockChange(block);
-        },
-        [onBlockChange]
-    );
+const PlaybookStats = memo((props: PlaybookStatsProps) => {
+    const {
+        hostsCount,
+        failedHostsCount,
+        playsCount,
+        failedTasksCount,
+        selectedBlock,
+        onBlockChange
+    } = props;
 
     return (
         <>
-            <Card.Group itemsPerRow={4}>
+            <Card.Group itemsPerRow={4} className={hostsCount ? '' : 'loading'}>
                 <Card
-                    onClick={hostsCount > 0 ? () => onBlockToggle(Blocks.hosts) : undefined}
+                    onClick={
+                        hostsCount && hostsCount > 0 ? () => onBlockChange(Blocks.hosts) : undefined
+                    }
                     color={selectedBlock === Blocks.hosts ? activeBlockColor : undefined}
                     className={selectedBlock === Blocks.hosts ? 'playbookStatsBlockToggled' : ''}>
                     <Card.Content textAlign={'center'}>
@@ -73,14 +70,18 @@ const PlaybookStats = ({
                 </Card>
                 <Card
                     onClick={
-                        failedHostsCount > 0 ? () => onBlockToggle(Blocks.failedHosts) : undefined
+                        failedHostsCount && failedHostsCount > 0
+                            ? () => onBlockChange(Blocks.failedHosts)
+                            : undefined
                     }
                     color={selectedBlock === Blocks.failedHosts ? activeBlockColor : undefined}
                     className={
                         selectedBlock === Blocks.failedHosts ? 'playbookStatsBlockToggled' : ''
                     }>
                     <Card.Content textAlign={'center'}>
-                        <Statistic color={failedHostsCount > 0 ? 'red' : 'black'} size={'tiny'}>
+                        <Statistic
+                            color={failedHostsCount && failedHostsCount > 0 ? 'red' : 'black'}
+                            size={'tiny'}>
                             <Statistic.Value>{failedHostsCount}</Statistic.Value>
                             <Statistic.Label className={'playbookStatsLabel'}>
                                 FAILED HOSTS
@@ -89,7 +90,9 @@ const PlaybookStats = ({
                     </Card.Content>
                 </Card>
                 <Card
-                    onClick={playsCount > 0 ? () => onBlockToggle(Blocks.plays) : undefined}
+                    onClick={
+                        playsCount && playsCount > 0 ? () => onBlockChange(Blocks.plays) : undefined
+                    }
                     color={selectedBlock === Blocks.plays ? activeBlockColor : undefined}
                     className={selectedBlock === Blocks.plays ? 'playbookStatsBlockToggled' : ''}>
                     <Card.Content textAlign={'center'}>
@@ -103,14 +106,18 @@ const PlaybookStats = ({
                 </Card>
                 <Card
                     onClick={
-                        failedTasksCount > 0 ? () => onBlockToggle(Blocks.failedTasks) : undefined
+                        failedTasksCount && failedTasksCount > 0
+                            ? () => onBlockChange(Blocks.failedTasks)
+                            : undefined
                     }
                     color={selectedBlock === Blocks.failedTasks ? activeBlockColor : undefined}
                     className={
                         selectedBlock === Blocks.failedTasks ? 'playbookStatsBlockToggled' : ''
                     }>
                     <Card.Content textAlign={'center'}>
-                        <Statistic color={failedTasksCount > 0 ? 'red' : 'black'} size={'tiny'}>
+                        <Statistic
+                            color={failedTasksCount && failedTasksCount > 0 ? 'red' : 'black'}
+                            size={'tiny'}>
                             <Statistic.Value>{failedTasksCount}</Statistic.Value>
                             <Statistic.Label className={'playbookStatsLabel'}>
                                 FAILED TASKS
@@ -121,6 +128,6 @@ const PlaybookStats = ({
             </Card.Group>
         </>
     );
-};
+});
 
 export default PlaybookStats;

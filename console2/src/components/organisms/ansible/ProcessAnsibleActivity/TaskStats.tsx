@@ -25,7 +25,7 @@ import { memo } from 'react';
 
 export interface TaskStatsProps {
     totalTaskWork: number;
-    tasks: TaskInfoEntry[];
+    tasks?: TaskInfoEntry[];
 }
 
 const renderTaskRow = (
@@ -51,15 +51,42 @@ const renderTaskRow = (
     );
 };
 
+const renderTableBody = (totalTaskWork: number, tasks?: TaskInfoEntry[]) => {
+    if (!tasks) {
+        return (
+            <Table.Row style={{ fontWeight: 'bold' }}>
+                <Table.Cell
+                    collapsing={true}
+                    singleLine={true}
+                    textAlign={'right'}
+                    className="taskProgressCell">
+                    -
+                </Table.Cell>
+                <Table.Cell>&nbsp;</Table.Cell>
+            </Table.Row>
+        );
+    }
+
+    return tasks.map((value, index) =>
+        renderTaskRow(value.name, value.type, value.stats, totalTaskWork, index)
+    );
+};
+
 const TaskStats = memo(({ totalTaskWork, tasks }: TaskStatsProps) => {
     return (
         <>
-            <Table compact={true} basic={'very'} columns={2}>
-                <Table.Body>
-                    {tasks.map((value, index) =>
-                        renderTaskRow(value.name, value.type, value.stats, totalTaskWork, index)
-                    )}
-                </Table.Body>
+            <Table compact={true} basic={'very'} columns={2} className={tasks ? '' : 'loading'}>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell collapsing={true} singleLine={true} textAlign={'right'}>
+                            Task
+                        </Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true} singleLine={true}>
+                            Host execution count
+                        </Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>{renderTableBody(totalTaskWork, tasks)}</Table.Body>
             </Table>
         </>
     );

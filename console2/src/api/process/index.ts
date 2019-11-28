@@ -58,7 +58,7 @@ export const getStatusSemanticColor = (status: ProcessStatus): SemanticCOLORS =>
     }
 };
 
-export const isFinal = (s: ProcessStatus) =>
+export const isFinal = (s?: ProcessStatus) =>
     s === ProcessStatus.FINISHED ||
     s === ProcessStatus.FAILED ||
     s === ProcessStatus.CANCELLED ||
