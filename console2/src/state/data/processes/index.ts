@@ -99,14 +99,14 @@ export const actions = {
         projectName: ConcordKey,
         repoName: ConcordKey,
         entryPoint?: string,
-        profile?: string
+        profiles?: string[]
     ): StartProcessRequest => ({
         type: actionTypes.START_PROCESS_REQUEST,
         orgName,
         projectName,
         repoName,
         entryPoint,
-        profile
+        profiles
     }),
 
     restoreProcess: (instanceId: ConcordKey, checkpointId: ConcordKey): RestoreProcessRequest => ({
@@ -276,10 +276,10 @@ function* onStartProcess({
     projectName,
     repoName,
     entryPoint,
-    profile
+    profiles
 }: StartProcessRequest) {
     try {
-        const response = yield call(apiStart, orgName, projectName, repoName, entryPoint, profile);
+        const response = yield call(apiStart, orgName, projectName, repoName, entryPoint, profiles);
         yield put({
             type: actionTypes.START_PROCESS_RESPONSE,
             ...response

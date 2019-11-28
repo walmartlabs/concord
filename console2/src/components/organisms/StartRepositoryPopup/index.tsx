@@ -48,7 +48,7 @@ interface ExternalProps {
 
 interface DispatchProps {
     reset: () => void;
-    onConfirm: (entryPoint?: string, profile?: string) => void;
+    onConfirm: (entryPoint?: string, profiles?: string[]) => void;
     openProcessPage: (instanceId: ConcordId) => void;
 }
 
@@ -66,7 +66,7 @@ interface OwnState {
     selectedEntryPoint?: string;
 
     profiles: string[];
-    selectedProfile?: string;
+    selectedProfiles?: string[];
 }
 
 const makeOptions = (data?: string[]): DropdownItemProps[] => {
@@ -85,6 +85,14 @@ interface SimpleDropdownProps {
     onChange: (value: string) => void;
 }
 
+interface MultiSelectDropdownProps {
+    data: string[];
+    defaultValue?: string;
+    disabled: boolean;
+    onAdd: (value: string) => void;
+    onChange: (value: string[]) => void;
+}
+
 const SimpleDropdown = ({ data, defaultValue, disabled, onAdd, onChange }: SimpleDropdownProps) => (
     <Dropdown
         clearable={true}
@@ -99,6 +107,27 @@ const SimpleDropdown = ({ data, defaultValue, disabled, onAdd, onChange }: Simpl
     />
 );
 
+const MultiSelectDropdown = ({
+    data,
+    defaultValue,
+    disabled,
+    onAdd,
+    onChange
+}: MultiSelectDropdownProps) => (
+    <Dropdown
+        clearable={true}
+        selection={true}
+        multiple={true}
+        allowAdditions={true}
+        search={true}
+        defaultValue={defaultValue}
+        disabled={disabled}
+        options={makeOptions(data)}
+        onAddItem={(e, data) => onAdd(data.value as string)}
+        onChange={(e, data) => onChange(data.value as string[])}
+    />
+);
+
 class StartRepositoryPopup extends React.Component<Props, OwnState> {
     constructor(props: Props) {
         super(props);
@@ -106,6 +135,7 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
         this.state = {
             entryPoints: [...(props.repoEntryPoints || [])],
             selectedEntryPoint: props.entryPoint,
+            selectedProfiles: props.profiles,
             profiles: [...(props.repoProfiles || [])]
         };
     }
@@ -194,23 +224,25 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
                                 </Table.Cell>
                             </Table.Row>
                             <Table.Row>
-                                <Table.Cell textAlign={'right'}>Profile</Table.Cell>
+                                <Table.Cell textAlign={'right'}>Profile(s)</Table.Cell>
                                 <Table.Cell>
                                     {allowProfile ? (
-                                        <SimpleDropdown
+                                        <MultiSelectDropdown
                                             data={this.state.profiles}
                                             defaultValue={profiles ? profiles[0] : undefined}
                                             disabled={profiles !== undefined}
                                             onAdd={(v) =>
                                                 this.setState({
-                                                    selectedProfile: v,
+                                                    selectedProfiles: [v],
                                                     profiles: [v, ...this.state.profiles]
                                                 })
                                             }
-                                            onChange={(v) => this.setState({ selectedProfile: v })}
+                                            onChange={(v) => this.setState({ selectedProfiles: v })}
                                         />
+                                    ) : profiles !== undefined ? (
+                                        profiles.join(',')
                                     ) : (
-                                        profiles
+                                        ''
                                     )}
                                 </Table.Cell>
                             </Table.Row>
@@ -224,7 +256,7 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
                 error={error}
                 reset={reset}
                 onConfirm={() =>
-                    onConfirm(this.state.selectedEntryPoint, this.state.selectedProfile)
+                    onConfirm(this.state.selectedEntryPoint, this.state.selectedProfiles)
                 }
                 onDoneElements={() => (
                     <Button
@@ -252,8 +284,8 @@ const mapDispatchToProps = (
     { orgName, projectName, repoName }: ExternalProps
 ): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
-    onConfirm: (entryPoint?: string, profile?: string) =>
-        dispatch(actions.startProcess(orgName, projectName, repoName, entryPoint, profile)),
+    onConfirm: (entryPoint?: string, profiles?: string[]) =>
+        dispatch(actions.startProcess(orgName, projectName, repoName, entryPoint, profiles)),
     openProcessPage: (instanceId: ConcordId) => dispatch(pushHistory(`/process/${instanceId}`))
 });
 
