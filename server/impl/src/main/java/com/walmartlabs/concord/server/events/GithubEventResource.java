@@ -51,7 +51,6 @@ import org.sonatype.siesta.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.naming.NamingException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -174,7 +173,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             }
             
             return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP);
-        } catch (NamingException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

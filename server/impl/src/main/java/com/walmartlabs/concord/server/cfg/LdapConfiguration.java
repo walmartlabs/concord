@@ -94,6 +94,11 @@ public class LdapConfiguration implements Serializable {
     @Config("ldap.returningAttributes")
     private List<String> returningAttributes;
 
+    @Inject
+    @Nullable
+    @Config("ldap.cacheDuration")
+    private Long cacheDuration;
+
     private final Set<String> exposeAttributes;
 
     private final Set<String> excludeAttributes;
@@ -168,6 +173,10 @@ public class LdapConfiguration implements Serializable {
 
     public boolean isAutoCreateUsers() {
         return autoCreateUsers;
+    }
+
+    public Long getCacheDuration() {
+        return cacheDuration;
     }
 
     private static Set<String> split(String s) {

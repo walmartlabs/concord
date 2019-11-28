@@ -4,6 +4,7 @@
 
 ### Added
 
+- server: optional caching of LDAP query results;
 - http: default `User-Agent` value, contains the version of
 the plugin;
 - imports: ability to `exclude` files when importing external
