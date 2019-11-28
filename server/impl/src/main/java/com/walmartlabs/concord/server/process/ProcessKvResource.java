@@ -83,7 +83,7 @@ public class ProcessKvResource implements Resource {
     @GET
     @ApiOperation("Get string KV")
     @Path("{id}/kv/{key}/string")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public String getString(@PathParam("id") UUID instanceId,
                             @PathParam("key") String key) {
 
