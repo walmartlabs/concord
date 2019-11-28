@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GitCliRepositoryProvider implements RepositoryProvider {
 
@@ -74,9 +76,12 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public Snapshot export(Path src, Path dst) throws IOException {
+    public Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException {
         LastModifiedSnapshot snapshot = new LastModifiedSnapshot();
-        IOUtils.copy(src, dst, GIT_FILES, snapshot, StandardCopyOption.REPLACE_EXISTING);
+        List<String> allIgnorePatterns = new ArrayList<>();
+        allIgnorePatterns.add(GIT_FILES);
+        allIgnorePatterns.addAll(ignorePatterns);
+        IOUtils.copy(src, dst, allIgnorePatterns, snapshot, StandardCopyOption.REPLACE_EXISTING);
         return snapshot;
     }
 

@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 public class ClasspathRepositoryProvider implements RepositoryProvider {
 
@@ -72,7 +73,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public Snapshot export(Path src, Path dst) throws IOException {
+    public Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException {
         IOUtils.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         return new Snapshot() {

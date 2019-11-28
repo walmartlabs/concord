@@ -30,10 +30,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public final class IOUtils {
 
@@ -210,22 +207,26 @@ public final class IOUtils {
     }
 
     public static void copy(Path src, Path dst) throws IOException {
-        copy(src, dst, null, null, new CopyOption[0]);
+        copy(src, dst, (String) null, null, new CopyOption[0]);
     }
 
     public static void copy(Path src, Path dst, CopyOption... options) throws IOException {
-        copy(src, dst, null, null, options);
+        copy(src, dst, (String) null, null, options);
     }
 
     public static void copy(Path src, Path dst, String ignorePattern, CopyOption... options) throws IOException {
-        _copy(1, src, src, dst, ignorePattern, null, options);
+        _copy(1, src, src, dst, toList(ignorePattern), null, options);
     }
 
     public static void copy(Path src, Path dst, String skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
+        _copy(1, src, src, dst, toList(skipContents), visitor, options);
+    }
+
+    public static void copy(Path src, Path dst, List<String> skipContents, FileVisitor visitor, CopyOption... options) throws IOException {
         _copy(1, src, src, dst, skipContents, visitor, options);
     }
 
-    private static void _copy(int depth, Path root, Path src, Path dst, String ignorePattern, FileVisitor visitor, CopyOption... options) throws IOException {
+    private static void _copy(int depth, Path root, Path src, Path dst, List<String> ignorePattern, FileVisitor visitor, CopyOption... options) throws IOException {
         if (depth >= MAX_COPY_DEPTH) {
             throw new IOException("Too deep: " + src);
         }
@@ -233,7 +234,7 @@ public final class IOUtils {
         Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (ignorePattern != null && dir.getFileName().toString().matches(ignorePattern)) {
+                if (dir != src && anyMatch(src.relativize(dir).toString(), ignorePattern)) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
 
@@ -242,7 +243,7 @@ public final class IOUtils {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (ignorePattern != null && file.getFileName().toString().matches(ignorePattern)) {
+                if (file != src && anyMatch(src.relativize(file).toString(), ignorePattern)) {
                     return FileVisitResult.CONTINUE;
                 }
 
@@ -348,6 +349,22 @@ public final class IOUtils {
             return defaultValue;
         }
         return s;
+    }
+
+    private static List<String> toList(String entry) {
+        if (entry == null) {
+            return Collections.emptyList();
+        }
+
+        return Collections.singletonList(entry);
+    }
+
+    private static boolean anyMatch(String what, List<String> patterns) {
+        if (patterns == null) {
+            return false;
+        }
+
+        return patterns.stream().anyMatch(what::matches);
     }
 
     private IOUtils() {

@@ -36,7 +36,7 @@ public class ImportManagerProvider {
             if (entry.dest() != null) {
                 dst = dst.resolve(entry.dest());
             }
-            repositoryManager.export(entry.url(), entry.version(), null, entry.path(), dst, entry.secret());
+            repositoryManager.export(entry.url(), entry.version(), null, entry.path(), dst, entry.secret(), entry.exclude());
             return null;
         });
     }

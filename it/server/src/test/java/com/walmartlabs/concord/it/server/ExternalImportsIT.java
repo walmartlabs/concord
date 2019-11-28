@@ -32,7 +32,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -287,6 +289,96 @@ public class ExternalImportsIT extends AbstractServerIT {
         repositoriesApi.validateRepository(orgName, projectName, repoName);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithExcludeFullDir() throws Exception {
+        String repoUrl = initRepo("externalImportWithDir");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMainWithExclude", repoUrl, "dir");
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // get the name of the agent's log file
+
+        assertNotNull(pir.getLogFileName());
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+        assertLog(".*Hello from Template, Concord!.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithExcludeFileFromDir() throws Exception {
+        String repoUrl = initRepo("externalImportWithDir");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMainWithExclude", repoUrl, "dir/concord.yml");
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // get the name of the agent's log file
+
+        assertNotNull(pir.getLogFileName());
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+        assertLog(".*Hello from Template, Concord!.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportWithExcludeFile() throws Exception {
+        String repoUrl = initRepo("externalImportWithDir");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMainWithExclude", repoUrl, "concord.yml");
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // get the name of the agent's log file
+
+        assertNotNull(pir.getLogFileName());
+
+        // check the logs
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello, Concord!.*", ab);
+        assertLog(".*Hello from Template DIR, Concord!.*", ab);
+    }
+
     private static String initRepo(String resourceName) throws Exception {
         Path tmpDir = createTempDir();
 
@@ -300,20 +392,35 @@ public class ExternalImportsIT extends AbstractServerIT {
     }
 
     private static Path createPayload(String resourceName, String repoUrl) throws Exception {
+        return createPayload(resourceName, Collections.singletonMap("{{gitUrl}}", repoUrl));
+    }
+
+    private static Path createPayload(String resourceName, String repoUrl, String exclude) throws Exception {
+        Map<String, String> replacements = new HashMap<>();
+        replacements.put("{{gitUrl}}", repoUrl);
+        replacements.put("{{exclude}}", exclude);
+        return createPayload(resourceName, replacements);
+    }
+
+    private static Path createPayload(String resourceName, Map<String, String> replacements) throws Exception {
         Path tmpDir = createTempDir();
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
         Path concordFile = tmpDir.resolve("concord.yml");
-        replace(concordFile, "{{gitUrl}}", repoUrl);
+        replacements.forEach((k, v) -> replace(concordFile, k, v));
         return tmpDir;
     }
 
-    private static void replace(Path concord, String what, String newValue) throws IOException {
-        List<String> fileContent = Files.readAllLines(concord, StandardCharsets.UTF_8).stream()
-                .map(l -> l.replaceAll(Pattern.quote(what), newValue))
-                .collect(Collectors.toList());
+    private static void replace(Path concord, String what, String newValue) {
+        try {
+            List<String> fileContent = Files.readAllLines(concord, StandardCharsets.UTF_8).stream()
+                    .map(l -> l.replaceAll(Pattern.quote(what), newValue))
+                    .collect(Collectors.toList());
 
-        Files.write(concord, fileContent, StandardCharsets.UTF_8);
+            Files.write(concord, fileContent, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void commit(File dir) throws Exception {

@@ -1,0 +1,14 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+      exclude:
+        - "{{exclude}}"
+
+flows:
+  default:
+    - log: "Hello, ${name}!"
+    - call: flowFromTemplate
+
+configuration:
+  arguments:
+    name: "Concord"

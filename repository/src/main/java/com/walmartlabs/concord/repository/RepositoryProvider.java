@@ -24,6 +24,7 @@ import com.walmartlabs.concord.sdk.Secret;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 public interface RepositoryProvider {
 
@@ -33,7 +34,7 @@ public interface RepositoryProvider {
 
     void fetch(String uri, String branch, String commitId, Secret secret, Path dst);
 
-    Snapshot export(Path src, Path dst) throws IOException;
+    Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException;
 
     RepositoryInfo getInfo(Path path);
 }
