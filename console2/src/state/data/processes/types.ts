@@ -30,6 +30,7 @@ import {
 } from '../../../api/process';
 import { RequestState } from '../common';
 import { State as ChildrenState } from './children/types';
+import { State as EventsState } from './events/types';
 
 export interface GetProcessRequest extends Action {
     instanceId: ConcordId;
@@ -105,4 +106,5 @@ export interface State {
     restoreProcess: RestoreProcessState;
 
     children: ChildrenState;
+    events: EventsState;
 }
