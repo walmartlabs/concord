@@ -38,7 +38,7 @@ RUN pip install --upgrade --ignore-installed \
     openshift \
     pbr \
     pyvmomi \
-    pywinrm==0.3.0 \
+    pywinrm==0.4.1 \
     requests_kerberos \
     ujson \
     virtualenv
