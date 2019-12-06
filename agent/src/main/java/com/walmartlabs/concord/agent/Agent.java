@@ -339,11 +339,7 @@ public class Agent {
                 jobExecutor = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
             }
 
-            try {
-                return jobExecutor.exec(job);
-            } finally {
-                job.getLog().delete();
-            }
+            return jobExecutor.exec(job);
         };
     }
 }

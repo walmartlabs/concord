@@ -112,6 +112,8 @@ public class RunnerJobExecutor {
 
             job.getLog().error("Process startup error: {}", e.getMessage());
 
+            cleanup(job);
+
             throw e;
         }
 
@@ -122,6 +124,8 @@ public class RunnerJobExecutor {
                 exec(_job, pe);
             } catch (Exception e) {
                 throw new RuntimeException(e);
+            } finally {
+                cleanup(_job);
             }
         });
 
@@ -501,6 +505,14 @@ public class RunnerJobExecutor {
         return h.hash();
     }
 
+    private static void cleanup(RunnerJob job) {
+        try {
+            job.getLog().delete();
+        } catch (Exception e) {
+            log.warn("cleanup [{}] -> error while cleaning up the process logs: {}", job.getInstanceId(), e.getMessage());
+        }
+    }
+
     /**
      * A tiny wrapper to simplify working with the log streaming.
      */
@@ -542,13 +554,6 @@ public class RunnerJobExecutor {
                 f.get(1, TimeUnit.MINUTES);
             } catch (Exception e) {
                 log.warn("waitForCompletion -> timeout waiting for the log stream of {}", job.getInstanceId());
-            }
-
-            try {
-                ProcessLog processLog = job.getLog();
-                processLog.delete();
-            } catch (Exception e) {
-                log.warn("waitForCompletion -> cleanup of {} error: {}", job.getInstanceId(), e.getMessage());
             }
         }
     }
