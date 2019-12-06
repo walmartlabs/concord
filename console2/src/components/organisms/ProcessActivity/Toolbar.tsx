@@ -25,7 +25,16 @@ import {
     ProcessEntry,
     ProcessStatus
 } from '../../../api/process';
-import { Breadcrumb, Button, Dropdown, Icon, Label, Menu, MenuItem } from 'semantic-ui-react';
+import {
+    Breadcrumb,
+    Button,
+    Dropdown,
+    Icon,
+    Label,
+    Menu,
+    MenuItem,
+    Sticky
+} from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 import { ProcessLastErrorModal, WithCopyToClipboard } from '../../molecules';
 
@@ -33,33 +42,51 @@ import './styles.css';
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 import { CancelProcessPopup, DisableProcessPopup } from '../index';
 import { ConcordId } from '../../../api/common';
+import { memo, useCallback, useState } from 'react';
 
 interface ExternalProps {
+    stickyRef: any;
     loading: boolean;
     instanceId: ConcordId;
     process?: ProcessEntry;
     refresh: () => void;
 }
 
-const ProcessToolbar = (props: ExternalProps) => {
-    const { loading, refresh, process, instanceId } = props;
+const ProcessToolbar = memo((props: ExternalProps) => {
+    const { stickyRef, loading, refresh, process, instanceId } = props;
+
+    const [isFixed, setFixed] = useState(false);
+
+    const onStick = useCallback(() => {
+        setFixed(false);
+    }, []);
+
+    const onUnstick = useCallback(() => {
+        setFixed(true);
+    }, []);
 
     return (
-        <Menu tabular={false} secondary={true} borderless={true} className={'ProcessMainToolbar'}>
-            <MenuItem>
-                <Icon name="refresh" loading={loading} size={'large'} onClick={refresh} />
-            </MenuItem>
+        <Sticky context={stickyRef} onStick={onStick} onUnstick={onUnstick}>
+            <Menu
+                tabular={false}
+                secondary={true}
+                borderless={true}
+                className={isFixed ? 'ProcessMainToolbar' : 'ProcessMainToolbar unfixed'}>
+                <MenuItem>
+                    <Icon name="refresh" loading={loading} size={'large'} onClick={refresh} />
+                </MenuItem>
 
-            <MenuItem>{renderBreadcrumbs(instanceId, process)}</MenuItem>
+                <MenuItem>{renderBreadcrumbs(instanceId, process)}</MenuItem>
 
-            <MenuItem>{renderProcessStatus(process)}</MenuItem>
+                <MenuItem>{renderProcessStatus(process)}</MenuItem>
 
-            <MenuItem position={'right'}>{renderProcessMainActions(refresh, process)}</MenuItem>
+                <MenuItem position={'right'}>{renderProcessMainActions(refresh, process)}</MenuItem>
 
-            <MenuItem>{renderProcessSecondaryActions(refresh, process)}</MenuItem>
-        </Menu>
+                <MenuItem>{renderProcessSecondaryActions(refresh, process)}</MenuItem>
+            </Menu>
+        </Sticky>
     );
-};
+});
 
 const renderBreadcrumbs = (instanceId: ConcordId, process?: ProcessEntry) => {
     if (!process) {

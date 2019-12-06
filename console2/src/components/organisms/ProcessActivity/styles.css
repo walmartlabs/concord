@@ -17,8 +17,17 @@
  * limitations under the License.
  * =====
  */
+
 .ProcessMainToolbar {
-    margin-top: 1rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+.ProcessMainToolbar.unfixed {
+    background: white !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(34,36,38,.15) !important;
+    box-shadow: none !important;
 }
 
 .ProcessMainToolbar .item {

@@ -61,6 +61,8 @@ interface ExternalProps {
 const DATA_FETCH_INTERVAL = 5000;
 
 const ProcessActivity = (props: ExternalProps) => {
+    const stickyRef = useRef(null);
+
     const [loading, setLoading] = useState<boolean>(false);
     const loadingCounter = useRef<number>(0);
     const [refresh, toggleRefresh] = useState<boolean>(false);
@@ -93,15 +95,16 @@ const ProcessActivity = (props: ExternalProps) => {
     const baseUrl = `/process/${instanceId}`;
 
     return (
-        <>
+        <div ref={stickyRef}>
             <ProcessToolbar
                 loading={loading}
                 instanceId={instanceId}
                 process={process}
                 refresh={refreshHandler}
+                stickyRef={stickyRef}
             />
 
-            <Menu tabular={true}>
+            <Menu tabular={true} style={{ marginTop: 0 }}>
                 <Menu.Item active={activeTab === 'status'}>
                     <Icon name="hourglass half" />
                     <Link to={`${baseUrl}/status`}>Status</Link>
@@ -200,7 +203,7 @@ const ProcessActivity = (props: ExternalProps) => {
                 </Route>
                 <Route component={NotFoundPage} />
             </Switch>
-        </>
+        </div>
     );
 };
 
