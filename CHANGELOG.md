@@ -28,8 +28,10 @@ repositories;
 - concord-server: configurable hard limit for the process log size;
 - ansible: new parameter `enablePolicy` to apply Concord policies to
 plays;
-- concord-server: new endpoint `/api/v1/agent/all/workers` to
-retrieve the list of currently available agent workers;
+- concord-server: new endpoints `/api/v1/agent/all/workers` and
+`/api/v1/agent/all/workersCount` to retrieve the list of currently
+available agent workers and the number of available workers grouped
+by a property in agent `capabilities`;
 
 ### Changed
 

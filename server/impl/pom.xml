@@ -58,6 +58,7 @@
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-repository</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
