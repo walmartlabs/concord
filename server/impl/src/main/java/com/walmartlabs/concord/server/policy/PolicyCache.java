@@ -28,6 +28,7 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.server.BackgroundTask;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.cfg.PolicyCacheConfiguration;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
@@ -56,6 +57,7 @@ public class PolicyCache implements BackgroundTask {
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private final Object refreshMutex = new Object();
 
+    private final PolicyCacheConfiguration cacheCfg;
     private final Dao dao;
 
     private PolicyEngine defaultPolicy;
@@ -68,8 +70,9 @@ public class PolicyCache implements BackgroundTask {
     private Thread loader;
 
     @Inject
-    public PolicyCache(ObjectMapper objectMapper, Dao dao) {
+    public PolicyCache(ObjectMapper objectMapper, PolicyCacheConfiguration cacheCfg, Dao dao) {
         this.objectMapper = objectMapper;
+        this.cacheCfg = cacheCfg;
         this.dao = dao;
     }
 
@@ -167,7 +170,7 @@ public class PolicyCache implements BackgroundTask {
                     if (lastRefreshRequestAt > now) {
                         lastRefreshRequestAt = now;
                     } else {
-                        refreshMutex.wait();
+                        refreshMutex.wait(cacheCfg.getReloadInterval());
                     }
                 }
             } catch (InterruptedException e) {
