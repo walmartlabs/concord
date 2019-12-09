@@ -1,0 +1,7 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+
+flows:
+  onTrigger:
+    - log: "Hello, ${name}"

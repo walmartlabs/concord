@@ -31,10 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -379,11 +376,81 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello from Template DIR, Concord!.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testImportWithTriggers() throws Exception {
+        String importRepoUrl = initRepo("testTrigger");
+        String clientRepoUrl = initRepo("importATrigger", "concord.yml", "{{gitUrl}}", importRepoUrl);
+
+        String orgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setUrl(clientRepoUrl))));
+
+        // ---
+
+        TriggersApi triggersApi = new TriggersApi(getApiClient());
+        while (true) {
+            List<TriggerEntry> triggers = triggersApi.list(orgName, projectName, repoName);
+            if (triggers != null && triggers.size() == 1 && triggers.get(0).getEventSource().equals("test")) {
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        // ---
+
+        ExternalEventsApi externalEventsApi = new ExternalEventsApi(getApiClient());
+        externalEventsApi.event("test", Collections.emptyMap());
+
+        // ---
+
+        ProcessEntry pe;
+
+        ProcessV2Api processApi = new ProcessV2Api(getApiClient());
+        while (true) {
+            List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null);
+
+            Optional<ProcessEntry> o = l.stream().filter(e -> e.getTriggeredBy().getTrigger().getEventSource().equals("test")).findFirst();
+            if (o.isPresent()) {
+                pe = o.get();
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        // ---
+
+        waitForCompletion(new ProcessApi(getApiClient()), pe.getInstanceId());
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Hello, Concord.*", ab);
+    }
+
     private static String initRepo(String resourceName) throws Exception {
+        return initRepo(resourceName, null, null, null);
+    }
+
+    private static String initRepo(String resourceName, String path, String find, String replace) throws Exception {
         Path tmpDir = createTempDir();
 
         File src = new File(ExternalImportsIT.class.getResource(resourceName).toURI());
         IOUtils.copy(src.toPath(), tmpDir);
+
+        if (path != null) {
+            Path p = tmpDir.resolve(path);
+            String s = new String(Files.readAllBytes(p));
+            Files.write(p, s.replace(find, replace).getBytes());
+        }
 
         Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
         repo.add().addFilepattern(".").call();
