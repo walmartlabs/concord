@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.agent;
  */
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.server.AgentWorkerUtils;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -84,9 +85,6 @@ public class AgentResource implements Resource {
             throw new ValidationErrorsException("Invalid 'capabilities' value. Expected a path to a property, got: " + capabilities);
         }
 
-        return data.stream()
-                .map(e -> ConfigurationUtils.get(e.capabilities(), path))
-                .map(e -> e != null ? e : "n/a")
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        return AgentWorkerUtils.groupBy(data, path);
     }
 }
