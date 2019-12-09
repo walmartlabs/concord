@@ -176,7 +176,7 @@ class NewSecretActivity extends React.Component<Props, OwnState> {
                     onSubmit={(entry) => this.handleSubmit(entry)}
                     initial={{
                         name: '',
-                        visibility: SecretVisibility.PUBLIC,
+                        visibility: SecretVisibility.PRIVATE,
                         type: SecretTypeExt.NEW_KEY_PAIR,
                         storeType: SecretStoreType.CONCORD
                     }}

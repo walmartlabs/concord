@@ -55,7 +55,7 @@ class NewProjectActivity extends React.PureComponent<Props> {
                     onSubmit={submit}
                     initial={{
                         name: '',
-                        visibility: ProjectVisibility.PUBLIC,
+                        visibility: ProjectVisibility.PRIVATE,
                         description: ''
                     }}
                 />
