@@ -26,6 +26,7 @@ import { actions, State } from '../../../state/data/projects';
 import { SingleOperationPopup } from '../../molecules';
 
 import './styles.css';
+import { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -43,36 +44,95 @@ interface StateProps {
     validating: boolean;
     success: boolean;
     error: RequestError;
+    validationErrors: string[];
+    validationWarnings: string[];
 }
 
 type Props = DispatchProps & ExternalProps & StateProps;
 
 class ValidateRepositoryPopup extends React.Component<Props> {
     render() {
-        const { trigger, validating, success, error, reset, onConfirm, repoName } = this.props;
+        const {
+            trigger,
+            validating,
+            success,
+            error,
+            validationErrors,
+            validationWarnings,
+            reset,
+            onConfirm,
+            repoName
+        } = this.props;
 
         let title = 'Validate repository?';
 
-        if (success) {
-            title = 'Validation complete';
-        }
-
         if (error) {
             title = 'Validation error';
+        }
+
+        let icon: SemanticICONS | undefined;
+        let iconColor: SemanticCOLORS | undefined;
+        let msg;
+
+        if (success) {
+            title = 'Validation complete';
+            icon = 'check circle';
+            iconColor = 'green';
+            msg = <p>Repository validated successfully.</p>;
+        }
+
+        let warningDetails;
+        if (validationWarnings.length > 0) {
+            icon = 'warning circle';
+            iconColor = 'yellow';
+            warningDetails = (
+                <>
+                    <p>Warnings:</p>
+                    <ul>
+                        {validationWarnings.map((e) => (
+                            <li>{e}</li>
+                        ))}
+                    </ul>
+                </>
+            );
+        }
+
+        let errorDetails;
+        if (validationErrors.length > 0) {
+            icon = 'exclamation circle';
+            iconColor = 'red';
+            errorDetails = (
+                <>
+                    <p>Errors:</p>
+                    <ul>
+                        {validationErrors.map((e) => (
+                            <li>{e}</li>
+                        ))}
+                    </ul>
+                </>
+            );
         }
 
         return (
             <SingleOperationPopup
                 trigger={trigger}
                 title={title}
+                icon={icon}
+                iconColor={iconColor}
                 introMsg={
                     <p>
-                        This will run syntax validation on flows for <b>{repoName}</b> repository?
+                        Run syntax validation for <b>{repoName}</b> repository?
                     </p>
                 }
                 running={validating}
                 success={success}
-                successMsg={<p> Repository validated successfully.</p>}
+                successMsg={
+                    <>
+                        {msg}
+                        {warningDetails}
+                        {errorDetails}
+                    </>
+                }
                 error={error}
                 reset={reset}
                 onConfirm={onConfirm}
@@ -84,7 +144,13 @@ class ValidateRepositoryPopup extends React.Component<Props> {
 const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
     validating: projects.validateRepository.running,
     success: !!projects.validateRepository.response && projects.validateRepository.response.ok,
-    error: projects.validateRepository.error
+    error: projects.validateRepository.error,
+    validationErrors: projects.validateRepository.response
+        ? projects.validateRepository.response.errors || []
+        : [],
+    validationWarnings: projects.validateRepository.response
+        ? projects.validateRepository.response.warnings || []
+        : []
 });
 
 const mapDispatchToProps = (

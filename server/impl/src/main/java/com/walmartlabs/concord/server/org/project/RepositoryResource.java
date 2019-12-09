@@ -153,8 +153,8 @@ public class RepositoryResource implements Resource {
             throw new ConcordApplicationException("Repository not found: " + repositoryName, Status.NOT_FOUND);
         }
 
-        projectRepositoryManager.validateRepository(projectId, repositoryDao.get(projectId, repoId));
+        ProjectValidator.Result result = projectRepositoryManager.validateRepository(projectId, repositoryDao.get(projectId, repoId));
 
-        return new RepositoryValidationResponse(OperationResult.VALIDATED);
+        return new RepositoryValidationResponse(result.isValid(), OperationResult.VALIDATED, result.getErrors(), result.getWarnings());
     }
 }

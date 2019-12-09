@@ -169,7 +169,10 @@ public class TriggerResource implements Resource {
                 return result.getProjectDefinition();
             });
 
-            ProjectValidator.validate(pd);
+            ProjectValidator.Result result = ProjectValidator.validate(pd);
+            if (!result.isValid()) {
+                throw new ValidationErrorsException(String.join("\n", result.getErrors()));
+            }
         } catch (Exception e) {
             log.error("refresh ['{}'] -> project load error", repo.getId(), e);
             throw new ConcordApplicationException("Refresh failed (repository ID: " + repo.getId() + "): " + e.getMessage(), e);

@@ -1,0 +1,6 @@
+configuration:
+  template: "{{ template }}"
+
+triggers:
+  - test:
+      entryPoint: "fromTemplate"

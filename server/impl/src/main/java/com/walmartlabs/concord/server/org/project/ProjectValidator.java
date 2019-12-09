@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.org.project;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Strings;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.project.model.Trigger;
@@ -31,6 +32,7 @@ import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.SourceMap;
 import org.sonatype.siesta.ValidationErrorsException;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -39,19 +41,19 @@ public class ProjectValidator {
     private static final CronParser parser =
             new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
-    public static void validate(ProjectDefinition pd) {
+    public static Result validate(ProjectDefinition pd) {
         List<String> errors = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+
         for (Trigger t : pd.getTriggers()) {
-            validateTrigger(t, errors, pd);
+            validateTrigger(pd, t, errors, warnings);
         }
 
-        if (!errors.isEmpty()) {
-            throw new ValidationErrorsException(String.join("\n", errors));
-        }
+        return new Result(errors, warnings);
     }
 
-    private static void validateTrigger(Trigger t, List<String> errors, ProjectDefinition pd) {
-        validateEntryPoint(t, errors, pd.getFlows());
+    private static void validateTrigger(ProjectDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
+        validateEntryPoint(pd, t, errors, warnings);
 
         validateSpec(t, errors);
 
@@ -67,14 +69,16 @@ public class ProjectValidator {
                 .forEach(v -> validateRegex(t, errors, v));
     }
 
-    private static void validateEntryPoint(Trigger t, List<String> errors, Map<String, ProcessDefinition> flows) {
+    private static void validateEntryPoint(ProjectDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
         if (Strings.isNullOrEmpty(t.getEntryPoint())) {
             errors.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "is missing"));
             return;
         }
 
+        Map<String, ProcessDefinition> flows = pd.getFlows();
         if (Objects.isNull(flows) || !flows.containsKey(t.getEntryPoint())) {
-            errors.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "does not point to valid flow"));
+            warnings.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "does not point to a valid flow. " +
+                    "This warning can be ignored if the entryPoint references a flow from a template."));
         }
     }
 
@@ -126,7 +130,6 @@ public class ProjectValidator {
 
         if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(timezone)) {
             errors.add(makeErrorMessage(t, "timezone", "with value '" + timezone + "' not found"));
-            return;
         }
     }
 
@@ -144,6 +147,32 @@ public class ProjectValidator {
 
     private static String makeErrorMessage(Trigger t, String property, String message) {
         return "trigger: " + t.getName() + " -> " + property + " " + (message) + " " + location(t.getSourceMap());
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class Result implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final List<String> errors;
+        private final List<String> warnings;
+
+        public Result(List<String> errors, List<String> warnings) {
+            this.errors = errors;
+            this.warnings = warnings;
+        }
+
+        public List<String> getErrors() {
+            return errors;
+        }
+
+        public List<String> getWarnings() {
+            return warnings;
+        }
+
+        public boolean isValid() {
+            return errors == null || errors.isEmpty();
+        }
     }
 }
 

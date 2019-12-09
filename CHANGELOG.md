@@ -37,6 +37,9 @@ by a property in agent `capabilities`;
 
 ### Changed
 
+- concord-server, concord-console: when validating repositories
+return errors and warnings separately. Downgrade a missing
+`entryPoint` reference in triggers to a warning;
 - concord-console: project and secret visibility is now private by
 default;
 - concord-console: fixed missing support for `activeProfiles` for

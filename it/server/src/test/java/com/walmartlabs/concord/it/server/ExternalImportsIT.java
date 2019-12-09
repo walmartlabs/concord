@@ -37,8 +37,7 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class ExternalImportsIT extends AbstractServerIT {
 
@@ -283,7 +282,8 @@ public class ExternalImportsIT extends AbstractServerIT {
                         .setUrl(userRepoUrl))));
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        repositoriesApi.validateRepository(orgName, projectName, repoName);
+        RepositoryValidationResponse resp = repositoriesApi.validateRepository(orgName, projectName, repoName);
+        assertTrue(resp.isOk());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

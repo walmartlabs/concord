@@ -90,7 +90,6 @@ public class Constants {
         /**
          * Template name.
          */
-        @Deprecated
         public static final String TEMPLATE_KEY = "template";
 
         /**
