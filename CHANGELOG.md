@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-console: the about page now shows the date when the
+environment was last updated (optional, requires update of `cfg.js`);
 - concord-console: support for multiple profiles in the repository
 run dialog;
 - server: optional caching of LDAP query results;

@@ -6,6 +6,7 @@ export interface ConcordEnvironment {
     logoutUrl?: string;
     login?: LoginConfiguration;
     extraProcessMenuLinks?: ExtraProcessMenuLinks;
+    lastUpdated?: string;
 }
 
 export interface TopBarMeta {
