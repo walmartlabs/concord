@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -60,7 +61,10 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
         ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()));
 
         ProjectDefinition pd = result.getProjectDefinition();
-        ProjectValidator.validate(pd);
+        ProjectValidator.Result validationResult = ProjectValidator.validate(pd);
+        if (!validationResult.isValid()) {
+            throw new ValidationErrorsException(String.join("\n", validationResult.getErrors()));
+        }
 
         triggerManager.refresh(repo.getProjectId(), repo.getId(), pd);
     }

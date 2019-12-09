@@ -171,6 +171,10 @@
                             <item>
                                 <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
+                            <item>
+                                <code>java.method.removed</code>
+                                <classQualifiedName>com.walmartlabs.concord.client.RepositoryValidationResponse</classQualifiedName>
+                            </item>
                         </revapi.ignore>
                         <revapi.filter>
                             <elements>

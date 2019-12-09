@@ -21,18 +21,33 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.server.OperationResult;
 
 import java.io.Serializable;
+import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class RepositoryValidationResponse implements Serializable {
-    private final boolean ok = true;
+
+    private static final long serialVersionUID = 1L;
+
+    private final boolean ok;
     private final OperationResult result;
 
+    private final List<String> errors;
+    private final List<String> warnings;
+
     @JsonCreator
-    public RepositoryValidationResponse(@JsonProperty("result") OperationResult result) {
+    public RepositoryValidationResponse(@JsonProperty("ok") boolean ok,
+                                        @JsonProperty("result") OperationResult result,
+                                        @JsonProperty("errors") List<String> errors,
+                                        @JsonProperty("warnings") List<String> warnings) {
+        this.ok = ok;
         this.result = result;
+        this.errors = errors;
+        this.warnings = warnings;
     }
 
     public OperationResult getResult() {
@@ -43,12 +58,21 @@ public class RepositoryValidationResponse implements Serializable {
         return ok;
     }
 
-    @Override
-    public String toString() {
-        return "CreateTeamResponse{" +
-                "ok=" + ok +
-                ", result=" + result +
-                '}';
+    public List<String> getErrors() {
+        return errors;
     }
 
+    public List<String> getWarnings() {
+        return warnings;
+    }
+
+    @Override
+    public String toString() {
+        return "RepositoryValidationResponse{" +
+                "ok=" + ok +
+                ", result=" + result +
+                ", errors=" + errors +
+                ", warnings=" + warnings +
+                '}';
+    }
 }

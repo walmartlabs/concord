@@ -290,7 +290,8 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        repositoriesApi.validateRepository("Default", projectName, repoName);
+        RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
+        assertTrue(resp.isOk());
     }
 
     @Test(expected = Exception.class)
@@ -321,7 +322,8 @@ public class ProjectIT extends AbstractServerIT {
         // ---
 
         RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
-        repositoriesApi.validateRepository("Default", projectName, repoName);
+        RepositoryValidationResponse resp = repositoriesApi.validateRepository("Default", projectName, repoName);
+        assertTrue(resp.isOk());
     }
 
     @Test(expected = Exception.class)

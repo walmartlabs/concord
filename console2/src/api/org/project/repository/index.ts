@@ -75,6 +75,8 @@ export interface TriggerEntry {
 export interface RepositoryValidationResponse {
     ok: boolean;
     result: OperationResult;
+    errors?: string[];
+    warnings?: string[];
 }
 
 export const createOrUpdate = (

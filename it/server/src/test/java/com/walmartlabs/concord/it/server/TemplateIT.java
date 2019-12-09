@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,8 +24,10 @@ import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.eclipse.jgit.api.Git;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,18 +37,18 @@ import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class TemplateIT extends AbstractServerIT {
 
-    private static final String META_JS = "({ entryPoint: \"main\", arguments: { greeting: \"Hello, \" + _input.name }})";
+    private static final String MAIN_JS = "({ entryPoint: \"main\", arguments: { greeting: \"Hello, \" + _input.name }})";
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
         final String processYml = "main:\n- expr: ${log.info(\"test\", greeting)}";
 
         String templateAlias = "template_" + randomString();
-        Path templatePath = createTemplate(processYml);
+        Path templatePath = createTemplate(processYml, MAIN_JS);
 
         TemplateAliasApi templateAliasResource = new TemplateAliasApi(getApiClient());
         templateAliasResource.createOrUpdate(new TemplateAliasEntry()
@@ -94,7 +96,7 @@ public class TemplateIT extends AbstractServerIT {
         final String processYml = "main:\n- expr: ${log.info(\"test\", xxx)}";
 
         String templateAlias = "template_" + randomString();
-        Path templatePath = createTemplate(processYml);
+        Path templatePath = createTemplate(processYml, MAIN_JS);
 
         TemplateAliasApi templateAliasResource = new TemplateAliasApi(getApiClient());
         templateAliasResource.createOrUpdate(new TemplateAliasEntry()
@@ -140,11 +142,59 @@ public class TemplateIT extends AbstractServerIT {
         assertLog(".*BOO.*", ab);
     }
 
-    private static Path createTemplate(String process) throws IOException {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testEntryPointReference() throws Exception {
+        final String processYml = "fromTemplate:\n- log: \"hello!\"";
+        Path templatePath = createTemplate(processYml, null);
+
         Path tmpDir = createTempDir();
 
-        Path metaPath = tmpDir.resolve("_main.js");
-        Files.write(metaPath, META_JS.getBytes());
+        File src = new File(ProjectIT.class.getResource("repositoryValidationTemplateRef").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Path concordYml = tmpDir.resolve("concord.yml");
+        String s = new String(Files.readAllBytes(concordYml))
+                .replace("{{ template }}", "file://" + templatePath.toAbsolutePath().toString());
+        Files.write(concordYml, s.getBytes());
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+
+        String orgName = "org_" + randomString();
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        // ---
+
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setUrl(gitUrl))));
+
+        // ---
+
+        RepositoriesApi repositoriesApi = new RepositoriesApi(getApiClient());
+        RepositoryValidationResponse resp = repositoriesApi.validateRepository(orgName, projectName, repoName);
+        assertTrue(resp.isOk());
+        assertFalse(resp.getWarnings().isEmpty());
+    }
+
+    private static Path createTemplate(String process, String mainJs) throws IOException {
+        Path tmpDir = createTempDir();
+
+        if (mainJs != null) {
+            Path metaPath = tmpDir.resolve("_main.js");
+            Files.write(metaPath, mainJs.getBytes());
+        }
 
         Path processesPath = tmpDir.resolve("flows");
         Files.createDirectories(processesPath);

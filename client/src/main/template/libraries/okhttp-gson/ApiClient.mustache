@@ -962,8 +962,13 @@ public class ApiClient {
                         vErrs = (Map<String,Object>) json.deserialize(respBody, Map.class);
                     }
 
-                    if (vErrs != null && vErrs.containsKey("message")) {
-                        msg = (String) vErrs.get("message");
+                    if (vErrs != null) {
+                        if (vErrs.containsKey("message")) {
+                            msg = (String) vErrs.get("message");
+                        }
+                        if (vErrs.containsKey("details")) {
+                            msg = msg + " Details: " + (String) vErrs.get("details");
+                        }
                     }
                 } catch (IOException e) {
                     throw new ApiException(response.message(), e, response.code(), response.headers().toMultimap());

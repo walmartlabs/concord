@@ -175,14 +175,15 @@ public class ProjectRepositoryManager {
         }
     }
 
-    public void validateRepository(UUID projectId, RepositoryEntry repo) {
+    public ProjectValidator.Result validateRepository(UUID projectId, RepositoryEntry repo) {
         try {
             ProjectDefinition pd = repositoryManager.withLock(repo.getUrl(), () -> {
                 Repository repository = repositoryManager.fetch(projectId, repo);
                 ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()));
                 return result.getProjectDefinition();
             });
-            ProjectValidator.validate(pd);
+
+            return ProjectValidator.validate(pd);
         } catch (Exception e) {
             throw new RepositoryValidationException("Validation failed: " + repo.getName(), e);
         }
