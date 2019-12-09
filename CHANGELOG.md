@@ -35,6 +35,8 @@ by a property in agent `capabilities`;
 
 ### Changed
 
+- concord-console: project and secret visibility is now private by
+default;
 - concord-console: fixed missing support for `activeProfiles` for
 manual triggers;
 - concord-console: updated look of the process status toolbar;
