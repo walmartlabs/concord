@@ -1,0 +1,5 @@
+triggers:
+  - test:
+      entryPoint: onTrigger
+      arguments:
+        name: "Concord"

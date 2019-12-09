@@ -24,12 +24,14 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
+import com.walmartlabs.concord.server.jooq.tables.UserRoles;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -158,6 +160,10 @@ public abstract class AbstractEventResource {
     }
 
     private void assertRoles(String eventName) {
+        if (Roles.isAdmin()) {
+            return;
+        }
+
         // optional feature: require a specific user role to access the external events endpoint
         Map<String, String> requiredRoles = eventsCfg.getRequiredRoles();
         if (requiredRoles == null || requiredRoles.isEmpty()) {
