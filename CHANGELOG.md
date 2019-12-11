@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- ansible: improved handling of `currentRetryCount` attributes in
+playbook events. This fixes an issue that was preventing Ansible
+events from being correctly processed by the server.   
+
+
+
 ## [1.36.0] - 2019-12-09
 
 ### Added

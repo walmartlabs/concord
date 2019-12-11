@@ -89,7 +89,7 @@ public class AnsibleEventProcessor implements EventProcessor {
                 .hostGroup(MapUtils.getString(e.payload(), "hostGroup", "-"))
                 .status(status)
                 .duration(MapUtils.getNumber(e.payload(), "duration", 0L).longValue())
-                .retryCount(MapUtils.getNumber(e.payload(), "currentRetryCount", 0).intValue())
+                .retryCount(getIntFromString(e.payload(), "currentRetryCount", 0))
                 .build();
     }
 
@@ -125,6 +125,23 @@ public class AnsibleEventProcessor implements EventProcessor {
                 .status(status)
                 .eventSeq(eventSeq)
                 .build();
+    }
+
+    private static int getIntFromString(Map<String, Object> m, String name, int defaultValue) {
+        Object v = m.get(name);
+        if (v == null) {
+            return defaultValue;
+        }
+
+        if (v instanceof String) {
+            return Integer.parseInt((String) v);
+        }
+
+        if (v instanceof Number) {
+            return ((Number) v).intValue();
+        }
+
+        throw new IllegalArgumentException("Invalid variable '" + name + "' type, expected: int, got: " + v.getClass());
     }
 
     @Named
