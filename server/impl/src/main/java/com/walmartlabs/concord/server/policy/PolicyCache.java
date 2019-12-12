@@ -216,7 +216,7 @@ public class PolicyCache implements BackgroundTask {
                 byProject.put(l.projectId(), pe);
             } else if (l.orgId() == null && l.projectId() == null && l.userId() != null) {
                 byUser.put(l.userId(), pe);
-            } else if (l.userId() != null ){
+            } else if (l.userId() != null) {
                 otherUserPolicies.add(PolicyItem.of(l, pe));
             } else {
                 log.warn("Unexpected policy link: {}", l);
@@ -243,9 +243,6 @@ public class PolicyCache implements BackgroundTask {
         } finally {
             l.unlock();
         }
-
-        log.info("setPolicies ['{}', '{}', '{}', '{}', '{}'] -> done",
-                defaultPolicy, byOrg.size(), byProject.size(), byUser.size(), otherUserPolicies.size());
     }
 
     private Map<UUID, Policy> mergePolicies(List<PolicyRules> policies) {
