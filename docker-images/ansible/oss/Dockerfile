@@ -18,6 +18,7 @@ RUN yum -y install \
     python \
     python-devel \
     python-pip \
+    rsync \
     sshpass \
     util-linux \
     && yum clean all
