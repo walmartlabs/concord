@@ -52,6 +52,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.POLICY_LINKS;
 public class PolicyCache implements BackgroundTask {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyCache.class);
+    private static final long ERROR_DELAY = 10000;
 
     private final ObjectMapper objectMapper;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -177,6 +178,12 @@ public class PolicyCache implements BackgroundTask {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
                 log.warn("run -> error", e);
+
+                try {
+                    Thread.sleep(ERROR_DELAY);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }
