@@ -4,6 +4,10 @@
 
 ### Changed
 
+- concord-server: fixed a division by zero error when calculating
+Ansible play progress;
+- ansible: correctly handle Jinja2 expressions in host groups when
+recording events; 
 - concord-server: sanitize `\u0000` in strings when inserting JSONB
 data (e.g. process events). 
 

@@ -402,7 +402,11 @@ const buildPlaybookOptions = (playbooks: PlaybookInfo[], oldValues?: PlaybookEnt
             return { value: s.id, text: s.name + ' @ ' + formatTimestamp(s.startedAt) };
         });
 
-    if (!oldValues || oldValues.length === playbooks.length) {
+    if (!oldValues) {
+        return result;
+    }
+
+    if (oldValues.length !== playbooks.length) {
         return result;
     }
 

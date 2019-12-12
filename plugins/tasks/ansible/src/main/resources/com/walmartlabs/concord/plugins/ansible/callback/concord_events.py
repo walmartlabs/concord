@@ -5,6 +5,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible.module_utils.six import string_types
 from ansible.playbook.block import Block
 from ansible.playbook.handler import Handler
+from ansible.template import Templar
 
 import time
 import datetime
@@ -230,14 +231,24 @@ class CallbackModule(CallbackBase):
         total_work = 0
         hosts = Set()
         info = []
-        for p in playbook.get_plays():
-            play_hosts = p.get_variable_manager()._inventory.get_hosts(p.hosts)
+        for play in playbook.get_plays():
+            loader = play._loader
+            if play._included_path is not None:
+                loader.set_basedir(play._included_path)
+            else:
+                loader.set_basedir(playbook._basedir)
+
+            all_vars = play.get_variable_manager().get_vars(play=play)
+            templar = Templar(loader=loader, variables=all_vars)
+            play.post_validate(templar)
+
+            play_hosts = play.get_variable_manager()._inventory.get_hosts(play.hosts)
             play_hosts_count = len(play_hosts)
-            play_task = _collect_tasks(p)
+            play_task = _collect_tasks(play)
 
             play_info = {
-                'id': p._uuid,
-                'play': p.get_name(),
+                'id': play._uuid,
+                'play': play.get_name(),
                 'hosts': play_hosts_count,
                 'tasks': play_task
             }
