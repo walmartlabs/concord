@@ -441,9 +441,11 @@ public class ProcessAnsibleResource implements Resource {
             long totalWork = r.value10().longValue();
             long finishedCount = r.value8().longValue();
             PlaybookStatus status = r.value9() == null ? PlaybookStatus.RUNNING : PlaybookStatus.valueOf(r.value9());
-            int progress = (int) (100 * finishedCount / totalWork);
-            if (status == PlaybookStatus.OK || status == PlaybookStatus.FAILED) {
+            int progress;
+            if (status == PlaybookStatus.OK || status == PlaybookStatus.FAILED || totalWork == 0) {
                 progress = 100;
+            } else {
+                progress = (int) (100 * finishedCount / totalWork);
             }
 
             return ImmutablePlaybookEntry.builder()
