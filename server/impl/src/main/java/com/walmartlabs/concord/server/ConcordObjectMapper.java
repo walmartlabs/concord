@@ -49,7 +49,7 @@ public class ConcordObjectMapper {
             return null;
         }
 
-        return JSONB.valueOf(toString(m));
+        return JSONB.valueOf(removeUnsupportedEscape(toString(m)));
     }
 
     public String toString(Object m) {
@@ -86,6 +86,10 @@ public class ConcordObjectMapper {
 
     public Map<String, Object> fromString(String s) {
         return deserialize(s, MAP_TYPE);
+    }
+
+    private static String removeUnsupportedEscape(String str) {
+        return str.replace("\\u0000", "");
     }
 
     private <T> T deserialize(String o, TypeReference valueTypeRef) {
