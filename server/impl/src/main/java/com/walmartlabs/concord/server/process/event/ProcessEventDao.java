@@ -150,7 +150,7 @@ public class ProcessEventDao extends AbstractDao {
                     ps.setObject(1, pk.getInstanceId());
                     ps.setTimestamp(2, pk.getCreatedAt());
                     ps.setString(3, eventType);
-                    ps.setString(4, objectMapper.toString(data));
+                    ps.setString(4, objectMapper.toJSONB(data).toString());
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -192,7 +192,7 @@ public class ProcessEventDao extends AbstractDao {
                     ps.setTimestamp(2, processKey.getCreatedAt());
                     ps.setString(3, e.getEventType());
                     ps.setTimestamp(4, eventDate);
-                    ps.setString(5, objectMapper.toString(e.getData()));
+                    ps.setString(5, objectMapper.toJSONB(e.getData()).toString());
                     ps.addBatch();
                 }
                 ps.executeBatch();
