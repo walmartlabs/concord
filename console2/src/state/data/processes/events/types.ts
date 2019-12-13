@@ -29,6 +29,7 @@ export interface GetAnsibleEventsRequest extends Action {
     host?: string;
     hostGroup?: string;
     status?: AnsibleStatus;
+    playbookId?: ConcordId;
 }
 
 export interface GetAnsibleEventsResponse extends Action {

@@ -48,7 +48,7 @@ public class EventDao extends AbstractDao {
         super(cfg);
     }
 
-    public List<ProcessEventEntry> list(ProcessKey processKey, Map<String, Object> dataFilter) {
+    public List<ProcessEventEntry> list(ProcessKey processKey, Map<String, String> dataFilter) {
         try (DSLContext tx = DSL.using(cfg)) {
 
             SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx

@@ -265,6 +265,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
 
                     <AnsibleHostList
                         instanceId={instanceId}
+                        playbookId={selectedPlaybook ? selectedPlaybook.id : undefined}
                         hosts={ansibleHosts}
                         hostGroups={ansibleHostGroups}
                         prev={ansibleHostsPrev}
@@ -280,6 +281,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
 
                     <AnsibleHostList
                         instanceId={instanceId}
+                        playbookId={selectedPlaybook ? selectedPlaybook.id : undefined}
                         hosts={failedAnsibleHosts}
                         hostGroups={failedAnsibleHostGroups}
                         prev={failedAnsibleHostsPrev}
@@ -315,7 +317,9 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
             {selectedBlock === Blocks.failedTasks && (
                 <>
                     <Divider content="Failed Tasks" horizontal={true} />
-                    <AnsibleTaskList showHosts={true} tasks={failedTasks} hidePlaybook={true} />
+                    <div style={{ overflowX: 'auto' }}>
+                        <AnsibleTaskList showHosts={true} tasks={failedTasks} hidePlaybook={true} />
+                    </div>
                 </>
             )}
         </>

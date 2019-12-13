@@ -44,13 +44,15 @@ export const actions = {
         instanceId: ConcordId,
         host?: string,
         hostGroup?: string,
-        status?: AnsibleStatus
+        status?: AnsibleStatus,
+        playbookId?: ConcordId
     ): GetAnsibleEventsRequest => ({
         type: actionTypes.GET_ANSIBLE_EVENTS_REQUEST,
         instanceId,
         host,
         hostGroup,
-        status
+        status,
+        playbookId
     })
 };
 
@@ -90,9 +92,22 @@ export const reducers = combineReducers<State>({
     error: listError
 });
 
-function* onAnsibleEvents({ instanceId, host, hostGroup, status }: GetAnsibleEventsRequest) {
+function* onAnsibleEvents({
+    instanceId,
+    host,
+    hostGroup,
+    status,
+    playbookId
+}: GetAnsibleEventsRequest) {
     try {
-        const response = yield call(apiListAnsibleEvents, instanceId, host, hostGroup, status);
+        const response = yield call(
+            apiListAnsibleEvents,
+            instanceId,
+            host,
+            hostGroup,
+            status,
+            playbookId
+        );
         yield put({
             type: actionTypes.GET_ANSIBLE_EVENTS_RESPONSE,
             events: response
