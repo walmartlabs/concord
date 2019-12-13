@@ -34,6 +34,7 @@ interface State {
 
 interface Props {
     instanceId: ConcordId;
+    playbookId?: ConcordId;
     hosts?: AnsibleHost[];
     hostGroups: string[];
 
@@ -57,7 +58,8 @@ class AnsibleHostList extends React.Component<Props, State> {
         hostGroup: string,
         hostStatus: AnsibleStatus,
         duration: number,
-        idx: number
+        idx: number,
+        playbookId?: ConcordId
     ) {
         return (
             <Modal
@@ -78,6 +80,7 @@ class AnsibleHostList extends React.Component<Props, State> {
                 <Modal.Content scrolling={true}>
                     <AnsibleTaskListActivity
                         instanceId={instanceId}
+                        playbookId={playbookId}
                         host={host}
                         hostGroup={hostGroup}
                     />
@@ -86,7 +89,7 @@ class AnsibleHostList extends React.Component<Props, State> {
         );
     }
 
-    static renderHosts(instanceId: ConcordId, hosts?: AnsibleHost[]) {
+    static renderHosts(instanceId: ConcordId, playbookId?: ConcordId, hosts?: AnsibleHost[]) {
         if (!hosts) {
             return (
                 <tr style={{ fontWeight: 'bold' }}>
@@ -110,7 +113,8 @@ class AnsibleHostList extends React.Component<Props, State> {
                 host.hostGroup,
                 host.status,
                 host.duration,
-                idx
+                idx,
+                playbookId
             )
         );
     }
@@ -178,7 +182,7 @@ class AnsibleHostList extends React.Component<Props, State> {
     }
 
     render() {
-        const { instanceId, hosts, hostGroups, prev, next } = this.props;
+        const { instanceId, playbookId, hosts, hostGroups, prev, next } = this.props;
 
         return (
             <>
@@ -238,7 +242,9 @@ class AnsibleHostList extends React.Component<Props, State> {
                         </Table.Row>
                     </Table.Header>
 
-                    <Table.Body>{AnsibleHostList.renderHosts(instanceId, hosts)}</Table.Body>
+                    <Table.Body>
+                        {AnsibleHostList.renderHosts(instanceId, playbookId, hosts)}
+                    </Table.Body>
                 </Table>
             </>
         );

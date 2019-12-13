@@ -39,7 +39,12 @@ class AnsibleTaskList extends React.Component<Props> {
         const { tasks, showHosts, hideStatus, hidePlaybook } = this.props;
 
         return (
-            <Table celled={true} attached="bottom" basic={true} compact={true}>
+            <Table
+                celled={true}
+                attached="bottom"
+                basic={true}
+                compact={true}
+                style={{ width: '100%', margin: 0 }}>
                 <Table.Header>
                     <Table.Row>
                         {showHosts && <Table.HeaderCell collapsing={true}>Host</Table.HeaderCell>}
@@ -95,6 +100,8 @@ class AnsibleTaskList extends React.Component<Props> {
                                             collapsed={true}
                                             name={null}
                                             enableClipboard={false}
+                                            displayObjectSize={false}
+                                            displayDataTypes={false}
                                         />
                                     </Table.Cell>
                                     {!hidePlaybook && (
@@ -123,19 +130,22 @@ class AnsibleTaskList extends React.Component<Props> {
     render() {
         const { title } = this.props;
 
+        if (!title) {
+            return this.renderTaskList();
+        }
+
         return (
             <>
+                {/*TODO: replace this table in table with two line header */}
                 <Table
                     style={{ border: 'none', padding: '0' }}
                     className={this.props.tasks ? '' : 'loading'}>
                     <Table.Body>
                         <Table.Row>
                             <Table.Cell style={{ padding: '0', border: 'none' }}>
-                                {title && (
-                                    <Header as="h3" attached="top">
-                                        {title}
-                                    </Header>
-                                )}
+                                <Header as="h3" attached="top">
+                                    {title}
+                                </Header>
                             </Table.Cell>
                         </Table.Row>
                         <Table.Row>

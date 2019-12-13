@@ -32,6 +32,7 @@ import { combinePrePostEvents } from '../../ProcessEventsActivity';
 
 interface ExternalProps {
     instanceId: ConcordId;
+    playbookId?: ConcordId;
     host?: string;
     hostGroup?: string;
     status?: AnsibleStatus;
@@ -49,7 +50,8 @@ interface DispatchProps {
         instanceId: ConcordId,
         host?: string,
         hostGroup?: string,
-        status?: AnsibleStatus
+        status?: AnsibleStatus,
+        playbookId?: ConcordId
     ) => void;
 }
 
@@ -61,8 +63,8 @@ class AnsibleTaskListActivity extends React.Component<Props> {
     }
 
     init() {
-        const { instanceId, host, hostGroup, status, load } = this.props;
-        load(instanceId, host, hostGroup, status);
+        const { instanceId, playbookId, host, hostGroup, status, load } = this.props;
+        load(instanceId, host, hostGroup, status, playbookId);
     }
 
     render() {
@@ -105,8 +107,8 @@ export const mapStateToProps = ({ processes: { events } }: StateType): StateProp
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (instanceId, host, hostGroup, status) =>
-        dispatch(actions.listAnsibleEvents(instanceId, host, hostGroup, status))
+    load: (instanceId, host, hostGroup, status, playbookId) =>
+        dispatch(actions.listAnsibleEvents(instanceId, host, hostGroup, status, playbookId))
 });
 
 export default connect(

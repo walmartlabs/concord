@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server, concord-console: fixed the failed hosts/tasks
+request for processes with multiple playbook executions;
 - concord-server: fixed a division by zero error when calculating
 Ansible play progress;
 - ansible: correctly handle Jinja2 expressions in host groups when

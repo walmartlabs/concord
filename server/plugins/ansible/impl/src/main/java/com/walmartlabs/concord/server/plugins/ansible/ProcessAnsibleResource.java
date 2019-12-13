@@ -182,14 +182,14 @@ public class ProcessAnsibleResource implements Resource {
                                               @QueryParam("host") String host,
                                               @QueryParam("hostGroup") String hostGroup,
                                               @QueryParam("status") String status,
-                                              @QueryParam("parentCorrelationId") UUID parentCorrelationId) {
+                                              @QueryParam("playbookId") UUID playbookId) {
 
         ProcessKey key = processKeyCache.get(processInstanceId);
         if (key == null) {
             return Collections.emptyList();
         }
 
-        Map<String, Object> eventFilter = new HashMap<>();
+        Map<String, String> eventFilter = new HashMap<>();
         if (host != null) {
             eventFilter.put("host", host);
         }
@@ -199,8 +199,8 @@ public class ProcessAnsibleResource implements Resource {
         if (status != null) {
             eventFilter.put("status", status);
         }
-        if (parentCorrelationId != null) {
-            eventFilter.put("parentCorrelationId", parentCorrelationId);
+        if (playbookId != null) {
+            eventFilter.put("parentCorrelationId", playbookId.toString());
         }
 
         return eventDao.list(key, eventFilter);
