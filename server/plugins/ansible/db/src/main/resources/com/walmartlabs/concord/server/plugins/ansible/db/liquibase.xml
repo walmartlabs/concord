@@ -196,4 +196,21 @@
             <column name="PLAY_ID"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="ansible-10007" author="ybrigo@gmail.com">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*)
+                from pg_inherits
+                join pg_class parent ON pg_inherits.inhparent = parent.oid
+                join pg_class child ON pg_inherits.inhrelid = child.oid
+                join pg_namespace nmsp_parent ON nmsp_parent.oid = parent.relnamespace
+                join pg_namespace nmsp_child ON nmsp_child.oid = child.relnamespace
+                where parent.relname = 'ansible_hosts'
+            </sqlCheck>
+        </preConditions>
+
+        <dropPrimaryKey tableName="ANSIBLE_HOSTS"/>
+        <addPrimaryKey tableName="ANSIBLE_HOSTS" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT, HOST, HOST_GROUP, PLAYBOOK_ID"/>
+    </changeSet>
 </databaseChangeLog>
