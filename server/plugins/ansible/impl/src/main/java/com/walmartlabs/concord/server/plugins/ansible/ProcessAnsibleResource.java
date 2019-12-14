@@ -40,6 +40,7 @@ import org.immutables.value.Value;
 import org.jooq.*;
 import org.sonatype.siesta.Resource;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -200,7 +201,7 @@ public class ProcessAnsibleResource implements Resource {
             eventFilter.put("status", status);
         }
         if (playbookId != null) {
-            eventFilter.put("parentCorrelationId", playbookId.toString());
+            eventFilter.put("playbookId", playbookId.toString());
         }
 
         return eventDao.list(key, eventFilter);
@@ -429,7 +430,8 @@ public class ProcessAnsibleResource implements Resource {
                         failedTasks,
                         finishedTasks,
                         playbookStatus,
-                        p.TOTAL_WORK)
+                        p.TOTAL_WORK,
+                        p.RETRY_NUM)
                         .from(p)
                         .where(p.INSTANCE_CREATED_AT.eq(createdAt)
                                 .and(p.INSTANCE_ID.eq(instanceId)))
@@ -437,7 +439,7 @@ public class ProcessAnsibleResource implements Resource {
             });
         }
 
-        private static PlaybookEntry toPlaybookEntry(Record10<UUID, String, Timestamp, Integer, Integer, Integer, BigDecimal, BigDecimal, String, Integer> r) {
+        private static PlaybookEntry toPlaybookEntry(Record11<UUID, String, Timestamp, Integer, Integer, Integer, BigDecimal, BigDecimal, String, Integer, Integer> r) {
             long totalWork = r.value10().longValue();
             long finishedCount = r.value8().longValue();
             PlaybookStatus status = r.value9() == null ? PlaybookStatus.RUNNING : PlaybookStatus.valueOf(r.value9());
@@ -458,6 +460,7 @@ public class ProcessAnsibleResource implements Resource {
                     .failedTasksCount(r.value7() == null ? 0 : r.value7().longValue())
                     .progress(progress)
                     .status(status)
+                    .retryNum(r.value11())
                     .build();
         }
 
@@ -535,6 +538,9 @@ public class ProcessAnsibleResource implements Resource {
         int progress();
 
         PlaybookStatus status();
+
+        @Nullable
+        Integer retryNum();
     }
 
     @Value.Immutable

@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class PlaybookInfoEvent {
+public class PlaybookInfoEvent extends AbstractAnsibleEvent {
 
     public static PlaybookInfoEvent from(EventProcessor.Event e) {
         if (!e.eventType().equals(Constants.ANSIBLE_PLAYBOOK_INFO)) {
@@ -37,14 +37,8 @@ public class PlaybookInfoEvent {
         return new PlaybookInfoEvent(e);
     }
 
-    private final EventProcessor.Event e;
-
     private PlaybookInfoEvent(EventProcessor.Event e) {
-        this.e = e;
-    }
-
-    public UUID getPlaybookId() {
-        return MapUtils.assertUUID(e.payload(), "parentCorrelationId");
+        super(e);
     }
 
     public String getPlaybookName() {
@@ -64,6 +58,20 @@ public class PlaybookInfoEvent {
 
     public long getTotalWork() {
         return MapUtils.assertNumber(e.payload(), "totalWork").longValue();
+    }
+
+    public Integer retryCount() {
+        Object v = e.payload().get("currentRetryCount");
+
+        if (v instanceof Number) {
+            return ((Number) v).intValue();
+        }
+
+        if (v instanceof String) {
+            return Integer.parseInt((String)v);
+        }
+
+        return null;
     }
 
     public String getStatus() {

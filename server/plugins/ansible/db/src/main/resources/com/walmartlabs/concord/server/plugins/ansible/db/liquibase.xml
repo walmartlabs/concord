@@ -5,6 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
     <changeSet id="ansible-10000" author="ybrigo@gmail.com">
+        <validCheckSum>7:a6629219e3ee8ccedc56a698d1dc226f</validCheckSum>
+
         <!-- migration from pre-1.18.0 -->
         <preConditions onFail="MARK_RAN">
             <not>
@@ -36,9 +38,11 @@
             <column name="DURATION" type="bigint">
                 <constraints nullable="false"/>
             </column>
+            <!-- removed in 1.36.1+
             <column name="RETRY_COUNT" type="int" defaultValue="0">
                 <constraints nullable="false"/>
             </column>
+            -->
         </createTable>
     </changeSet>
 
@@ -212,5 +216,14 @@
 
         <dropPrimaryKey tableName="ANSIBLE_HOSTS"/>
         <addPrimaryKey tableName="ANSIBLE_HOSTS" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT, HOST, HOST_GROUP, PLAYBOOK_ID"/>
+    </changeSet>
+
+
+    <changeSet id="ansible-10008" author="ybrigo@gmail.com">
+        <addColumn tableName="ANSIBLE_PLAYBOOK_STATS">
+            <column name="RETRY_NUM" type="int">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
     </changeSet>
 </databaseChangeLog>

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlayboo
 import org.immutables.value.Value;
 import org.jooq.*;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -61,12 +62,13 @@ public class PlaybookInfoProcessor implements EventProcessor {
             playbooks.add(ImmutablePlaybookInfo.builder()
                     .instanceId(e.instanceId())
                     .instanceCreatedAt(e.instanceCreatedAt())
-                    .playbookId(p.getPlaybookId())
+                    .playbookId(p.playbookId())
                     .name(p.getPlaybookName())
                     .startedAt(e.eventDate())
                     .hostCount(p.getHostsCount())
                     .playCount(p.getPlays().size())
                     .totalWork(p.getTotalWork())
+                    .currentRetryCount(p.retryCount())
                     .build());
         }
 
@@ -94,12 +96,13 @@ public class PlaybookInfoProcessor implements EventProcessor {
                             .and(a.INSTANCE_CREATED_AT.eq(value((Timestamp)null))
                                     .and(a.PLAYBOOK_ID.eq(value((UUID)null)))));
 
-            SelectConditionStep<Record8<UUID, Timestamp, UUID, String, Timestamp, Integer, Integer, Integer>> values =
+            SelectConditionStep<Record9<UUID, Timestamp, UUID, String, Timestamp, Integer, Integer, Integer, Integer>> values =
                     tx.select(value((UUID) null),
                             value((Timestamp)null),
                             value((UUID) null),
                             value((String) null),
                             value((Timestamp)null),
+                            value((Integer)null),
                             value((Integer)null),
                             value((Integer)null),
                             value((Integer)null))
@@ -113,7 +116,8 @@ public class PlaybookInfoProcessor implements EventProcessor {
                             a.STARTED_AT,
                             a.HOST_COUNT,
                             a.PLAY_COUNT,
-                            a.TOTAL_WORK)
+                            a.TOTAL_WORK,
+                            a.RETRY_NUM)
                     .select(values)
                     .getSQL();
 
@@ -128,10 +132,11 @@ public class PlaybookInfoProcessor implements EventProcessor {
                         ps.setLong(6, p.hostCount());
                         ps.setInt(7, p.playCount());
                         ps.setLong(8, p.totalWork());
+                        ps.setObject(9, p.currentRetryCount());
 
-                        ps.setObject(9, p.instanceId());
-                        ps.setObject(10, p.instanceCreatedAt());
-                        ps.setObject(11, p.playbookId());
+                        ps.setObject(10, p.instanceId());
+                        ps.setObject(11, p.instanceCreatedAt());
+                        ps.setObject(12, p.playbookId());
 
                         ps.addBatch();
                     }
@@ -159,5 +164,8 @@ public class PlaybookInfoProcessor implements EventProcessor {
         int playCount();
 
         long totalWork();
+
+        @Nullable
+        Integer currentRetryCount();
     }
 }

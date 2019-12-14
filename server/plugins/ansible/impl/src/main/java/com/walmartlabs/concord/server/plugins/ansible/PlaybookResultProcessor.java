@@ -61,7 +61,7 @@ public class PlaybookResultProcessor implements EventProcessor {
             results.add(ImmutablePlaybookResult.builder()
                     .instanceId(e.instanceId())
                     .instanceCreatedAt(e.instanceCreatedAt())
-                    .playbookId(p.getPlaybookId())
+                    .playbookId(p.playbookId())
                     .status(p.getStatus())
                     .build());
         }

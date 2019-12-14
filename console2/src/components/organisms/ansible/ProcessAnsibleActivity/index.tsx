@@ -185,6 +185,13 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         setSelectedBlock(undefined);
         setSelectedPlayId(undefined);
         setTaskStats(undefined);
+        setAnsibleHosts(undefined);
+        setAnsibleHostGroups([]);
+        setAnsibleHostsFilter(undefined);
+        setFailedAnsibleHosts(undefined);
+        setFailedAnsibleHostGroups([]);
+        setFailedAnsibleHostsFilter(undefined);
+        setFailedTasks(undefined);
     }, []);
 
     const onBlockChangeHandler = useCallback((block: Blocks) => {
@@ -337,7 +344,7 @@ const makePlayStats = (plays: PlayInfo[], playbookStatus: string): PlayInfoEntry
 
     return sorted.map((s, i) => {
         const nextPlayStarted = i + 1 < sorted.length && sorted[i + 1].finishedTaskCount > 0;
-        let progress = 0;
+        let progress;
         if ((playbookStatus === 'OK' && s.finishedTaskCount > 0) || nextPlayStarted) {
             progress = 100;
         } else {
@@ -403,7 +410,12 @@ const buildPlaybookOptions = (playbooks: PlaybookInfo[], oldValues?: PlaybookEnt
     const result = playbooks
         .sort((a, b) => (a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0))
         .map((s) => {
-            return { value: s.id, text: s.name + ' @ ' + formatTimestamp(s.startedAt) };
+            let retryInfo = '';
+            if (s.retryNum && s.retryNum > 0) {
+                retryInfo = ' (retry: ' + s.retryNum + ')';
+            }
+
+            return { value: s.id, text: s.name + ' @ ' + formatTimestamp(s.startedAt) + retryInfo };
         });
 
     if (!oldValues) {

@@ -108,6 +108,7 @@ export interface PlaybookInfo {
     failedTasksCount: number;
     progress: number;
     status: string;
+    retryNum?: number;
 }
 
 export interface PlayInfo {

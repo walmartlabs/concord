@@ -107,9 +107,9 @@ public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
                     pe.EVENT_SEQ,
                     pe.EVENT_DATE,
                     pe.EVENT_TYPE,
-                    when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_EVENT_TYPE), payloadField(tx, "host", "hostGroup", "status", "duration", "ignore_errors", "currentRetryCount", "hostStatus", "playId", "parentCorrelationId", "action", "isHandler", "taskId", "task"))
-                            .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_INFO), payloadField(tx, "plays", "parentCorrelationId", "playbook", "uniqueHosts", "totalWork"))
-                            .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_RESULT), payloadField(tx, "parentCorrelationId", "status")))
+                    when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_EVENT_TYPE), payloadField(tx, "host", "hostGroup", "status", "duration", "ignore_errors", "currentRetryCount", "hostStatus", "playId", "playbookId", "parentCorrelationId", "action", "isHandler", "taskId", "task"))
+                            .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_INFO), payloadField(tx, "plays", "playbookId", "playbook", "uniqueHosts", "totalWork", "parentCorrelationId", "currentRetryCount"))
+                            .when(pe.EVENT_TYPE.eq(Constants.ANSIBLE_PLAYBOOK_RESULT), payloadField(tx, "playbookId", "status", "parentCorrelationId")))
                     .from(pe)
                     .where(pe.EVENT_TYPE.in(Constants.ANSIBLE_EVENT_TYPE, Constants.ANSIBLE_PLAYBOOK_INFO, Constants.ANSIBLE_PLAYBOOK_RESULT)
                             .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));

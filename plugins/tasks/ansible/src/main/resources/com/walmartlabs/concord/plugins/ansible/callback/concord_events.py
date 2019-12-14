@@ -9,6 +9,7 @@ from ansible.template import Templar
 
 import time
 import datetime
+import uuid
 
 import os
 import ujson as json
@@ -40,7 +41,7 @@ class CallbackModule(CallbackBase):
         # TODO could be moved into the task itself
         self.currentRetryCount = None
         if "CONCORD_CURRENT_RETRY_COUNT" in os.environ:
-            self.currentRetryCount = os.environ['CONCORD_CURRENT_RETRY_COUNT']
+            self.currentRetryCount = int(os.environ['CONCORD_CURRENT_RETRY_COUNT'])
 
         # TODO could be moved into the task itself
         self.eventCorrelationId = None
@@ -48,29 +49,26 @@ class CallbackModule(CallbackBase):
             self.eventCorrelationId = os.environ['CONCORD_EVENT_CORRELATION_ID']
 
         self.taskDurations = {}
-        self.hostStatus = {}
+        self.playbookId = self._get_playbook_id()
+
+    def _get_playbook_id(self):
+        if self.eventCorrelationId is not None:
+            return self.eventCorrelationId
+        else:
+            return str(uuid.uuid4())
 
     def _handle_event(self, type, event):
         self.outFile.write(json.dumps({
             'eventType': type,
             'eventDate': datetime.datetime.utcnow().isoformat() + 'Z',
             'data': dict(event, **{'parentCorrelationId': self.eventCorrelationId,
-                                   'currentRetryCount': self.currentRetryCount})
+                                   'playbookId': self.playbookId})
         }))
         self.outFile.write('<~EOL~>\n')
         self.outFile.flush()
 
     def handle_event(self, event):
         self._handle_event('ANSIBLE', event)
-
-    def _record_host_statuses(self):
-        for v in self.hostStatus.values():
-            event = {
-                'hostStatus': "OK",
-                'host': v['host'],
-                'hostGroup': v['hostGroup']
-            }
-            self.handle_event(event)
 
     def cleanup_results(self, result):
         abridged_result = self._strip_internal_keys(result)
@@ -122,19 +120,6 @@ class CallbackModule(CallbackBase):
     def _host_correlation_id(host_group, host_uuid):
         return host_group + host_uuid
 
-    def _remove_host(self, host):
-        host_uuid = host._uuid
-        host_group = self.play.get_name()
-        correlation_id = self._host_correlation_id(host_group, host_uuid)
-        self.hostStatus.pop(correlation_id, None)
-
-    def _mark_host_running(self, host):
-        host_uuid = host._uuid
-        host_group = self.play.get_name()
-        host_name = host.name
-        correlation_id = self._host_correlation_id(host_group, host_uuid)
-        self.hostStatus[correlation_id] = {'hostGroup': host_group, 'host': host_name}
-
     @staticmethod
     def _task_correlation_id(host_name, task_uuid):
         return host_name + task_uuid
@@ -150,7 +135,6 @@ class CallbackModule(CallbackBase):
 
         data = {
             'status': "RUNNING",
-            'hostStatus': "RUNNING",
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
             'host': host.name,
@@ -257,6 +241,7 @@ class CallbackModule(CallbackBase):
             total_work += play_hosts_count * len(play_task)
 
         self._handle_event('ANSIBLE_PLAYBOOK_INFO', {'playbook':playbook._file_name,
+                                                     'currentRetryCount': self.currentRetryCount,
                                                      'uniqueHosts': len(hosts),
                                                      'totalWork': total_work,
                                                      'plays': info})
@@ -272,11 +257,8 @@ class CallbackModule(CallbackBase):
     def v2_playbook_on_start(self, playbook):
         self.playbook = playbook
         self.handle_playbook_start(playbook)
-        self.playbook_on_start()
 
     def playbook_on_stats(self, stats):
-        self._record_host_statuses()
-
         status = self._get_playbook_status(stats)
         self._handle_event('ANSIBLE_PLAYBOOK_RESULT', {'playbook': self.playbook._file_name,
                                                        'status': status})
@@ -303,20 +285,13 @@ class CallbackModule(CallbackBase):
             'ignore_errors': ignore_errors
         }
 
-        if not ignore_errors:
-            data['hostStatus'] = "FAILED"
-            self._remove_host(result._host)
-
         self.handle_event(data)
 
     def v2_runner_on_ok(self, result, **kwargs):
-        self._mark_host_running(result._host)
-
         task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
             'status': "OK",
-            'hostStatus': 'RUNNING',
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
             'host': result._host.name,
@@ -334,13 +309,10 @@ class CallbackModule(CallbackBase):
         self.handle_event(data)
 
     def v2_runner_on_unreachable(self, result):
-        self._remove_host(result._host)
-
         task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
             'status': 'UNREACHABLE',
-            'hostStatus': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
             'host': result._host.name,
@@ -358,13 +330,10 @@ class CallbackModule(CallbackBase):
         self.handle_event(data)
 
     def v2_runner_on_async_failed(self, result, **kwargs):
-        self._remove_host(result._host)
-
         task_correlation_id = self._task_correlation_id(result._host.name, result._task._uuid)
 
         data = {
             'status': 'UNREACHABLE',
-            'hostStatus': 'UNREACHABLE',
             'playbook': self.playbook._file_name,
             'playId': self.play._uuid,
             'host': result._host.name,
