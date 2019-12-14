@@ -22,21 +22,34 @@ package com.walmartlabs.concord.server.plugins.ansible;
 
 import com.walmartlabs.concord.sdk.MapUtils;
 
-public class PlaybookResultEvent extends AbstractAnsibleEvent {
+import java.sql.Timestamp;
+import java.util.UUID;
 
-    public static PlaybookResultEvent from(EventProcessor.Event e) {
-        if (!e.eventType().equals(Constants.ANSIBLE_PLAYBOOK_RESULT)) {
-            return null;
+public abstract class AbstractAnsibleEvent {
+
+    protected final EventProcessor.Event e;
+
+    protected AbstractAnsibleEvent(EventProcessor.Event e) {
+        this.e = e;
+    }
+
+    public UUID instanceId() {
+        return e.instanceId();
+    }
+
+    public Timestamp instanceCreatedAt() {
+        return e.instanceCreatedAt();
+    }
+
+    public long eventSeq() {
+        return e.eventSeq();
+    }
+
+    public UUID playbookId() {
+        UUID result = MapUtils.getUUID(e.payload(), "playbookId");
+        if (result != null) {
+            return result;
         }
-
-        return new PlaybookResultEvent(e);
-    }
-
-    private PlaybookResultEvent(EventProcessor.Event e) {
-        super(e);
-    }
-
-    public String getStatus() {
-        return MapUtils.assertString(e.payload(), "status");
+        return MapUtils.getUUID(e.payload(), "parentCorrelationId");
     }
 }

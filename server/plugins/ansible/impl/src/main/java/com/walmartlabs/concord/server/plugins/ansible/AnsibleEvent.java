@@ -22,12 +22,9 @@ package com.walmartlabs.concord.server.plugins.ansible;
 
 import com.walmartlabs.concord.sdk.MapUtils;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-public class AnsibleEvent {
+public class AnsibleEvent extends AbstractAnsibleEvent {
 
     public static AnsibleEvent from(EventProcessor.Event e) {
         if (!e.eventType().equals(Constants.ANSIBLE_EVENT_TYPE)) {
@@ -37,14 +34,16 @@ public class AnsibleEvent {
         return new AnsibleEvent(e);
     }
 
-    private final EventProcessor.Event e;
-
     private AnsibleEvent(EventProcessor.Event e) {
-        this.e = e;
+        super(e);
     }
 
-    public UUID getPlaybookId() {
-        return MapUtils.assertUUID(e.payload(), "parentCorrelationId");
+    public String host() {
+        return MapUtils.assertString(e.payload(), "host");
+    }
+
+    public String hostGroup() {
+        return MapUtils.getString(e.payload(), "hostGroup", "-");
     }
 
     public UUID getPlayId() {
@@ -73,5 +72,13 @@ public class AnsibleEvent {
 
     public boolean isHandler() {
         return MapUtils.getBoolean(e.payload(), "isHandler", false);
+    }
+
+    public long duration() {
+        return MapUtils.getNumber(e.payload(), "duration", 0L).longValue();
+    }
+
+    public boolean ignoreErrors() {
+        return MapUtils.getBoolean(e.payload(), "ignore_errors", false);
     }
 }

@@ -72,7 +72,7 @@ public class PlayInfoProcessor implements EventProcessor {
                 PlayInfoKey key = PlayInfoKey.builder()
                         .instanceId(e.instanceId())
                         .instanceCreatedAt(e.instanceCreatedAt())
-                        .playbookId(p.getPlaybookId())
+                        .playbookId(p.playbookId())
                         .playId(play.getId())
                         .build();
                 Long finishedCount = finishedTasks.remove(key);
@@ -114,7 +114,7 @@ public class PlayInfoProcessor implements EventProcessor {
                 PlayInfoKey key = PlayInfoKey.builder()
                         .instanceId(e.instanceId())
                         .instanceCreatedAt(e.instanceCreatedAt())
-                        .playbookId(event.getPlaybookId())
+                        .playbookId(event.playbookId())
                         .playId(playId)
                         .build();
 

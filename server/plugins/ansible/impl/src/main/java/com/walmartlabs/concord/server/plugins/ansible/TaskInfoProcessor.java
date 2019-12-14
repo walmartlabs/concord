@@ -74,7 +74,7 @@ public class TaskInfoProcessor implements EventProcessor {
             TaskInfoKey key = ImmutableTaskInfoKey.builder()
                     .instanceId(e.instanceId())
                     .instanceCreatedAt(e.instanceCreatedAt())
-                    .playbookId(a.getPlaybookId())
+                    .playbookId(a.playbookId())
                     .playId(a.getPlayId())
                     .taskId(a.getTaskId())
                     .build();
@@ -112,7 +112,7 @@ public class TaskInfoProcessor implements EventProcessor {
                     TaskInfoKey key = ImmutableTaskInfoKey.builder()
                             .instanceId(e.instanceId())
                             .instanceCreatedAt(e.instanceCreatedAt())
-                            .playbookId(p.getPlaybookId())
+                            .playbookId(p.playbookId())
                             .playId(play.getId())
                             .taskId(MapUtils.assertUUID(t, "id"))
                             .build();
@@ -297,7 +297,7 @@ public class TaskInfoProcessor implements EventProcessor {
         }
     }
 
-    class TaskStats {
+    static class TaskStats {
 
         private int okCount;
         private int failedCount;

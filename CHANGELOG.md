@@ -4,6 +4,11 @@
 
 ### Changed
 
+- concord-server, concord-console, ansible: hosts statuses are now
+limited to `ok`, `failed` and `unreachable`. Fixes the host status
+calculation and reduces the number of recorded host events;
+- concord-server, concord-console, ansible: fixed handling of retries
+in the new Ansible UI;
 - concord-server, concord-console: fixed the failed hosts/tasks
 request for processes with multiple playbook executions;
 - concord-server: fixed a division by zero error when calculating

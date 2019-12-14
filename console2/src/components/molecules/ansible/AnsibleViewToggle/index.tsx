@@ -29,7 +29,7 @@ export default (props: Props) => {
     return (
         <Popup
             trigger={<Radio label="New view (beta)" toggle={true} {...props} />}
-            content="Requires Ansible plugin 1.36.0 or higher"
+            content="Requires Ansible plugin 1.37.0 or higher"
         />
     );
 };

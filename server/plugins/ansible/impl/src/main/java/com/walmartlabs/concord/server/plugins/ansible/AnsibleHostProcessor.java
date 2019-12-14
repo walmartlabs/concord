@@ -22,14 +22,12 @@ package com.walmartlabs.concord.server.plugins.ansible;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.sdk.MapUtils;
 import org.immutables.value.Value;
 import org.jooq.CaseValueStep;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -45,76 +43,46 @@ import static org.jooq.impl.DSL.*;
 
 @Named
 @Singleton
-public class AnsibleEventProcessor implements EventProcessor {
+public class AnsibleHostProcessor implements EventProcessor {
 
     private final Dao dao;
 
     @Inject
-    public AnsibleEventProcessor(Dao dao) {
+    public AnsibleHostProcessor(Dao dao) {
         this.dao = dao;
     }
 
     @Override
     public void process(DSLContext tx, List<Event> events) {
-        List<EventItem> eventItems = new ArrayList<>();
+        List<AnsibleEvent> eventItems = new ArrayList<>();
         for (Event e : events) {
-            if (e.eventType().equals(Constants.ANSIBLE_EVENT_TYPE)) {
-                eventItems.add(toEventItem(e));
+            AnsibleEvent event = AnsibleEvent.from(e);
+            if (event == null) {
+                continue;
             }
+
+            eventItems.add(event);
         }
 
         List<HostItem> result = combineEvents(eventItems);
         dao.insert(tx, result);
     }
 
-    private EventItem toEventItem(Event e) {
-        boolean ignoreErrors = MapUtils.getBoolean(e.payload(), "ignore_errors", false);
-        String status = MapUtils.getString(e.payload(), "status");
-        if (ignoreErrors && Status.FAILED.name().equals(status)) {
-            status = Status.OK.name();
-        }
-
-        String hostStatus = MapUtils.getString(e.payload(), "hostStatus");
-        if (hostStatus != null) {
-            status = hostStatus;
-        }
-
-        return ImmutableEventItem.builder()
-                .instanceId(e.instanceId())
-                .instanceCreatedAt(e.instanceCreatedAt())
-                .playbookId(MapUtils.getUUID(e.payload(), "parentCorrelationId"))
-                .eventSeq(e.eventSeq())
-                .eventDate(e.eventDate())
-                .host(MapUtils.assertString(e.payload(), "host"))
-                .hostGroup(MapUtils.getString(e.payload(), "hostGroup", "-"))
-                .status(status)
-                .duration(MapUtils.getNumber(e.payload(), "duration", 0L).longValue())
-                .retryCount(getIntFromString(e.payload(), "currentRetryCount", 0))
-                .build();
-    }
-
-    private static List<HostItem> combineEvents(List<EventItem> events) {
+    private static List<HostItem> combineEvents(List<AnsibleEvent> events) {
         Map<HostItem.Key, HostItem> result = new HashMap<>();
-        for (EventItem e : events) {
-            result.compute(ImmutableKey.of(e.instanceId(), e.instanceCreatedAt(), e.playbookId(), e.host(), e.hostGroup()),
+        for (AnsibleEvent e : events) {
+            result.compute(HostItem.Key.from(e),
                     (k, v) -> (v == null) ? HostItem.from(e) : combine(v, e));
         }
         return new ArrayList<>(result.values());
     }
 
-    private static HostItem combine(HostItem hostItem, EventItem newEvent) {
-        if (hostItem.retryCount() != newEvent.retryCount()) {
-            return HostItem.from(newEvent);
-        }
-
+    private static HostItem combine(HostItem hostItem, AnsibleEvent newEvent) {
         long duration = hostItem.duration() + newEvent.duration();
 
-        String status;
-        long eventSeq;
-        if (Status.of(newEvent.status()).weight() > Status.of(hostItem.status()).weight()) {
-            status = newEvent.status();
-            eventSeq = newEvent.eventSeq();
-        } else {
+        HostStatus status = getHostStatus(newEvent);
+        long eventSeq = newEvent.eventSeq();
+        if (status.weight() <= hostItem.status().weight()) {
             status = hostItem.status();
             eventSeq = hostItem.eventSeq();
         }
@@ -125,23 +93,6 @@ public class AnsibleEventProcessor implements EventProcessor {
                 .status(status)
                 .eventSeq(eventSeq)
                 .build();
-    }
-
-    private static int getIntFromString(Map<String, Object> m, String name, int defaultValue) {
-        Object v = m.get(name);
-        if (v == null) {
-            return defaultValue;
-        }
-
-        if (v instanceof String) {
-            return Integer.parseInt((String) v);
-        }
-
-        if (v instanceof Number) {
-            return ((Number) v).intValue();
-        }
-
-        throw new IllegalArgumentException("Invalid variable '" + name + "' type, expected: int, got: " + v.getClass());
     }
 
     @Named
@@ -171,42 +122,34 @@ public class AnsibleEventProcessor implements EventProcessor {
             Field<Integer> newStatusWeight = decodeStatus(choose(value((String) null)));
 
             String update = tx.update(ANSIBLE_HOSTS)
-                    .set(ANSIBLE_HOSTS.DURATION, when(ANSIBLE_HOSTS.RETRY_COUNT.notEqual((Integer)null), value((Long)null)).otherwise(ANSIBLE_HOSTS.DURATION.plus(value((Integer) null))))
-                    .set(ANSIBLE_HOSTS.STATUS, when(ANSIBLE_HOSTS.RETRY_COUNT.notEqual((Integer)null), value((String)null)).otherwise(when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.STATUS).otherwise(value((String) null))))
-                    .set(ANSIBLE_HOSTS.EVENT_SEQ, when(ANSIBLE_HOSTS.RETRY_COUNT.notEqual((Integer)null), value((Long)null)).otherwise(when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.EVENT_SEQ).otherwise(value((Long) null))))
-                    .set(ANSIBLE_HOSTS.RETRY_COUNT, (Integer)null)
+                    .set(ANSIBLE_HOSTS.DURATION, ANSIBLE_HOSTS.DURATION.plus(value((Integer) null)))
+                    .set(ANSIBLE_HOSTS.STATUS, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.STATUS).otherwise(value((String) null)))
+                    .set(ANSIBLE_HOSTS.EVENT_SEQ, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.EVENT_SEQ).otherwise(value((Long) null)))
                     .where(ANSIBLE_HOSTS.INSTANCE_ID.eq(value((UUID) null))
                             .and(ANSIBLE_HOSTS.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
                                     .and(ANSIBLE_HOSTS.HOST.eq(value((String) null))
-                                            .and(ANSIBLE_HOSTS.HOST_GROUP.eq(value((String) null))))))
+                                            .and(ANSIBLE_HOSTS.HOST_GROUP.eq(value((String) null))
+                                                    .and(ANSIBLE_HOSTS.PLAYBOOK_ID.eq((UUID)null))))))
                     .getSQL();
 
             try (PreparedStatement ps = conn.prepareStatement(update)) {
                 for (HostItem h : hosts) {
                     // set duration
-                    ps.setInt(1, h.retryCount());
-                    ps.setLong(2, h.duration());
-                    ps.setLong(3, h.duration());
+                    ps.setLong(1, h.duration());
 
                     // set status
-                    ps.setInt(4, h.retryCount());
-                    ps.setString(5, h.status());
-                    ps.setString(6, h.status());
-                    ps.setString(7, h.status());
+                    ps.setString(2, h.status().name());
+                    ps.setString(3, h.status().name());
 
                     // set event seq
-                    ps.setInt(8, h.retryCount());
-                    ps.setLong(9, h.eventSeq());
-                    ps.setString(10, h.status());
-                    ps.setLong(11, h.eventSeq());
+                    ps.setString(4, h.status().name());
+                    ps.setLong(5, h.eventSeq());
 
-                    //set retry count
-                    ps.setInt(12, h.retryCount());
-
-                    ps.setObject(13, h.key().instanceId());
-                    ps.setTimestamp(14, h.key().instanceCreatedAt());
-                    ps.setString(15, h.key().host());
-                    ps.setString(16, h.key().hostGroup());
+                    ps.setObject(6, h.key().instanceId());
+                    ps.setTimestamp(7, h.key().instanceCreatedAt());
+                    ps.setString(8, h.key().host());
+                    ps.setString(9, h.key().hostGroup());
+                    ps.setObject(10, h.key().playbookId());
 
                     ps.addBatch();
                 }
@@ -223,9 +166,8 @@ public class AnsibleEventProcessor implements EventProcessor {
                             ANSIBLE_HOSTS.HOST_GROUP,
                             ANSIBLE_HOSTS.STATUS,
                             ANSIBLE_HOSTS.DURATION,
-                            ANSIBLE_HOSTS.EVENT_SEQ,
-                            ANSIBLE_HOSTS.RETRY_COUNT)
-                    .values(value((UUID) null), null, null, null, null, null, null, null, null)
+                            ANSIBLE_HOSTS.EVENT_SEQ)
+                    .values(value((UUID) null), null, null, null, null, null, null, null)
                     .getSQL();
 
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
@@ -235,10 +177,9 @@ public class AnsibleEventProcessor implements EventProcessor {
                     ps.setObject(3, h.key().playbookId());
                     ps.setString(4, h.key().host());
                     ps.setString(5, h.key().hostGroup());
-                    ps.setString(6, h.status());
+                    ps.setString(6, h.status().name());
                     ps.setLong(7, h.duration());
                     ps.setLong(8, h.eventSeq());
-                    ps.setLong(9, h.retryCount());
 
                     ps.addBatch();
                 }
@@ -248,12 +189,10 @@ public class AnsibleEventProcessor implements EventProcessor {
 
         private static Field<Integer> decodeStatus(CaseValueStep<String> choose) {
             return choose
-                    .when(inline(Status.FAILED.name()), inline(Status.FAILED.weight()))
-                    .when(inline(Status.UNREACHABLE.name()), inline(Status.UNREACHABLE.weight()))
-                    .when(inline(Status.SKIPPED.name()), inline(Status.SKIPPED.weight()))
-                    .when(inline(Status.CHANGED.name()), inline(Status.CHANGED.weight()))
-                    .when(inline(Status.OK.name()), inline(Status.OK.weight()))
-                    .otherwise(inline(0));
+                    .when(inline(HostStatus.FAILED.name()), inline(HostStatus.FAILED.weight()))
+                    .when(inline(HostStatus.UNREACHABLE.name()), inline(HostStatus.UNREACHABLE.weight()))
+                    .when(inline(HostStatus.OK.name()), inline(HostStatus.OK.weight()))
+                    .otherwise(inline(HostStatus.OK.weight));
         }
 
         private static List<HostItem> removeInvalidItems(List<HostItem> items) {
@@ -265,18 +204,24 @@ public class AnsibleEventProcessor implements EventProcessor {
         }
     }
 
-    private enum Status {
+    private static HostStatus getHostStatus(AnsibleEvent e) {
+        boolean ignoreErrors = e.ignoreErrors();
+        String status = e.getStatus();
+        if (ignoreErrors && AnsibleHostProcessor.HostStatus.FAILED.name().equals(status)) {
+            return AnsibleHostProcessor.HostStatus.OK;
+        }
+        return HostStatus.of(status);
+    }
 
-        RUNNING(0),
-        SKIPPED(1),
+    public enum HostStatus {
+
         OK(2),
-        CHANGED(3),
         UNREACHABLE(4),
         FAILED(5);
 
         private final int weight;
 
-        Status(int weight) {
+        HostStatus(int weight) {
             this.weight = weight;
         }
 
@@ -284,8 +229,8 @@ public class AnsibleEventProcessor implements EventProcessor {
             return weight;
         }
 
-        public static Status of(String status) {
-            for (Status s : values()) {
+        public static HostStatus of(String status) {
+            for (HostStatus s : values()) {
                 if (s.name().equals(status)) {
                     return s;
                 }
@@ -307,7 +252,6 @@ public class AnsibleEventProcessor implements EventProcessor {
             Timestamp instanceCreatedAt();
 
             @Value.Parameter
-            @Nullable
             UUID playbookId();
 
             @Value.Parameter
@@ -315,51 +259,27 @@ public class AnsibleEventProcessor implements EventProcessor {
 
             @Value.Parameter
             String hostGroup();
+
+            static Key from(AnsibleEvent e) {
+                return ImmutableKey.of(e.instanceId(), e.instanceCreatedAt(), e.playbookId(), e.host(), e.hostGroup());
+            }
         }
 
         Key key();
 
-        String status();
+        HostStatus status();
 
         long duration();
 
         long eventSeq();
 
-        int retryCount();
-
-        static HostItem from(EventItem event) {
+        static HostItem from(AnsibleEvent event) {
             return ImmutableHostItem.builder()
-                    .key(ImmutableKey.of(event.instanceId(), event.instanceCreatedAt(), event.playbookId(), event.host(), event.hostGroup()))
-                    .status(event.status())
+                    .key(HostItem.Key.from(event))
+                    .status(getHostStatus(event))
                     .duration(event.duration())
                     .eventSeq(event.eventSeq())
-                    .retryCount(event.retryCount())
                     .build();
         }
-    }
-
-    @Value.Immutable
-    public interface EventItem extends AbstractEventProcessor.Event {
-
-        UUID instanceId();
-
-        Timestamp instanceCreatedAt();
-
-        @Nullable
-        UUID playbookId();
-
-        Timestamp eventDate();
-
-        long eventSeq();
-
-        String host();
-
-        String hostGroup();
-
-        String status();
-
-        long duration();
-
-        int retryCount();
     }
 }
