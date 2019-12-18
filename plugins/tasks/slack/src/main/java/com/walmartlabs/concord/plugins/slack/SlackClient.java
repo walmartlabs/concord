@@ -62,6 +62,7 @@ public class SlackClient implements AutoCloseable {
 
     private static final String SLACK_API_ROOT = "https://slack.com/api/";
     private static final String CHAT_POST_MESSAGE_CMD = "chat.postMessage";
+    private static final String MESSAGE_ADD_REACTION_CMD = "reactions.add";
     private static final String CREATE_CHANNEL_CMD = "channels.create";
     private static final String CREATE_GROUP_CMD = "groups.create";
     private static final String ARCHIVE_CHANNEL_CMD = "channels.archive";
@@ -86,6 +87,15 @@ public class SlackClient implements AutoCloseable {
     public void close() throws IOException {
         client.close();
         connManager.close();
+    }
+
+    public Response addReaction(String channelId, String ts, String reaction) throws IOException {
+        Map<String, Object> params = new HashMap<>();
+        params.put("channel", channelId);
+        params.put("timestamp", ts);
+        params.put("name", reaction);
+
+        return exec(MESSAGE_ADD_REACTION_CMD, params);
     }
 
     public Response message(String channelId, String ts, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
@@ -151,7 +161,7 @@ public class SlackClient implements AutoCloseable {
                 statusCode = response.getStatusLine().getStatusCode();
 
                 if (statusCode == HttpStatus.SC_OK) {
-                    return parseReponse(response, command, params);
+                    return parseResponse(response, command, params);
                 }
 
                 if (statusCode == TOO_MANY_REQUESTS_ERROR) {
@@ -170,16 +180,16 @@ public class SlackClient implements AutoCloseable {
         }
 
         String error = "Slack request not successful after " + retryCount + " retries. Last response code: " + statusCode;
-        return new Response(false, null, error);
+        return new Response(false, null, null, error);
     }
 
-    private Response parseReponse(CloseableHttpResponse response, String command,
-                                  Map<String, Object> params) throws IOException {
+    private Response parseResponse(CloseableHttpResponse response, String command,
+                                   Map<String, Object> params) throws IOException {
         Response r;
 
         if (response.getEntity() == null) {
             log.error("exec ['{}', '{}'] -> empty response", command, params);
-            r = new Response(false, null, "empty response");
+            r = new Response(false, null, null, "empty response");
         } else {
             String s = EntityUtils.toString(response.getEntity());
             r = objectMapper.readValue(s, Response.class);
@@ -255,16 +265,19 @@ public class SlackClient implements AutoCloseable {
 
         private final boolean ok;
         private final String ts;
+        private final String id;
         private final String error;
         private final Map<String, Object> params = new HashMap<>();
 
         @JsonCreator
         public Response(@JsonProperty("ok") boolean ok,
                         @JsonProperty("ts") String ts,
+                        @JsonProperty("channel") String id,
                         @JsonProperty("error") String error) {
 
             this.ok = ok;
             this.ts = ts;
+            this.id = id;
             this.error = error;
         }
 
@@ -278,6 +291,10 @@ public class SlackClient implements AutoCloseable {
 
         public String getTs() {
             return ts;
+        }
+
+        public String getChannelId() {
+            return id;
         }
 
         @JsonAnyGetter
