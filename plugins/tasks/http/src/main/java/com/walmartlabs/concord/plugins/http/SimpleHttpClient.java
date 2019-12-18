@@ -121,7 +121,7 @@ public class SimpleHttpClient {
                 content = processResponse(httpResponse, config);
                 response.put("content", content);
             } else {
-                content = EntityUtils.toString(httpResponse.getEntity());
+                content = httpResponse.getEntity() != null ? EntityUtils.toString(httpResponse.getEntity()) : "";
                 // for backward compatibility
                 response.put("content", "");
                 response.put("errorString", content);

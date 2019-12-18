@@ -4,6 +4,7 @@
 
 ### Changed
 
+- http: fixed a potential NPE on empty responses;
 - concord-server, concord-console, ansible: hosts statuses are now
 limited to `ok`, `failed` and `unreachable`. Fixes the host status
 calculation and reduces the number of recorded host events;
