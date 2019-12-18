@@ -19,6 +19,10 @@ recording events;
 - concord-server: sanitize `\u0000` in strings when inserting JSONB
 data (e.g. process events). 
 
+### Breaking
+
+- concord-agent: `runner` configuration section is renamed to
+`runnerV1` to better support alternative runtimes.
 
 
 ## [1.36.1] - 2019-12-11

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.agent.cfg.Configuration;
 import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;

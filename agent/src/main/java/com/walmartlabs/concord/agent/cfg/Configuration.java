@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.cfg;
 
 /*-
  * *****
@@ -21,19 +21,20 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.typesafe.config.Config;
-import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.ollie.config.ConfigurationProcessor;
 import com.walmartlabs.ollie.config.EnvironmentSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+
+import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
+import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
 public class Configuration {
 
@@ -83,11 +84,7 @@ public class Configuration {
     private final long repositoryCacheMaxAge;
     private final Path repositoryCacheInfoDir;
 
-    private final Path runnerPath;
-    private final Path runnerCfgDir;
-    private final String agentJavaCmd;
-
-    private final boolean runnerSecurityManagerEnabled;
+    private final RunnerV1Configuration runnerV1Cfg;
 
     private final String apiKey;
 
@@ -154,19 +151,7 @@ public class Configuration {
         this.repositoryCacheMaxAge = cfg.getDuration("repositoryCache.maxAge", TimeUnit.MILLISECONDS);
         this.repositoryCacheInfoDir = getDir(cfg, "repositoryCache.cacheInfoDir");
 
-        String path = getStringOrDefault(cfg, "runner.path", () -> {
-            try {
-                Properties props = new Properties();
-                props.load(Configuration.class.getResourceAsStream("runner.properties"));
-                return props.getProperty("runner.path");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        this.runnerPath = Paths.get(path);
-        this.runnerSecurityManagerEnabled = cfg.getBoolean("runner.securityManagerEnabled");
-        this.runnerCfgDir = getDir(cfg, "runner.cfgDir");
-        this.agentJavaCmd = cfg.getString("runner.javaCmd");
+        this.runnerV1Cfg = new RunnerV1Configuration(cfg);
     }
 
     public String getAgentId() {
@@ -193,20 +178,8 @@ public class Configuration {
         return payloadDir;
     }
 
-    public String getAgentJavaCmd() {
-        return agentJavaCmd;
-    }
-
     public Path getDependencyCacheDir() {
         return dependencyCacheDir;
-    }
-
-    public Path getRunnerPath() {
-        return runnerPath;
-    }
-
-    public Path getRunnerCfgDir() {
-        return runnerCfgDir;
     }
 
     public int getWorkersCount() {
@@ -235,10 +208,6 @@ public class Configuration {
 
     public List<String> getExtraDockerVolumes() {
         return extraDockerVolumes;
-    }
-
-    public boolean isRunnerSecurityManagerEnabled() {
-        return runnerSecurityManagerEnabled;
     }
 
     public String getApiKey() {
@@ -329,48 +298,8 @@ public class Configuration {
         return repositoryCacheMaxAge;
     }
 
-    @Override
-    public String toString() {
-        return "Configuration{" +
-                "agentId='" + agentId + '\'' +
-                ", capabilities=" + capabilities +
-                ", dependencyCacheDir=" + dependencyCacheDir +
-                ", dependencyListsDir=" + dependencyListsDir +
-                ", payloadDir=" + payloadDir +
-                ", logDir=" + logDir +
-                ", logMaxDelay=" + logMaxDelay +
-                ", workersCount=" + workersCount +
-                ", javaPath=" + javaPath +
-                ", pollInterval=" + pollInterval +
-                ", maxPreforkAge=" + maxPreforkAge +
-                ", maxPreforkCount=" + maxPreforkCount +
-                ", serverApiBaseUrl='" + serverApiBaseUrl + '\'' +
-                ", serverWebsocketUrls=" + Arrays.toString(serverWebsocketUrls) +
-                ", apiVerifySsl=" + apiVerifySsl +
-                ", connectTimeout=" + connectTimeout +
-                ", readTimeout=" + readTimeout +
-                ", userAgent='" + userAgent + '\'' +
-                ", maxWebSocketInactivity=" + webSocketPingInterval +
-                ", dockerHost='" + dockerHost + '\'' +
-                ", dockerOrphanSweeperEnabled=" + dockerOrphanSweeperEnabled +
-                ", dockerOrphanSweeperPeriod=" + dockerOrphanSweeperPeriod +
-                ", extraDockerVolumes=" + extraDockerVolumes +
-                ", repositoryCacheDir=" + repositoryCacheDir +
-                ", repositoryLockTimeout=" + repositoryLockTimeout +
-                ", repositoryOauthToken='" + repositoryOauthToken + '\'' +
-                ", shallowClone=" + shallowClone +
-                ", repositoryHttpLowSpeedLimit=" + repositoryHttpLowSpeedLimit +
-                ", repositoryHttpLowSpeedTime=" + repositoryHttpLowSpeedTime +
-                ", repositorySshTimeout=" + repositorySshTimeout +
-                ", repositorySshTimeoutRetryCount=" + repositorySshTimeoutRetryCount +
-                ", repositoryCacheInfoDir=" + repositoryCacheInfoDir +
-                ", repositoryCacheMaxAge=" + repositoryCacheMaxAge +
-                ", runnerPath=" + runnerPath +
-                ", runnerCfgDir=" + runnerCfgDir +
-                ", agentJavaCmd='" + agentJavaCmd + '\'' +
-                ", runnerSecurityManagerEnabled=" + runnerSecurityManagerEnabled +
-                ", apiKey='" + apiKey + '\'' +
-                '}';
+    public RunnerV1Configuration getRunnerV1Cfg() {
+        return runnerV1Cfg;
     }
 
     private static Config load(String name) {
@@ -389,33 +318,6 @@ public class Configuration {
         }
 
         return getCSV(cfg.getString("server.websocketUrl"));
-    }
-
-    private static String getStringOrDefault(Config cfg, String key, Supplier<String> defaultValueSupplier) {
-        if (cfg.hasPath(key)) {
-            return cfg.getString(key);
-        }
-        return defaultValueSupplier.get();
-    }
-
-    private static Path getDir(Config cfg, String key) {
-        try {
-            if (!cfg.hasPath(key)) {
-                return IOUtils.createTempDir(key);
-            }
-
-            String value = cfg.getString(key);
-            if (value.startsWith("/")) {
-                Path p = Paths.get(value);
-                if (!Files.exists(p)) {
-                    Files.createDirectories(p);
-                }
-                return p;
-            }
-            return IOUtils.createTempDir(value);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private static String[] getCSV(String s) {

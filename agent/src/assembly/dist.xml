@@ -27,7 +27,7 @@
             <outputDirectory>.</outputDirectory>
         </file>
         <file>
-            <source>${project.build.directory}/runner/runner.jar</source>
+            <source>${project.build.directory}/runner/runner-v1.jar</source>
             <outputDirectory>runner</outputDirectory>
         </file>
     </files>

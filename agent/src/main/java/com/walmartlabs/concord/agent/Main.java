@@ -21,6 +21,8 @@ package com.walmartlabs.concord.agent;
  */
 
 
+import com.walmartlabs.concord.agent.cfg.Configuration;
+
 public class Main {
 
     public static void main(String[] args) throws Exception {
