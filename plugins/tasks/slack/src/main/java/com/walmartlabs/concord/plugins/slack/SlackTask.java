@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;
@@ -41,17 +42,31 @@ public class SlackTask implements Task {
     @Override
     @SuppressWarnings("unchecked")
     public void execute(Context ctx) {
-        String channelId = (String) ctx.getVariable("channelId");
-        String text = (String) ctx.getVariable("text");
-        String iconEmoji = (String) ctx.getVariable("iconEmoji");
-        String username = (String) ctx.getVariable("username");
+        Action action = Action.valueOf(ContextUtils.getString(ctx, "action", Action.SENDMESSAGE.name()).toUpperCase());
+
         boolean ignoreErrors = getBoolean(ctx, "ignoreErrors", false);
-        Collection<Object> attachments = (Collection) ctx.getVariable("attachments");
+        String channelId = ContextUtils.assertString(ctx, "channelId");
 
-        // Optional and should be parent thread Id (ts)
-        String ts = (String) ctx.getVariable("ts");
-
-        call(ctx, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
+        switch (action) {
+            case ADDREACTION: {
+                String ts = ContextUtils.assertString(ctx, "ts");
+                String reaction = ContextUtils.assertString(ctx, "reaction");
+                callAddReaction(ctx, channelId, ts, ignoreErrors, reaction);
+                break;
+            }
+            case SENDMESSAGE: {
+                String ts = ContextUtils.getString(ctx, "ts");
+                String text = (String) ctx.getVariable("text");
+                String iconEmoji = (String) ctx.getVariable("iconEmoji");
+                String username = (String) ctx.getVariable("username");
+                Collection<Object> attachments = (Collection<Object>) ctx.getVariable("attachments");
+                call(ctx, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
+                break;
+            }
+            default: {
+                throw new IllegalArgumentException("Unsupported action type: " + action);
+            }
+        }
     }
 
     public void call(@InjectVariable("context") Context ctx, String channelId, String text) {
@@ -78,11 +93,7 @@ public class SlackTask implements Task {
                 log.info("Slack message sent into '{}' channel", channelId);
             }
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("ok", r.isOk());
-            result.put("error", r.getError());
-            result.put("ts", r.getTs());
-            ctx.setVariable("result", result);
+            ctx.setVariable("result", result(r));
         } catch (Exception e) {
             if (!ignoreErrors) {
                 log.error("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error", channelId, ts, text, iconEmoji, username, attachments, e);
@@ -90,11 +101,51 @@ public class SlackTask implements Task {
             }
 
             log.warn("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error (ignoreErrors=true)", channelId, ts, text, iconEmoji, username, attachments, e);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("ok", false);
-            result.put("error", e.getMessage());
-            ctx.setVariable("result", result);
+            ctx.setVariable("result", errorResult(e));
         }
+    }
+
+    private void callAddReaction(@InjectVariable("context") Context ctx, String channelId, String ts, boolean ignoreErrors, String reaction) {
+        SlackConfiguration cfg = SlackConfiguration.from(ctx);
+        try (SlackClient client = new SlackClient(cfg)) {
+            SlackClient.Response r = client.addReaction(channelId, ts, reaction);
+
+            if (!r.isOk()) {
+                log.warn("Error adding reaction to Slack message: {}", r.getError());
+            } else {
+                log.info("Reaction '{}' added to the Slack message '{}'", reaction, ts);
+            }
+
+            ctx.setVariable("result", result(r));
+        } catch (Exception e) {
+            if (!ignoreErrors) {
+                log.error("callAddReaction ['{}', '{}', '{}'] -> error", channelId, ts, reaction, e);
+                throw new RuntimeException("slack task error: ", e);
+            }
+
+            log.warn("callAddReaction ['{}', '{}', '{}', '{}'] -> error (ignoreErrors=true)", channelId, ts, reaction, e);
+            ctx.setVariable("result", errorResult(e));
+        }
+    }
+
+    private static Map<String, Object> result(SlackClient.Response r) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("ok", r.isOk());
+        m.put("error", r.getError());
+        m.put("id", r.getChannelId());
+        m.put("ts", r.getTs());
+        return m;
+    }
+
+    private static Map<String, Object> errorResult(Throwable t) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("ok", false);
+        m.put("error", t.getMessage());
+        return m;
+    }
+
+    private enum Action {
+        SENDMESSAGE,
+        ADDREACTION
     }
 }

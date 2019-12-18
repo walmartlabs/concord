@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- slack: new action `addReaction`.
+
 ### Changed
 
 - http: fixed a potential NPE on empty responses;
