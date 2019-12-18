@@ -14,9 +14,9 @@
     <packaging>takari-jar</packaging>
 
     <properties>
-        <runner.path>
+        <runnerV1.path>
             ${project.basedir}/../runtime/v1/impl/target/concord-runtime-impl-v1-${project.version}-jar-with-dependencies.jar
-        </runner.path>
+        </runnerV1.path>
     </properties>
 
     <dependencies>
@@ -189,7 +189,7 @@
                                     <artifactId>concord-runtime-impl-v1</artifactId>
                                     <version>${project.version}</version>
                                     <classifier>jar-with-dependencies</classifier>
-                                    <destFileName>runner.jar</destFileName>
+                                    <destFileName>runner-v1.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}/runner</outputDirectory>

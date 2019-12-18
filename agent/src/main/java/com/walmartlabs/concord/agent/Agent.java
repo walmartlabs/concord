@@ -25,6 +25,8 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.Worker.CompletionCallback;
 import com.walmartlabs.concord.agent.Worker.StateFetcher;
+import com.walmartlabs.concord.agent.cfg.Configuration;
+import com.walmartlabs.concord.agent.cfg.RunnerV1Configuration;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.*;
@@ -310,15 +312,17 @@ public class Agent {
                                                        DependencyManager dependencyManager,
                                                        ExecutorService executor) {
 
+        RunnerV1Configuration runnerV1Cfg = cfg.getRunnerV1Cfg();
+
         RunnerJobExecutorConfiguration runnerExecutorCfg = RunnerJobExecutorConfiguration.builder()
                 .agentId(cfg.getAgentId())
                 .serverApiBaseUrl(cfg.getServerApiBaseUrl())
-                .agentJavaCmd(cfg.getAgentJavaCmd())
+                .agentJavaCmd(runnerV1Cfg.getJavaCmd())
                 .dependencyListDir(cfg.getDependencyListsDir())
                 .dependencyCacheDir(cfg.getDependencyCacheDir())
-                .runnerPath(cfg.getRunnerPath())
-                .runnerCfgDir(cfg.getRunnerCfgDir())
-                .runnerSecurityManagerEnabled(cfg.isRunnerSecurityManagerEnabled())
+                .runnerPath(runnerV1Cfg.getPath())
+                .runnerCfgDir(runnerV1Cfg.getCfgDir())
+                .runnerSecurityManagerEnabled(runnerV1Cfg.isSecurityManagerEnabled())
                 .extraDockerVolumes(cfg.getExtraDockerVolumes())
                 .maxHeartbeatInterval(cfg.getMaxNoHeartbeatInterval())
                 .build();

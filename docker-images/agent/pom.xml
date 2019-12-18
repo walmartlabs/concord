@@ -60,14 +60,6 @@
                                     <outputDirectory>${project.build.directory}/dist</outputDirectory>
                                     <destFileName>agent.tar.gz</destFileName>
                                 </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-                                    <artifactId>concord-runtime-impl-v1</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>jar-with-dependencies</classifier>
-                                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
-                                    <destFileName>runner.jar</destFileName>
-                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>

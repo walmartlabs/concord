@@ -25,6 +25,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.agent.cfg.Configuration;
 import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 
