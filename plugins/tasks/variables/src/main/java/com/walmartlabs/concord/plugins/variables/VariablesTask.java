@@ -60,7 +60,8 @@ public class VariablesTask implements Task {
     }
 
     public void set(@InjectVariable("context") Context ctx, Map<String, Object> vars) {
-        vars.forEach((k, v) -> {
+        vars.forEach((k, value) -> {
+            Object v = ctx.interpolate(value);
             if (isNestedVariable(k)) {
                 StandardELContext sc = createELContext(ctx);
                 ValueExpression x = expressionFactory.createValueExpression(sc, "${" + k + "}", Object.class);

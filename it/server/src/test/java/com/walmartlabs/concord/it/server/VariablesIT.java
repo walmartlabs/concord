@@ -173,4 +173,25 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*defaultValue: 101$", ab);
         assertLog(".*defaultValueFromUnknown: 102$", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSetDependentVars() throws Exception {
+        byte[] payload = archive(VariablesIT.class.getResource("setVarNested").toURI(),
+                ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.obj.x", "123");
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*obj.x: 123$", ab);
+        assertLog(".*obj.name: Concord$", ab);
+        assertLog(".*obj.msg: Hello, Concord$", ab);
+    }
 }

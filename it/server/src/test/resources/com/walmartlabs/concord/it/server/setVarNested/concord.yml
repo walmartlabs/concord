@@ -1,0 +1,13 @@
+configuration:
+  arguments:
+    obj:
+      x: 123
+flows:
+  default:
+    - set:
+        obj.name: "Concord"
+        obj.msg: "Hello, ${obj.name}"
+
+    - log: "obj.x: ${obj.x}"
+    - log: "obj.name: ${obj.name}"
+    - log: "obj.msg: ${obj.msg}"

@@ -338,7 +338,7 @@ public interface StepConverter<T extends YamlStep> {
         } else if (o instanceof Map) {
             Map<Object, Object> src = (Map<Object, Object>) o;
 
-            Map<Object, Object> dst = new HashMap<>(src.size());
+            Map<Object, Object> dst = new LinkedHashMap<>(src.size());
             for (Map.Entry<Object, Object> e : src.entrySet()) {
                 dst.put(e.getKey(), deepConvert(e.getValue()));
             }

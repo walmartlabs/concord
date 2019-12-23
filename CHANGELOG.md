@@ -13,6 +13,8 @@ listen for process-level events, process logs and audit events.
 
 ### Changed
 
+- variables-tasks: fixed an interpolation issue when multiple
+dependant values are `set` simultaneously;
 - http: fixed a potential NPE on empty responses;
 - concord-server, concord-console, ansible: hosts statuses are now
 limited to `ok`, `failed` and `unreachable`. Fixes the host status
