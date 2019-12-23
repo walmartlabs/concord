@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.audit;
+package com.walmartlabs.concord.server.sdk.audit;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,7 @@ package com.walmartlabs.concord.server.audit;
  * =====
  */
 
+public interface AuditLogListener {
 
-public enum AuditObject {
-
-    EXTERNAL_EVENT,
-    INVENTORY,
-    ORGANIZATION,
-    POLICY,
-    PROJECT,
-    ROLE,
-    SECRET,
-    SYSTEM,
-    TEAM
+    void onEvent(AuditEvent event);
 }

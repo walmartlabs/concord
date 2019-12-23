@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.slf4j.Logger;
@@ -60,12 +60,12 @@ public class RepositoryProcessor implements PayloadProcessor {
 
     private final RepositoryDao repositoryDao;
     private final RepositoryManager repositoryManager;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
     public RepositoryProcessor(RepositoryDao repositoryDao,
                                RepositoryManager repositoryManager,
-                               LogManager logManager) {
+                               ProcessLogManager logManager) {
 
         this.repositoryDao = repositoryDao;
         this.repositoryManager = repositoryManager;

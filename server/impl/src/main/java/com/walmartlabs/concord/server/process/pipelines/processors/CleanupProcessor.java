@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import org.slf4j.MDC;
 
 import javax.inject.Inject;
@@ -35,10 +35,10 @@ import java.nio.file.Path;
 @Named
 public class CleanupProcessor implements FinalizerProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public CleanupProcessor(LogManager logManager) {
+    public CleanupProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

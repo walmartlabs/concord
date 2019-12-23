@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -35,10 +35,10 @@ public class FailProcessor implements ExceptionProcessor {
 
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager queueManager;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public FailProcessor(ProcessQueueDao queueDao, ProcessQueueManager queueManager, LogManager logManager) {
+    public FailProcessor(ProcessQueueDao queueDao, ProcessQueueManager queueManager, ProcessLogManager logManager) {
         this.queueDao = queueDao;
         this.logManager = logManager;
         this.queueManager = queueManager;

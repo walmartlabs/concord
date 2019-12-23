@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.Inject;
+import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import com.walmartlabs.ollie.lifecycle.Lifecycle;
 import org.eclipse.sisu.EagerSingleton;
 

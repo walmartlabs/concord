@@ -27,7 +27,7 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
@@ -37,7 +37,7 @@ import java.nio.file.Path;
 @Named
 public class FilePolicyApplier implements PolicyApplier {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @InjectCounter
     private final Counter policyWarn;
@@ -46,7 +46,7 @@ public class FilePolicyApplier implements PolicyApplier {
     private final Counter policyDeny;
 
     @Inject
-    public FilePolicyApplier(LogManager logManager, Counter policyWarn, Counter policyDeny) {
+    public FilePolicyApplier(ProcessLogManager logManager, Counter policyWarn, Counter policyDeny) {
         this.logManager = logManager;
         this.policyWarn = policyWarn;
         this.policyDeny = policyDeny;

@@ -24,7 +24,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import javax.inject.Inject;
@@ -38,10 +38,10 @@ import java.util.Map;
 @Named
 public class DependenciesProcessor implements PayloadProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public DependenciesProcessor(LogManager logManager) {
+    public DependenciesProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

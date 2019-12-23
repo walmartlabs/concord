@@ -16,5 +16,6 @@
 
     <modules>
         <module>ansible</module>
+        <module>kafka-event-sink</module>
     </modules>
 </project>

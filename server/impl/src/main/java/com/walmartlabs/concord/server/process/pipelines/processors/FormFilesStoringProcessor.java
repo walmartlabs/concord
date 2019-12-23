@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,10 +39,10 @@ import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES
 @Named
 public class FormFilesStoringProcessor implements PayloadProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public FormFilesStoringProcessor(LogManager logManager) {
+    public FormFilesStoringProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

@@ -25,7 +25,7 @@ import com.walmartlabs.concord.common.CycleChecker;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,11 +49,11 @@ public class TemplateScriptProcessor implements PayloadProcessor {
     public static final String REQUEST_DATA_TEMPLATE_FILE_NAME = "_main.js";
     public static final String INPUT_REQUEST_DATA_KEY = "_input";
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final ScriptEngine scriptEngine;
 
     @Inject
-    public TemplateScriptProcessor(LogManager logManager) {
+    public TemplateScriptProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
         this.scriptEngine = new ScriptEngineManager().getEngineByName("nashorn");
     }

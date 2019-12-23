@@ -25,7 +25,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -39,10 +39,10 @@ import java.util.Map;
  */
 public class RequestDataStoringProcessor implements PayloadProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public RequestDataStoringProcessor(LogManager logManager) {
+    public RequestDataStoringProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.audit;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
+import com.walmartlabs.concord.server.sdk.audit.AuditObject;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 

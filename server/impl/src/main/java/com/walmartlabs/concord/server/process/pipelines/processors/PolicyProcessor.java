@@ -24,7 +24,7 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.policy.PolicyApplier;
 
 import javax.inject.Inject;
@@ -37,11 +37,11 @@ import java.util.Set;
 @Named
 public class PolicyProcessor implements PayloadProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final Set<PolicyApplier> appliers;
 
     @Inject
-    public PolicyProcessor(LogManager logManager, Set<PolicyApplier> appliers) {
+    public PolicyProcessor(ProcessLogManager logManager, Set<PolicyApplier> appliers) {
         this.logManager = logManager;
         this.appliers = appliers;
     }

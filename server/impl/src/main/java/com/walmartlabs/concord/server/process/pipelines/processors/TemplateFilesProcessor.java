@@ -27,7 +27,7 @@ import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.template.TemplateAliasDao;
 
 import javax.inject.Inject;
@@ -50,13 +50,13 @@ import java.util.Optional;
 @Deprecated
 public class TemplateFilesProcessor implements PayloadProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final DependencyManager dependencyManager;
     private final TemplateAliasDao aliasDao;
 
     @Inject
     public TemplateFilesProcessor(DependencyManager dependencyManager,
-                                  LogManager logManager,
+                                  ProcessLogManager logManager,
                                   TemplateAliasDao aliasDao) {
 
         this.logManager = logManager;

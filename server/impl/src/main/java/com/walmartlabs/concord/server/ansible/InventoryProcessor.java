@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 
@@ -48,10 +48,10 @@ public class InventoryProcessor implements PayloadProcessor {
     private static final String INVENTORY_FILE_NAME = "_inventory";
     private static final String DYNAMIC_INVENTORY_FILE_NAME = "_dynamicInventory";
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public InventoryProcessor(LogManager logManager) {
+    public InventoryProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

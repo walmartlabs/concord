@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.cfg.DependencyVersionConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,10 +39,10 @@ import java.nio.file.StandardCopyOption;
 public class DependencyVersionsExportProcessor implements PayloadProcessor {
 
     private final DependencyVersionConfiguration cfg;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public DependencyVersionsExportProcessor(DependencyVersionConfiguration cfg, LogManager logManager) {
+    public DependencyVersionsExportProcessor(DependencyVersionConfiguration cfg, ProcessLogManager logManager) {
         this.cfg = cfg;
         this.logManager = logManager;
     }

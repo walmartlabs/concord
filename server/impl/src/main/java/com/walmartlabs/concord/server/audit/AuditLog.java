@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.audit;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,12 @@ package com.walmartlabs.concord.server.audit;
  * =====
  */
 
+import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
+import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
+import com.walmartlabs.concord.server.sdk.audit.AuditObject;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.slf4j.Logger;
@@ -41,11 +44,13 @@ public class AuditLog {
 
     private final AuditConfiguration cfg;
     private final AuditDao auditDao;
+    private final Listeners listeners;
 
     @Inject
-    public AuditLog(AuditConfiguration cfg, AuditDao auditDao) {
+    public AuditLog(AuditConfiguration cfg, AuditDao auditDao, Listeners listeners) {
         this.cfg = cfg;
         this.auditDao = auditDao;
+        this.listeners = listeners;
     }
 
     public EntryBuilder add(AuditObject object, AuditAction action) {
@@ -118,6 +123,8 @@ public class AuditLog {
             details.put("requestId", RequestId.get());
 
             auditDao.insert(userId, object, action, details);
+
+            listeners.onAuditEvent(new AuditEvent(userId, object.name(), action.name(), details));
         }
     }
 }

@@ -20,9 +20,6 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
@@ -31,7 +28,7 @@ import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
+import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -50,6 +47,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
@@ -64,34 +62,24 @@ public class ProcessEventResource implements Resource {
     private final ProcessKeyCache processKeyCache;
     private final ProcessQueueDao queueDao;
     private final ProjectAccessManager projectAccessManager;
-
-    @InjectMeter
-    private final Meter eventsReceived;
-
-    private final Histogram batchInsertHistogram;
+    private final ProcessEventManager eventManager;
 
     @Inject
     public ProcessEventResource(ProcessEventDao eventDao,
                                 ProcessKeyCache processKeyCache,
                                 ProcessQueueDao queueDao,
                                 ProjectAccessManager projectAccessManager,
-                                Meter eventsReceived,
-                                MetricRegistry metricRegistry) {
+                                ProcessEventManager eventManager) {
 
         this.eventDao = eventDao;
         this.processKeyCache = processKeyCache;
         this.queueDao = queueDao;
         this.projectAccessManager = projectAccessManager;
-        this.eventsReceived = eventsReceived;
-
-        this.batchInsertHistogram = metricRegistry.histogram("process-events-batch-insert");
+        this.eventManager = eventManager;
     }
 
     /**
      * Register a process event.
-     *
-     * @param processInstanceId
-     * @param req
      */
     @POST
     @ApiOperation(value = "Register a process event", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
@@ -102,15 +90,12 @@ public class ProcessEventResource implements Resource {
                       @ApiParam ProcessEventRequest req) {
 
         ProcessKey processKey = assertProcessKey(processInstanceId);
-        eventDao.insert(processKey, req.getEventType(), req.getEventDate(), req.getData());
-        eventsReceived.mark();
+        ProcessEvent e = new ProcessEvent(processKey, req.getEventType(), req.getEventDate(), req.getData());
+        eventManager.event(Collections.singletonList(e));
     }
 
     /**
      * Register multiple events for the specified process.
-     *
-     * @param processInstanceId
-     * @param data
      */
     @POST
     @ApiOperation(value = "Register multiple events for the specified process", authorizations = {@Authorization("session_key"), @Authorization("api_key")})
@@ -120,22 +105,17 @@ public class ProcessEventResource implements Resource {
     public void batchEvent(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                            @ApiParam List<ProcessEventRequest> data) {
 
-        if (data.isEmpty()) {
-            return;
-        }
-
         ProcessKey processKey = assertProcessKey(processInstanceId);
-        eventDao.insert(processKey, data);
 
-        eventsReceived.mark(data.size());
-        batchInsertHistogram.update(data.size());
+        List<ProcessEvent> events = data.stream()
+                .map(req -> new ProcessEvent(processKey, req.getEventType(), req.getEventDate(), req.getData()))
+                .collect(Collectors.toList());
+
+        eventManager.event(events);
     }
 
     /**
      * List process events.
-     *
-     * @param processInstanceId
-     * @return
      */
     @GET
     @ApiOperation(value = "List process events", responseContainer = "list", response = ProcessEventEntry.class)

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

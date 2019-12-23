@@ -59,9 +59,9 @@
         <jsqlparser.version>2.0</jsqlparser.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.12</junit.version>
+        <kafka.client.version>2.3.1</kafka.client.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>3.5.1
-        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <logback.version>1.2.3</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
@@ -259,6 +259,11 @@
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
                 <artifactId>concord-ansible-plugin-db</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins</groupId>
+                <artifactId>kafka-event-sink</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -935,6 +940,11 @@
                 <groupId>info.picocli</groupId>
                 <artifactId>picocli</artifactId>
                 <version>4.0.0-beta-1b</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.client.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
