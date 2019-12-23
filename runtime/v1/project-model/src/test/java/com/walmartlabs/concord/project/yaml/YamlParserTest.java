@@ -2617,7 +2617,10 @@ public class YamlParserTest extends AbstractYamlParserTest {
         }
 
         public void set(ExecutionContext executionContext, Map<String, Object> vars) {
-            vars.forEach(executionContext::setVariable);
+            vars.forEach((k, v) -> {
+                Object vv = executionContext.interpolate(v);
+                executionContext.setVariable(k, vv);
+            });
         }
     }
 
