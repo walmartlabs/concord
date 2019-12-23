@@ -39,7 +39,7 @@ public class YamlSetVariablesStepConverter implements StepConverter<YamlSetVaria
         String expression = "${vars.set(execution, __0)}";
 
         Object vars = StepConverter.deepConvert(s.getVariables());
-        Set<VariableMapping> inVars = Collections.singleton(new VariableMapping(null, null, vars, "__0", true));
+        Set<VariableMapping> inVars = Collections.singleton(new VariableMapping(null, null, vars, "__0", false));
 
         c.addElement(new ServiceTask(id, ExpressionType.SIMPLE, expression, inVars, null, true));
         c.addOutput(id);
