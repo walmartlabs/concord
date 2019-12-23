@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
@@ -85,8 +84,8 @@ public class ProcessInfoProcessor implements PayloadProcessor {
 
     private void exportSessionToken(ProcessKey processKey, Path ws, String token) {
         try {
-            Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-            Files.write(dst.resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME), token.getBytes());
+            Path dst = Files.createDirectories(ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+            Files.write(dst.resolve(Constants.Files.SESSION_TOKEN_FILE_NAME), token.getBytes());
         } catch (IOException e) {
             logManager.error(processKey, "Error while storing the session token: {}", e);
             throw new ProcessException(processKey, "Error while string the session token", e);

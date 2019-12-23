@@ -35,6 +35,7 @@ public class ImportManagerFactory {
         this.repositoryExporter = repositoryExporter;
     }
 
+    @SuppressWarnings("rawtypes")
     public ImportManager create() {
         List<ImportProcessor> processors = new ArrayList<>();
         processors.add(new RepositoryProcessor(repositoryExporter));

@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.Trigger;
 import com.walmartlabs.concord.repository.GitCliRepositoryProvider;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.events.github.GithubRepoInfo;
 import com.walmartlabs.concord.server.events.github.GithubUtils;
@@ -56,7 +56,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
 
     @Override
     public void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t) {
-        Map<String, Object> params = t.getConditions();
+        Map<String, Object> params = t.conditions();
         if (params == null) {
             return;
         }
@@ -72,7 +72,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
     }
 
     private Map<String, Object> enrichTriggerConditions(DSLContext tx, UUID repoId, Trigger t) {
-        Map<String, Object> params = t.getConditions();
+        Map<String, Object> params = t.conditions();
         if (params.containsKey(GITHUB_ORG_KEY) && params.containsKey(GITHUB_REPO_KEY) && params.containsKey(REPO_BRANCH_KEY)) {
             return params;
         }
@@ -83,7 +83,7 @@ public class GithubTriggerProcessor implements TriggerProcessor {
             return params;
         }
 
-        Map<String, Object> newParams = new HashMap<>(t.getConditions());
+        Map<String, Object> newParams = new HashMap<>(t.conditions());
         newParams.putIfAbsent(GITHUB_ORG_KEY, githubRepoInfo.owner());
         newParams.putIfAbsent(GITHUB_REPO_KEY, githubRepoInfo.name());
 

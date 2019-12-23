@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -33,11 +33,10 @@ import java.util.stream.Collectors;
 public class TagsExtractingProcessor implements PayloadProcessor {
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
-        Object v = cfg.get(InternalConstants.Request.TAGS_KEY);
+        Object v = cfg.get(Constants.Request.TAGS_KEY);
         if (v == null) {
             return chain.process(payload);
         }
@@ -48,6 +47,7 @@ public class TagsExtractingProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
+    @SuppressWarnings("rawtypes")
     private static Set<String> parse(ProcessKey pk, Object v) {
         if (v instanceof String) {
             String[] as = ((String) v).split(",");

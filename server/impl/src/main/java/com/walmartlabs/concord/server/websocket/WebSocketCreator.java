@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.websocket;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
@@ -70,8 +70,8 @@ public class WebSocketCreator implements org.eclipse.jetty.websocket.servlet.Web
         }
 
         UUID channelId = UUID.randomUUID();
-        String agentId = req.getHeader(InternalConstants.Headers.AGENT_ID);
-        String userAgent = req.getHeader(InternalConstants.Headers.AGENT_UA);
+        String agentId = req.getHeader(QueueClient.AGENT_ID);
+        String userAgent = req.getHeader(QueueClient.AGENT_UA);
         return new WebSocketListener(channelManager, channelId, agentId, userAgent);
     }
 

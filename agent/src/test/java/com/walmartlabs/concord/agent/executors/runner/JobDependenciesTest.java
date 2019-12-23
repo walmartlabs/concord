@@ -20,7 +20,6 @@ package com.walmartlabs.concord.agent.executors.runner;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import org.junit.Test;
 
@@ -43,8 +42,8 @@ public class JobDependenciesTest {
     public void test() throws Exception {
         Path payloadDir = Files.createTempDirectory("test");
 
-        Path versionsFile = payloadDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(InternalConstants.Files.DEPENDENCY_VERSIONS_FILE_NAME);
+        Path versionsFile = payloadDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(Constants.Files.DEPENDENCY_VERSIONS_FILE_NAME);
 
         Files.createDirectories(versionsFile.getParent());
 

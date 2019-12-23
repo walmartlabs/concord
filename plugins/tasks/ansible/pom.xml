@@ -40,11 +40,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-            <artifactId>concord-project-model-v1</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <scope>provided</scope>

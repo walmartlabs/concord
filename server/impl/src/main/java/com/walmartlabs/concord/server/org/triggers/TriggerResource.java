@@ -21,9 +21,9 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.repository.Repository;
+import com.walmartlabs.concord.server.process.loader.ProjectLoader;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -51,6 +51,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -165,8 +166,8 @@ public class TriggerResource implements Resource {
         try {
             pd = repositoryManager.withLock(repo.getUrl(), () -> {
                 Repository repository = repositoryManager.fetch(repo.getProjectId(), repo);
-                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()));
-                return result.getProjectDefinition();
+                ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()), Collections.emptyMap());
+                return result.projectDefinition();
             });
 
             ProjectValidator.Result result = ProjectValidator.validate(pd);

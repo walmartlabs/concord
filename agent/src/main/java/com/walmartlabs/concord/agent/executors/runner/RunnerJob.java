@@ -27,7 +27,6 @@ import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.model.*;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -48,7 +47,7 @@ public class RunnerJob {
 
         Path payloadDir = jobRequest.getPayloadDir();
 
-        Path p = payloadDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = payloadDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (Files.exists(p)) {
             try (InputStream in = Files.newInputStream(p)) {
                 cfg = new ObjectMapper().readValue(in, Map.class);
@@ -146,7 +145,7 @@ public class RunnerJob {
         ApiConfiguration apiCfgSrc = ApiConfiguration.builder().build();
         DockerConfiguration dockerCfgSrc = DockerConfiguration.builder().build();
 
-        Object v = processCfg.get(InternalConstants.Request.RUNNER_KEY);
+        Object v = processCfg.get(Constants.Request.RUNNER_KEY);
         if (v != null) {
             RunnerConfiguration src = createObjectMapper().convertValue(v, RunnerConfiguration.class);
 

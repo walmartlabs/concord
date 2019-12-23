@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -42,7 +41,7 @@ import java.util.Map;
 @Named
 public class ForkCleanupProcessor implements PayloadProcessor {
 
-    private static final String[] MARKER_FILES = {InternalConstants.Files.SUSPEND_MARKER_FILE_NAME, InternalConstants.Files.RESUME_MARKER_FILE_NAME};
+    private static final String[] MARKER_FILES = {Constants.Files.SUSPEND_MARKER_FILE_NAME, Constants.Files.RESUME_MARKER_FILE_NAME};
 
     private final ObjectMapper objectMapper;
 
@@ -54,8 +53,8 @@ public class ForkCleanupProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path stateDir = workspace.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
+        Path stateDir = workspace.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
         try {
             // clear the parent process' suspend/resume markers
@@ -67,7 +66,7 @@ public class ForkCleanupProcessor implements PayloadProcessor {
 
             // remove the parent process' arguments file if a state snapshot is present
             // we don't want the original process arguments to overwrite the process variables
-            Path stateSnapshot = stateDir.resolve(InternalConstants.Files.LAST_KNOWN_VARIABLES_FILE_NAME);
+            Path stateSnapshot = stateDir.resolve(Constants.Files.LAST_KNOWN_VARIABLES_FILE_NAME);
             if (Files.exists(stateSnapshot)) {
                 clearArguments(workspace);
             }
@@ -80,7 +79,7 @@ public class ForkCleanupProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private void clearArguments(Path workspace) throws IOException {
-        Path requestFile = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        Path requestFile = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(requestFile)) {
             return;
         }

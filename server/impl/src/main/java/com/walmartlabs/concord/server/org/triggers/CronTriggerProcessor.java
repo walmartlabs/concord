@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.Constants;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
@@ -48,12 +48,12 @@ public class CronTriggerProcessor implements TriggerProcessor {
 
     @Override
     public void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t) {
-        if (t.getConditions() == null) {
+        if (t.conditions() == null) {
             log.warn("process ['{}'] -> cron trigger without params, ignore", triggerId);
             return;
         }
 
-        String spec = (String) t.getConditions().get(Constants.Trigger.CRON_SPEC);
+        String spec = (String) t.conditions().get(Constants.Trigger.CRON_SPEC);
 
         if (spec == null) {
             log.warn("process ['{}'] -> cron trigger without spec, ignore", triggerId);
@@ -61,7 +61,7 @@ public class CronTriggerProcessor implements TriggerProcessor {
         }
 
         ZoneId zoneId = null;
-        String timezone = (String) t.getConditions().get(Constants.Trigger.CRON_TIMEZONE);
+        String timezone = (String) t.conditions().get(Constants.Trigger.CRON_TIMEZONE);
         if (timezone != null) {
             if (!validTimeZone(timezone)) {
                 log.warn("process ['{}'] -> cron trigger invalid timezone, ignore", triggerId);

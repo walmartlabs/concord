@@ -42,7 +42,7 @@ import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.queueclient.QueueClientConfiguration;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
@@ -293,7 +293,7 @@ public class Agent {
 
     private static List<JobPostProcessor> createPostProcessors(ProcessApi processApi) {
         return Collections.singletonList(
-                new JobFileUploadPostProcessor(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                new JobFileUploadPostProcessor(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
                         "attachments", (instanceId, data) -> {
                     String path = "/api/v1/process/" + instanceId + "/attachment";
 
@@ -336,7 +336,7 @@ public class Agent {
             RunnerJob job = RunnerJob.from(runnerExecutorCfg, req, processLogFactory);
 
             // TODO looks a bit messy, refactor to use proper configuration objects
-            if (job.getProcessCfg().get(InternalConstants.Request.CONTAINER) != null) {
+            if (job.getProcessCfg().get(Constants.Request.CONTAINER) != null) {
                 DockerRunnerJobExecutorConfiguration dockerRunnerCfg = new DockerRunnerJobExecutorConfiguration(cfg.getDockerHost(), cfg.getDependencyCacheDir(), cfg.getJavaPath());
                 jobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
             } else {

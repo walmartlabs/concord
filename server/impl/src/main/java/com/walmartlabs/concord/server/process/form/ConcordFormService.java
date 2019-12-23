@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.form;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.form.ConcordFormValidator;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
@@ -102,9 +102,9 @@ public class ConcordFormService {
     }
 
     public List<FormListEntry> list(ProcessKey processKey) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                InternalConstants.Files.JOB_STATE_DIR_NAME,
-                InternalConstants.Files.JOB_FORMS_DIR_NAME);
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_DIR_NAME);
 
         List<Form> forms = stateManager.forEach(processKey, resource, ConcordFormService::deserialize);
         return forms.stream().map(f -> {
@@ -115,16 +115,16 @@ public class ConcordFormService {
 
             Map<String, Object> opts = f.getOptions();
             boolean yield = MapUtils.getBoolean(opts, "yield", false);
-            Map<String, Object> runAs = MapUtils.getMap(opts, InternalConstants.Forms.RUN_AS_KEY, null);
+            Map<String, Object> runAs = MapUtils.getMap(opts, Constants.Forms.RUN_AS_KEY, null);
 
             return new FormListEntry(name, branding, yield, runAs);
         }).collect(Collectors.toList());
     }
 
     public String nextFormId(ProcessKey processKey) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                InternalConstants.Files.JOB_STATE_DIR_NAME,
-                InternalConstants.Files.JOB_FORMS_DIR_NAME);
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_DIR_NAME);
 
         Function<String, Optional<String>> getId = s -> {
             int i = s.lastIndexOf("/");
@@ -153,9 +153,9 @@ public class ConcordFormService {
         }
 
         ResumeHandler resumeHandler = (f, args) -> {
-            String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                    InternalConstants.Files.JOB_STATE_DIR_NAME,
-                    InternalConstants.Files.JOB_FORMS_DIR_NAME,
+            String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                    Constants.Files.JOB_STATE_DIR_NAME,
+                    Constants.Files.JOB_FORMS_DIR_NAME,
                     formName);
 
             stateManager.deleteFile(processKey, resource);
@@ -167,13 +167,13 @@ public class ConcordFormService {
 
             // TODO refactor into the process manager
             Map<String, Object> m = new HashMap<>();
-            m.put(InternalConstants.Request.ARGUMENTS_KEY, args);
+            m.put(Constants.Request.ARGUMENTS_KEY, args);
             if (data != null) {
-                m.put(InternalConstants.Files.FORM_FILES, data.remove(InternalConstants.Files.FORM_FILES));
+                m.put(Constants.Files.FORM_FILES, data.remove(Constants.Files.FORM_FILES));
             }
 
             Map<String, Object> opts = f.getOptions();
-            Object runAs = opts != null ? opts.get(InternalConstants.Forms.RUN_AS_KEY) : null;
+            Object runAs = opts != null ? opts.get(Constants.Forms.RUN_AS_KEY) : null;
             if (runAs != null) {
                 m.put(INTERNAL_RUN_AS_KEY, runAs);
             }
@@ -184,10 +184,10 @@ public class ConcordFormService {
         Map<String, Object> merged = merge(form, data);
 
         // optionally save the user who submitted the form
-        boolean saveSubmittedBy = MapUtils.getBoolean(form.getOptions(), InternalConstants.Forms.SAVE_SUBMITTED_BY_KEY, false);
+        boolean saveSubmittedBy = MapUtils.getBoolean(form.getOptions(), Constants.Forms.SAVE_SUBMITTED_BY_KEY, false);
         if (saveSubmittedBy) {
             UserInfo i = userManager.getCurrentUserInfo();
-            merged.put(InternalConstants.Forms.SUBMITTED_BY_KEY, i);
+            merged.put(Constants.Forms.SUBMITTED_BY_KEY, i);
         }
 
         try {

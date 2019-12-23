@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
@@ -166,8 +165,8 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
         private void process(PollEntry entry, ProcessEntry parent) {
             Map<String, Object> req = new HashMap<>();
-            req.put(InternalConstants.Request.ENTRY_POINT_KEY, entry.flow);
-            req.put(InternalConstants.Request.TAGS_KEY, null); // clear tags
+            req.put(Constants.Request.ENTRY_POINT_KEY, entry.flow);
+            req.put(Constants.Request.TAGS_KEY, null); // clear tags
 
             PartialProcessKey childKey = PartialProcessKey.create();
             try {

@@ -181,9 +181,7 @@ public class EngineFactory {
         }
 
         ProcessDefinitionProvider processes() {
-            return id -> {
-                return ProjectDefinitionUtils.getFlow(project, activeProfiles, id);
-            };
+            return id -> ProjectDefinitionUtils.getFlow(project, activeProfiles, id);
         }
 
         FormDefinitionProvider forms() {

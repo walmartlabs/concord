@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.imports.Import;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.project.ImportsNormalizer;
+import com.walmartlabs.concord.server.process.loader.ImportsNormalizer;
 import com.walmartlabs.concord.server.cfg.ImportConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 

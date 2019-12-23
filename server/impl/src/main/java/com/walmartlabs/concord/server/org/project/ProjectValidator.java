@@ -25,11 +25,10 @@ import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Strings;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.SourceMap;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.Constants;
-import io.takari.bpm.model.ProcessDefinition;
-import io.takari.bpm.model.SourceMap;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import java.io.Serializable;
@@ -45,7 +44,7 @@ public class ProjectValidator {
         List<String> errors = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
 
-        for (Trigger t : pd.getTriggers()) {
+        for (Trigger t : pd.triggers()) {
             validateTrigger(pd, t, errors, warnings);
         }
 
@@ -59,43 +58,55 @@ public class ProjectValidator {
 
         validateTimezone(t, errors);
 
-        if (Objects.isNull(t.getConditions())) {
+        if (Objects.isNull(t.conditions())) {
             return;
         }
 
-        t.getConditions().entrySet().stream()
+        t.conditions().entrySet().stream()
                 .filter(v -> v.getValue() instanceof String)
                 .filter(v -> !Constants.Trigger.CRON_SPEC.equals(v.getKey()))
                 .forEach(v -> validateRegex(t, errors, v));
     }
 
     private static void validateEntryPoint(ProjectDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
-        if (Strings.isNullOrEmpty(t.getEntryPoint())) {
+        String entryPoint = getEntryPoint(t);
+
+        if (Strings.isNullOrEmpty(entryPoint)) {
             errors.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "is missing"));
             return;
         }
 
-        Map<String, ProcessDefinition> flows = pd.getFlows();
-        if (Objects.isNull(flows) || !flows.containsKey(t.getEntryPoint())) {
+        Map<String, ?> flows = pd.flows();
+        if (Objects.isNull(flows) || !flows.containsKey(entryPoint)) {
             warnings.add(makeErrorMessage(t, Constants.Request.ENTRY_POINT_KEY, "does not point to a valid flow. " +
                     "This warning can be ignored if the entryPoint references a flow from a template."));
         }
     }
 
+    private static String getEntryPoint(Trigger t) {
+        Map<String, Object> cfg = t.configuration();
+
+        if (cfg == null) {
+            return null;
+        }
+
+        return (String) cfg.get(Constants.Request.ENTRY_POINT_KEY);
+    }
+
     private static void validateSpec(Trigger t, List<String> errors) {
-        String triggerName = t.getName();
+        String triggerName = t.name();
         if (!triggerName.equals("cron")) {
             return;
         }
 
         String k = Constants.Trigger.CRON_SPEC;
 
-        if (Objects.isNull(t.getConditions())) {
+        if (Objects.isNull(t.conditions())) {
             errors.add(makeErrorMessage(t, k, "is missing"));
             return;
         }
 
-        Object spec = t.getConditions().get(k);
+        Object spec = t.conditions().get(k);
         if (Objects.isNull(spec)) {
             errors.add(makeErrorMessage(t, k, "is missing"));
             return;
@@ -109,16 +120,16 @@ public class ProjectValidator {
     }
 
     private static void validateTimezone(Trigger t, List<String> errors) {
-        String triggerName = t.getName();
+        String triggerName = t.name();
         if (!triggerName.equals("cron")) {
             return;
         }
 
-        if (Objects.isNull(t.getConditions())) {
+        if (Objects.isNull(t.conditions())) {
             return;
         }
 
-        Object timezone = t.getConditions().get("timezone");
+        Object timezone = t.conditions().get("timezone");
         if (Objects.isNull(timezone)) {
             return;
         }
@@ -142,11 +153,11 @@ public class ProjectValidator {
     }
 
     private static String location(SourceMap m) {
-        return "@ src: " + m.getSource() + ", line: " + m.getLine() + ", col: " + m.getColumn();
+        return "@ src: " + m.source() + ", line: " + m.line() + ", col: " + m.column();
     }
 
     private static String makeErrorMessage(Trigger t, String property, String message) {
-        return "trigger: " + t.getName() + " -> " + property + " " + (message) + " " + location(t.getSourceMap());
+        return "trigger: " + t.name() + " -> " + property + " " + (message) + " " + location(t.sourceMap());
     }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

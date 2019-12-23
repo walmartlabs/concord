@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.form.ConcordFormService;
@@ -55,7 +55,7 @@ public class ChangeUserProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        Boolean keep = (Boolean) runAsParams.get(InternalConstants.Forms.RUN_AS_KEEP_KEY);
+        Boolean keep = (Boolean) runAsParams.get(Constants.Forms.RUN_AS_KEEP_KEY);
         if (keep != null && keep) {
             securityContext.storeCurrentSubject(payload.getProcessKey());
             return currentUserInfoProcessor.process(chain, payload);

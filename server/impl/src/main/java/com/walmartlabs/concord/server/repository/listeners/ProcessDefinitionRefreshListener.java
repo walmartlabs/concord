@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
-import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.ProjectLoader;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
@@ -55,11 +55,11 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
 
     @Override
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
-        ProjectDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()))
-                .getProjectDefinition();
+        ProjectDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), Collections.emptyMap())
+                .projectDefinition();
 
-        Set<String> entryPoints = pd.getFlows().keySet();
-        List<String> profiles = new ArrayList<>(pd.getProfiles().keySet());
+        Set<String> entryPoints = pd.flows().keySet();
+        List<String> profiles = new ArrayList<>(pd.profiles().keySet());
 
         Map<String, Object> meta = new HashMap<>();
         meta.put("entryPoints", emptyToNull(entryPoints));

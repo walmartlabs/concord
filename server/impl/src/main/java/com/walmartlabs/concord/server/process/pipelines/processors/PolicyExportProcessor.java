@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -71,8 +71,8 @@ public class PolicyExportProcessor implements PayloadProcessor {
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
-            Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-            objectMapper.writeValue(dst.resolve(InternalConstants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
+            Path dst = Files.createDirectories(ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+            objectMapper.writeValue(dst.resolve(Constants.Files.POLICY_FILE_NAME).toFile(), policy.getRules());
         } catch (IOException e) {
             logManager.error(processKey, "Error while storing process policy: {}", e);
             throw new ProcessException(processKey, "Storing process policy error", e);

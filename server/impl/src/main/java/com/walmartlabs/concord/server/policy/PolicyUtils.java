@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.secret.SecretType;
@@ -82,12 +82,12 @@ public final class PolicyUtils {
 
     public static Map<String, Object> toMap(UUID orgId, UUID projectId, Trigger trigger) {
         Map<String, Object> m = new HashMap<>();
-        m.put("eventSource", trigger.getName());
+        m.put("eventSource", trigger.name());
         m.put("orgId", orgId);
         m.put("projectId", projectId);
-        m.put("arguments", trigger.getArguments() != null ? trigger.getArguments() : Collections.emptyList());
-        m.put("params", trigger.getConditions() != null ? trigger.getConditions() : Collections.emptyList());
-        m.put("cfg", trigger.getCfg() != null ? trigger.getCfg() : Collections.emptyList());
+        m.put("arguments", trigger.arguments() != null ? trigger.arguments() : Collections.emptyMap());
+        m.put("params", trigger.conditions() != null ? trigger.conditions() : Collections.emptyMap());
+        m.put("cfg", trigger.configuration() != null ? trigger.configuration() : Collections.emptyList());
         return m;
     }
 

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.plugins.variables;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;
@@ -103,7 +103,7 @@ public class VariablesTask implements Task {
         sc.addELResolver(r);
 
         VariableMapper vm = sc.getVariableMapper();
-        vm.setVariable(InternalConstants.Context.CONTEXT_KEY, expressionFactory.createValueExpression(ctx, Context.class));
+        vm.setVariable(Constants.Context.CONTEXT_KEY, expressionFactory.createValueExpression(ctx, Context.class));
         return sc;
     }
 

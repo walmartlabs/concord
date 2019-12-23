@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,7 +35,7 @@ public final class OutVariablesUtils {
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> read(Path attachmentsDir) throws IOException {
-        Path processOut = attachmentsDir.resolve(InternalConstants.Files.OUT_VALUES_FILE_NAME);
+        Path processOut = attachmentsDir.resolve(Constants.Files.OUT_VALUES_FILE_NAME);
         if (!Files.exists(processOut)) {
             return Collections.emptyMap();
         }
