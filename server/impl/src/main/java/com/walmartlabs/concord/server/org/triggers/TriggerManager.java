@@ -23,8 +23,8 @@ package com.walmartlabs.concord.server.org.triggers;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.policy.EntityAction;
@@ -71,34 +71,34 @@ public class TriggerManager extends AbstractDao {
 
     public void refresh(UUID projectId, UUID repoId, ProjectDefinition pd) {
         UUID orgId = projectDao.getOrgId(projectId);
-        for(Trigger t : pd.getTriggers()) {
+        for(Trigger t : pd.triggers()) {
             policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, toMap(orgId, projectId, t));
         }
 
         tx(tx -> {
             triggersDao.delete(tx, projectId, repoId);
 
-            pd.getTriggers().forEach(t -> {
-                Map<String, Object> conditions = merge(triggersCfg.getDefaultConditions(), t.getName(), t.getConditions());
-                Map<String, Object> cfg = merge(triggersCfg.getDefaultConfiguration(), t.getName(), t.getCfg());
+            pd.triggers().forEach(t -> {
+                Map<String, Object> conditions = merge(triggersCfg.getDefaultConditions(), t.name(), t.conditions());
+                Map<String, Object> cfg = merge(triggersCfg.getDefaultConfiguration(), t.name(), t.configuration());
 
                 UUID triggerId = triggersDao.insert(tx,
                         projectId,
                         repoId,
-                        t.getName(),
-                        t.getActiveProfiles(),
-                        t.getArguments(),
+                        t.name(),
+                        t.activeProfiles(),
+                        t.arguments(),
                         conditions,
                         cfg);
 
-                TriggerProcessor processor = triggerProcessors.get(t.getName());
+                TriggerProcessor processor = triggerProcessors.get(t.name());
                 if (processor != null) {
                     processor.process(tx, repoId, triggerId, t);
                 }
             });
         });
 
-        log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.getTriggers().size());
+        log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.triggers().size());
     }
 
     @SuppressWarnings("unchecked")

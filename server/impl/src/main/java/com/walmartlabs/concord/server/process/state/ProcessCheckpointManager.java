@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.state;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.TemporaryPath;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.OutVariablesUtils;
@@ -98,11 +98,11 @@ public class ProcessCheckpointManager {
 
                 String checkpointName = readCheckpointName(extractedDir.path());
 
-                stateManager.deleteDirectory(processKey, InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME);
-                stateManager.deleteDirectory(processKey, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
+                stateManager.deleteDirectory(processKey, Constants.Files.CONCORD_SYSTEM_DIR_NAME);
+                stateManager.deleteDirectory(processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
                 stateManager.importPath(processKey, null, extractedDir.path());
 
-                Map<String, Object> out = OutVariablesUtils.read(extractedDir.path().resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME));
+                Map<String, Object> out = OutVariablesUtils.read(extractedDir.path().resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
                 if (out.isEmpty()) {
                     queueDao.removeMeta(processKey, "out");
                 } else {

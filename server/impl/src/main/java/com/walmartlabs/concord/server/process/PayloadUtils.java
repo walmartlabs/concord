@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
@@ -41,7 +40,7 @@ public final class PayloadUtils {
     @SuppressWarnings("unchecked")
     public static Map<String, Object> getRequirements(Payload p) {
         Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
-        return (Map<String, Object>) cfg.get(InternalConstants.Request.REQUIREMENTS);
+        return (Map<String, Object>) cfg.get(Constants.Request.REQUIREMENTS);
     }
 
     public static Instant getStartAt(Payload p) {

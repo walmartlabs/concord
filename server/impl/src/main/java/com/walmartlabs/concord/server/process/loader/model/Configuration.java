@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server;
+package com.walmartlabs.concord.server.process.loader.model;
 
 /*-
  * *****
@@ -20,25 +20,9 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.project.ProjectLoader;
+import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+public interface Configuration {
 
-@Named
-public class ProjectLoaderProvider implements Provider<ProjectLoader> {
-
-    private final ImportManager importManager;
-
-    @Inject
-    public ProjectLoaderProvider(ImportManager importManager) {
-        this.importManager = importManager;
-    }
-
-    @Override
-    public ProjectLoader get() {
-        return new ProjectLoader(importManager);
-    }
+    Map<String, Object> asMap();
 }

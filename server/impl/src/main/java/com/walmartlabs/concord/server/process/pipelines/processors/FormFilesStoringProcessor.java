@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -33,8 +34,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
-
-import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES;
 
 @Named
 public class FormFilesStoringProcessor implements PayloadProcessor {
@@ -56,7 +55,7 @@ public class FormFilesStoringProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        Map<String, String> formFiles = (Map<String, String>) cfg.get(FORM_FILES);
+        Map<String, String> formFiles = (Map<String, String>) cfg.get(Constants.Files.FORM_FILES);
         if (formFiles == null) {
             return chain.process(payload);
         }

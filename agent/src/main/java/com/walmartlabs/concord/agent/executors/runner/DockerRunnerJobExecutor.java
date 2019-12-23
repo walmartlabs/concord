@@ -23,8 +23,8 @@ package com.walmartlabs.concord.agent.executors.runner;
 import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,7 +71,7 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
         String javaCmd = DockerCommandBuilder.getJavaCmd();
 
         Path runnerPath = DockerCommandBuilder.getRunnerPath(runnerCfg.runnerPath());
-        Path runnerDir = DockerCommandBuilder.getWorkspaceDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
+        Path runnerDir = DockerCommandBuilder.getWorkspaceDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
 
         // we can't use "preforks" anyway, so let's store the runner's cfg directly in the payload dir
         Path runnerCfgPath = runnerDir.resolve(storeRunnerCfg(job.getPayloadDir(), job.getRunnerCfg()).getFileName());
@@ -120,7 +120,7 @@ public class DockerRunnerJobExecutor extends RunnerJobExecutor {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getContainerCfg(RunnerJob job) {
         Map<String, Object> cfg = job.getProcessCfg();
-        Map<String, Object> result = (Map<String, Object>) cfg.get(InternalConstants.Request.CONTAINER);
+        Map<String, Object> result = (Map<String, Object>) cfg.get(Constants.Request.CONTAINER);
         if (result == null) {
             throw new IllegalArgumentException("Docker runner without container configuration");
         }

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.ContainerRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -70,7 +70,7 @@ public class ContainerPolicyApplier implements PolicyApplier {
         ProcessKey processKey = payload.getProcessKey();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
-        Path p = workDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(p)) {
             return;
         }
@@ -78,7 +78,7 @@ public class ContainerPolicyApplier implements PolicyApplier {
         Map<String, Object> containerOptions;
         try (InputStream in = Files.newInputStream(p)) {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            containerOptions = (Map<String, Object>) m.get(InternalConstants.Request.CONTAINER);
+            containerOptions = (Map<String, Object>) m.get(Constants.Request.CONTAINER);
         } catch (IOException e) {
             logManager.error(processKey, "Error while reading container configuration: {}", e);
             throw new ProcessException(processKey, "Error while reading container configuration", e);

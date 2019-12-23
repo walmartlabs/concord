@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.org;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
@@ -222,11 +221,11 @@ public class ProjectProcessResource implements Resource {
 
         if (activeProfiles != null) {
             String[] as = activeProfiles.split(",");
-            cfg.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
+            cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
         }
 
         if (requestInfo != null) {
-            cfg.put(InternalConstants.Request.ARGUMENTS_KEY, requestInfo);
+            cfg.put(Constants.Request.ARGUMENTS_KEY, requestInfo);
         }
 
         PartialProcessKey processKey = PartialProcessKey.create();

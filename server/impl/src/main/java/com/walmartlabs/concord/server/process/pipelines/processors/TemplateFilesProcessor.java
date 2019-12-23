@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -42,12 +42,9 @@ import java.util.Optional;
 
 /**
  * Extracts template files into the workspace.
- *
- * @deprecated old style "_main.js in an archive" are deprecated. Use {@link ImportProcessor}
  */
 @Named
 @Singleton
-@Deprecated
 public class TemplateFilesProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
@@ -69,7 +66,7 @@ public class TemplateFilesProcessor implements PayloadProcessor {
         ProcessKey processKey = payload.getProcessKey();
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
 
-        Object s = cfg.get(InternalConstants.Request.TEMPLATE_KEY);
+        Object s = cfg.get(Constants.Request.TEMPLATE_KEY);
         if (!(s instanceof String)) {
             return chain.process(payload);
         }

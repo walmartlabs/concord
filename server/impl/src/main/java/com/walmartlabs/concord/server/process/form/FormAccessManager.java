@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.form;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.Roles;
@@ -63,11 +63,11 @@ public class FormAccessManager {
         }
 
         Map<String, Object> opts = f.getOptions();
-        if (opts == null || opts.get(InternalConstants.Forms.RUN_AS_KEY) == null) {
+        if (opts == null || opts.get(Constants.Forms.RUN_AS_KEY) == null) {
             return f;
         }
 
-        Map<String, Object> runAsParams = (Map<String, Object>) opts.get(InternalConstants.Forms.RUN_AS_KEY);
+        Map<String, Object> runAsParams = (Map<String, Object>) opts.get(Constants.Forms.RUN_AS_KEY);
 
         UserPrincipal p = UserPrincipal.assertCurrent();
 
@@ -96,9 +96,9 @@ public class FormAccessManager {
     }
 
     private Form getForm(ProcessKey processKey, String formName) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                InternalConstants.Files.JOB_STATE_DIR_NAME,
-                InternalConstants.Files.JOB_FORMS_DIR_NAME,
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_DIR_NAME,
                 formName);
 
         Optional<Form> o = stateManager.get(processKey, resource, FormAccessManager::deserialize);

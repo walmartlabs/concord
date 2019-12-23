@@ -40,8 +40,8 @@ import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.immutables.value.Value;
 import org.slf4j.Logger;
@@ -189,7 +189,7 @@ public class RunnerJobExecutor {
             // wait for the log to finish
             logStream.waitForCompletion();
 
-            Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
+            Path payloadDir = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
 
             // run all job post processors, e.g. the attachment uploader
             try {
@@ -324,7 +324,7 @@ public class RunnerJobExecutor {
         // the job's payload directory containing all files from the process' state snapshot and/or the repository's data
         Path src = job.getPayloadDir();
         // the VM's payload directory
-        Path dst = entry.getProcDir().resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
+        Path dst = entry.getProcDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
         // TODO use move
         IOUtils.copy(src, dst);
 
@@ -343,7 +343,7 @@ public class RunnerJobExecutor {
         // the job's payload directory containing all files from the process' state snapshot and/or the repository's data
         Path src = job.getPayloadDir();
         // the VM's payload directory
-        Path dst = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
+        Path dst = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
         Files.move(src, dst, StandardCopyOption.ATOMIC_MOVE);
 
         writeInstanceId(job.getInstanceId(), dst);
@@ -352,7 +352,7 @@ public class RunnerJobExecutor {
     }
 
     private ProcessEntry start(Path procDir, String[] cmd) throws IOException {
-        Path payloadDir = procDir.resolve(InternalConstants.Files.PAYLOAD_DIR_NAME);
+        Path payloadDir = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
         if (!Files.exists(payloadDir)) {
             Files.createDirectories(payloadDir);
         }
@@ -367,7 +367,7 @@ public class RunnerJobExecutor {
         // TODO constants
         Map<String, String> env = b.environment();
         env.put(IOUtils.TMP_DIR_KEY, IOUtils.TMP_DIR.toAbsolutePath().toString());
-        env.put("_CONCORD_ATTACHMENTS_DIR", payloadDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
+        env.put("_CONCORD_ATTACHMENTS_DIR", payloadDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .toAbsolutePath().toString());
 
         // pass through the docker mode
@@ -416,7 +416,7 @@ public class RunnerJobExecutor {
 
     @SuppressWarnings("unchecked")
     private List<String> getAgentJvmParams(Path workDir, Map<String, Object> processCfg) {
-        Path p = workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME);
+        Path p = workDir.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME);
         if (!Files.exists(p)) {
             // get jvm args from the process' configuration
             return getJvmArgsFromConfig(processCfg);
@@ -424,14 +424,14 @@ public class RunnerJobExecutor {
 
         try (InputStream in = Files.newInputStream(p)) {
             Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            return (List<String>) m.get(InternalConstants.Agent.JVM_ARGS_KEY);
+            return (List<String>) m.get(Constants.Agent.JVM_ARGS_KEY);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     private static List<String> getJvmArgsFromConfig(Map<String, Object> processCfg) {
-        Map<String, Object> requirements = MapUtils.get(processCfg, InternalConstants.Request.REQUIREMENTS, null);
+        Map<String, Object> requirements = MapUtils.get(processCfg, Constants.Request.REQUIREMENTS, null);
         if (requirements == null) {
             return null;
         }
@@ -454,8 +454,8 @@ public class RunnerJobExecutor {
     private static PolicyEngineRules readPolicyRules(RunnerJob job) throws IOException {
         Path workDir = job.getPayloadDir();
 
-        Path policyFile = workDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(InternalConstants.Files.POLICY_FILE_NAME);
+        Path policyFile = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(Constants.Files.POLICY_FILE_NAME);
 
         if (!Files.exists(policyFile)) {
             return null;
@@ -481,7 +481,7 @@ public class RunnerJobExecutor {
     private static boolean canUsePrefork(RunnerJob job) {
         Path workDir = job.getPayloadDir();
 
-        if (Files.exists(workDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME))) {
+        if (Files.exists(workDir.resolve(Constants.Files.LIBRARIES_DIR_NAME))) {
             // the process supplied its own libraries, can't use preforking
             return false;
         }
@@ -493,7 +493,7 @@ public class RunnerJobExecutor {
         }
 
         // the process supplied its own JVM parameters in _agent.json, can't use preforking
-        return !Files.exists(workDir.resolve(InternalConstants.Agent.AGENT_PARAMS_FILE_NAME));
+        return !Files.exists(workDir.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME));
     }
 
     private static HashCode hash(String[] as) {
@@ -559,7 +559,7 @@ public class RunnerJobExecutor {
     }
 
     private static void writeInstanceId(UUID instanceId, Path dst) throws IOException {
-        Path idPath = dst.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
+        Path idPath = dst.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         Files.write(idPath, instanceId.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.SYNC);
     }
 

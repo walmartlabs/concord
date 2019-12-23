@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.repository;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
@@ -32,6 +31,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.AccessScope;
+import com.walmartlabs.concord.server.process.loader.ProjectLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,15 +39,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-@Singleton
 @Named
+@Singleton
 public class RepositoryManager {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryManager.class);
@@ -80,6 +79,7 @@ public class RepositoryManager {
         this.secretManager = secretManager;
         this.projectDao = projectDao;
         this.repoCfg = repoCfg;
+
         this.repositoryCache = new RepositoryCache(repoCfg.getCacheDir(),
                 repoCfg.getCacheInfoDir(),
                 repoCfg.getLockTimeout(),
@@ -97,7 +97,7 @@ public class RepositoryManager {
             Repository repo = providers.fetch(uri, branch, commitId, path, secret, tmpDir);
 
             if (repoCfg.isConcordFileValidationEnabled()) {
-                if (!isConcordFileExists(repo.path())) {
+                if (!ProjectLoader.isConcordFileExists(repo.path())) {
                     throw new InvalidRepositoryPathException("Invalid repository path: `concord.yml` or `.concord.yml` is missing!");
                 }
             }
@@ -153,16 +153,5 @@ public class RepositoryManager {
         }
 
         return s.getSecret();
-    }
-
-    private static boolean isConcordFileExists(Path repoPath) {
-        for (String projectFileName : ProjectLoader.PROJECT_FILE_NAMES) {
-            Path projectFile = repoPath.resolve(projectFileName);
-            if (Files.exists(projectFile)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

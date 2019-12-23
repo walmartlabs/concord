@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 
 import javax.inject.Named;
@@ -44,9 +44,9 @@ public class OutVariablesSettingProcessor implements PayloadProcessor {
             cfg = new HashMap<>();
         }
 
-        cfg.put(InternalConstants.Request.OUT_EXPRESSIONS_KEY, outExpr);
+        cfg.put(Constants.Request.OUT_EXPRESSIONS_KEY, outExpr);
         payload = payload.mergeValues(Payload.CONFIGURATION,
-                Collections.singletonMap(InternalConstants.Request.OUT_EXPRESSIONS_KEY, outExpr));
+                Collections.singletonMap(Constants.Request.OUT_EXPRESSIONS_KEY, outExpr));
 
         return chain.process(payload);
     }

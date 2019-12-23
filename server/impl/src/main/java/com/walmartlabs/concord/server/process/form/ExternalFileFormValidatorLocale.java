@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.form;
 
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
 import com.walmartlabs.concord.common.form.DefaultConcordFormValidatorLocale;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.takari.bpm.model.form.FormField;
@@ -140,8 +140,8 @@ public class ExternalFileFormValidatorLocale implements ConcordFormValidatorLoca
             }
         };
 
-        String globalPath = InternalConstants.Files.ERROR_MESSAGES_FILE_NAME;
-        String formSpecificPath = "forms/" + formName + "/" + InternalConstants.Files.ERROR_MESSAGES_FILE_NAME;
+        String globalPath = Constants.Files.ERROR_MESSAGES_FILE_NAME;
+        String formSpecificPath = "forms/" + formName + "/" + Constants.Files.ERROR_MESSAGES_FILE_NAME;
 
         return Stream.of(formSpecificPath, globalPath)
                 .map(p -> stateManager.get(processKey, p, converter).orElse(null))

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.queueclient;
  */
 
 import com.google.common.util.concurrent.SettableFuture;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.queueclient.message.Message;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -45,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class QueueClient {
+
+    public static final String AGENT_UA = "X-Concord-Agent";
+    public static final String AGENT_ID = "X-Concord-Agent-Id";
 
     private static final Logger log = LoggerFactory.getLogger(QueueClient.class);
 
@@ -253,8 +255,8 @@ public class QueueClient {
             this.client.start();
 
             ClientUpgradeRequest request = new ClientUpgradeRequest();
-            request.setHeader(InternalConstants.Headers.AGENT_ID, agentId);
-            request.setHeader(InternalConstants.Headers.AGENT_UA, userAgent);
+            request.setHeader(AGENT_ID, agentId);
+            request.setHeader(AGENT_UA, userAgent);
             request.setHeader(HttpHeaders.AUTHORIZATION, apiToken);
             return client.connect(this, destUri, request).get(connectTimeout, TimeUnit.MILLISECONDS);
         }

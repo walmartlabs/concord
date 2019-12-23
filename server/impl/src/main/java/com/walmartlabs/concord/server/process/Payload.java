@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 

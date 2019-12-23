@@ -59,7 +59,7 @@ public class ImportManagerProvider implements Provider<ImportManager> {
         return factory.create();
     }
 
-    private class RepositoryExporterImpl implements RepositoryExporter {
+    private static class RepositoryExporterImpl implements RepositoryExporter {
 
         private final OrganizationDao organizationDao;
         private final SecretManager secretManager;

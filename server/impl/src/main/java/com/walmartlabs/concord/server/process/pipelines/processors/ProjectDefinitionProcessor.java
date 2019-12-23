@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.server.process.loader.ProjectLoader;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -69,15 +69,15 @@ public class ProjectDefinitionProcessor implements PayloadProcessor {
             UUID projectId = payload.getHeader(Payload.PROJECT_ID);
             ProjectLoader.Result result = projectLoader.loadProject(workDir, importsNormalizer.forProject(projectId), cfg);
 
-            List<Snapshot> snapshots = result.getSnapshots();
+            List<Snapshot> snapshots = result.snapshots();
             for (Snapshot s : snapshots) {
                 payload = addSnapshot(payload, s);
             }
 
-            ProjectDefinition pd = result.getProjectDefinition();
+            ProjectDefinition pd = result.projectDefinition();
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
 
-            payload = payload.putHeader(Payload.IMPORTS, pd.getImports());
+            payload = payload.putHeader(Payload.IMPORTS, pd.imports());
 
             return chain.process(payload);
         } catch (Exception e) {

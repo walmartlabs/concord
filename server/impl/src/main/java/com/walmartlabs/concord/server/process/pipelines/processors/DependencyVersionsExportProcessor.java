@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DependencyVersionConfiguration;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -59,8 +59,8 @@ public class DependencyVersionsExportProcessor implements PayloadProcessor {
         Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
 
         try {
-            Path dst = Files.createDirectories(ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME));
-            IOUtils.copy(cfg.getPath(), dst.resolve(InternalConstants.Files.DEPENDENCY_VERSIONS_FILE_NAME), StandardCopyOption.REPLACE_EXISTING);
+            Path dst = Files.createDirectories(ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+            IOUtils.copy(cfg.getPath(), dst.resolve(Constants.Files.DEPENDENCY_VERSIONS_FILE_NAME), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             logManager.error(processKey, "Error while storing dependency versions: {}", e);
             throw new ProcessException(processKey, "Error while storing dependency versions: " + e.getMessage(), e);

@@ -21,7 +21,7 @@ package com.walmartlabs.concord.agent.executors.runner;
  */
 
 import com.walmartlabs.concord.agent.ExecutionException;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +74,7 @@ public class JobDependencies {
     private static Collection<URI> getDependencyUris(RunnerJob job) throws ExecutionException {
         try {
             Map<String, Object> m = job.getProcessCfg();
-            Collection<String> deps = (Collection<String>) m.get(InternalConstants.Request.DEPENDENCIES_KEY);
+            Collection<String> deps = (Collection<String>) m.get(Constants.Request.DEPENDENCIES_KEY);
             return normalizeUrls(deps);
         } catch (URISyntaxException | IOException e) {
             throw new ExecutionException("Error while reading the list of dependencies: " + e.getMessage(), e);
@@ -144,8 +144,8 @@ public class JobDependencies {
 
     private static Map<String, String> getDependencyVersions(RunnerJob job) throws ExecutionException {
         Path workDir = job.getPayloadDir();
-        Path pluginsFile = workDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(InternalConstants.Files.DEPENDENCY_VERSIONS_FILE_NAME);
+        Path pluginsFile = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(Constants.Files.DEPENDENCY_VERSIONS_FILE_NAME);
 
         if (!Files.exists(pluginsFile)) {
             return Collections.emptyMap();

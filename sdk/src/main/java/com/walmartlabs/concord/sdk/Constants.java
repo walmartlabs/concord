@@ -9,9 +9,9 @@ package com.walmartlabs.concord.sdk;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,6 +55,34 @@ public class Constants {
          * Stores the last caught exception.
          */
         public static final String LAST_ERROR_KEY = "lastError";
+
+        /**
+         * Execution context.
+         *
+         * @deprecated use {@link Constants.Context#CONTEXT_KEY}
+         */
+        @Deprecated
+        public static final String EXECUTION_CONTEXT_KEY = "execution";
+
+        /**
+         * Correlation ID of process events. Can be used to create "pre-" and "post-action" event records.
+         */
+        public static final String EVENT_CORRELATION_KEY = "__eventCorrelationId";
+
+        /**
+         * "pre-" event creation time. Can be used to calculate event durations.
+         */
+        public static final String EVENT_CREATED_AT_KEY = "__eventCreatedAt";
+
+        /**
+         * The maximum number of retries of the current `retry` block.
+         */
+        public static final String RETRY_COUNTER = "__retryCount";
+
+        /**
+         * The current number of retries of the current `retry` block.
+         */
+        public static final String CURRENT_RETRY_COUNTER = "__currentRetryCount";
     }
 
     /**
@@ -196,6 +224,11 @@ public class Constants {
          * Resume event name. Filled in for processes resumed after being suspended.
          */
         public static final String EVENT_NAME_KEY = "resumeEventName";
+
+        /**
+         * The runner's configuration section.
+         */
+        public static final String RUNNER_KEY = "runner";
     }
 
     public static class Trigger {
@@ -253,6 +286,16 @@ public class Constants {
     public static class Files {
 
         /**
+         * Directory which contains payload data.
+         */
+        public static final String PAYLOAD_DIR_NAME = "payload";
+
+        /**
+         * File which contains the ID of a process.
+         */
+        public static final String INSTANCE_ID_FILE_NAME = "_instanceId";
+
+        /**
          * Directory containing libraries (dependencies) of a payload.
          */
         public static final String LIBRARIES_DIR_NAME = "lib";
@@ -298,6 +341,38 @@ public class Constants {
         public static final String JOB_FORMS_DIR_NAME = "forms";
 
         /**
+         * Directory which contains submitted form files.
+         */
+        public static final String FORM_FILES = "_form_files";
+
+        /**
+         * File which contains data of process' OUT variables.
+         */
+        public static final String OUT_VALUES_FILE_NAME = "out.json";
+
+        /**
+         * Marker file, indicating that a process was suspended.
+         * It contains the list of waiting events.
+         */
+        public static final String SUSPEND_MARKER_FILE_NAME = "_suspend";
+
+        /**
+         * Marker file, indicating that a process should be resumed.
+         * It contains the name of a resuming event.
+         */
+        public static final String RESUME_MARKER_FILE_NAME = "_resume";
+
+        /**
+         * Snapshot of the process' variables, taken each time the process stops.
+         */
+        public static final String LAST_KNOWN_VARIABLES_FILE_NAME = "_lastVariables";
+
+        /**
+         * The last unhandled error of the process, serialized to a file.
+         */
+        public static final String LAST_ERROR_FILE_NAME = "_lastError";
+
+        /**
          * Concord system files.
          */
         public static final String CONCORD_SYSTEM_DIR_NAME = ".concord";
@@ -321,6 +396,16 @@ public class Constants {
          * File which contains checkpoint metadata.
          */
         public static final String CHECKPOINT_META_FILE_NAME = ".checkpoint";
+
+        /**
+         * Policy file.
+         */
+        public static final String POLICY_FILE_NAME = "policy.json";
+
+        /**
+         * Properties file with a list of default dependency versions.
+         */
+        public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyversions.properties";
     }
 
     public static class Flows {
@@ -339,6 +424,44 @@ public class Constants {
          * Timeout-handling flow.
          */
         public static final String ON_TIMEOUT_FLOW = "onTimeout";
+    }
+
+    public static class Forms {
+
+        /**
+         * The form wizard will stop on the form with {@code yield=true}.
+         */
+        public static final String YIELD_KEY = "yield";
+
+        public static final String FIELDS_KEY = "fields";
+
+        /**
+         * Additional values provided for the form.
+         */
+        public static final String VALUES_KEY = "values";
+
+        /**
+         * User qualifiers of forms.
+         */
+        public static final String RUN_AS_KEY = "runAs";
+
+        public static final String RUN_AS_USERNAME_KEY = "username";
+
+        public static final String RUN_AS_LDAP_KEY = "ldap";
+
+        public static final String RUN_AS_GROUP_KEY = "group";
+
+        public static final String RUN_AS_KEEP_KEY = "keep";
+
+        /**
+         * Form data field containing the submitter's user data.
+         */
+        public static final String SUBMITTED_BY_KEY = "submittedBy";
+
+        /**
+         * If {@code true} then the submitter's data will be stored in the {@link Forms#SUBMITTED_BY_KEY} field.
+         */
+        public static final String SAVE_SUBMITTED_BY_KEY = "saveSubmittedBy";
     }
 
     /**
@@ -389,5 +512,26 @@ public class Constants {
         public static final String SYNC = "sync";
 
         public static final String META = "meta";
+    }
+
+    public static class Headers {
+
+        public static final String SECRET_TYPE = "X-Concord-SecretType";
+    }
+
+    /**
+     * Agent parameters.
+     */
+    public static class Agent {
+
+        /**
+         * File which contains runtime parameters for agents: heap size, JVM arguments, etc.
+         */
+        public static final String AGENT_PARAMS_FILE_NAME = "_agent.json";
+
+        /**
+         * JVM parameters for an agent's job.
+         */
+        public static final String JVM_ARGS_KEY = "jvmArgs";
     }
 }

@@ -26,7 +26,7 @@ import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Secret;
 
 import java.io.File;
@@ -66,7 +66,7 @@ public class SecretClient {
                 throw new IllegalArgumentException("Secret not found");
             }
 
-            SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(ClientUtils.getHeader(InternalConstants.Headers.SECRET_TYPE, r));
+            SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(ClientUtils.getHeader(Constants.Headers.SECRET_TYPE, r));
 
             if (type != null && type != actualSecretType) {
                 throw new IllegalArgumentException("Expected " + type + " got " + actualSecretType);

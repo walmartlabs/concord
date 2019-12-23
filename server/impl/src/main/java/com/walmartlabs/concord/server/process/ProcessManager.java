@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
@@ -270,9 +270,9 @@ public class ProcessManager {
     }
 
     private boolean isSuspended(ProcessKey processKey) {
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                InternalConstants.Files.JOB_STATE_DIR_NAME,
-                InternalConstants.Files.SUSPEND_MARKER_FILE_NAME);
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.SUSPEND_MARKER_FILE_NAME);
 
         return stateManager.exists(processKey, resource);
     }

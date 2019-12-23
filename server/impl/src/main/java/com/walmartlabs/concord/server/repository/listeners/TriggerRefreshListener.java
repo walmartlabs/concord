@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
-import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.ProjectLoader;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import com.walmartlabs.concord.server.org.project.ProjectValidator;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerManager;
@@ -34,6 +34,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
+import java.util.Collections;
 
 @Named
 public class TriggerRefreshListener implements RepositoryRefreshListener {
@@ -58,9 +59,9 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
         log.info("refresh ['{}'] ->  triggers", repo.getId());
 
-        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()));
+        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), Collections.emptyMap());
 
-        ProjectDefinition pd = result.getProjectDefinition();
+        ProjectDefinition pd = result.projectDefinition();
         ProjectValidator.Result validationResult = ProjectValidator.validate(pd);
         if (!validationResult.isValid()) {
             throw new ValidationErrorsException(String.join("\n", validationResult.getErrors()));

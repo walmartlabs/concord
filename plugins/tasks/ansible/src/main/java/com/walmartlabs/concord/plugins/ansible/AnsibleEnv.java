@@ -20,7 +20,6 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
@@ -64,7 +63,7 @@ public class AnsibleEnv {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
         }
 
-        Integer retryCount = (Integer) context.getVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER);
+        Integer retryCount = (Integer) context.getVariable(Constants.Context.CURRENT_RETRY_COUNTER);
         if (retryCount != null) {
             env.put("CONCORD_CURRENT_RETRY_COUNT", Integer.toString(retryCount));
         }
@@ -109,7 +108,7 @@ public class AnsibleEnv {
         String t = apiCfg.getSessionToken(context);
         env.put("CONCORD_SESSION_TOKEN", t != null ? t : "none");
 
-        env.put("CONCORD_POLICY", Paths.get(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME, InternalConstants.Files.POLICY_FILE_NAME).toString());
+        env.put("CONCORD_POLICY", Paths.get(Constants.Files.CONCORD_SYSTEM_DIR_NAME, Constants.Files.POLICY_FILE_NAME).toString());
 
         Map<String, Object> projectInfo = getMap(context, Constants.Request.PROJECT_INFO_KEY, null);
         String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;

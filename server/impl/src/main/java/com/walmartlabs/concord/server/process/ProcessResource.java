@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.process;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
@@ -650,7 +649,7 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Invalid attachment name: " + attachmentName, Status.BAD_REQUEST);
         }
 
-        String resource = path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, attachmentName);
         Optional<Path> o = stateManager.get(processKey, resource, src -> {
             try {
                 Path tmp = IOUtils.createTempFile("attachment", ".bin");
@@ -696,7 +695,7 @@ public class ProcessResource implements Resource {
 
         PartialProcessKey processKey = ProcessKey.from(processEntry);
 
-        String resource = InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
+        String resource = Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/";
         List<String> l = stateManager.list(processKey, resource);
         return l.stream()
                 .map(s -> s.substring(resource.length()))
@@ -955,8 +954,8 @@ public class ProcessResource implements Resource {
             tmpDir = IOUtils.createTempDir("attachments");
             IOUtils.unzip(tmpIn, tmpDir);
 
-            stateManager.deleteDirectory(processKey, path(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, InternalConstants.Files.JOB_STATE_DIR_NAME));
-            stateManager.importPath(processKey, InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
+            stateManager.deleteDirectory(processKey, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
+            stateManager.importPath(processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
 
             Map<String, Object> out = OutVariablesUtils.read(tmpDir);
             if (out.isEmpty()) {

@@ -24,9 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -92,7 +92,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
         // create the resulting configuration
         Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, cfg, policyCfg);
-        m.put(InternalConstants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+        m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
@@ -132,7 +132,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path src = workspace.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
         if (!Files.exists(src)) {
             return Collections.emptyMap();
         }
@@ -177,7 +177,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     private static List<String> getActiveProfiles(List<Map<String, Object>> mm) {
         for (Map<String, Object> m : mm) {
-            Object o = m.get(InternalConstants.Request.ACTIVE_PROFILES_KEY);
+            Object o = m.get(Constants.Request.ACTIVE_PROFILES_KEY);
             if (o == null) {
                 continue;
             }
@@ -189,7 +189,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
             } else if (o instanceof List) {
                 return (List<String>) o;
             } else {
-                throw new IllegalArgumentException("Invalid '" + InternalConstants.Request.ACTIVE_PROFILES_KEY +
+                throw new IllegalArgumentException("Invalid '" + Constants.Request.ACTIVE_PROFILES_KEY +
                         "' value. Expected a JSON array or a comma-delimited list of profiles, got: " + o);
             }
         }

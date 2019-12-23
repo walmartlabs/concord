@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.Trigger;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import org.jooq.DSLContext;
 
 import java.util.UUID;

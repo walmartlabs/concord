@@ -20,9 +20,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import com.walmartlabs.concord.project.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import org.slf4j.Logger;
@@ -55,9 +54,9 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
 
         Collection<String> profiles = payload.getHeader(Payload.ACTIVE_PROFILES);
 
-        update(payload, pd, profiles, handlers, Constants.Flows.ON_FAILURE_FLOW, InternalConstants.Request.DISABLE_ON_FAILURE_KEY);
-        update(payload, pd, profiles, handlers, Constants.Flows.ON_CANCEL_FLOW, InternalConstants.Request.DISABLE_ON_CANCEL_KEY);
-        update(payload, pd, profiles, handlers, Constants.Flows.ON_TIMEOUT_FLOW, InternalConstants.Request.DISABLE_ON_TIMEOUT_KEY);
+        update(payload, pd, profiles, handlers, Constants.Flows.ON_FAILURE_FLOW, Constants.Request.DISABLE_ON_FAILURE_KEY);
+        update(payload, pd, profiles, handlers, Constants.Flows.ON_CANCEL_FLOW, Constants.Request.DISABLE_ON_CANCEL_KEY);
+        update(payload, pd, profiles, handlers, Constants.Flows.ON_TIMEOUT_FLOW, Constants.Request.DISABLE_ON_TIMEOUT_KEY);
 
         payload = payload.putHeader(Payload.PROCESS_HANDLERS, handlers);
 

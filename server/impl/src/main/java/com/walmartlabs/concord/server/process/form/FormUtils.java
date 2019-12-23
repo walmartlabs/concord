@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.form;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.form.ConcordFormFields;
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.DefaultFormFields;
@@ -44,17 +44,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.common.form.ConcordFormFields.FieldOptions.READ_ONLY;
-import static com.walmartlabs.concord.project.InternalConstants.Files.FORM_FILES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public final class FormUtils {
 
-    private static final String RUN_AS_USERNAME_PATH = InternalConstants.Forms.RUN_AS_KEY + "." +
-            InternalConstants.Forms.RUN_AS_USERNAME_KEY;
+    private static final String RUN_AS_USERNAME_PATH = Constants.Forms.RUN_AS_KEY + "." +
+            Constants.Forms.RUN_AS_USERNAME_KEY;
 
-    private static final String RUN_AS_LDAP_GROUP_PATH = InternalConstants.Forms.RUN_AS_KEY + "." +
-            InternalConstants.Forms.RUN_AS_LDAP_KEY + "." +
-            InternalConstants.Forms.RUN_AS_GROUP_KEY;
+    private static final String RUN_AS_LDAP_GROUP_PATH = Constants.Forms.RUN_AS_KEY + "." +
+            Constants.Forms.RUN_AS_LDAP_KEY + "." +
+            Constants.Forms.RUN_AS_GROUP_KEY;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
 
@@ -67,7 +66,7 @@ public final class FormUtils {
             return Collections.emptySet();
         }
 
-        Object v = runAsParams.get(InternalConstants.Forms.RUN_AS_USERNAME_KEY);
+        Object v = runAsParams.get(Constants.Forms.RUN_AS_USERNAME_KEY);
         if (v == null) {
             return Collections.emptySet();
         }
@@ -133,7 +132,7 @@ public final class FormUtils {
             return Collections.emptySet();
         }
 
-        Object ldap = runAsParams.get(InternalConstants.Forms.RUN_AS_LDAP_KEY);
+        Object ldap = runAsParams.get(Constants.Forms.RUN_AS_LDAP_KEY);
         if (ldap == null) {
             return Collections.emptySet();
         }
@@ -143,7 +142,7 @@ public final class FormUtils {
             // ldap:
             //   group: VALUE
             Map<Object, Object> m = (Map<Object, Object>) ldap;
-            final Object value = m.get(InternalConstants.Forms.RUN_AS_GROUP_KEY);
+            final Object value = m.get(Constants.Forms.RUN_AS_GROUP_KEY);
 
             // a single string value
             if (value instanceof String) {
@@ -184,7 +183,7 @@ public final class FormUtils {
     private static String parseOldGroupDefinition(String formName, Object item) {
         if (item instanceof Map) {
             Map<Object, Object> m = (Map<Object, Object>) item;
-            Object o = m.get(InternalConstants.Forms.RUN_AS_GROUP_KEY);
+            Object o = m.get(Constants.Forms.RUN_AS_GROUP_KEY);
             if (o instanceof String) {
                 return (String) o;
             } else {
@@ -230,7 +229,7 @@ public final class FormUtils {
 
         Map<String, String> tmpFiles = new HashMap<>();
         Map<String, Object> m2 = new HashMap<>();
-        m2.put(FORM_FILES, tmpFiles);
+        m2.put(Constants.Files.FORM_FILES, tmpFiles);
 
         Map<String, Object> env = form.getEnv();
 

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.pipelines.processors.signing.Signing;
 import com.walmartlabs.concord.server.user.UserManager;
 
@@ -32,6 +32,6 @@ public class CurrentUserInfoProcessor extends UserInfoProcessor {
 
     @Inject
     public CurrentUserInfoProcessor(UserManager userManager, Signing signing) {
-        super(InternalConstants.Request.CURRENT_USER_KEY, userManager, signing);
+        super(Constants.Request.CURRENT_USER_KEY, userManager, signing);
     }
 }

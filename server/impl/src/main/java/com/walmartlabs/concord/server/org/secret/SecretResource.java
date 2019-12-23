@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.org.secret;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.MultipartUtils;
@@ -192,7 +191,7 @@ public class SecretResource implements Resource {
         try {
             return Response.ok((StreamingOutput) output -> output.write(entry.getData()),
                     MediaType.APPLICATION_OCTET_STREAM)
-                    .header(InternalConstants.Headers.SECRET_TYPE, entry.getType().name())
+                    .header(Constants.Headers.SECRET_TYPE, entry.getType().name())
                     .build();
         } catch (Exception e) {
             log.error("fetchSecret ['{}'] -> error while fetching a secret", secretName, e);
