@@ -29,7 +29,7 @@ import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
@@ -45,7 +45,7 @@ import static com.walmartlabs.concord.server.process.pipelines.processors.policy
 @Named
 public class ContainerPolicyApplier implements PolicyApplier {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @InjectCounter
     private final Counter policyWarn;
@@ -56,7 +56,7 @@ public class ContainerPolicyApplier implements PolicyApplier {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public ContainerPolicyApplier(LogManager logManager, Counter policyWarn, Counter policyDeny) {
+    public ContainerPolicyApplier(ProcessLogManager logManager, Counter policyWarn, Counter policyDeny) {
         this.logManager = logManager;
         this.policyWarn = policyWarn;
         this.policyDeny = policyDeny;

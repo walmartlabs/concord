@@ -23,9 +23,7 @@ package com.walmartlabs.concord.server.org.project;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.repository.Repository;
-import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
-import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.events.Events;
 import com.walmartlabs.concord.server.events.ExternalEventResource;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -33,6 +31,8 @@ import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.sdk.audit.AuditObject;
 import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
 

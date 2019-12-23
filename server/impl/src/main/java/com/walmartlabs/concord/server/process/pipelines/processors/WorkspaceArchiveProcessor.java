@@ -24,7 +24,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,10 +40,10 @@ import java.nio.file.StandardCopyOption;
 @Named
 public class WorkspaceArchiveProcessor implements PayloadProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public WorkspaceArchiveProcessor(LogManager logManager) {
+    public WorkspaceArchiveProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

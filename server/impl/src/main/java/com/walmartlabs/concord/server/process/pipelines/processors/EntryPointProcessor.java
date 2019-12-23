@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,10 +32,10 @@ import java.util.Map;
 @Named
 public class EntryPointProcessor implements PayloadProcessor {
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public EntryPointProcessor(LogManager logManager) {
+    public EntryPointProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 

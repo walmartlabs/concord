@@ -27,7 +27,9 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
+import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;
@@ -41,18 +43,19 @@ import java.util.*;
 public class ProcessQueueManager {
 
     private final ProcessQueueDao queueDao;
-    private final ProcessEventDao eventDao;
     private final ConcordObjectMapper objectMapper;
     private final ProcessKeyCache keyCache;
+    private final ProcessEventManager eventManager;
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
                                ProcessEventDao eventDao,
                                ConcordObjectMapper objectMapper,
-                               ProcessKeyCache keyCache) {
+                               ProcessKeyCache keyCache,
+                               ProcessEventManager eventManager) {
 
         this.queueDao = queueDao;
-        this.eventDao = eventDao;
+        this.eventManager = eventManager;
         this.objectMapper = objectMapper;
         this.keyCache = keyCache;
     }
@@ -73,7 +76,7 @@ public class ProcessQueueManager {
 
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, initiatorId, meta, triggeredBy);
-            eventDao.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+            eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
         });
     }
 
@@ -103,7 +106,7 @@ public class ProcessQueueManager {
 
         queueDao.tx(tx -> {
             queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive);
-            eventDao.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
+            eventManager.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
         });
     }
 
@@ -133,7 +136,7 @@ public class ProcessQueueManager {
      */
     public void updateStatus(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
         queueDao.updateStatus(tx, processKey, status);
-        eventDao.insertStatusHistory(tx, processKey, status, statusPayload);
+        eventManager.insertStatusHistory(tx, processKey, status, statusPayload);
     }
 
     /**
@@ -144,7 +147,7 @@ public class ProcessQueueManager {
     public boolean updateExpectedStatus(ProcessKey processKey, ProcessStatus expected, ProcessStatus status) {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(tx, processKey, expected, status);
-            eventDao.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+            eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
             return success;
         });
     }
@@ -158,7 +161,7 @@ public class ProcessQueueManager {
     public boolean updateExpectedStatus(List<ProcessKey> processKeys, List<ProcessStatus> expected, ProcessStatus status) {
         return queueDao.txResult(tx -> {
             boolean success = queueDao.updateStatus(processKeys, expected, status);
-            eventDao.insertStatusHistory(tx, processKeys, status);
+            eventManager.insertStatusHistory(tx, processKeys, status);
             return success;
         });
     }
@@ -175,7 +178,7 @@ public class ProcessQueueManager {
      */
     public void updateAgentId(DSLContext tx, ProcessKey processKey, String agentId, ProcessStatus status) {
         queueDao.updateAgentId(tx, processKey, agentId, status);
-        eventDao.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+        eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
     }
 
     /**
@@ -188,11 +191,12 @@ public class ProcessQueueManager {
     /**
      * Updates the process' wait conditions. Adds a wait condition history event.
      */
-    public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition wait) {
-        queueDao.updateWait(tx, key, wait);
+    public void updateWait(DSLContext tx, ProcessKey processKey, AbstractWaitCondition wait) {
+        queueDao.updateWait(tx, processKey, wait);
 
         Map<String, Object> eventData = objectMapper.convertToMap(wait != null ? wait : new NoneCondition());
-        eventDao.insert(tx, key, EventType.PROCESS_WAIT.name(), null, eventData);
+        ProcessEvent e = new ProcessEvent(processKey, EventType.PROCESS_WAIT.name(), null, eventData);
+        eventManager.event(tx, Collections.singletonList(e));
     }
 
     /**

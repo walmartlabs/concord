@@ -33,7 +33,7 @@ import com.walmartlabs.concord.server.cfg.ProcessQueueConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.queueclient.message.MessageType;
@@ -78,7 +78,7 @@ public class Dispatcher extends PeriodicTask {
     private final Locks locks;
     private final DispatcherDao dao;
     private final WebSocketChannelManager channelManager;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final ProcessQueueManager queueManager;
     private final Set<Filter> filters;
     private final ImportsNormalizerFactory importsNormalizerFactory;
@@ -92,7 +92,7 @@ public class Dispatcher extends PeriodicTask {
     public Dispatcher(Locks locks,
                       DispatcherDao dao,
                       WebSocketChannelManager channelManager,
-                      LogManager logManager,
+                      ProcessLogManager logManager,
                       ProcessQueueManager queueManager,
                       Set<Filter> filters,
                       ImportsNormalizerFactory importsNormalizerFactory,

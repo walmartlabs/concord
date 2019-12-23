@@ -20,13 +20,13 @@ package com.walmartlabs.concord.server.org.team;
  * =====
  */
 
-import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
-import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessUtils;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.sdk.audit.AuditObject;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.User;

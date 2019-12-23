@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
@@ -39,10 +39,10 @@ import java.util.Map;
 public class EnqueueingProcessor implements PayloadProcessor {
 
     private final ProcessQueueManager queueManager;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public EnqueueingProcessor(ProcessQueueManager queueManager, LogManager logManager) {
+    public EnqueueingProcessor(ProcessQueueManager queueManager, ProcessLogManager logManager) {
         this.queueManager = queueManager;
         this.logManager = logManager;
     }

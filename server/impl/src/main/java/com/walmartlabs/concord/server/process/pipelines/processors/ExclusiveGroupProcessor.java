@@ -27,7 +27,7 @@ import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.PayloadUtils;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ExclusiveGroupLock;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -55,13 +55,13 @@ public class ExclusiveGroupProcessor implements PayloadProcessor {
 
     private static final String CANCEL_MODE = "cancel";
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final ProcessQueueManager queueManager;
     private final ExclusiveProcessDao exclusiveProcessDao;
     private final ExclusiveGroupLock exclusiveGroupLock;
 
     @Inject
-    public ExclusiveGroupProcessor(LogManager logManager,
+    public ExclusiveGroupProcessor(ProcessLogManager logManager,
                                    ProcessQueueManager queueManager,
                                    ExclusiveProcessDao exclusiveProcessDao,
                                    ExclusiveGroupLock exclusiveGroupLock) {

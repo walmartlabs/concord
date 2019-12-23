@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -41,10 +41,10 @@ import java.util.*;
 public class ProcessInfoProcessor implements PayloadProcessor {
 
     private final SecretStoreConfiguration secretCfg;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @Inject
-    public ProcessInfoProcessor(SecretStoreConfiguration secretCfg, LogManager logManager) {
+    public ProcessInfoProcessor(SecretStoreConfiguration secretCfg, ProcessLogManager logManager) {
         this.secretCfg = secretCfg;
         this.logManager = logManager;
     }

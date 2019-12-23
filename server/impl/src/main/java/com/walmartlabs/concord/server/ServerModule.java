@@ -21,12 +21,8 @@ package com.walmartlabs.concord.server;
  */
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.db.DatabaseModule;
 import com.walmartlabs.concord.server.metrics.MetricModule;
-import com.walmartlabs.concord.server.policy.PolicyCache;
-import com.walmartlabs.concord.server.process.queue.EnqueuedTask;
-import com.walmartlabs.concord.server.task.TaskScheduler;
 
 public class ServerModule extends AbstractModule {
 
@@ -34,12 +30,5 @@ public class ServerModule extends AbstractModule {
     protected void configure() {
         install(new MetricModule());
         install(new DatabaseModule());
-
-        Multibinder<BackgroundTask> tasks = Multibinder.newSetBinder(binder(), BackgroundTask.class);
-        tasks.addBinding().to(com.walmartlabs.concord.server.agent.dispatcher.Dispatcher.class);
-        tasks.addBinding().to(com.walmartlabs.concord.server.process.queue.dispatcher.Dispatcher.class);
-        tasks.addBinding().to(EnqueuedTask.class);
-        tasks.addBinding().to(TaskScheduler.class);
-        tasks.addBinding().to(PolicyCache.class);
     }
 }

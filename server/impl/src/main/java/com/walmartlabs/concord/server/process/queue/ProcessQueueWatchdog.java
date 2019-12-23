@@ -33,7 +33,7 @@ import com.walmartlabs.concord.server.agent.Commands;
 import com.walmartlabs.concord.server.cfg.ProcessWatchdogConfiguration;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import com.walmartlabs.concord.server.user.UserDao;
@@ -107,7 +107,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     private final ProcessWatchdogConfiguration cfg;
     private final ProcessQueueDao queueDao;
     private final AgentCommandsDao agentCommandsDao;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final WatchdogDao watchdogDao;
     private final UserDao userDao;
     private final PayloadManager payloadManager;
@@ -118,7 +118,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
     public ProcessQueueWatchdog(ProcessWatchdogConfiguration cfg,
                                 ProcessQueueDao queueDao,
                                 AgentCommandsDao agentCommandsDao,
-                                LogManager logManager,
+                                ProcessLogManager logManager,
                                 WatchdogDao watchdogDao,
                                 UserDao userDao,
                                 PayloadManager payloadManager,

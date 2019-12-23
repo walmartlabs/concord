@@ -27,7 +27,7 @@ import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.processors.Chain;
 import com.walmartlabs.concord.server.process.pipelines.processors.PayloadProcessor;
 import com.walmartlabs.concord.server.process.pipelines.processors.RepositoryProcessor;
@@ -53,12 +53,12 @@ public class PrivateKeyProcessor implements PayloadProcessor {
 
     private static final String PRIVATE_KEY_FILE_NAME = "_privateKey";
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final SecretManager secretManager;
     private final ProjectDao projectDao;
 
     @Inject
-    public PrivateKeyProcessor(LogManager logManager, SecretManager secretManager, ProjectDao projectDao) {
+    public PrivateKeyProcessor(ProcessLogManager logManager, SecretManager secretManager, ProjectDao projectDao) {
         this.logManager = logManager;
         this.secretManager = secretManager;
         this.projectDao = projectDao;

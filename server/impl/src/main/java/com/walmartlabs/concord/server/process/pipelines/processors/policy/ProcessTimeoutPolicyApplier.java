@@ -28,7 +28,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
@@ -41,13 +41,13 @@ public class ProcessTimeoutPolicyApplier implements PolicyApplier {
 
     private static final String DEFAULT_PROCESS_TIMEOUT_MSG = "Maximum 'processTimeout' value exceeded: current {0}, limit {1}";
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
 
     @InjectCounter
     private final Counter policyDeny;
 
     @Inject
-    public ProcessTimeoutPolicyApplier(LogManager logManager, Counter policyDeny) {
+    public ProcessTimeoutPolicyApplier(ProcessLogManager logManager, Counter policyDeny) {
         this.logManager = logManager;
         this.policyDeny = policyDeny;
     }

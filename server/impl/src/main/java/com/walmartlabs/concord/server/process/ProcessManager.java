@@ -26,7 +26,7 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.pipelines.ForkPipeline;
 import com.walmartlabs.concord.server.process.pipelines.NewProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.ResumePipeline;
@@ -65,7 +65,7 @@ public class ProcessManager {
     private final ProcessQueueDao queueDao;
     private final ProcessStateManager stateManager;
     private final AgentManager agentManager;
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final ProjectAccessManager projectAccessManager;
     private final ProcessCheckpointManager checkpointManager;
     private final PayloadManager payloadManager;
@@ -105,7 +105,7 @@ public class ProcessManager {
     public ProcessManager(ProcessQueueDao queueDao,
                           ProcessStateManager stateManager,
                           AgentManager agentManager,
-                          LogManager logManager,
+                          ProcessLogManager logManager,
                           ProjectAccessManager projectAccessManager,
                           ProcessCheckpointManager checkpointManager,
                           PayloadManager payloadManager,

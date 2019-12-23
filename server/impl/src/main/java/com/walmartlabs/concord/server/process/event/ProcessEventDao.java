@@ -23,11 +23,9 @@ package com.walmartlabs.concord.server.process.event;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
-import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.jooq.tables.records.ProcessEventsRecord;
-import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -37,8 +35,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,6 +52,11 @@ public class ProcessEventDao extends AbstractDao {
     public ProcessEventDao(@MainDB Configuration cfg, ConcordObjectMapper objectMapper) {
         super(cfg);
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    protected void tx(Tx t) {
+        super.tx(t);
     }
 
     public List<ProcessEventEntry> list(ProcessEventFilter filter) {
@@ -107,33 +109,6 @@ public class ProcessEventDao extends AbstractDao {
         }
     }
 
-    public void insert(ProcessKey processKey, String eventType, OffsetDateTime eventDate, Map<String, Object> data) {
-        tx(tx -> insert(tx, processKey, eventType, eventDate, data));
-    }
-
-    public void insert(ProcessKey processKey, List<ProcessEventRequest> entries) {
-        if (entries == null || entries.isEmpty()) {
-            return;
-        }
-
-        tx(tx -> insert(tx, processKey, entries));
-    }
-
-    public void insert(DSLContext tx, ProcessKey processKey, String eventType, OffsetDateTime eventDate, Map<String, Object> data) {
-        // client have option to send the actual event's timestamp
-        // if it's not available then the current DB timestamp will be used
-        Field<Timestamp> ts = eventDate != null ? value(Timestamp.from(eventDate.toInstant())) : currentTimestamp();
-
-        ProcessEventsRecord r = tx.insertInto(PROCESS_EVENTS)
-                .set(PROCESS_EVENTS.INSTANCE_ID, processKey.getInstanceId())
-                .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, processKey.getCreatedAt())
-                .set(PROCESS_EVENTS.EVENT_TYPE, eventType)
-                .set(PROCESS_EVENTS.EVENT_DATE, ts)
-                .set(PROCESS_EVENTS.EVENT_DATA, objectMapper.toJSONB(data))
-                .returning(PROCESS_EVENTS.EVENT_SEQ)
-                .fetchOne();
-    }
-
     public void insert(DSLContext tx, List<ProcessKey> processKeys, String eventType, Map<String, Object> data) {
         String sql = tx.insertInto(PROCESS_EVENTS)
                 .set(PROCESS_EVENTS.INSTANCE_ID, (UUID) null)
@@ -158,22 +133,28 @@ public class ProcessEventDao extends AbstractDao {
         });
     }
 
-    public void insertStatusHistory(DSLContext tx, ProcessKey processKey, ProcessStatus status, Map<String, Object> statusPayload) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("status", status.name());
-        payload.putAll(statusPayload);
+    public void insert(DSLContext tx, List<ProcessEvent> events) {
+        if (events == null || events.isEmpty()) {
+            return;
+        }
 
-        insert(tx, processKey, EventType.PROCESS_STATUS.name(), null, objectMapper.convertToMap(payload));
-    }
+        if (events.size() == 1) {
+            ProcessEvent e = events.get(0);
 
-    public void insertStatusHistory(DSLContext tx, List<ProcessKey> processKeys, ProcessStatus status) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("status", status.name());
+            ProcessKey processKey = e.getProcessKey();
+            Field<Timestamp> ts = e.getEventDate() != null ? value(Timestamp.from(e.getEventDate().toInstant())) : currentTimestamp();
+            Map<String, Object> m = e.getData() != null ? e.getData() : Collections.emptyMap();
 
-        insert(tx, processKeys, EventType.PROCESS_STATUS.name(), objectMapper.convertToMap(payload));
-    }
+            tx.insertInto(PROCESS_EVENTS)
+                    .set(PROCESS_EVENTS.INSTANCE_ID, processKey.getInstanceId())
+                    .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, processKey.getCreatedAt())
+                    .set(PROCESS_EVENTS.EVENT_TYPE, e.getEventType())
+                    .set(PROCESS_EVENTS.EVENT_DATE, ts)
+                    .set(PROCESS_EVENTS.EVENT_DATA, objectMapper.toJSONB(m))
+                    .execute();
+            return;
+        }
 
-    private void insert(DSLContext tx, ProcessKey processKey, List<ProcessEventRequest> entries) {
         String sql = tx.insertInto(PROCESS_EVENTS)
                 .set(PROCESS_EVENTS.INSTANCE_ID, (UUID) null)
                 .set(PROCESS_EVENTS.INSTANCE_CREATED_AT, (Timestamp) null)
@@ -185,16 +166,19 @@ public class ProcessEventDao extends AbstractDao {
 
         tx.connection(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                for (ProcessEventRequest e : entries) {
+                for (ProcessEvent e : events) {
+                    ProcessKey processKey = e.getProcessKey();
                     Timestamp eventDate = e.getEventDate() != null ? Timestamp.from(e.getEventDate().toInstant()) : Timestamp.from(Instant.now());
+                    Map<String, Object> m = e.getData() != null ? e.getData() : Collections.emptyMap();
 
                     ps.setObject(1, processKey.getInstanceId());
                     ps.setTimestamp(2, processKey.getCreatedAt());
                     ps.setString(3, e.getEventType());
                     ps.setTimestamp(4, eventDate);
-                    ps.setString(5, objectMapper.toJSONB(e.getData()).toString());
+                    ps.setString(5, objectMapper.toJSONB(m).toString());
                     ps.addBatch();
                 }
+
                 ps.executeBatch();
             }
         });

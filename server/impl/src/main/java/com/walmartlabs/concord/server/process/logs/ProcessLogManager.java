@@ -20,10 +20,12 @@ package com.walmartlabs.concord.server.process.logs;
  * =====
  */
 
+import com.codahale.metrics.Counter;
 import com.walmartlabs.concord.common.LogUtils;
+import com.walmartlabs.concord.db.PgIntRange;
+import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,15 +35,22 @@ import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 
 @Named
 @Singleton
-public class LogManager {
-
-    private static final Logger log = LoggerFactory.getLogger(LogManager.class);
+public class ProcessLogManager {
 
     private final ProcessLogsDao logsDao;
+    private final Listeners listeners;
+
+    @InjectCounter
+    private final Counter logBytesAppended;
 
     @Inject
-    public LogManager(ProcessLogsDao logsDao) {
+    public ProcessLogManager(ProcessLogsDao logsDao,
+                             Listeners listeners,
+                             Counter logBytesAppended) {
+
         this.logsDao = logsDao;
+        this.listeners = listeners;
+        this.logBytesAppended = logBytesAppended;
     }
 
     public void info(ProcessKey processKey, String log, Object... args) {
@@ -60,8 +69,11 @@ public class LogManager {
         log(processKey, msg.getBytes());
     }
 
-    public void log(ProcessKey processKey, byte[] msg) {
-        logsDao.append(processKey, msg);
+    public int log(ProcessKey processKey, byte[] msg) {
+        PgIntRange range = logsDao.append(processKey, msg);
+        logBytesAppended.inc(msg.length);
+        listeners.onProcessLogAppend(processKey, msg);
+        return range.getUpper();
     }
 
     private void log(ProcessKey processKey, LogLevel level, String msg, Object... args) {

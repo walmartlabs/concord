@@ -4,7 +4,12 @@
 
 ### Added
 
-- slack: new action `addReaction`.
+- slack: new action `addReaction`;
+- concord-server, plugins: new server plugin `kafka-event-sink`.
+Sends process events into a Kafka topic;
+- concord-server-sdk: new interfaces `ProcessEventListener`,
+`AuditLogListener` and `ProcessLogListener`. Allows server plugins to
+listen for process-level events, process logs and audit events.
 
 ### Changed
 

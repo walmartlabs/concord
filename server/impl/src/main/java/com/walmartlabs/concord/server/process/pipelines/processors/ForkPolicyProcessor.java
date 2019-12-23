@@ -27,7 +27,7 @@ import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.LogManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.Configuration;
 import org.jooq.Record1;
@@ -50,11 +50,11 @@ public class ForkPolicyProcessor implements PayloadProcessor {
 
     private static final String DEFAULT_POLICY_MESSAGE = "Maximum number of forks exceeded: current {0}, limit {1}";
 
-    private final LogManager logManager;
+    private final ProcessLogManager logManager;
     private final ForkDepthDao forkDepthDao;
 
     @Inject
-    public ForkPolicyProcessor(LogManager logManager, ForkDepthDao forkDepthDao) {
+    public ForkPolicyProcessor(ProcessLogManager logManager, ForkDepthDao forkDepthDao) {
         this.logManager = logManager;
         this.forkDepthDao = forkDepthDao;
     }
