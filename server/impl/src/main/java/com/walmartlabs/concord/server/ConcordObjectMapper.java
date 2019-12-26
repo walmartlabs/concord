@@ -68,7 +68,7 @@ public class ConcordObjectMapper {
         return fromJSONB(o, MAP_TYPE);
     }
 
-    public <T> T fromJSONB(JSONB o, TypeReference valueTypeRef) {
+    public <T> T fromJSONB(JSONB o, TypeReference<T> valueTypeRef) {
         if (o == null) {
             return null;
         }
@@ -92,7 +92,7 @@ public class ConcordObjectMapper {
         return str.replace("\\u0000", "");
     }
 
-    private <T> T deserialize(String o, TypeReference valueTypeRef) {
+    private <T> T deserialize(String o, TypeReference<T> valueTypeRef) {
         if (o == null) {
             return null;
         }
