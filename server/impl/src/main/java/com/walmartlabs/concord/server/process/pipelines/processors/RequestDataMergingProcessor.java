@@ -24,8 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
@@ -33,6 +31,8 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinitionUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;

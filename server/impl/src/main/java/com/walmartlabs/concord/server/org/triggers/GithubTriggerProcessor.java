@@ -21,12 +21,12 @@ package com.walmartlabs.concord.server.org.triggers;
  */
 
 import com.walmartlabs.concord.repository.GitCliRepositoryProvider;
-import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.events.github.GithubRepoInfo;
 import com.walmartlabs.concord.server.events.github.GithubUtils;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import org.jooq.DSLContext;
 
 import javax.inject.Inject;

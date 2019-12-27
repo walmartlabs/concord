@@ -25,7 +25,6 @@ import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
-import com.walmartlabs.concord.server.sdk.audit.AuditObject;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKeyPrincipal;
 import org.slf4j.Logger;
