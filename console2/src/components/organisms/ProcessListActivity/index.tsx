@@ -139,7 +139,8 @@ const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | u
 };
 
 class ProcessListActivity extends React.Component<Props> {
-    componentWillMount() {
+
+    UNSAFE_componentWillMount() {
         const { orgName, projectName, load, location } = this.props;
         const f = parseSearchFilter(location.search);
         load(orgName, projectName, f.filters, f.pagination);

@@ -95,7 +95,7 @@ export interface State {
     error: string | null;
 }
 
-export const reducers: Reducer<State> = combineReducers({ loggingIn, error });
+export const reducers = combineReducers<State>({ loggingIn, error });
 
 export const selectors = {
     isLoggingIn: (state: State): boolean => state.loggingIn,
