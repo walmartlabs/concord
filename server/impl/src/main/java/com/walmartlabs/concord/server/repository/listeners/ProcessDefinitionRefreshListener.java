@@ -20,11 +20,11 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.loader.ProjectLoader;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
+import com.walmartlabs.concord.server.process.loader.ProjectLoader;
+import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

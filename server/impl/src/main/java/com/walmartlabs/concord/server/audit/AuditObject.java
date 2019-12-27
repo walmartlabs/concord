@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.sdk.audit;
+package com.walmartlabs.concord.server.audit;
 
 /*-
  * *****

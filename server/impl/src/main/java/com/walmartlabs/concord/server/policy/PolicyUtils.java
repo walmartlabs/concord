@@ -20,11 +20,11 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.secret.SecretVisibility;
+import com.walmartlabs.concord.server.process.loader.model.Trigger;
 
 import java.util.Collections;
 import java.util.HashMap;
