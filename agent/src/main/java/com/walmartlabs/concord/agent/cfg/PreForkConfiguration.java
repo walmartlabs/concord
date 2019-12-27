@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.executors;
+package com.walmartlabs.concord.agent.cfg;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent.executors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,31 @@ package com.walmartlabs.concord.agent.executors;
  * =====
  */
 
-import com.walmartlabs.concord.agent.JobInstance;
-import com.walmartlabs.concord.agent.JobRequest;
+import com.typesafe.config.Config;
 
-public interface JobExecutor {
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.util.concurrent.TimeUnit;
 
-    JobRequest.Type acceptsType();
+@Named
+@Singleton
+public class PreForkConfiguration {
 
-    JobInstance exec(JobRequest jobRequest) throws Exception;
+    private final long maxAge;
+    private final int maxCount;
+
+    @Inject
+    public PreForkConfiguration(Config cfg) {
+        this.maxAge = cfg.getDuration("prefork.maxAge", TimeUnit.MILLISECONDS);
+        this.maxCount = cfg.getInt("prefork.maxCount");
+    }
+
+    public long getMaxAge() {
+        return maxAge;
+    }
+
+    public int getMaxCount() {
+        return maxCount;
+    }
 }

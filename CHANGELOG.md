@@ -32,6 +32,9 @@ data (e.g. process events).
 
 ### Breaking
 
+- concord-agent: support for the container-per-process execution mode
+is removed. It will be brought back in the future as a a separate
+type of Agent;
 - concord-agent: `runner` configuration section is renamed to
 `runnerV1` to better support alternative runtimes.
 

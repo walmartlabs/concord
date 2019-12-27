@@ -23,21 +23,34 @@ package com.walmartlabs.concord.agent;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.imports.ImportManager;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+@Named
 public class WorkerFactory {
 
     private final RepositoryManager repositoryManager;
     private final ImportManager importManager;
     private final Map<JobRequest.Type, JobExecutor> executors;
+    private final StateFetcher stateFetcher;
 
-    public WorkerFactory(RepositoryManager repositoryManager, ImportManager importManager, Map<JobRequest.Type, JobExecutor> executors) {
+    @Inject
+    public WorkerFactory(RepositoryManager repositoryManager,
+                         ImportManager importManager,
+                         Collection<JobExecutor> executors,
+                         StateFetcher stateFetcher) {
+
         this.repositoryManager = repositoryManager;
         this.importManager = importManager;
-        this.executors = executors;
+        this.executors = executors.stream().collect(Collectors.toMap(JobExecutor::acceptsType, Function.identity()));
+        this.stateFetcher = stateFetcher;
     }
 
-    public Worker create(JobRequest jobRequest, Worker.CompletionCallback completionCallback, Worker.StateFetcher stateFetcher) throws ExecutionException {
+    public Worker create(JobRequest jobRequest, Worker.CompletionCallback completionCallback) throws ExecutionException {
         JobExecutor executor = executors.get(jobRequest.getType());
         if (executor == null) {
             throw new ExecutionException("Unsupported job type: " + jobRequest.getType());

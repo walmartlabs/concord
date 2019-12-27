@@ -22,8 +22,10 @@ package com.walmartlabs.concord.agent.cfg;
 
 import com.typesafe.config.Config;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
@@ -31,13 +33,16 @@ import java.util.Properties;
 import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
-public class RunnerV1Configuration implements Serializable {
+@Named
+@Singleton
+public class RunnerV1Configuration {
 
     private final Path path;
     private final Path cfgDir;
     private final String javaCmd;
     private final boolean securityManagerEnabled;
 
+    @Inject
     public RunnerV1Configuration(Config cfg) {
         String path = getStringOrDefault(cfg, "runnerV1.path", () -> {
             try {

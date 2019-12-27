@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.remote;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,21 +25,43 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.agent.cfg.Configuration;
+import com.walmartlabs.concord.agent.cfg.ServerConfiguration;
 import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.common.IOUtils;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public final class ApiClientFactory {
+@Named
+@Singleton
+public class ApiClientProvider implements Provider<ApiClient> {
 
     private static final String SESSION_COOKIE_NAME = "JSESSIONID";
 
-    public static ApiClient create(Configuration cfg) throws IOException {
+    private final ServerConfiguration cfg;
+
+    @Inject
+    public ApiClientProvider(ServerConfiguration cfg) {
+        this.cfg = cfg;
+    }
+
+    @Override
+    public ApiClient get() {
+        try {
+            return create(cfg);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static ApiClient create(ServerConfiguration cfg) throws IOException {
         OkHttpClient ok = new OkHttpClient();
         ok.setReadTimeout(cfg.getReadTimeout(), TimeUnit.MILLISECONDS);
         ok.setConnectTimeout(cfg.getConnectTimeout(), TimeUnit.MILLISECONDS);
@@ -48,15 +70,12 @@ public final class ApiClientFactory {
         ok.interceptors().add(new AddCookiesInterceptor(cookieJar));
         ok.interceptors().add(new ReceivedCookiesInterceptor(cookieJar));
 
-        ApiClient client = new ConcordApiClient(cfg.getServerApiBaseUrl(), ok);
+        ApiClient client = new ConcordApiClient(cfg.getApiBaseUrl(), ok);
         client.setTempFolderPath(IOUtils.createTempDir("agent-client").toString());
         client.setApiKey(cfg.getApiKey());
         client.setUserAgent(cfg.getUserAgent());
-        client.setVerifyingSsl(cfg.isApiVerifySsl());
+        client.setVerifyingSsl(cfg.isVerifySsl());
         return client;
-    }
-
-    private ApiClientFactory() {
     }
 
     private static class AddCookiesInterceptor implements Interceptor {
