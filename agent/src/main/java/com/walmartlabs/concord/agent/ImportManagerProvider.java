@@ -24,12 +24,19 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import java.nio.file.Path;
 
-public class ImportManagerProvider {
+@Named
+@Singleton
+public class ImportManagerProvider implements Provider<ImportManager> {
 
     private final ImportManagerFactory factory;
 
+    @Inject
     public ImportManagerProvider(RepositoryManager repositoryManager, DependencyManager dependencyManager) {
         this.factory = new ImportManagerFactory(dependencyManager, (entry, workDir) -> {
             Path dst = workDir;
@@ -41,6 +48,7 @@ public class ImportManagerProvider {
         });
     }
 
+    @Override
     public ImportManager get() {
         return factory.create();
     }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.agent;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.agent.logging;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,34 +21,31 @@ package com.walmartlabs.concord.agent.logging;
  */
 
 import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.UUID;
 
 @Named
 @Singleton
-public class ProcessLogFactory {
+public class DependencyManagerProvider implements Provider<DependencyManager> {
 
-    private final Path logDir;
-    private final long logStreamMaxDelay;
-    private final LogAppender logAppender;
+    private final AgentConfiguration cfg;
 
     @Inject
-    public ProcessLogFactory(AgentConfiguration cfg, LogAppender logAppender) {
-        this.logDir = cfg.getLogDir();
-        this.logStreamMaxDelay = cfg.getLogMaxDelay();
-        this.logAppender = logAppender;
+    public DependencyManagerProvider(AgentConfiguration cfg) {
+        this.cfg = cfg;
     }
 
-    public RedirectedProcessLog createRedirectedLog(UUID instanceId) throws IOException {
-        return new RedirectedProcessLog(logDir, instanceId, logAppender, logStreamMaxDelay);
-    }
-
-    public RemoteProcessLog createRemoteLog(UUID instanceId) {
-        return new RemoteProcessLog(instanceId, logAppender);
+    @Override
+    public DependencyManager get() {
+        try {
+            return new DependencyManager(cfg.getDependencyCacheDir());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

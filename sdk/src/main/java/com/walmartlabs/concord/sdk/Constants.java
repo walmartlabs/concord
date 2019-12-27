@@ -197,6 +197,7 @@ public class Constants {
 
         /**
          * Container configuration.
+         * @deprecated the container-per-process execution mode is deprecated.
          */
         public static final String CONTAINER = "container";
 

@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.agent;
+package com.walmartlabs.concord.agent.api;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,20 +20,27 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ProcessApi;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import org.eclipse.sisu.space.SpaceModule;
-import org.eclipse.sisu.space.URLClassSpace;
-import org.eclipse.sisu.wire.WireModule;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
-public class Main {
+@Named
+@Singleton
+public class ProcessApiProvider implements Provider<ProcessApi> {
 
-    public static void main(String[] args) throws Exception {
-        ClassLoader cl = Main.class.getClassLoader();
-        Injector injector = Guice.createInjector(new WireModule(new SpaceModule(new URLClassSpace(cl))));
+    private final ApiClient apiClient;
 
-        Agent a = injector.getInstance(Agent.class);
-        a.run();
+    @Inject
+    public ProcessApiProvider(ApiClient apiClient) {
+        this.apiClient = apiClient;
+    }
+
+    @Override
+    public ProcessApi get() {
+        return new ProcessApi(apiClient);
     }
 }

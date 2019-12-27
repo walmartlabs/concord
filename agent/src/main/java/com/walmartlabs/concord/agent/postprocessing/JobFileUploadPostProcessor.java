@@ -31,7 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class JobFileUploadPostProcessor implements JobPostProcessor {
+public abstract class JobFileUploadPostProcessor implements JobPostProcessor {
 
     private final String sourcePath;
     private final String name;

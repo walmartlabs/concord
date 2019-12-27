@@ -29,9 +29,12 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobInstance;
+import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.Utils;
+import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
+import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
@@ -66,7 +69,7 @@ import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER
 /**
  * Executes jobs using concord-runner runtime.
  */
-public class RunnerJobExecutor {
+public class RunnerJobExecutor implements JobExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerJobExecutor.class);
 
@@ -76,7 +79,9 @@ public class RunnerJobExecutor {
     private final DefaultDependencies defaultDependencies;
     private final List<JobPostProcessor> postProcessors;
     private final ProcessPool processPool;
+    private final ProcessLogFactory logFactory;
     private final ExecutorService executor;
+
     private final ObjectMapper objectMapper;
 
     public RunnerJobExecutor(RunnerJobExecutorConfiguration cfg,
@@ -84,6 +89,7 @@ public class RunnerJobExecutor {
                              DefaultDependencies defaultDependencies,
                              List<JobPostProcessor> postProcessors,
                              ProcessPool processPool,
+                             ProcessLogFactory processLogFactory,
                              ExecutorService executor) {
 
         this.cfg = cfg;
@@ -91,6 +97,7 @@ public class RunnerJobExecutor {
         this.defaultDependencies = defaultDependencies;
         this.postProcessors = postProcessors;
         this.processPool = processPool;
+        this.logFactory = processLogFactory;
         this.executor = executor;
 
         // sort JSON keys for consistency
@@ -98,7 +105,18 @@ public class RunnerJobExecutor {
                 .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
     }
 
-    public JobInstance exec(RunnerJob job) throws Exception {
+    @Override
+    public JobRequest.Type acceptsType() {
+        return JobRequest.Type.RUNNER;
+    }
+
+    @Override
+    public JobInstance exec(JobRequest jobRequest) throws Exception {
+        RunnerJob job = RunnerJob.from(cfg, jobRequest, logFactory);
+        return exec(job);
+    }
+
+    private JobInstance exec(RunnerJob job) throws Exception {
         // prepare and start a new JVM of use a pre-forked one
         ProcessEntry pe;
         try {

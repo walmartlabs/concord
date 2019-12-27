@@ -207,11 +207,6 @@ public class Worker implements Runnable {
         void apply() throws Exception;
     }
 
-    public interface StateFetcher {
-
-        void downloadState(JobRequest jobRequest) throws Exception;
-    }
-
     public interface CompletionCallback {
 
         void onStatusChange(StatusEnum status);

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.agent;
 
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
+import com.walmartlabs.concord.agent.logging.RemoteProcessLog;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 
@@ -31,6 +32,7 @@ import java.util.UUID;
 public class JobRequest {
 
     public static JobRequest from(ProcessResponse resp, Path workDir, ProcessLogFactory logFactory) {
+        RemoteProcessLog log = logFactory.createRemoteLog(resp.getProcessId());
         return new JobRequest(Type.RUNNER, resp.getProcessId(),
                 workDir,
                 resp.getOrgName(),
@@ -38,7 +40,7 @@ public class JobRequest {
                 resp.getRepoPath(),
                 resp.getCommitId(),
                 resp.getSecretName(),
-                logFactory.createRemoteLog(resp.getProcessId()),
+                log,
                 resp.getImports());
     }
 

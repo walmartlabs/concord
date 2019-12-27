@@ -21,42 +21,53 @@ package com.walmartlabs.concord.agent;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.agent.cfg.Configuration;
+import com.walmartlabs.concord.agent.cfg.GitConfiguration;
+import com.walmartlabs.concord.agent.cfg.RepositoryCacheConfiguration;
 import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.imports.Import.SecretDefinition;
 import com.walmartlabs.concord.repository.*;
 import com.walmartlabs.concord.sdk.Secret;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+@Named
+@Singleton
 public class RepositoryManager {
 
-    private final RepositoryProviders providers;
     private final SecretClient secretClient;
+    private final RepositoryProviders providers;
     private final RepositoryCache repositoryCache;
 
-    public RepositoryManager(Configuration cfg, SecretClient secretClient, ObjectMapper objectMapper) throws IOException {
-        GitClientConfiguration gitCfg = GitClientConfiguration.builder()
-                .oauthToken(cfg.getRepositoryOauthToken())
-                .shallowClone(cfg.isShallowClone())
-                .httpLowSpeedLimit(cfg.getRepositoryHttpLowSpeedLimit())
-                .httpLowSpeedTime(cfg.getRepositoryHttpLowSpeedTime())
-                .sshTimeout(cfg.getRepositorySshTimeout())
-                .sshTimeoutRetryCount(cfg.getRepositorySshTimeoutRetryCount())
-                .build();
-
-        List<RepositoryProvider> providers = Collections.singletonList(new GitCliRepositoryProvider(gitCfg));
-        this.providers = new RepositoryProviders(providers);
+    @Inject
+    public RepositoryManager(SecretClient secretClient,
+                             GitConfiguration gitCfg,
+                             RepositoryCacheConfiguration cacheCfg,
+                             ObjectMapper objectMapper) throws IOException {
 
         this.secretClient = secretClient;
 
-        this.repositoryCache = new RepositoryCache(cfg.getRepositoryCacheDir(),
-                cfg.getRepositoryCacheInfoDir(),
-                cfg.getRepositoryLockTimeout(),
-                cfg.getRepositoryCacheMaxAge(),
+        GitClientConfiguration clientCfg = GitClientConfiguration.builder()
+                .oauthToken(gitCfg.getToken())
+                .shallowClone(gitCfg.isShallowClone())
+                .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
+                .httpLowSpeedTime(gitCfg.getHttpLowSpeedTime())
+                .sshTimeout(gitCfg.getSshTimeout())
+                .sshTimeoutRetryCount(gitCfg.getSshTimeoutRetryCount())
+                .build();
+
+        List<RepositoryProvider> providers = Collections.singletonList(new GitCliRepositoryProvider(clientCfg));
+        this.providers = new RepositoryProviders(providers);
+
+        this.repositoryCache = new RepositoryCache(cacheCfg.getCacheDir(),
+                cacheCfg.getInfoDir(),
+                cacheCfg.getLockTimeout(),
+                cacheCfg.getMaxAge(),
                 objectMapper);
     }
 

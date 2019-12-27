@@ -23,15 +23,21 @@ package com.walmartlabs.concord.agent.executors.runner;
 import com.google.common.hash.HashCode;
 import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.Utils;
+import com.walmartlabs.concord.agent.cfg.PreForkConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Named
+@Singleton
 public class ProcessPool {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessPool.class);
@@ -43,9 +49,10 @@ public class ProcessPool {
     private final Map<HashCode, Queue<ProcessEntry>> pool = new HashMap<>();
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
-    public ProcessPool(long maxEntryAge, int maxEntryCount) {
-        this.maxEntryAge = maxEntryAge;
-        this.maxEntryCount = maxEntryCount;
+    @Inject
+    public ProcessPool(PreForkConfiguration cfg) {
+        this.maxEntryAge = cfg.getMaxAge();
+        this.maxEntryCount = cfg.getMaxCount();
         init();
     }
 

@@ -20,104 +20,87 @@ package com.walmartlabs.concord.agent;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.Worker.CompletionCallback;
-import com.walmartlabs.concord.agent.Worker.StateFetcher;
-import com.walmartlabs.concord.agent.cfg.Configuration;
-import com.walmartlabs.concord.agent.cfg.RunnerV1Configuration;
+import com.walmartlabs.concord.agent.cfg.AgentConfiguration;
+import com.walmartlabs.concord.agent.cfg.DockerConfiguration;
 import com.walmartlabs.concord.agent.docker.OrphanSweeper;
-import com.walmartlabs.concord.agent.executors.JobExecutor;
-import com.walmartlabs.concord.agent.executors.runner.*;
-import com.walmartlabs.concord.agent.executors.runner.DockerRunnerJobExecutor.DockerRunnerJobExecutorConfiguration;
-import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
-import com.walmartlabs.concord.agent.logging.LogAppender;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
-import com.walmartlabs.concord.agent.postprocessing.JobFileUploadPostProcessor;
-import com.walmartlabs.concord.agent.postprocessing.JobPostProcessor;
+import com.walmartlabs.concord.agent.mmode.MaintenanceModeListener;
+import com.walmartlabs.concord.agent.mmode.MaintenanceModeNotifier;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
-import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.dependencymanager.DependencyManager;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.queueclient.QueueClient;
-import com.walmartlabs.concord.server.queueclient.QueueClientConfiguration;
 import com.walmartlabs.concord.server.queueclient.message.ProcessRequest;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Named
+@Singleton
 public class Agent {
 
     private static final Logger log = LoggerFactory.getLogger(Agent.class);
 
-    private static final long ERROR_DELAY = 5000;
-    private static final int API_CALL_MAX_RETRIES = 3;
-    private static final long API_CALL_RETRY_DELAY = 3000;
+    private final AgentConfiguration agentCfg;
+    private final DockerConfiguration dockerCfg;
 
-    private final Configuration cfg;
-
-    private final ProcessApi processApi;
+    private final QueueClient queueClient;
     private final ProcessLogFactory processLogFactory;
-    private final ExecutorService executor;
+    private final StateFetcher stateFetcher;
+    private final ProcessApi processApi;
     private final WorkerFactory workerFactory;
 
     private final Map<UUID, Worker> activeWorkers = new ConcurrentHashMap<>();
     private final AtomicBoolean maintenanceMode = new AtomicBoolean(false);
 
-    public Agent(Configuration cfg) throws Exception {
-        this.cfg = cfg;
+    @Inject
+    public Agent(AgentConfiguration agentCfg,
+                 DockerConfiguration dockerCfg,
+                 QueueClient queueClient,
+                 ProcessLogFactory processLogFactory,
+                 StateFetcher stateFetcher,
+                 ProcessApi processApi,
+                 WorkerFactory workerFactory) {
 
-        ApiClient apiClient = ApiClientFactory.create(cfg);
-        this.processApi = new ProcessApi(apiClient);
+        this.agentCfg = agentCfg;
+        this.dockerCfg = dockerCfg;
+        this.queueClient = queueClient;
 
-        SecretClient secretClient = new SecretClient(apiClient);
-        RepositoryManager repositoryManager = new RepositoryManager(cfg, secretClient, new ObjectMapper());
-
-        this.processLogFactory = new ProcessLogFactory(cfg.getLogDir(), cfg.getLogMaxDelay(), createLogAppender(processApi));
-
-        this.executor = Executors.newCachedThreadPool();
-
-        ProcessPool processPool = new ProcessPool(cfg.getMaxPreforkAge(), cfg.getMaxPreforkCount());
-        DependencyManager dependencyManager = new DependencyManager(cfg.getDependencyCacheDir());
-        ImportManagerProvider imp = new ImportManagerProvider(repositoryManager, dependencyManager);
-
-        JobExecutor runnerExec = createRunnerJobExecutor(cfg, processApi, processLogFactory, processPool, dependencyManager, executor);
-        Map<JobRequest.Type, JobExecutor> executors = Collections.singletonMap(JobRequest.Type.RUNNER, runnerExec);
-
-        this.workerFactory = new WorkerFactory(repositoryManager, imp.get(), executors);
+        this.processLogFactory = processLogFactory;
+        this.stateFetcher = stateFetcher;
+        this.processApi = processApi;
+        this.workerFactory = workerFactory;
     }
 
     public void run() throws Exception {
-        int workersCount = cfg.getWorkersCount();
+        ExecutorService executor = Executors.newCachedThreadPool();
+
+        int workersCount = agentCfg.getWorkersCount();
         log.info("run -> using {} worker(s)", workersCount);
         Semaphore workersAvailable = new Semaphore(workersCount);
-
-        // connect to the server's websocket
-        QueueClient queueClient = connectToServer();
 
         // listen for maintenance mode requests
         startMaintenanceModeNotifier(queueClient);
 
-        if (cfg.isDockerOrphanSweeperEnabled()) {
-            executor.submit(new OrphanSweeper(this::isAlive, cfg.getDockerOrphanSweeperPeriod()));
+        if (dockerCfg.isOrphanSweeperEnabled()) {
+            executor.submit(new OrphanSweeper(this::isAlive, dockerCfg.getOrphanSweeperPeriod()));
         }
 
         // start the command handler in a separate thread
-        CommandHandler commandHandler = new CommandHandler(cfg.getAgentId(), queueClient, cfg.getPollInterval(), this::cancel);
+        CommandHandler commandHandler = new CommandHandler(agentCfg.getAgentId(), queueClient, agentCfg.getPollInterval(), this::cancel);
         executor.submit(commandHandler);
 
         // main loop
@@ -141,7 +124,7 @@ public class Agent {
 
                 // wait before retrying
                 // the server is not reachable or unhealthy, no point retrying immediately
-                Utils.sleep(ERROR_DELAY);
+                Utils.sleep(AgentConstants.ERROR_DELAY);
                 continue;
             }
 
@@ -154,7 +137,7 @@ public class Agent {
             UUID instanceId = jobRequest.getInstanceId();
 
             // worker will handle the process' lifecycle
-            Worker w = workerFactory.create(jobRequest, createStatusCallback(instanceId, workersAvailable), createStateFetcher());
+            Worker w = workerFactory.create(jobRequest, createStatusCallback(instanceId, workersAvailable));
 
             // register the worker so we can cancel it later
             activeWorkers.put(instanceId, w);
@@ -162,21 +145,6 @@ public class Agent {
             // start a new thread to process the job
             executor.submit(w);
         }
-    }
-
-    private QueueClient connectToServer() throws URISyntaxException {
-        QueueClient queueClient = new QueueClient(new QueueClientConfiguration.Builder(cfg.getServerWebsocketUrls())
-                .agentId(cfg.getAgentId())
-                .apiKey(cfg.getApiKey())
-                .userAgent(cfg.getUserAgent())
-                .connectTimeout(cfg.getConnectTimeout())
-                .pingInterval(cfg.getWebSocketPingInterval())
-                .maxNoActivityPeriod(cfg.getWebsocketMaxNoActivityPeriod())
-                .build());
-
-        queueClient.start();
-
-        return queueClient;
     }
 
     private void startMaintenanceModeNotifier(QueueClient queueClient) {
@@ -238,27 +206,23 @@ public class Agent {
         };
     }
 
-    private StateFetcher createStateFetcher() {
-        return new RemoteStateFetcher(processApi, API_CALL_MAX_RETRIES, API_CALL_RETRY_DELAY);
-    }
-
     private JobRequest take(QueueClient queueClient) throws Exception {
-        Future<ProcessResponse> req = queueClient.request(new ProcessRequest(cfg.getCapabilities()));
+        Future<ProcessResponse> req = queueClient.request(new ProcessRequest(agentCfg.getCapabilities()));
 
         ProcessResponse resp = req.get();
         if (resp == null) {
             return null;
         }
 
-        Path workDir = IOUtils.createTempDir(cfg.getPayloadDir(), "workDir");
+        Path workDir = IOUtils.createTempDir(agentCfg.getPayloadDir(), "workDir");
 
         return JobRequest.from(resp, workDir, processLogFactory);
     }
 
     private void updateStatus(UUID instanceId, StatusEnum s) {
         try {
-            ClientUtils.withRetry(API_CALL_MAX_RETRIES, API_CALL_RETRY_DELAY, () -> {
-                processApi.updateStatus(instanceId, cfg.getAgentId(), s.name());
+            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
+                processApi.updateStatus(instanceId, agentCfg.getAgentId(), s.name());
                 return null;
             });
         } catch (ApiException e) {
@@ -273,77 +237,5 @@ public class Agent {
         }
 
         w.cancel();
-    }
-
-    private LogAppender createLogAppender(ProcessApi processApi) {
-        return (instanceId, ab) -> {
-            String path = "/api/v1/process/" + instanceId + "/log";
-
-            try {
-                ClientUtils.withRetry(API_CALL_MAX_RETRIES, API_CALL_RETRY_DELAY, () -> {
-                    ClientUtils.postData(processApi.getApiClient(), path, ab);
-                    return null;
-                });
-            } catch (ApiException e) {
-                // TODO handle errors
-                log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
-            }
-        };
-    }
-
-    private static List<JobPostProcessor> createPostProcessors(ProcessApi processApi) {
-        return Collections.singletonList(
-                new JobFileUploadPostProcessor(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
-                        "attachments", (instanceId, data) -> {
-                    String path = "/api/v1/process/" + instanceId + "/attachment";
-
-                    ClientUtils.withRetry(API_CALL_MAX_RETRIES, API_CALL_RETRY_DELAY, () -> {
-                        ClientUtils.postData(processApi.getApiClient(), path, data.toFile());
-                        return null;
-                    });
-                })
-        );
-    }
-
-    private static JobExecutor createRunnerJobExecutor(Configuration cfg,
-                                                       ProcessApi processApi,
-                                                       ProcessLogFactory processLogFactory,
-                                                       ProcessPool processPool,
-                                                       DependencyManager dependencyManager,
-                                                       ExecutorService executor) {
-
-        RunnerV1Configuration runnerV1Cfg = cfg.getRunnerV1Cfg();
-
-        RunnerJobExecutorConfiguration runnerExecutorCfg = RunnerJobExecutorConfiguration.builder()
-                .agentId(cfg.getAgentId())
-                .serverApiBaseUrl(cfg.getServerApiBaseUrl())
-                .agentJavaCmd(runnerV1Cfg.getJavaCmd())
-                .dependencyListDir(cfg.getDependencyListsDir())
-                .dependencyCacheDir(cfg.getDependencyCacheDir())
-                .runnerPath(runnerV1Cfg.getPath())
-                .runnerCfgDir(runnerV1Cfg.getCfgDir())
-                .runnerSecurityManagerEnabled(runnerV1Cfg.isSecurityManagerEnabled())
-                .extraDockerVolumes(cfg.getExtraDockerVolumes())
-                .maxHeartbeatInterval(cfg.getMaxNoHeartbeatInterval())
-                .build();
-
-        DefaultDependencies defaultDependencies = new DefaultDependencies();
-
-        List<JobPostProcessor> postProcessors = createPostProcessors(processApi);
-
-        return req -> {
-            RunnerJobExecutor jobExecutor;
-            RunnerJob job = RunnerJob.from(runnerExecutorCfg, req, processLogFactory);
-
-            // TODO looks a bit messy, refactor to use proper configuration objects
-            if (job.getProcessCfg().get(Constants.Request.CONTAINER) != null) {
-                DockerRunnerJobExecutorConfiguration dockerRunnerCfg = new DockerRunnerJobExecutorConfiguration(cfg.getDockerHost(), cfg.getDependencyCacheDir(), cfg.getJavaPath());
-                jobExecutor = new DockerRunnerJobExecutor(runnerExecutorCfg, dockerRunnerCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
-            } else {
-                jobExecutor = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, processPool, executor);
-            }
-
-            return jobExecutor.exec(job);
-        };
     }
 }
