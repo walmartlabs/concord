@@ -33,8 +33,8 @@ import {
     ProjectEntry,
     ProjectVisibility
 } from '../../../api/org/project';
-import { Pagination } from '../../../state/data/projects';
 import { CreateNewEntityButton, PaginationToolBar, RequestErrorMessage } from '../../molecules';
+import {usePagination} from "../../molecules/PaginationToolBar/usePagination";
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -51,8 +51,7 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<RequestError>();
     const [canCreate, setCanCreate] = useState<boolean>(false);
-
-    const [paginationFilter, setPaginationFilter] = useState<Pagination>({ offset: 0, limit: 50 });
+    const {paginationFilter, handleLimitChange, handleNext, handlePrev, handleFirst, resetOffset} = usePagination();
     const [next, setNext] = useState<boolean>(false);
     const oldFilter = useRef<string>();
 
@@ -64,7 +63,7 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
 
             if (filter && oldFilter.current !== filter) {
                 oldFilter.current = filter;
-                setPaginationFilter({ offset: 0, limit: paginationFilter.limit });
+                resetOffset(0);
             }
 
             const paginatedProjectList = await getPaginatedProjectList(
@@ -81,11 +80,11 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
         } finally {
             setLoading(false);
         }
-    }, [orgName, filter, paginationFilter.offset, paginationFilter.limit]);
+    }, [orgName, filter, paginationFilter.offset, paginationFilter.limit, resetOffset]);
 
     useEffect(() => {
         fetchData();
-    }, [orgs, orgName, filter, paginationFilter.offset, paginationFilter.limit]);
+    }, [fetchData]);
 
     const fetchCanCreateStatus = useCallback(async () => {
         const response = await apiCheckResult(EntityType.PROJECT, orgName);
@@ -94,25 +93,7 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
 
     useEffect(() => {
         fetchCanCreateStatus();
-    }, [orgName]);
-
-    const handleLimitChange = (limit: any) => {
-        setPaginationFilter({ offset: 0, limit });
-    };
-
-    const handleNext = () => {
-        const nextOffset = paginationFilter.offset + 1;
-        setPaginationFilter({ offset: nextOffset, limit: paginationFilter.limit });
-    };
-
-    const handlePrev = () => {
-        const prevOffset = paginationFilter.offset - 1;
-        setPaginationFilter({ offset: prevOffset, limit: paginationFilter.limit });
-    };
-
-    const handleFirst = () => {
-        setPaginationFilter({ offset: 0, limit: paginationFilter.limit });
-    };
+    }, [fetchCanCreateStatus]);
 
     const ProjectVisibilityIcon = ({ project }: { project: ProjectEntry }) => {
         if (project.visibility === ProjectVisibility.PUBLIC) {
