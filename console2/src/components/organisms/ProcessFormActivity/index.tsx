@@ -160,7 +160,4 @@ const mapDispatchToProps = (
         dispatch(actions.startForm(processInstanceId, formName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessFormActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(ProcessFormActivity);

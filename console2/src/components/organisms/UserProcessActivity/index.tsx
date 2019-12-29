@@ -156,7 +156,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: () => dispatch(actions.getUserActivity(MAX_CARD_ITEMS + 1, MAX_OWN_PROCESSES))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(UserProcesses);
+export default connect(mapStateToProps, mapDispatchToProps)(UserProcesses);

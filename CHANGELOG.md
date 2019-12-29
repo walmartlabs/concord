@@ -13,6 +13,8 @@ listen for process-level events, process logs and audit events.
 
 ### Changed
 
+- concord-console: fixed the dropdown behavior in the operation
+confirmation popup;
 - variables-tasks: fixed an interpolation issue when multiple
 dependant values are `set` simultaneously;
 - http: fixed a potential NPE on empty responses;

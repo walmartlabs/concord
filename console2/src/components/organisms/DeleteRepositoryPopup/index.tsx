@@ -89,7 +89,4 @@ const mapDispatchToProps = (
     onDone: () => dispatch(actions.getProject(orgName, projectName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(DeleteRepositoryPopup);
+export default connect(mapStateToProps, mapDispatchToProps)(DeleteRepositoryPopup);

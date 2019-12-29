@@ -289,7 +289,4 @@ const mapDispatchToProps = (
     openProcessPage: (instanceId: ConcordId) => dispatch(pushHistory(`/process/${instanceId}`))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(StartRepositoryPopup);
+export default connect(mapStateToProps, mapDispatchToProps)(StartRepositoryPopup);

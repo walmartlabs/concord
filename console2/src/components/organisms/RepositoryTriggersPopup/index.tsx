@@ -164,7 +164,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.listTriggers(orgName, projectName, repoName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(RepositoryTriggersPopup);
+export default connect(mapStateToProps, mapDispatchToProps)(RepositoryTriggersPopup);

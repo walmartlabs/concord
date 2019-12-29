@@ -102,7 +102,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.updateSecretVisibility(orgName, secretId, projectId, visibility))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProjectRenameActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectRenameActivity);

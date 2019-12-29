@@ -160,7 +160,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName, teamName) => dispatch(actions.getTeam(orgName, teamName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(TeamActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(TeamActivity);

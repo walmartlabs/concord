@@ -74,7 +74,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.createTeam(orgName, entry))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(NewTeamActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(NewTeamActivity);

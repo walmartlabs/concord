@@ -101,7 +101,4 @@ const mapDispatchToProps = (
     load: () => dispatch(actions.listTeams(orgName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(FindTeamDropdown);
+export default connect(mapStateToProps, mapDispatchToProps)(FindTeamDropdown);

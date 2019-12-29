@@ -47,7 +47,4 @@ const mapDispatchToProps = (
     redirect: () => dispatch(pushHistory(location))
 });
 
-export default connect(
-    null,
-    mapDispatchToProps
-)(RedirectButton);
+export default connect(null, mapDispatchToProps)(RedirectButton);

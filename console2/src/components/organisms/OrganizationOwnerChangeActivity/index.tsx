@@ -82,7 +82,4 @@ const mapStateToProps = ({ orgs }: { orgs: State }): StateProps => ({
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     change: (orgId, orgName, owner) => dispatch(actions.changeOwner(orgId, orgName, owner))
 });
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(OrganizationOwnerChangeActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(OrganizationOwnerChangeActivity);

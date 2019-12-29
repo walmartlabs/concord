@@ -209,7 +209,4 @@ const mapDispatchToProps = (
     }
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(NewSecretActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(NewSecretActivity);

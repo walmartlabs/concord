@@ -111,7 +111,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.listAnsibleEvents(instanceId, host, hostGroup, status, playbookId))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(AnsibleTaskListActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(AnsibleTaskListActivity);

@@ -84,7 +84,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     update: (orgName, projectEntity) => dispatch(actions.updateProject(orgName, projectEntity))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(EditProjectActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(EditProjectActivity);

@@ -88,7 +88,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     change: (orgName, projectId, projectName, owner) =>
         dispatch(actions.changeProjectOwner(orgName, projectId, projectName, owner))
 });
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProjectOwnerChangeActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectOwnerChangeActivity);

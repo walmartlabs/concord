@@ -161,7 +161,4 @@ const mapDispatchToProps = (
     onConfirm: () => dispatch(actions.validateRepository(orgName, projectName, repoName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ValidateRepositoryPopup);
+export default connect(mapStateToProps, mapDispatchToProps)(ValidateRepositoryPopup);

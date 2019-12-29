@@ -80,7 +80,4 @@ const mapDispatchToProps = (
     load: () => dispatch(actions.listProjects(orgName, { limit: -1, offset: -1 }))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProjectDropdown);
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectDropdown);

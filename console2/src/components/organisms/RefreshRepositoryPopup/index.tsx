@@ -85,7 +85,4 @@ const mapDispatchToProps = (
     onConfirm: () => dispatch(actions.refreshRepository(orgName, projectName, repoName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(RefreshRepositoryPopup);
+export default connect(mapStateToProps, mapDispatchToProps)(RefreshRepositoryPopup);

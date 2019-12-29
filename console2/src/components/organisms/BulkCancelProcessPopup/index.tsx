@@ -81,7 +81,4 @@ const mapDispatchToProps = (
     onConfirm: () => dispatch(actions.cancelBulk(data))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(BulkCancelProcessPopup);
+export default connect(mapStateToProps, mapDispatchToProps)(BulkCancelProcessPopup);

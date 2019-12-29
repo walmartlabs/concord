@@ -264,7 +264,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: (orgName, projectName) => dispatch(actions.getProject(orgName, projectName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProjectActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectActivity);

@@ -162,7 +162,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     onSearch: (filter: string) => dispatch(actions.findUsers(filter))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(FindUserField);
+export default connect(mapStateToProps, mapDispatchToProps)(FindUserField);

@@ -27,13 +27,20 @@ import { RequestError } from '../../../api/common';
 import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
 import { list as getPaginatedOrgList } from '../../../api/org/index';
 import { PaginationToolBar, RequestErrorMessage } from '../../molecules';
-import { usePagination } from "../../molecules/PaginationToolBar/usePagination";
+import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 
 const OrganizationList = () => {
     const [data, setData] = useState<OrganizationEntry[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<RequestError>();
-    const {paginationFilter, handleLimitChange, handleNext, handlePrev, handleFirst, resetOffset} = usePagination();
+    const {
+        paginationFilter,
+        handleLimitChange,
+        handleNext,
+        handlePrev,
+        handleFirst,
+        resetOffset
+    } = usePagination();
     const [next, setNext] = useState<boolean>(false);
     const oldFilter = useRef<string>();
     const oldOnlyCurrent = useRef<boolean>(true);
