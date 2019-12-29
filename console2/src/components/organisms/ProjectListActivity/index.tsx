@@ -34,7 +34,7 @@ import {
     ProjectVisibility
 } from '../../../api/org/project';
 import { CreateNewEntityButton, PaginationToolBar, RequestErrorMessage } from '../../molecules';
-import {usePagination} from "../../molecules/PaginationToolBar/usePagination";
+import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -51,7 +51,14 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<RequestError>();
     const [canCreate, setCanCreate] = useState<boolean>(false);
-    const {paginationFilter, handleLimitChange, handleNext, handlePrev, handleFirst, resetOffset} = usePagination();
+    const {
+        paginationFilter,
+        handleLimitChange,
+        handleNext,
+        handlePrev,
+        handleFirst,
+        resetOffset
+    } = usePagination();
     const [next, setNext] = useState<boolean>(false);
     const oldFilter = useRef<string>();
 

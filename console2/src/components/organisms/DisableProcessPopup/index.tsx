@@ -45,7 +45,7 @@ const DisableProcessPopup = memo((props: ExternalProps) => {
         setDisabling(true);
 
         try {
-            apiDisable(instanceId, disabled);
+            await apiDisable(instanceId, disabled);
             setSuccess(true);
         } catch (e) {
             setError(e);

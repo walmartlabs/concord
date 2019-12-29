@@ -97,7 +97,4 @@ const mapDispatchToProps = (
     load: () => dispatch(actions.listSecrets(orgName, { limit: -1, offset: -1 }))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SecretDropdown);
+export default connect(mapStateToProps, mapDispatchToProps)(SecretDropdown);

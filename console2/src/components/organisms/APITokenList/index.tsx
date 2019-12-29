@@ -101,7 +101,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     load: () => dispatch(actions.listTokens())
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(APITokenList);
+export default connect(mapStateToProps, mapDispatchToProps)(APITokenList);

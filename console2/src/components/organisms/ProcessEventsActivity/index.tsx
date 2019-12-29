@@ -59,7 +59,10 @@ const ProcessEventsActivity = (props: ExternalProps) => {
         });
 
         if (events.length > 0) {
-            lastEventId.current = Math.max.apply(Math, events.map((e) => e.seqId));
+            lastEventId.current = Math.max.apply(
+                Math,
+                events.map((e) => e.seqId)
+            );
         }
 
         setEvents((prevEvents) => reduceEvents(prevEvents ? prevEvents : [], events));

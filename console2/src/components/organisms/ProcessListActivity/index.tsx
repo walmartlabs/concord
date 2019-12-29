@@ -139,7 +139,6 @@ const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | u
 };
 
 class ProcessListActivity extends React.Component<Props> {
-
     UNSAFE_componentWillMount() {
         const { orgName, projectName, load, location } = this.props;
         const f = parseSearchFilter(location.search);
@@ -234,7 +233,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     }
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(withRouter(ProcessListActivity));
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(ProcessListActivity));

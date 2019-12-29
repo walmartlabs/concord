@@ -94,9 +94,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     logOut: () => dispatch(actions.logout())
 });
 
-export default withRouter(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(TopBar)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(TopBar));

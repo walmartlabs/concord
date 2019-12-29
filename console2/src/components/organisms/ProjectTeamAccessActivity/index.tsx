@@ -97,7 +97,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     }
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProjectTeamAccessActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectTeamAccessActivity);

@@ -62,9 +62,17 @@ class SingleOperationPopup extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = { open: false };
+
+        this.handleOpen = this.handleOpen.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+        this.handleConfirm = this.handleConfirm.bind(this);
+        this.renderContent = this.renderContent.bind(this);
+        this.renderActions = this.renderActions.bind(this);
+        this.stopPropagation = this.stopPropagation.bind(this);
     }
 
-    handleOpen() {
+    handleOpen(event?: React.SyntheticEvent) {
+        this.stopPropagation(event);
         this.props.reset();
         this.setState({ open: true });
     }
@@ -148,11 +156,20 @@ class SingleOperationPopup extends React.Component<Props, State> {
         );
     }
 
+    stopPropagation(event?: React.SyntheticEvent) {
+        if (event) {
+            event.stopPropagation();
+        }
+    }
+
     render() {
         const { trigger, title, icon, iconColor, customStyle = {} } = this.props;
 
         return (
             <Modal
+                onClick={this.stopPropagation}
+                onOpen={this.handleOpen}
+                onClose={this.stopPropagation}
                 style={customStyle}
                 open={this.state.open}
                 dimmer="inverted"

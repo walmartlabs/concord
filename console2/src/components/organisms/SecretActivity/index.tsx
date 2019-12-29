@@ -276,7 +276,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.getSecret(orgName, secretName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SecretActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(SecretActivity);

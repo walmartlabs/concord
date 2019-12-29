@@ -91,7 +91,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.restoreProcess(instanceId, checkpointId))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ProcessRestoreActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(ProcessRestoreActivity);

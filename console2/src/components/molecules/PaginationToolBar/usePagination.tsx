@@ -21,8 +21,8 @@ import { Pagination } from '../../../state/data/projects';
 import { useCallback, useState } from 'react';
 
 export interface UsePaginationType {
-    paginationFilter: Pagination,
-    handleLimitChange: (limit: number) => void,
+    paginationFilter: Pagination;
+    handleLimitChange: (limit: number) => void;
     handleNext: () => void;
     handlePrev: () => void;
     handleFirst: () => void;
@@ -48,9 +48,16 @@ export const usePagination = (): UsePaginationType => {
         setPaginationFilter((prev) => ({ offset: 0, limit: prev.limit }));
     }, []);
 
-    const resetOffset = useCallback( (offset: number) => {
-        setPaginationFilter( (prev) => ({offset, limit: prev.limit}));
+    const resetOffset = useCallback((offset: number) => {
+        setPaginationFilter((prev) => ({ offset, limit: prev.limit }));
     }, []);
 
-    return {paginationFilter, handleLimitChange, handleNext, handlePrev, handleFirst, resetOffset};
+    return {
+        paginationFilter,
+        handleLimitChange,
+        handleNext,
+        handlePrev,
+        handleFirst,
+        resetOffset
+    };
 };

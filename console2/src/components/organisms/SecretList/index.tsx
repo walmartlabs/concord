@@ -222,7 +222,4 @@ const mapDispatchToProps = (
         dispatch(actions.listSecrets(orgName, paginationFilter, filter))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SecretList);
+export default connect(mapStateToProps, mapDispatchToProps)(SecretList);

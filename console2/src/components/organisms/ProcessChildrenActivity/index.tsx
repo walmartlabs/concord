@@ -143,7 +143,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     }
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(withRouter(ProcessChildrenActivity));
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(ProcessChildrenActivity));

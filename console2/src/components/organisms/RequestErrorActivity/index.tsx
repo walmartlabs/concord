@@ -54,7 +54,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     logOut: () => dispatch(actions.setCurrent({}))
 });
 
-export default connect(
-    null,
-    mapDispatchToProps
-)(RequestErrorActivity);
+export default connect(null, mapDispatchToProps)(RequestErrorActivity);

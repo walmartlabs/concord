@@ -71,7 +71,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     deleteSecret: (orgName, secretName) => dispatch(actions.deleteSecret(orgName, secretName))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SecretDeleteActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(SecretDeleteActivity);

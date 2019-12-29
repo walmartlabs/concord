@@ -92,7 +92,4 @@ const mapDispatchToProps = (
     onDone: () => dispatch(actions.listTokens())
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(APITokenDeleteActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(APITokenDeleteActivity);

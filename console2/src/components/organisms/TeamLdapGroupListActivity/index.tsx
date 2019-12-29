@@ -139,7 +139,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.replaceLdapGroups(orgName, teamName, users))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(TeamLdapGroupListActivity);
+export default connect(mapStateToProps, mapDispatchToProps)(TeamLdapGroupListActivity);

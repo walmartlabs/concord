@@ -121,7 +121,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     onSearch: (filter: string) => dispatch(actions.findLdapGroups(filter))
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(FindLdapGroupField);
+export default connect(mapStateToProps, mapDispatchToProps)(FindLdapGroupField);

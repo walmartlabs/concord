@@ -192,9 +192,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         dispatch(actions.doLogin(username, password, rememberMe, apiKey))
 });
 
-export default withRouter(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(Login)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Login));
