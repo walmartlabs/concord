@@ -42,7 +42,7 @@ const SecretListActivity = ({ orgName }: Props) => {
 
     useEffect(() => {
         fetchCanCreateStatus();
-    }, [orgName]);
+    }, [fetchCanCreateStatus]);
 
     return (
         <>

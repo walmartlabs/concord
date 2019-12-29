@@ -26,15 +26,14 @@ import { Input, List, Loader, Menu, Radio } from 'semantic-ui-react';
 import { RequestError } from '../../../api/common';
 import { OrganizationEntry, OrganizationVisibility } from '../../../api/org';
 import { list as getPaginatedOrgList } from '../../../api/org/index';
-import { Pagination } from '../../../state/data/orgs';
 import { PaginationToolBar, RequestErrorMessage } from '../../molecules';
+import { usePagination } from "../../molecules/PaginationToolBar/usePagination";
 
 const OrganizationList = () => {
     const [data, setData] = useState<OrganizationEntry[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<RequestError>();
-
-    const [paginationFilter, setPaginationFilter] = useState<Pagination>({ page: 0, limit: 50 });
+    const {paginationFilter, handleLimitChange, handleNext, handlePrev, handleFirst, resetOffset} = usePagination();
     const [next, setNext] = useState<boolean>(false);
     const oldFilter = useRef<string>();
     const oldOnlyCurrent = useRef<boolean>(true);
@@ -48,17 +47,17 @@ const OrganizationList = () => {
 
             if (filter && oldFilter.current !== filter) {
                 oldFilter.current = filter;
-                setPaginationFilter({ page: 0, limit: paginationFilter.limit });
+                resetOffset(0);
             }
 
             if (oldOnlyCurrent.current !== onlyCurrent) {
                 oldOnlyCurrent.current = onlyCurrent;
-                setPaginationFilter({ page: 0, limit: paginationFilter.limit });
+                resetOffset(0);
             }
 
             const paginatedOrgList = await getPaginatedOrgList(
                 onlyCurrent,
-                paginationFilter.page,
+                paginationFilter.offset,
                 paginationFilter.limit,
                 filter
             );
@@ -69,30 +68,11 @@ const OrganizationList = () => {
         } finally {
             setLoading(false);
         }
-    }, [onlyCurrent, filter, paginationFilter.page, paginationFilter.limit]);
+    }, [onlyCurrent, filter, paginationFilter.offset, paginationFilter.limit, resetOffset]);
 
-    // TODO react-hooks/exhaustive-deps warning
     useEffect(() => {
         fetchData();
-    }, [onlyCurrent, filter, paginationFilter.page, paginationFilter.limit]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const handleLimitChange = (limit: any) => {
-        setPaginationFilter({ page: 0, limit });
-    };
-
-    const handleNext = () => {
-        const nextPage = paginationFilter.page + 1;
-        setPaginationFilter({ page: nextPage, limit: paginationFilter.limit });
-    };
-
-    const handlePrev = () => {
-        const prevPage = paginationFilter.page - 1;
-        setPaginationFilter({ page: prevPage, limit: paginationFilter.limit });
-    };
-
-    const handleFirst = () => {
-        setPaginationFilter({ page: 0, limit: paginationFilter.limit });
-    };
+    }, [fetchData]);
 
     return (
         <>
@@ -120,9 +100,9 @@ const OrganizationList = () => {
                     handleNext={handleNext}
                     handlePrev={handlePrev}
                     handleFirst={handleFirst}
-                    disablePrevious={paginationFilter.page === 0}
+                    disablePrevious={paginationFilter.offset === 0}
                     disableNext={!next}
-                    disableFirst={paginationFilter.page === 0}
+                    disableFirst={paginationFilter.offset === 0}
                 />
             </Menu>
 
