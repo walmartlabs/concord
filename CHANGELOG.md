@@ -13,6 +13,8 @@ listen for process-level events, process logs and audit events.
 
 ### Changed
 
+- docker: expose the host's `DOCKER_HOST` to the containers running
+in the `docker` task;
 - concord-console: fixed the dropdown behavior in the operation
 confirmation popup;
 - variables-tasks: fixed an interpolation issue when multiple

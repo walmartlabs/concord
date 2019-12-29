@@ -37,9 +37,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Named
@@ -67,6 +65,8 @@ public class DockerServiceImpl implements DockerService {
     @SuppressWarnings("unchecked")
     public Process start(Context ctx, DockerContainerSpec spec) throws IOException {
         DockerProcessBuilder b = DockerProcessBuilder.from(ctx, spec);
+
+        b.env(createEffectiveEnv(spec.env()));
 
         List<String> volumes = new ArrayList<>();
         // add the default volume - mount the process' workDir as /workspace
@@ -110,6 +110,22 @@ public class DockerServiceImpl implements DockerService {
         } while (!Thread.currentThread().isInterrupted() && tryCount <= retryCount);
 
         return result;
+    }
+
+    private static Map<String, String> createEffectiveEnv(Map<String, String> env) {
+        Map<String, String> m = new HashMap<>();
+
+        String dockerHost = System.getenv("DOCKER_HOST");
+        if (dockerHost == null) {
+            dockerHost = "unix:///var/run/docker.sock";
+        }
+        m.put("DOCKER_HOST", dockerHost);
+
+        if (env != null) {
+            m.putAll(env);
+        }
+
+        return m;
     }
 
     private static void streamToLog(InputStream in, LogCallback callback) throws IOException {
