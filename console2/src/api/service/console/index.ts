@@ -61,24 +61,36 @@ export const logout = async () => {
 export const isProjectExists = throttle(async (orgName: ConcordKey, name: string): Promise<
     boolean
 > => {
-    const json = await fetchJson(`/api/service/console/org/${orgName}/project/${name}/exists`);
-    return json as boolean;
+    try {
+        const json = await fetchJson(`/api/service/console/org/${orgName}/project/${name}/exists`);
+        return json as boolean;
+    } catch (e) {
+        return false;
+    }
 }, 1000);
 
 // TODO throttle in sagas?
 export const isSecretExists = throttle(async (orgName: ConcordKey, name: string): Promise<
     boolean
 > => {
-    const json = await fetchJson(`/api/service/console/org/${orgName}/secret/${name}/exists`);
-    return json as boolean;
+    try {
+        const json = await fetchJson(`/api/service/console/org/${orgName}/secret/${name}/exists`);
+        return json as boolean;
+    } catch (e) {
+        return false;
+    }
 }, 1000);
 
 export const isRepositoryExists = throttle(
     async (orgName: ConcordKey, projectName: ConcordKey, name: string): Promise<boolean> => {
-        const json = await fetchJson(
-            `/api/service/console/org/${orgName}/project/${projectName}/repo/${name}/exists`
-        );
-        return json as boolean;
+        try {
+            const json = await fetchJson(
+                `/api/service/console/org/${orgName}/project/${projectName}/repo/${name}/exists`
+            );
+            return json as boolean;
+        } catch (e) {
+            return false;
+        }
     },
     1000
 );
@@ -87,14 +99,22 @@ export const isRepositoryExists = throttle(
 export const isTeamExists = throttle(async (orgName: ConcordKey, name: string): Promise<
     boolean
 > => {
-    const json = await fetchJson(`/api/service/console/org/${orgName}/team/${name}/exists`);
-    return json as boolean;
+    try {
+        const json = await fetchJson(`/api/service/console/org/${orgName}/team/${name}/exists`);
+        return json as boolean;
+    } catch (e) {
+        return false;
+    }
 }, 1000);
 
 // TODO throttle in sagas?
 export const isApiTokenExists = throttle(async (name: string): Promise<boolean> => {
-    const json = await fetchJson(`/api/service/console/apikey/${name}/exists`);
-    return json as boolean;
+    try {
+        const json = await fetchJson(`/api/service/console/apikey/${name}/exists`);
+        return json as boolean;
+    } catch (e) {
+        return false;
+    }
 }, 1000);
 
 export interface RepositoryTestRequest {

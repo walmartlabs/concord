@@ -269,32 +269,32 @@ const validator = async (values: FormValues, props: Props) => {
 
     e = validation.name(values.name);
     if (e) {
-        return Promise.reject({ name: e });
+        return Promise.resolve({ name: e });
     }
 
     if (values.name !== props.initial.name) {
         const exists = await isRepositoryExists(props.orgName, props.projectName, values.name);
         if (exists) {
-            return Promise.reject({ name: repositoryAlreadyExistsError(values.name) });
+            return Promise.resolve({ name: repositoryAlreadyExistsError(values.name) });
         }
     }
 
     e = validation.url(values.url);
     if (e) {
-        return Promise.reject({ url: e });
+        return Promise.resolve({ url: e });
     }
 
     switch (values.sourceType) {
         case RepositorySourceType.BRANCH_OR_TAG:
             e = validation.branch(values.branch);
             if (e) {
-                return Promise.reject({ branch: e });
+                return Promise.resolve({ branch: e });
             }
             break;
         case RepositorySourceType.COMMIT_ID:
             e = validation.commitId(values.commitId);
             if (e) {
-                return Promise.reject({ commitId: e });
+                return Promise.resolve({ commitId: e });
             }
             break;
         default:
@@ -303,12 +303,12 @@ const validator = async (values: FormValues, props: Props) => {
 
     e = validation.path(values.path);
     if (e) {
-        return Promise.reject({ path: e });
+        return Promise.resolve({ path: e });
     }
 
     if (!values.withSecret) {
         if (!values.url.startsWith('https://')) {
-            return Promise.reject({
+            return Promise.resolve({
                 url:
                     "Invalid repository URL: must begin with 'https://'. SSH repository URLs require additional credentials to be specified."
             });
@@ -316,7 +316,7 @@ const validator = async (values: FormValues, props: Props) => {
     } else {
         e = validation.secretId(values.secretId);
         if (e) {
-            return Promise.reject({ secret: e });
+            return Promise.resolve({ secret: e });
         }
     }
 
