@@ -32,9 +32,8 @@ export default class extends React.PureComponent<FormCheckboxProps & Props> {
         const { name: fieldName, label, required, inline, ...rest } = this.props;
 
         return (
-            <Field
-                name={fieldName}
-                render={({ field, form }: FieldProps) => {
+            <Field name={fieldName}>
+                {({ field, form }: FieldProps) => {
                     const touched = getIn(form.touched, fieldName);
                     const error = getIn(form.errors, fieldName);
                     const invalid = !!(touched && error);
@@ -54,7 +53,7 @@ export default class extends React.PureComponent<FormCheckboxProps & Props> {
                         </Form.Field>
                     );
                 }}
-            />
+            </Field>
         );
     }
 }

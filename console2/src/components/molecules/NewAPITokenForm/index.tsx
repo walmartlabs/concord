@@ -64,12 +64,12 @@ const validator = async (values: FormValues) => {
 
     e = validation.name(values.name);
     if (e) {
-        return Promise.reject({ name: e });
+        return Promise.resolve({ name: e });
     }
 
     const exists = await isApiTokenExists(values.name);
     if (exists) {
-        return Promise.reject({ name: apiTokenAlreadyExistsError(values.name) });
+        return Promise.resolve({ name: apiTokenAlreadyExistsError(values.name) });
     }
 
     return {};

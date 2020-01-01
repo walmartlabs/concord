@@ -28,9 +28,8 @@ export default class extends React.Component<FormInputProps> {
         const { name: fieldName, label, required, ...rest } = this.props;
 
         return (
-            <Field
-                name={fieldName}
-                render={({ field, form }: FieldProps) => {
+            <Field name={fieldName}>
+                {({ field, form }: FieldProps) => {
                     const touched = getIn(form.touched, fieldName);
                     const error = getIn(form.errors, fieldName);
                     const invalid = !!(touched && error);
@@ -50,7 +49,7 @@ export default class extends React.Component<FormInputProps> {
                         </Form.Field>
                     );
                 }}
-            />
+            </Field>
         );
     }
 }

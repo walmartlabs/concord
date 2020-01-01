@@ -96,17 +96,17 @@ const validator = async (values: FormValues, props: Props) => {
 
     e = validation.name(values.name);
     if (e) {
-        return Promise.reject({ name: e });
+        return Promise.resolve({ name: e });
     }
 
     const exists = await isProjectExists(props.orgName, values.name);
     if (exists) {
-        return Promise.reject({ name: projectAlreadyExistsError(values.name) });
+        return Promise.resolve({ name: projectAlreadyExistsError(values.name) });
     }
 
     e = validation.description(values.description);
     if (e) {
-        return Promise.reject({ description: e });
+        return Promise.resolve({ description: e });
     }
 
     return {};

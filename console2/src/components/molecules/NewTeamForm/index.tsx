@@ -66,17 +66,17 @@ const validator = async (values: NewTeamEntry, { orgName }: Props): Promise<{}> 
 
     e = validation.name(values.name);
     if (e) {
-        return Promise.reject({ name: e });
+        return Promise.resolve({ name: e });
     }
 
     const exists = await isTeamExists(orgName, values.name);
     if (exists) {
-        return Promise.reject({ name: teamAlreadyExistsError(values.name) });
+        return Promise.resolve({ name: teamAlreadyExistsError(values.name) });
     }
 
     e = validation.description(values.description);
     if (e) {
-        return Promise.reject({ description: e });
+        return Promise.resolve({ description: e });
     }
 
     return {};
