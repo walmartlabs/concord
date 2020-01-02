@@ -63,6 +63,7 @@ const ProjectConfiguration: React.FunctionComponent<Props> = ({ config, submitti
                 language="json"
                 value={JSON.stringify(config, null, 4)}
                 editorDidMount={handleEditorDidMount}
+                options={{ minimap: { enabled: false } }}
             />
             <div style={{ width: '130px', marginLeft: '20px' }}>
                 <Button
