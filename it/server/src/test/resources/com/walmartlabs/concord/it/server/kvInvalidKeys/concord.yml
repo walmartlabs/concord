@@ -1,0 +1,8 @@
+configuration:
+  arguments:
+    myKey: null
+    myValue: "Hello!"
+
+flows:
+  default:
+    - "${kv.putString(myKey, myValue)}"

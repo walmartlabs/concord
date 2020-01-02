@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,7 @@ package com.walmartlabs.concord.it.server;
  */
 
 import com.google.common.collect.ImmutableMap;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -34,11 +32,13 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class KvServiceIT extends AbstractServerIT {
@@ -83,6 +83,41 @@ public class KvServiceIT extends AbstractServerIT {
         byte[] ab = test("kvSpecialString", "default", testKey);
 
         assertLog(".*" + Pattern.quote("#aaa#bbb") + ".*", ab);
+    }
+
+    @Test
+    public void testInvalidKeys() throws Exception {
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        String orgName = "org_" + randomString();
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName));
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        String projectName = "project_" + randomString();
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+
+        // ---
+
+        byte[] payload = archive(KvServiceIT.class.getResource("kvInvalidKeys").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLogAtLeast(".*Keys cannot be empty or null.*", 1, ab);
     }
 
     private byte[] test(String process, String entryPoint, String testKey) throws Exception {
