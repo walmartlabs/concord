@@ -229,3 +229,26 @@ export const updateProjectAccess = (
 
     return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/access/bulk`, opts);
 };
+
+export const getProjectConfiguration = (
+    orgName: ConcordKey,
+    projectName: ConcordKey
+): Promise<GenericOperationResult> => {
+    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/cfg`);
+};
+
+export const updateProjectConfiguration = (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    config: Object
+): Promise<GenericOperationResult> => {
+    const opts = {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/project/${projectName}/cfg`, opts);
+};
