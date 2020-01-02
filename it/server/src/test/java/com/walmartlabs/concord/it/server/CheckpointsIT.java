@@ -259,8 +259,8 @@ public class CheckpointsIT extends AbstractServerIT {
 
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
         CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
-        ProcessEventsApi processEventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> processEvents = processEventsApi.list(instanceId, null, null, null, null, null, true, null);
+        ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
+        List<ProcessEventEntry> processEvents = eventsApi.list(instanceId, null, null, null, null, null, true, null);
         assertNotNull(processEvents);
 
         // restore from ONE checkpoint

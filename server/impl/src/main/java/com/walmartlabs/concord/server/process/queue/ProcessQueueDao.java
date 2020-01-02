@@ -474,19 +474,11 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    public UUID getInitiatorId(PartialProcessKey processKey) {
+    public ProjectIdAndInitiator getProjectIdAndInitiator(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.INITIATOR_ID).from(PROCESS_QUEUE)
+            return tx.select(PROCESS_QUEUE.PROJECT_ID, PROCESS_QUEUE.INITIATOR_ID).from(PROCESS_QUEUE)
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(PROCESS_QUEUE.INITIATOR_ID);
-        }
-    }
-
-    public UUID getProjectId(PartialProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_QUEUE.PROJECT_ID).from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
-                    .fetchOne(PROCESS_QUEUE.PROJECT_ID);
+                    .fetchOne(r -> new ProjectIdAndInitiator(r.get(PROCESS_QUEUE.PROJECT_ID), r.get(PROCESS_QUEUE.INITIATOR_ID)));
         }
     }
 
@@ -820,6 +812,25 @@ public class ProcessQueueDao extends AbstractDao {
 
         public ProcessStatus getStatus() {
             return status;
+        }
+    }
+
+    public static class ProjectIdAndInitiator {
+
+        private final UUID projectId;
+        private final UUID initiatorId;
+
+        public ProjectIdAndInitiator(UUID projectId, UUID initiatorId) {
+            this.projectId = projectId;
+            this.initiatorId = initiatorId;
+        }
+
+        public UUID getProjectId() {
+            return projectId;
+        }
+
+        public UUID getInitiatorId() {
+            return initiatorId;
         }
     }
 }

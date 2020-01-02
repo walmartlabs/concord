@@ -1,0 +1,10 @@
+configuration:
+  runner:
+    events:
+      recordTaskInVars: true
+
+flows:
+  default:
+    - task: log
+      in:
+        msg: "Hello!"

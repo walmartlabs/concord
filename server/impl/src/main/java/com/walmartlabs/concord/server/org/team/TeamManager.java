@@ -134,7 +134,10 @@ public class TeamManager {
                 type = UserPrincipal.assertCurrent().getType();
             }
 
-            UUID id = getOrCreateUserId(u.getUsername(), u.getUserDomain(), type);
+            UUID id = u.getUserId();
+            if (id == null) {
+                id = getOrCreateUserId(u.getUsername(), u.getUserDomain(), type);
+            }
             userIds.put(u.getUsername(), id);
         }
 

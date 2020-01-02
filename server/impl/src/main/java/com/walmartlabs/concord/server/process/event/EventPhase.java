@@ -34,4 +34,12 @@ public enum EventPhase {
     public String getKey() {
         return key;
     }
+
+    public static EventPhase fromString(String s) {
+        if (s == null) {
+            return null;
+        }
+
+        return valueOf(s.toUpperCase());
+    }
 }
