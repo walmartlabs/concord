@@ -65,8 +65,6 @@ public class DockerTask implements Task {
 
     @Override
     public void execute(Context ctx) throws Exception {
-        // TODO validation
-
         String image = ContextUtils.assertString(ctx, IMAGE_KEY);
         String cmd = ContextUtils.getString(ctx, CMD_KEY, null);
         Map<String, Object> env = ContextUtils.getMap(ctx, ENV_KEY, null);
@@ -106,6 +104,7 @@ public class DockerTask implements Task {
         }
 
         boolean isRedirectErrorStream = stdErrVar == null && stdOutVar == null;
+
         DockerContainerSpec spec = DockerContainerSpec.builder()
                 .image(image)
                 .env(stringify(env))
@@ -119,8 +118,10 @@ public class DockerTask implements Task {
                 .pullRetryCount(pullRetryCount)
                 .pullRetryInterval(pullRetryInterval)
                 .build();
+
         boolean withInputStream = isRedirectErrorStream || stdOutVar == null;
         boolean withErrorStream = !withInputStream || stdErrVar != null;
+
         StringBuilder stdErr = new StringBuilder();
         int code = dockerService.start(ctx, spec,
                 withInputStream ? line -> processLog.info("DOCKER: {}", line) : null,
