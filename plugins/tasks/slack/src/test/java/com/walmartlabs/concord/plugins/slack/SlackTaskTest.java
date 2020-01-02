@@ -29,77 +29,68 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.fail;
+
 @Ignore
 public class SlackTaskTest {
 
-    private static final String VALID_TEST_PROXY = "proxy.wal-mart.com";
-    private static final String INVALID_TEST_PROXY = "proxify.not-wal-mart.com";
-    private static final int TEST_PROXY_PORT = 9080;
-    private static final String TEST_API_ENV_VAR = "SLACK_TEST_API_TOKEN";
-    private static final String TEST_CHANNEL = "#ibodrov-slack-tst";
-    private static final String TEST_MESSAGE = "test";
-
-    private static final Logger log = LoggerFactory.getLogger(SlackTaskTest.class);
-
     @Test
-    public void testMessage() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void testMessage() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("authToken", System.getenv(TEST_API_ENV_VAR));
-//        slackCfg.put("proxyAddress", VALID_TEST_PROXY);
-//        slackCfg.put("proxyPort", TEST_PROXY_PORT);
+        slackCfg.put("authToken", TestParams.TEST_API_TOKEN);
+        slackCfg.put("proxyAddress", TestParams.TEST_PROXY_ADDRESS);
+        slackCfg.put("proxyPort", TestParams.TEST_PROXY_PORT);
         m.put("slackCfg", slackCfg);
-        m.put("channelId", TEST_CHANNEL);
-        m.put("text", TEST_MESSAGE);
+        m.put("channelId", TestParams.TEST_CHANNEL);
+        m.put("text", "test");
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
         t.execute(ctx);
-        Map result = (Map) ctx.getVariable("result");
+
+        Map<String, Object> result = (Map<String, Object>) ctx.getVariable("result");
         assert (boolean) result.get("ok");
     }
 
     @Test
-    public void testMessageInvalidProxyThrowErrors() throws Exception {
+    public void testMessageInvalidProxyThrowErrors() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("authToken", System.getenv(TEST_API_ENV_VAR));
-        slackCfg.put("proxyAddress", INVALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
+        slackCfg.put("authToken", TestParams.TEST_API_TOKEN);
+        slackCfg.put("proxyAddress", TestParams.TEST_INVALID_PROXY_ADDRESS);
+        slackCfg.put("proxyPort", TestParams.TEST_PROXY_PORT);
         m.put("slackCfg", slackCfg);
-        m.put("channelId", TEST_CHANNEL);
-        m.put("text", TEST_MESSAGE);
+        m.put("channelId", TestParams.TEST_CHANNEL);
+        m.put("text", "test");
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
         try {
             t.execute(ctx);
-        } catch (RuntimeException re) {
-            log.info("Execution throws Runtime exception: {}", re.getMessage());
+            fail("should fail");
+        } catch (Exception e) {
         }
     }
 
     @Test
-    public void testMessageInvalidProxyIgnoreErrors() throws Exception {
+    public void testMessageInvalidProxyIgnoreErrors() {
         Map<String, Object> m = new HashMap<>();
 
         Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("authToken", System.getenv(TEST_API_ENV_VAR));
-        slackCfg.put("proxyAddress", INVALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
+        slackCfg.put("authToken", TestParams.TEST_API_TOKEN);
+        slackCfg.put("proxyAddress", TestParams.TEST_PROXY_ADDRESS);
+        slackCfg.put("proxyPort", TestParams.TEST_PROXY_PORT);
         m.put("slackCfg", slackCfg);
-        m.put("channelId", TEST_CHANNEL);
-        m.put("text", TEST_MESSAGE);
+        m.put("channelId", TestParams.TEST_CHANNEL);
+        m.put("text", "test");
         m.put("ignoreErrors", true);
 
         MockContext ctx = new MockContext(m);
         SlackTask t = new SlackTask();
-        try {
-            t.execute(ctx);
-        } catch (RuntimeException re) {
-            log.info("Execution throws Runtime exception: {}", re.getMessage());
-        }
+        t.execute(ctx);
     }
 }

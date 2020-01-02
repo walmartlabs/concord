@@ -23,37 +23,24 @@ package com.walmartlabs.concord.plugins.slack;
 import com.walmartlabs.concord.sdk.MockContext;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
 @Ignore
 public class SlackChannelTaskTest {
 
-    private static final String TEST_CHANNEL_NAME = "testChannel201911142";
-    private static final String TEST_GROUP_NAME = "testGroup201911142";
-    private static final String INVALID_TEST_PROXY = "proxify.not-wal-mart.com";
-    private static final String VALID_TEST_PROXY = "proxy.wal-mart.com";
-    private static final int TEST_PROXY_PORT = 9080;
-    private static final String TEST_API_ENV_VAR = "SLACK_TEST_API_TOKEN";
-
-    private static final Logger log = LoggerFactory.getLogger(SlackChannelTaskTest.class);
-
     @Test
     public void testCreateAndArchiveChannel() throws Exception {
         Map<String, Object> m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
+        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_API_TOKEN);
 
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.CREATE.toString());
-        m.put(SlackChannelTask.CHANNEL_NAME_KEY, TEST_CHANNEL_NAME);
+        m.put(TaskParams.ACTION.getKey(), SlackChannelTask.Action.CREATE.toString());
+        m.put(TaskParams.CHANNEL_NAME.getKey(), TestParams.TEST_CHANNEL + System.currentTimeMillis());
 
         Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("proxyAddress", VALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
+        slackCfg.put(TaskParams.PROXY_ADDRESS.getKey(), TestParams.TEST_PROXY_ADDRESS);
+        slackCfg.put(TaskParams.PROXY_PORT.getKey(), TestParams.TEST_PROXY_PORT);
         m.put("slackCfg", slackCfg);
 
         MockContext ctx = new MockContext(m);
@@ -62,13 +49,13 @@ public class SlackChannelTaskTest {
 
         // ---
 
-        String channelId = (String) ctx.getVariable(SlackChannelTask.RESULT_KEY);
+        String channelId = (String) ctx.getVariable(SlackChannelTask.SLACK_CHANNEL_ID_KEY);
 
         m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
+        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_API_TOKEN);
 
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.ARCHIVE.toString());
-        m.put(SlackChannelTask.CHANNEL_ID_KEY, channelId);
+        m.put(TaskParams.ACTION.getKey(), SlackChannelTask.Action.ARCHIVE.toString());
+        m.put(TaskParams.CHANNEL_ID.getKey(), channelId);
         m.put("slackCfg", slackCfg);
 
         ctx = new MockContext(m);
@@ -79,14 +66,14 @@ public class SlackChannelTaskTest {
     @Test
     public void testCreateAndArchiveGroup() throws Exception {
         Map<String, Object> m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
+        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_API_TOKEN);
 
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.CREATEGROUP.toString());
-        m.put(SlackChannelTask.CHANNEL_NAME_KEY, TEST_GROUP_NAME);
+        m.put(TaskParams.ACTION.getKey(), SlackChannelTask.Action.CREATEGROUP.toString());
+        m.put(TaskParams.CHANNEL_NAME.getKey(), TestParams.TEST_CHANNEL + System.currentTimeMillis());
 
         Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("proxyAddress", VALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
+        slackCfg.put(TaskParams.PROXY_ADDRESS.getKey(), TestParams.TEST_PROXY_ADDRESS);
+        slackCfg.put(TaskParams.PROXY_PORT.getKey(), TestParams.TEST_PROXY_PORT);
         m.put("slackCfg", slackCfg);
 
         MockContext ctx = new MockContext(m);
@@ -95,112 +82,18 @@ public class SlackChannelTaskTest {
 
         // ---
 
-        String channelId = (String) ctx.getVariable(SlackChannelTask.RESULT_KEY);
+        String channelId = (String) ctx.getVariable(SlackChannelTask.SLACK_CHANNEL_ID_KEY);
 
         m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
+        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_API_TOKEN);
 
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.ARCHIVEGROUP.toString());
-        m.put(SlackChannelTask.CHANNEL_ID_KEY, channelId);
+        m.put(TaskParams.ACTION.getKey(), SlackChannelTask.Action.ARCHIVEGROUP.toString());
+        m.put(TaskParams.CHANNEL_ID.getKey(), channelId);
 
         m.put("slackCfg", slackCfg);
 
         ctx = new MockContext(m);
         t = new SlackChannelTask();
         t.execute(ctx);
-    }
-
-    @Test
-    public void testCreateChannelInvalidProxy() throws Exception {
-        Map<String, Object> m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
-
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.CREATE.toString());
-        m.put(SlackChannelTask.CHANNEL_NAME_KEY, TEST_CHANNEL_NAME);
-
-        Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("proxyAddress", INVALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
-        m.put("slackCfg", slackCfg);
-
-        MockContext ctx = new MockContext(m);
-        SlackChannelTask t = new SlackChannelTask();
-        try {
-            t.execute(ctx);
-        } catch (IOException ie) {
-            log.info("Create channel with invalid proxy throws IOException. Error: {}", ie.getMessage());
-        }
-    }
-
-    @Test
-    public void testArchiveChannelInvalidProxy() throws Exception {
-        String channelId = "testchannel";
-
-        Map<String, Object> m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
-
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.ARCHIVE.toString());
-        m.put(SlackChannelTask.CHANNEL_ID_KEY, channelId);
-
-        Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("proxyAddress", INVALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
-        m.put("slackCfg", slackCfg);
-
-
-        MockContext ctx = new MockContext(m);
-        SlackChannelTask t = new SlackChannelTask();
-        try {
-            t.execute(ctx);
-        } catch (IOException ie) {
-            log.info("Archive channel with invalid proxy throws IOException. Error: {}", ie.getMessage());
-        }
-    }
-
-    @Test
-    public void testCreateGroupInvalidProxy() throws Exception {
-        Map<String, Object> m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
-
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.CREATEGROUP.toString());
-        m.put(SlackChannelTask.CHANNEL_NAME_KEY, TEST_GROUP_NAME);
-
-        Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("proxyAddress", INVALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
-        m.put("slackCfg", slackCfg);
-
-        MockContext ctx = new MockContext(m);
-        SlackChannelTask t = new SlackChannelTask();
-        try {
-            t.execute(ctx);
-        } catch (IOException ie) {
-            log.info("Create group with invalid proxy throws IOException. Error: {}", ie.getMessage());
-        }
-    }
-
-    @Test
-    public void testArchiveGroupInvalidProxy() throws Exception {
-        String channelId = "testchannel";
-
-        Map<String, Object> m = new HashMap<>();
-        m.put(SlackChannelTask.API_TOKEN_KEY, System.getenv(TEST_API_ENV_VAR));
-
-        m.put(SlackChannelTask.ACTION_KEY, SlackChannelTask.Action.ARCHIVEGROUP.toString());
-        m.put(SlackChannelTask.CHANNEL_ID_KEY, channelId);
-
-        Map<String, Object> slackCfg = new HashMap<>();
-        slackCfg.put("proxyAddress", INVALID_TEST_PROXY);
-        slackCfg.put("proxyPort", TEST_PROXY_PORT);
-        m.put("slackCfg", slackCfg);
-
-
-        MockContext ctx = new MockContext(m);
-        SlackChannelTask t = new SlackChannelTask();
-        try {
-            t.execute(ctx);
-        } catch (IOException ie) {
-            log.info("Archive group with invalid proxy throws IOException. Error: {}", ie.getMessage());
-        }
     }
 }
