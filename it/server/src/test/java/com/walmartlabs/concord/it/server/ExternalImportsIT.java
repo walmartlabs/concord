@@ -436,6 +436,28 @@ public class ExternalImportsIT extends AbstractServerIT {
         assertLog(".*Hello, Concord.*", ab);
     }
 
+    @Test
+    public void testDependencyMerging() throws Exception {
+        String repoUrl = initRepo("externalImportWithDeps");
+
+        Path payloadDir = createPayload("externalImportMainWithDeps", repoUrl, "concord.yml");
+        byte[] payload = archive(payloadDir.toUri());
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*Hello from Groovy!.*", ab);
+        assertLog(".*Hello from Python!.*", ab);
+    }
+
     private static String initRepo(String resourceName) throws Exception {
         return initRepo(resourceName, null, null, null);
     }

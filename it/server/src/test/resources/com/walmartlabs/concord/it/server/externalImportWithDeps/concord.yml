@@ -1,0 +1,9 @@
+configuration:
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
+flows:
+  flowFromImport:
+    - script: groovy
+      body: |
+        println "Hello from Groovy!"

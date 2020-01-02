@@ -16,6 +16,8 @@ listen for process-level events, process logs and audit events.
 
 ### Changed
 
+- project-model-v1: merge `dependencies` lists from all loaded
+Concord YAML files;
 - docker: expose the host's `DOCKER_HOST` to the containers running
 in the `docker` task;
 - concord-console: fixed the dropdown behavior in the operation
