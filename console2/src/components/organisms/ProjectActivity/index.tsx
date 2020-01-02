@@ -45,8 +45,16 @@ import {
     ProjectRenameActivity,
     RedirectButton
 } from '../index';
+import ProjectConfigurationActivity from '../ProjectConfigurationActivity';
 
-export type TabLink = 'process' | 'checkpoint' | 'repository' | 'settings' | 'access' | null;
+export type TabLink =
+    | 'process'
+    | 'checkpoint'
+    | 'repository'
+    | 'settings'
+    | 'access'
+    | 'configuration'
+    | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -113,6 +121,11 @@ class ProjectActivity extends React.PureComponent<Props> {
 
     static renderTeamAccess(p: ProjectEntry) {
         return <ProjectTeamAccessActivity orgName={p.orgName} projectName={p.name} />;
+    }
+
+    static renderConfiguration(p: ProjectEntry) {
+        console.log('p', p);
+        return <ProjectConfigurationActivity orgName={p.orgName} projectName={p.name} />;
     }
 
     static renderSettings(p: ProjectEntry, refresh: () => void) {
@@ -217,6 +230,10 @@ class ProjectActivity extends React.PureComponent<Props> {
                         <Icon name="key" />
                         <Link to={`${baseUrl}/access`}>Access</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'configuration'}>
+                        <Icon name="save" />
+                        <Link to={`${baseUrl}/configuration`}>Configuration</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'settings'}>
                         <Icon name="setting" />
                         <Link to={`${baseUrl}/settings`}>Settings</Link>
@@ -239,6 +256,9 @@ class ProjectActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/access`} exact={true}>
                         {ProjectActivity.renderTeamAccess(data)}
+                    </Route>
+                    <Route path={`${baseUrl}/configuration`} exact={true}>
+                        {ProjectActivity.renderConfiguration(data)}
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         {ProjectActivity.renderSettings(data, () => load(orgName, projectName))}

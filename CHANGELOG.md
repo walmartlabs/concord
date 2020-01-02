@@ -4,6 +4,7 @@
 
 ### Added
 
+- concord-console: project configuration editor;
 - slack: new action `addReaction`;
 - concord-server, plugins: new server plugin `kafka-event-sink`.
 Sends process events into a Kafka topic;
