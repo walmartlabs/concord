@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao.ProjectIdAndInitiator;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -127,7 +128,7 @@ public class ProcessEventResource implements Resource {
                                         @ApiParam @QueryParam("after") IsoDateParam geTimestamp,
                                         @ApiParam @QueryParam("fromId") Long fromId,
                                         @ApiParam @QueryParam("eventCorrelationId") UUID eventCorrelationId,
-                                        @ApiParam @QueryParam("eventPhase") EventPhase eventPhase, // TODO make it case-insensitive?
+                                        @ApiParam @QueryParam("eventPhase") EventPhase eventPhase,
                                         @ApiParam @QueryParam("includeAll") @DefaultValue("false") boolean includeAll,
                                         @ApiParam @QueryParam("limit") @DefaultValue("-1") int limit) {
 
@@ -180,16 +181,16 @@ public class ProcessEventResource implements Resource {
             return;
         }
 
-        // TODO fetch both initiatorId and projectId simultaneously?
-        UUID projectId = queueDao.getProjectId(processKey);
-        if (projectId != null) {
+        ProjectIdAndInitiator ids = queueDao.getProjectIdAndInitiator(processKey);
+        if (ids.getProjectId() != null) {
             // if the process belongs to a project, only those who have WRITER privileges can
             // access extended event data
-            projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
+            if (projectAccessManager.assertAccess(ids.getProjectId(), ResourceAccessLevel.WRITER, true) != null) {
+                return;
+            }
         }
 
-        UUID initiatorId = queueDao.getInitiatorId(processKey);
-        if (p.getId().equals(initiatorId)) {
+        if (p.getId().equals(ids.getInitiatorId())) {
             // if it is a standalone process, only the initator can access extended event data
             return;
         }

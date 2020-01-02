@@ -16,6 +16,9 @@ listen for process-level events, process logs and audit events.
 
 ### Changed
 
+- concord-server: fixed an RBAC issue when loading extended process
+event data. Now the `/api/v1/process/PROCESS_ID/event?includeAll=true`
+correctly checks for org/project permissions and ownership;
 - project-model-v1: merge `dependencies` lists from all loaded
 Concord YAML files;
 - docker: expose the host's `DOCKER_HOST` to the containers running
