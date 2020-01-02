@@ -16,6 +16,7 @@ listen for process-level events, process logs and audit events.
 
 ### Changed
 
+- slack: make `authToken` and `apiToken` parameters interchangeable;
 - kv-tasks: disallow `null` or empty keys;
 - concord-server: fixed an RBAC issue when loading extended process
 event data. Now the `/api/v1/process/PROCESS_ID/event?includeAll=true`

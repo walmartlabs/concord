@@ -20,31 +20,29 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-
-import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.util.Map;
 
-import static com.walmartlabs.concord.plugins.slack.Utils.getInteger;
-import static com.walmartlabs.concord.plugins.slack.Utils.getString;
-
 public class SlackConfiguration {
 
-    @SuppressWarnings("unchecked")
-    public static SlackConfiguration from(Context ctx) {
-        Map<String, Object> slackParams = (Map<String, Object>) ctx.getVariable("slackCfg");
-        return from(ctx, getString(slackParams, "authToken"));
-    }
+    public static SlackConfiguration from(Map<String, Object> args) {
+        String apiToken = MapUtils.getString(args, TaskParams.API_TOKEN.getKey());
 
-    @SuppressWarnings("unchecked")
-    public static SlackConfiguration from(Context ctx, String authToken) {
-        Map<String, Object> slackParams = (Map<String, Object>) ctx.getVariable("slackCfg");
+        if (apiToken == null) {
+            // fallback to the old "authToken" parameter
+            apiToken = MapUtils.getString(args, TaskParams.AUTH_TOKEN.getKey());
+        }
 
-        SlackConfiguration cfg = new SlackConfiguration(authToken);
-        cfg.setProxy(getString(slackParams, "proxyAddress"), getInteger(slackParams, "proxyPort"));
-        cfg.setConnectTimeout(getInteger(slackParams, "connectTimeout", DEFAULT_CONNECT_TIMEOUT));
-        cfg.setSoTimeout(getInteger(slackParams, "soTimeout", DEFAULT_SO_TIMEOUT));
-        cfg.setRetryCount(getInteger(slackParams, "retryCount", DEFAULT_RETRY_COUNT));
+        if (apiToken == null) {
+            throw new IllegalStateException("'" + TaskParams.API_TOKEN.getKey() + "' or '" + TaskParams.AUTH_TOKEN.getKey() + "' is required.");
+        }
+
+        SlackConfiguration cfg = new SlackConfiguration(apiToken);
+        cfg.setProxy(MapUtils.getString(args, TaskParams.PROXY_ADDRESS.getKey()), MapUtils.getInt(args, TaskParams.PROXY_PORT.getKey(), -1));
+        cfg.setConnectTimeout(MapUtils.getInt(args, TaskParams.CONNECT_TIMEOUT.getKey(), DEFAULT_CONNECT_TIMEOUT));
+        cfg.setSoTimeout(MapUtils.getInt(args, TaskParams.SO_TIMEOUT.getKey(), DEFAULT_SO_TIMEOUT));
+        cfg.setRetryCount(MapUtils.getInt(args, TaskParams.RETRY_COUNT.getKey(), DEFAULT_RETRY_COUNT));
 
         return cfg;
     }

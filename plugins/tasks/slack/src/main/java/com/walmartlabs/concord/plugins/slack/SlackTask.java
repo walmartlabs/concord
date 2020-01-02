@@ -20,19 +20,15 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.walmartlabs.concord.plugins.slack.Utils.getBoolean;
 
 @Named("slack")
 public class SlackTask implements Task {
@@ -40,27 +36,18 @@ public class SlackTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(SlackTask.class);
 
     @Override
-    @SuppressWarnings("unchecked")
     public void execute(Context ctx) {
         Action action = Action.valueOf(ContextUtils.getString(ctx, "action", Action.SENDMESSAGE.name()).toUpperCase());
 
-        boolean ignoreErrors = getBoolean(ctx, "ignoreErrors", false);
-        String channelId = ContextUtils.assertString(ctx, "channelId");
+        Map<String, Object> args = Utils.collectAgs(ctx);
 
         switch (action) {
             case ADDREACTION: {
-                String ts = ContextUtils.assertString(ctx, "ts");
-                String reaction = ContextUtils.assertString(ctx, "reaction");
-                callAddReaction(ctx, channelId, ts, ignoreErrors, reaction);
+                addReaction(ctx, args);
                 break;
             }
             case SENDMESSAGE: {
-                String ts = ContextUtils.getString(ctx, "ts");
-                String text = (String) ctx.getVariable("text");
-                String iconEmoji = (String) ctx.getVariable("iconEmoji");
-                String username = (String) ctx.getVariable("username");
-                Collection<Object> attachments = (Collection<Object>) ctx.getVariable("attachments");
-                call(ctx, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
+                sendMessage(ctx, args);
                 break;
             }
             default: {
@@ -76,6 +63,7 @@ public class SlackTask implements Task {
     public void call(@InjectVariable("context") Context ctx,
                      String channelId, String text,
                      String iconEmoji, String username, Collection<Object> attachments) {
+
         call(ctx, channelId, null, text, iconEmoji, username, attachments, false);
     }
 
@@ -84,8 +72,37 @@ public class SlackTask implements Task {
                      String iconEmoji, String username, Collection<Object> attachments,
                      boolean ignoreErrors) {
 
-        SlackConfiguration cfg = SlackConfiguration.from(ctx);
-        try (SlackClient client = new SlackClient(cfg)) {
+        Map<String, Object> args = Utils.collectAgs(ctx);
+        SlackConfiguration slackCfg = SlackConfiguration.from(args);
+
+        sendMessage(ctx, slackCfg, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
+    }
+
+    private void sendMessage(Context ctx, Map<String, Object> args) {
+        SlackConfiguration slackCfg = SlackConfiguration.from(args);
+
+        boolean ignoreErrors = MapUtils.getBoolean(args, "ignoreErrors", false);
+        String channelId = MapUtils.assertString(args, "channelId");
+        String ts = MapUtils.getString(args, "ts");
+        String text = MapUtils.getString(args, "text");
+        String iconEmoji = MapUtils.getString(args, "iconEmoji");
+        String username = MapUtils.getString(args, "username");
+        Collection<Object> attachments = MapUtils.getList(args, "attachments", Collections.emptyList());
+
+        sendMessage(ctx, slackCfg, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
+    }
+
+    public void sendMessage(@InjectVariable("context") Context ctx,
+                            SlackConfiguration slackCfg,
+                            String channelId,
+                            String ts,
+                            String text,
+                            String iconEmoji,
+                            String username,
+                            Collection<Object> attachments,
+                            boolean ignoreErrors) {
+
+        try (SlackClient client = new SlackClient(slackCfg)) {
             SlackClient.Response r = client.message(channelId, ts, text, iconEmoji, username, attachments);
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());
@@ -105,9 +122,15 @@ public class SlackTask implements Task {
         }
     }
 
-    private void callAddReaction(@InjectVariable("context") Context ctx, String channelId, String ts, boolean ignoreErrors, String reaction) {
-        SlackConfiguration cfg = SlackConfiguration.from(ctx);
-        try (SlackClient client = new SlackClient(cfg)) {
+    private void addReaction(Context ctx, Map<String, Object> args) {
+        SlackConfiguration slackCfg = SlackConfiguration.from(args);
+
+        boolean ignoreErrors = MapUtils.getBoolean(args, "ignoreErrors", false);
+        String channelId = MapUtils.assertString(args, "channelId");
+        String ts = MapUtils.assertString(args, "ts");
+        String reaction = MapUtils.assertString(args, "reaction");
+
+        try (SlackClient client = new SlackClient(slackCfg)) {
             SlackClient.Response r = client.addReaction(channelId, ts, reaction);
 
             if (!r.isOk()) {
@@ -132,7 +155,7 @@ public class SlackTask implements Task {
         Map<String, Object> m = new HashMap<>();
         m.put("ok", r.isOk());
         m.put("error", r.getError());
-        m.put("id", r.getChannelId());
+        m.put("id", Utils.extractString(r, "channel"));
         m.put("ts", r.getTs());
         return m;
     }

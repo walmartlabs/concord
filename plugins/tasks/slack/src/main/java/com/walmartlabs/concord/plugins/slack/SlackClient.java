@@ -180,7 +180,7 @@ public class SlackClient implements AutoCloseable {
         }
 
         String error = "Slack request not successful after " + retryCount + " retries. Last response code: " + statusCode;
-        return new Response(false, null, null, error);
+        return new Response(false, null, error);
     }
 
     private Response parseResponse(CloseableHttpResponse response, String command,
@@ -189,7 +189,7 @@ public class SlackClient implements AutoCloseable {
 
         if (response.getEntity() == null) {
             log.error("exec ['{}', '{}'] -> empty response", command, params);
-            r = new Response(false, null, null, "empty response");
+            r = new Response(false, null, "empty response");
         } else {
             String s = EntityUtils.toString(response.getEntity());
             r = objectMapper.readValue(s, Response.class);
@@ -265,19 +265,16 @@ public class SlackClient implements AutoCloseable {
 
         private final boolean ok;
         private final String ts;
-        private final String id;
         private final String error;
         private final Map<String, Object> params = new HashMap<>();
 
         @JsonCreator
         public Response(@JsonProperty("ok") boolean ok,
                         @JsonProperty("ts") String ts,
-                        @JsonProperty("channel") String id,
                         @JsonProperty("error") String error) {
 
             this.ok = ok;
             this.ts = ts;
-            this.id = id;
             this.error = error;
         }
 
@@ -291,10 +288,6 @@ public class SlackClient implements AutoCloseable {
 
         public String getTs() {
             return ts;
-        }
-
-        public String getChannelId() {
-            return id;
         }
 
         @JsonAnyGetter
