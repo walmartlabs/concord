@@ -1,0 +1,14 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+
+configuration:
+  dependencies:
+    - "mvn://org.python:jython-standalone:2.7.1"
+
+flows:
+  default:
+    - call: flowFromImport
+    - script: python
+      body: |
+        print "Hello from Python!"

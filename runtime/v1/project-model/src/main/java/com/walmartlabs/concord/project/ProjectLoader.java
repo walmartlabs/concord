@@ -32,6 +32,8 @@ import com.walmartlabs.concord.project.yaml.model.*;
 import com.walmartlabs.concord.project.yaml.validator.Validator;
 import com.walmartlabs.concord.project.yaml.validator.ValidatorContext;
 import com.walmartlabs.concord.repository.Snapshot;
+import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import io.takari.bpm.model.ProcessDefinition;
 import io.takari.bpm.model.form.FormDefinition;
 
@@ -348,7 +350,8 @@ public class ProjectLoader {
                 profiles = new HashMap<>();
             }
 
-            Map<String, Object> variables = new LinkedHashMap<>(this.configuration);
+            Map<String, Object> configuration = new LinkedHashMap<>(this.configuration);
+            List<String> dependencies = new ArrayList<>();
             List<Trigger> triggers = new ArrayList<>();
             Imports imports = Imports.builder().build();
 
@@ -366,7 +369,12 @@ public class ProjectLoader {
                     }
 
                     if (pd.getConfiguration() != null) {
-                        variables = ConfigurationUtils.deepMerge(variables, pd.getConfiguration());
+                        Map<String, Object> cfg = pd.getConfiguration();
+
+                        List<String> deps = MapUtils.getList(cfg, Constants.Request.DEPENDENCIES_KEY, Collections.emptyList());
+                        dependencies.addAll(deps);
+
+                        configuration = ConfigurationUtils.deepMerge(configuration, cfg);
                     }
 
                     if (pd.getProfiles() != null) {
@@ -393,7 +401,9 @@ public class ProjectLoader {
                 }
             }
 
-            return new ProjectDefinition(flows, forms, variables, profiles, triggers, imports, resources);
+            configuration.put(Constants.Request.DEPENDENCIES_KEY, dependencies);
+
+            return new ProjectDefinition(flows, forms, configuration, profiles, triggers, imports, resources);
         }
 
         private static boolean isYaml(Path p) {
