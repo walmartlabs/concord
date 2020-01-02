@@ -25,6 +25,7 @@ html {
 
 body {
   min-height: 100% !important;
+  margin-right: calc(-1 * (100vw - 100%));
 }
 
 #root {
