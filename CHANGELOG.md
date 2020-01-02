@@ -4,6 +4,8 @@
 
 ### Added
 
+- docker: option to use the container's user instead of forcing
+the default Concord UID;
 - concord-console: project configuration editor;
 - slack: new action `addReaction`;
 - concord-server, plugins: new server plugin `kafka-event-sink`.

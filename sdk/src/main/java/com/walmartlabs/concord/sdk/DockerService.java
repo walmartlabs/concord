@@ -30,8 +30,15 @@ public interface DockerService {
     @Deprecated
     Process start(Context ctx, DockerContainerSpec spec) throws IOException;
 
-    int start(Context ctx, DockerContainerSpec spec,
-              LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException;
+    /**
+     * Starts a new Docker container using the provided {@code spec}.
+     * @param ctx the process' context
+     * @param spec the container's specification
+     * @param outCallback callback for stdout
+     * @param errCallback callback for stderr
+     * @return exit code of the `docker run` command
+     */
+    int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException;
 
     interface LogCallback {
 

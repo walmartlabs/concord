@@ -74,8 +74,21 @@ public class DockerProcessBuilder {
     private static final Logger log = LoggerFactory.getLogger(DockerProcessBuilder.class);
 
     public static final String CONCORD_DOCKER_LOCAL_MODE_KEY = "CONCORD_DOCKER_LOCAL_MODE";
+    public static final String CONCORD_DOCKER_DEFAULT_USER_KEY = "CONCORD_DOCKER_DEFAULT_USER";
+    public static final String CONCORD_DOCKER_USE_CONTAINER_USER_KEY = "CONCORD_DOCKER_USE_CONTAINER_USER";
+
     public static final String CONCORD_TX_ID_LABEL = "concordTxId";
-    private static final String DEFAULT_USER = "456"; // as in dockerPasswd
+
+    private static final String DEFAULT_USER;
+
+    static {
+        String s = System.getenv(CONCORD_DOCKER_DEFAULT_USER_KEY);
+        if (s != null) {
+            DEFAULT_USER = s;
+        } else {
+            DEFAULT_USER = "456"; // as in dockerPasswd
+        }
+    }
 
     private final String image;
 
@@ -101,6 +114,7 @@ public class DockerProcessBuilder {
     private boolean exposeHostUsers = false;
     private boolean useHostUser = false;
     private boolean useHostNetwork = true;
+    private boolean useContainerUser;
 
     private boolean redirectErrorStream = true;
 
@@ -117,6 +131,8 @@ public class DockerProcessBuilder {
         } else {
             this.generateUsers = true;
         }
+
+        this.useContainerUser = Boolean.parseBoolean(env(CONCORD_DOCKER_USE_CONTAINER_USER_KEY, "false"));
     }
 
     public Process build() throws IOException {
@@ -147,7 +163,7 @@ public class DockerProcessBuilder {
             c.add("--name");
             c.add(q(name));
         }
-        if (user != null && !useHostUser) {
+        if (user != null && !useHostUser && !useContainerUser) {
             c.add("-u");
             c.add(user);
         }
@@ -201,7 +217,7 @@ public class DockerProcessBuilder {
             c.add("-v");
             c.add("/etc/passwd:/etc/passwd:ro");
         }
-        if (useHostUser) {
+        if (useHostUser && !useContainerUser) {
             c.add("-u");
             c.add("`id -u`:`id -g`");
 
@@ -366,6 +382,11 @@ public class DockerProcessBuilder {
 
     public DockerProcessBuilder redirectErrorStream(boolean redirectErrorStream) {
         this.redirectErrorStream = redirectErrorStream;
+        return this;
+    }
+
+    public DockerProcessBuilder useContainerUser(boolean useContainerUser) {
+        this.useContainerUser = useContainerUser;
         return this;
     }
 
