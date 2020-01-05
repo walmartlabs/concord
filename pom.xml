@@ -374,5 +374,24 @@
                 </site>
             </distributionManagement>
         </profile>
+        <profile>
+            <id>concord-external</id>
+            <distributionManagement>
+                <repository>
+                    <id>${public-release.serverId}</id>
+                    <url>${public-release.url}</url>
+                </repository>
+
+                <snapshotRepository>
+                    <id>${public-snapshot.serverId}</id>
+                    <url>${public-snapshot.url}</url>
+                </snapshotRepository>
+
+                <site>
+                    <id>${site.id}</id>
+                    <url>${site.url}</url>
+                </site>
+            </distributionManagement>
+        </profile>
     </profiles>
 </project>

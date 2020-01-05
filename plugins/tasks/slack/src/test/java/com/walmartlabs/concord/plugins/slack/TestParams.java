@@ -20,15 +20,39 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Optional;
+import java.util.Properties;
 
 public final class TestParams {
 
-    public static final String TEST_API_TOKEN = System.getenv("SLACK_TEST_API_TOKEN");
-    public static final String TEST_PROXY_ADDRESS = System.getenv("SLACK_TEST_PROXY_ADDRESS");
-    public static final String TEST_INVALID_PROXY_ADDRESS = System.getenv("SLACK_TEST_INVALID_PROXY_ADDRESS");
-    public static final int TEST_PROXY_PORT = Integer.parseInt(Optional.ofNullable(System.getenv("SLACK_TEST_PROXY_PORT")).orElse("-1"));
-    public static final String TEST_CHANNEL = System.getenv("SLACK_TEST_CHANNEL");
+    static File testPropertiesFile = new File(System.getProperty("user.home"), ".concord/profile");
+    static Properties testProperties;
+
+    static {
+        if(testPropertiesFile.exists()) {
+            testProperties = new Properties();
+            try (InputStream input = new FileInputStream(testPropertiesFile)) {
+                testProperties.load(input);
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static String testParameter(String existingName, String profileName) {
+        String value = System.getenv(existingName);
+        return value != null ? value : testProperties.getProperty(profileName);
+    }
+
+    public static final String TEST_API_TOKEN = testParameter("SLACK_TEST_API_TOKEN", "SLACK_BOT_API_TOKEN");
+    public static final String TEST_USER_API_TOKEN = testParameter("SLACK_TEST_API_TOKEN", "SLACK_USER_API_TOKEN");
+    public static final String TEST_PROXY_ADDRESS = testParameter("SLACK_TEST_PROXY_ADDRESS", "SLACK_PROXY_ADDRESS");
+    public static final String TEST_INVALID_PROXY_ADDRESS = testParameter("SLACK_TEST_INVALID_PROXY_ADDRESS", "SLACK_INVALID_PROXY_ADDRESS");
+    public static final int TEST_PROXY_PORT = Integer.parseInt(Optional.ofNullable(testParameter("SLACK_TEST_PROXY_PORT", "SLACK_PROXY_PORT")).orElse("-1"));
+    public static final String TEST_CHANNEL = testParameter("SLACK_TEST_CHANNEL", "SLACK_CHANNEL");
 
     private TestParams() {
     }

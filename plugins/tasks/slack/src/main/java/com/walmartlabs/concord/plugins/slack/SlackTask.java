@@ -20,7 +20,11 @@ package com.walmartlabs.concord.plugins.slack;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.*;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
+import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.sdk.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +52,10 @@ public class SlackTask implements Task {
             }
             case SENDMESSAGE: {
                 sendMessage(ctx, args);
+                break;
+            }
+            case UPDATEMESSAGE: {
+                sendMessage(ctx, args, true);
                 break;
             }
             default: {
@@ -90,18 +98,53 @@ public class SlackTask implements Task {
     }
 
     private void sendMessage(Context ctx, Map<String, Object> args) {
+        sendMessage(ctx, args, false);
+    }
+
+    private void sendMessage(Context ctx, Map<String, Object> args, boolean update) {
         SlackConfiguration slackCfg = SlackConfiguration.from(args);
 
         boolean ignoreErrors = MapUtils.getBoolean(args, "ignoreErrors", false);
-        boolean replyBroadcast = MapUtils.getBoolean(args, "replyBroadcast", false);
-        String channelId = MapUtils.assertString(args, "channelId");
-        String ts = MapUtils.getString(args, "ts");
-        String text = MapUtils.getString(args, "text");
-        String iconEmoji = MapUtils.getString(args, "iconEmoji");
-        String username = MapUtils.getString(args, "username");
-        Collection<Object> attachments = MapUtils.getList(args, "attachments", Collections.emptyList());
+        String json = MapUtils.getString(args, "json");
+        if (json != null) {
+            sendJsonMessage(ctx, slackCfg, json, ignoreErrors, update);
+        } else {
+            boolean replyBroadcast = MapUtils.getBoolean(args, "replyBroadcast", false);
+            String channelId = MapUtils.assertString(args, "channelId");
+            String ts = MapUtils.getString(args, "ts");
+            String text = MapUtils.getString(args, "text");
+            String iconEmoji = MapUtils.getString(args, "iconEmoji");
+            String username = MapUtils.getString(args, "username");
+            Collection<Object> attachments = MapUtils.getList(args, "attachments", Collections.emptyList());
 
-        sendMessage(ctx, slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
+            sendMessage(ctx, slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
+        }
+    }
+
+    public void sendJsonMessage(@InjectVariable("context") Context ctx, SlackConfiguration slackCfg, String json, boolean ignoreErrors) {
+        sendJsonMessage(ctx, slackCfg, json, ignoreErrors, false);
+    }
+
+    public void sendJsonMessage(@InjectVariable("context") Context ctx, SlackConfiguration slackCfg, String json, boolean ignoreErrors, boolean update) {
+        try (SlackClient client = new SlackClient(slackCfg)) {
+            SlackClient.Response r;
+            if(update) {
+                r = client.updateJsonMessage(json);
+            } else {
+                r = client.postJsonMessage(json);
+            }
+            if (!r.isOk()) {
+                log.warn("Error sending a Slack message: {}", r.getError());
+            }
+            ctx.setVariable("result", result(r));
+        } catch (Exception e) {
+            if (!ignoreErrors) {
+                log.error("call ['{}', '{}'] -> error", json, e);
+                throw new RuntimeException("slack task error: ", e);
+            }
+            log.warn("call ['{}', '{}'] -> error (ignoreErrors=true)", json, e);
+            ctx.setVariable("result", errorResult(e));
+        }
     }
 
     public void sendMessage(@InjectVariable("context") Context ctx,
@@ -120,7 +163,7 @@ public class SlackTask implements Task {
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());
             } else {
-                log.info("Slack message sent into '{}' channel", channelId);
+                log.debug("Slack message sent into '{}' channel", channelId);
             }
 
             ctx.setVariable("result", result(r));
@@ -182,6 +225,7 @@ public class SlackTask implements Task {
 
     private enum Action {
         SENDMESSAGE,
-        ADDREACTION
+        ADDREACTION,
+        UPDATEMESSAGE
     }
 }

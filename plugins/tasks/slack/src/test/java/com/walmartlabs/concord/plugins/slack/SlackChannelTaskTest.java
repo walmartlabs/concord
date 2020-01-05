@@ -21,14 +21,22 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.sdk.MockContext;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Ignore
+import static org.junit.Assume.assumeTrue;
+
 public class SlackChannelTaskTest {
+
+    @Before
+    public void setUp() {
+        assumeTrue(TestParams.TEST_API_TOKEN != null);
+        assumeTrue(TestParams.TEST_USER_API_TOKEN != null);
+    }
 
     @Test
     public void testCreateAndArchiveChannel() throws Exception {
@@ -65,8 +73,18 @@ public class SlackChannelTaskTest {
 
     @Test
     public void testCreateAndArchiveGroup() throws Exception {
+        //
+        // Managing groups is specifically requires a real user token. Bots cannot manage
+        // groups even though the Slack UI lets you add the groups.write permission for a bot.
+        // A bot can't actually perform any action granted by the groups.write permission so
+        // you need to make sure you are using the token for the OAuth user and not the bot. You
+        // can distinguish between as follows:
+        //
+        // Bot Tokens start with xoxb-
+        // User Tokens start with xoxp-
+        //
         Map<String, Object> m = new HashMap<>();
-        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_API_TOKEN);
+        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_USER_API_TOKEN);
 
         m.put(TaskParams.ACTION.getKey(), SlackChannelTask.Action.CREATEGROUP.toString());
         m.put(TaskParams.CHANNEL_NAME.getKey(), TestParams.TEST_CHANNEL + System.currentTimeMillis());
@@ -85,7 +103,7 @@ public class SlackChannelTaskTest {
         String channelId = (String) ctx.getVariable(SlackChannelTask.SLACK_CHANNEL_ID_KEY);
 
         m = new HashMap<>();
-        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_API_TOKEN);
+        m.put(TaskParams.API_TOKEN.getKey(), TestParams.TEST_USER_API_TOKEN);
 
         m.put(TaskParams.ACTION.getKey(), SlackChannelTask.Action.ARCHIVEGROUP.toString());
         m.put(TaskParams.CHANNEL_ID.getKey(), channelId);
