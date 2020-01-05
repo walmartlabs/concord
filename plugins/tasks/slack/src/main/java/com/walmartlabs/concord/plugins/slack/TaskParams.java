@@ -37,6 +37,7 @@ public enum TaskParams {
     RETRY_COUNT("retryCount"),
     SO_TIMEOUT("soTimeout"),
     TEXT("text"),
+    JSON("json"),
     TS("ts"),
     REPLY_BROADCAST("replyBroadcast"),
     USERNAME("username");
