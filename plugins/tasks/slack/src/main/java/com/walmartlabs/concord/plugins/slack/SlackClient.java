@@ -62,6 +62,7 @@ public class SlackClient implements AutoCloseable {
 
     private static final String SLACK_API_ROOT = "https://slack.com/api/";
     private static final String CHAT_POST_MESSAGE_CMD = "chat.postMessage";
+    private static final String CHAT_UPDATE_MESSAGE_CMD = "chat.update";
     private static final String MESSAGE_ADD_REACTION_CMD = "reactions.add";
     private static final String CREATE_CHANNEL_CMD = "channels.create";
     private static final String CREATE_GROUP_CMD = "groups.create";
@@ -98,7 +99,15 @@ public class SlackClient implements AutoCloseable {
         return exec(MESSAGE_ADD_REACTION_CMD, params);
     }
 
-    public Response message(String channelId, String ts,boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
+    public Response postJsonMessage(String json) throws IOException {
+        return exec(CHAT_POST_MESSAGE_CMD, json);
+    }
+
+    public Response updateJsonMessage(String json) throws IOException {
+        return exec(CHAT_UPDATE_MESSAGE_CMD, json);
+    }
+
+    public Response message(String channelId, String ts, boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
         Map<String, Object> params = new HashMap<>();
         params.put("channel", channelId);
         params.put("as_user", true);
@@ -144,34 +153,38 @@ public class SlackClient implements AutoCloseable {
     }
 
     private Response exec(String command, Map<String, Object> params) throws IOException {
+        return exec(command, objectMapper.writeValueAsString(params));
+    }
+
+    private Response exec(String command, String json) throws IOException {
         int retryAfter = DEFAULT_RETRY_AFTER;
         IOException lastException = null;
         Integer statusCode = null;
 
         HttpPost request = new HttpPost(SLACK_API_ROOT + command);
-        request.setEntity(new StringEntity(objectMapper.writeValueAsString(params), ContentType.APPLICATION_JSON));
+        request.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
         for (int attemptNo = 0; attemptNo <= retryCount; attemptNo++) {
             if (attemptNo > 0) {
                 sleep(retryAfter * 1000L);
                 log.info("exec [{}, {}] -> attempt #{}. Retrying request after {} sec ...",
-                        command, params, attemptNo, retryAfter);
+                        command, json, attemptNo, retryAfter);
             }
 
             try (CloseableHttpResponse response = client.execute(request)) {
                 statusCode = response.getStatusLine().getStatusCode();
 
                 if (statusCode == HttpStatus.SC_OK) {
-                    return parseResponse(response, command, params);
+                    return parseResponse(response, command, json);
                 }
 
                 if (statusCode == TOO_MANY_REQUESTS_ERROR) {
                     retryAfter = getRetryAfter(response);
                 }
 
-                log.warn("exec ['{}', '{}'] -> response code: {}", command, params, statusCode);
+                log.warn("exec ['{}', '{}'] -> response code: {}", command, json, statusCode);
             } catch (IOException ie) {
-                log.error("exec [{}, {}] -> {}", command, params, ie.getMessage());
+                log.error("exec [{}, {}] -> {}", command, json, ie.getMessage());
                 lastException = ie;
             }
         }
@@ -185,16 +198,16 @@ public class SlackClient implements AutoCloseable {
     }
 
     private Response parseResponse(CloseableHttpResponse response, String command,
-                                   Map<String, Object> params) throws IOException {
+                                   String json) throws IOException {
         Response r;
 
         if (response.getEntity() == null) {
-            log.error("exec ['{}', '{}'] -> empty response", command, params);
+            log.error("exec ['{}', '{}'] -> empty response", command, json);
             r = new Response(false, null, "empty response");
         } else {
             String s = EntityUtils.toString(response.getEntity());
             r = objectMapper.readValue(s, Response.class);
-            log.info("exec ['{}', '{}'] -> {}", command, params, r);
+            log.info("exec ['{}', '{}'] -> {}", command, json, r);
         }
 
         return r;
