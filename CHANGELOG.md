@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.37.1] - 2010-01-06
 
 ### Changed
 
