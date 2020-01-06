@@ -1,0 +1,15 @@
+configuration:
+  arguments:
+    event:
+      branch: 'master'
+
+flows:
+  default:
+    - set:
+        commitEvent:
+          event: 'push'
+          branch: '${event.branch}'
+
+    - log: "event: ${event}"
+    - log: "commitEvent.event: ${commitEvent.event}"
+    - log: "commitEvent.branch: ${commitEvent.branch}"

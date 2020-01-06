@@ -1,5 +1,15 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- variables-task: fixed an interpolation issue in the `set`
+implementation. Now it correctly works for nested values that are
+referencing variables from the "outside" scope.
+
+
+
 ## [1.37.0] - 2020-01-02
 
 ### Added
