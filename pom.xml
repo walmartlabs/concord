@@ -11,7 +11,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>parent</artifactId>
-    <version>1.37.1-SNAPSHOT</version>
+    <version>1.37.1</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -76,7 +76,7 @@
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-targetplatform</artifactId>
-                <version>1.37.1-SNAPSHOT</version>
+                <version>1.37.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -304,7 +304,7 @@
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>HEAD</tag>
+        <tag>1.37.1</tag>
     </scm>
 
     <profiles>
