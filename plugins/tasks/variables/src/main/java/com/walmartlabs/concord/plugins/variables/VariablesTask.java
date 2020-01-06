@@ -59,9 +59,11 @@ public class VariablesTask implements Task {
         ctx.setVariable(targetKey, v);
     }
 
+    @SuppressWarnings("unchecked")
     public void set(@InjectVariable("context") Context ctx, Map<String, Object> vars) {
         vars.forEach((k, value) -> {
-            Object v = ctx.interpolate(value);
+            Map<String, Object> vv = (Map<String, Object>) ctx.interpolate(Collections.singletonMap(k, value));
+            Object v = vv.get(k);
             if (isNestedVariable(k)) {
                 StandardELContext sc = createELContext(ctx);
                 ValueExpression x = expressionFactory.createValueExpression(sc, "${" + k + "}", Object.class);

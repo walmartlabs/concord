@@ -194,4 +194,24 @@ public class VariablesIT extends AbstractServerIT {
         assertLog(".*obj.name: Concord$", ab);
         assertLog(".*obj.msg: Hello, Concord$", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSetDependentVars2() throws Exception {
+        byte[] payload = archive(VariablesIT.class.getResource("setVarNested2").toURI(),
+                ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*event: \\{branch=master\\}$", ab);
+        assertLog(".*commitEvent.event: push$", ab);
+        assertLog(".*commitEvent.branch: master$", ab);
+    }
 }
