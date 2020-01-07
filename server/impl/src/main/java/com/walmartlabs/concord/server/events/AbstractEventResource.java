@@ -122,7 +122,7 @@ public abstract class AbstractEventResource {
             if (t.getArguments() != null) {
                 args.putAll(t.getArguments());
             }
-            args.put("event", event);
+            args.put("event", ExpressionUtils.escapeMap(event));
 
             Map<String, Object> cfg = new HashMap<>();
             cfg.put(Constants.Request.ARGUMENTS_KEY, args);
