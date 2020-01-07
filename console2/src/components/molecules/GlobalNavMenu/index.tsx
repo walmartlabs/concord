@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown, Image, Menu } from 'semantic-ui-react';
-import { LinkMeta } from '../../../../cfg';
+import { CustomResources, LinkMeta } from '../../../../cfg';
 
 export type GlobalNavTab = 'activity' | 'process' | 'org' | null;
 
@@ -32,6 +32,8 @@ interface Props {
     extraSystemLinks: LinkMeta[];
     openAbout: () => void;
     openProfile: () => void;
+    customResources: CustomResources;
+    openCustomResource: (name: string) => void;
     logOut: () => void;
 }
 
@@ -44,6 +46,8 @@ class GlobalNavMenu extends React.PureComponent<Props> {
             openUrl,
             openAbout,
             openProfile,
+            customResources,
+            openCustomResource,
             logOut
         } = this.props;
 
@@ -73,12 +77,24 @@ class GlobalNavMenu extends React.PureComponent<Props> {
 
                                 {extraSystemLinks.map((x, idx) => (
                                     <Dropdown.Item
-                                        key={idx}
+                                        key={`extra_${idx}`}
                                         icon={x.icon}
                                         text={x.text}
                                         onClick={() => openUrl(x.url)}
                                     />
                                 ))}
+
+                                {Object.keys(customResources).map((k, idx) => {
+                                    const r = customResources[k];
+                                    return (
+                                        <Dropdown.Item
+                                            key={`custom_${idx}`}
+                                            icon={r.icon}
+                                            text={r.title}
+                                            onClick={() => openCustomResource(k)}
+                                        />
+                                    );
+                                })}
                             </Dropdown.Menu>
                         </Menu.Item>
                         <Menu.Item as={Dropdown} text={userDisplayName}>
