@@ -23,7 +23,7 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { push as pushHistory } from 'connected-react-router';
-import { LinkMeta } from '../../../../cfg';
+import { CustomResources, LinkMeta } from '../../../../cfg';
 
 import { actions, State as SessionState } from '../../../state/session';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
@@ -48,6 +48,11 @@ const getExtraSystemLinks = (): LinkMeta[] => {
     return [];
 };
 
+const getCustomResources = (): CustomResources => {
+    const { customResources } = window.concord;
+    return customResources || {};
+};
+
 interface StateProps {
     userDisplayName?: string;
 }
@@ -56,6 +61,7 @@ interface DispatchProps {
     openUrl: (url: string) => void;
     openAbout: () => void;
     openProfile: () => void;
+    openCustomResource: (name: string) => void;
     logOut: () => void;
 }
 
@@ -76,6 +82,7 @@ class TopBar extends React.PureComponent<TopBarProps> {
             <GlobalNavMenu
                 activeTab={activeTab}
                 extraSystemLinks={getExtraSystemLinks()}
+                customResources={getCustomResources()}
                 {...this.props}
                 logOut={this.getLogout()}
             />
@@ -91,6 +98,7 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     openUrl: (url: string) => window.open(url, '_blank'),
     openAbout: () => dispatch(pushHistory('/about')),
     openProfile: () => dispatch(pushHistory('/profile')),
+    openCustomResource: (name: string) => dispatch(pushHistory(`/custom/${name}`)),
     logOut: () => dispatch(actions.logout())
 });
 

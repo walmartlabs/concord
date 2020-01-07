@@ -43,7 +43,8 @@ import {
     ProfilePage,
     UserActivityPage,
     LogoutPage,
-    UnauthorizedPage
+    UnauthorizedPage,
+    CustomResourcePage
 } from './components/pages';
 import { Layout } from './components/templates';
 import { actions as session } from './state/session';
@@ -162,6 +163,15 @@ class App extends React.Component {
                                 <ProtectedRoute path="/about" exact={true} component={AboutPage} />
 
                                 <ProtectedRoute path="/profile" component={ProfilePage} />
+
+                                <ProtectedRoute path="/custom">
+                                    <Switch>
+                                        <Route
+                                            path="/custom/:resourceName"
+                                            component={CustomResourcePage}
+                                        />
+                                    </Switch>
+                                </ProtectedRoute>
 
                                 <Route component={NotFoundPage} />
                             </Switch>

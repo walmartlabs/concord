@@ -7,6 +7,7 @@ export interface ConcordEnvironment {
     login?: LoginConfiguration;
     extraProcessMenuLinks?: ExtraProcessMenuLinks;
     lastUpdated?: string;
+    customResources?: CustomResources;
 }
 
 export interface TopBarMeta {
@@ -33,6 +34,19 @@ export interface ExtraProcessMenuLink {
     label: string;
     color: string;
     icon: string;
+}
+
+export interface CustomResources {
+    [key: string]: CustomResource;
+}
+
+export interface CustomResource {
+    title?: string;
+    description?: string;
+    icon?: string;
+    url: string;
+    width?: string;
+    height?: string;
 }
 
 declare global {
