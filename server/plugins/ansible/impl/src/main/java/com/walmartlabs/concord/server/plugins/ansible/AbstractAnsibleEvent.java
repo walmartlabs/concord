@@ -50,6 +50,10 @@ public abstract class AbstractAnsibleEvent {
         if (result != null) {
             return result;
         }
-        return MapUtils.getUUID(e.payload(), "parentCorrelationId");
+        result = MapUtils.getUUID(e.payload(), "parentCorrelationId");
+        if (result != null) {
+            return result;
+        }
+        return e.instanceId();
     }
 }
