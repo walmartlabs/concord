@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.metrics;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.AgentWorkerUtils;
 import com.walmartlabs.concord.server.agent.AgentManager;
 import com.walmartlabs.concord.server.agent.AgentWorkerEntry;
 import com.walmartlabs.concord.server.cfg.WorkerMetricsConfiguration;
-import com.walmartlabs.ollie.lifecycle.Lifecycle;
+import com.walmartlabs.concord.server.sdk.BackgroundTask;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
@@ -32,14 +32,11 @@ import org.eclipse.sisu.EagerSingleton;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Named
 @EagerSingleton
-public class WorkerMetrics implements Lifecycle {
+public class WorkerMetrics implements BackgroundTask {
 
     private final Collector collector;
 
@@ -48,11 +45,21 @@ public class WorkerMetrics implements Lifecycle {
         String prop = cfg.getGroupByCapabilitiesProperty();
         String[] path = prop.split("\\.");
 
+        // retain the metric's keys
+        // if a certain flavor of workers disappears we'd want to show zero in the metric instead of no metric at all
+        Set<Object> keys = Collections.synchronizedSet(new HashSet<>());
+
         collector = new Collector() {
             @Override
             public List<MetricFamilySamples> collect() {
                 Collection<AgentWorkerEntry> data = agentManager.getAvailableAgents();
-                Map<Object, Long> m = AgentWorkerUtils.groupBy(data, path);
+
+                Map<Object, Long> currentData = AgentWorkerUtils.groupBy(data, path);
+                keys.addAll(currentData.keySet());
+
+                Map<Object, Long> m = new HashMap<>();
+                keys.forEach(k -> m.put(k, 0L));
+                m.putAll(currentData);
 
                 GaugeMetricFamily f = new GaugeMetricFamily("available_workers", "number of available workers for the " + prop, Collections.singletonList("prop"));
                 m.forEach((k, v) -> {
