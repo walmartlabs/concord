@@ -56,6 +56,8 @@ interface Props {
     onDone?: () => void;
 
     onDoneElements?: () => React.ReactNode;
+
+    disableYes?: boolean;
 }
 
 class SingleOperationPopup extends React.Component<Props, State> {
@@ -115,7 +117,16 @@ class SingleOperationPopup extends React.Component<Props, State> {
     }
 
     renderActions() {
-        const { success, error, running, onDone, onDoneElements, customNo, customYes } = this.props;
+        const {
+            success,
+            error,
+            running,
+            onDone,
+            onDoneElements,
+            customNo,
+            customYes,
+            disableYes = false
+        } = this.props;
 
         if (success) {
             return (
@@ -149,7 +160,11 @@ class SingleOperationPopup extends React.Component<Props, State> {
                 <Button basic={true} disabled={running} onClick={() => this.handleClose()}>
                     {customNo || 'No'}
                 </Button>
-                <Button color="blue" loading={running} onClick={() => this.handleConfirm()}>
+                <Button
+                    color="blue"
+                    loading={running}
+                    onClick={() => this.handleConfirm()}
+                    disabled={disableYes}>
                     {customYes || 'Yes'}
                 </Button>
             </>

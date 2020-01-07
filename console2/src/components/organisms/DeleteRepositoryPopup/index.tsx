@@ -19,8 +19,10 @@
  */
 
 import * as React from 'react';
+import { useState } from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
+import { Input } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
@@ -47,32 +49,47 @@ interface StateProps {
 
 type Props = DispatchProps & ExternalProps & StateProps;
 
-class DeleteRepositoryPopup extends React.Component<Props> {
-    render() {
-        const { trigger, deleting, success, error, reset, onConfirm, onDone } = this.props;
+const DeleteRepositoryPopup = (props: Props) => {
+    const { trigger, deleting, success, error, reset, onConfirm, onDone, repoName } = props;
 
-        return (
-            <SingleOperationPopup
-                trigger={trigger}
-                title="Delete repository?"
-                introMsg={
+    const [confirmation, setConfirmation] = useState('');
+
+    return (
+        <SingleOperationPopup
+            trigger={trigger}
+            title="Delete repository?"
+            introMsg={
+                <>
                     <p>
                         Are you sure you want to delete the repository? Any process or repository
                         that uses this repository may stop working correctly.
                     </p>
-                }
-                running={deleting}
-                runningMsg={<p>Removing the repository...</p>}
-                success={success}
-                successMsg={<p>The repository was removed successfully.</p>}
-                error={error}
-                reset={reset}
-                onConfirm={onConfirm}
-                onDone={onDone}
-            />
-        );
-    }
-}
+                    <p>
+                        Please type <strong>{repoName}</strong> to confirm.
+                    </p>
+                    <div className={`ui input ${confirmation !== repoName ? 'error' : ''}`}>
+                        <Input
+                            type="text"
+                            name="name"
+                            placeholder="Repository name"
+                            value={confirmation}
+                            onChange={(e, data) => setConfirmation(data.value)}
+                        />
+                    </div>
+                </>
+            }
+            running={deleting}
+            runningMsg={<p>Removing the repository...</p>}
+            success={success}
+            successMsg={<p>The repository was removed successfully.</p>}
+            error={error}
+            reset={reset}
+            onConfirm={onConfirm}
+            onDone={onDone}
+            disableYes={confirmation !== repoName}
+        />
+    );
+};
 
 const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
     deleting: projects.deleteRepository.running,
