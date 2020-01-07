@@ -1,0 +1,10 @@
+flows:
+  default:
+    - task: ansible
+      in:
+        playbook: "playbook.yml"
+        inventory:
+          - "inventory.ini"
+          - local:
+              children:
+                - test

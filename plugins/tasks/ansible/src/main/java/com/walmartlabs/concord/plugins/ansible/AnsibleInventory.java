@@ -76,11 +76,13 @@ public class AnsibleInventory {
         // check if there are multiple entries
         if (v instanceof Collection) {
             List<Path> l = new ArrayList<>();
-            for (Object vv : (Collection) v) {
-                if (vv instanceof Map) {
+            for (Object vv : (Collection<Object>) v) {
+                if (vv instanceof String) {
+                    l.add(processInventoryFile((String) vv));
+                } else if (vv instanceof Map) {
                     l.add(processInventoryObject((Map<String, Object>) vv));
                 } else {
-                    throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY + "' entry. Expected a map (YAML/JSON object), got: (" + vv.getClass() + ") " + vv);
+                    throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY + "' entry. Expected a map (YAML/JSON object) or a path to a file, got: (" + vv.getClass() + ") " + vv);
                 }
             }
             return l;
@@ -95,7 +97,7 @@ public class AnsibleInventory {
         v = args.get(TaskParams.INVENTORY_FILE_KEY.getKey());
         if (v instanceof Collection) {
             List<Path> l = new ArrayList<>();
-            for (Object vv : (Collection) v) {
+            for (Object vv : (Collection<Object>) v) {
                 if (vv instanceof String) {
                     l.add(processInventoryFile((String) vv));
                 } else {

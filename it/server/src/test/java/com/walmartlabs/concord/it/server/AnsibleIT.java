@@ -537,4 +537,25 @@ public class AnsibleIT extends AbstractServerIT {
         assertLogAtLeast(".*Hello ccc.*", 2, ab);
         assertNoLog(".*Hello bbb.*", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testInventoryMixMatch() throws Exception {
+        URI dir = AnsibleIT.class.getResource("ansibleInventoryMix").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello!.*", ab);
+    }
 }
