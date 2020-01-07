@@ -55,6 +55,21 @@ public class InventoryTask extends AbstractConcordTask {
         return ansible(ctx, orgName, inventoryName, hostGroupName, queryName, params, null);
     }
 
+    public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
+                                       String orgName, String inventoryName,
+                                       String hostGroupName, String queryName) throws Exception {
+
+        return ansible(ctx, orgName, inventoryName, hostGroupName, queryName, null, null);
+    }
+
+    public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
+                                       String inventoryName,
+                                       String hostGroupName, String queryName) throws Exception {
+
+        String orgName = getOrg(ctx);
+        return ansible(ctx, orgName, inventoryName, hostGroupName, queryName, null, null);
+    }
+
     @SuppressWarnings("unchecked")
     public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
                                        String orgName, String inventoryName,
