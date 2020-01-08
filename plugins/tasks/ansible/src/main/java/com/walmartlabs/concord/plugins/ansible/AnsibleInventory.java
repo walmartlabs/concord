@@ -82,7 +82,7 @@ public class AnsibleInventory {
                 } else if (vv instanceof Map) {
                     l.add(processInventoryObject((Map<String, Object>) vv));
                 } else {
-                    throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY + "' entry. Expected a map (YAML/JSON object) or a path to a file, got: (" + vv.getClass() + ") " + vv);
+                    throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY.getKey() + "' entry. Expected a map (YAML/JSON object) or a path to a file, got: (" + vv.getClass() + ") " + vv);
                 }
             }
             return l;
@@ -90,7 +90,7 @@ public class AnsibleInventory {
             Path p = processInventoryObject((Map<String, Object>) v);
             return Collections.singletonList(p);
         } else if (v != null) {
-            throw new IllegalArgumentException("Unsupported '" + TaskParams.INVENTORY_KEY + "' value. Expected an inventory object or a list of inventory objects, got: (" + v.getClass() + ") " + v);
+            throw new IllegalArgumentException("Unsupported '" + TaskParams.INVENTORY_KEY.getKey() + "' value. Expected an inventory object or a list of inventory objects, got: (" + v.getClass() + ") " + v);
         }
 
         // try a static inventory file
