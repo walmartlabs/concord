@@ -38,56 +38,51 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.events.github.Constants.*;
 
 /**
- * Processes "github" trigger definitions. The main goal is to save trigger
+ * Enrich "github" trigger definitions. The main goal is to save trigger
  * definitions in the DB so they can be used later to match with external events
  * (GitHub push notifications, for example).
  */
-@Named("github")
-public class GithubTriggerProcessor implements TriggerProcessor {
+@Named
+public class GithubTriggerEnricher {
 
-    private final TriggersDao triggersDao;
     private final RepositoryDao repositoryDao;
 
     @Inject
-    public GithubTriggerProcessor(TriggersDao triggersDao, RepositoryDao repositoryDao) {
-        this.triggersDao = triggersDao;
+    public GithubTriggerEnricher(RepositoryDao repositoryDao) {
         this.repositoryDao = repositoryDao;
     }
 
-    @Override
-    public void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t) {
-        Map<String, Object> params = t.conditions();
-        if (params == null) {
-            return;
+    public Map<String, Object> enrich(DSLContext tx, UUID repoId, Map<String, Object> conditions) {
+        if (conditions == null) {
+            return conditions;
         }
 
         // determine the trigger definition's version
         // version 1 is the original implementation
         // version 2 is a streamlined implementation that doesn't support some of the corner cases of v1
-        int triggerVersion = MapUtils.getInt(params, VERSION_KEY, 1);
+        int triggerVersion = MapUtils.getInt(conditions, VERSION_KEY, 1);
         if (triggerVersion == 2) {
-            params = enrichTriggerConditions(tx, repoId, t);
-            triggersDao.update(tx, triggerId, params);
+            conditions = enrichTriggerConditions(tx, repoId, conditions);
         }
+        return conditions;
     }
 
-    private Map<String, Object> enrichTriggerConditions(DSLContext tx, UUID repoId, Trigger t) {
-        Map<String, Object> params = t.conditions();
-        if (params.containsKey(GITHUB_ORG_KEY) && params.containsKey(GITHUB_REPO_KEY) && params.containsKey(REPO_BRANCH_KEY)) {
-            return params;
+    private Map<String, Object> enrichTriggerConditions(DSLContext tx, UUID repoId, Map<String, Object> conditions) {
+        if (conditions.containsKey(GITHUB_ORG_KEY) && conditions.containsKey(GITHUB_REPO_KEY) && conditions.containsKey(REPO_BRANCH_KEY)) {
+            return conditions;
         }
 
         RepositoryEntry repo = repositoryDao.get(tx, repoId);
         GithubRepoInfo githubRepoInfo = GithubUtils.getRepositoryInfo(repo.getUrl());
         if (githubRepoInfo == null) {
-            return params;
+            return conditions;
         }
 
-        Map<String, Object> newParams = new HashMap<>(t.conditions());
+        Map<String, Object> newParams = new HashMap<>(conditions);
         newParams.putIfAbsent(GITHUB_ORG_KEY, githubRepoInfo.owner());
         newParams.putIfAbsent(GITHUB_REPO_KEY, githubRepoInfo.name());
 
-        Object eventType = params.get(TYPE_KEY);
+        Object eventType = conditions.get(TYPE_KEY);
         if (PULL_REQUEST_EVENT.equals(eventType) || PUSH_EVENT.equals(eventType)) {
             String defaultBranch = repo.getBranch() != null ? repo.getBranch() : GitCliRepositoryProvider.DEFAULT_BRANCH;
             newParams.putIfAbsent(REPO_BRANCH_KEY, defaultBranch);

@@ -20,20 +20,33 @@ package com.walmartlabs.concord.server.process.loader.model;
  * =====
  */
 
+import org.immutables.value.Value;
+
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
+@Value.Immutable
 public interface Trigger {
 
     String name();
 
+    @Nullable
     Map<String, Object> arguments();
 
+    @Nullable
     Map<String, Object> conditions();
 
+    @Nullable
     Map<String, Object> configuration();
 
+    @Nullable
     List<String> activeProfiles();
 
+    @Nullable
     SourceMap sourceMap();
+
+    static ImmutableTrigger.Builder builder() {
+        return ImmutableTrigger.builder();
+    }
 }

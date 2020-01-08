@@ -34,8 +34,8 @@ import java.util.Arrays;
 import java.util.TimeZone;
 import java.util.UUID;
 
-@Named("cron")
-public class CronTriggerProcessor implements TriggerProcessor {
+@Named
+public class CronTriggerProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(CronTriggerProcessor.class);
 
@@ -46,8 +46,7 @@ public class CronTriggerProcessor implements TriggerProcessor {
         this.schedulerDao = schedulerDao;
     }
 
-    @Override
-    public void process(DSLContext tx, UUID repoId, UUID triggerId, Trigger t) {
+    public void process(DSLContext tx, UUID triggerId, Trigger t) {
         if (t.conditions() == null) {
             log.warn("process ['{}'] -> cron trigger without params, ignore", triggerId);
             return;

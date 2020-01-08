@@ -75,10 +75,9 @@ public class TriggersDao extends AbstractDao {
                 .getTriggerId();
     }
 
-    public void update(DSLContext tx, UUID triggerId, Map<String, Object> conditions) {
-        tx.update(TRIGGERS)
-                .set(TRIGGERS.CONDITIONS, objectMapper.toJSONB(conditions))
-                .where(TRIGGERS.TRIGGER_ID.eq(triggerId))
+    public void delete(DSLContext tx, List<UUID> triggerIds) {
+        tx.delete(TRIGGERS)
+                .where(TRIGGERS.TRIGGER_ID.in(triggerIds))
                 .execute();
     }
 
@@ -90,11 +89,15 @@ public class TriggersDao extends AbstractDao {
 
     public List<TriggerEntry> list(UUID projectId, UUID repositoryId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> query = selectTriggers(tx);
-
-            return query.where(TRIGGERS.PROJECT_ID.eq(projectId).and(TRIGGERS.REPO_ID.eq(repositoryId)))
-                    .fetch(this::toEntity);
+            return list(tx, projectId, repositoryId);
         }
+    }
+
+    public List<TriggerEntry> list(DSLContext tx, UUID projectId, UUID repositoryId) {
+        SelectJoinStep<Record12<UUID, UUID, String, UUID, String, UUID, String, String, String[], JSONB, JSONB, JSONB>> query = selectTriggers(tx);
+
+        return query.where(TRIGGERS.PROJECT_ID.eq(projectId).and(TRIGGERS.REPO_ID.eq(repositoryId)))
+                .fetch(this::toEntity);
     }
 
     public List<TriggerEntry> list(String eventSource) {
