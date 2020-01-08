@@ -21,41 +21,17 @@ package com.walmartlabs.concord.server.metrics;
  */
 
 import com.codahale.metrics.MetricRegistry;
-import com.walmartlabs.concord.server.sdk.metrics.GaugeProvider;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.dropwizard.DropwizardExports;
-import io.prometheus.client.hotspot.DefaultExports;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.util.Set;
 
 @Named
 @Singleton
 public class MetricRegistryProvider implements Provider<MetricRegistry> {
 
-    private final Set<GaugeProvider<?>> gauges;
-
-    @Inject
-    public MetricRegistryProvider(Set<GaugeProvider<?>> gauges) {
-        this.gauges = gauges;
-    }
-
     @Override
     public MetricRegistry get() {
-        MetricRegistry registry = new MetricRegistry();
-
-        // prometheus integration
-        CollectorRegistry.defaultRegistry.register(new DropwizardExports(registry));
-
-        // initialize standard prometheus exports (hotspot, memory, etc)
-        DefaultExports.initialize();
-
-        // register gauges
-        gauges.forEach(g -> registry.register(g.name(), g.gauge()));
-
-        return registry;
+        return new MetricRegistry();
     }
 }
