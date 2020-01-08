@@ -128,7 +128,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
 
         if (githubCfg.isLogEvents()) {
             auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
-                    .field("source", "github")
+                    .field("source", EVENT_SOURCE)
                     .field("eventId", deliveryId)
                     .field("githubEvent", eventName)
                     .field("payload", payload)
@@ -171,7 +171,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                 log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", event, ldapDn);
                 return super.getOrCreateUserEntry(event);
             }
-            
+
             return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP);
         } catch (Exception e) {
             throw new RuntimeException(e);

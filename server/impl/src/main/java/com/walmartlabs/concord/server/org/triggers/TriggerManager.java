@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
@@ -31,14 +33,17 @@ import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
 import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.policy.PolicyUtils.toMap;
 
@@ -47,40 +52,53 @@ public class TriggerManager extends AbstractDao {
 
     private static final Logger log = LoggerFactory.getLogger(TriggerManager.class);
 
-    private final Map<String, TriggerProcessor> triggerProcessors;
     private final ProjectDao projectDao;
     private final TriggersDao triggersDao;
     private final PolicyManager policyManager;
     private final TriggersConfiguration triggersCfg;
 
+    private final CronTriggerProcessor cronTriggerProcessor;
+    private final GithubTriggerEnricher githubTriggerEnricher;
+
     @Inject
     public TriggerManager(@MainDB Configuration cfg,
-                          Map<String, TriggerProcessor> triggerProcessors,
                           ProjectDao projectDao,
                           TriggersDao triggersDao,
                           PolicyManager policyManager,
-                          TriggersConfiguration triggersCfg) {
+                          TriggersConfiguration triggersCfg,
+                          CronTriggerProcessor cronTriggerProcessor,
+                          GithubTriggerEnricher githubTriggerEnricher) {
 
         super(cfg);
-        this.triggerProcessors = triggerProcessors;
+
         this.projectDao = projectDao;
         this.triggersDao = triggersDao;
         this.policyManager = policyManager;
         this.triggersCfg = triggersCfg;
+
+        this.cronTriggerProcessor = cronTriggerProcessor;
+        this.githubTriggerEnricher = githubTriggerEnricher;
     }
 
     public void refresh(UUID projectId, UUID repoId, ProjectDefinition pd) {
         UUID orgId = projectDao.getOrgId(projectId);
-        for(Trigger t : pd.triggers()) {
+        for (Trigger t : pd.triggers()) {
             policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, toMap(orgId, projectId, t));
         }
 
         tx(tx -> {
-            triggersDao.delete(tx, projectId, repoId);
+            List<TriggerEntry> currentTriggers = triggersDao.list(tx, projectId, repoId);
+            ListMultimap<String, TriggerEntry> triggerIds = toTriggerIds(currentTriggers);
 
             pd.triggers().forEach(t -> {
-                Map<String, Object> conditions = merge(triggersCfg.getDefaultConditions(), t.name(), t.conditions());
-                Map<String, Object> cfg = merge(triggersCfg.getDefaultConfiguration(), t.name(), t.configuration());
+                t = enrichTriggerDefinition(tx, repoId, t);
+
+                String internalId = TriggerInternalIdCalculator.getId(t.name(), t.activeProfiles(), t.arguments(), t.conditions(), t.configuration());
+                List<TriggerEntry> triggers = triggerIds.get(internalId);
+                if (!triggers.isEmpty()) {
+                    triggers.remove(0);
+                    return;
+                }
 
                 UUID triggerId = triggersDao.insert(tx,
                         projectId,
@@ -88,17 +106,49 @@ public class TriggerManager extends AbstractDao {
                         t.name(),
                         t.activeProfiles(),
                         t.arguments(),
-                        conditions,
-                        cfg);
+                        t.conditions(),
+                        t.configuration());
 
-                TriggerProcessor processor = triggerProcessors.get(t.name());
-                if (processor != null) {
-                    processor.process(tx, repoId, triggerId, t);
-                }
+                postProcessTrigger(tx, triggerId, t);
             });
+
+            if (!triggerIds.isEmpty()) {
+                triggersDao.delete(tx, triggerIds.values().stream().map(TriggerEntry::getId).collect(Collectors.toList()));
+            }
         });
 
         log.info("refresh ['{}', '{}'] -> done, triggers count: {}", projectId, repoId, pd.triggers().size());
+    }
+
+    private Trigger enrichTriggerDefinition(DSLContext tx, UUID repoId, Trigger t) {
+        Map<String, Object> conditions = merge(triggersCfg.getDefaultConditions(), t.name(), t.conditions());
+        Map<String, Object> cfg = merge(triggersCfg.getDefaultConfiguration(), t.name(), t.configuration());
+
+        // when we add more trigger types requiring a similar post-processing mechanism
+        // then we should consider creating appropriate interfaces/listeners
+        if ("github".equals(t.name())) {
+            conditions = githubTriggerEnricher.enrich(tx, repoId, conditions);
+        }
+
+        return Trigger.builder().from(t)
+                .conditions(conditions)
+                .configuration(cfg)
+                .build();
+    }
+
+    private void postProcessTrigger(DSLContext tx, UUID triggerId, Trigger t) {
+        if ("cron".equals(t.name())) {
+            cronTriggerProcessor.process(tx, triggerId, t);
+        }
+    }
+
+    private static ListMultimap<String, TriggerEntry> toTriggerIds(List<TriggerEntry> triggers) {
+        ListMultimap<String, TriggerEntry> result = ArrayListMultimap.create();
+        for (TriggerEntry t : triggers) {
+            String internalId = TriggerInternalIdCalculator.getId(t.getEventSource(), t.getActiveProfiles(), t.getArguments(), t.getConditions(), t.getCfg());
+            result.put(internalId, t);
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")
