@@ -12,9 +12,9 @@ triggers:
 
   - github:
       version: 2
-      type: "push"
       entryPoint: "onChange"
       conditions:
+        type: "push"
         githubOrg: ".*"
         githubRepo: ".*"
         branch: ".*"
