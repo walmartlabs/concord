@@ -51,6 +51,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+            <artifactId>concord-noderoster-plugin-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord.it</groupId>
             <artifactId>concord-common-it</artifactId>
             <scope>test</scope>
@@ -60,6 +65,7 @@
             <artifactId>concord-sdk</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -260,6 +266,18 @@
                                 <artifactItem>
                                     <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                                     <artifactId>dynamic-tasks</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+
+                                <!-- TODO this should be automated -->
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+                                    <artifactId>noderoster-tasks</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                                    <artifactId>concord-noderoster-plugin-client</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
 
@@ -480,12 +498,15 @@
                                         <env>
                                             <CONCORD_CFG_FILE>/opt/concord/conf/server.conf</CONCORD_CFG_FILE>
                                             <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
+                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
+                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
+                                            <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_URL>jdbc:postgresql://${it.db.addr}/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
-                                            <DB_PASSWORD>it</DB_PASSWORD>
-                                            <DB_INVENTORY_USERNAME>postgres</DB_INVENTORY_USERNAME>
-                                            <DB_INVENTORY_PASSWORD>it</DB_INVENTORY_PASSWORD>
                                             <LDAP_URL>ldap://${it.ldap.addr}</LDAP_URL>
+                                            <NODEROSTER_DB_PASSWORD>it</NODEROSTER_DB_PASSWORD>
+                                            <NODEROSTER_DB_URL>jdbc:postgresql://${it.db.addr}/postgres</NODEROSTER_DB_URL>
+                                            <NODEROSTER_DB_USERNAME>postgres</NODEROSTER_DB_USERNAME>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->

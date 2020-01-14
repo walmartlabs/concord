@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="noderoster-10000" author="ibodrov@gmail.com">
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+        </sql>
+    </changeSet>
+
+    <changeSet id="noderoster-10020" author="ybrigo@gmail.com">
+        <createTable tableName="NODE_ROSTER_HOSTS">
+            <column name="HOST_ID" type="uuid" defaultValueComputed="uuid_generate_v1()">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="NORMALIZED_HOSTNAME" type="varchar(2048)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="CREATED_AT" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="noderoster-10030" author="ybrigo@gmail.com">
+        <createTable tableName="NODE_ROSTER_PROCESS_HOSTS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="HOST_ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="INITIATOR" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="INITIATOR_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PROJECT_ID" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="noderoster-10040" author="ybrigo@gmail.com">
+        <createTable tableName="NODE_ROSTER_HOST_FACTS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="HOST_ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="FACTS" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="noderoster-10050" author="ybrigo@gmail.com">
+        <createTable tableName="NODE_ROSTER_HOST_ARTIFACTS">
+            <column name="INSTANCE_ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="INSTANCE_CREATED_AT" type="timestamp">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="HOST_ID" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="ARTIFACT_URL" type="varchar(1024)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

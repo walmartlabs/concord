@@ -1,0 +1,15 @@
+flows:
+  default:
+  - task: ansible
+    in:
+      playbook: playbook.yml
+      inventory:
+        local:
+          hosts:
+            - "${hostA}"
+            - "${hostB}"
+          vars:
+            ansible_connection: "local"
+      extraVars:
+        artifactUrl: "${artifactUrl}"
+        artifactDest: "${workDir}"

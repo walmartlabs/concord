@@ -239,11 +239,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
-                <artifactId>concord-ansible-plugin-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.walmartlabs.concord.plugins.basic</groupId>
                 <artifactId>ansible-template</artifactId>
                 <version>${project.version}</version>
@@ -260,12 +255,32 @@
             </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
+                <artifactId>concord-ansible-plugin-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
                 <artifactId>concord-ansible-plugin-db</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins</groupId>
                 <artifactId>kafka-event-sink</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                <artifactId>concord-noderoster-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                <artifactId>concord-noderoster-plugin-db</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
+                <artifactId>concord-noderoster-plugin-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

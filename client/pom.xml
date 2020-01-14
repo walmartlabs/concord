@@ -119,6 +119,7 @@
                 <artifactId>swagger-codegen-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>server</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>

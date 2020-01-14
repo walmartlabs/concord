@@ -72,6 +72,7 @@
                             </languageSpecificPrimitives>
                             <templateDirectory>${project.basedir}/../../../../client/src/main/template</templateDirectory>
                             <library>okhttp-gson</library>
+                            <!-- TODO change the package to "ansible" -->
                             <apiPackage>com.walmartlabs.concord.client</apiPackage>
                             <modelPackage>com.walmartlabs.concord.client</modelPackage>
                             <configOptions>

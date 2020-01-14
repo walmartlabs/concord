@@ -28,6 +28,20 @@ import java.util.UUID;
 
 public final class ContextUtils {
 
+    public static UUID getUUID(Context ctx, String name) {
+        Object o = ctx.getVariable(name);
+        if (o == null) {
+            return null;
+        }
+        if (o instanceof String) {
+            return UUID.fromString((String) o);
+        }
+        if (o instanceof UUID) {
+            return (UUID) o;
+        }
+        throw new IllegalArgumentException("Invalid variable '" + name + "' type, expected: string/uuid, got: " + o.getClass());
+    }
+
     public static int getInt(Context ctx, String name, int defaultValue) {
         Integer result = getVariable(ctx, name, defaultValue, Integer.class);
         if (result == null) {

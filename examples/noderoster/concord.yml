@@ -1,0 +1,72 @@
+configuration:
+  dependencies:
+  - mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:1.16.2-SNAPSHOT
+
+flows:
+
+  findDeployedBy:
+  - log: "Finding the user who deployed on a host"
+  - task: noderoster
+    in:
+      action: "deployedby"
+      hostName: "host-1.walmart.com"
+      baseUrl: "concord-inventory.host.com:8002"
+  - log: "${result}"
+  - task: noderoster
+    in:
+      action: "deployedby"
+      hostId: 5677ec34-1be2-11e9-b6aa-fa163edd0df7
+      baseUrl: "concord-inventory.host.com:8002"
+  - log: "${result}"
+
+  findTouchedHosts:
+  - log: "Finding touched hosts"
+  - task: noderoster
+    in:
+      action: "touchedHosts"
+      projectId: 1ea1274c-0902-11e8-908c-fa163ee88118
+      baseUrl: "concord-inventory.host.com:8002"
+  - log: "${result}"
+
+  findHostsWithArtifacts:
+  - log: "Finding hosts with artifacts"
+  - task: noderoster
+    in:
+      action: "hostsWithArtifacts"
+      artifactPattern: "storesystems"
+      baseUrl: "concord-inventory.host.com:8002"
+  - log: "${result}"
+
+  findKnownHosts:
+  - log: "Finding all known hosts"
+  - task: noderoster
+    in:
+      action: "knownHosts"
+      baseUrl: "concord-inventory.host.com:8002"
+  - log: "${result}"
+
+  findFacts:
+  - log: "Finding facts"
+  - task: noderoster
+    in:
+      action: "facts"
+      hostName: "host-1.walmart.com"
+      baseUrl: "concord-inventory.host.com:8002"
+  - log: "${result}"
+
+  findDeployedOnHosts:
+  - log: "Listing artifacts deployed on host"
+  - task: noderoster
+    in:
+      action: "deployedOnHost"
+      hostName: "host-1.walmart.com"
+      baseUrl: "concord-inventory.host.com:8002"
+  - log: "${result}"
+
+  default:
+  - call: findDeployedBy
+  - call: findTouchedHosts
+  - call: findHostsWithArtifacts
+  - call: findKnownHosts
+  - call: findFacts
+  - call: findDeployedOnHosts
