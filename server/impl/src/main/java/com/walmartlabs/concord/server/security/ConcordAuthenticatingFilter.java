@@ -181,7 +181,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             token = parseBasicAuth(h, req, rememberMe);
         } else {
             if (h.startsWith(BEARER_AUTH_PREFIX)) {
-                h = h.substring(BASIC_AUTH_PREFIX.length() + 1);
+                h = h.substring(BEARER_AUTH_PREFIX.length() + 1);
             }
 
             validateApiKey(h);
