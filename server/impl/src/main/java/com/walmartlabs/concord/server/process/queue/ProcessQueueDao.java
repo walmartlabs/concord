@@ -35,7 +35,6 @@ import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessCheckpointEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
-import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -69,8 +68,6 @@ public class ProcessQueueDao extends AbstractDao {
     private static final TypeReference<List<ProcessCheckpointEntry>> LIST_OF_CHECKPOINTS = new TypeReference<List<ProcessCheckpointEntry>>() {
     };
     private static final TypeReference<ProcessStatusHistoryEntry> STATUS_HISTORY_ENTRY = new TypeReference<ProcessStatusHistoryEntry>() {
-    };
-    private static final TypeReference<ProcessWaitHistoryEntry> WAIT_HISTORY_ENTRY = new TypeReference<ProcessWaitHistoryEntry>() {
     };
     private static final TypeReference<List<ProcessStatusHistoryEntry>> LIST_OF_STATUS_HISTORY = new TypeReference<List<ProcessStatusHistoryEntry>>() {
     };
@@ -459,21 +456,6 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    // TODO move to EventDao?
-    public List<ProcessWaitHistoryEntry> getWaitHistory(ProcessKey processKey) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            return tx.select(waitEntryToJsonb(pe))
-                    .from(pe)
-                    .where(pe.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(pe.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
-                            .and(pe.EVENT_TYPE.eq(EventType.PROCESS_WAIT.name())))
-                    .orderBy(pe.EVENT_DATE.desc())
-                    .fetch(r -> objectMapper.fromJSONB(r.value1(), WAIT_HISTORY_ENTRY));
-
-        }
-    }
-
     public ProjectIdAndInitiator getProjectIdAndInitiator(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_QUEUE.PROJECT_ID, PROCESS_QUEUE.INITIATOR_ID).from(PROCESS_QUEUE)
@@ -498,16 +480,6 @@ public class ProcessQueueDao extends AbstractDao {
                         inline("changeDate"), toJsonDate(pe.EVENT_DATE),
                         inline("status"), field("{0}->'status'", Object.class, pe.EVENT_DATA),
                         inline("payload"), field("{0} - 'status'", Object.class, pe.EVENT_DATA)));
-    }
-
-    private Field<JSONB> waitEntryToJsonb(ProcessEvents pe) {
-        return function("jsonb_strip_nulls", JSONB.class,
-                function("jsonb_build_object", JSONB.class,
-                        inline("id"), pe.EVENT_ID,
-                        inline("eventDate"), toJsonDate(pe.EVENT_DATE),
-                        inline("type"), field("{0}->'type'", Object.class, pe.EVENT_DATA),
-                        inline("reason"), field("{0}->'reason'", Object.class, pe.EVENT_DATA),
-                        inline("payload"), field("{0} - 'type' - 'reason'", Object.class, pe.EVENT_DATA)));
     }
 
     private void filterByTags(SelectQuery<Record> query, Set<String> tags) {

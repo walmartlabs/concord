@@ -36,6 +36,7 @@ import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
+import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
@@ -101,6 +102,7 @@ public class ProcessResource implements Resource {
     private final ProjectAccessManager projectAccessManager;
     private final ProcessConfiguration processCfg;
     private final ProcessLogManager logManager;
+    private final ProcessEventDao processEventDao;
 
     private final ProcessResourceV2 v2;
 
@@ -118,6 +120,7 @@ public class ProcessResource implements Resource {
                            ObjectMapper objectMapper,
                            ProcessConfiguration processCfg,
                            ProcessLogManager logManager,
+                           ProcessEventDao processEventDao,
                            ProcessResourceV2 v2) {
 
         this.processManager = processManager;
@@ -133,6 +136,7 @@ public class ProcessResource implements Resource {
         this.objectMapper = objectMapper;
         this.processCfg = processCfg;
         this.logManager = logManager;
+        this.processEventDao = processEventDao;
 
         this.v2 = v2;
     }
@@ -621,9 +625,11 @@ public class ProcessResource implements Resource {
     @javax.ws.rs.Path("/{instanceId}/waits")
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public List<ProcessWaitHistoryEntry> getWaitHistory(@ApiParam @PathParam("instanceId") UUID instanceId) {
+    public List<ProcessWaitHistoryEntry> getWaitHistory(@ApiParam @PathParam("instanceId") UUID instanceId,
+                                                        @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
+                                                        @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
         ProcessKey pk = assertKey(instanceId);
-        return queueDao.getWaitHistory(pk);
+        return processEventDao.getWaitHistory(pk, limit, offset);
     }
 
     /**
