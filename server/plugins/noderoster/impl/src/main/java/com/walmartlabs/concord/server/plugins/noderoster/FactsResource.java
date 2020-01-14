@@ -55,7 +55,7 @@ public class FactsResource implements Resource {
 
     @GET
     @Path("/")
-    @ApiOperation(value = "Get facts for a host")
+    @ApiOperation(value = "Get facts for a host", response = Object.class)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getFacts(@ApiParam @QueryParam("hostName") String hostName,
                              @ApiParam @QueryParam("hostId") UUID hostId) {
