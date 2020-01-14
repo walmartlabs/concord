@@ -97,7 +97,6 @@ public class ProcessManager {
     private static final Set<ProcessStatus> RESTORE_ALLOWED_STATUSES = new HashSet<>(Arrays.asList(
             ProcessStatus.FAILED,
             ProcessStatus.FINISHED,
-            ProcessStatus.SUSPENDED,
             ProcessStatus.TIMED_OUT,
             ProcessStatus.CANCELLED));
 
@@ -233,6 +232,8 @@ public class ProcessManager {
         }
 
         queueManager.updateStatus(processKey, ProcessStatus.SUSPENDED, Collections.singletonMap("checkpointId", checkpointId));
+
+        logManager.info(processKey,"Restoring from checkpoint '{}'", eventName);
 
         resume(payload);
     }

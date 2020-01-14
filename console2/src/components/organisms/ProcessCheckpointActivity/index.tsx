@@ -18,6 +18,7 @@
  * =====
  */
 import * as React from 'react';
+import { useCallback, useState } from 'react';
 import { ProcessCheckpointEntry, ProcessHistoryEntry, ProcessStatus } from '../../../api/process';
 import { ContentBlock } from '../CheckpointView/ProcessList/styles';
 import { generateCheckpointGroups } from '../CheckpointView/Container/checkpointUtils';
@@ -35,7 +36,6 @@ import { SingleOperationPopup } from '../../molecules';
 import { isFinalStatus } from '../ProcessRestoreActivity';
 import { Button, Popup } from 'semantic-ui-react';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
-import { useCallback, useState } from 'react';
 import { ConcordId, RequestError } from '../../../api/common';
 
 interface ExternalProps {
@@ -95,17 +95,26 @@ const Checkpoint = (props: Props) => {
         processDisabled
     } = props;
 
+    const popupContent =
+        checkpointStartTime.toDateString() + ' ' + formatDate(checkpointStartTime, 'HH:mm:ss');
+    const additionalPopupContent =
+        processStatus === ProcessStatus.SUSPENDED
+            ? 'Cancel the process before restoring a checkpoint'
+            : undefined;
+
     return (
         <SingleOperationPopup
             trigger={(onClick: any) => (
                 <Popup
+                    hoverable={true}
+                    position={'bottom left'}
+                    wide={true}
+                    header={additionalPopupContent === undefined ? undefined : popupContent}
                     content={
-                        checkpointStartTime.toDateString() +
-                        ' ' +
-                        formatDate(checkpointStartTime, 'HH:mm:ss')
+                        additionalPopupContent === undefined ? popupContent : additionalPopupContent
                     }
                     trigger={
-                        <span>
+                        <div>
                             <Button
                                 onClick={onClick}
                                 disabled={!isFinalStatus(processStatus) || processDisabled}
@@ -118,7 +127,7 @@ const Checkpoint = (props: Props) => {
                                 }}>
                                 {checkpointName}
                             </Button>
-                        </span>
+                        </div>
                     }
                 />
             )}
