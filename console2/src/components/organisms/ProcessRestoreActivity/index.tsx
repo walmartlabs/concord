@@ -45,8 +45,7 @@ interface DispatchProps {
 
 type Props = ExternalProps & StateProps & DispatchProps;
 
-export const isFinalStatus = (s: ProcessStatus): boolean =>
-    isFinal(s) || s === ProcessStatus.SUSPENDED;
+export const isFinalStatus = (s: ProcessStatus): boolean => isFinal(s);
 
 class ProcessRestoreActivity extends React.PureComponent<Props> {
     render() {
