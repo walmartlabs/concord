@@ -41,6 +41,7 @@ docker run -d \
 -v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
 -e "CONCORD_CFG_FILE=${CONCORD_CFG_FILE}" \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
+-e 'NODEROSTER_DB_URL=jdbc:postgresql://db:5432/postgres' \
 "${DOCKER_PREFIX}/concord-server:${VERSION}"
 
 # wait for the server to start

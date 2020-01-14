@@ -211,6 +211,9 @@
                                             <DB_PASSWORD>it</DB_PASSWORD>
                                             <DB_URL>jdbc:postgresql://db-node:5432/postgres</DB_URL>
                                             <DB_USERNAME>postgres</DB_USERNAME>
+                                            <NODEROSTER_DB_PASSWORD>it</NODEROSTER_DB_PASSWORD>
+                                            <NODEROSTER_DB_URL>jdbc:postgresql://db-node:5432/postgres</NODEROSTER_DB_URL>
+                                            <NODEROSTER_DB_USERNAME>postgres</NODEROSTER_DB_USERNAME>
                                         </env>
                                         <wait>
                                             <!--suppress MavenModelInspection -->

@@ -24,8 +24,10 @@
         <module>tasks/http</module>
         <module>tasks/kv</module>
         <module>tasks/locale</module>
+        <module>tasks/lock</module>
         <module>tasks/log</module>
         <module>tasks/misc</module>
+        <module>tasks/noderoster</module>
         <module>tasks/resource</module>
         <module>tasks/slack</module>
         <module>tasks/sleep</module>
@@ -33,6 +35,5 @@
         <module>tasks/throw</module>
         <module>tasks/variables</module>
         <module>templates/ansible</module>
-        <module>tasks/lock</module>
     </modules>
 </project>

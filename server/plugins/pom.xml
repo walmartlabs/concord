@@ -17,5 +17,6 @@
     <modules>
         <module>ansible</module>
         <module>kafka-event-sink</module>
+        <module>noderoster</module>
     </modules>
 </project>
