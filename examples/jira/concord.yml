@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:jira-task:0.78.0"
+  - "mvn://com.walmartlabs.concord.plugins:jira-task:1.22.0"
 
 flows:
   default:
@@ -29,10 +29,8 @@ flows:
         customfield_20400: # application/service (array of values)
           - "2125921"      # "SDE - Concord"
 
-
   # the issue ID is stored as `issueId`
   - log: "Issue ID: ${issueId}"
-
 
   # add a comment
   - task: jira
@@ -42,7 +40,6 @@ flows:
       password: "myJiraPassword"
       issueKey: "${issueId}"
       comment: "This is my comment from Concord"
-
 
   # transition to another status
   - task: jira
@@ -59,7 +56,6 @@ flows:
         customfield_20106: # release handling option
           id: "24226"      # "This is not going into production (ever)"
 
-
   # delete an existing issue
   - task: jira
     in:
@@ -67,6 +63,5 @@ flows:
       userId: "${initiator.username}"
       password: "myJiraPassword"
       issueKey: "${issueId}"
-
 
   - log: "Done!"

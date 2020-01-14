@@ -8,7 +8,6 @@ forms:
   myForm:
   - action: {label: "Action", type: "string?", allow: ["Approve", "Reject"]}
 
-
 configuration:
   arguments:
     name: "Concord"
