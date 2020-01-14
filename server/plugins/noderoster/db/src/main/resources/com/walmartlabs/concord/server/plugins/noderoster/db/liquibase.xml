@@ -80,4 +80,17 @@
             </column>
         </createTable>
     </changeSet>
+
+    <changeSet id="noderoster-10060" author="ibodrov@gmail.com">
+        <addColumn tableName="NODE_ROSTER_HOST_FACTS">
+            <!-- a process can produce multiple gather_facts events for each host -->
+            <column name="SEQ_ID" type="serial"/>
+        </addColumn>
+
+        <dropPrimaryKey tableName="NODE_ROSTER_HOST_FACTS"/>
+
+        <createIndex tableName="NODE_ROSTER_HOST_FACTS" indexName="IDX_NR_HF_HOST">
+            <column name="HOST_ID"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

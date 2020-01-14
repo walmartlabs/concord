@@ -1,0 +1,12 @@
+---
+- hosts: groupA
+  tasks:
+    - debug:
+        msg: "Hello!"
+        verbosity: 0
+
+- hosts: groupB
+  tasks:
+    - debug:
+        msg: "Hello!"
+        verbosity: 0

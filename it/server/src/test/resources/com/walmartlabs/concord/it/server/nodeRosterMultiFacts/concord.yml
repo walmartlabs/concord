@@ -1,0 +1,16 @@
+flows:
+  default:
+  - task: ansible
+    in:
+      playbook: playbook.yml
+      inventory:
+        groupA:
+          hosts:
+            - "${host}"
+          vars:
+            ansible_connection: "local"
+        groupB:
+          hosts:
+            - "${host}"
+          vars:
+            ansible_connection: "local"

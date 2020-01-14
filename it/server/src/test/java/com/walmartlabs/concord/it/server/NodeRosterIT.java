@@ -52,7 +52,7 @@ public class NodeRosterIT extends AbstractServerIT {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void test() throws Exception {
+    public void testE2e() throws Exception {
         String hostA = "hostA_" + randomString();
         String hostB = "hostB_" + randomString();
 
@@ -132,5 +132,40 @@ public class NodeRosterIT extends AbstractServerIT {
         assertLog(".*ok=true.*", ab);
         assertLog(".*hostName=" + hostA + ".*", ab);
         assertLog(".*hostName=" + hostB + ".*", ab);
+    }
+
+    @Test
+    public void testMultipleFactsPerHost() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("nodeRosterMultiFacts").toURI(), ITConstants.DEPENDENCIES_DIR);
+
+        String host = "host_" + randomString();
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.host", host);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*" + host + ".*failed=0.*", ab);
+
+        // ---
+
+        NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(getApiClient());
+
+        while (true) {
+            List<HostEntry> l = hostsApi.getAllKnownHosts(1000, 0); // TODO might require paging
+            if (l.stream().anyMatch(h -> h.getHostName().equals(host))) {
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
+        assertNotNull(factsApi.getFacts(host, null));
     }
 }

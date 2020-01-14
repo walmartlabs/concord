@@ -35,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Named
@@ -56,14 +57,17 @@ public class FactsResource implements Resource {
     @Path("/")
     @ApiOperation(value = "Get facts for a host")
     @Produces(MediaType.APPLICATION_JSON)
-    public Object getFacts(@ApiParam @QueryParam("hostName") String hostName,
-                           @ApiParam @QueryParam("hostId") UUID hostId) {
+    public Response getFacts(@ApiParam @QueryParam("hostName") String hostName,
+                             @ApiParam @QueryParam("hostId") UUID hostId) {
 
         UUID effectiveHostId = Utils.getHostId(hostManager, hostId, hostName);
         if (effectiveHostId == null) {
             return null;
         }
 
-        return hostsDao.getFacts(effectiveHostId);
+        // return the raw JSON string, no need to parse it just to serialize it back
+        return Response.ok()
+                .entity(hostsDao.getLastFacts(effectiveHostId))
+                .build();
     }
 }
