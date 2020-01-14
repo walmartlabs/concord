@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.events.github;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.events.github;
  */
 
 import com.walmartlabs.concord.repository.GitCliRepositoryProvider;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
@@ -90,7 +91,21 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         if (branch != null) {
             result.put(REPO_BRANCH_KEY, payload.getBranch());
         }
-        result.put(COMMIT_ID_KEY, payload.getString("after"));
+
+        if (PULL_REQUEST_EVENT.equals(eventName)) {
+            Map<String, Object> pullRequest = MapUtils.getMap(payload.raw(), PULL_REQUEST_EVENT, Collections.emptyMap());
+            Map<String, Object> head = MapUtils.getMap(pullRequest, "head", Collections.emptyMap());
+            String sha = MapUtils.getString(head, "sha");
+            if (sha != null) {
+                result.put(COMMIT_ID_KEY, sha);
+            }
+        } else if (PUSH_EVENT.equals(eventName)) {
+            String after = payload.getString("after");
+            if (after != null) {
+                result.put(COMMIT_ID_KEY, after);
+            }
+        }
+
         result.put(SENDER_KEY, payload.getSender());
         result.put(TYPE_KEY, eventName);
         result.put(STATUS_KEY, payload.getAction());
