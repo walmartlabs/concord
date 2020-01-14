@@ -7,4 +7,4 @@ cp -R concord.yml playbook target/
 
 cd target && zip -r payload.zip ./* > /dev/null && cd ..
 
-curl -ikn -F archive=@target/payload.zip -F org=Default -F project=test http://${SERVER_ADDR}/api/v1/process
+curl -ikn -F archive=@target/payload.zip http://${SERVER_ADDR}/api/v1/process

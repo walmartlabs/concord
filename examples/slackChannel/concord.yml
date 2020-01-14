@@ -28,7 +28,6 @@ flows:
   # the channel ID is stored as `slackChannelId`
   - log: "Channel ID: ${slackChannelId}"
 
-
   # archive a slack group
   - task: slackChannel
     in:

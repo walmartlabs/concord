@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:git:0.78.0"
+  - "mvn://com.walmartlabs.concord.plugins:git:1.22.0"
 
 flows:
   default:
@@ -15,7 +15,6 @@ flows:
         password: myPwd # optional
       workingDir: myRepo
   # the repo will be cloned into `myRepo` directory
-
 
   # creating a new branch and pushing it to remote origin
   - task: git
