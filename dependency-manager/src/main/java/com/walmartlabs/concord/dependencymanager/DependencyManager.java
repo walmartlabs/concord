@@ -42,6 +42,7 @@ import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +59,6 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import static org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_IGNORE;
-import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_NEVER;
-
 public class DependencyManager {
 
     private static final Logger log = LoggerFactory.getLogger(DependencyManager.class);
@@ -73,7 +71,15 @@ public class DependencyManager {
     private static final String FILES_CACHE_DIR = "files";
     public static final String MAVEN_SCHEME = "mvn";
 
-    private static final MavenRepository MAVEN_CENTRAL = new MavenRepository("central", "default", "https://repo.maven.apache.org/maven2/", false);
+    private static final MavenRepository MAVEN_CENTRAL = MavenRepository.builder()
+            .id("central")
+            .contentType("default")
+            .url("https://repo.maven.apache.org/maven2/")
+            .snapshotPolicy(MavenRepositoryPolicy.builder()
+                    .enabled(false)
+                    .build())
+            .build();
+
     private static final List<MavenRepository> DEFAULT_REPOS = Collections.singletonList(MAVEN_CENTRAL);
 
     private final Path cacheDir;
@@ -96,10 +102,6 @@ public class DependencyManager {
 
         log.info("init -> using repositories: {}", repositories);
         this.repositories = toRemote(repositories);
-    }
-
-    public Path getLocalCacheDir() {
-        return localCacheDir;
     }
 
     public Collection<DependencyEntity> resolve(Collection<URI> items) throws IOException {
@@ -364,14 +366,31 @@ public class DependencyManager {
 
     private static List<RemoteRepository> toRemote(List<MavenRepository> l) {
         return l.stream()
-                .map(r -> {
-                    RemoteRepository.Builder result = new RemoteRepository.Builder(r.getId(), r.getContentType(), r.getUrl());
-                    if (!r.isSnapshotEnabled()) {
-                        result.setSnapshotPolicy(new RepositoryPolicy(false, UPDATE_POLICY_NEVER, CHECKSUM_POLICY_IGNORE));
-                    }
-                    return result.build();
-                })
+                .map(DependencyManager::toRemote)
                 .collect(Collectors.toList());
+    }
+
+    private static RemoteRepository toRemote(MavenRepository r) {
+        RemoteRepository.Builder b = new RemoteRepository.Builder(r.id(), r.contentType(), r.url());
+
+        MavenRepositoryPolicy releasePolicy = r.releasePolicy();
+        if (releasePolicy != null) {
+            b.setReleasePolicy(new RepositoryPolicy(releasePolicy.enabled(), releasePolicy.updatePolicy(), releasePolicy.checksumPolicy()));
+        }
+
+        MavenRepositoryPolicy snapshotPolicy = r.snapshotPolicy();
+        if (snapshotPolicy != null) {
+            b.setSnapshotPolicy(new RepositoryPolicy(snapshotPolicy.enabled(), snapshotPolicy.updatePolicy(), snapshotPolicy.checksumPolicy()));
+        }
+
+        Map<String, String> auth = r.auth();
+        if (auth != null) {
+            AuthenticationBuilder ab = new AuthenticationBuilder();
+            auth.forEach(ab::addString);
+            b.setAuthentication(ab.build());
+        }
+
+        return b.build();
     }
 
     private static Map<String, String> splitQuery(URI uri) throws UnsupportedEncodingException {
@@ -391,7 +410,6 @@ public class DependencyManager {
         return m;
     }
 
-    @SuppressWarnings("unchecked")
     private static List<MavenRepository> readCfg() {
         String s = System.getenv(CFG_FILE_KEY);
         if (s == null || s.trim().isEmpty()) {
@@ -404,42 +422,13 @@ public class DependencyManager {
             return DEFAULT_REPOS;
         }
 
-        Map<String, Object> m;
+        ObjectMapper om = new ObjectMapper();
         try (InputStream in = Files.newInputStream(p)) {
-            ObjectMapper om = new ObjectMapper();
-            m = om.readValue(in, Map.class);
+            MavenRepositoryConfiguration cfg = om.readValue(in, MavenRepositoryConfiguration.class);
+            return cfg.repositories();
         } catch (IOException e) {
             throw new RuntimeException("Error while reading the Maven configuration file: " + s, e);
         }
-
-        Object v = m.get("repositories");
-        if (v == null) {
-            return DEFAULT_REPOS;
-        }
-
-        if (!(v instanceof Collection)) {
-            throw new RuntimeException("The 'repositories' value should be an array of objects: " + s);
-        }
-
-        Collection<Map<String, Object>> repos = (Collection<Map<String, Object>>) v;
-
-        List<MavenRepository> l = new ArrayList<>();
-        for (Map<String, Object> r : repos) {
-            String id = (String) r.get("id");
-            if (id == null) {
-                throw new RuntimeException("Missing repository 'id' value: " + s);
-            }
-
-            String contentType = (String) r.getOrDefault("layout", "default");
-
-            String url = (String) r.get("url");
-            if (url == null) {
-                throw new RuntimeException("Missing repository 'url' value: " + s);
-            }
-
-            l.add(new MavenRepository(id, contentType, url, true));
-        }
-        return l;
     }
 
     private static final class DependencyList {
