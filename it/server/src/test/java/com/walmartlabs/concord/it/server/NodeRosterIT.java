@@ -74,8 +74,8 @@ public class NodeRosterIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*ok: \\[" + hostA + "\\].*", ab);
-        assertLog(".*ok: \\[" + hostB + "\\].*", ab);
+        assertLog(".*" + hostA + ".*failed=0.*", ab);
+        assertLog(".*" + hostB + ".*failed=0.*", ab);
 
         // wait for events to be processes and check for known hosts
 
