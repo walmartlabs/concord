@@ -27,7 +27,7 @@ import {
     WaitPayload,
     WaitType
 } from '../../../api/process';
-import { Icon, Table } from 'semantic-ui-react';
+import { Accordion, Icon, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
 import { Link } from 'react-router-dom';
 import { LocalTimestamp } from '../index';
@@ -78,7 +78,9 @@ const renderElements = (data?: ProcessWaitHistoryEntry[]) => {
 const renderProcessLink = (id: ConcordId) => {
     return (
         <p>
-            <Link to={`/process/${id}`}>{id}</Link>
+            <Link to={`/process/${id}`} key={id}>
+                {id}
+            </Link>
         </p>
     );
 };
@@ -125,7 +127,27 @@ const renderCondition = ({ type, reason, payload }: ProcessWaitHistoryEntry) => 
 };
 
 const renderProcessWaitDetails = (payload: ProcessWaitPayload) => {
-    return payload.processes.map((p) => renderProcessLink(p));
+    if (payload.processes.length === 0) {
+        return <></>;
+    } else if (payload.processes.length === 1) {
+        return renderProcessLink(payload.processes[0]);
+    }
+
+    const panels = [
+        {
+            key: 'k1',
+            title: {
+                content: (
+                    <Link to={`/process/${payload.processes[0]}`} key={payload.processes[0]}>
+                        {payload.processes[0]}
+                    </Link>
+                ),
+                style: { padding: 0 }
+            },
+            content: [payload.processes.slice(1).map((id) => renderProcessLink(id))]
+        }
+    ];
+    return <Accordion panels={panels} />;
 };
 
 const renderProcessLockDetails = (payload: ProcessLockPayload) => {

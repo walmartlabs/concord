@@ -117,6 +117,11 @@ export interface ProcessWaitHistoryEntry {
     payload?: WaitPayload;
 }
 
+export interface PaginatedWaitHistoryEntries {
+    items: ProcessWaitHistoryEntry[];
+    next: boolean;
+}
+
 export interface ProcessMeta {
     out?: {
         lastError?: {};
