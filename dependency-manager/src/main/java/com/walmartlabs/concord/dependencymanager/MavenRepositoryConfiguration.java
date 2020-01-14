@@ -4,7 +4,7 @@ package com.walmartlabs.concord.dependencymanager;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,39 +24,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-@JsonSerialize(as = ImmutableMavenRepository.class)
-@JsonDeserialize(as = ImmutableMavenRepository.class)
-public interface MavenRepository {
-
-    String id();
+@JsonSerialize(as = ImmutableMavenRepositoryConfiguration.class)
+@JsonDeserialize(as = ImmutableMavenRepositoryConfiguration.class)
+public interface MavenRepositoryConfiguration {
 
     @Value.Default
-    default String contentType() {
-        return "default";
-    }
-
-    String url();
-
-    @Nullable
-    @Value.Redacted
-    Map<String, String> auth();
-
-    @Value.Default
-    default MavenRepositoryPolicy snapshotPolicy() {
-        return MavenRepositoryPolicy.builder().build();
-    }
-
-    @Value.Default
-    default MavenRepositoryPolicy releasePolicy() {
-        return MavenRepositoryPolicy.builder().build();
-    }
-
-    static ImmutableMavenRepository.Builder builder() {
-        return ImmutableMavenRepository.builder();
+    default List<MavenRepository> repositories() {
+        return Collections.emptyList();
     }
 }

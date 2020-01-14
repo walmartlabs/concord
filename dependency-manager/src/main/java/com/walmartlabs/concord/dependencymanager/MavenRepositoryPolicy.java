@@ -4,7 +4,7 @@ package com.walmartlabs.concord.dependencymanager;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,41 +22,31 @@ package com.walmartlabs.concord.dependencymanager;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.immutables.value.Value;
-
-import javax.annotation.Nullable;
-import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-@JsonSerialize(as = ImmutableMavenRepository.class)
-@JsonDeserialize(as = ImmutableMavenRepository.class)
-public interface MavenRepository {
-
-    String id();
+@JsonSerialize(as = ImmutableMavenRepositoryPolicy.class)
+@JsonDeserialize(as = ImmutableMavenRepositoryPolicy.class)
+public interface MavenRepositoryPolicy {
 
     @Value.Default
-    default String contentType() {
-        return "default";
-    }
-
-    String url();
-
-    @Nullable
-    @Value.Redacted
-    Map<String, String> auth();
-
-    @Value.Default
-    default MavenRepositoryPolicy snapshotPolicy() {
-        return MavenRepositoryPolicy.builder().build();
+    default boolean enabled() {
+        return true;
     }
 
     @Value.Default
-    default MavenRepositoryPolicy releasePolicy() {
-        return MavenRepositoryPolicy.builder().build();
+    default String updatePolicy() {
+        return RepositoryPolicy.UPDATE_POLICY_NEVER;
     }
 
-    static ImmutableMavenRepository.Builder builder() {
-        return ImmutableMavenRepository.builder();
+    @Value.Default
+    default String checksumPolicy() {
+        return RepositoryPolicy.CHECKSUM_POLICY_IGNORE;
+    }
+
+    static ImmutableMavenRepositoryPolicy.Builder builder() {
+        return ImmutableMavenRepositoryPolicy.builder();
     }
 }
