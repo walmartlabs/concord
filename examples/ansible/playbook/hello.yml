@@ -4,6 +4,3 @@
   - debug:
       msg: "{{ greetings }}"
       verbosity: 0
-  - get_url:
-      url: "http://central.maven.org/maven2/com/walmartlabs/concord/parent/1.37.1/parent-1.37.1.pom"
-      dest: "/tmp"

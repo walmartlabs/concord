@@ -29,8 +29,13 @@ import java.util.List;
 
 public final class DbUtils {
 
+    /**
+     * Do not use it as generic "INSERT ... ON CONFLICT UPDATE" solution.
+     * It works only until there's only one "inserter".
+     */
     public static <E> void upsert(DSLContext tx, List<E> items,
                                   Update<E> update, Insert<E> insert) {
+
         tx.connection(conn -> {
             int[] updated = update.call(tx, conn, items);
             List<E> forInsert = new ArrayList<>();

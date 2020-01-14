@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.plugins.noderoster.processor;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterH
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.jooq.Field;
 import org.jooq.JSONB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +45,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostFacts.NODE_ROSTER_HOST_FACTS;
-import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.value;
 
 @Named
@@ -124,15 +122,18 @@ public class HostFactsProcessor implements Processor {
         private void insert(DSLContext tx, List<HostFactsItem> items) {
             tx.connection(conn -> {
                 int[] updated = update(tx, conn, items);
+
                 List<HostFactsItem> itemsForInsert = new ArrayList<>();
                 for (int i = 0; i < updated.length; i++) {
                     if (updated[i] < 1) {
                         itemsForInsert.add(items.get(i));
                     }
                 }
+
                 if (!itemsForInsert.isEmpty()) {
                     insert(tx, conn, itemsForInsert);
                 }
+
                 log.info("insert -> updated: {}, inserted: {}",
                         items.size() - itemsForInsert.size(), itemsForInsert.size());
             });
@@ -163,7 +164,6 @@ public class HostFactsProcessor implements Processor {
 
         private void insert(DSLContext tx, Connection conn, List<HostFactsItem> items) throws SQLException {
             NodeRosterHostFacts f = NODE_ROSTER_HOST_FACTS.as("f");
-            Field<Object> jsonField = field("?::jsonb", (Object) null);
 
             String insert = tx.insertInto(f)
                     .columns(f.HOST_ID,

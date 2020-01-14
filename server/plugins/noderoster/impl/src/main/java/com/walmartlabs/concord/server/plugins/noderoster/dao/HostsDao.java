@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -79,21 +78,12 @@ public class HostsDao extends AbstractDao {
                         .build()));
     }
 
-    public Object getFacts(UUID hostId) {
-        try {
-            String s = getFactsString(hostId);
-            return objectMapper.readValue(s, Object.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String getFactsString(UUID hostId) {
+    public String getLastFacts(UUID hostId) {
         return txResult(tx -> tx.select(NODE_ROSTER_HOST_FACTS.FACTS.cast(String.class))
                 .from(NODE_ROSTER_HOST_FACTS)
                 .innerJoin(NODE_ROSTER_PROCESS_HOSTS).on(NODE_ROSTER_PROCESS_HOSTS.HOST_ID.eq(NODE_ROSTER_HOST_FACTS.HOST_ID))
                 .where(NODE_ROSTER_PROCESS_HOSTS.HOST_ID.eq(hostId))
-                .orderBy(NODE_ROSTER_HOST_FACTS.INSTANCE_CREATED_AT.desc())
+                .orderBy(NODE_ROSTER_HOST_FACTS.SEQ_ID.desc())
                 .limit(1)
                 .fetchOne(Record1::value1));
 
