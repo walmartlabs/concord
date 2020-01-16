@@ -68,7 +68,7 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
 
     @Override
     protected List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item) {
-        PolicyEngine pe = getPolicyEngine(tx, item.orgId(), item.projectId(), item.initiatorId(), item.parentInstanceId());
+        PolicyEngine pe = getPolicyEngine(item.orgId(), item.projectId(), item.initiatorId(), item.parentInstanceId());
         if (pe == null) {
             return Collections.emptyList();
         }
@@ -99,7 +99,7 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
         return ProcessCompletionCondition.CompleteCondition.ONE_OF;
     }
 
-    private PolicyEngine getPolicyEngine(DSLContext tx, UUID orgId, UUID prjId, UUID userId, UUID parentInstanceId) {
+    private PolicyEngine getPolicyEngine(UUID orgId, UUID prjId, UUID userId, UUID parentInstanceId) {
         if (prjId == null) {
             return null;
         }

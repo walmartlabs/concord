@@ -39,8 +39,6 @@ public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
 
     public abstract Set<UUID> processes();
 
-    // TODO: remove @Nullable when all conditions migrated to the new format
-    @Nullable
     public abstract Set<ProcessStatus> finalStatuses();
 
     @Value.Default
