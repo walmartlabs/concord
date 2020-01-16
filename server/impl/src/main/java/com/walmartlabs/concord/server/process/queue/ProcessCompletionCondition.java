@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.queue;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
@@ -34,12 +35,21 @@ import java.util.UUID;
 @JsonDeserialize(as = ImmutableProcessCompletionCondition.class)
 public abstract class ProcessCompletionCondition extends AbstractWaitCondition {
 
+    private static final Set<ProcessStatus> DEFAULT_FINISHED_STATUSES = ImmutableSet.of(
+            ProcessStatus.FINISHED,
+            ProcessStatus.FAILED,
+            ProcessStatus.CANCELLED,
+            ProcessStatus.TIMED_OUT);
+
     @Nullable
     public abstract String resumeEvent();
 
     public abstract Set<UUID> processes();
 
-    public abstract Set<ProcessStatus> finalStatuses();
+    @Value.Default
+    public Set<ProcessStatus> finalStatuses() {
+        return DEFAULT_FINISHED_STATUSES;
+    }
 
     @Value.Default
     public CompleteCondition completeCondition() {
