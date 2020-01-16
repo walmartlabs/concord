@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
@@ -50,13 +49,6 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
 
     private final Set<ProcessStatus> STATUSES = new HashSet<>(Arrays.asList(ProcessStatus.ENQUEUED, ProcessStatus.SUSPENDED));
 
-    // TODO: remove me when all conditions migrated to new format
-    private static final Set<ProcessStatus> DEFAULT_FINISHED_STATUSES = ImmutableSet.of(
-            ProcessStatus.FINISHED,
-            ProcessStatus.FAILED,
-            ProcessStatus.CANCELLED,
-            ProcessStatus.TIMED_OUT);
-
     private final Dao dao;
     private final ProcessManager processManager;
     private final PayloadManager payloadManager;
@@ -80,13 +72,7 @@ public class WaitProcessFinishHandler implements ProcessWaitHandler<ProcessCompl
 
     @Override
     public ProcessCompletionCondition process(UUID instanceId, ProcessStatus processStatus, ProcessCompletionCondition wait) {
-        Set<ProcessStatus> finishedStatuses = DEFAULT_FINISHED_STATUSES;
-
-        Set<ProcessStatus> finalStatuses = wait.finalStatuses();
-        if (finalStatuses != null && !finalStatuses.isEmpty()) {
-            finishedStatuses = finalStatuses;
-        }
-
+        Set<ProcessStatus> finishedStatuses = wait.finalStatuses();
         Set<UUID> awaitProcesses = wait.processes();
 
         Set<UUID> finishedProcesses = dao.findFinished(awaitProcesses, finishedStatuses);
