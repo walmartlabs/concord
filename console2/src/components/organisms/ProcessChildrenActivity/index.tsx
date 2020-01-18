@@ -139,7 +139,7 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
         if (filters) {
             dispatch(pushHistory({ search: queryParams(filters) }));
         }
-        dispatch(actions.listChildren(instanceId, filters));
+        dispatch(actions.listChildren(instanceId, filters, paginationFilters));
     }
 });
 
