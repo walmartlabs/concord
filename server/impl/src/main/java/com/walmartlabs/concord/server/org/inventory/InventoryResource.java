@@ -23,16 +23,15 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
-import com.walmartlabs.concord.server.org.*;
-import com.walmartlabs.concord.server.org.team.TeamDao;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.ResourceAccessEntry;
+import com.walmartlabs.concord.server.org.jsonstore.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,34 +39,24 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
 @Api(value = "Inventories", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Deprecated
 public class InventoryResource implements Resource {
 
-    private final InventoryManager inventoryManager;
-    private final InventoryDao inventoryDao;
-    private final OrganizationManager orgManager;
-    private final OrganizationDao orgDao;
-    private final TeamDao teamDao;
+    private final JsonStoreManager storageManager;
+    private final JsonStoreDao storageDao;
 
     @Inject
-    public InventoryResource(InventoryManager inventoryManager,
-                             InventoryDao inventoryDao,
-                             OrganizationManager orgManager,
-                             OrganizationDao orgDao,
-                             TeamDao teamDao) {
-
-        this.inventoryManager = inventoryManager;
-        this.inventoryDao = inventoryDao;
-        this.orgManager = orgManager;
-        this.orgDao = orgDao;
-        this.teamDao = teamDao;
+    public InventoryResource(JsonStoreManager storageManager, JsonStoreDao storageDao) {
+        this.storageManager = storageManager;
+        this.storageDao = storageDao;
     }
 
     /**
@@ -81,8 +70,10 @@ public class InventoryResource implements Resource {
     @Path("/{orgName}/inventory")
     @Produces(MediaType.APPLICATION_JSON)
     public List<InventoryEntry> list(@ApiParam @PathParam("orgName") String orgName) {
-        OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return inventoryDao.list(org.getId());
+        List<JsonStoreEntry> result = storageManager.list(orgName, -1, -1, null);
+        return result.stream()
+                .map(InventoryResource::convert)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -98,9 +89,7 @@ public class InventoryResource implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     public InventoryEntry get(@ApiParam @PathParam("orgName") String orgName,
                               @ApiParam @PathParam("inventoryName") String inventoryName) {
-
-        OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        return assertInventory(org.getId(), inventoryName, ResourceAccessLevel.READER, false);
+        return convert(storageManager.get(orgName, inventoryName));
     }
 
     /**
@@ -119,19 +108,22 @@ public class InventoryResource implements Resource {
     public CreateInventoryResponse createOrUpdate(@ApiParam @PathParam("orgName") String orgName,
                                                   @ApiParam @Valid InventoryEntry entry) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-
-        UUID id = entry.getId();
-        if (id == null) {
-            id = inventoryDao.getId(org.getId(), entry.getName());
+        JsonStoreEntry prevStorage = null;
+        if (entry.getId() != null) {
+            prevStorage = storageDao.get(entry.getId());
         }
 
-        if (id != null) {
-            inventoryManager.update(id, entry);
-            return new CreateInventoryResponse(OperationResult.UPDATED, id);
+        if (prevStorage != null) {
+            storageManager.update(orgName, prevStorage.id(), JsonStoreRequest.builder()
+                    .name(entry.getName())
+                    .owner(toOwner(entry.getOwner()))
+                    .visibility(entry.getVisibility() != null ? entry.getVisibility() : JsonStoreVisibility.PRIVATE)
+                    .build());
+
+            return new CreateInventoryResponse(OperationResult.UPDATED, prevStorage.id());
         }
 
-        id = inventoryManager.insert(org.getId(), entry);
+        UUID id = storageManager.insert(orgName, entry.getName(), entry.getVisibility() != null ? entry.getVisibility() : JsonStoreVisibility.PUBLIC, toOwner(entry.getOwner()));
 
         return new CreateInventoryResponse(OperationResult.CREATED, id);
     }
@@ -146,16 +138,8 @@ public class InventoryResource implements Resource {
                                                     @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
                                                     @ApiParam @Valid ResourceAccessEntry entry) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        storageManager.updateAccessLevel(orgName, inventoryName, entry);
 
-        UUID inventoryId = inventoryDao.getId(org.getId(), inventoryName);
-        if (inventoryId == null) {
-            throw new ConcordApplicationException("Inventory not found: " + inventoryName, Response.Status.NOT_FOUND);
-        }
-
-        UUID teamId = ResourceAccessUtils.getTeamId(orgDao, teamDao, org.getId(), entry);
-
-        inventoryManager.updateAccessLevel(inventoryId, teamId, entry.getLevel());
         return new GenericOperationResult(OperationResult.UPDATED);
     }
 
@@ -173,19 +157,32 @@ public class InventoryResource implements Resource {
     public GenericOperationResult delete(@ApiParam @PathParam("orgName") String orgName,
                                          @ApiParam @PathParam("inventoryName") String inventoryName) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-
-        InventoryEntry i = assertInventory(org.getId(), inventoryName, ResourceAccessLevel.OWNER, false);
-        inventoryManager.delete(i.getId());
+        storageManager.delete(orgName, inventoryName);
 
         return new GenericOperationResult(OperationResult.DELETED);
     }
 
-    private InventoryEntry assertInventory(UUID orgId, String inventoryName, ResourceAccessLevel accessLevel, boolean orgMembersOnly) {
-        if (inventoryName == null) {
-            throw new ValidationErrorsException("A valid inventory name is required");
+    private static InventoryEntry convert(JsonStoreEntry e) {
+        if (e == null) {
+            return null;
         }
 
-        return inventoryManager.assertInventoryAccess(orgId, inventoryName, accessLevel, orgMembersOnly);
+        InventoryOwner owner = null;
+        if (e.owner() != null) {
+            owner = new InventoryOwner(e.owner().id(), e.owner().username());
+        }
+
+        return new InventoryEntry(e.id(), e.name(), e.orgId(), e.orgName(), e.visibility(), owner, null);
+    }
+
+    private static EntityOwner toOwner(InventoryOwner owner) {
+        if (owner == null) {
+            return null;
+        }
+
+        return EntityOwner.builder()
+                .id(owner.getId())
+                .username(owner.getUsername())
+                .build();
     }
 }

@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.audit;
 import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
+import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.audit.AuditEvent;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -61,6 +62,7 @@ public class AuditLog {
         private final AuditObject object;
         private final AuditAction action;
         private final Map<String, Object> details;
+        private Map<String, Object> changes;
 
         private UUID userId;
 
@@ -68,6 +70,7 @@ public class AuditLog {
             this.object = object;
             this.action = action;
             this.details = new HashMap<>();
+            this.changes = new HashMap<>();
         }
 
         public EntryBuilder userId(UUID userId) {
@@ -81,6 +84,15 @@ public class AuditLog {
             }
 
             details.put(k, v);
+            return this;
+        }
+
+        public EntryBuilder changes(Object prevEntry, Object newEntry) {
+            if (prevEntry == null && newEntry == null) {
+                return this;
+            }
+
+            this.changes = DiffUtils.compare(prevEntry, newEntry);
             return this;
         }
 
@@ -120,6 +132,10 @@ public class AuditLog {
             details.put("actionSource", actionSource);
 
             details.put("requestId", RequestId.get());
+
+            if (changes != null && !changes.isEmpty()) {
+                details.put("changes", changes);
+            }
 
             auditDao.insert(userId, object, action, details);
 

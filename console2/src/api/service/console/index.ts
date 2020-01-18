@@ -81,6 +81,33 @@ export const isSecretExists = throttle(async (orgName: ConcordKey, name: string)
     }
 }, 1000);
 
+export const isStorageExists = throttle(async (orgName: ConcordKey, name: string): Promise<
+    boolean
+> => {
+    try {
+        const json = await fetchJson(
+            `/api/service/console/org/${orgName}/jsonstore/${name}/exists`
+        );
+        return json as boolean;
+    } catch (exception) {
+        return false;
+    }
+}, 1000);
+
+export const isStorageQueryExists = throttle(
+    async (orgName: ConcordKey, storageName: string, queryName: string): Promise<boolean> => {
+        try {
+            const json = await fetchJson(
+                `/api/service/console/org/${orgName}/jsonstore/${storageName}/query/${queryName}/exists`
+            );
+            return json as boolean;
+        } catch (exception) {
+            return false;
+        }
+    },
+    1000
+);
+
 export const isRepositoryExists = throttle(
     async (orgName: ConcordKey, projectName: ConcordKey, name: string): Promise<boolean> => {
         try {

@@ -40,6 +40,7 @@ public class PolicyEngine {
     private final ProtectedTasksPolicy protectedTasksPolicy;
     private final EntityPolicy entityPolicy;
     private final ProcessCfgPolicy processCfgPolicy;
+    private final JsonStorePolicy jsonStoragePolicy;
 
     public PolicyEngine(PolicyEngineRules rules) {
         this(Collections.emptyList(), rules);
@@ -67,6 +68,7 @@ public class PolicyEngine {
         this.protectedTasksPolicy = new ProtectedTasksPolicy(rules.getProtectedTasksRules());
         this.entityPolicy = new EntityPolicy(rules.getEntityRules());
         this.processCfgPolicy = new ProcessCfgPolicy(rules.getProcessCfgRules());
+        this.jsonStoragePolicy = new JsonStorePolicy(rules.getJsonStoreRule());
     }
 
     public List<String> policyNames() {
@@ -123,6 +125,10 @@ public class PolicyEngine {
 
     public ProcessCfgPolicy getProcessCfgPolicy() {
         return processCfgPolicy;
+    }
+
+    public JsonStorePolicy getJsonStoragePolicy() {
+        return jsonStoragePolicy;
     }
 
     @Override

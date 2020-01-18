@@ -39,6 +39,7 @@ export { default as ProcessWizardPage } from './ProcessWizardPage';
 export { default as ProfilePage } from './ProfilePage';
 export { default as ProjectPage } from './ProjectPage';
 export { default as SecretPage } from './SecretPage';
+export { default as JsonStorePage } from './JsonStorePage';
 export { default as TeamPage } from './TeamPage';
 export { default as UserActivityPage } from './UserActivityPage';
 export { default as UnauthorizedPage } from './UnauthorizedPage';

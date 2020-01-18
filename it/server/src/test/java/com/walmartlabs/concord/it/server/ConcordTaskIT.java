@@ -513,7 +513,7 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*\\{varFromFork=Hello, " + nameVar + "\\}.*", ab);
         assertLog(".*\\{varFromFork=Bye, " + nameVar + "\\}.*", ab);
     }
-    
+
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testForkAsyncGrabOutVars() throws Exception {
         byte[] payload = archive(ConcordTaskIT.class.getResource("concordTaskForkAsyncGrabOutVars").toURI());

@@ -25,19 +25,20 @@ import { Popup } from 'semantic-ui-react';
 
 interface Props {
     entity: string;
+    title?: string;
     orgName: ConcordKey;
     userInOrg: boolean;
     enabledInPolicy: boolean;
 }
 
-export default ({ entity, orgName, userInOrg, enabledInPolicy }: Props) => {
+export default ({ entity, title, orgName, userInOrg, enabledInPolicy }: Props) => {
     const button = (disabled?: boolean) => (
         <RedirectButton
             disabled={disabled}
             icon="plus"
             positive={true}
             labelPosition="left"
-            content={`New ${entity}`}
+            content={title || `New ${entity}`}
             location={`/org/${orgName}/${entity}/_new`}
         />
     );

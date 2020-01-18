@@ -39,7 +39,7 @@ export default class extends React.PureComponent<Props> {
         const details = error.details && error.details.length > 0 ? error.details : undefined;
 
         return (
-            <Message negative={true}>
+            <Message negative={true} error={true}>
                 {error.message && <Message.Header>{error.message}</Message.Header>}
                 {details && details.split('\n').map((item, i) => <p key={i}>{item}</p>)}
                 {error.instanceId && (

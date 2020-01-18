@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.cfg;
  */
 
 import com.walmartlabs.concord.db.DatabaseConfiguration;
-import com.walmartlabs.concord.db.InventoryDB;
+import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.ollie.config.Config;
 
 import javax.inject.Inject;
@@ -30,8 +30,8 @@ import javax.inject.Singleton;
 
 @Named
 @Singleton
-@InventoryDB
-public class InventoryDBConfiguration implements DatabaseConfiguration {
+@JsonStorageDB
+public class JsonStorageDBConfiguration implements DatabaseConfiguration {
 
     @Inject
     @Config("db.url")

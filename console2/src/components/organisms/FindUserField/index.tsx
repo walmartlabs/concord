@@ -73,7 +73,7 @@ export const renderUsername = (username: string, userDomain?: string): string =>
 export const renderUser = (username: string, userDomain?: string, displayName?: string): string => {
     return displayName !== undefined
         ? displayName + ' (' + renderUsername(username, userDomain) + ' )'
-        : username;
+        : renderUsername(username, userDomain);
 };
 
 class FindUserField extends React.PureComponent<Props, InternalState> {
@@ -84,6 +84,23 @@ class FindUserField extends React.PureComponent<Props, InternalState> {
         this.state = {
             value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName)
         };
+    }
+
+    componentDidUpdate(
+        prevProps: Readonly<Props>,
+        prevState: Readonly<InternalState>,
+        snapshot?: any
+    ): void {
+        if (
+            prevProps.defaultUsername !== this.props.defaultUsername ||
+            prevProps.defaultUserDomain !== this.props.defaultUserDomain ||
+            prevProps.defaultDisplayName !== this.props.defaultDisplayName
+        ) {
+            const { defaultUsername, defaultUserDomain, defaultDisplayName } = this.props;
+            this.setState({
+                value: renderUser(defaultUsername || '', defaultUserDomain, defaultDisplayName)
+            });
+        }
     }
 
     componentDidMount() {

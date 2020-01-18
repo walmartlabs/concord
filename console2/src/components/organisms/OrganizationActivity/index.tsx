@@ -28,7 +28,7 @@ import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react'
 import { ConcordKey, RequestError } from '../../../api/common';
 import { OrganizationEntry } from '../../../api/org';
 import { actions, selectors, State } from '../../../state/data/orgs';
-import { WithCopyToClipboard, RequestErrorMessage } from '../../molecules';
+import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
     OrganizationOwnerChangeActivity,
     ProcessListActivity,
@@ -38,8 +38,9 @@ import {
 } from '../../organisms';
 
 import { NotFoundPage } from '../../pages';
+import StorageListActivity from '../../pages/JsonStorePage/StoreListActivity';
 
-export type TabLink = 'process' | 'project' | 'secret' | 'team' | 'settings' | null;
+export type TabLink = 'process' | 'project' | 'secret' | 'team' | 'jsonstore' | 'settings' | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -87,6 +88,10 @@ class OrganizationActivity extends React.PureComponent<Props> {
 
     static renderTeams(orgName: string) {
         return <TeamListActivity orgName={orgName} />;
+    }
+
+    static renderStorage(orgName: string) {
+        return <StorageListActivity orgName={orgName} />;
     }
 
     static renderSettings(e: OrganizationEntry) {
@@ -162,6 +167,10 @@ class OrganizationActivity extends React.PureComponent<Props> {
                         <Icon name="users" />
                         <Link to={`${baseUrl}/team`}>Teams</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'jsonstore'}>
+                        <Icon name="database" />
+                        <Link to={`${baseUrl}/jsonstore`}>JSON Stores</Link>
+                    </Menu.Item>
                     <Menu.Item active={activeTab === 'settings'}>
                         <Icon name="setting" />
                         <Link to={`${baseUrl}/settings`}>Settings</Link>
@@ -183,6 +192,9 @@ class OrganizationActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/team`} exact={true}>
                         {OrganizationActivity.renderTeams(data.name)}
+                    </Route>
+                    <Route path={`${baseUrl}/jsonstore`} exact={true}>
+                        {OrganizationActivity.renderStorage(data.name)}
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         {OrganizationActivity.renderSettings(data)}

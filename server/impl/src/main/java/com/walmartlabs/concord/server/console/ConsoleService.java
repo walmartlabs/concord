@@ -24,6 +24,10 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreAccessManager;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreDao;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreQueryDao;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
@@ -75,6 +79,9 @@ public class ConsoleService implements Resource {
     private final LdapManager ldapManager;
     private final ApiKeyDao apiKeyDao;
     private final ProjectAccessManager projectAccessManager;
+    private final JsonStoreDao storageDao;
+    private final JsonStoreQueryDao storageQueryDao;
+    private final JsonStoreAccessManager jsonStoreAccessManager;
 
     @Inject
     public ConsoleService(ProjectDao projectDao,
@@ -86,7 +93,10 @@ public class ConsoleService implements Resource {
                           TeamDao teamDao,
                           LdapManager ldapManager,
                           ApiKeyDao apiKeyDao,
-                          ProjectAccessManager projectAccessManager) {
+                          ProjectAccessManager projectAccessManager,
+                          JsonStoreDao storageDao,
+                          JsonStoreQueryDao storageQueryDao,
+                          JsonStoreAccessManager jsonStoreAccessManager) {
 
         this.projectDao = projectDao;
         this.repositoryManager = repositoryManager;
@@ -98,6 +108,9 @@ public class ConsoleService implements Resource {
         this.ldapManager = ldapManager;
         this.apiKeyDao = apiKeyDao;
         this.projectAccessManager = projectAccessManager;
+        this.storageDao = storageDao;
+        this.storageQueryDao = storageQueryDao;
+        this.jsonStoreAccessManager = jsonStoreAccessManager;
     }
 
     @GET
@@ -143,6 +156,34 @@ public class ConsoleService implements Resource {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         return projectDao.getId(org.getId(), projectName) != null;
+    }
+
+    @GET
+    @Path("/org/{orgName}/jsonstore/{storageName}/exists")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public boolean isStorageExists(@PathParam("orgName") @ConcordKey String orgName,
+                                   @PathParam("storageName") String storageName) {
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        return storageDao.getId(org.getId(), storageName) != null;
+    }
+
+    @GET
+    @Path("/org/{orgName}/jsonstore/{storeName}/query/{queryName}/exists")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public boolean isStorageQueryExists(@PathParam("orgName") @ConcordKey String orgName,
+                                        @PathParam("storeName") String storeName,
+                                        @PathParam("queryName") String queryName) {
+
+        try {
+            OrganizationEntry org = orgManager.assertAccess(orgName, true);
+            JsonStoreEntry storage = jsonStoreAccessManager.assertAccess(org.getId(), null, storeName, ResourceAccessLevel.READER, true);
+            return storageQueryDao.getId(storage.id(), queryName) != null;
+        } catch (UnauthorizedException e) {
+            return false;
+        }
     }
 
     @GET

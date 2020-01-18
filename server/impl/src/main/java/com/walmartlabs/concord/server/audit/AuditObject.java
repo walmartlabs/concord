@@ -25,11 +25,14 @@ public enum AuditObject {
 
     EXTERNAL_EVENT,
     INVENTORY,
+    JSON_STORE,
+    JSON_STORE_DATA,
+    JSON_STORE_QUERY,
     ORGANIZATION,
     POLICY,
     PROJECT,
     ROLE,
     SECRET,
     SYSTEM,
-    TEAM
+    TEAM,
 }

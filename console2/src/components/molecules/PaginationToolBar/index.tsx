@@ -36,6 +36,7 @@ interface Props {
     disableFirst?: boolean;
     dropDownValues?: number[]; // Numbers
     maxValue?: number; // Maximum Items that could render
+    disabled?: boolean;
 }
 
 interface State {
@@ -53,7 +54,12 @@ class PaginationToolBar extends React.Component<Props, State> {
     }
 
     render() {
-        const { handleLimitChange, dropDownValues = defaultDropDownValues, maxValue } = this.props;
+        const {
+            handleLimitChange,
+            dropDownValues = defaultDropDownValues,
+            maxValue,
+            disabled
+        } = this.props;
 
         return (
             <>
@@ -70,6 +76,7 @@ class PaginationToolBar extends React.Component<Props, State> {
                         basic={true}
                         fluid={false}
                         onChange={(v, data) => handleLimitChange(data.value)}
+                        disabled={disabled}
                     />
                 )}
                 <Button.Group>

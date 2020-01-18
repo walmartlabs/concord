@@ -40,6 +40,7 @@ public class PolicyEngineRules {
     private final PolicyRules<EntityRule> entityRules;
     private final Map<String, Object> processCfg;
     private final Map<String, Object> customRule;
+    private final JsonStoreRule jsonStoreRule;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -49,7 +50,8 @@ public class PolicyEngineRules {
                              @JsonProperty("queue") QueueRule queueRules,
                              @JsonProperty("protectedTask") ProtectedTasksRule protectedTasksRules,
                              @JsonProperty("entity") PolicyRules<EntityRule> entityRules,
-                             @JsonProperty("processCfg") Map<String, Object> processCfg) {
+                             @JsonProperty("processCfg") Map<String, Object> processCfg,
+                             @JsonProperty("jsonStore") JsonStoreRule jsonStoreRule) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -61,6 +63,7 @@ public class PolicyEngineRules {
         this.entityRules = entityRules;
         this.processCfg = processCfg;
         this.customRule = new HashMap<>();
+        this.jsonStoreRule = jsonStoreRule;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -110,6 +113,10 @@ public class PolicyEngineRules {
         return customRule;
     }
 
+    public JsonStoreRule getJsonStoreRule() {
+        return jsonStoreRule;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -124,12 +131,13 @@ public class PolicyEngineRules {
                 Objects.equals(protectedTasksRules, that.protectedTasksRules) &&
                 Objects.equals(entityRules, that.entityRules) &&
                 Objects.equals(processCfg, that.processCfg) &&
-                Objects.equals(customRule, that.customRule);
+                Objects.equals(customRule, that.customRule) &&
+                Objects.equals(jsonStoreRule, that.jsonStoreRule);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dependencyRules, fileRules, taskRules, workspaceRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule);
+        return Objects.hash(dependencyRules, fileRules, taskRules, workspaceRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule);
     }
 
     @Override
@@ -145,6 +153,7 @@ public class PolicyEngineRules {
                 ", entityRules=" + entityRules +
                 ", processCfg=" + processCfg +
                 ", customRule=" + customRule +
+                ", jsonStorageRule=" + jsonStoreRule +
                 '}';
     }
 }

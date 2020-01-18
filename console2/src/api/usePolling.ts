@@ -27,23 +27,25 @@ export const usePolling = (
     refresh: boolean
 ): RequestError | undefined => {
     const poll = useRef<number | undefined>(undefined);
-    const currentTimeoutChainId = useRef(0);
     const [error, setError] = useState<RequestError>();
 
     useEffect(() => {
-        const fetchData = async (timeoutChainId: number) => {
+        let cancelled = false;
+
+        const fetchData = async () => {
             loadingHandler(1);
 
             let result = false;
             try {
                 result = await request();
+
                 setError(undefined);
             } catch (e) {
                 setError(e);
             } finally {
                 if (result) {
-                    if (timeoutChainId === currentTimeoutChainId.current) {
-                        poll.current = setTimeout(() => fetchData(timeoutChainId), interval);
+                    if (!cancelled) {
+                        poll.current = setTimeout(() => fetchData(), interval);
                     }
                 } else {
                     stopPolling();
@@ -53,9 +55,12 @@ export const usePolling = (
             }
         };
 
-        fetchData(currentTimeoutChainId.current);
+        fetchData();
 
-        return () => stopPolling();
+        return () => {
+            cancelled = true;
+            stopPolling();
+        };
     }, [request, interval, refresh, loadingHandler]);
 
     const stopPolling = () => {
@@ -63,7 +68,6 @@ export const usePolling = (
             clearTimeout(poll.current);
             poll.current = undefined;
         }
-        currentTimeoutChainId.current += 1;
     };
 
     return error;

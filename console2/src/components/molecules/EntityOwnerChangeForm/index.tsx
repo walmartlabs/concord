@@ -36,6 +36,7 @@ interface Props {
     confirmationContent: string;
     onSubmit: (owner: Owner) => void;
     submitting: boolean;
+    disabled?: boolean;
 }
 
 interface State {
@@ -78,13 +79,19 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
 
     render() {
         const { dirty } = this.state;
-        const { submitting, originalOwner, confirmationHeader, confirmationContent } = this.props;
+        const {
+            submitting,
+            originalOwner,
+            confirmationHeader,
+            confirmationContent,
+            disabled
+        } = this.props;
 
         return (
             <>
                 <Form loading={submitting}>
                     <Form.Group widths={3}>
-                        <Form.Field>
+                        <Form.Field disabled={disabled}>
                             <FindUserField
                                 placeholder="Search for a user..."
                                 defaultUsername={
@@ -106,7 +113,7 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
                             primary={true}
                             negative={true}
                             content="Change"
-                            disabled={!dirty}
+                            disabled={!dirty || disabled}
                             onClick={(ev) => this.handleShowConfirm(ev)}
                         />
                     </Form.Group>

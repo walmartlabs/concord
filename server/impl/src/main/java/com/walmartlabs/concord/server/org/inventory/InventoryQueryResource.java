@@ -21,20 +21,16 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
-import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.org.jsonstore.*;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -45,28 +41,26 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Named
 @Singleton
 @Api(value = "Inventory Queries", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Deprecated
 public class InventoryQueryResource implements Resource {
 
-    private final OrganizationManager orgManager;
-    private final InventoryManager inventoryManager;
-    private final InventoryQueryDao inventoryQueryDao;
-    private final InventoryQueryExecDao inventoryQueryExecDao;
+    private final JsonStoreQueryResource storageQueryResource;
+    private final OrganizationManager organizationManager;
+    private final JsonStoreDao storageDao;
+    private final JsonStoreQueryDao storageQueryDao;
 
     @Inject
-    public InventoryQueryResource(OrganizationManager orgManager,
-                                  InventoryManager inventoryManager,
-                                  InventoryQueryDao inventoryQueryDao,
-                                  InventoryQueryExecDao inventoryQueryExecDao) {
-
-        this.inventoryManager = inventoryManager;
-        this.orgManager = orgManager;
-        this.inventoryQueryDao = inventoryQueryDao;
-        this.inventoryQueryExecDao = inventoryQueryExecDao;
+    public InventoryQueryResource(JsonStoreQueryResource storageQueryResource, OrganizationManager organizationManager, JsonStoreDao storageDao, JsonStoreQueryDao storageQueryDao) {
+        this.storageQueryResource = storageQueryResource;
+        this.organizationManager = organizationManager;
+        this.storageDao = storageDao;
+        this.storageQueryDao = storageQueryDao;
     }
 
     /**
@@ -85,12 +79,7 @@ public class InventoryQueryResource implements Resource {
                                    @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
                                    @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
-
-        UUID queryId = assertQuery(inventory.getId(), queryName);
-        return inventoryQueryDao.get(queryId);
+        return convert(storageQueryResource.get(orgName, inventoryName, queryName));
     }
 
     /**
@@ -104,7 +93,7 @@ public class InventoryQueryResource implements Resource {
      */
     @POST
     @ApiOperation("Create or update inventory query")
-    @Consumes(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
     public CreateInventoryQueryResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
@@ -112,21 +101,16 @@ public class InventoryQueryResource implements Resource {
                                                        @ApiParam @PathParam("queryName") @ConcordKey String queryName,
                                                        @ApiParam String text) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
+        GenericOperationResult res = storageQueryResource.createOrUpdate(orgName, inventoryName, JsonStoreQueryRequest.builder()
+                .name(queryName)
+                .text(text)
+                .build());
 
-        validateQuery(text);
+        OrganizationEntry org = organizationManager.assertExisting(null, orgName);
+        JsonStoreEntry storage = storageDao.get(org.getId(), inventoryName);
+        UUID id = storageQueryDao.getId(storage.id(), queryName);
 
-        UUID inventoryId = inventory.getId();
-        UUID queryId = inventoryQueryDao.getId(inventoryId, queryName);
-
-        if (queryId == null) {
-            queryId = inventoryQueryDao.insert(inventoryId, queryName, text);
-            return new CreateInventoryQueryResponse(OperationResult.CREATED, queryId);
-        } else {
-            inventoryQueryDao.update(queryId, inventoryId, queryName, text);
-            return new CreateInventoryQueryResponse(OperationResult.UPDATED, queryId);
-        }
+        return new CreateInventoryQueryResponse(res.getResult(), id);
     }
 
     /**
@@ -143,9 +127,10 @@ public class InventoryQueryResource implements Resource {
     public List<InventoryQueryEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                           @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
-        return inventoryQueryDao.list(inventory.getId());
+        return storageQueryResource.list(orgName, inventoryName, -1, -1, null)
+                .stream()
+                .map(InventoryQueryResource::convert)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -164,12 +149,7 @@ public class InventoryQueryResource implements Resource {
                                                @ApiParam @PathParam("inventoryName") @ConcordKey String inventoryName,
                                                @ApiParam @PathParam("queryName") @ConcordKey String queryName) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
-
-        UUID inventoryId = inventory.getId();
-        UUID queryId = assertQuery(inventoryId, queryName);
-        inventoryQueryDao.delete(queryId);
+        storageQueryResource.delete(orgName, inventoryName, queryName);
         return new DeleteInventoryQueryResponse();
     }
 
@@ -193,40 +173,13 @@ public class InventoryQueryResource implements Resource {
                              @ApiParam @PathParam("queryName") @ConcordKey String queryName,
                              @ApiParam @Valid Map<String, Object> params) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
-
-        UUID inventoryId = inventory.getId();
-        UUID queryId = assertQuery(inventoryId, queryName);
-        try {
-            return inventoryQueryExecDao.exec(queryId, params);
-        } catch (Exception e) {
-            throw new ConcordApplicationException("Error while execution query: " + e.getMessage(), e);
-        }
+        return storageQueryResource.exec(orgName, inventoryName, queryName, params);
     }
 
-    private UUID assertQuery(UUID inventoryId, String queryName) {
-        if (queryName == null) {
-            throw new ValidationErrorsException("A valid query name is required");
+    private static InventoryQueryEntry convert(JsonStoreQueryEntry query) {
+        if (query == null) {
+            return null;
         }
-
-        UUID id = inventoryQueryDao.getId(inventoryId, queryName);
-        if (id == null) {
-            throw new ValidationErrorsException("Query not found: " + queryName);
-        }
-        return id;
-    }
-
-    private static void validateQuery(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            throw new ValidationErrorsException("Query should not be empty");
-        }
-
-        try {
-            CCJSqlParserUtil.parse(text);
-        } catch (JSQLParserException e) {
-            String msg = e.getCause().getMessage();
-            throw new ValidationErrorsException("Query parse error: " + msg);
-        }
+        return new InventoryQueryEntry(query.id(), query.name(), query.storeId(), query.text());
     }
 }

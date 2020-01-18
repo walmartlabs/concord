@@ -70,7 +70,6 @@ public class InventoryTask extends AbstractConcordTask {
         return ansible(ctx, orgName, inventoryName, hostGroupName, queryName, null, null);
     }
 
-    @SuppressWarnings("unchecked")
     public Map<String, Object> ansible(@InjectVariable("context") Context ctx,
                                        String orgName, String inventoryName,
                                        String hostGroupName, String queryName, Map<String, Object> params,

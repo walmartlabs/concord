@@ -21,10 +21,12 @@ package com.walmartlabs.concord.server.policy;
  */
 
 import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreVisibility;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.secret.SecretVisibility;
 import com.walmartlabs.concord.server.process.loader.model.Trigger;
+import com.walmartlabs.concord.server.user.UserEntry;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -89,6 +91,33 @@ public final class PolicyUtils {
         m.put("params", trigger.conditions() != null ? trigger.conditions() : Collections.emptyMap());
         m.put("cfg", trigger.configuration() != null ? trigger.configuration() : Collections.emptyList());
         return m;
+    }
+
+    public static Map<String, Object> toMap(UUID orgId, String storageName,
+                                            JsonStoreVisibility visibility, UserEntry owner) {
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("orgId", orgId);
+        m.put("name", storageName);
+        if (visibility != null) {
+            m.put("visibility", visibility.name());
+        }
+        m.putAll(toMap(owner));
+        return m;
+    }
+
+    private static Map<String, Object> toMap(UserEntry owner) {
+        if (owner == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("ownerId", owner.getId());
+        result.put("ownerName", owner.getName());
+        if (owner.getDomain() != null) {
+            result.put("ownerDomain", owner.getDomain());
+        }
+        result.put("ownerType", owner.getType().name());
+        return result;
     }
 
     private PolicyUtils() {

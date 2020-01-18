@@ -78,8 +78,11 @@ public class PolicyEngineRulesTest {
         Map<String, Object> processCfg = new HashMap<>();
         processCfg.put("a", "b");
 
+        JsonStoreRule.StoreRule storageRule = new JsonStoreRule.StoreRule(123, "storage-rule");
+        JsonStoreRule.StoreDataRule storageDataRule = new JsonStoreRule.StoreDataRule(11L, "storage-data-rule");
+
         PolicyEngineRules r = new PolicyEngineRules(dependencyRules, fileRules, taskRules, workspaceRule,
-                containerRules, queueRules, protectedTasksRules, entityRules, processCfg);
+                containerRules, queueRules, protectedTasksRules, entityRules, processCfg, new JsonStoreRule(storageRule, storageDataRule));
 
         r.addCustomRule("ansible", Collections.singletonMap("k", "v"));
 
