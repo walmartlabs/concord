@@ -1,0 +1,5 @@
+flows:
+  default:
+  - log: "empty: ${jsonStore.get(storageName, 'xxx')}"
+  - ${jsonStore.put(storageName, 'test', '"string"')}
+  - log: "get: ${jsonStore.get(storageName, 'test')}"

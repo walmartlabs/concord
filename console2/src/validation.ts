@@ -39,6 +39,10 @@ export const projectAlreadyExistsError = (n: string) => `Project already exists:
 
 export const secretAlreadyExistsError = (n: string) => `Secret already exists: ${n}`;
 
+export const storageAlreadyExistsError = (n: string) => `Storage already exists: ${n}`;
+
+export const storageQueryAlreadyExistsError = (n: string) => `Storage query already exists: ${n}`;
+
 export const repositoryAlreadyExistsError = (n: string) => `Repository already exists: ${n}`;
 
 export const teamAlreadyExistsError = (n: string) => `Team already exists: ${n}`;
@@ -84,6 +88,23 @@ export const project = {
     description: (v?: string) => {
         if (v && v.length > 1024) {
             return tooLongError(1024);
+        }
+        return;
+    }
+};
+
+export const storage = {
+    name: concordKeyValidator
+};
+
+export const storageQuery = {
+    name: concordKeyValidator,
+    query: (v?: string) => {
+        if (!v) {
+            return requiredError();
+        }
+        if (v && v.length > 4000) {
+            return tooLongError(4000);
         }
         return;
     }

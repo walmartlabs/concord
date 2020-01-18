@@ -25,6 +25,9 @@ public enum EntityType {
     ORGANIZATION("org"),
     PROJECT("project"),
     SECRET("secret"),
+    STORAGE("storage"),
+    STORAGE_ITEM("storageItem"),
+    STORAGE_QUERY("storageQuery"),
     TRIGGER("trigger");
 
     private final String id;

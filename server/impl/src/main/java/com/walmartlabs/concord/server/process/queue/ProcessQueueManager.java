@@ -26,7 +26,6 @@ import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.RequestId;
 import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
@@ -49,7 +48,6 @@ public class ProcessQueueManager {
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
-                               ProcessEventDao eventDao,
                                ConcordObjectMapper objectMapper,
                                ProcessKeyCache keyCache,
                                ProcessEventManager eventManager) {

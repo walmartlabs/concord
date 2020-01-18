@@ -55,9 +55,9 @@ public class DatabaseModule extends AbstractModule {
     }
 
     @Provides
-    @InventoryDB
+    @JsonStorageDB
     @Singleton
-    public DataSource inventoryDataSource(@InventoryDB DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
+    public DataSource inventoryDataSource(@JsonStorageDB DatabaseConfiguration cfg, MetricRegistry metricRegistry) {
         return DataSourceUtils.createDataSource(cfg, "inventory", cfg.username(), cfg.password(), metricRegistry);
     }
 
@@ -69,9 +69,9 @@ public class DatabaseModule extends AbstractModule {
     }
 
     @Provides
-    @InventoryDB
+    @JsonStorageDB
     @Singleton
-    public Configuration inventoryJooqConfiguration(@InventoryDB DataSource ds) {
+    public Configuration inventoryJooqConfiguration(@JsonStorageDB DataSource ds) {
         return DataSourceUtils.createJooqConfiguration(ds);
     }
 }

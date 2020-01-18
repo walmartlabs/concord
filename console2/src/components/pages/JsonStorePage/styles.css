@@ -1,5 +1,3 @@
-package com.walmartlabs.concord.server.org.inventory;
-
 /*-
  * *****
  * Concord
@@ -20,33 +18,28 @@ package com.walmartlabs.concord.server.org.inventory;
  * =====
  */
 
-import java.io.Serializable;
+.editorContainer {
+    margin: 0 0 1em;
+}
 
-public class InventoryDataItem implements Serializable {
+.editorContainer.loading {
+    opacity: 0.45;
+}
 
-    private static final long serialVersionUID = 1L;
+.editorContainer .editor {
+    border: 1px solid rgba(34,36,38,.15);
+    border-radius: .28571429rem;
+    height: 40vh;
+}
 
-    private final String path;
+.itemLink {
+    color: #4183c4;
+}
 
-    private final int level;
+.itemLink:hover {
+    color: #1e70bf;
+}
 
-    private final Object data;
-
-    public InventoryDataItem(String path, int level, Object data) {
-        this.path = path;
-        this.level = level;
-        this.data = data;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public Object getData() {
-        return data;
-    }
-
-    public int getLevel() {
-        return level;
-    }
+.viewModeToggle {
+    margin: 5px !important;
 }

@@ -23,41 +23,45 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.org.jsonstore.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.sonatype.siesta.Resource;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Named
 @Singleton
 @Api(value = "Inventory Data", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/org")
+@Deprecated
 public class InventoryDataResource implements Resource {
 
+    private final JsonStoreDataResource storageDataResource;
     private final OrganizationManager orgManager;
-    private final InventoryManager inventoryManager;
-    private final InventoryDataDao inventoryDataDao;
+    private final JsonStoreAccessManager accessManager;
+    private final JsonStoreDataDao storageDataDao;
 
     @Inject
-    public InventoryDataResource(OrganizationManager orgManager,
-                                 InventoryManager inventoryManager,
-                                 InventoryDataDao inventoryDataDao) {
+    public InventoryDataResource(JsonStoreDataResource storageDataResource,
+                                 OrganizationManager orgManager,
+                                 JsonStoreAccessManager jsonStoreAccessManager,
+                                 JsonStoreDataDao storageDataDao) {
+
+        this.storageDataResource = storageDataResource;
         this.orgManager = orgManager;
-        this.inventoryManager = inventoryManager;
-        this.inventoryDataDao = inventoryDataDao;
+        this.accessManager = jsonStoreAccessManager;
+        this.storageDataDao = storageDataDao;
     }
 
     /**
@@ -77,14 +81,7 @@ public class InventoryDataResource implements Resource {
                       @ApiParam @PathParam("itemPath") String itemPath,
                       @ApiParam @QueryParam("singleItem") @DefaultValue("false") boolean singleItem) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
-
-        if (singleItem) {
-            return inventoryDataDao.getSingleItem(inventory.getId(), itemPath);
-        } else {
-            return build(inventory.getId(), itemPath);
-        }
+        return storageDataResource.get(orgName, inventoryName, itemPath);
     }
 
     /**
@@ -102,9 +99,16 @@ public class InventoryDataResource implements Resource {
                                           @ApiParam @PathParam("inventoryName") String inventoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.READER, true);
+        JsonStoreEntry storage = accessManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.READER, true);
 
-        return inventoryDataDao.list(inventory.getId());
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (JsonStoreDataEntry storageDataEntry : storageDataDao.list(storage.id())) {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("data", storageDataEntry.data());
+            entry.put("path", storageDataEntry.path());
+            result.add(entry);
+        }
+        return result;
     }
 
     /**
@@ -126,16 +130,8 @@ public class InventoryDataResource implements Resource {
                        @ApiParam @PathParam("itemPath") String itemPath,
                        @ApiParam Object data) {
 
-        // we expect all top-level entries to be JSON objects
-        if (!itemPath.contains("/") && !(data instanceof Map)) {
-            throw new ValidationErrorsException("Top-level inventory entries must be JSON objects. Got: " + data.getClass());
-        }
-
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.WRITER, true);
-
-        inventoryDataDao.merge(inventory.getId(), itemPath, data);
-        return build(inventory.getId(), itemPath);
+        storageDataResource.data(orgName, inventoryName, itemPath, data);
+        return data;
     }
 
     /**
@@ -154,19 +150,8 @@ public class InventoryDataResource implements Resource {
                                               @ApiParam @PathParam("inventoryName") String inventoryName,
                                               @ApiParam @PathParam("itemPath") String itemPath) {
 
-        OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        InventoryEntry inventory = inventoryManager.assertInventoryAccess(org.getId(), inventoryName, ResourceAccessLevel.WRITER, true);
-
-        inventoryDataDao.delete(inventory.getId(), itemPath);
+        storageDataResource.delete(orgName, inventoryName, itemPath);
 
         return new DeleteInventoryDataResponse();
-    }
-
-    private Object build(UUID inventoryId, String itemPath) {
-        try {
-            return JsonBuilder.build(inventoryDataDao.get(inventoryId, itemPath));
-        } catch (IOException e) {
-            throw new ConcordApplicationException("Error while building the response: " + e.getMessage(), e);
-        }
     }
 }

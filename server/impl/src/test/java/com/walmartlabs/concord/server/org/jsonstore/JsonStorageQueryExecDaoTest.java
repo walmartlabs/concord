@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.inventory;
+package com.walmartlabs.concord.server.org.jsonstore;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,37 +31,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.org.inventory.SqlParserTest.parseQueries;
+import static com.walmartlabs.concord.server.org.jsonstore.SqlParserTest.parseQueries;
 import static junit.framework.TestCase.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Ignore("local DB connection required")
-public class InventoryQueryExecDaoTest extends AbstractDaoTest {
+public class JsonStorageQueryExecDaoTest extends AbstractDaoTest {
 
     @Test
     public void execQueryTest() throws Exception {
         List<String> queries = parseQueries("queries.txt");
 
-        InventoryQueryDao qd = mock(InventoryQueryDao.class);
-        InventoryQueryExecDao dao = new InventoryQueryExecDao(getConfiguration(), qd, new ConcordObjectMapper(TestObjectMapper.INSTANCE));
+        JsonStoreQueryDao qd = mock(JsonStoreQueryDao.class);
+        JsonStoreQueryExecDao dao = new JsonStoreQueryExecDao(getConfiguration(), new ConcordObjectMapper(TestObjectMapper.INSTANCE), qd);
 
+        UUID storageId = UUID.randomUUID();
         for(String sql : queries) {
+            String queryName = "test";
             UUID queryId = UUID.randomUUID();
             Map<String, Object> params = null;
             if (sql.contains("?::jsonb")) {
                 params = new HashMap<>();
                 params.put("k", "v");
             }
-            when(qd.get(eq(queryId))).thenReturn(createInventoryQueryEntry(sql));
+            when(qd.get(eq(storageId), eq(queryName))).thenReturn(JsonStoreQueryEntry.builder()
+                    .id(queryId)
+                    .storeId(storageId)
+                    .name(queryName)
+                    .text(sql)
+                    .build());
 
-            List<Object> result = dao.exec(queryId, params);
+            List<Object> result = dao.exec(storageId, queryName, params);
             assertNotNull(result);
         }
-    }
-
-    private static InventoryQueryEntry createInventoryQueryEntry(String sql) {
-        return new InventoryQueryEntry(UUID.randomUUID(), "test", UUID.randomUUID(), sql);
     }
 }

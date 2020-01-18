@@ -12,4 +12,54 @@
                 and EVENT_SOURCE = 'github'
         </sql>
     </changeSet>
+
+    <changeSet id="1380100" author="ybrigo@gmail.com">
+        <addColumn tableName="INVENTORY_DATA">
+            <column name="ITEM_DATA_SIZE" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1380110" author="ybrigo@gmail.com">
+        <renameTable oldTableName="INVENTORIES" newTableName="JSON_STORES"/>
+        <renameTable oldTableName="INVENTORY_DATA" newTableName="JSON_STORE_DATA"/>
+        <renameTable oldTableName="INVENTORY_QUERIES" newTableName="JSON_STORE_QUERIES"/>
+        <renameTable oldTableName="INVENTORY_TEAM_ACCESS" newTableName="JSON_STORE_TEAM_ACCESS"/>
+    </changeSet>
+
+    <changeSet id="1380120" author="ybrigo@gmail.com">
+        <renameColumn tableName="JSON_STORES" oldColumnName="INVENTORY_ID" newColumnName="JSON_STORE_ID"/>
+        <renameColumn tableName="JSON_STORES" oldColumnName="INVENTORY_NAME" newColumnName="JSON_STORE_NAME"/>
+        <renameColumn tableName="JSON_STORE_DATA" oldColumnName="INVENTORY_ID" newColumnName="JSON_STORE_ID"/>
+        <renameColumn tableName="JSON_STORE_QUERIES" oldColumnName="INVENTORY_ID" newColumnName="JSON_STORE_ID"/>
+        <renameColumn tableName="JSON_STORE_TEAM_ACCESS" oldColumnName="INVENTORY_ID" newColumnName="JSON_STORE_ID"/>
+    </changeSet>
+
+    <!-- backward campatibility -->
+    <changeSet id="1380130" author="ybrigo@gmail.com">
+        <createView viewName="INVENTORIES" replaceIfExists="true">
+            select
+                JSON_STORE_ID as INVENTORY_ID,
+                JSON_STORE_NAME as INVENTORY_NAME,
+                null as PARENT_INVENTORY_ID,
+                ORG_ID,
+                VISIBILITY,
+                OWNER_ID
+            from JSON_STORES
+        </createView>
+
+        <createView viewName="INVENTORY_DATA" replaceIfExists="true">
+            select JSON_STORE_ID as INVENTORY_ID, ITEM_PATH, ITEM_DATA from JSON_STORE_DATA
+        </createView>
+
+        <createView viewName="INVENTORY_QUERIES" replaceIfExists="true">
+            select
+                QUERY_ID,
+                JSON_STORE_ID as INVENTORY_ID,
+                QUERY_NAME,
+                QUERY_TEXT
+            from JSON_STORE_QUERIES
+        </createView>
+    </changeSet>
 </databaseChangeLog>

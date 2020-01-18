@@ -31,7 +31,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.Callable;
 
+/**
+ * @deprecated replaced by the JSON storage API
+ */
 @Named
+@Deprecated
 public class ObjectStorageImpl implements ObjectStorage {
 
     private static final Logger log = LoggerFactory.getLogger(LockServiceImpl.class);
@@ -50,6 +54,9 @@ public class ObjectStorageImpl implements ObjectStorage {
 
     @Override
     public BucketInfo createBucket(Context ctx, String name) throws Exception {
+        log.warn("ObjectStorage interface is deprecated and replaced by the JSON Storage API. " +
+                "It will be removed at some point in the future. Plugins must be updated to use the JSON Storage API directly.");
+
         ProjectInfo projectInfo = ContextUtils.getProjectInfo(ctx);
         if (projectInfo == null) {
             throw new IllegalArgumentException("Can't create an Object Storage bucket, a Concord project is required");

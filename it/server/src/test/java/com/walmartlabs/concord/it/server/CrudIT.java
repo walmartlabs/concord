@@ -188,14 +188,14 @@ public class CrudIT extends AbstractServerIT {
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) dataApi.data(orgName, inventoryName, itemPath, data);
         assertNotNull(result);
-        assertEquals(Collections.singletonMap("a", data), result);
+        assertEquals(data, result);
 
         // --- get
 
         @SuppressWarnings("unchecked")
         Map<String, Object> result2 = (Map<String, Object>) dataApi.get(orgName, inventoryName, itemPath, false);
         assertNotNull(result2);
-        assertEquals(Collections.singletonMap("a", data), result);
+        assertEquals(data, result);
 
         // --- delete
 
@@ -636,6 +636,8 @@ public class CrudIT extends AbstractServerIT {
         }
 
         usersApi.delete(createUserResponse.getId());
+
+        policyResource.delete(policyForUser);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

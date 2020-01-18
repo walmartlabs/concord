@@ -130,7 +130,7 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
                             enabledInPolicy={canCreate}
                         />
                     </Menu.Item>
-                    <Menu.Item>
+                    <Menu.Item style={{ padding: 0 }}>
                         <PaginationToolBar
                             filterProps={paginationFilter}
                             handleLimitChange={(limit) => handleLimitChange(limit)}

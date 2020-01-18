@@ -36,18 +36,24 @@ class ButtonWithConfirmation extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = { showConfirm: false };
+        this.handleShowConfirm = this.handleShowConfirm.bind(this);
+        this.handleCancel = this.handleCancel.bind(this);
+        this.handleConfirm = this.handleConfirm.bind(this);
     }
 
     handleShowConfirm(ev: React.SyntheticEvent<{}>) {
         ev.preventDefault();
+        ev.stopPropagation();
         this.setState({ showConfirm: true });
     }
 
-    handleCancel() {
+    handleCancel(ev: React.SyntheticEvent<{}>) {
+        ev.stopPropagation();
         this.setState({ showConfirm: false });
     }
 
-    handleConfirm() {
+    handleConfirm(ev: React.SyntheticEvent<{}>) {
+        ev.stopPropagation();
         this.setState({ showConfirm: false });
         this.props.onConfirm();
     }
@@ -73,8 +79,8 @@ class ButtonWithConfirmation extends React.Component<Props, State> {
                     open={this.state.showConfirm}
                     header={confirmationHeader}
                     content={confirmationContent}
-                    onConfirm={() => this.handleConfirm()}
-                    onCancel={() => this.handleCancel()}
+                    onConfirm={this.handleConfirm}
+                    onCancel={this.handleCancel}
                 />
             </>
         );

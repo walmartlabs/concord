@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,12 +25,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreVisibility;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
+@Deprecated
 public class InventoryEntry implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -46,7 +48,7 @@ public class InventoryEntry implements Serializable {
     @ConcordKey
     private final String orgName;
 
-    private final InventoryVisibility visibility;
+    private final JsonStoreVisibility visibility;
 
     private final InventoryOwner owner;
 
@@ -56,7 +58,7 @@ public class InventoryEntry implements Serializable {
         this(null, name, null, null, null, null, null);
     }
 
-    public InventoryEntry(String name, InventoryVisibility visibility) {
+    public InventoryEntry(String name, JsonStoreVisibility visibility) {
         this(null, name, null, null, visibility, null, null);
     }
 
@@ -65,7 +67,7 @@ public class InventoryEntry implements Serializable {
                           @JsonProperty("name") String name,
                           @JsonProperty("orgId") UUID orgId,
                           @JsonProperty("orgName") String orgName,
-                          @JsonProperty("visibility") InventoryVisibility visibility,
+                          @JsonProperty("visibility") JsonStoreVisibility visibility,
                           @JsonProperty("owner") InventoryOwner owner,
                           @JsonProperty("parent") InventoryEntry parent) {
 
@@ -94,7 +96,7 @@ public class InventoryEntry implements Serializable {
         return orgName;
     }
 
-    public InventoryVisibility getVisibility() {
+    public JsonStoreVisibility getVisibility() {
         return visibility;
     }
 

@@ -90,7 +90,7 @@ class TeamAccessList extends React.Component<Props, State> {
 
     handleSave(ev: React.SyntheticEvent<{}>) {
         ev.preventDefault();
-
+        this.setState({ editMode: false });
         const { data } = this.state;
         const { submit } = this.props;
         submit(data.filter((e) => !e.deleted));

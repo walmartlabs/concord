@@ -22,10 +22,18 @@ package com.walmartlabs.concord.sdk;
 
 import org.immutables.value.Value;
 
+/**
+ * @deprecated replaced by the JSON storage API
+ */
+@Deprecated
 public interface ObjectStorage {
 
     BucketInfo createBucket(Context ctx, String name) throws Exception;
 
+    /**
+     * @deprecated replaced by the JSON storage API
+     */
+    @Deprecated
     @Value.Immutable
     interface BucketInfo {
 

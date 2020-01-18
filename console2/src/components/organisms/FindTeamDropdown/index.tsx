@@ -62,7 +62,7 @@ class FindTeamDropdown extends React.PureComponent<ExternalProps & StateProps & 
     }
 
     render() {
-        const { ...rest } = this.props;
+        const { orgName, name, load, ...rest } = this.props;
 
         return (
             <Dropdown

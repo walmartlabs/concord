@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.org.inventory;
+package com.walmartlabs.concord.server.org.jsonstore;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.inventory;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.org.inventory;
  */
 
 import com.walmartlabs.concord.db.AbstractDao;
-import com.walmartlabs.concord.db.InventoryDB;
+import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
@@ -31,6 +31,7 @@ import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
@@ -45,6 +46,7 @@ import org.jooq.DSLContext;
 import org.jooq.QueryPart;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -52,42 +54,46 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.tables.InventoryData.INVENTORY_DATA;
+import static com.walmartlabs.concord.server.jooq.Tables.INVENTORY_DATA;
+import static com.walmartlabs.concord.server.jooq.Tables.JSON_STORE_DATA;
 import static org.jooq.impl.DSL.val;
 
 @Named
-public class InventoryQueryExecDao extends AbstractDao {
+public class JsonStoreQueryExecDao extends AbstractDao {
 
     private final ConcordObjectMapper objectMapper;
-
-    private final InventoryQueryDao inventoryQueryDao;
+    private final JsonStoreQueryDao storeQueryDao;
 
     @Inject
-    public InventoryQueryExecDao(@InventoryDB Configuration cfg,
-                                 InventoryQueryDao inventoryQueryDao,
-                                 ConcordObjectMapper objectMapper) {
-        super(cfg);
+    public JsonStoreQueryExecDao(@JsonStorageDB Configuration cfg,
+                                 ConcordObjectMapper objectMapper,
+                                 JsonStoreQueryDao storeQueryDao) {
 
-        this.inventoryQueryDao = inventoryQueryDao;
+        super(cfg);
         this.objectMapper = objectMapper;
+        this.storeQueryDao = storeQueryDao;
     }
 
-    public List<Object> exec(UUID queryId, Map<String, Object> params) {
-        InventoryQueryEntry q = inventoryQueryDao.get(queryId);
+    public List<Object> exec(UUID storeId, String queryName, Map<String, Object> params) {
+        JsonStoreQueryEntry q = storeQueryDao.get(storeId, queryName);
         if (q == null) {
-            return null;
+            throw new ValidationErrorsException("Query not found: " + queryName);
         }
 
-        String sql = createQuery(q.getText());
+        return execSql(q.storeId(), q.text(), params);
+    }
+
+    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params) {
+        String sql = createQuery(query);
 
         try (DSLContext tx = DSL.using(cfg)) {
             // TODO we should probably inspect the query to determine whether we need to bind the params or not
 
             QueryPart[] args;
             if (params == null) {
-                args = new QueryPart[]{val(q.getInventoryId())};
+                args = new QueryPart[]{val(storeId)};
             } else {
-                args = new QueryPart[]{val(objectMapper.toString(params)), val(q.getInventoryId())};
+                args = new QueryPart[]{val(objectMapper.toString(params)), val(storeId)};
             }
 
             return tx.resultQuery(sql, args)
@@ -96,7 +102,11 @@ public class InventoryQueryExecDao extends AbstractDao {
     }
 
     private Object toExecResult(Record record) {
-        return objectMapper.fromString((String) record.getValue(0));
+        Object value = record.get(0);
+        if (value == null) {
+            return null;
+        }
+        return objectMapper.fromString(value.toString(), Object.class);
     }
 
     private static String createQuery(String src) {
@@ -115,11 +125,23 @@ public class InventoryQueryExecDao extends AbstractDao {
                             }
 
                             Alias fromAlias = from.getAlias();
+                            Column left = null;
 
-                            // inventory_data.inventory_id
-                            Table inventoryDataTable = new Table(INVENTORY_DATA.getName());
-                            inventoryDataTable.setAlias(fromAlias);
-                            Column left = new Column(inventoryDataTable, INVENTORY_DATA.INVENTORY_ID.getName());
+                            if (from instanceof Table) {
+                                String tableName = ((Table) from).getName();
+                                if (tableName.toLowerCase().contains("inventory_data")) {
+                                    Table inventoryDataTable = new Table(INVENTORY_DATA.getName());
+                                    inventoryDataTable.setAlias(fromAlias);
+                                    left = new Column(inventoryDataTable, INVENTORY_DATA.INVENTORY_ID.getName());
+                                }
+                            }
+
+                            if (left == null) {
+                                // json_store.json_store_id
+                                Table jsonStorageTable = new Table(JSON_STORE_DATA.getName());
+                                jsonStorageTable.setAlias(fromAlias);
+                                left = new Column(jsonStorageTable, JSON_STORE_DATA.JSON_STORE_ID.getName());
+                            }
 
                             // cast(? as uuid)
                             CastExpression right = new CastExpression();
@@ -128,7 +150,7 @@ public class InventoryQueryExecDao extends AbstractDao {
                             t.setDataType("uuid");
                             right.setType(t);
 
-                            // inventory_data.inventory_id = cast(? as uuid)
+                            // json_store_data.store_id = cast(? as uuid)
                             EqualsTo eq = new EqualsTo();
                             eq.setLeftExpression(left);
                             eq.setRightExpression(right);
@@ -146,7 +168,13 @@ public class InventoryQueryExecDao extends AbstractDao {
 
             return st.toString();
         } catch (JSQLParserException e) {
-            throw new IllegalArgumentException("Query parse error: " + e.getMessage(), e);
+            Throwable t = e;
+
+            if (t.getCause() instanceof ParseException) {
+                t = t.getCause();
+            }
+
+            throw new IllegalArgumentException("Query parse error: " + t.getMessage(), t);
         }
     }
 }

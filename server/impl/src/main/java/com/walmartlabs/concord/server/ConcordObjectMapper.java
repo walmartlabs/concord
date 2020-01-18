@@ -52,6 +52,14 @@ public class ConcordObjectMapper {
         return JSONB.valueOf(removeUnsupportedEscape(toString(m)));
     }
 
+    public JSONB jsonStringToJSONB(String json) {
+        if (json == null) {
+            return null;
+        }
+
+        return JSONB.valueOf(removeUnsupportedEscape(json));
+    }
+
     public String toString(Object m) {
         if (m == null) {
             return null;
@@ -84,8 +92,8 @@ public class ConcordObjectMapper {
         return deserialize(o.toString(), valueType);
     }
 
-    public Map<String, Object> fromString(String s) {
-        return deserialize(s, MAP_TYPE);
+    public <T> T fromString(String s, Class<T> valueType) {
+        return deserialize(s, valueType);
     }
 
     private static String removeUnsupportedEscape(String str) {
