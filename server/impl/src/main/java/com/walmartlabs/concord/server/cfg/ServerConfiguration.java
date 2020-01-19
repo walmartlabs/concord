@@ -39,6 +39,7 @@ public class ServerConfiguration implements Serializable {
     private static final String BASE_RESOURCE_PATH_KEY = "BASE_RESOURCE_PATH";
     private static final String SECURE_COOKIES_KEY = "SECURE_COOKIES";
     private static final String SESSION_TIMEOUT_KEY = "SESSION_TIMEOUT";
+    private static final String REQUEST_HEADER_SIZE_KEY = "REQUEST_HEADER_SIZE";
 
     public static final int port;
     public static final boolean secureCookies;
@@ -46,6 +47,7 @@ public class ServerConfiguration implements Serializable {
     public static final String accessLogPath;
     public static final int accessLogRetainDays;
     public static final String baseResourcePath;
+    public static final int requestHeaderSize;
 
     static {
         port = Integer.parseInt(getEnv(API_PORT_KEY, "8001"));
@@ -54,6 +56,7 @@ public class ServerConfiguration implements Serializable {
         accessLogPath = getEnv(ACCESS_LOG_PATH_KEY, null);
         accessLogRetainDays = Integer.parseInt(getEnv(ACCESS_LOG_RETAIN_DAYS_KEY, "7"));
         baseResourcePath = getEnv(BASE_RESOURCE_PATH_KEY, null);
+        requestHeaderSize = Integer.parseInt(getEnv(REQUEST_HEADER_SIZE_KEY, "16384"));
     }
 
     private static String getEnv(String k, String defaultValue) {

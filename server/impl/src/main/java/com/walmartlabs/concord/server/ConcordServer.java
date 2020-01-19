@@ -92,6 +92,7 @@ public class ConcordServer {
                 .sessionCookieOptions(sessionCookieOptions())
                 .sessionsEnabled(true)
                 .sessionMaxInactiveInterval(ServerConfiguration.sessionTimeout)
+                .requestHeaderSize(ServerConfiguration.requestHeaderSize)
                 .jmxEnabled(true);
 
         OllieServer server = builder.build();
