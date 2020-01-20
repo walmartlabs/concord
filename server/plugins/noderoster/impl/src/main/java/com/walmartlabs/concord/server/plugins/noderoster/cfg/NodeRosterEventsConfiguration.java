@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.plugins.noderoster.cfg;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,29 +22,30 @@ package com.walmartlabs.concord.server.plugins.noderoster.cfg;
 
 import com.walmartlabs.ollie.config.Config;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Instant;
 
 @Named
 @Singleton
-public class AnsibleEventsConfiguration implements Serializable {
+public class NodeRosterEventsConfiguration implements Serializable {
 
     @Inject
-    @Config("ansibleEvents.period")
+    @Config("noderoster.events.period")
     private int period;
 
     @Inject
-    @Config("ansibleEvents.fetchLimit")
+    @Config("noderoster.events.fetchLimit")
     private int fetchLimit;
 
-    public AnsibleEventsConfiguration() {
-    }
+    private final Instant startTimestamp;
 
-    public AnsibleEventsConfiguration(int period, int fetchLimit) {
-        this.period = period;
-        this.fetchLimit = fetchLimit;
+    @Inject
+    public NodeRosterEventsConfiguration(@Config("noderoster.events.startTimestamp") @Nullable String startTimestamp) {
+        this.startTimestamp = startTimestamp != null ? Instant.parse(startTimestamp) : null;
     }
 
     public int getPeriod() {
@@ -53,5 +54,10 @@ public class AnsibleEventsConfiguration implements Serializable {
 
     public int getFetchLimit() {
         return fetchLimit;
+    }
+
+    @Nullable
+    public Instant getStartTimestamp() {
+        return startTimestamp;
     }
 }

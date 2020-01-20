@@ -39,8 +39,7 @@ public abstract class AbstractEventProcessor<E extends AbstractEventProcessor.Ev
 
     @Override
     public void performTask() {
-        int processedEvents = 0;
-
+        int processedEvents;
         do {
             EventMarkerDao.EventMarker m = eventMarkerDao.get(processorName);
             processedEvents = process(m, fetchLimit);
