@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.plugins.noderoster.processor;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,13 +25,14 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.plugins.noderoster.cfg.AnsibleEventsConfiguration;
+import com.walmartlabs.concord.server.plugins.noderoster.cfg.NodeRosterEventsConfiguration;
 import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.*;
@@ -47,18 +48,23 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
     private final List<Processor> processors;
 
     private final long interval;
+    private final Timestamp startTimestamp;
 
     @Inject
-    public AnsibleEventsProcessor(AnsibleEventsConfiguration cfg,
+    public AnsibleEventsProcessor(NodeRosterEventsConfiguration eventsCfg,
                                   EventMarkerDao eventMarkerDao,
                                   EventsDao eventsDao,
                                   Map<String, Processor> processors) {
 
-        super(NAME, eventMarkerDao, cfg.getFetchLimit());
+        super(NAME, eventMarkerDao, eventsCfg.getFetchLimit());
 
         this.eventsDao = eventsDao;
         this.processors = new ArrayList<>(processors.values());
-        this.interval = cfg.getPeriod();
+
+        this.interval = eventsCfg.getPeriod();
+
+        Instant startTimestamp = eventsCfg.getStartTimestamp();
+        this.startTimestamp = startTimestamp != null ? Timestamp.from(startTimestamp) : null;
     }
 
     @Override
@@ -68,7 +74,7 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
 
     @Override
     protected List<AnsibleEvent> processEvents(DSLContext tx, EventMarker marker, int fetchLimit) {
-        List<AnsibleEvent> events = eventsDao.list(marker, fetchLimit);
+        List<AnsibleEvent> events = eventsDao.list(marker, startTimestamp, fetchLimit);
         if (events.isEmpty()) {
             return Collections.emptyList();
         }
@@ -91,34 +97,36 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
             this.objectMapper = new ObjectMapper();
         }
 
-        public List<AnsibleEvent> list(EventMarker marker, int count) {
-            return txResult(tx -> list(tx, marker, count));
-        }
+        public List<AnsibleEvent> list(EventMarker marker, Timestamp startTimestamp, int count) {
+            return txResult(tx -> {
+                ProcessQueue pq = PROCESS_QUEUE.as("pq");
+                ProcessEvents pe = PROCESS_EVENTS.as("pe");
+                Field<String> username = tx.select(USERS.USERNAME).from(USERS).where(USERS.USER_ID.eq(pq.INITIATOR_ID)).asField();
 
-        private List<AnsibleEvent> list(DSLContext tx, EventMarker marker, int count) {
-            ProcessQueue pq = PROCESS_QUEUE.as("pq");
-            ProcessEvents pe = PROCESS_EVENTS.as("pe");
-            Field<String> username = tx.select(USERS.USERNAME).from(USERS).where(USERS.USER_ID.eq(pq.INITIATOR_ID)).asField();
+                Field<Object> eventData = function("jsonb_strip_nulls", Object.class, pe.EVENT_DATA);
+                SelectConditionStep<Record9<UUID, Long, UUID, Timestamp, Timestamp, Object, String, UUID, UUID>> s = tx.select(
+                        pe.EVENT_ID,
+                        pe.EVENT_SEQ,
+                        pe.INSTANCE_ID,
+                        pe.INSTANCE_CREATED_AT,
+                        pe.EVENT_DATE,
+                        eventData,
+                        username,
+                        pq.INITIATOR_ID,
+                        pq.PROJECT_ID)
+                        .from(pe)
+                        .innerJoin(pq).on(pq.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pq.CREATED_AT.eq(pe.INSTANCE_CREATED_AT)))
+                        .where(pe.EVENT_TYPE.eq("ANSIBLE")
+                                .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));
 
-            Field<Object> eventData = function("jsonb_strip_nulls", Object.class, pe.EVENT_DATA);
-            SelectConditionStep<Record9<UUID, Long, UUID, Timestamp, Timestamp, Object, String, UUID, UUID>> s = tx.select(
-                    pe.EVENT_ID,
-                    pe.EVENT_SEQ,
-                    pe.INSTANCE_ID,
-                    pe.INSTANCE_CREATED_AT,
-                    pe.EVENT_DATE,
-                    eventData,
-                    username,
-                    pq.INITIATOR_ID,
-                    pq.PROJECT_ID)
-                    .from(pe)
-                    .innerJoin(pq).on(pq.INSTANCE_ID.eq(pe.INSTANCE_ID).and(pq.CREATED_AT.eq(pe.INSTANCE_CREATED_AT)))
-                    .where(pe.EVENT_TYPE.eq("ANSIBLE")
-                            .and(pe.EVENT_SEQ.greaterThan(marker.eventSeq())));
+                if (startTimestamp != null) {
+                    s.and(pe.INSTANCE_CREATED_AT.greaterOrEqual(startTimestamp));
+                }
 
-            return s.orderBy(pe.EVENT_SEQ)
-                    .limit(count)
-                    .fetch(this::toEntity);
+                return s.orderBy(pe.EVENT_SEQ)
+                        .limit(count)
+                        .fetch(this::toEntity);
+            });
         }
 
         private AnsibleEvent toEntity(Record9<UUID, Long, UUID, Timestamp, Timestamp, Object, String, UUID, UUID> r) {

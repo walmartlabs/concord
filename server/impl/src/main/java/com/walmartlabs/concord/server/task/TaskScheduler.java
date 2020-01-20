@@ -130,7 +130,7 @@ public class TaskScheduler extends PeriodicTask {
 
         dao.transaction(tx -> {
             List<String> ids = dao.pollStalled(tx, cutOff);
-            for(String id : ids) {
+            for (String id : ids) {
                 dao.fail(tx, id);
                 log.info("failStalled -> marked as failed: {}", id);
             }
@@ -166,7 +166,7 @@ public class TaskScheduler extends PeriodicTask {
                 tx.update(TASKS)
                         .set(TASKS.STARTED_AT, currentTimestamp())
                         .set(TASKS.TASK_STATUS, value("RUNNING"))
-                        .set(TASKS.FINISHED_AT, (Timestamp)null)
+                        .set(TASKS.FINISHED_AT, (Timestamp) null)
                         .set(TASKS.LAST_UPDATED_AT, currentTimestamp())
                         .where(TASKS.TASK_ID.in(ids))
                         .execute();
@@ -201,9 +201,15 @@ public class TaskScheduler extends PeriodicTask {
         public void updateTaskIntervals(Map<String, ScheduledTask> tasks) {
             tx(tx -> {
                 for (Map.Entry<String, ScheduledTask> e : tasks.entrySet()) {
+                    ScheduledTask task = e.getValue();
+
+                    if (task.getIntervalInSec() <= 0) {
+                        log.warn("{} has period <= 0, the task will be disabled", e.getKey());
+                    }
+
                     tx.insertInto(TASKS, TASKS.TASK_ID, TASKS.TASK_INTERVAL)
-                            .values(e.getKey(), e.getValue().getIntervalInSec())
-                            .onDuplicateKeyUpdate().set(TASKS.TASK_INTERVAL, e.getValue().getIntervalInSec())
+                            .values(e.getKey(), task.getIntervalInSec())
+                            .onDuplicateKeyUpdate().set(TASKS.TASK_INTERVAL, task.getIntervalInSec())
                             .execute();
                 }
             });

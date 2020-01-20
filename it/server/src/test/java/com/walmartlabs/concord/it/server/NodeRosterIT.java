@@ -134,7 +134,7 @@ public class NodeRosterIT extends AbstractServerIT {
         assertLog(".*hostName=" + hostB + ".*", ab);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testMultipleFactsPerHost() throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource("nodeRosterMultiFacts").toURI(), ITConstants.DEPENDENCIES_DIR);
 
