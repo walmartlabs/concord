@@ -58,7 +58,7 @@ public class HostsResource implements Resource {
     }
 
     @GET
-    @Path("/")
+    @Path("/deployedArtifact")
     @ApiOperation(value = "Get hosts with a deployed artifact")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, List<HostEntry>> deployedOnHosts(@ApiParam @QueryParam("artifactPattern") String artifactPattern,
@@ -74,7 +74,7 @@ public class HostsResource implements Resource {
     }
 
     @GET
-    @Path("/all") // TODO swap with @Path("/")
+    @Path("/")
     @ApiOperation(value = "Get all known hosts", responseContainer = "list", response = HostEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
     public List<HostEntry> getAllKnownHosts(@ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
