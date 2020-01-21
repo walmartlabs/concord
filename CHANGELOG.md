@@ -1,14 +1,14 @@
 # Change log
 
-## [Unreleased]
+## [1.38.0] - 2020-01-21
 
 ### Added
 
 - concord-server: configurable max request size for the embedded
 Jetty server;
 - new JSON Store API, UI and a flow task;
-- concord-server: provide `event.commitId` variable for `pull_request`
-and `push` events in `github` triggers;
+- concord-server: provide `event.commitId` variable for
+`pull_request` and `push` events in `github` triggers;
 - node-roster: initial version;
 - concord-server, concord-console: disable checkpoint restoration for
 suspended processes;
