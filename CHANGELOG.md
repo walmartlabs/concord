@@ -1,5 +1,49 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: configurable max request size for the embedded
+Jetty server;
+- new JSON Store API, UI and a flow task;
+- concord-server: provide `event.commitId` variable for `pull_request`
+and `push` events in `github` triggers;
+- node-roster: initial version;
+- concord-server, concord-console: disable checkpoint restoration for
+suspended processes;
+- concord-console: pagination to the process wait conditions page;
+- dependency-manager: support for authentication and release/snapshot
+policies;
+- ansible: allow mix and match of inline inventories and file paths;
+- concord-console: customizable pages for external resources
+presented as iframes.
+
+### Changed
+
+- concord-server: the Inventory API is deprecated in favor of the
+JSON Store API;
+- concord-console: fixed pagination of the child process list;
+- concord-server: the system trigger (responsible for refreshing
+repositories) now correctly triggers only on "push" events;
+- concord-server: when refreshing trigger definitions in the DB,
+the server now correctly detects changes and updates/replaces only
+the changed triggers;
+- concord-console: require an additional confirmation when removing a
+repository;
+- concord-server: show the `available_worker` metric even if all
+workers of a specific "flavor" are gone;
+- concord-server: escape expressions (`${}`) in external event data.
+All string values in the `event` variable (which is provided for
+processes triggered by external events) will have their `${` escaped
+as `\${`;
+- concord-cli: fix the build, the standalone JAR is now runnable
+again;
+- ansible: fixed processing of events that are created by the task
+called in an expression.
+
+
+
 ## [1.37.1] - 2010-01-06
 
 ### Changed
