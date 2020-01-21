@@ -20,6 +20,8 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
@@ -31,11 +33,13 @@ import java.util.Map;
 @Value.Style(jdkOnly = true)
 @JsonSerialize(as = ImmutableMavenRepository.class)
 @JsonDeserialize(as = ImmutableMavenRepository.class)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public interface MavenRepository {
 
     String id();
 
     @Value.Default
+    @JsonAlias("layout")
     default String contentType() {
         return "default";
     }
