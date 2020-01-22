@@ -37,6 +37,9 @@ public class Payload {
 
         Map<String, Object> repo = MapUtils.getMap(data, REPO_NAME_KEY, Collections.emptyMap());
         String fullRepoName = MapUtils.getString(repo, "full_name");
+        if (fullRepoName == null) {
+            return null;
+        }
         String[] orgRepo = fullRepoName.split("/");
         if (orgRepo.length < 2) {
             return null;

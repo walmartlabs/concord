@@ -129,7 +129,7 @@ public class JsonStoreDataDao extends AbstractDao {
     private JsonStoreDataEntry toDataEntry(Record2<String, JSONB> r) {
         return JsonStoreDataEntry.builder()
                 .path(r.value1())
-                .data(r.value2().toString())
+                .data(objectMapper.fromJSONB(r.value2(), Object.class))
                 .build();
     }
 }

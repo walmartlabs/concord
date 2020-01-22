@@ -188,14 +188,14 @@ public class CrudIT extends AbstractServerIT {
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) dataApi.data(orgName, inventoryName, itemPath, data);
         assertNotNull(result);
-        assertEquals(data, result);
+        assertEquals(Collections.singletonMap("a", data), result);
 
         // --- get
 
         @SuppressWarnings("unchecked")
         Map<String, Object> result2 = (Map<String, Object>) dataApi.get(orgName, inventoryName, itemPath, false);
         assertNotNull(result2);
-        assertEquals(data, result);
+        assertEquals(Collections.singletonMap("a", data), result);
 
         // --- delete
 
