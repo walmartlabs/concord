@@ -23,22 +23,26 @@ package com.walmartlabs.concord.server.org.inventory;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.jsonstore.*;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreAccessManager;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreEntry;
+import com.walmartlabs.concord.server.org.jsonstore.JsonStoreManager;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Named
 @Singleton
@@ -47,21 +51,17 @@ import java.util.Map;
 @Deprecated
 public class InventoryDataResource implements Resource {
 
-    private final JsonStoreDataResource storageDataResource;
     private final OrganizationManager orgManager;
-    private final JsonStoreAccessManager accessManager;
-    private final JsonStoreDataDao storageDataDao;
+    private final JsonStoreAccessManager inventoryManager;
+    private final InventoryDataDao inventoryDataDao;
 
     @Inject
-    public InventoryDataResource(JsonStoreDataResource storageDataResource,
-                                 OrganizationManager orgManager,
-                                 JsonStoreAccessManager jsonStoreAccessManager,
-                                 JsonStoreDataDao storageDataDao) {
-
-        this.storageDataResource = storageDataResource;
+    public InventoryDataResource(OrganizationManager orgManager,
+                                 JsonStoreAccessManager inventoryManager,
+                                 InventoryDataDao inventoryDataDao) {
         this.orgManager = orgManager;
-        this.accessManager = jsonStoreAccessManager;
-        this.storageDataDao = storageDataDao;
+        this.inventoryManager = inventoryManager;
+        this.inventoryDataDao = inventoryDataDao;
     }
 
     /**
@@ -81,7 +81,14 @@ public class InventoryDataResource implements Resource {
                       @ApiParam @PathParam("itemPath") String itemPath,
                       @ApiParam @QueryParam("singleItem") @DefaultValue("false") boolean singleItem) {
 
-        return storageDataResource.get(orgName, inventoryName, itemPath);
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        JsonStoreEntry inventory = inventoryManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.READER, true);
+
+        if (singleItem) {
+            return inventoryDataDao.getSingleItem(inventory.id(), itemPath);
+        } else {
+            return build(inventory.id(), itemPath);
+        }
     }
 
     /**
@@ -99,16 +106,9 @@ public class InventoryDataResource implements Resource {
                                           @ApiParam @PathParam("inventoryName") String inventoryName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
-        JsonStoreEntry storage = accessManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.READER, true);
+        JsonStoreEntry inventory = inventoryManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.READER, true);
 
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (JsonStoreDataEntry storageDataEntry : storageDataDao.list(storage.id())) {
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("data", storageDataEntry.data());
-            entry.put("path", storageDataEntry.path());
-            result.add(entry);
-        }
-        return result;
+        return inventoryDataDao.list(inventory.id());
     }
 
     /**
@@ -130,8 +130,16 @@ public class InventoryDataResource implements Resource {
                        @ApiParam @PathParam("itemPath") String itemPath,
                        @ApiParam Object data) {
 
-        storageDataResource.data(orgName, inventoryName, itemPath, data);
-        return data;
+        // we expect all top-level entries to be JSON objects
+        if (!itemPath.contains("/") && !(data instanceof Map)) {
+            throw new ValidationErrorsException("Top-level inventory entries must be JSON objects. Got: " + data.getClass());
+        }
+
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        JsonStoreEntry inventory = inventoryManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.WRITER, true);
+
+        inventoryDataDao.merge(inventory.id(), itemPath, data);
+        return build(inventory.id(), itemPath);
     }
 
     /**
@@ -150,8 +158,19 @@ public class InventoryDataResource implements Resource {
                                               @ApiParam @PathParam("inventoryName") String inventoryName,
                                               @ApiParam @PathParam("itemPath") String itemPath) {
 
-        storageDataResource.delete(orgName, inventoryName, itemPath);
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
+        JsonStoreEntry inventory = inventoryManager.assertAccess(org.getId(), null, inventoryName, ResourceAccessLevel.WRITER, true);
+
+        inventoryDataDao.delete(inventory.id(), itemPath);
 
         return new DeleteInventoryDataResponse();
+    }
+
+    private Object build(UUID inventoryId, String itemPath) {
+        try {
+            return JsonBuilder.build(inventoryDataDao.get(inventoryId, itemPath));
+        } catch (IOException e) {
+            throw new ConcordApplicationException("Error while building the response: " + e.getMessage(), e);
+        }
     }
 }

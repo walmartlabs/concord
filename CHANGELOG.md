@@ -1,5 +1,16 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed a potential NPE when handling non-repository
+GitHub events (issues, teams, etc);
+- concord-server: revert changes in `/api/v1/org/${orgName}/inventory/${inventoryName}/data`
+endpoints.
+
+
+
 ## [1.38.0] - 2020-01-21
 
 ### Added
