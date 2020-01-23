@@ -35,7 +35,8 @@ public interface JsonStoreCapacity {
 
     long size();
 
-    long maxSize();
+    @Nullable
+    Long maxSize();
 
     static ImmutableJsonStoreCapacity.Builder builder() {
         return ImmutableJsonStoreCapacity.builder();
