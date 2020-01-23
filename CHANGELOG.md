@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed the existence check when creating or
+updating an inventory.
+
+
+
 ## [1.38.1] - 2020-01-22
 
 ### Changed
