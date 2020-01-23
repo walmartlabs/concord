@@ -110,7 +110,7 @@ public class JsonStoreManager {
         long currentSize = storeDataDao.getSize(store.id());
 
         PolicyEngine policy = policyManager.get(store.id(), null, UserPrincipal.assertCurrent().getId());
-        long maxSize = -1;
+        Long maxSize = null;
         if (policy != null) {
             maxSize = policy.getJsonStoragePolicy().getMaxSize();
         }
