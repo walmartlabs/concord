@@ -24,6 +24,8 @@ import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.org.EntityOwner;
+import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessEntry;
 import com.walmartlabs.concord.server.org.jsonstore.*;
 import io.swagger.annotations.Api;
@@ -52,11 +54,13 @@ public class InventoryResource implements Resource {
 
     private final JsonStoreManager storageManager;
     private final JsonStoreDao storageDao;
+    private final OrganizationManager orgManager;
 
     @Inject
-    public InventoryResource(JsonStoreManager storageManager, JsonStoreDao storageDao) {
+    public InventoryResource(JsonStoreManager storageManager, JsonStoreDao storageDao, OrganizationManager orgManager) {
         this.storageManager = storageManager;
         this.storageDao = storageDao;
+        this.orgManager = orgManager;
     }
 
     /**
@@ -108,24 +112,18 @@ public class InventoryResource implements Resource {
     public CreateInventoryResponse createOrUpdate(@ApiParam @PathParam("orgName") String orgName,
                                                   @ApiParam @Valid InventoryEntry entry) {
 
-        JsonStoreEntry prevStorage = null;
-        if (entry.getId() != null) {
-            prevStorage = storageDao.get(entry.getId());
-        }
+        OrganizationEntry org = orgManager.assertAccess(orgName, true);
 
-        if (prevStorage != null) {
-            storageManager.update(orgName, prevStorage.id(), JsonStoreRequest.builder()
-                    .name(entry.getName())
-                    .owner(toOwner(entry.getOwner()))
-                    .visibility(entry.getVisibility() != null ? entry.getVisibility() : JsonStoreVisibility.PRIVATE)
-                    .build());
+        OperationResult result = storageManager.createOrUpdate(orgName, JsonStoreRequest.builder()
+                .id(entry.getId())
+                .name(entry.getName())
+                .owner(toOwner(entry.getOwner()))
+                .visibility(entry.getVisibility() != null ? entry.getVisibility() : JsonStoreVisibility.PUBLIC)
+                .build());
 
-            return new CreateInventoryResponse(OperationResult.UPDATED, prevStorage.id());
-        }
+        UUID id = storageDao.getId(org.getId(), entry.getName());
 
-        UUID id = storageManager.insert(orgName, entry.getName(), entry.getVisibility() != null ? entry.getVisibility() : JsonStoreVisibility.PUBLIC, toOwner(entry.getOwner()));
-
-        return new CreateInventoryResponse(OperationResult.CREATED, id);
+        return new CreateInventoryResponse(result, id);
     }
 
     @POST
