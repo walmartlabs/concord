@@ -4,6 +4,8 @@
 
 ### Changed
 
+- concord-server: fixed negative maxSize in JSON store capacity
+response; 
 - concord-server: fixed the existence check when creating or
 updating an inventory.
 
