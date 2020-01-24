@@ -188,7 +188,20 @@ public class RunAsIT extends AbstractServerIT {
         pe = waitForCompletion(processApi, p.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
+        // starting from 1.39.0 the log endpoint performs additional RBAC checks
+        // in this case user B doesn't have permissions to access the log
+        try {
+            getLog(pe.getLogFileName());
+            fail("should fail");
+        } catch (ApiException e) {
+            assertEquals(403, e.getCode());
+        }
+
+        // switch to the user A and fetch the log again
+
+        setApiKey(apiKeyA.getKey());
         ab = getLog(pe.getLogFileName());
+
         assertLog(".*Now we are running as " + userBName + ".*", ab);
     }
 
@@ -238,6 +251,8 @@ public class RunAsIT extends AbstractServerIT {
         pe = waitForCompletion(processApi, spr.getInstanceId());
 
         // check the logs
+
+        resetApiKey();
 
         ab = getLog(pe.getLogFileName());
         assertLog(".*BBB: Hello!.*", ab);

@@ -799,7 +799,8 @@ public class ProcessResource implements Resource {
     public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                            @HeaderParam("range") String range) {
 
-        ProcessKey processKey = assertKey(instanceId);
+        // check the permissions, logs can contain sensitive data
+        ProcessKey processKey = assertLogAccess(instanceId);
 
         Integer start = null;
         Integer end = null;
@@ -827,8 +828,6 @@ public class ProcessResource implements Resource {
 
         ProcessLog l = logsDao.get(processKey, start, end);
         List<ProcessLogChunk> data = l.getChunks();
-        // TODO check if the instance actually exists
-
         if (data.isEmpty()) {
             int actualStart = start != null ? start : 0;
             int actualEnd = end != null ? end : actualStart;
@@ -1084,15 +1083,40 @@ public class ProcessResource implements Resource {
     private ProcessKey assertProcessKey(UUID instanceId) {
         ProcessKey processKey = processKeyCache.get(instanceId);
         if (processKey == null) {
-            throw new ConcordApplicationException("Process instance not found", Response.Status.NOT_FOUND);
+            throw new ConcordApplicationException("Process instance not found: " + instanceId, Response.Status.NOT_FOUND);
         }
         return processKey;
     }
 
-    private void assertProcessAccess(ProcessEntry p, String downloadEntity) {
+    private ProcessKey assertLogAccess(UUID instanceId) {
+        ProcessEntry pe = processManager.assertProcess(instanceId);
+        ProcessKey pk = ProcessKey.from(pe);
+
+        if (Roles.isAdmin() || Roles.isGlobalReader()) {
+            return pk;
+        }
+
         UserPrincipal principal = UserPrincipal.assertCurrent();
 
-        UUID initiatorId = p.initiatorId();
+        UUID initiatorId = pe.initiatorId();
+        if (principal.getId().equals(initiatorId)) {
+            // process owners should be able to view the process' logs
+            return pk;
+        }
+
+        if (pe.projectId() != null) {
+            projectAccessManager.assertAccess(pe.projectId(), ResourceAccessLevel.WRITER, true);
+            return pk;
+        }
+
+        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
+                "the necessary permissions to view the process log: " + instanceId);
+    }
+
+    private void assertProcessAccess(ProcessEntry pe, String downloadEntity) {
+        UserPrincipal principal = UserPrincipal.assertCurrent();
+
+        UUID initiatorId = pe.initiatorId();
         if (principal.getId().equals(initiatorId)) {
             // process owners should be able to download the process' state
             return;
@@ -1102,13 +1126,13 @@ public class ProcessResource implements Resource {
             return;
         }
 
-        if (p.projectId() != null) {
-            projectAccessManager.assertAccess(p.projectId(), ResourceAccessLevel.OWNER, true);
+        if (pe.projectId() != null) {
+            projectAccessManager.assertAccess(pe.projectId(), ResourceAccessLevel.OWNER, true);
             return;
         }
 
         throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to the download " + downloadEntity + " : " + p.instanceId());
+                "the necessary permissions to the download " + downloadEntity + " : " + pe.instanceId());
     }
 
     private ProcessEntry assertProcess(PartialProcessKey processKey) {
