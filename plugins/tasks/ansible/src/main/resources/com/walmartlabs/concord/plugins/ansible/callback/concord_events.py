@@ -94,7 +94,7 @@ class CallbackModule(CallbackBase):
         return clean
 
     def _trunc_long_items(self, obj):
-        if isinstance(obj, basestring):
+        if isinstance(obj, str):
             overlimit = len(obj) - self.MAX_STRING_LEN
             return (obj[:self.HALF_MAX_STRING_LEN] +
                     '...[skipped ' + str(overlimit) + ' bytes]...' +
