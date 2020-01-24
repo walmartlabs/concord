@@ -29,6 +29,6 @@ spec:
             - name: OPERATOR_NAME
               value: "concord-agent-operator"
             - name: CONCORD_BASE_URL
-              value: "http://192.168.99.1:8001"
+              value: "http://192.168.0.157:8001" # replace with local IP
             - name: CONCORD_API_TOKEN
               value: "...token..."
