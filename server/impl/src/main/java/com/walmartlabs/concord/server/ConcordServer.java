@@ -81,13 +81,14 @@ public class ConcordServer {
                 .filterChain("/api/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/forms/**", ConcordAuthenticatingFilter.class)
                 .filterChain("/events/github/**", GithubAuthenticatingFilter.class)
+                .filterChain("/logs/**", ConcordAuthenticatingFilter.class)
                 .at("/resources/console").resource("/com/walmartlabs/concord/server/console/static")
                 .serve("/forms/*").with(DefaultServlet.class, formsServletParams())
                 .serve("/metrics").with(MetricsServlet.class) // prometheus integration
                 .serve("/*").with(DefaultServlet.class, uiServletParams()) // must be the last entry
-                .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
-                .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
-                .filter("/service/*", "/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
+                .filter("/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
+                .filter("/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
+                .filter("/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
                 .filter("/cfg.js").through(NoCacheFilter.class) // the UI's configuration
                 .sessionCookieOptions(sessionCookieOptions())
                 .sessionsEnabled(true)
