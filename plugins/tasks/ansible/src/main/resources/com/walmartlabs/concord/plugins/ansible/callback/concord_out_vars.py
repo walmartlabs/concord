@@ -24,7 +24,7 @@ class CallbackModule(CallbackBase):
         if "CONCORD_OUT_VARS_FILE" in os.environ:
             self.out_vars_file_name = os.environ["CONCORD_OUT_VARS_FILE"]
 
-        print "Saving out variables:", self.out_vars
+        print("Saving out variables:", self.out_vars)
 
     def playbook_on_stats(self, stats):
         if not self.out_vars:
@@ -46,7 +46,7 @@ class CallbackModule(CallbackBase):
 
         target_file = open(self.out_vars_file_name, "w")
         target_file.write(json.dumps(result, indent=2))
-        print "Variables saved to:", self.out_vars_file_name
+        print("Variables saved to:", self.out_vars_file_name)
 
 
     def v2_playbook_on_play_start(self, play):

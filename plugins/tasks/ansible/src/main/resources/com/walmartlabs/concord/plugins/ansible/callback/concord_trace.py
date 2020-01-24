@@ -37,7 +37,7 @@ class CallbackModule(CallbackBase):
         target_file = open(target_filename, "w")
         target_file.write(json.dumps(data, indent=2))
 
-        print "Trace saved to:", target_filename
+        print("Trace saved to:", target_filename)
 
     def playbook_on_stats(self, stats):
         self.log(ConcordAnsibleStats.build_stats_data(stats))

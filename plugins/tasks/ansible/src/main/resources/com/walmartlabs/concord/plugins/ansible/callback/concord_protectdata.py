@@ -24,11 +24,11 @@ class CallbackModule(CallbackModule_default):
     def __init__(self):
         super(CallbackModule, self).__init__()
         self.secret_list = ['password', 'credentials', 'secret', 'ansible_password', 'vaultpassword']
-        print "Log filter is enabled..."
+        print("Log filter is enabled...")
     
     def hide_password(self, result):
         ret = {}
-        for key, value in result.iteritems():
+        for key, value in result.items():
             if isinstance(value, collections.Mapping):
                 ret[key] = self.hide_password(value)
             elif any (x in enc(value).lower() for x in self.secret_list) or any (y in enc(key).lower() for y in self.secret_list):
@@ -38,11 +38,11 @@ class CallbackModule(CallbackModule_default):
         return ret
 
     def v2_playbook_on_task_start(self, task, is_conditional):
-        print "TASK", "[",task.get_name(),"]" , "*************************************************************************"
+        print("TASK", "[",task.get_name(),"]" , "*************************************************************************")
         task_args = task._attributes.get('args')
-        for k, v in task_args.iteritems():
+        for k, v in task_args.items():
            if any(s in enc(v).lower() for s in self.secret_list):
-             print "*********** THIS TASK CONTAINS SENSITIVE INFORMATION. ENABLING NO_LOG ******************"
+             print("*********** THIS TASK CONTAINS SENSITIVE INFORMATION. ENABLING NO_LOG ******************")
              task.no_log = True
     
     def _dump_results(self, result,  indent=None, sort_keys=True, keep_invocation=False):
