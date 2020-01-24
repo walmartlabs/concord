@@ -5,7 +5,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: concord-agent-operator
-    namespace: 'my-namespace'
+    namespace: 'default'
 roleRef:
   kind: ClusterRole
   name: concord-agent-operator

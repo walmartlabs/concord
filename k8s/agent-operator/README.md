@@ -1,29 +1,61 @@
 # Kubernetes Operator for Concord Agents
 
-Takes care of deploying and scaling [Concord](https://concord.walmartlabs.com)
+Takes care of deploying and scaling [Concord](https://concord.walmartlabs.com) 
 Agents based on the current Process Queue usage. 
 
 ## Building the Image
 
+First, build the parent concord repo to install the latest artifacts:
 ```
+$ cd concord/
+$ mvn clean install
+```
+Build the agent operator image:
+```
+$ cd concord/k8s/agent-operator
 $ ../../mvnw clean compile jib:dockerBuild
 ```
 
 ## Running in Dev Mode
 
+Below are the steps to deploy the concord agent operator to the `default` namespace
+in any local/dev k8s cluster (in this case minikube).
+
+Before deploying the operator's resources, please ensure the 
+concord server URL fields in the yaml specs are correctly pointing 
+to a running instance on your dev or local machine. 
+Also make sure that the API token used in the `operator.yml` is valid and working.
+
 1. Start the cluster and create the necessary resources:
   ```
   $ minikube start
-  $ kubectl create -f deploy/cluster_role.yml
-  $ kubectl create -f deploy/service_account.yml
-  $ kubectl create -f deploy/cluster_role_binding.yml
+  $ kubectl create -f deploy/cluster_role.yml -n default
+  $ kubectl create -f deploy/service_account.yml -n default
+  $ kubectl create -f deploy/cluster_role_binding.yml -n default
   ```
-2. Start `com.walmartlabs.concord.agentoperator.Operator` in your IDE;
-3. Create the service:
+2. Start the operator:
   ```
-  $ kubectl create -f deploy/crds/crd.yml
-  $ kubectl create -f deploy/crds/cr.yml
+  $ kubectl create -f deploy/operator.yml -n default
   ```
+3. Create the custom resource:
+  ```
+  $ kubectl create -f deploy/crds/crd.yml -n default
+  $ kubectl create -f deploy/crds/cr.yml -n default
+  ```
+
+#### How to Verify
+
+1. Check the pods running in the `default` namespace:
+```
+kubectl get po -n default
+```
+The output should show two pods - 
+the concord agent operator pod (with 1 container) and the agentpool pod (with 2 containers).
+
+2. Verify the logs of both these pods using:
+```
+kubectl logs -f <pod_name> -c <container_name> -n default
+```
 
 ## Running in Production
 
