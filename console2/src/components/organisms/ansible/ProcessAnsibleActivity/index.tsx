@@ -102,7 +102,9 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         const process = await apiGet(instanceId, []);
         setProcess(process);
 
-        const playbooks = await apiListAnsiblePlaybooks(instanceId);
+        let playbooks = await apiListAnsiblePlaybooks(instanceId);
+        playbooks = playbooks.sort((a, b) => (a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0));
+
         setPlaybooks(playbooks);
         setPlaybookOptions((prevState) => buildPlaybookOptions(playbooks, prevState));
 
@@ -239,17 +241,17 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         <>
             <Segment basic={true} style={{ padding: 0 }}>
                 <PlaybookChooser
-                    currentValue={selectedPlaybook ? selectedPlaybook.id : undefined}
+                    currentValue={selectedPlaybook?.id}
                     options={playbookOptions}
                     onPlaybookChange={onPlaybookChangeHandler}
                 />
             </Segment>
 
             <PlaybookStats
-                hostsCount={selectedPlaybook ? selectedPlaybook.hostsCount : undefined}
-                failedHostsCount={selectedPlaybook ? selectedPlaybook.failedHostsCount : undefined}
-                playsCount={selectedPlaybook ? selectedPlaybook.playsCount : undefined}
-                failedTasksCount={selectedPlaybook ? selectedPlaybook.failedTasksCount : undefined}
+                hostsCount={selectedPlaybook?.hostsCount}
+                failedHostsCount={selectedPlaybook?.failedHostsCount}
+                playsCount={selectedPlaybook?.playsCount}
+                failedTasksCount={selectedPlaybook?.failedTasksCount}
                 selectedBlock={selectedBlock}
                 onBlockChange={onBlockChangeHandler}
             />
@@ -260,7 +262,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     percent={playbookProgress}
                     progress={'percent'}
                     active={
-                        !isFinal(process ? process.status : undefined) && playbookProgress < 100
+                        !isFinal(process?.status) && playbookProgress < 100
                     }
                     color={statusColor}
                 />
@@ -272,7 +274,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
 
                     <AnsibleHostList
                         instanceId={instanceId}
-                        playbookId={selectedPlaybook ? selectedPlaybook.id : undefined}
+                        playbookId={selectedPlaybook?.id}
                         hosts={ansibleHosts}
                         hostGroups={ansibleHostGroups}
                         prev={ansibleHostsPrev}
@@ -288,7 +290,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
 
                     <AnsibleHostList
                         instanceId={instanceId}
-                        playbookId={selectedPlaybook ? selectedPlaybook.id : undefined}
+                        playbookId={selectedPlaybook?.id}
                         hosts={failedAnsibleHosts}
                         hostGroups={failedAnsibleHostGroups}
                         prev={failedAnsibleHostsPrev}
@@ -408,7 +410,6 @@ const findPlaybookOrFirst = (id?: ConcordId, playbooks?: PlaybookInfo[]) => {
 
 const buildPlaybookOptions = (playbooks: PlaybookInfo[], oldValues?: PlaybookEntry[]) => {
     const result = playbooks
-        .sort((a, b) => (a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0))
         .map((s) => {
             let retryInfo = '';
             if (s.retryNum && s.retryNum > 0) {
