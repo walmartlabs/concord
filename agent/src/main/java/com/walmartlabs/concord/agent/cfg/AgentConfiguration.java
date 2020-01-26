@@ -53,6 +53,7 @@ public class AgentConfiguration {
 
     private final int workersCount;
     private final long pollInterval;
+    private final int maintenanceModeListenerPort;
 
     @Inject
     public AgentConfiguration(Config cfg) {
@@ -69,6 +70,7 @@ public class AgentConfiguration {
         this.logMaxDelay = cfg.getDuration("logMaxDelay", TimeUnit.MILLISECONDS);
 
         this.workersCount = cfg.getInt("workersCount");
+        this.maintenanceModeListenerPort = cfg.getInt("maintenanceModeListenerPort");
 
         this.pollInterval = cfg.getDuration("pollInterval", TimeUnit.MILLISECONDS);
     }
@@ -107,5 +109,9 @@ public class AgentConfiguration {
 
     public long getPollInterval() {
         return pollInterval;
+    }
+
+    public int getMaintenanceModeListenerPort() {
+        return maintenanceModeListenerPort;
     }
 }

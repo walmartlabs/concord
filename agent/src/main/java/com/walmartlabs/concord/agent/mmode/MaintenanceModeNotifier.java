@@ -34,12 +34,11 @@ import java.net.InetSocketAddress;
 public class MaintenanceModeNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(MaintenanceModeNotifier.class);
-    private static final int DEFAULT_PORT = 8010;
 
     private final HttpServer server;
 
-    public MaintenanceModeNotifier(MaintenanceModeListener listener) throws IOException {
-        this.server = HttpServer.create(new InetSocketAddress("localhost", DEFAULT_PORT), 0);
+    public MaintenanceModeNotifier(Integer port, MaintenanceModeListener listener) throws IOException {
+        this.server = HttpServer.create(new InetSocketAddress("localhost", port), 0);
         this.server.createContext("/maintenance-mode", new MaintenanceModeHandler(listener));
     }
 
@@ -53,7 +52,7 @@ public class MaintenanceModeNotifier {
         log.info("stop -> done");
     }
 
-    private class MaintenanceModeHandler implements HttpHandler {
+    private static class MaintenanceModeHandler implements HttpHandler {
 
         private static final String NOT_FOUND_RESPONSE = "404 (Not Found)\n";
 
