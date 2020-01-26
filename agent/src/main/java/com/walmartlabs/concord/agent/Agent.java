@@ -149,7 +149,7 @@ public class Agent {
 
     private void startMaintenanceModeNotifier(QueueClient queueClient) {
         try {
-            MaintenanceModeNotifier n = new MaintenanceModeNotifier(new MaintenanceModeListener() {
+            MaintenanceModeNotifier n = new MaintenanceModeNotifier(agentCfg.getMaintenanceModeListenerPort(), new MaintenanceModeListener() {
                 @Override
                 public Status onMaintenanceMode() {
                     maintenanceMode.set(true);
