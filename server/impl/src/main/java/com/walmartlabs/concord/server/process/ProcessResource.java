@@ -1092,6 +1092,10 @@ public class ProcessResource implements Resource {
         ProcessEntry pe = processManager.assertProcess(instanceId);
         ProcessKey pk = ProcessKey.from(pe);
 
+        if (!processCfg.isCheckLogPermissions()) {
+            return pk;
+        }
+
         if (Roles.isAdmin() || Roles.isGlobalReader()) {
             return pk;
         }

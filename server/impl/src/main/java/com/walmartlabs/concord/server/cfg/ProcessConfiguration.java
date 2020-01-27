@@ -83,6 +83,10 @@ public class ProcessConfiguration implements Serializable {
     private int logSizeLimit;
 
     @Inject
+    @Config("process.checkLogPermissions")
+    private boolean checkLogPermissions;
+
+    @Inject
     public ProcessConfiguration(@Config("process.signingKeyPath") @Nullable String signingKeyPath) {
         this.signingKeyPath = signingKeyPath != null ? Paths.get(signingKeyPath) : null;
     }
@@ -138,5 +142,9 @@ public class ProcessConfiguration implements Serializable {
 
     public int getLogSizeLimit() {
         return logSizeLimit;
+    }
+
+    public boolean isCheckLogPermissions() {
+        return checkLogPermissions;
     }
 }
