@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
+import com.codahale.metrics.Timer;
+
 public class MetricUtils {
 
     private static final String SHARED_PREFIX = "com.walmartlabs.concord.";
@@ -30,5 +32,14 @@ public class MetricUtils {
             n = n.substring(SHARED_PREFIX.length());
         }
         return type + "," + n + "." + name + (suffix != null ? suffix : "");
+    }
+
+    public static void withTimer(Timer timer, Runnable r) {
+        Timer.Context t = timer.time();
+        try {
+            r.run();
+        } finally {
+            t.stop();
+        }
     }
 }
