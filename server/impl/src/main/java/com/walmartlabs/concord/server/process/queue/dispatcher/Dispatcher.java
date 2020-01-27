@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
 
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.walmartlabs.concord.common.MapMatcher;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
@@ -61,6 +62,7 @@ import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QU
 import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
 import static com.walmartlabs.concord.server.jooq.tables.Repositories.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.Secrets.SECRETS;
+import static com.walmartlabs.concord.server.metrics.MetricUtils.withTimer;
 import static org.jooq.impl.DSL.*;
 
 /**
@@ -87,6 +89,7 @@ public class Dispatcher extends PeriodicTask {
 
     private final Histogram uniqueProjectsHistogram;
     private final Histogram dispatchedCountHistogram;
+    private final Timer responseTimer;
 
     @Inject
     public Dispatcher(Locks locks,
@@ -113,9 +116,11 @@ public class Dispatcher extends PeriodicTask {
 
         this.uniqueProjectsHistogram = metricRegistry.histogram("process-queue-dispatcher-unique-projects");
         this.dispatchedCountHistogram = metricRegistry.histogram("process-queue-dispatcher-dispatched-count");
+        this.responseTimer = metricRegistry.timer("process-queue-dispatcher-response-timer");
     }
 
     @Override
+    @WithTimer
     protected boolean performTask() {
         // TODO the WebSocketChannelManager business can be replaced with an async jax-rs endpoint and an "inbox" queue
 
@@ -129,27 +134,40 @@ public class Dispatcher extends PeriodicTask {
                 .map(e -> new Request(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
 
-        // run everything in a single transaction
+        // prepare all responses in a single transaction
         // take a global lock to avoid races
-        return dao.txResult(tx -> {
+        List<Match> matches = dao.txResult(tx -> {
             locks.lock(tx, LOCK_KEY);
-            return dispatch(tx, l);
+            return match(tx, l);
         });
+
+        // no matches, retry after a delay
+        if (matches.isEmpty()) {
+            return false;
+        }
+
+        // send all responses in parallel
+        withTimer(responseTimer, () -> matches.stream()
+                .parallel()
+                .forEach(this::sendResponse));
+
+        return true;
     }
 
-    private boolean dispatch(DSLContext tx, List<Request> requests) {
+    private List<Match> match(DSLContext tx, List<Request> requests) {
         // we need it modifiable
         List<Request> inbox = new ArrayList<>(requests);
 
         int offset = 0;
         Set<UUID> projectsToSkip = new HashSet<>();
 
+        List<Match> matches;
         while (true) {
             // fetch the next few ENQUEUED processes from the DB
             List<ProcessQueueEntry> candidates = new ArrayList<>(dao.next(tx, offset, batchSize));
             if (candidates.isEmpty() || inbox.isEmpty()) {
                 // no potential candidates or no requests left to process
-                return false;
+                return Collections.emptyList();
             }
 
             uniqueProjectsHistogram.update(countUniqueProjects(candidates));
@@ -187,7 +205,7 @@ public class Dispatcher extends PeriodicTask {
                 projectsToSkip.add(e.projectId());
             }
 
-            List<Match> matches = match(inbox, candidates);
+            matches = match(inbox, candidates);
             if (matches.isEmpty()) {
                 // no matches, try fetching the next N records
                 offset += batchSize;
@@ -197,17 +215,16 @@ public class Dispatcher extends PeriodicTask {
             for (Match m : matches) {
                 ProcessQueueEntry candidate = m.response;
 
-                // mark the process as STARTING and send it to the agent
+                // mark the process as STARTING
                 queueManager.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
-
-                sendResponse(m);
-
                 inbox.remove(m.request);
             }
 
             dispatchedCountHistogram.update(matches.size());
-            return true;
+            break;
         }
+
+        return matches;
     }
 
     private List<Match> match(List<Request> requests, List<ProcessQueueEntry> candidates) {
