@@ -1,5 +1,27 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-agent: make the maintenance mode port configurable.
+
+### Changed
+
+- k8s: the example CRDs were updated to include the pod's name into
+the agent's `capabilities`;
+- concord-server: the process queue dispatcher now sends responses
+outside of the global lock;
+- concord-console: fixed "flickering" when switching between
+playbooks in the new Ansible UI;
+- ansible: callback plugins updated to support both Python 2 and 3;
+- concord-server: the `/api/v1/process/{id}/log` endpoint now
+performs additional permissions check. Now only initiators, project
+`WRITERS`, admins and "global readers" can access process logs.
+Disabled by default.
+
+
+
 ## [1.38.2] - 2020-01-23
 
 ### Changed
