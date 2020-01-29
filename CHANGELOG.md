@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.39.3] - 2020-01-29
 
 ### Added
 
