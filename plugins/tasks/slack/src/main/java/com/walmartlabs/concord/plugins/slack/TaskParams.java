@@ -38,6 +38,7 @@ public enum TaskParams {
     SO_TIMEOUT("soTimeout"),
     TEXT("text"),
     TS("ts"),
+    REPLY_BROADCAST("replyBroadcast"),
     USERNAME("username");
 
     private final String key;

@@ -98,7 +98,7 @@ public class SlackClient implements AutoCloseable {
         return exec(MESSAGE_ADD_REACTION_CMD, params);
     }
 
-    public Response message(String channelId, String ts, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
+    public Response message(String channelId, String ts,boolean replyBroadcast, String text, String iconEmoji, String username, Collection<Object> attachments) throws IOException {
         Map<String, Object> params = new HashMap<>();
         params.put("channel", channelId);
         params.put("as_user", true);
@@ -107,6 +107,7 @@ public class SlackClient implements AutoCloseable {
 
         if (ts != null) {
             params.put("thread_ts", ts);
+            params.put("reply_broadcast", replyBroadcast);
         }
 
         if (iconEmoji != null) {
