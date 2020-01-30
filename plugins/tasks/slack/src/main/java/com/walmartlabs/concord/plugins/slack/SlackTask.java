@@ -57,14 +57,14 @@ public class SlackTask implements Task {
     }
 
     public void call(@InjectVariable("context") Context ctx, String channelId, String text) {
-        call(ctx, channelId, null, text, null, null, null, false);
+        call(ctx, channelId, null, false, text, null, null, null, false);
     }
 
     public void call(@InjectVariable("context") Context ctx,
                      String channelId, String text,
                      String iconEmoji, String username, Collection<Object> attachments) {
 
-        call(ctx, channelId, null, text, iconEmoji, username, attachments, false);
+        call(ctx, channelId, null, false, text, iconEmoji, username, attachments, false);
     }
 
     public void call(@InjectVariable("context") Context ctx,
@@ -75,13 +75,25 @@ public class SlackTask implements Task {
         Map<String, Object> args = Utils.collectAgs(ctx);
         SlackConfiguration slackCfg = SlackConfiguration.from(args);
 
-        sendMessage(ctx, slackCfg, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
+        sendMessage(ctx, slackCfg, channelId, ts, false, text, iconEmoji, username, attachments, ignoreErrors);
+    }
+
+    public void call(@InjectVariable("context") Context ctx,
+                     String channelId, String ts, boolean replyBroadcast, String text,
+                     String iconEmoji, String username, Collection<Object> attachments,
+                     boolean ignoreErrors) {
+
+        Map<String, Object> args = Utils.collectAgs(ctx);
+        SlackConfiguration slackCfg = SlackConfiguration.from(args);
+
+        sendMessage(ctx, slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
     }
 
     private void sendMessage(Context ctx, Map<String, Object> args) {
         SlackConfiguration slackCfg = SlackConfiguration.from(args);
 
         boolean ignoreErrors = MapUtils.getBoolean(args, "ignoreErrors", false);
+        boolean replyBroadcast = MapUtils.getBoolean(args, "replyBroadcast", false);
         String channelId = MapUtils.assertString(args, "channelId");
         String ts = MapUtils.getString(args, "ts");
         String text = MapUtils.getString(args, "text");
@@ -89,13 +101,14 @@ public class SlackTask implements Task {
         String username = MapUtils.getString(args, "username");
         Collection<Object> attachments = MapUtils.getList(args, "attachments", Collections.emptyList());
 
-        sendMessage(ctx, slackCfg, channelId, ts, text, iconEmoji, username, attachments, ignoreErrors);
+        sendMessage(ctx, slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, ignoreErrors);
     }
 
     public void sendMessage(@InjectVariable("context") Context ctx,
                             SlackConfiguration slackCfg,
                             String channelId,
                             String ts,
+                            boolean replyBroadcast,
                             String text,
                             String iconEmoji,
                             String username,
@@ -103,7 +116,7 @@ public class SlackTask implements Task {
                             boolean ignoreErrors) {
 
         try (SlackClient client = new SlackClient(slackCfg)) {
-            SlackClient.Response r = client.message(channelId, ts, text, iconEmoji, username, attachments);
+            SlackClient.Response r = client.message(channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());
             } else {
@@ -113,11 +126,11 @@ public class SlackTask implements Task {
             ctx.setVariable("result", result(r));
         } catch (Exception e) {
             if (!ignoreErrors) {
-                log.error("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error", channelId, ts, text, iconEmoji, username, attachments, e);
+                log.error("call ['{}', '{}', '{}', '{}', '{}', '{}', '{}'] -> error", channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, e);
                 throw new RuntimeException("slack task error: ", e);
             }
 
-            log.warn("call ['{}', '{}', '{}', '{}', '{}', '{}'] -> error (ignoreErrors=true)", channelId, ts, text, iconEmoji, username, attachments, e);
+            log.warn("call ['{}', '{}', '{}', '{}', '{}', '{}', '{}'] -> error (ignoreErrors=true)", channelId, ts, replyBroadcast, text, iconEmoji, username, attachments, e);
             ctx.setVariable("result", errorResult(e));
         }
     }
