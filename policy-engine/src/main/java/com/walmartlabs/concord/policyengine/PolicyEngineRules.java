@@ -41,6 +41,7 @@ public class PolicyEngineRules {
     private final Map<String, Object> processCfg;
     private final Map<String, Object> customRule;
     private final JsonStoreRule jsonStoreRule;
+    private final Map<String, Object> defaultProcessCfg;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -51,7 +52,8 @@ public class PolicyEngineRules {
                              @JsonProperty("protectedTask") ProtectedTasksRule protectedTasksRules,
                              @JsonProperty("entity") PolicyRules<EntityRule> entityRules,
                              @JsonProperty("processCfg") Map<String, Object> processCfg,
-                             @JsonProperty("jsonStore") JsonStoreRule jsonStoreRule) {
+                             @JsonProperty("jsonStore") JsonStoreRule jsonStoreRule,
+                             @JsonProperty("defaultProcessCfg") Map<String, Object> defaultProcessCfg) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -64,6 +66,7 @@ public class PolicyEngineRules {
         this.processCfg = processCfg;
         this.customRule = new HashMap<>();
         this.jsonStoreRule = jsonStoreRule;
+        this.defaultProcessCfg = defaultProcessCfg;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -101,6 +104,11 @@ public class PolicyEngineRules {
     @JsonProperty("processCfg")
     public Map<String, Object> getProcessCfgRules() {
         return processCfg;
+    }
+
+    @JsonProperty("defaultProcessCfg")
+    public Map<String, Object> getDefaultProcessCfg() {
+        return defaultProcessCfg;
     }
 
     @JsonAnySetter
