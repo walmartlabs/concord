@@ -42,6 +42,7 @@ import java.util.Map;
 /**
  * Default values for {@code configuration} object in processes.
  */
+@Deprecated
 @Named
 @Singleton
 public class DefaultProcessConfiguration implements FileChangeNotifier.FileChangeListener {

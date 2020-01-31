@@ -65,6 +65,9 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         // system-level default configuration
         Map<String, Object> defCfg = defaultCfg.getCfg();
 
+        // default configuration from policy
+        Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);
+
         // configuration from the policy
         Map<String, Object> policyCfg = getPolicyCfg(payload);
 
@@ -91,7 +94,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, cfg, policyCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, cfg, policyCfg);
         m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
@@ -117,6 +120,16 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
 
         Map<String, Object> m = orgDao.getConfiguration(orgId);
         return m != null ? m : Collections.emptyMap();
+    }
+
+    private Map<String, Object> getDefaultCfgFromPolicy(Payload payload) {
+        PolicyEngine policy = payload.getHeader(Payload.POLICY);
+
+        if (policy == null) {
+            return Collections.emptyMap();
+        }
+
+        return policy.getDefaultProcessCfgPolicy().get();
     }
 
     private Map<String, Object> getPolicyCfg(Payload payload) {
