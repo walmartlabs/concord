@@ -42,6 +42,9 @@ import java.util.*;
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterProcessHosts.NODE_ROSTER_PROCESS_HOSTS;
 import static org.jooq.impl.DSL.value;
 
+/**
+ * Saves all hosts found in events of a particular process.
+ */
 @Named
 public class ProcessHostsProcessor implements Processor {
 

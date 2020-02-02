@@ -37,10 +37,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.function.Function;
 
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostArtifacts.NODE_ROSTER_HOST_ARTIFACTS;
 import static org.jooq.impl.DSL.value;
 
+/**
+ * Collect "get_url", "maven_artifact" and other related events, extracts
+ * the artifact data and saved in the DB.
+ */
 @Named
 public class HostArtifactsProcessor implements Processor {
 
@@ -61,14 +66,16 @@ public class HostArtifactsProcessor implements Processor {
 
         for (AnsibleEvent e : events) {
             String host = e.data().getHost();
-            String url = getArtifactUrl(e.data());
-            if (host != null && url != null) {
-                items.add(HostArtifactItem.builder()
-                        .instanceId(e.instanceId())
-                        .instanceCreatedAt(e.instanceCreatedAt())
-                        .host(hosts.getOrCreate(host))
-                        .artifactUrl(url)
-                        .build());
+            Set<String> urls = getArtifactUrl(e.data());
+            if (host != null && urls != null) {
+                for (String url : urls) {
+                    items.add(HostArtifactItem.builder()
+                            .instanceId(e.instanceId())
+                            .instanceCreatedAt(e.instanceCreatedAt())
+                            .host(hosts.getOrCreate(host))
+                            .artifactUrl(url)
+                            .build());
+                }
             }
         }
 
@@ -79,7 +86,7 @@ public class HostArtifactsProcessor implements Processor {
         log.info("process -> events: {}, items: {}", events.size(), items.size());
     }
 
-    private static String getArtifactUrl(EventData eventData) {
+    private static Set<String> getArtifactUrl(EventData eventData) {
         if (!eventData.isPostEvent()) {
             return null;
         }
@@ -98,6 +105,7 @@ public class HostArtifactsProcessor implements Processor {
                 return fromMavenArtifact(eventData);
             }
             case "get_url":
+                return fromGetUrl(eventData);
             case "uri": {
                 return fromUri(eventData);
             }
@@ -107,40 +115,86 @@ public class HostArtifactsProcessor implements Processor {
     }
 
     // /$groupId[0]/../$groupId[n]/$artifactId/$version/$artifactId-$version-$classifier.$extension
-    private static String fromMavenArtifact(EventData eventData) {
-        Map<String, Object> result = eventData.getMap("result");
-        if (result == null) {
-            return null;
-        }
+    private static Set<String> fromMavenArtifact(EventData eventData) {
+        return processResult(eventData, result -> {
+            String repoUrl = (String) result.get("repository_url");
+            String groupId = (String) result.get("group_id");
+            String artifactId = (String) result.get("artifact_id");
+            String extension = (String) result.get("extension");
+            String classifier = (String) result.get("classifier");
+            String version = (String) result.get("version");
 
-        String repoUrl = (String) result.get("repository_url");
-        String groupId = (String) result.get("group_id");
-        String artifactId = (String) result.get("artifact_id");
-        String extension = (String) result.get("extension");
-        String classifier = (String) result.get("classifier");
-        String version = (String) result.get("version");
+            if (repoUrl == null || groupId == null || artifactId == null || version == null) {
+                return null;
+            }
 
-        if (repoUrl == null || groupId == null || artifactId == null || version == null) {
-            return null;
-        }
+            String name = artifactId + "-" + version;
+            if (classifier != null && !classifier.isEmpty()) {
+                name += "-" + classifier;
+            }
+            name += "." + extension;
 
-        String name = artifactId + "-" + version;
-        if (classifier != null && !classifier.isEmpty()) {
-            name += "-" + classifier;
-        }
-        name += "." + extension;
-
-        return normalizeUrl(repoUrl) + "/" + groupId.replaceAll("\\.", "/") + "/" + artifactId + "/" + version + "/" + name;
+            return normalizeUrl(repoUrl) + "/" + groupId.replaceAll("\\.", "/") + "/" + artifactId + "/" + version + "/" + name;
+        });
     }
 
-    private static String fromUri(EventData eventData) {
+    private static Set<String> fromGetUrl(EventData eventData) {
+        return processResult(eventData, r -> {
+            Object url = r.get("url");
+            if (url instanceof String) {
+                return (String) url;
+            }
+            return null;
+        });
+    }
+
+
+    private static Set<String> fromUri(EventData eventData) {
+        return processResult(eventData, r -> {
+            if (r.get("path") == null) {
+                return null;
+            }
+            Object url = r.get("url");
+            if (url instanceof String) {
+                return (String) url;
+            }
+            return null;
+        });
+    }
+
+    private static Set<String> processResult(EventData eventData, Function<Map<String, Object>, String> processor) {
         Map<String, Object> result = eventData.getMap("result");
         if (result == null) {
-            return null;
+            return Collections.emptySet();
         }
 
-        Object v = result.get("url");
-        return v != null ? v.toString() : null;
+        String singleResult = processor.apply(result);
+        if (singleResult != null) {
+            return Collections.singleton(singleResult);
+        }
+
+        return processResults(result, processor);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Set<String> processResults(Map<String, Object> result, Function<Map<String, Object>, String> processor) {
+        Object resultsObject = result.get("results");
+        if (!(resultsObject instanceof Collection)) {
+            return Collections.emptySet();
+        }
+
+        Set<String> processed = new HashSet<>();
+        Collection<Map<String, Object>> results = (Collection<Map<String, Object>>) resultsObject;
+        for (Object ro : results) {
+            if (ro instanceof Map) {
+                Map<String, Object> r = (Map<String, Object>) ro;
+                String value = processor.apply(r);
+                if (value != null) {
+                    processed.add(value);
+                }
+            }
+        }
+        return processed;
     }
 
     private static String normalizeUrl(String url) {
