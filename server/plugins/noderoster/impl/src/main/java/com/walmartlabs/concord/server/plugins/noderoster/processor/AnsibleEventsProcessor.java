@@ -39,6 +39,10 @@ import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.plugins.noderoster.processor.EventMarkerDao.EventMarker;
 import static org.jooq.impl.DSL.function;
 
+/**
+ * Scans the process_events table for new Ansible events and hands
+ * the data off to individual processors.
+ */
 @Named("noderoster/ansible-events-processor")
 public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent> {
 

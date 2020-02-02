@@ -47,12 +47,20 @@ public class EventData {
     }
 
     public String getString(String param) {
-        return (String) data.get(param);
+        Object o = data.get(param);
+        if (o instanceof String) {
+            return (String) data.get(param);
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> getMap(String param) {
-        return (Map<String, Object>) data.get(param);
+        Object o = data.get(param);
+        if (o instanceof Map) {
+            return (Map<String, Object>) data.get(param);
+        }
+        return null;
     }
 
     public EventData(Map<String, Object> data) {

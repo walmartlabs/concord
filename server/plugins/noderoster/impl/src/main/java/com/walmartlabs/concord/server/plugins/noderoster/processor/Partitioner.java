@@ -30,6 +30,10 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
 
+/**
+ * Handles partitioned tables. Assumes {@code table_yyyyMMdd} format
+ * of partition names.
+ */
 public class Partitioner<E, R extends Record> {
 
     // TODO make configurable

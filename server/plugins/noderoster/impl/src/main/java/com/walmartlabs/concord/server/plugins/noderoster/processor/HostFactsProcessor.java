@@ -47,6 +47,9 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostFacts.NODE_ROSTER_HOST_FACTS;
 import static org.jooq.impl.DSL.value;
 
+/**
+ * Collects facts received from "gather_facts" steps and saves them in the DB.
+ */
 @Named
 public class HostFactsProcessor implements Processor {
 
