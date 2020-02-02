@@ -33,7 +33,7 @@ import { LoadingState } from '../../../App';
 
 interface RouteProps {
     orgName: string;
-    storageName: string;
+    storeName: string;
     queryName: string;
 }
 
@@ -42,7 +42,7 @@ const EditStoreQueryPage = (props: RouteComponentProps<RouteProps>) => {
     const stickyRef = useRef(null);
     const [refresh, toggleRefresh] = useState<boolean>(false);
 
-    const { orgName, storageName, queryName } = props.match.params;
+    const { orgName, storeName, queryName } = props.match.params;
 
     const refreshHandler = useCallback(() => {
         toggleRefresh((prevState) => !prevState);
@@ -54,7 +54,7 @@ const EditStoreQueryPage = (props: RouteComponentProps<RouteProps>) => {
                 loading={loading}
                 refresh={refreshHandler}
                 stickyRef={stickyRef}
-                breadcrumbs={renderBreadcrumbs(orgName, storageName, queryName)}
+                breadcrumbs={renderBreadcrumbs(orgName, storeName, queryName)}
             />
 
             <Segment basic={true}>
@@ -62,7 +62,7 @@ const EditStoreQueryPage = (props: RouteComponentProps<RouteProps>) => {
                     <Header>Modify {queryName} query</Header>
                     <EditStoreQueryActivity
                         orgName={orgName}
-                        storageName={storageName}
+                        storeName={storeName}
                         queryName={queryName}
                         forceRefresh={refresh}
                     />
@@ -72,7 +72,7 @@ const EditStoreQueryPage = (props: RouteComponentProps<RouteProps>) => {
     );
 };
 
-const renderBreadcrumbs = (orgName: string, storageName: string, queryName: string) => {
+const renderBreadcrumbs = (orgName: string, storeName: string, queryName: string) => {
     return (
         <Breadcrumb size="big">
             <Breadcrumb.Section>
@@ -80,7 +80,7 @@ const renderBreadcrumbs = (orgName: string, storageName: string, queryName: stri
             </Breadcrumb.Section>
             <Breadcrumb.Divider />
             <Breadcrumb.Section>
-                <Link to={`/org/${orgName}/jsonstore/${storageName}/query`}>{storageName}</Link>
+                <Link to={`/org/${orgName}/jsonstore/${storeName}/query`}>{storeName}</Link>
             </Breadcrumb.Section>
             <Breadcrumb.Divider />
             <Breadcrumb.Section active={true}>{queryName}</Breadcrumb.Section>

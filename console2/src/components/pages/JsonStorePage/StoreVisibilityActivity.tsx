@@ -32,22 +32,22 @@ import { RequestErrorActivity } from '../../organisms';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     initialVisibility?: StorageVisibility;
     disabled: boolean;
 }
 
 const StoreVisibilityActivity = ({
     orgName,
-    storageName,
+    storeName,
     initialVisibility,
     disabled
 }: ExternalProps) => {
     const [value, setValue] = useState<StorageVisibility | undefined>(initialVisibility);
 
     const postData = useCallback(() => {
-        return apiUpdateVisibility(orgName, storageName, value!);
-    }, [orgName, storageName, value]);
+        return apiUpdateVisibility(orgName, storeName, value!);
+    }, [orgName, storeName, value]);
 
     const { error, isLoading, data, fetch, clearState } = useApi<GenericOperationResult>(postData, {
         fetchOnMount: false,

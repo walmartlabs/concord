@@ -41,6 +41,8 @@ import {
 } from '../../../api/org/project/repository';
 import { RequestState } from '../common';
 
+// TODO should it be a common type?
+// TODO rename "offset" to "page"?
 export interface Pagination {
     limit: number;
     offset: number;

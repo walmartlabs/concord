@@ -86,7 +86,7 @@ public class ConcordServer {
                 .serve("/forms/*").with(DefaultServlet.class, formsServletParams())
                 .serve("/metrics").with(MetricsServlet.class) // prometheus integration
                 .serve("/*").with(DefaultServlet.class, uiServletParams()) // must be the last entry
-                .filter("/api/*", "/logs/*", "/forms/*").through(RequestIdFilter.class)
+                .filter("/api/*", "/logs/*", "/forms/*").through(RequestContextFilter.class)
                 .filter("/api/*", "/logs/*", "/forms/*").through(CORSFilter.class)
                 .filter("/api/*", "/logs/*", "/forms/*").through(NoCacheFilter.class)
                 .filter("/cfg.js").through(NoCacheFilter.class) // the UI's configuration

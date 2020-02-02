@@ -39,11 +39,11 @@ import './styles.css';
 
 export interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     forceRefresh: any;
 }
 
-const StoreQueryList = ({ orgName, storageName, forceRefresh }: ExternalProps) => {
+const StoreQueryList = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
     const [filter, setFilter] = useState<string>();
@@ -56,14 +56,8 @@ const StoreQueryList = ({ orgName, storageName, forceRefresh }: ExternalProps) =
     } = usePagination();
 
     const fetchData = useCallback(() => {
-        return apiGet(
-            orgName,
-            storageName,
-            paginationFilter.offset,
-            paginationFilter.limit,
-            filter
-        );
-    }, [orgName, storageName, paginationFilter, filter]);
+        return apiGet(orgName, storeName, paginationFilter.offset, paginationFilter.limit, filter);
+    }, [orgName, storeName, paginationFilter, filter]);
 
     const { data, error, clearState, fetch } = useApi<PaginatedStorageQueryEntries>(fetchData, {
         fetchOnMount: true,
@@ -120,7 +114,7 @@ const StoreQueryList = ({ orgName, storageName, forceRefresh }: ExternalProps) =
                             positive={true}
                             labelPosition="left"
                             content={`New query`}
-                            location={`/org/${orgName}/jsonstore/${storageName}/query/_new`}
+                            location={`/org/${orgName}/jsonstore/${storeName}/query/_new`}
                         />
                     </Menu.Item>
 
@@ -154,11 +148,11 @@ const StoreQueryList = ({ orgName, storageName, forceRefresh }: ExternalProps) =
                         <List.Item
                             key={idx}
                             as="a"
-                            href={`#/org/${orgName}/jsonstore/${storageName}/query/${d.name}/edit`}>
+                            href={`#/org/${orgName}/jsonstore/${storeName}/query/${d.name}/edit`}>
                             <List.Content floated="right">
                                 <StoreQueryDeleteActivity
                                     orgName={orgName}
-                                    storageName={storageName}
+                                    storeName={storeName}
                                     storageQueryName={d.name}
                                     trigger={storageQueryDeleteTrigger}
                                     onDone={deleteHandler}

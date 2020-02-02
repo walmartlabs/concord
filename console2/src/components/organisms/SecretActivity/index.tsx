@@ -22,7 +22,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
-import { Divider, Header, Icon, Loader, Menu, Segment, Table, Grid } from 'semantic-ui-react';
+import { Divider, Grid, Header, Icon, Loader, Menu, Segment, Table } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
@@ -35,17 +35,18 @@ import {
 import { actions, selectors, State } from '../../../state/data/secrets';
 import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
+    AuditLogActivity,
     PublicKeyPopup,
     SecretDeleteActivity,
     SecretProjectActivity,
     SecretRenameActivity,
-    SecretVisibilityActivity,
-    SecretTeamAccessActivity
+    SecretTeamAccessActivity,
+    SecretVisibilityActivity
 } from '../../organisms';
 import { NotFoundPage } from '../../pages';
 import { renderUser } from '../FindUserField';
 
-export type TabLink = 'info' | 'settings' | 'access' | null;
+export type TabLink = 'info' | 'settings' | 'access' | 'audit' | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -190,6 +191,12 @@ class SecretActivity extends React.PureComponent<Props> {
         return <SecretTeamAccessActivity orgName={data.orgName} secretName={data.name} />;
     }
 
+    static renderAuditLog(e: SecretEntry) {
+        return (
+            <AuditLogActivity filter={{ details: { orgName: e.orgName, secretName: e.name } }} />
+        );
+    }
+
     componentDidMount() {
         this.init();
     }
@@ -236,23 +243,27 @@ class SecretActivity extends React.PureComponent<Props> {
                         <Icon name="setting" />
                         <Link to={`${baseUrl}/settings`}>Settings</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'audit'}>
+                        <Icon name="history" />
+                        <Link to={`${baseUrl}/audit`}>Audit Log</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
                     <Route path={baseUrl} exact={true}>
                         <Redirect to={`${baseUrl}/info`} />
                     </Route>
-
                     <Route path={`${baseUrl}/info`} exact={true}>
                         {SecretActivity.renderInfo(data)}
                     </Route>
-
                     <Route path={`${baseUrl}/access`} exact={true}>
                         {SecretActivity.renderTeamAccess(data)}
                     </Route>
-
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         {SecretActivity.renderSettings(data)}
+                    </Route>
+                    <Route path={`${baseUrl}/audit`} exact={true}>
+                        {SecretActivity.renderAuditLog(data)}
                     </Route>
 
                     <Route component={NotFoundPage} />

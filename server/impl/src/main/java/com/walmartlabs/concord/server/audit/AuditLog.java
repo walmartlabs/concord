@@ -21,7 +21,7 @@ package com.walmartlabs.concord.server.audit;
  */
 
 import com.walmartlabs.concord.server.Listeners;
-import com.walmartlabs.concord.server.RequestId;
+import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
@@ -125,13 +125,15 @@ public class AuditLog {
 
                 PartialProcessKey processKey = sessionKey.getProcessKey();
                 actionSource.put("instanceId", processKey.getInstanceId());
+            } else if (RequestUtils.isItAUIRequest()) {
+                actionSource.put("type", ActionSource.UI);
             } else {
                 // if the request was made using the API
                 actionSource.put("type", ActionSource.API_REQUEST);
             }
             details.put("actionSource", actionSource);
 
-            details.put("requestId", RequestId.get());
+            details.put("requestId", RequestUtils.getRequestId());
 
             if (changes != null && !changes.isEmpty()) {
                 details.put("changes", changes);

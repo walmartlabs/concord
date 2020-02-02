@@ -29,13 +29,14 @@ import { actions, selectors, State } from '../../../state/data/teams';
 import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import { NotFoundPage } from '../../pages';
 import {
+    AuditLogActivity,
     TeamDeleteActivity,
     TeamLdapGroupListActivity,
     TeamMemberListActivity,
     TeamRenameActivity
 } from '../index';
 
-export type TabLink = 'members' | 'ldapGroups' | 'settings' | null;
+export type TabLink = 'members' | 'ldapGroups' | 'settings' | 'audit' | null;
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -123,6 +124,10 @@ class TeamActivity extends React.PureComponent<Props> {
                         <Icon name="setting" />
                         <Link to={`/org/${orgName}/team/${teamName}/settings`}>Settings</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'audit'}>
+                        <Icon name="history" />
+                        <Link to={`/org/${orgName}/team/${teamName}/audit`}>Audit Log</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -137,7 +142,12 @@ class TeamActivity extends React.PureComponent<Props> {
                         <TeamLdapGroupListActivity orgName={orgName} teamName={teamName} />
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
-                        <h1>{TeamActivity.renderSetting(data)}</h1>
+                        {TeamActivity.renderSetting(data)}
+                    </Route>
+                    <Route path={`${baseUrl}/audit`} exact={true}>
+                        <AuditLogActivity
+                            filter={{ details: { orgName: orgName, teamName: teamName } }}
+                        />
                     </Route>
 
                     <Route component={NotFoundPage} />

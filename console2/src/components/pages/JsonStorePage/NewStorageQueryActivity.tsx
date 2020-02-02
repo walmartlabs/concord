@@ -35,7 +35,7 @@ import { LoadingDispatch } from '../../../App';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
 }
 
 const INIT_VALUES = {
@@ -44,15 +44,15 @@ const INIT_VALUES = {
 };
 
 const NewStorageQueryActivity = (props: ExternalProps) => {
-    const { orgName, storageName } = props;
+    const { orgName, storeName } = props;
 
     const dispatch = React.useContext(LoadingDispatch);
     const [queryForExecute, setQueryForExecute] = useState();
     const [values, setValues] = useState(INIT_VALUES);
 
     const postQuery = useCallback(() => {
-        return apiCreate(orgName, storageName, values.name, values.query);
-    }, [orgName, storageName, values]);
+        return apiCreate(orgName, storeName, values.name, values.query);
+    }, [orgName, storeName, values]);
 
     const { error, isLoading, data, fetch } = useApi<GenericOperationResult>(postQuery, {
         fetchOnMount: false,
@@ -61,8 +61,8 @@ const NewStorageQueryActivity = (props: ExternalProps) => {
     });
 
     const execQuery = useCallback(() => {
-        return apiExecuteQuery(orgName, storageName, queryForExecute);
-    }, [orgName, storageName, queryForExecute]);
+        return apiExecuteQuery(orgName, storeName, queryForExecute);
+    }, [orgName, storeName, queryForExecute]);
 
     const {
         error: execError,
@@ -93,7 +93,7 @@ const NewStorageQueryActivity = (props: ExternalProps) => {
     );
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore/${storageName}/query`} />;
+        return <Redirect to={`/org/${orgName}/jsonstore/${storeName}/query`} />;
     }
 
     return (
@@ -103,7 +103,7 @@ const NewStorageQueryActivity = (props: ExternalProps) => {
             {execData && <ExecuteQueryResult data={execData} onClose={execClearState} />}
             <NewStorageQueryForm
                 orgName={orgName}
-                storageName={storageName}
+                storeName={storeName}
                 submitting={isLoading}
                 executing={isExecLoading}
                 onSubmit={handleSubmit}

@@ -234,7 +234,7 @@ public class ProjectManager {
                 .field("orgId", orgId)
                 .field("orgName", orgName)
                 .field("projectId", projectId)
-                .field("projectName", projectName)
+                .field("name", projectName)
                 .field("changes", changes)
                 .log();
     }

@@ -28,18 +28,18 @@ import { useApi } from '../../../hooks/useApi';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     storageQueryName: ConcordKey;
     trigger: (onClick: (event: React.SyntheticEvent) => void) => React.ReactNode;
     onDone: () => void;
 }
 
 const StoreQueryDeleteActivity = (props: ExternalProps) => {
-    const { orgName, storageName, storageQueryName, trigger, onDone } = props;
+    const { orgName, storeName, storageQueryName, trigger, onDone } = props;
 
     const deleteDataRequest = useCallback(() => {
-        return apiDelete(orgName, storageName, storageQueryName);
-    }, [orgName, storageName, storageQueryName]);
+        return apiDelete(orgName, storeName, storageQueryName);
+    }, [orgName, storeName, storageQueryName]);
 
     const { data, isLoading, error, clearState, fetch } = useApi<GenericOperationResult>(
         deleteDataRequest,

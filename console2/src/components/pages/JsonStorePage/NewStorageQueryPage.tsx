@@ -31,14 +31,14 @@ import { LoadingState } from '../../../App';
 
 interface RouteProps {
     orgName: string;
-    storageName: string;
+    storeName: string;
 }
 
 const NewStorageQueryPage = (props: RouteComponentProps<RouteProps>) => {
     const loading = useContext(LoadingState);
     const stickyRef = useRef(null);
 
-    const { orgName, storageName } = props.match.params;
+    const { orgName, storeName } = props.match.params;
 
     return (
         <div ref={stickyRef}>
@@ -46,20 +46,20 @@ const NewStorageQueryPage = (props: RouteComponentProps<RouteProps>) => {
                 loading={loading}
                 refresh={() => console.log('refresh')}
                 stickyRef={stickyRef}
-                breadcrumbs={renderBreadcrumbs(orgName, storageName)}
+                breadcrumbs={renderBreadcrumbs(orgName, storeName)}
             />
 
             <Segment basic={true}>
                 <Container text={true}>
                     <Header>Create a New Query</Header>
-                    <NewStorageQueryActivity orgName={orgName} storageName={storageName} />
+                    <NewStorageQueryActivity orgName={orgName} storeName={storeName} />
                 </Container>
             </Segment>
         </div>
     );
 };
 
-const renderBreadcrumbs = (orgName: string, storageName: string) => {
+const renderBreadcrumbs = (orgName: string, storeName: string) => {
     return (
         <Breadcrumb size="big">
             <Breadcrumb.Section>
@@ -67,7 +67,7 @@ const renderBreadcrumbs = (orgName: string, storageName: string) => {
             </Breadcrumb.Section>
             <Breadcrumb.Divider />
             <Breadcrumb.Section>
-                <Link to={`/org/${orgName}/jsonstore/${storageName}/query`}>{storageName}</Link>
+                <Link to={`/org/${orgName}/jsonstore/${storeName}/query`}>{storeName}</Link>
             </Breadcrumb.Section>
             <Breadcrumb.Divider />
             <Breadcrumb.Section active={true}>New Query</Breadcrumb.Section>

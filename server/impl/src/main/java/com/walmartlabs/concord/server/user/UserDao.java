@@ -187,6 +187,7 @@ public class UserDao extends AbstractDao {
             } else if (result.size() > 1) {
                 throw new IllegalArgumentException("Non unique results found for username: '" + username + "', domain: '" + userDomain + "', type: " + type);
             }
+
             return result.get(0);
         }
     }

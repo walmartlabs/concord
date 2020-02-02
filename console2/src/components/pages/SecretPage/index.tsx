@@ -40,6 +40,8 @@ const pathToTab = (s: string): TabLink => {
         return 'settings';
     } else if (s.endsWith('/access')) {
         return 'access';
+    } else if (s.endsWith('/audit')) {
+        return 'audit';
     }
 
     return null;

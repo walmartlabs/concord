@@ -23,6 +23,7 @@ import { Button, Dropdown } from 'semantic-ui-react';
 
 import { Pagination } from '../../../state/data/processes';
 
+// TODO make customizable
 const defaultDropDownValues = [50, 100, 500];
 
 interface Props {

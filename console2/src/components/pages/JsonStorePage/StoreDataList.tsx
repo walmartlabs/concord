@@ -36,11 +36,11 @@ import './styles.css';
 
 export interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     forceRefresh: any;
 }
 
-const StoreDataList = ({ orgName, storageName, forceRefresh }: ExternalProps) => {
+const StoreDataList = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
     const [filter, setFilter] = useState<string>();
@@ -53,14 +53,8 @@ const StoreDataList = ({ orgName, storageName, forceRefresh }: ExternalProps) =>
     } = usePagination();
 
     const fetchData = useCallback(() => {
-        return apiGet(
-            orgName,
-            storageName,
-            paginationFilter.offset,
-            paginationFilter.limit,
-            filter
-        );
-    }, [orgName, storageName, paginationFilter, filter]);
+        return apiGet(orgName, storeName, paginationFilter.offset, paginationFilter.limit, filter);
+    }, [orgName, storeName, paginationFilter, filter]);
 
     const { data, error, clearState, fetch } = useApi<PaginatedStorageDataEntries>(fetchData, {
         fetchOnMount: true,
@@ -138,14 +132,14 @@ const StoreDataList = ({ orgName, storageName, forceRefresh }: ExternalProps) =>
                         <List.Item
                             key={idx}
                             as="a"
-                            href={`/api/v1/org/${orgName}/jsonstore/${storageName}/item/${encodeURIComponent(
+                            href={`/api/v1/org/${orgName}/jsonstore/${storeName}/item/${encodeURIComponent(
                                 d
                             )}`}
                             target="_blank">
                             <List.Content floated="right">
                                 <StoreDataDeleteActivity
                                     orgName={orgName}
-                                    storageName={storageName}
+                                    storeName={storeName}
                                     storageDataPath={d}
                                     trigger={storageDataDeleteTrigger}
                                     onDone={deleteHandler}

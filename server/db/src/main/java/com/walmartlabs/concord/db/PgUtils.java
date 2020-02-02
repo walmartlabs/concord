@@ -52,6 +52,10 @@ public final class PgUtils {
         return DSL.condition("{0} @> jsonb_build_object({1}, {2})", field, DSL.val(key), DSL.value(value));
     }
 
+    public static Condition jsonbContains(Field<JSONB> field, JSONB value) {
+        return DSL.condition("{0} @> {1}", field, DSL.value(value));
+    }
+
     private PgUtils() {
     }
 }

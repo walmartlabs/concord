@@ -283,7 +283,7 @@ public class JsonStoreManager {
         auditLog.add(AuditObject.JSON_STORE, auditAction)
                 .changes(prevEntity, newEntity)
                 .field("orgId", orgId)
-                .field("id", id)
+                .field("jsonStoreId", id)
                 .field("name", name)
                 .log();
     }

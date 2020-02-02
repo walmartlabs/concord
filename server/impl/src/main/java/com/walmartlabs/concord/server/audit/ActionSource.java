@@ -31,5 +31,10 @@ public enum ActionSource {
     /**
      * Access from a process.
      */
-    PROCESS
+    PROCESS,
+
+    /**
+     * Access from the UI
+     */
+    UI
 }

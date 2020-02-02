@@ -58,9 +58,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Timestamp;
 import java.util.*;
 
+import static com.walmartlabs.concord.server.Utils.toTimestamp;
 import static javax.ws.rs.core.Response.Status;
 
 @Named
@@ -294,15 +294,6 @@ public class ProjectProcessResource implements Resource {
             Map<String, Object> args = prepareArgumentsForInProgressTemplate(entry);
             return responseTemplates.inProgressWait(Response.ok(), args).build();
         }
-    }
-
-    private static Timestamp toTimestamp(IsoDateParam p) {
-        if (p == null) {
-            return null;
-        }
-
-        Calendar c = p.getValue();
-        return new Timestamp(c.getTimeInMillis());
     }
 
     private static Map<String, Object> prepareArgumentsForInProgressTemplate(ProcessEntry entry) {

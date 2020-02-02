@@ -234,7 +234,7 @@ public class OrganizationManager {
     private void addAuditLog(AuditAction auditAction, UUID orgId, String orgName, Map<String, Object> changes) {
         auditLog.add(AuditObject.ORGANIZATION, auditAction)
                 .field("orgId", orgId)
-                .field("orgName", orgName)
+                .field("name", orgName)
                 .field("changes", changes)
                 .log();
     }

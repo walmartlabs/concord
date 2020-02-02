@@ -31,6 +31,7 @@ import { actions, selectors, State } from '../../../state/data/projects';
 import { comparators } from '../../../utils';
 import { RepositoryList, RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
+    AuditLogActivity,
     EncryptValueActivity,
     ProjectOwnerChangeActivity,
     ProjectRawPayloadModeActivity,
@@ -54,6 +55,7 @@ export type TabLink =
     | 'settings'
     | 'access'
     | 'configuration'
+    | 'audit'
     | null;
 
 interface ExternalProps {
@@ -179,6 +181,12 @@ class ProjectActivity extends React.PureComponent<Props> {
         );
     }
 
+    static renderAuditLog(p: ProjectEntry) {
+        return (
+            <AuditLogActivity filter={{ details: { orgName: p.orgName, projectName: p.name } }} />
+        );
+    }
+
     componentDidMount() {
         this.init();
     }
@@ -238,6 +246,10 @@ class ProjectActivity extends React.PureComponent<Props> {
                         <Icon name="setting" />
                         <Link to={`${baseUrl}/settings`}>Settings</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'audit'}>
+                        <Icon name="history" />
+                        <Link to={`${baseUrl}/audit`}>Audit Log</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -262,6 +274,9 @@ class ProjectActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         {ProjectActivity.renderSettings(data, () => load(orgName, projectName))}
+                    </Route>
+                    <Route path={`${baseUrl}/audit`} exact={true}>
+                        {ProjectActivity.renderAuditLog(data)}
                     </Route>
 
                     <Route component={NotFoundPage} />

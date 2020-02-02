@@ -116,7 +116,7 @@ public class PolicyResource implements Resource {
             id = policyManager.insert(entry.name(), entry.parentId(), entry.rules());
 
             auditLog.add(AuditObject.POLICY, AuditAction.CREATE)
-                    .field("id", id)
+                    .field("policyId", id)
                     .field("parentId", entry.parentId())
                     .field("name", entry.name())
                     .log();
@@ -126,7 +126,7 @@ public class PolicyResource implements Resource {
             policyManager.update(id, entry.name(), entry.parentId(), entry.rules());
 
             auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
-                    .field("id", id)
+                    .field("policyId", id)
                     .field("parentId", entry.parentId())
                     .field("name", entry.name())
                     .log();
@@ -150,7 +150,7 @@ public class PolicyResource implements Resource {
         policyManager.delete(id);
 
         auditLog.add(AuditObject.POLICY, AuditAction.DELETE)
-                .field("id", id)
+                .field("policyId", id)
                 .field("name", policyName)
                 .log();
 
@@ -173,7 +173,7 @@ public class PolicyResource implements Resource {
         policyManager.link(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
-                .field("id", l.policyId)
+                .field("policyId", l.policyId)
                 .field("name", policyName)
                 .field("link", l)
                 .field("action", "link")
@@ -202,7 +202,7 @@ public class PolicyResource implements Resource {
         policyManager.unlink(l.policyId, l.orgId, l.projectId, l.userId);
 
         auditLog.add(AuditObject.POLICY, AuditAction.UPDATE)
-                .field("id", l.policyId)
+                .field("policyId", l.policyId)
                 .field("name", policyName)
                 .field("link", l)
                 .field("action", "unlink")

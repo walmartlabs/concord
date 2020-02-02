@@ -30,6 +30,7 @@ import { OrganizationEntry } from '../../../api/org';
 import { actions, selectors, State } from '../../../state/data/orgs';
 import { RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
 import {
+    AuditLogActivity,
     OrganizationOwnerChangeActivity,
     ProcessListActivity,
     ProjectListActivity,
@@ -40,7 +41,15 @@ import {
 import { NotFoundPage } from '../../pages';
 import StorageListActivity from '../../pages/JsonStorePage/StoreListActivity';
 
-export type TabLink = 'process' | 'project' | 'secret' | 'team' | 'jsonstore' | 'settings' | null;
+export type TabLink =
+    | 'process'
+    | 'project'
+    | 'secret'
+    | 'team'
+    | 'jsonstore'
+    | 'settings'
+    | 'audit'
+    | null;
 
 interface ExternalProps {
     activeTab: TabLink;
@@ -115,6 +124,10 @@ class OrganizationActivity extends React.PureComponent<Props> {
         );
     }
 
+    static renderAuditLog(e: OrganizationEntry) {
+        return <AuditLogActivity filter={{ details: { orgName: e.name } }} />;
+    }
+
     componentDidMount() {
         this.init();
     }
@@ -175,6 +188,10 @@ class OrganizationActivity extends React.PureComponent<Props> {
                         <Icon name="setting" />
                         <Link to={`${baseUrl}/settings`}>Settings</Link>
                     </Menu.Item>
+                    <Menu.Item active={activeTab === 'audit'}>
+                        <Icon name="history" />
+                        <Link to={`${baseUrl}/audit`}>Audit Log</Link>
+                    </Menu.Item>
                 </Menu>
 
                 <Switch>
@@ -198,6 +215,9 @@ class OrganizationActivity extends React.PureComponent<Props> {
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         {OrganizationActivity.renderSettings(data)}
+                    </Route>
+                    <Route path={`${baseUrl}/audit`} exact={true}>
+                        {OrganizationActivity.renderAuditLog(data)}
                     </Route>
 
                     <Route component={NotFoundPage} />

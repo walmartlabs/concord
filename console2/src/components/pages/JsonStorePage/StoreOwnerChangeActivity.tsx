@@ -29,14 +29,14 @@ import { useApi } from '../../../hooks/useApi';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     initialOwner?: Owner;
     disabled: boolean;
 }
 
 const StoreOwnerChangeActivity = ({
     orgName,
-    storageName,
+    storeName,
     disabled,
     initialOwner
 }: ExternalProps) => {
@@ -44,8 +44,8 @@ const StoreOwnerChangeActivity = ({
     const [value, setValue] = useState({ owner: initialOwner });
 
     const postData = useCallback(() => {
-        return apiChangeOwner(orgName, storageName, value.owner!);
-    }, [orgName, storageName, value]);
+        return apiChangeOwner(orgName, storeName, value.owner!);
+    }, [orgName, storeName, value]);
 
     const { error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(postData, {
         fetchOnMount: false,

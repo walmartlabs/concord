@@ -44,6 +44,8 @@ const pathToTab = (s: string): TabLink => {
         return 'jsonstore';
     } else if (s.endsWith('/settings')) {
         return 'settings';
+    } else if (s.endsWith('/audit')) {
+        return 'audit';
     }
 
     return null;

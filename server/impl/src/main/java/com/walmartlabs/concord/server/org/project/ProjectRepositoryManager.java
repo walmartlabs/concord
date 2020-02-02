@@ -220,8 +220,8 @@ public class ProjectRepositoryManager {
         auditLog.add(AuditObject.PROJECT, AuditAction.UPDATE)
                 .field("orgId", orgId)
                 .field("orgName", orgName)
-                .field("projectName", projectName)
                 .field("projectId", projectId)
+                .field("name", projectName)
                 .field("changes", changes)
                 .log();
     }
