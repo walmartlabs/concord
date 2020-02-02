@@ -37,29 +37,29 @@ import { LoadingDispatch } from '../../../App';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     queryName: ConcordKey;
     forceRefresh: any;
 }
 
 const EditStoreQueryActivity = (props: ExternalProps) => {
-    const { orgName, storageName, queryName, forceRefresh } = props;
+    const { orgName, storeName, queryName, forceRefresh } = props;
 
     const dispatch = React.useContext(LoadingDispatch);
     const [query, setQuery] = useState();
     const [queryForExecute, setQueryForExecute] = useState();
 
     const loadQuery = useCallback(() => {
-        return apiGetQuery(orgName, storageName, queryName);
-    }, [orgName, storageName, queryName]);
+        return apiGetQuery(orgName, storeName, queryName);
+    }, [orgName, storeName, queryName]);
 
     const postData = useCallback(() => {
-        return apiCreate(orgName, storageName, queryName, query);
-    }, [orgName, storageName, queryName, query]);
+        return apiCreate(orgName, storeName, queryName, query);
+    }, [orgName, storeName, queryName, query]);
 
     const execQuery = useCallback(() => {
-        return apiExecuteQuery(orgName, storageName, queryForExecute);
-    }, [orgName, storageName, queryForExecute]);
+        return apiExecuteQuery(orgName, storeName, queryForExecute);
+    }, [orgName, storeName, queryForExecute]);
 
     const { fetch: loadQueryFetch, clearState: loadQueryClear, data: loadQueryData } = useApi<
         StorageQueryEntry
@@ -104,7 +104,7 @@ const EditStoreQueryActivity = (props: ExternalProps) => {
     );
 
     if (data) {
-        return <Redirect to={`/org/${orgName}/jsonstore/${storageName}/query`} />;
+        return <Redirect to={`/org/${orgName}/jsonstore/${storeName}/query`} />;
     }
 
     return (

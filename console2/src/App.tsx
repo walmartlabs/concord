@@ -153,19 +153,19 @@ const App = () => {
                                             />
 
                                             <Route
-                                                path="/org/:orgName/jsonstore/:storageName/query/_new"
+                                                path="/org/:orgName/jsonstore/:storeName/query/_new"
                                                 exact={true}
                                                 component={NewStorageQueryPage}
                                             />
 
                                             <Route
-                                                path="/org/:orgName/jsonstore/:storageName/query/:queryName/edit"
+                                                path="/org/:orgName/jsonstore/:storeName/query/:queryName/edit"
                                                 exact={true}
                                                 component={EditStoreQueryPage}
                                             />
 
                                             <Route
-                                                path="/org/:orgName/jsonstore/:storageName"
+                                                path="/org/:orgName/jsonstore/:storeName"
                                                 component={JsonStorePage}
                                             />
 

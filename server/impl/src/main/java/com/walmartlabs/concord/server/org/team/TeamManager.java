@@ -92,8 +92,8 @@ public class TeamManager {
         });
 
         auditLog.add(AuditObject.TEAM, AuditAction.CREATE)
-                .field("id", teamId)
                 .field("orgId", orgId)
+                .field("teamId", teamId)
                 .field("name", teamName)
                 .log();
 
@@ -108,7 +108,8 @@ public class TeamManager {
 
         // TODO delta?
         auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
-                .field("id", teamId)
+                .field("orgId", orgId)
+                .field("teamId", teamId)
                 .log();
     }
 
@@ -118,8 +119,8 @@ public class TeamManager {
         teamDao.delete(t.getId());
 
         auditLog.add(AuditObject.TEAM, AuditAction.DELETE)
-                .field("id", t.getId())
                 .field("orgId", t.getOrgId())
+                .field("teamId", t.getId())
                 .field("name", t.getName())
                 .log();
     }
@@ -160,8 +161,8 @@ public class TeamManager {
         });
 
         auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
-                .field("id", t.getId())
                 .field("orgId", t.getOrgId())
+                .field("teamId", t.getId())
                 .field("name", t.getName())
                 .field("action", "addUsers")
                 .field("users", users)
@@ -189,8 +190,8 @@ public class TeamManager {
         });
 
         auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
-                .field("id", t.getId())
                 .field("orgId", t.getOrgId())
+                .field("teamId", t.getId())
                 .field("name", t.getName())
                 .field("action", "addLdapGroups")
                 .field("groups", groups)
@@ -218,8 +219,8 @@ public class TeamManager {
         teamDao.removeUsers(t.getId(), userIds);
 
         auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
-                .field("id", t.getId())
                 .field("orgId", t.getOrgId())
+                .field("teamId", t.getId())
                 .field("name", t.getName())
                 .field("action", "removeUsers")
                 .field("users", users)

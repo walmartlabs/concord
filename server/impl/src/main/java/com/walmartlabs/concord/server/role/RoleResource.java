@@ -105,7 +105,7 @@ public class RoleResource implements Resource {
             id = roleDao.insert(entry.getName(), entry.getPermissions());
 
             auditLog.add(AuditObject.ROLE, AuditAction.CREATE)
-                    .field("id", id)
+                    .field("roleId", id)
                     .field("name", entry.getName())
                     .field("permissions", entry.getPermissions())
                     .log();
@@ -115,7 +115,7 @@ public class RoleResource implements Resource {
             roleDao.update(id, entry.getName(), entry.getPermissions());
 
             auditLog.add(AuditObject.ROLE, AuditAction.UPDATE)
-                    .field("id", id)
+                    .field("roleId", id)
                     .field("name", entry.getName())
                     .field("permissions", entry.getPermissions())
                     .log();
@@ -139,7 +139,7 @@ public class RoleResource implements Resource {
         roleDao.delete(id);
 
         auditLog.add(AuditObject.ROLE, AuditAction.DELETE)
-                .field("id", id)
+                .field("roleId", id)
                 .field("name", roleName)
                 .log();
 

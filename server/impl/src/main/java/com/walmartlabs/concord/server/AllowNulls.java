@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,9 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import java.util.UUID;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-public final class RequestId {
-
-    private static final ThreadLocal<UUID> holder = new ThreadLocal<>();
-
-    public static UUID get() {
-        return holder.get();
-    }
-
-    public static void set(UUID id) {
-        holder.set(id);
-    }
-
-    private RequestId() {
-    }
+@Retention(RetentionPolicy.SOURCE)
+public @interface AllowNulls {
 }

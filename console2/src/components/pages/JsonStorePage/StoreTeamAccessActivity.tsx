@@ -34,11 +34,11 @@ import { LoadingDispatch } from '../../../App';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     forceRefresh: boolean;
 }
 
-const StoreTeamAccessActivity = ({ orgName, storageName, forceRefresh }: ExternalProps) => {
+const StoreTeamAccessActivity = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
     const [refresh, toggleRefresh] = useState<boolean>(forceRefresh);
 
@@ -47,8 +47,8 @@ const StoreTeamAccessActivity = ({ orgName, storageName, forceRefresh }: Externa
     }, [forceRefresh]);
 
     const fetchData = useCallback(() => {
-        return apiGetAccess(orgName, storageName);
-    }, [orgName, storageName]);
+        return apiGetAccess(orgName, storeName);
+    }, [orgName, storeName]);
 
     const { data, error } = useApi<ResourceAccessEntry[]>(fetchData, {
         fetchOnMount: false,
@@ -60,10 +60,10 @@ const StoreTeamAccessActivity = ({ orgName, storageName, forceRefresh }: Externa
     const [value, setValue] = useState({ access: [] as ResourceAccessEntry[] });
 
     const postData = useCallback(async () => {
-        const result = await apiUpdateAccess(orgName, storageName, value.access);
+        const result = await apiUpdateAccess(orgName, storeName, value.access);
         toggleRefresh((prevState) => !prevState);
         return result;
-    }, [orgName, storageName, value]);
+    }, [orgName, storeName, value]);
 
     const post = useApi<GenericOperationResult>(postData, {
         fetchOnMount: false,

@@ -34,13 +34,14 @@ import StoreTeamAccessActivity from './StoreTeamAccessActivity';
 import StoreDataList from './StoreDataList';
 import StoreQueryList from './StoreQueryList';
 import { LoadingState } from '../../../App';
+import { AuditLogActivity } from '../../organisms';
 
 interface RouteProps {
     orgName: ConcordId;
-    storageName: ConcordId;
+    storeName: ConcordId;
 }
 
-type TabLink = 'data' | 'query' | 'access' | 'settings' | null;
+type TabLink = 'data' | 'query' | 'access' | 'settings' | 'audit' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/data')) {
@@ -51,6 +52,8 @@ const pathToTab = (s: string): TabLink => {
         return 'access';
     } else if (s.endsWith('/settings')) {
         return 'settings';
+    } else if (s.endsWith('/audit')) {
+        return 'audit';
     }
 
     return null;
@@ -62,14 +65,14 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
     const loading = React.useContext(LoadingState);
     const [refresh, toggleRefresh] = useState<boolean>(false);
 
-    const { orgName, storageName } = props.match.params;
+    const { orgName, storeName } = props.match.params;
     const activeTab = pathToTab(props.location.pathname);
 
     const refreshHandler = useCallback(() => {
         toggleRefresh((prevState) => !prevState);
     }, []);
 
-    const baseUrl = `/org/${orgName}/jsonstore/${storageName}`;
+    const baseUrl = `/org/${orgName}/jsonstore/${storeName}`;
 
     return (
         <div ref={stickyRef}>
@@ -77,7 +80,7 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
                 loading={loading}
                 refresh={refreshHandler}
                 stickyRef={stickyRef}
-                breadcrumbs={renderBreadcrumbs(orgName, storageName)}
+                breadcrumbs={renderBreadcrumbs(orgName, storeName)}
             />
 
             <Menu tabular={true} style={{ marginTop: 0 }}>
@@ -97,6 +100,10 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
                     <Icon name="setting" />
                     <Link to={`${baseUrl}/settings`}>Settings</Link>
                 </Menu.Item>
+                <Menu.Item active={activeTab === 'audit'}>
+                    <Icon name="history" />
+                    <Link to={`${baseUrl}/audit`}>Audit Log</Link>
+                </Menu.Item>
             </Menu>
 
             <Switch>
@@ -105,31 +112,30 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
                 </Route>
 
                 <Route path={`${baseUrl}/data`} exact={true}>
-                    <StoreDataList
-                        orgName={orgName}
-                        storageName={storageName}
-                        forceRefresh={refresh}
-                    />
+                    <StoreDataList orgName={orgName} storeName={storeName} forceRefresh={refresh} />
                 </Route>
                 <Route path={`${baseUrl}/query`} exact={true}>
                     <StoreQueryList
                         orgName={orgName}
-                        storageName={storageName}
+                        storeName={storeName}
                         forceRefresh={refresh}
                     />
                 </Route>
                 <Route path={`${baseUrl}/access`} exact={true}>
                     <StoreTeamAccessActivity
                         orgName={orgName}
-                        storageName={storageName}
+                        storeName={storeName}
                         forceRefresh={refresh}
                     />
                 </Route>
                 <Route path={`${baseUrl}/settings`} exact={true}>
-                    <StoreSettings
-                        orgName={orgName}
-                        storageName={storageName}
+                    <StoreSettings orgName={orgName} storeName={storeName} forceRefresh={refresh} />
+                </Route>
+                <Route path={`${baseUrl}/audit`} exact={true}>
+                    <AuditLogActivity
                         forceRefresh={refresh}
+                        showRefreshButton={false}
+                        filter={{ details: { orgName: orgName, jsonStoreName: storeName } }}
                     />
                 </Route>
 
@@ -139,14 +145,14 @@ const StoragePage = (props: RouteComponentProps<RouteProps>) => {
     );
 };
 
-const renderBreadcrumbs = (orgName: string, storageName: string) => {
+const renderBreadcrumbs = (orgName: string, storeName: string) => {
     return (
         <Breadcrumb size="big">
             <Breadcrumb.Section>
                 <Link to={`/org/${orgName}/jsonstore`}>{orgName}</Link>
             </Breadcrumb.Section>
             <Breadcrumb.Divider />
-            <Breadcrumb.Section active={true}>{storageName}</Breadcrumb.Section>
+            <Breadcrumb.Section active={true}>{storeName}</Breadcrumb.Section>
         </Breadcrumb>
     );
 };

@@ -29,16 +29,16 @@ import { Redirect } from 'react-router';
 
 interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     disabled: boolean;
 }
 
-const StoreDeleteActivity = ({ orgName, storageName, disabled }: ExternalProps) => {
+const StoreDeleteActivity = ({ orgName, storeName, disabled }: ExternalProps) => {
     const [forceRequest, toggleForceRequest] = useState<boolean>(false);
 
     const deleteData = useCallback(async () => {
-        return await apiDelete(orgName, storageName);
-    }, [orgName, storageName]);
+        return await apiDelete(orgName, storeName);
+    }, [orgName, storeName]);
 
     const { data, error, isLoading } = useApi<GenericOperationResult>(deleteData, {
         fetchOnMount: false,

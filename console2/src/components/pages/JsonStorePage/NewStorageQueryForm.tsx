@@ -39,7 +39,7 @@ export type NewStorageQueryFormValues = FormValues;
 
 export interface Props {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     initial: FormValues;
     submitting: boolean;
     executing: boolean;
@@ -49,7 +49,7 @@ export interface Props {
 
 const NewStorageQueryForm = ({
     orgName,
-    storageName,
+    storeName,
     onSubmit,
     onExecute,
     submitting,
@@ -76,7 +76,7 @@ const NewStorageQueryForm = ({
         let hasError = false;
         setIsValidating(true);
         try {
-            const nameValidateResult = await validateName(orgName, storageName, queryName);
+            const nameValidateResult = await validateName(orgName, storeName, queryName);
             if (nameValidateResult !== undefined) {
                 setQueryNameError(nameValidateResult);
                 hasError = true;
@@ -96,7 +96,7 @@ const NewStorageQueryForm = ({
         }
 
         return hasError;
-    }, [orgName, storageName, queryName]);
+    }, [orgName, storeName, queryName]);
 
     const handleSubmit = useCallback(async () => {
         const hasError = await handleValidate();
@@ -167,14 +167,14 @@ const NewStorageQueryForm = ({
 
 const validateName = async (
     orgName: ConcordKey,
-    storageName: ConcordKey,
+    storeName: ConcordKey,
     name: string
 ): Promise<string | undefined> => {
     const error = storageQuery.name(name);
     if (error) {
         return Promise.resolve(error);
     }
-    const exists = await isStorageQueryExists(orgName, storageName, name);
+    const exists = await isStorageQueryExists(orgName, storeName, name);
     if (exists) {
         return Promise.resolve(storageQueryAlreadyExistsError(name));
     }

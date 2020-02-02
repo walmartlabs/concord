@@ -39,19 +39,19 @@ import { LoadingDispatch } from '../../../App';
 
 export interface ExternalProps {
     orgName: ConcordKey;
-    storageName: ConcordKey;
+    storeName: ConcordKey;
     forceRefresh: any;
 }
 
-const StoreSettings = ({ orgName, storageName, forceRefresh }: ExternalProps) => {
+const StoreSettings = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
     const fetchData = useCallback(async () => {
-        const storage = await apiGet(orgName, storageName);
-        const capacity = await apiGetCapacity(orgName, storageName);
+        const storage = await apiGet(orgName, storeName);
+        const capacity = await apiGetCapacity(orgName, storeName);
 
         return { ...storage, ...capacity };
-    }, [orgName, storageName]);
+    }, [orgName, storeName]);
 
     const { data, error } = useApi<StorageEntry & StorageCapacity>(fetchData, {
         fetchOnMount: true,
@@ -86,7 +86,7 @@ const StoreSettings = ({ orgName, storageName, forceRefresh }: ExternalProps) =>
                 </Header>
                 <StoreVisibilityActivity
                     orgName={orgName}
-                    storageName={storageName}
+                    storeName={storeName}
                     initialVisibility={data?.visibility}
                     disabled={disabled}
                 />
@@ -100,7 +100,7 @@ const StoreSettings = ({ orgName, storageName, forceRefresh }: ExternalProps) =>
                 </Header>
                 <StoreOwnerChangeActivity
                     orgName={orgName}
-                    storageName={storageName}
+                    storeName={storeName}
                     initialOwner={data?.owner}
                     disabled={disabled}
                 />
@@ -108,11 +108,7 @@ const StoreSettings = ({ orgName, storageName, forceRefresh }: ExternalProps) =>
                 <Header as="h4" disabled={disabled}>
                     Delete storage
                 </Header>
-                <StoreDeleteActivity
-                    orgName={orgName}
-                    storageName={storageName}
-                    disabled={disabled}
-                />
+                <StoreDeleteActivity orgName={orgName} storeName={storeName} disabled={disabled} />
             </Segment>
         </>
     );

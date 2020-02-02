@@ -41,4 +41,8 @@ if (module.hot) {
 }
 
 // remove any old service worker
-navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((reg) => reg.unregister()));
+if (navigator.serviceWorker) {
+    navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => regs.forEach((reg) => reg.unregister()));
+}

@@ -137,7 +137,6 @@ class FindUserField extends React.PureComponent<Props, InternalState> {
             <Search
                 value={value}
                 input={{
-                    fluid: true,
                     placeholder: placeholder ? placeholder : 'Search for a user...',
                     error
                 }}

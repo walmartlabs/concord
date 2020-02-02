@@ -175,7 +175,7 @@ public class JsonStoreQueryManager {
         changes.put("newQuery", newQuery);
         auditLog.add(AuditObject.JSON_STORE_QUERY, auditAction)
                 .field("orgId", orgId)
-                .field("storeId", storeId)
+                .field("jsonStoreId", storeId)
                 .field("queryName", queryName)
                 .field("changes", changes)
                 .log();

@@ -29,6 +29,7 @@ export interface UsePaginationType {
     resetOffset: (offset: number) => void;
 }
 
+// TODO customizable defaults (e.g. a way to specify the default "limit")
 export const usePagination = (): UsePaginationType => {
     const [paginationFilter, setPaginationFilter] = useState<Pagination>({ offset: 0, limit: 50 });
 

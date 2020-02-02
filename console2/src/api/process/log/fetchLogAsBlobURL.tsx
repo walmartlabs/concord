@@ -18,8 +18,10 @@
  * =====
  */
 
+import { managedFetch } from '../../common';
+
 export default (processId: string) =>
-    fetch(`/api/v1/process/${processId}/log`)
+    managedFetch(`/api/v1/process/${processId}/log`)
         .then((response) => response.body)
         .then((rs) => {
             if (rs) {

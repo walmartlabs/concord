@@ -17,9 +17,11 @@
  * limitations under the License.
  * =====
  */
+
 export { default as AnsibleTaskListActivity } from './ansible/AnsibleTaskActivity';
 export { default as APITokenDeleteActivity } from './APITokenDeleteActivity';
 export { default as APITokenList } from './APITokenList';
+export { default as AuditLogActivity } from './AuditLogActivity';
 export { default as BulkCancelProcessPopup } from './BulkCancelProcessPopup';
 export { default as CancelProcessPopup } from './CancelProcessPopup';
 export { default as DeleteRepositoryPopup } from './DeleteRepositoryPopup';

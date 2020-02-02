@@ -107,6 +107,17 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
 
     init.credentials = 'same-origin';
 
+    if (!init.headers) {
+        init.headers = new Headers();
+    }
+
+    // send a special header with each request to indicate that this is, in fact, a UI request
+    if (init.headers instanceof Headers) {
+        init.headers.set('X-Concord-UI-Request', 'true');
+    } else {
+        init.headers = { ...init.headers, 'X-Concord-UI-Request': 'true' };
+    }
+
     let response;
     try {
         response = await fetch(input, init);

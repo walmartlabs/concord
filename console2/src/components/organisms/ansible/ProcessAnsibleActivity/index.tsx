@@ -103,7 +103,9 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         setProcess(process);
 
         let playbooks = await apiListAnsiblePlaybooks(instanceId);
-        playbooks = playbooks.sort((a, b) => (a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0));
+        playbooks = playbooks.sort((a, b) =>
+            a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0
+        );
 
         setPlaybooks(playbooks);
         setPlaybookOptions((prevState) => buildPlaybookOptions(playbooks, prevState));
@@ -261,9 +263,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     size={'small'}
                     percent={playbookProgress}
                     progress={'percent'}
-                    active={
-                        !isFinal(process?.status) && playbookProgress < 100
-                    }
+                    active={!isFinal(process?.status) && playbookProgress < 100}
                     color={statusColor}
                 />
             </Segment>
@@ -409,15 +409,14 @@ const findPlaybookOrFirst = (id?: ConcordId, playbooks?: PlaybookInfo[]) => {
 };
 
 const buildPlaybookOptions = (playbooks: PlaybookInfo[], oldValues?: PlaybookEntry[]) => {
-    const result = playbooks
-        .map((s) => {
-            let retryInfo = '';
-            if (s.retryNum && s.retryNum > 0) {
-                retryInfo = ' (retry: ' + s.retryNum + ')';
-            }
+    const result = playbooks.map((s) => {
+        let retryInfo = '';
+        if (s.retryNum && s.retryNum > 0) {
+            retryInfo = ' (retry: ' + s.retryNum + ')';
+        }
 
-            return { value: s.id, text: s.name + ' @ ' + formatTimestamp(s.startedAt) + retryInfo };
-        });
+        return { value: s.id, text: s.name + ' @ ' + formatTimestamp(s.startedAt) + retryInfo };
+    });
 
     if (!oldValues) {
         return result;

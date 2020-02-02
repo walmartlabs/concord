@@ -153,8 +153,8 @@ public class JsonStoreDataManager {
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("orgId", org.getId());
         attrs.put("orgName", org.getName());
-        attrs.put("storeId", store.id());
-        attrs.put("storeName", store.name());
+        attrs.put("jsonStoreId", store.id());
+        attrs.put("jsonStoreName", store.name());
         attrs.put("itemPath", itemPath);
         attrs.put("itemData", data);
         return attrs;
@@ -163,7 +163,7 @@ public class JsonStoreDataManager {
     private void addAuditLog(AuditAction auditAction, UUID orgId, UUID storeId, String itemPath) {
         auditLog.add(AuditObject.JSON_STORE_DATA, auditAction)
                 .field("orgId", orgId)
-                .field("storeId", storeId)
+                .field("jsonStoreId", storeId)
                 .field("itemPath", itemPath)
                 .log();
     }

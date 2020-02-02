@@ -24,7 +24,7 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
-import com.walmartlabs.concord.server.RequestId;
+import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
@@ -232,7 +232,7 @@ public class ProcessQueueManager {
         }
 
         m = new HashMap<>(m);
-        m.put(Constants.Meta.SYSTEM_GROUP, Collections.singletonMap(Constants.Meta.REQUEST_ID, RequestId.get()));
+        m.put(Constants.Meta.SYSTEM_GROUP, Collections.singletonMap(Constants.Meta.REQUEST_ID, RequestUtils.getRequestId()));
 
         return m;
     }

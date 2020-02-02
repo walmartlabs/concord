@@ -314,9 +314,9 @@ public class SecretManager {
         changes.put("updated", updated);
 
         auditLog.add(AuditObject.SECRET, AuditAction.UPDATE)
-                .field("orgId", e.getId())
+                .field("orgId", e.getOrgId())
                 .field("secretId", e.getId())
-                .field("secretName", e.getName())
+                .field("name", e.getName())
                 .field("changes", changes)
                 .log();
     }
@@ -333,8 +333,8 @@ public class SecretManager {
         secretDao.delete(e.getId());
 
         auditLog.add(AuditObject.SECRET, AuditAction.DELETE)
-                .field("id", e.getId())
-                .field("orgId", e.getId())
+                .field("orgId", e.getOrgId())
+                .field("secretId", e.getId())
                 .field("name", e.getName())
                 .log();
     }
@@ -383,8 +383,8 @@ public class SecretManager {
         byte[] ab = decryptData(e.getId(), e.getStoreType(), password);
 
         auditLog.add(AuditObject.SECRET, AuditAction.ACCESS)
-                .field("id", e.getId())
                 .field("orgId", e.getOrgId())
+                .field("secretId", e.getId())
                 .field("name", e.getName())
                 .field("type", e.getType())
                 .field("scope", accessScope)
@@ -467,8 +467,8 @@ public class SecretManager {
         }
 
         auditLog.add(AuditObject.SECRET, AuditAction.CREATE)
-                .field("id", id)
                 .field("orgId", orgId)
+                .field("secretId", id)
                 .field("type", type)
                 .field("storeType", storeType)
                 .field("name", name)

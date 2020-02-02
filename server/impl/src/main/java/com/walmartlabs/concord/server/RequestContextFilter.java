@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,22 +20,23 @@ package com.walmartlabs.concord.server;
  * =====
  */
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-public class RequestIdFilter implements Filter {
-
-    private static final Logger log = LoggerFactory.getLogger(RequestIdFilter.class);
+/**
+ * Handles the initialization of {@link RequestContext} for each request.
+ */
+public class RequestContextFilter implements Filter {
 
     private static final String REQUEST_ID_KEY = "_requestId";
+    private static final String[] EXTRA_HEADER_KEYS = {RequestUtils.UI_REQUEST_HEADER};
 
     @Override
     public void init(FilterConfig filterConfig) {
-        log.info("RequestIdFilter filter enabled");
     }
 
     @Override
@@ -47,11 +48,22 @@ public class RequestIdFilter implements Filter {
             request.setAttribute(REQUEST_ID_KEY, id);
         }
 
+        Map<String, String> extraHeaders = new HashMap<>(EXTRA_HEADER_KEYS.length);
+        if (request instanceof HttpServletRequest) {
+            HttpServletRequest httpReq = (HttpServletRequest) request;
+            for (String k : EXTRA_HEADER_KEYS) {
+                String s = httpReq.getHeader(k);
+                if (s != null && !s.isEmpty()) {
+                    extraHeaders.put(k, s);
+                }
+            }
+        }
+
         try {
-            RequestId.set(id);
+            RequestContext.set(id, extraHeaders);
             chain.doFilter(request, response);
         } finally {
-            RequestId.set(null);
+            RequestContext.clear();
         }
     }
 

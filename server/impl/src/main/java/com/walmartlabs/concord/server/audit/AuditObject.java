@@ -24,7 +24,6 @@ package com.walmartlabs.concord.server.audit;
 public enum AuditObject {
 
     EXTERNAL_EVENT,
-    INVENTORY,
     JSON_STORE,
     JSON_STORE_DATA,
     JSON_STORE_QUERY,
@@ -35,4 +34,10 @@ public enum AuditObject {
     SECRET,
     SYSTEM,
     TEAM,
+
+    /**
+     * @deprecated superseded by {@link #JSON_STORE}
+     */
+    @Deprecated
+    INVENTORY,
 }
