@@ -36,6 +36,7 @@ import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -88,6 +89,15 @@ public class JsonStoreDataManager {
     }
 
     public OperationResult createOrUpdate(String orgName, String storeName, String itemPath, Object data) {
+        if (data == null) {
+            throw new ValidationErrorsException("JSON Store entries cannot be null.");
+        }
+
+        // we expect all entries to be proper JSON objects
+        if (!(data instanceof Map)) {
+            throw new ValidationErrorsException("All JSON Store entries must be valid JSON objects. Got: " + data.getClass());
+        }
+
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         JsonStoreEntry store = jsonStoreAccessManager.assertAccess(org.getId(), null, storeName, ResourceAccessLevel.WRITER, true);
 
@@ -95,13 +105,11 @@ public class JsonStoreDataManager {
         policyManager.checkEntity(org.getId(), null, EntityType.STORAGE_ITEM, EntityAction.UPDATE, null, toMap(org, store, itemPath, jsonData));
 
         Long currentItemSize = storeDataDao.getItemSize(store.id(), itemPath);
-
         assertStorageDataPolicy(org.getId(), store.id(), currentItemSize == null ? 0 : currentItemSize, jsonData);
 
         storeDataDao.upsert(store.id(), itemPath, jsonData);
 
         addAuditLog(currentItemSize != null ? AuditAction.UPDATE : AuditAction.CREATE, org.getId(), store.id(), itemPath);
-
         return currentItemSize != null ? OperationResult.UPDATED : OperationResult.CREATED;
     }
 
@@ -118,7 +126,7 @@ public class JsonStoreDataManager {
     }
 
     private void assertStorageDataPolicy(UUID orgId, UUID storeId, long currentItemSize, String jsonData) {
-        PolicyEngine policy = policyManager.get(orgId, null,  UserPrincipal.assertCurrent().getUser().getId());
+        PolicyEngine policy = policyManager.get(orgId, null, UserPrincipal.assertCurrent().getUser().getId());
         if (policy == null) {
             return;
         }

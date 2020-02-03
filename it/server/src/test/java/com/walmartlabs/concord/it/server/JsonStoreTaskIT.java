@@ -55,7 +55,7 @@ public class JsonStoreTaskIT extends AbstractServerIT {
 
                     byte[] ab = getLog(pir.getLogFileName());
                     assertLog(".*empty: $", ab);
-                    assertLog(".*get: string$", ab);
+                    assertLog(".*get: \\{x=1}*", ab);
                 });
             });
         });

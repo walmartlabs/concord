@@ -28,6 +28,7 @@ import com.squareup.okhttp.Response;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ImmutableApiClientConfiguration.Builder;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
 
@@ -69,26 +70,30 @@ public abstract class AbstractConcordTask implements Task {
         return f.apply(apiClientFactory.create(cfg));
     }
 
-    protected <T> T request(Context ctx, String uri, Map<String, Object> input, Class<T> entityType) throws Exception {
+    protected <T> T request(Context ctx, String uri, String method, Map<String, Object> input, Class<T> entityType) throws Exception {
         return withClient(ctx, client -> {
-            RequestBody body = ClientUtils.createMultipartBody(input).build();
+            RequestBody body = input != null ? ClientUtils.createMultipartBody(input).build() : null;
 
             Request.Builder b = new Request.Builder()
                     .url(client.getBasePath() + uri)
                     .header("Accept", "*/*")
-                    .post(body);
+                    .method(method, body);
 
             // we're going to use the "raw" OkHttpClient, so we need to set up the auth manually
             String apiKey = getApiKey(ctx);
             if (apiKey != null) {
                 b.header("Authorization", apiKey);
             } else {
-                b.header("X-Concord-SessionToken", apiCfg.getSessionToken(ctx)); // TODO constants
+                b.header(Constants.Headers.SESSION_TOKEN, apiCfg.getSessionToken(ctx));
             }
 
             OkHttpClient ok = client.getHttpClient();
             Response resp = ok.newCall(b.build()).execute();
             assertResponse(resp);
+
+            if (resp.code() == 204) { // HTTP "No Content"
+                return null;
+            }
 
             return objectMapper.readValue(resp.body().byteStream(), entityType);
         });

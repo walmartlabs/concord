@@ -88,12 +88,12 @@ public class JsonStoreDataResource implements Resource {
     }
 
     /**
-     * Update an item in a store
+     * Update an item in a store.
      *
      * @param orgName   organization's name
      * @param storeName store's name
      * @param itemPath  store's data path
-     * @param data      store's data
+     * @param data      store's data, must be a valid JSON object (represented by a Map)
      * @return
      */
     @PUT

@@ -20,6 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.squareup.okhttp.Request;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;
@@ -45,6 +46,14 @@ public class JsonStoreTask extends AbstractConcordTask {
     }
 
     public void put(@InjectVariable("context") Context ctx, String orgName, String storeName, String itemPath, Object data) throws ApiException {
+        if (data == null) {
+            throw new IllegalArgumentException("Data cannot be null.");
+        }
+
+        if (!(data instanceof Map)) {
+            throw new IllegalArgumentException("Data must be a valid JSON object, represented by a Java Map instance. Got: " + data.getClass());
+        }
+
         assertNotEmpty("Organization name", orgName);
         assertNotEmpty("Store name", storeName);
         assertNotEmpty("Item path", itemPath);
@@ -68,10 +77,10 @@ public class JsonStoreTask extends AbstractConcordTask {
 
         log.info("Getting item '{}' (org='{}', store='{}')", itemPath, orgName, storeName);
 
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> withClient(ctx, client -> {
-            JsonStoreDataApi api = new JsonStoreDataApi(client);
-            return api.get(orgName, storeName, itemPath);
-        }));
+        // we need to deserialize the response using Jackson instead of GSON to avoid
+        // differences between two libraries (e.g. deserialization of integers/decimals)
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
+                request(ctx, "/api/v1/org/" + orgName + "/jsonstore/" + storeName + "/item/" + itemPath, "GET", null, Map.class));
     }
 
     public Object delete(@InjectVariable("context") Context ctx, String storeName, String itemPath) throws ApiException {
