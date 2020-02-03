@@ -220,6 +220,7 @@ public class ConcordTask extends AbstractConcordTask {
         return result;
     }
 
+    @SuppressWarnings("rawtypes")
     public void kill(@InjectVariable("context") Context ctx, Map<String, Object> cfg) throws Exception {
         List<String> ids = new ArrayList<>();
 
@@ -288,8 +289,6 @@ public class ConcordTask extends AbstractConcordTask {
             throw new IllegalArgumentException("'" + PAYLOAD_KEY + "' and/or '" + PROJECT_KEY + "' are required");
         }
 
-        String targetUri = "/api/v1/process";
-
         Map<String, Object> input = new HashMap<>();
 
         if (archive != null) {
@@ -329,7 +328,7 @@ public class ConcordTask extends AbstractConcordTask {
                     project, repo, archive, sync, req, ctx.getVariable(BASE_URL_KEY));
         }
 
-        StartProcessResponse resp = request(ctx, targetUri, input, StartProcessResponse.class);
+        StartProcessResponse resp = request(ctx, "/api/v1/process", "POST", input, StartProcessResponse.class);
 
         UUID processId = resp.getInstanceId();
 

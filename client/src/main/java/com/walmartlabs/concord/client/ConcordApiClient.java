@@ -23,6 +23,7 @@ package com.walmartlabs.concord.client;
 import com.squareup.okhttp.OkHttpClient;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.auth.ApiKeyAuth;
+import com.walmartlabs.concord.sdk.Constants;
 
 public class ConcordApiClient extends ApiClient {
 
@@ -46,7 +47,7 @@ public class ConcordApiClient extends ApiClient {
         }
         auth.setApiKey(token);
         // TODO: remove me when swagger-maven-plugin 3.1.8 is released (in 3.1.7 the param's name always 'session_key')
-        auth.setParamName("X-Concord-SessionToken");
+        auth.setParamName(Constants.Headers.SESSION_TOKEN);
 
         return this;
     }

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security;
 
 import com.codahale.metrics.Meter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
@@ -59,7 +60,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     private static final Logger log = LoggerFactory.getLogger(ConcordAuthenticatingFilter.class);
 
     private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
-    private static final String SESSION_TOKEN_HEADER = "X-Concord-SessionToken";
     private static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
     private static final String BEARER_AUTH_PREFIX = "Bearer ";
@@ -109,7 +109,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         HttpServletRequest req = WebUtils.toHttp(request);
 
         // session header takes precedence
-        if (req.getHeader(SESSION_TOKEN_HEADER) != null) {
+        if (req.getHeader(Constants.Headers.SESSION_TOKEN) != null) {
             return createFromSessionHeader(req);
         }
 
@@ -198,7 +198,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     }
 
     private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
-        String h = req.getHeader(SESSION_TOKEN_HEADER);
+        String h = req.getHeader(Constants.Headers.SESSION_TOKEN);
         return buildSessionToken(req, h);
     }
 

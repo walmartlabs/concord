@@ -517,6 +517,8 @@ public class Constants {
 
     public static class Headers {
 
+        public static final String SESSION_TOKEN = "X-Concord-SessionToken";
+
         public static final String SECRET_TYPE = "X-Concord-SecretType";
     }
 
