@@ -4,6 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- updated in 1.40.0+
     <changeSet id="1270000" author="ibodrov@gmail.com" runInTransaction="false">
         <sql>
             create index concurrently IDX_PROC_WAIT_COND_NN
@@ -11,6 +12,7 @@
             where WAIT_CONDITIONS is not null
         </sql>
     </changeSet>
+    -->
 
     <changeSet id="1270100" author="ibodrov@gmail.com">
         <dropIndex tableName="PROCESS_QUEUE" indexName="IDX_PROC_Q_CURR_STAT"/>
