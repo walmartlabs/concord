@@ -95,6 +95,7 @@ public class TeamManager {
                 .field("orgId", orgId)
                 .field("teamId", teamId)
                 .field("name", teamName)
+                .changes(null, new TeamEntry(teamId, orgId, null, teamName, description))
                 .log();
 
         return teamId;
@@ -102,14 +103,15 @@ public class TeamManager {
 
     public void update(UUID teamId, String teamName, String description) {
         UUID orgId = teamDao.getOrgId(teamId);
-        assertAccess(orgId, teamId, null, TeamRole.MAINTAINER, true);
+        TeamEntry prevEntry = assertAccess(orgId, teamId, null, TeamRole.MAINTAINER, true);
 
         teamDao.update(teamId, teamName, description);
 
-        // TODO delta?
         auditLog.add(AuditObject.TEAM, AuditAction.UPDATE)
                 .field("orgId", orgId)
-                .field("teamId", teamId)
+                .field("teamId", prevEntry.getId())
+                .field("name", teamName)
+                .changes(prevEntry, teamDao.get(teamId))
                 .log();
     }
 
@@ -166,6 +168,7 @@ public class TeamManager {
                 .field("name", t.getName())
                 .field("action", "addUsers")
                 .field("users", users)
+                .field("replace", replace)
                 .log();
     }
 
@@ -195,6 +198,7 @@ public class TeamManager {
                 .field("name", t.getName())
                 .field("action", "addLdapGroups")
                 .field("groups", groups)
+                .field("replace", replace)
                 .log();
     }
 
