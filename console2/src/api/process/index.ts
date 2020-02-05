@@ -186,7 +186,8 @@ export const start = (
     projectName: ConcordKey,
     repoName: ConcordKey,
     entryPoint?: string,
-    profiles?: string[]
+    profiles?: string[],
+    args?: object
 ): Promise<StartProcessResponse> => {
     const data = new FormData();
 
@@ -198,6 +199,11 @@ export const start = (
     }
     if (profiles) {
         data.append('activeProfiles', profiles.join(','));
+    }
+
+    if (args) {
+        const argsBlob = [JSON.stringify({ arguments: args })];
+        data.append('request', new Blob(argsBlob, { type: 'application/octet-stream' }));
     }
 
     const opts = {
