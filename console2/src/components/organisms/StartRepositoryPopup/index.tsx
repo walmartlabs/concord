@@ -169,16 +169,15 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
         } = this.props;
 
         const successMsg = response ? (
-            <div>
-                {JSON.stringify(
-                    {
-                        ok: response.ok,
-                        instanceId: response.instanceId
-                    },
-                    null,
-                    2
-                )}
-            </div>
+            <ReactJson
+                name={null}
+                displayDataTypes={false}
+                displayObjectSize={false}
+                src={{
+                    ok: response.ok,
+                    instanceId: response.instanceId
+                }}
+            />
         ) : null;
 
         const instanceId = response ? response.instanceId : undefined;

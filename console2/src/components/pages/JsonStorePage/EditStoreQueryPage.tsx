@@ -59,7 +59,7 @@ const EditStoreQueryPage = (props: RouteComponentProps<RouteProps>) => {
 
             <Segment basic={true}>
                 <Container text={true}>
-                    <Header>Modify {queryName} query</Header>
+                    <Header>Edit query: {queryName}</Header>
                     <EditStoreQueryActivity
                         orgName={orgName}
                         storeName={storeName}
