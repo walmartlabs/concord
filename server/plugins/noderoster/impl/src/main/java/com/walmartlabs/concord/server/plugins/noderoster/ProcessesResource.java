@@ -33,54 +33,50 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Named
 @Singleton
-@Path("/api/v1/noderoster/hosts")
-@Api(value = "Node Roster Hosts", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
-public class HostsResource implements Resource {
+@Path("/api/v1/noderoster/processes")
+@Api(value = "Node Roster Processes", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+public class ProcessesResource implements Resource {
 
     private static final String DEFAULT_LIMIT = "30";
     private static final String DEFAULT_OFFSET = "0";
 
+    private final HostManager hosts;
     private final HostsDao hostsDao;
 
     @Inject
-    public HostsResource(HostsDao hostsDao) {
+    public ProcessesResource(HostManager hosts, HostsDao hostsDao) {
+        this.hosts = hosts;
         this.hostsDao = hostsDao;
     }
 
     @GET
     @Path("/")
-    @ApiOperation(value = "List all known hosts", responseContainer = "list", response = HostEntry.class)
+    @ApiOperation(value = "Get all known hosts", responseContainer = "list", response = ProcessEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<HostEntry> list(@ApiParam @QueryParam("host") String host,
-                                @ApiParam @QueryParam("artifact") String artifact,
-                                @ApiParam @QueryParam("processInstanceId") UUID processInstanceId,
-                                @ApiParam @QueryParam("include") Set<HostsDataInclude> includes,
-                                @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
-                                @ApiParam @QueryParam("offset") @DefaultValue(DEFAULT_OFFSET) int offset) {
+    public List<ProcessEntry> list(@ApiParam @QueryParam("hostId") UUID hostId,
+                                   @ApiParam @QueryParam("hostName") String hostName,
+                                   @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
+                                   @ApiParam @QueryParam("offset") @DefaultValue(DEFAULT_OFFSET) int offset) {
+
+        if (hostName == null && hostId == null) {
+            throw new ValidationErrorsException("A 'hostName' or 'hostId' value is required");
+        }
 
         assertLimitAndOffset(limit, offset);
 
-        HostFilter filter = HostFilter.builder()
-                .host(host)
-                .artifact(artifact)
-                .processInstanceId(processInstanceId)
-                .build();
+        UUID effectiveHostId = hosts.getId(hostId, hostName);
 
-        return hostsDao.list(filter, includes, limit, offset);
-    }
+        if (effectiveHostId == null) {
+            return Collections.emptyList();
+        }
 
-    @GET
-    @Path("/{hostId}")
-    @ApiOperation(value = "Get a host")
-    @Produces(MediaType.APPLICATION_JSON)
-    public HostEntry get(@ApiParam @PathParam("hostId") UUID hostId) {
-        return hostsDao.get(hostId);
+        return hostsDao.listProcesses(effectiveHostId, limit, offset);
     }
 
     private static void assertLimitAndOffset(int limit, int offset) {

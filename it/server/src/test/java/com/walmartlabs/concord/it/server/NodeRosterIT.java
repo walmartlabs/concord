@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,6 +31,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -81,40 +83,31 @@ public class NodeRosterIT extends AbstractServerIT {
 
         NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(getApiClient());
 
-        while (true) {
-            List<HostEntry> l = hostsApi.getAllKnownHosts(1000, 0); // TODO might require paging
-            if (l.stream().anyMatch(h -> h.getHostName().equals(hostA)) &&
-                    l.stream().anyMatch(h -> h.getHostName().equals(hostB))) {
-                break;
-            }
-
-            Thread.sleep(1000);
-        }
+        UUID hostAId = findHost(hostA, hostsApi);
+        UUID hostBId = findHost(hostB, hostsApi);
 
         // check if the artifact was deployed to our hosts
 
-        Map<String, List<HostEntry>> artifactHosts = hostsApi.deployedOnHosts(artifactUrl, 1000, 0); // TODO might require paging
-        assertNotNull(artifactHosts);
-
-        List<HostEntry> hosts = artifactHosts.get(artifactUrl);
-        assertNotNull(hosts);
-
-        assertTrue(hosts.stream().anyMatch(h -> h.getHostName().equals(hostA)));
-        assertTrue(hosts.stream().anyMatch(h -> h.getHostName().equals(hostB)));
+        NodeRosterArtifactsApi artifactsApi = new NodeRosterArtifactsApi(getApiClient());
+        List<ArtifactEntry> artifactHostsA = artifactsApi.list(hostAId, null,  artifactUrl, 1000, 0); // TODO might require paging
+        assertNotNull(artifactHostsA);
+        assertEquals(1, artifactHostsA.size());
 
         // check if we know who deployed to our hosts
 
-        InitiatorEntry initiator = hostsApi.getLastInitiator(hostA, null);
-        assertEquals("admin", initiator.getUsername());
+        NodeRosterProcessesApi nrProcessApi = new NodeRosterProcessesApi(getApiClient());
+        List<ProcessEntry> hostAProcesses = nrProcessApi.list(hostAId, null, 1000, 0);
+        assertFalse(hostAProcesses.isEmpty());
+        assertEquals("admin", hostAProcesses.get(0).getInitiator());
 
-        initiator = hostsApi.getLastInitiator(hostB, null);
-        assertEquals("admin", initiator.getUsername());
+        List<ProcessEntry> hostBProcesses = nrProcessApi.list(hostBId, null, 1000, 0);
+        assertFalse(hostBProcesses.isEmpty());
+        assertEquals("admin", hostBProcesses.get(0).getInitiator());
 
         // check the host facts
-
         NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
-        assertNotNull(factsApi.getFacts(hostA, null));
-        assertNotNull(factsApi.getFacts(hostB, null));
+        assertNotNull(factsApi.getFacts(hostAId, null));
+        assertNotNull(factsApi.getFacts(hostBId, null));
 
         // let's test the task
 
@@ -130,8 +123,8 @@ public class NodeRosterIT extends AbstractServerIT {
 
         ab = getLog(pir.getLogFileName());
         assertLog(".*ok=true.*", ab);
-        assertLog(".*hostName=" + hostA + ".*", ab);
-        assertLog(".*hostName=" + hostB + ".*", ab);
+        assertLog(".*name: " + hostA.toLowerCase() + ".*", ab);
+        assertLog(".*name: " + hostB.toLowerCase() + ".*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -156,16 +149,22 @@ public class NodeRosterIT extends AbstractServerIT {
 
         NodeRosterHostsApi hostsApi = new NodeRosterHostsApi(getApiClient());
 
+        UUID hostId = findHost(host, hostsApi);
+
+        NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
+        assertNotNull(factsApi.getFacts(hostId, null));
+    }
+
+    private static UUID findHost(String host, NodeRosterHostsApi hostsApi) throws InterruptedException, ApiException {
         while (true) {
-            List<HostEntry> l = hostsApi.getAllKnownHosts(1000, 0); // TODO might require paging
-            if (l.stream().anyMatch(h -> h.getHostName().equals(host))) {
-                break;
+            List<HostEntry> l = hostsApi.list(host, null, null, null, 10, 0);
+            HostEntry e = l.stream().filter(h -> h.getName().equalsIgnoreCase(host)).findFirst().orElse(null);
+
+            if (e != null) {
+                return e.getId();
             }
 
             Thread.sleep(1000);
         }
-
-        NodeRosterFactsApi factsApi = new NodeRosterFactsApi(getApiClient());
-        assertNotNull(factsApi.getFacts(host, null));
     }
 }

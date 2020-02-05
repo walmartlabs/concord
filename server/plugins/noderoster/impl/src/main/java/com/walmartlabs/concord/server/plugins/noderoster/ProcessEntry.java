@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2018 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,42 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+import java.io.Serializable;
+import java.util.Date;
 import java.util.UUID;
 
 @Value.Immutable
-@JsonSerialize(as = ImmutableInitiatorEntry.class)
-@JsonDeserialize(as = ImmutableInitiatorEntry.class)
-public interface InitiatorEntry {
+@JsonInclude(Include.NON_EMPTY)
+@JsonSerialize(as = ImmutableProcessEntry.class)
+@JsonDeserialize(as = ImmutableProcessEntry.class)
+public interface ProcessEntry extends Serializable {
 
-    UUID userId();
+    UUID instanceId();
 
-    String username();
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    Date createdAt();
 
-    static ImmutableInitiatorEntry.Builder builder() {
-        return ImmutableInitiatorEntry.builder();
+    @Nullable
+    UUID projectId();
+
+    @Nullable
+    String projectName();
+
+    @Nullable
+    UUID initiatorId();
+
+    @Nullable
+    String initiator();
+
+    static ImmutableProcessEntry.Builder builder() {
+        return ImmutableProcessEntry.builder();
     }
 }

@@ -20,35 +20,123 @@ package com.walmartlabs.concord.server.plugins.noderoster.dao;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.plugins.noderoster.HostEntry;
-import com.walmartlabs.concord.server.plugins.noderoster.InitiatorEntry;
+import com.walmartlabs.concord.server.plugins.noderoster.HostFilter;
+import com.walmartlabs.concord.server.plugins.noderoster.HostsDataInclude;
+import com.walmartlabs.concord.server.plugins.noderoster.ProcessEntry;
 import com.walmartlabs.concord.server.plugins.noderoster.db.NodeRosterDB;
-import org.jooq.Configuration;
-import org.jooq.Record1;
-import org.jooq.Record2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostArtifacts;
+import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHosts;
+import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterProcessHosts;
+import com.walmartlabs.concord.server.sdk.ProcessKey;
+import com.walmartlabs.concord.server.sdk.ProcessKeyCache;
+import org.jooq.*;
+import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROJECTS;
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostArtifacts.NODE_ROSTER_HOST_ARTIFACTS;
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostFacts.NODE_ROSTER_HOST_FACTS;
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHosts.NODE_ROSTER_HOSTS;
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterProcessHosts.NODE_ROSTER_PROCESS_HOSTS;
+import static org.jooq.impl.DSL.select;
 
 public class HostsDao extends AbstractDao {
 
-    private static final Logger log = LoggerFactory.getLogger(HostsDao.class);
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ProcessKeyCache processKeyCache;
 
     @Inject
-    public HostsDao(@NodeRosterDB Configuration cfg) {
+    public HostsDao(@NodeRosterDB Configuration cfg, ProcessKeyCache processKeyCache) {
         super(cfg);
+        this.processKeyCache = processKeyCache;
+    }
+
+    public HostEntry get(UUID id) {
+        return txResult(tx -> tx.select(NODE_ROSTER_HOSTS.HOST_ID, NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME, NODE_ROSTER_HOSTS.CREATED_AT)
+                .from(NODE_ROSTER_HOSTS)
+                .where(NODE_ROSTER_HOSTS.HOST_ID.eq(id))
+                .fetchOne(HostsDao::toHostEntry));
+    }
+
+    public List<HostEntry> list(HostFilter filter, Set<HostsDataInclude> includes, int limit, int offset) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            NodeRosterHosts nrh = NODE_ROSTER_HOSTS.as("nrh");
+            NodeRosterProcessHosts nrph = NODE_ROSTER_PROCESS_HOSTS.as("nrph");
+            NodeRosterHostArtifacts nrha = NODE_ROSTER_HOST_ARTIFACTS.as("nrha");
+
+            SelectQuery<Record> query = tx.selectQuery();
+            query.addSelect(nrh.HOST_ID, nrh.NORMALIZED_HOSTNAME, nrh.CREATED_AT);
+            query.addFrom(nrh);
+
+            if (filter.host() != null) {
+                query.addConditions(nrh.NORMALIZED_HOSTNAME.containsIgnoreCase(filter.host()));
+            }
+
+            ProcessKey key = null;
+            if (filter.processInstanceId() != null) {
+                key = processKeyCache.get(filter.processInstanceId());
+                if (key == null) {
+                    return Collections.emptyList();
+                }
+
+                query.addFrom(nrph);
+
+                query.addConditions(nrh.HOST_ID.eq(nrph.HOST_ID)
+                        .and(nrph.INSTANCE_ID.eq(key.getInstanceId())
+                                .and(nrph.INSTANCE_CREATED_AT.eq(key.getCreatedAt()))));
+            }
+
+            if ((includes != null && includes.contains(HostsDataInclude.ARTIFACTS))
+                    || filter.artifact() != null) {
+                query.addSelect(nrha.ARTIFACT_URL);
+                query.addFrom(nrha);
+                query.addConditions(nrh.HOST_ID.eq(nrha.HOST_ID));
+            }
+
+            if (filter.artifact() != null) {
+                query.addConditions(nrha.ARTIFACT_URL.likeRegex(filter.artifact()));
+
+                if (key != null) {
+                    query.addConditions(nrha.INSTANCE_ID.eq(key.getInstanceId())
+                            .and(nrha.INSTANCE_CREATED_AT.eq(key.getCreatedAt())));
+                }
+            }
+
+            query.addOrderBy(nrh.CREATED_AT.desc());
+            query.addLimit(limit);
+            query.addOffset(offset);
+
+            return query.fetch(HostsDao::toHostEntry);
+        }
+    }
+
+    public List<ProcessEntry> listProcesses(UUID hostId, int limit, int offset) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            NodeRosterProcessHosts h = NODE_ROSTER_PROCESS_HOSTS.as("h");
+
+            Field<String> projectNameField = select(PROJECTS.PROJECT_NAME)
+                    .from(PROJECTS)
+                    .where(PROJECTS.PROJECT_ID.eq(h.PROJECT_ID)).asField();
+
+            SelectJoinStep<Record6<UUID, Timestamp, UUID, String, UUID, String>> q = tx.select(
+                    h.INSTANCE_ID, h.INSTANCE_CREATED_AT,
+                    h.INITIATOR_ID, h.INITIATOR,
+                    h.PROJECT_ID, projectNameField)
+                    .from(h);
+
+            return q.where(h.HOST_ID.eq(hostId))
+                    .orderBy(h.INSTANCE_CREATED_AT.desc())
+                    .limit(limit)
+                    .offset(offset)
+                    .fetch(HostsDao::toProcessEntry);
+        }
     }
 
     public UUID getId(String host) {
@@ -66,71 +154,41 @@ public class HostsDao extends AbstractDao {
                 .getHostId());
     }
 
-    public InitiatorEntry getLastInitiator(UUID hostId) {
-        return txResult(tx -> tx.select(NODE_ROSTER_PROCESS_HOSTS.INITIATOR_ID, NODE_ROSTER_PROCESS_HOSTS.INITIATOR)
-                .from(NODE_ROSTER_PROCESS_HOSTS)
-                .where(NODE_ROSTER_PROCESS_HOSTS.HOST_ID.eq(hostId))
-                .orderBy(NODE_ROSTER_PROCESS_HOSTS.INSTANCE_CREATED_AT.desc())
-                .limit(1)
-                .fetchOne(r -> InitiatorEntry.builder()
-                        .userId(r.get(NODE_ROSTER_PROCESS_HOSTS.INITIATOR_ID))
-                        .username(r.get(NODE_ROSTER_PROCESS_HOSTS.INITIATOR))
-                        .build()));
-    }
-
     public String getLastFacts(UUID hostId) {
         return txResult(tx -> tx.select(NODE_ROSTER_HOST_FACTS.FACTS.cast(String.class))
                 .from(NODE_ROSTER_HOST_FACTS)
-                .innerJoin(NODE_ROSTER_PROCESS_HOSTS).on(NODE_ROSTER_PROCESS_HOSTS.HOST_ID.eq(NODE_ROSTER_HOST_FACTS.HOST_ID))
-                .where(NODE_ROSTER_PROCESS_HOSTS.HOST_ID.eq(hostId))
+                .where(NODE_ROSTER_HOST_FACTS.HOST_ID.eq(hostId))
                 .orderBy(NODE_ROSTER_HOST_FACTS.SEQ_ID.desc())
                 .limit(1)
                 .fetchOne(Record1::value1));
-
     }
 
-    public List<HostEntry> findTouchedHosts(UUID projectId, int limit, int offset) {
-        return txResult(tx -> tx.select(NODE_ROSTER_HOSTS.HOST_ID, NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME)
-                .from(NODE_ROSTER_HOSTS)
-                .innerJoin(NODE_ROSTER_PROCESS_HOSTS).on(NODE_ROSTER_PROCESS_HOSTS.HOST_ID.eq(NODE_ROSTER_HOSTS.HOST_ID))
-                .where(NODE_ROSTER_PROCESS_HOSTS.PROJECT_ID.eq(projectId))
-                .orderBy(NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME)
-                .limit(limit)
-                .offset(offset)
-                .fetch(HostsDao::toHostEntry));
+    private static <E> E getOrNull(Record r, Field<E> field) {
+        Field<?> f = r.field(field);
+        if (f == null) {
+            return null;
+        }
+
+        return r.get(field);
     }
 
-    public List<String> getMatchingArtifacts(String artifactPattern, int limit, int offset) {
-        return txResult(tx -> tx.selectDistinct(NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL)
-                .from(NODE_ROSTER_HOST_ARTIFACTS)
-                .where(NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL.likeRegex(artifactPattern))
-                .orderBy(NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL)
-                .limit(limit)
-                .offset(offset)
-                .fetch(NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL));
-    }
-
-    public List<HostEntry> getAllKnownHosts(int limit, int offset) {
-        return txResult(tx -> tx.select(NODE_ROSTER_HOSTS.HOST_ID, NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME)
-                .from(NODE_ROSTER_HOSTS)
-                .orderBy(NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME)
-                .limit(limit)
-                .offset(offset)
-                .fetch(HostsDao::toHostEntry));
-    }
-
-    public List<HostEntry> getHosts(String artifactUrl) {
-        return txResult(tx -> tx.selectDistinct(NODE_ROSTER_HOSTS.HOST_ID, NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME)
-                .from(NODE_ROSTER_HOSTS)
-                .innerJoin(NODE_ROSTER_HOST_ARTIFACTS).on(NODE_ROSTER_HOST_ARTIFACTS.HOST_ID.eq(NODE_ROSTER_HOSTS.HOST_ID))
-                .where(NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL.eq(artifactUrl))
-                .fetch(HostsDao::toHostEntry));
-    }
-
-    private static HostEntry toHostEntry(Record2<UUID, String> r) {
+    private static HostEntry toHostEntry(Record r) {
         return HostEntry.builder()
-                .hostId(r.value1())
-                .hostName(r.value2())
+                .id(r.getValue(NODE_ROSTER_HOSTS.HOST_ID))
+                .name(r.getValue(NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME))
+                .createdAt(r.getValue(NODE_ROSTER_HOSTS.CREATED_AT))
+                .artifactUrl(getOrNull(r, NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL))
+                .build();
+    }
+
+    private static ProcessEntry toProcessEntry(Record6<UUID, Timestamp, UUID, String, UUID, String> r) {
+        return ProcessEntry.builder()
+                .instanceId(r.value1())
+                .createdAt(r.value2())
+                .initiatorId(r.value3())
+                .initiator(r.value4())
+                .projectId(r.value5())
+                .projectName(r.value6())
                 .build();
     }
 }

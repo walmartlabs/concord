@@ -93,4 +93,24 @@
             <column name="HOST_ID"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="noderoster-10070" author="ybrigo@gmail.com" runInTransaction="false">
+        <!-- skip if the table is partitioned -->
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*)
+                from pg_inherits
+                join pg_class parent ON pg_inherits.inhparent = parent.oid
+                join pg_class child ON pg_inherits.inhrelid = child.oid
+                join pg_namespace nmsp_parent ON nmsp_parent.oid = parent.relnamespace
+                join pg_namespace nmsp_child ON nmsp_child.oid = child.relnamespace
+                where parent.relname = 'node_roster_host_artifacts'
+            </sqlCheck>
+        </preConditions>
+
+        <dropPrimaryKey tableName="NODE_ROSTER_HOST_ARTIFACTS"/>
+        <createIndex tableName="NODE_ROSTER_HOST_ARTIFACTS" indexName="IDX_NR_HA_HOST">
+            <column name="HOST_ID"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

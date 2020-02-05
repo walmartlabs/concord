@@ -20,31 +20,24 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.Date;
 import java.util.UUID;
 
 @Value.Immutable
-@JsonSerialize(as = ImmutableHostEntry.class)
-@JsonDeserialize(as = ImmutableHostEntry.class)
-public interface HostEntry {
-
-    UUID id();
-
-    String name();
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date createdAt();
+public interface HostFilter {
 
     @Nullable
-    String artifactUrl();
+    String host();
 
-    static ImmutableHostEntry.Builder builder() {
-        return ImmutableHostEntry.builder();
+    @Nullable
+    String artifact();
+
+    @Nullable
+    UUID processInstanceId();
+
+    static ImmutableHostFilter.Builder builder() {
+        return ImmutableHostFilter.builder();
     }
 }

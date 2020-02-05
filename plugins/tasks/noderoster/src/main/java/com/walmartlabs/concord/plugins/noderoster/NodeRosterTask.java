@@ -44,8 +44,6 @@ public class NodeRosterTask implements Task {
     private static final Logger log = LoggerFactory.getLogger(NodeRosterTask.class);
     private static final String API_KEY = "apiKey";
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Inject
     ApiClientFactory apiClientFactory;
 
@@ -56,26 +54,10 @@ public class NodeRosterTask implements Task {
         // TODO retries
 
         switch (action) {
-            case DEPLOYEDBY: {
-                getDeployedBy(ctx);
-                break;
-            }
-
-            case TOUCHEDHOSTS: {
-                findTouchedHosts(ctx);
-                break;
-            }
-
             case HOSTSWITHARTIFACTS: {
                 findHostsWithArtifacts(ctx);
                 break;
             }
-
-            case KNOWNHOSTS: {
-                findAllKnownHosts(ctx);
-                break;
-            }
-
             case FACTS: {
                 findFacts(ctx);
                 break;
@@ -89,12 +71,6 @@ public class NodeRosterTask implements Task {
             default:
                 throw new IllegalArgumentException("Unsupported action type: " + action);
         }
-
-    }
-
-    private static Action getAction(Context ctx) {
-        String action = assertString(ctx, Keys.ACTION_KEY);
-        return Action.valueOf(action.trim().toUpperCase());
     }
 
     /**
@@ -114,7 +90,7 @@ public class NodeRosterTask implements Task {
 
         Object facts = withClient(ctx, client -> {
             NodeRosterFactsApi api = new NodeRosterFactsApi(client);
-            return api.getFacts(hostName, hostId);
+            return api.getFacts(hostId, hostName);
         });
 
         ctx.setVariable("result", toResult(facts));
@@ -130,67 +106,12 @@ public class NodeRosterTask implements Task {
 
         log.info("Finding hosts where artifact {} is deployed (limit: {}, offset: {})...", artifactPattern, limit, offset);
 
-        Map<String, List<HostEntry>> hosts = withClient(ctx, client -> {
-            NodeRosterHostsApi api = new NodeRosterHostsApi(client);
-            return api.deployedOnHosts(artifactPattern, limit, offset);
-        });
-
-        ctx.setVariable("result", toResult(hosts));
-    }
-
-    /**
-     * Find all known hosts from the system
-     */
-    public void findAllKnownHosts(Context ctx) throws Exception {
-        int limit = getLimit(ctx);
-        int offset = getOffset(ctx);
-        log.info("Finding all known hosts (limit: {}, offset: {})...", limit, offset);
-
         List<HostEntry> hosts = withClient(ctx, client -> {
             NodeRosterHostsApi api = new NodeRosterHostsApi(client);
-            return api.getAllKnownHosts(limit, offset);
+            return api.list(null, artifactPattern, null, null, limit, offset);
         });
 
         ctx.setVariable("result", toResult(hosts));
-    }
-
-    /**
-     * Find which hosts a specific Concord project is "touching"
-     */
-    public void findTouchedHosts(Context ctx) throws Exception {
-        UUID projectId = UUID.fromString(assertString(ctx, Keys.PROJECT_ID_KEY));
-        int limit = getLimit(ctx);
-        int offset = getOffset(ctx);
-
-        log.info("Finding hosts touched by project ID {} (limit: {}, offset: {})...", projectId, limit, offset);
-
-        List<HostEntry> touchedHosts = withClient(ctx, client -> {
-            NodeRosterHostsApi api = new NodeRosterHostsApi(client);
-            return api.touchedHosts(projectId, limit, offset);
-        });
-
-        ctx.setVariable("result", toResult(touchedHosts));
-    }
-
-    /**
-     * Find who deployed last on a given host name or host id
-     */
-    public void getDeployedBy(Context ctx) throws Exception {
-        String hostName = getString(ctx, Keys.HOSTNAME_KEY);
-        UUID hostId = getUUID(ctx, Keys.HOSTID_KEY);
-
-        if (hostName == null && hostId == null) {
-            throw new IllegalArgumentException("A 'hostName' or 'hostId' value is required");
-        }
-
-        log.info("Finding who deployed last (hostName: {}, hostId: {})...", hostName, hostId);
-
-        InitiatorEntry deployedBy = withClient(ctx, client -> {
-            NodeRosterHostsApi api = new NodeRosterHostsApi(client);
-            return api.getLastInitiator(hostName, hostId);
-        });
-
-        ctx.setVariable("result", toResult(deployedBy));
     }
 
     /**
@@ -199,6 +120,8 @@ public class NodeRosterTask implements Task {
     public void findDeployedArtifacts(Context ctx) throws Exception {
         String hostName = getString(ctx, Keys.HOSTNAME_KEY);
         UUID hostId = getUUID(ctx, Keys.HOSTID_KEY);
+        int limit = getLimit(ctx);
+        int offset = getOffset(ctx);
 
         if (hostName == null && hostId == null) {
             throw new IllegalArgumentException("A 'hostName' or 'hostId' value is required");
@@ -208,7 +131,7 @@ public class NodeRosterTask implements Task {
 
         List<ArtifactEntry> deployedArtifacts = withClient(ctx, client -> {
             NodeRosterArtifactsApi api = new NodeRosterArtifactsApi(client);
-            return api.deployedArtifacts(hostName, hostId);
+            return api.list(hostId, hostName, null, limit, offset);
         });
 
         ctx.setVariable("result", toResult(deployedArtifacts));
@@ -227,9 +150,9 @@ public class NodeRosterTask implements Task {
         Map<String, Object> m = new HashMap<>();
         m.put("ok", data != null);
 
-        if (data != null) {
-            data = objectMapper.convertValue(data, Object.class);
-        }
+//        if (data != null) {
+//            data = objectMapper.convertValue(data, Object.class);
+//        }
         m.put("data", data);
 
         return m;
@@ -251,11 +174,13 @@ public class NodeRosterTask implements Task {
         return ContextUtils.getInt(ctx, Keys.OFFSET_KEY, 0);
     }
 
+    private static Action getAction(Context ctx) {
+        String action = assertString(ctx, Keys.ACTION_KEY);
+        return Action.valueOf(action.trim().toUpperCase());
+    }
+
     private enum Action {
-        DEPLOYEDBY,
-        TOUCHEDHOSTS,
         HOSTSWITHARTIFACTS,
-        KNOWNHOSTS,
         FACTS,
         DEPLOYEDONHOST
     }

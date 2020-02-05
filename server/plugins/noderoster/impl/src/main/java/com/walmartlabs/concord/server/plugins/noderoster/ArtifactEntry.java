@@ -24,14 +24,20 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import java.util.UUID;
+
 @Value.Immutable
 @JsonSerialize(as = ImmutableArtifactEntry.class)
 @JsonDeserialize(as = ImmutableArtifactEntry.class)
 public interface ArtifactEntry {
 
+    @Value.Parameter
     String url();
 
-    static ImmutableArtifactEntry.Builder builder() {
-        return ImmutableArtifactEntry.builder();
+    @Value.Parameter
+    UUID processInstanceId();
+
+    static ArtifactEntry of(String url, UUID processInstanceId) {
+        return ImmutableArtifactEntry.of(url, processInstanceId);
     }
 }

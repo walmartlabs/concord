@@ -27,6 +27,8 @@ import com.walmartlabs.concord.db.DataSourceUtils;
 import com.walmartlabs.concord.db.DatabaseChangeLogProvider;
 import com.walmartlabs.concord.db.DatabaseConfiguration;
 import org.jooq.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -34,6 +36,8 @@ import javax.sql.DataSource;
 
 @Named
 public class DatabaseModule extends AbstractModule {
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseModule.class);
 
     @Provides
     @NodeRosterDB

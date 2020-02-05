@@ -57,6 +57,8 @@ import NewStorageQueryPage from './components/pages/JsonStorePage/NewStorageQuer
 import EditStoreQueryPage from './components/pages/JsonStorePage/EditStoreQueryPage';
 import { initialState, LoadingAction, reducer } from './reducers/loading';
 import NewStorePage from './components/pages/JsonStorePage/NewStorePage';
+import NodeRosterPage from './components/pages/NodeRoster/NodeRosterPage';
+import HostPage from './components/pages/NodeRoster/HostPage';
 
 store.dispatch(session.checkAuth());
 
@@ -199,6 +201,17 @@ const App = () => {
                                                 path="/process/:instanceId"
                                                 component={ProcessPage}
                                             />
+                                        </Switch>
+                                    </ProtectedRoute>
+
+                                    <ProtectedRoute path="/noderoster">
+                                        <Switch>
+                                            <Route
+                                                path="/noderoster/host/:id"
+                                                component={HostPage}
+                                            />
+
+                                            <Route path="/noderoster" component={NodeRosterPage} />
                                         </Switch>
                                     </ProtectedRoute>
 
