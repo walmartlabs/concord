@@ -1,5 +1,27 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: initial version of the Node Roster UI;
+- concord-console: new "Audit Log" tab on the organization,
+project, team, secret and JSON store pages;
+- policies, concord-server: ability to set default configuration
+for processes using the new `defaultProcessCfg` policy;
+- slack: new parameter `replyBroadcast`. If `true` a reply to a
+thread is also posted to the channel.
+
+### Changed
+
+- concord-console: support for calling processes with arguments
+using manual triggers;
+- concord-server: improvements in audit logging of team changes.
+Now the audit events contain the change's delta;
+- concord-server: only JSON objects (Java Maps) are now allowed
+as JSON Store items.
+ 
+
 ## [1.39.3] - 2020-01-29
 
 ### Added
