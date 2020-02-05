@@ -95,7 +95,7 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
             <Menu secondary={true}>
                 <Menu.Item style={{ padding: 0 }}>
                     <Form>
-                        <Form.Group widths="equal" inline={true}>
+                        <Form.Group widths="equal" inline={true} style={{ margin: 0 }}>
                             {showRefreshButton && (
                                 <RefreshButton loading={isLoading} clickAction={() => fetch()} />
                             )}

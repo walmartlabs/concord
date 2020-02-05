@@ -35,6 +35,8 @@ const pathToTab = (s: string): GlobalNavTab => {
         return 'process';
     } else if (s.startsWith('/org')) {
         return 'org';
+    } else if (s.startsWith('/noderoster')) {
+        return 'noderoster';
     }
 
     return null;

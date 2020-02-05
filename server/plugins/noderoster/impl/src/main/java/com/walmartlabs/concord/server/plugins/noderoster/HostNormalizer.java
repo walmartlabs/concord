@@ -27,6 +27,6 @@ public class HostNormalizer {
 
     public String normalize(String host) {
         // TODO implement, add metrics
-        return host;
+        return host.toLowerCase();
     }
 }

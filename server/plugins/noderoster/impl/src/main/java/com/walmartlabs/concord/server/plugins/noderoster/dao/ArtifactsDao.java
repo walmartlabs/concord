@@ -23,7 +23,10 @@ package com.walmartlabs.concord.server.plugins.noderoster.dao;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.plugins.noderoster.ArtifactEntry;
 import com.walmartlabs.concord.server.plugins.noderoster.db.NodeRosterDB;
+import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostArtifacts;
 import org.jooq.Configuration;
+import org.jooq.Record2;
+import org.jooq.SelectJoinStep;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,12 +45,22 @@ public class ArtifactsDao extends AbstractDao {
         super(cfg);
     }
 
-    public List<ArtifactEntry> getArtifacts(UUID hostId) {
-        return txResult(tx -> tx.select(NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL)
-                .from(NODE_ROSTER_HOST_ARTIFACTS)
-                .where(NODE_ROSTER_HOST_ARTIFACTS.HOST_ID.eq(hostId))
-                .fetch(r -> ArtifactEntry.builder()
-                        .url(r.get(NODE_ROSTER_HOST_ARTIFACTS.ARTIFACT_URL))
-                        .build()));
+    public List<ArtifactEntry> getArtifacts(UUID hostId, int limit, int offset, String filter) {
+        return txResult(tx -> {
+            NodeRosterHostArtifacts a = NODE_ROSTER_HOST_ARTIFACTS.as("a");
+
+            SelectJoinStep<Record2<String, UUID>> q = tx.select(a.ARTIFACT_URL, a.INSTANCE_ID)
+                    .from(a);
+
+            if (filter != null) {
+                q.where(a.ARTIFACT_URL.likeRegex(filter));
+            }
+
+            return q.where(a.HOST_ID.eq(hostId))
+                    .orderBy(a.INSTANCE_CREATED_AT.desc())
+                    .limit(limit)
+                    .offset(offset)
+                    .fetch(r -> ArtifactEntry.of(r.get(a.ARTIFACT_URL), r.get(a.INSTANCE_ID)));
+        });
     }
 }

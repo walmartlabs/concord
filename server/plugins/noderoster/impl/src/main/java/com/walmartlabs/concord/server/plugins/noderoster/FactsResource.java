@@ -26,6 +26,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.sonatype.siesta.Resource;
+import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -57,17 +58,26 @@ public class FactsResource implements Resource {
     @Path("/last")
     @ApiOperation(value = "Get last known Ansible facts for a host", response = Object.class)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getFacts(@ApiParam @QueryParam("hostName") String hostName,
-                             @ApiParam @QueryParam("hostId") UUID hostId) {
+    public Response getFacts(@ApiParam @QueryParam("hostId") UUID hostId,
+                             @ApiParam @QueryParam("hostName") String hostName) {
 
-        UUID effectiveHostId = Utils.getHostId(hostManager, hostId, hostName);
+        if (hostName == null && hostId == null) {
+            throw new ValidationErrorsException("A 'hostName' or 'hostId' value is required");
+        }
+
+        UUID effectiveHostId = hostManager.getId(hostId, hostName);
         if (effectiveHostId == null) {
-            return null;
+            return Response.ok().entity("{}").build();
+        }
+
+        String result = hostsDao.getLastFacts(effectiveHostId);
+        if (result == null) {
+            return Response.ok().entity("{}").build();
         }
 
         // return the raw JSON string, no need to parse it just to serialize it back
         return Response.ok()
-                .entity(hostsDao.getLastFacts(effectiveHostId))
+                .entity(result)
                 .build();
     }
 }

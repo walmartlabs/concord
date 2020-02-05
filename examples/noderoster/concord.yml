@@ -1,41 +1,18 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:1.38.0"
+  - "mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:1.40.0"
 
 flows:
   default:
-    - call: findDeployedBy
-    - call: findTouchedHosts
     - call: findHostsWithArtifacts
-    - call: findKnownHosts
     - call: findFacts
     - call: findDeployedOnHosts
-
-  findDeployedBy:
-  - task: noderoster
-    in:
-      action: "deployedBy"
-      hostName: "host.example.com"
-  - log: "${result}"
-
-  findTouchedHosts:
-  - task: noderoster
-    in:
-      action: "touchedHosts"
-      projectId: "41cef9bc-3711-11ea-982b-237eb3b1d61e"
-  - log: "${result}"
 
   findHostsWithArtifacts:
   - task: noderoster
     in:
       action: "hostsWithArtifacts"
       artifactPattern: "storesystems"
-  - log: "${result}"
-
-  findKnownHosts:
-  - task: noderoster
-    in:
-      action: "knownHosts"
   - log: "${result}"
 
   findFacts:

@@ -90,13 +90,15 @@ interface Entry extends ProcessEntry {
 }
 
 interface Props {
-    data: ProcessEntry[];
+    data?: ProcessEntry[];
     orgName?: string;
     columns: ColumnDefinition[];
     onSelectProcess?: (selectedIds: ConcordId[]) => void;
 
     filterProps?: ProcessFilters;
     onFilterChange?: (column: ColumnDefinition, filterValue?: string) => void;
+
+    showHeader?: boolean;
 }
 
 interface State {
@@ -104,7 +106,7 @@ interface State {
     active: boolean;
 }
 
-const toState = (data: ProcessEntry[]): Entry[] => {
+const toState = (data?: ProcessEntry[]): Entry[] => {
     return data ? data.map((e) => ({ ...e, checked: false })) : [];
 };
 
@@ -328,29 +330,42 @@ class ProcessList extends React.Component<Props, State> {
     }
 
     render() {
-        const { columns, onFilterChange } = this.props;
+        const { columns, onFilterChange, showHeader } = this.props;
         const { data } = this.state;
 
         const canBeFiltered = onFilterChange !== undefined;
 
         if (!data || data.length === 0) {
-            return (
-                <>
-                    {canBeFiltered && (
-                        <Table celled={true} attached="bottom" selectable={true}>
-                            <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
-                        </Table>
-                    )}
-                    <h3>No processes found.</h3>
-                </>
-            );
+            if (showHeader) {
+                return (
+                    <Table celled={true} attached="bottom" selectable={true}>
+                        <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
+                        <Table.Body>
+                            <Table.Row style={{ fontWeight: 'bold' }}>
+                                <Table.Cell colSpan={columns.length}>No data available</Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
+                    </Table>
+                );
+            } else {
+                return (
+                    <>
+                        {canBeFiltered && (
+                            <Table celled={true} attached="bottom" selectable={true}>
+                                <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
+                            </Table>
+                        )}
+                        <h3>No processes found.</h3>
+                    </>
+                );
+            }
         }
 
         return (
             <Table celled={true} attached="bottom" selectable={true}>
                 <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
 
-                <Table.Body>{data.map((p, idx) => this.renderTableRow(p, columns))}</Table.Body>
+                <Table.Body>{data.map((p) => this.renderTableRow(p, columns))}</Table.Body>
             </Table>
         );
     }

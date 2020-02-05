@@ -49,7 +49,11 @@ public class HostManager {
                 .build();
     }
 
-    public UUID getId(String host) {
+    public UUID getId(UUID hostId, String host) {
+        if (hostId != null) {
+            return hostId;
+        }
+
         try {
             return hostCache.get(host, new GetLoader(host))
                     .orElse(null);

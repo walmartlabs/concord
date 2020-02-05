@@ -31,10 +31,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +42,9 @@ import java.util.UUID;
 @Path("/api/v1/noderoster/artifacts")
 @Api(value = "Node Roster Artifacts", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 public class ArtifactsResource implements Resource {
+
+    private static final String DEFAULT_LIMIT = "30";
+    private static final String DEFAULT_OFFSET = "0";
 
     private final HostManager hosts;
     private final ArtifactsDao artifactsDao;
@@ -59,22 +59,34 @@ public class ArtifactsResource implements Resource {
     @Path("/")
     @ApiOperation(value = "List artifacts deployed on a host", responseContainer = "list", response = ArtifactEntry.class)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<ArtifactEntry> deployedArtifacts(@ApiParam @QueryParam("hostName") String hostName,
-                                                 @ApiParam @QueryParam("hostId") UUID hostId) {
+    public List<ArtifactEntry> list(@ApiParam @QueryParam("hostId") UUID hostId,
+                                    @ApiParam @QueryParam("hostName") String hostName,
+                                    @ApiParam @QueryParam("filter") String filter,
+                                    @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIMIT) int limit,
+                                    @ApiParam @QueryParam("offset") @DefaultValue(DEFAULT_OFFSET) int offset) {
 
         if (hostName == null && hostId == null) {
             throw new ValidationErrorsException("A 'hostName' or 'hostId' value is required");
         }
 
-        UUID id = hostId;
-        if (id == null) {
-            id = hosts.getId(hostName);
-        }
+        assertLimitAndOffset(limit, offset);
 
-        if (id == null) {
+        UUID effectiveHostId = hosts.getId(hostId, hostName);
+
+        if (effectiveHostId == null) {
             return Collections.emptyList();
         }
 
-        return artifactsDao.getArtifacts(id);
+        return artifactsDao.getArtifacts(effectiveHostId, limit, offset, filter);
+    }
+
+    private static void assertLimitAndOffset(int limit, int offset) {
+        if (limit <= 0) {
+            throw new ValidationErrorsException("'limit' must be a positive number");
+        }
+
+        if (offset < 0) {
+            throw new ValidationErrorsException("'offset' must be equal or more than zero");
+        }
     }
 }
