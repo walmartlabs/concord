@@ -52,7 +52,7 @@ class AddRepositoryPage extends React.PureComponent<RouteComponentProps<RoutePro
                 <Segment basic={true}>
                     <Container text={true}>
                         <Header>
-                            <Header.Content>Edit a Repository</Header.Content>
+                            <Header.Content>Edit Repository: {repoName}</Header.Content>
                         </Header>
                         <EditRepositoryActivity
                             orgName={orgName}
