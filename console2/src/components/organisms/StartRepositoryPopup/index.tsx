@@ -22,6 +22,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { push as pushHistory } from 'connected-react-router';
+import ReactJson from 'react-json-view';
 import { Button, Dropdown, DropdownItemProps, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
@@ -43,12 +44,14 @@ interface ExternalProps {
     entryPoint?: string;
     allowProfile?: boolean;
     profiles?: string[];
+    showArgs?: boolean;
+    args?: object;
     trigger: (onClick: () => void) => React.ReactNode;
 }
 
 interface DispatchProps {
     reset: () => void;
-    onConfirm: (entryPoint?: string, profiles?: string[]) => void;
+    onConfirm: (entryPoint?: string, profiles?: string[], args?: object) => void;
     openProcessPage: (instanceId: ConcordId) => void;
 }
 
@@ -67,6 +70,7 @@ interface OwnState {
 
     profiles: string[];
     selectedProfiles?: string[];
+    arguments?: object;
 }
 
 const makeOptions = (data?: string[]): DropdownItemProps[] => {
@@ -136,7 +140,8 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
             entryPoints: [...(props.repoEntryPoints || [])],
             selectedEntryPoint: props.entryPoint,
             selectedProfiles: props.profiles,
-            profiles: [...(props.repoProfiles || [])]
+            profiles: [...(props.repoProfiles || [])],
+            arguments: props.args
         };
     }
 
@@ -158,7 +163,9 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
             allowEntryPoint,
             entryPoint,
             allowProfile,
-            profiles
+            profiles,
+            showArgs,
+            args
         } = this.props;
 
         const successMsg = response ? (
@@ -246,6 +253,20 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
                                     )}
                                 </Table.Cell>
                             </Table.Row>
+                            {showArgs ? (
+                                <Table.Row>
+                                    <Table.Cell textAlign={'right'}>Arguments</Table.Cell>
+                                    <Table.Cell>
+                                        <ReactJson
+                                            src={args != null ? args : {}}
+                                            collapsed={false}
+                                            name={null}
+                                        />
+                                    </Table.Cell>
+                                </Table.Row>
+                            ) : (
+                                ''
+                            )}
                         </Table.Body>
                     </Table>
                 }
@@ -281,11 +302,11 @@ const mapStateToProps = ({ processes }: { processes: ProcessState }): StateProps
 
 const mapDispatchToProps = (
     dispatch: Dispatch<AnyAction>,
-    { orgName, projectName, repoName }: ExternalProps
+    { orgName, projectName, repoName, args }: ExternalProps
 ): DispatchProps => ({
     reset: () => dispatch(actions.reset()),
     onConfirm: (entryPoint?: string, profiles?: string[]) =>
-        dispatch(actions.startProcess(orgName, projectName, repoName, entryPoint, profiles)),
+        dispatch(actions.startProcess(orgName, projectName, repoName, entryPoint, profiles, args)),
     openProcessPage: (instanceId: ConcordId) => dispatch(pushHistory(`/process/${instanceId}`))
 });
 
