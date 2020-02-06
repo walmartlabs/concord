@@ -4,6 +4,8 @@
 
 ### Added
 
+- concord-server: support for filtering on repository ID or name in
+`/api/v2/process` and `/api/v2/process/count` endpoints;
 - concord-console: initial version of the Node Roster UI;
 - concord-console: new "Audit Log" tab on the organization,
 project, team, secret and JSON store pages;
