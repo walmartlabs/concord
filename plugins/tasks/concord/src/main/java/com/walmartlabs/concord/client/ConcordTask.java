@@ -66,6 +66,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String ACTIVE_PROFILES_KEY = "activeProfiles";
     private static final String ARGUMENTS_KEY = "arguments";
     private static final String BASE_URL_KEY = "baseUrl";
+    private static final String DEBUG_KEY = "debug";
     private static final String DISABLE_ON_CANCEL_KEY = "disableOnCancel";
     private static final String DISABLE_ON_FAILURE_KEY = "disableOnFailure";
     private static final String ENTRY_POINT_KEY = "entryPoint";
@@ -320,12 +321,22 @@ public class ConcordTask extends AbstractConcordTask {
         addIfNotNull(input, "parentInstanceId", parentInstanceId);
 
         boolean sync = getBoolean(cfg, SYNC_KEY, false);
+        boolean debug = getBoolean(cfg, DEBUG_KEY, false);
         if (parentInstanceId != null) {
-            log.info("Starting a child process (project={}, repository={}, archive={}, sync={}, req={})",
-                    project, repo, archive, sync, req);
+            if (debug) {
+                log.info("Starting a child process (org={}, project={}, repository={}, archive={}, sync={}, req={})",
+                        org, project, repo, archive, sync, req);
+            } else {
+                log.info("Starting a child process (org={}, project={}, repository={})", org, project, repo);
+            }
         } else {
-            log.info("Starting a new process (project={}, repository={}, archive={}, sync={}, req={}), on {}",
-                    project, repo, archive, sync, req, ctx.getVariable(BASE_URL_KEY));
+            if (debug) {
+                log.info("Starting a new process (org={}, project={}, repository={}, archive={}, sync={}, req={}), on {}",
+                        org, project, repo, archive, sync, req, ctx.getVariable(BASE_URL_KEY));
+            } else {
+                log.info("Starting a new process (org={}, project={}, repository={}), on {}",
+                        org, project, repo, ctx.getVariable(BASE_URL_KEY));
+            }
         }
 
         StartProcessResponse resp = request(ctx, "/api/v1/process", "POST", input, StartProcessResponse.class);
@@ -377,6 +388,7 @@ public class ConcordTask extends AbstractConcordTask {
         handleResults(cfg, instances);
 
         boolean single = jobs.size() == 1;
+
         if (single) {
             // if only one job was started put all variables at the top level of the jobOut object
             // e.g. jobOut.someVar
@@ -394,7 +406,6 @@ public class ConcordTask extends AbstractConcordTask {
             }
             ctx.setVariable(JOB_OUT_KEY, vars);
         }
-
         ctx.removeVariable(SUSPEND_MARKER);
     }
 
@@ -573,7 +584,12 @@ public class ConcordTask extends AbstractConcordTask {
         UUID instanceId = assertUUID(cfg, INSTANCE_ID_KEY);
 
         boolean sync = getBoolean(cfg, SYNC_KEY, false);
-        log.info("Forking the current instance (sync={}, req={})...", sync, req);
+        boolean debug = getBoolean(cfg, DEBUG_KEY, false);
+        if (debug) {
+            log.info("Forking the current instance (sync={}, req={})...", sync, req);
+        } else {
+            log.info("Forking the current instance...");
+        }
 
         return withClient(ctx, client -> {
             ProcessApi api = new ProcessApi(client);
@@ -616,6 +632,7 @@ public class ConcordTask extends AbstractConcordTask {
                 ACTIVE_PROFILES_KEY,
                 ARCHIVE_KEY,
                 ARGUMENTS_KEY,
+                DEBUG_KEY,
                 DISABLE_ON_CANCEL_KEY,
                 DISABLE_ON_FAILURE_KEY,
                 ENTRY_POINT_KEY,
