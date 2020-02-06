@@ -135,7 +135,7 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         while (true) {
             String afterCreatedAt = after != null ? after.getCreatedAt().format(DATE_TIME_FORMATTER) : null;
-            List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, afterCreatedAt, null, null, null, initiator, null, null, null, null);
+            List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, afterCreatedAt, null, null, null, initiator, null, null, null, null);
             if (l.size() == 1 && isFinished(l.get(0).getStatus())) {
                 return l.get(0);
             }
@@ -147,7 +147,7 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
     protected int waitForProcessesToFinish() throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         while (true) {
-            List<ProcessEntry> l = processApi.list(null, null, null, null, null, null, null, null, null, null, null, null, null);
+            List<ProcessEntry> l = processApi.list(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
             boolean allDone = true;
             for (ProcessEntry e : l) {
@@ -177,7 +177,7 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
     protected void expectNoProceses(String orgName, String projectName, ProcessEntry after) throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         String afterCreatedAt = after != null ? after.getCreatedAt().format(DATE_TIME_FORMATTER) : null;
-        List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, afterCreatedAt, null, null, null, null, null, null, null, null);
+        List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, afterCreatedAt, null, null, null, null, null, null, null, null);
         assertEquals(0, l.size());
     }
 

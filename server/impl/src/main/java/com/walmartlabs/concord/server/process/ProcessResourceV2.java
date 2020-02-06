@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.queue.MetadataUtils;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
@@ -70,6 +71,7 @@ public class ProcessResourceV2 implements Resource {
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
     private final ProjectDao projectDao;
+    private final RepositoryDao repositoryDao;
     private final UserDao userDao;
     private final OrganizationManager orgManager;
     private final ProjectAccessManager projectAccessManager;
@@ -78,6 +80,7 @@ public class ProcessResourceV2 implements Resource {
     public ProcessResourceV2(ProcessQueueDao queueDao,
                              ProcessQueueManager processQueueManager,
                              ProjectDao projectDao,
+                             RepositoryDao repositoryDao,
                              UserDao userDao,
                              OrganizationManager orgManager,
                              ProjectAccessManager projectAccessManager) {
@@ -85,6 +88,7 @@ public class ProcessResourceV2 implements Resource {
         this.queueDao = queueDao;
         this.processQueueManager = processQueueManager;
         this.projectDao = projectDao;
+        this.repositoryDao = repositoryDao;
         this.userDao = userDao;
         this.orgManager = orgManager;
         this.projectAccessManager = projectAccessManager;
@@ -127,6 +131,8 @@ public class ProcessResourceV2 implements Resource {
                                    @ApiParam @QueryParam("orgName") String orgName,
                                    @ApiParam @QueryParam("projectId") UUID projectId,
                                    @ApiParam @QueryParam("projectName") String projectName,
+                                   @ApiParam @QueryParam("repoId") UUID repoId,
+                                   @ApiParam @QueryParam("repoName") String repoName,
                                    @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
                                    @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
@@ -146,8 +152,8 @@ public class ProcessResourceV2 implements Resource {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
         }
 
-        ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, afterCreatedAt,
-                beforeCreatedAt, tags, processStatus, initiator, parentId, processData, limit, offset, uriInfo);
+        ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, repoId, repoName,
+                afterCreatedAt, beforeCreatedAt, tags, processStatus, initiator, parentId, processData, limit, offset, uriInfo);
 
         return queueDao.list(filter);
     }
@@ -164,6 +170,8 @@ public class ProcessResourceV2 implements Resource {
                      @ApiParam @QueryParam("orgName") String orgName,
                      @ApiParam @QueryParam("projectId") UUID projectId,
                      @ApiParam @QueryParam("projectName") String projectName,
+                     @ApiParam @QueryParam("repoId") UUID repoId,
+                     @ApiParam @QueryParam("repoName") String repoName,
                      @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
                      @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                      @ApiParam @QueryParam("tags") Set<String> tags,
@@ -172,8 +180,9 @@ public class ProcessResourceV2 implements Resource {
                      @ApiParam @QueryParam("parentInstanceId") UUID parentId,
                      @Context UriInfo uriInfo) {
 
-        ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, afterCreatedAt,
-                beforeCreatedAt, tags, processStatus, initiator, parentId, Collections.emptySet(), null, null, uriInfo);
+        ProcessFilter filter = createProcessFilter(orgId, orgName, projectId, projectName, repoId, repoName,
+                afterCreatedAt, beforeCreatedAt, tags, processStatus, initiator, parentId, Collections.emptySet(),
+                null, null, uriInfo);
 
         if (filter.projectId() == null) {
             throw new ValidationErrorsException("A project ID or name is required");
@@ -186,6 +195,8 @@ public class ProcessResourceV2 implements Resource {
                                               String orgName,
                                               UUID projectId,
                                               String projectName,
+                                              UUID repoId,
+                                              String repoName,
                                               IsoDateParam afterCreatedAt,
                                               IsoDateParam beforeCreatedAt,
                                               Set<String> tags,
@@ -240,6 +251,18 @@ public class ProcessResourceV2 implements Resource {
             // it is done implicitly by calling getCurrentUserOrgIds for all non-admin users (see above)
         }
 
+        UUID effectiveRepoId = repoId;
+        if (effectiveRepoId == null && repoName != null) {
+            if (effectiveProjectId == null) {
+                throw new ValidationErrorsException("Project name or ID is required.");
+            }
+
+            effectiveRepoId = repositoryDao.getId(effectiveProjectId, repoName);
+            if (effectiveRepoId == null) {
+                throw new ConcordApplicationException("Repository not found: " + repoName, Response.Status.NOT_FOUND);
+            }
+        }
+
         // collect all metadata filters, we assume that they have "meta." prefix in their query parameter names
         List<MetadataFilter> metaFilters = MetadataUtils.parseMetadataFilters(uriInfo);
 
@@ -259,7 +282,7 @@ public class ProcessResourceV2 implements Resource {
                 .status(processStatus)
                 .initiator(initiator)
                 .metaFilters(metaFilters)
-                .includes(processData)
+                .includes(processData != null ? processData : Collections.emptySet())
                 .limit(limit)
                 .offset(offset)
                 .build();

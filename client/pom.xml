@@ -175,6 +175,7 @@
                             <elements>
                                 <exclude>
                                     <item>.*com\.walmartlabs\.concord\.client\.ProcessApi.*</item>
+                                    <item>.*com\.walmartlabs\.concord\.client\.ProcessV2Api.*</item>
                                 </exclude>
                             </elements>
                         </revapi.filter>

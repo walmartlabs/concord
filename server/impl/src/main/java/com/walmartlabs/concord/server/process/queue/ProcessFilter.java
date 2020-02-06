@@ -52,6 +52,9 @@ public interface ProcessFilter {
     @Nullable
     UUID projectId();
 
+    @Nullable
+    UUID repoId();
+
     /**
      * Include processes without projects.
      * Applied only when {@link #orgIds()} and/or {@link #projectId()} are defined.

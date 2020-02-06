@@ -417,7 +417,7 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         while (true) {
-            List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null);
+            List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, null, null, null, null, null, null, null, null, null);
 
             Optional<ProcessEntry> o = l.stream().filter(e -> e.getTriggeredBy().getTrigger().getEventSource().equals("test")).findFirst();
             if (o.isPresent()) {
