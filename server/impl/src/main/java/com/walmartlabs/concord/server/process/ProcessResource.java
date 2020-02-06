@@ -738,7 +738,7 @@ public class ProcessResource implements Resource {
                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
                                    @Context UriInfo uriInfo) {
 
-        return v2.list(null, orgName, projectId, projectName, afterCreatedAt, beforeCreatedAt, tags,
+        return v2.list(null, orgName, projectId, projectName, null, null, afterCreatedAt, beforeCreatedAt, tags,
                 processStatus, initiator, parentId, Collections.singleton(ProcessDataInclude.CHILDREN_IDS),
                 limit, offset, uriInfo);
     }

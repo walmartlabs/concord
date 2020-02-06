@@ -560,6 +560,14 @@ public class ProcessQueueDao extends AbstractDao {
             }
         }
 
+        if (filter.repoId() != null) {
+            if (filter.includeWithoutProject()) {
+                query.addConditions(PROCESS_QUEUE.REPO_ID.eq(filter.repoId()).or(PROCESS_QUEUE.REPO_ID.isNull()));
+            } else {
+                query.addConditions(PROCESS_QUEUE.REPO_ID.eq(filter.repoId()));
+            }
+        }
+
         if (filter.initiator() != null) {
             query.addConditions(USERS.USERNAME.startsWith(filter.initiator()));
         }
