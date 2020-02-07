@@ -24,7 +24,8 @@ using manual triggers;
 Now the audit events contain the change's delta;
 - concord-server: only JSON objects (Java Maps) are now allowed
 as JSON Store items.
- 
+
+
 
 ## [1.39.3] - 2020-01-29
 
