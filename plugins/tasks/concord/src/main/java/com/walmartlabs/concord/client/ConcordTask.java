@@ -19,10 +19,7 @@ package com.walmartlabs.concord.client;
  * limitations under the License.
  * =====
  */
-import javax.inject.Named;
-import javax.xml.bind.DatatypeConverter;
-import java.io.File;
-import java.io.IOException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.common.IOUtils;
@@ -30,14 +27,16 @@ import com.walmartlabs.concord.sdk.*;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Named;
+import javax.xml.bind.DatatypeConverter;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -94,8 +93,9 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String SUSPEND_MARKER = "__concordTaskSuspend";
     private static final String RESUME_EVENT_NAME = "concordTask";
 
+    private static final int MAX_EXECUTOR_THREADS = 20;
+
     private static final Set<String> FAILED_STATUSES;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
     static {
         FAILED_STATUSES = new HashSet<>();
@@ -103,6 +103,8 @@ public class ConcordTask extends AbstractConcordTask {
         FAILED_STATUSES.add(ProcessEntry.StatusEnum.CANCELLED.toString());
         FAILED_STATUSES.add(ProcessEntry.StatusEnum.TIMED_OUT.toString());
     }
+
+    private final ExecutorService executor = new ThreadPoolExecutor(1, MAX_EXECUTOR_THREADS, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
     @InjectVariable("uiLinks")
     Map<String, Object> uiLinks;
@@ -543,18 +545,20 @@ public class ConcordTask extends AbstractConcordTask {
 
     private List<String> forkMany(Context ctx, List<Map<String, Object>> jobs) throws Exception {
         List<String> ids = new ArrayList<>();
-        List<Future<UUID>> uuidFutures = new ArrayList<>();
+
+        List<Future<UUID>> futures = new ArrayList<>();
         for (Map<String, Object> job : jobs) {
             Map<String, Object> cfg = createJobCfg(ctx, job);
             cfg.put(INSTANCE_ID_KEY, ctx.getVariable(Constants.Context.TX_ID_KEY));
 
             int n = getInstances(cfg);
             for (int i = 0; i < n; i++) {
-                uuidFutures.add(forkOne(ctx, cfg));
+                futures.add(forkOne(ctx, cfg));
             }
 
-            for(Future<UUID> uuidFuture: uuidFutures) {
-               ids.add(uuidFuture.get().toString());
+            // collect all futures, effectively blocking until all forks are started
+            for (Future<UUID> f : futures) {
+                ids.add(f.get().toString());
             }
         }
 
@@ -575,7 +579,7 @@ public class ConcordTask extends AbstractConcordTask {
         return ids;
     }
 
-    private Future<UUID> forkOne(Context ctx, Map<String, Object> cfg) throws Exception {
+    private Future<UUID> forkOne(Context ctx, Map<String, Object> cfg) {
         if (cfg.containsKey(ARCHIVE_KEY)) {
             log.warn("'" + ARCHIVE_KEY + "' parameter is not supported for fork action and will be ignored");
         }
@@ -593,15 +597,13 @@ public class ConcordTask extends AbstractConcordTask {
         if (debug) {
             log.info("Forking the current instance (sync={}, req={})...", sync, req);
         }
-        return executorService.submit(() -> {
-             return withClient(ctx, client -> {
-                 ProcessApi api = new ProcessApi(client);
-                 StartProcessResponse resp = api.fork(instanceId, req, false, null);
-                 log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId()));
 
-                 return resp.getInstanceId();
-             });
-         });
+        return executor.submit(() -> withClient(ctx, client -> {
+            ProcessApi api = new ProcessApi(client);
+            StartProcessResponse resp = api.fork(instanceId, req, false, null);
+            log.info("Forked a child process: {} url: {}", resp.getInstanceId(), getProcessUrl(ctx, resp.getInstanceId()));
+            return resp.getInstanceId();
+        }));
     }
 
     private void kill(Context ctx) throws Exception {
