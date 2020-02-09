@@ -32,8 +32,8 @@ public final class TestParams {
     static Properties testProperties;
 
     static {
+        testProperties = new Properties();
         if(testPropertiesFile.exists()) {
-            testProperties = new Properties();
             try (InputStream input = new FileInputStream(testPropertiesFile)) {
                 testProperties.load(input);
             } catch(Exception e) {
