@@ -22,7 +22,6 @@ package com.walmartlabs.concord.policyengine;
 
 import com.walmartlabs.concord.sdk.Context;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

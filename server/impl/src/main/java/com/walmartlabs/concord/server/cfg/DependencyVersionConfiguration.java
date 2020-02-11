@@ -30,8 +30,13 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * @deprecated replaced with the "dependencyVersions" policy.
+ * @see com.walmartlabs.concord.policyengine.DependencyVersionsPolicy
+ */
 @Named
 @Singleton
+@Deprecated
 public class DependencyVersionConfiguration implements Serializable {
 
     private final Path path;

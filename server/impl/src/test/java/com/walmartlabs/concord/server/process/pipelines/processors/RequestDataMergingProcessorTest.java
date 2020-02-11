@@ -88,7 +88,7 @@ public class RequestDataMergingProcessorTest {
         defaultProcessCfgPolicy.put("a", "default");
         defaultProcessCfgPolicy.put("process-cfg-policy", "default-2");
 
-        PolicyEngineRules policy = new PolicyEngineRules(null, null, null, null, null, null, null, null, processCfgPolicy, null, defaultProcessCfgPolicy);
+        PolicyEngineRules policy = new PolicyEngineRules(null, null, null, null, null, null, null, null, processCfgPolicy, null, defaultProcessCfgPolicy, null);
 
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
