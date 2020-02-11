@@ -20,8 +20,10 @@
 
 import * as React from 'react';
 import { memo, useCallback, useState } from 'react';
-import { Form, Menu, Table, DropdownItemProps } from 'semantic-ui-react';
+import { Button, DropdownItemProps, Form, Menu, Popup, Table } from 'semantic-ui-react';
 import ReactJson from 'react-json-view';
+import { DateTimeInput } from 'semantic-ui-calendar-react';
+import { addHours, format as formatDate, parse as parseDate } from 'date-fns';
 
 import {
     AuditAction,
@@ -34,8 +36,33 @@ import { EntityOwnerPopup, LocalTimestamp, PaginationToolBar } from '../../molec
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
-import { RequestErrorActivity, FindUserField } from '../../organisms';
+import { FindUserField, RequestErrorActivity } from '../../organisms';
 import { RefreshButton } from '../../atoms';
+
+// date-fns format used to parse date-time strings set by the UI component
+const SRC_DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
+// date-fns format used to convert UI date-time strings into the API's date-time format
+const DST_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+// date-time format used by the UI component (pickers)
+const UI_DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm';
+
+const formatForApi = (s: string) =>
+    formatDate(parseDate(s, SRC_DATE_TIME_FORMAT, new Date()), DST_DATE_TIME_FORMAT);
+
+// converts timestamps from the UI format to the format accepted by the API
+const prepareCall = (f: AuditLogFilter) => {
+    const result = { ...f };
+
+    if (result.before) {
+        result.before = formatForApi(result.before);
+    }
+
+    if (result.after) {
+        result.after = formatForApi(result.after);
+    }
+
+    return result;
+};
 
 interface Props {
     filter: AuditLogFilter;
@@ -57,6 +84,29 @@ const keysToOptions = (o: any): DropdownItemProps[] =>
 const objectOptions = keysToOptions(AuditObject);
 const actionOptions = keysToOptions(AuditAction);
 
+// a toggle to force search even if the filter is unchanged
+interface ForceSearch {
+    force: boolean;
+}
+
+const DateTimeField = (props: {
+    value: string;
+    label: string;
+    onChange: (data: string) => void;
+}) => (
+    <Form.Field>
+        <DateTimeInput
+            value={props.value}
+            label={props.label}
+            dateTimeFormat={UI_DATE_TIME_FORMAT}
+            closable={true}
+            animation={undefined}
+            duration={10}
+            onChange={(ev: {}, data: any) => props.onChange(data.value as string)}
+        />
+    </Form.Field>
+);
+
 // wrapped in "memo" with a custom prop equality function to avoid the infinite re-rendering loop
 // when it tries to compare old props and new. Because React typically does only a shallow compare,
 // this wrapper is necessary when the parent component triggers a re-render and a child component
@@ -64,13 +114,23 @@ const actionOptions = keysToOptions(AuditAction);
 export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = true }: Props) => {
     const dispatch = React.useContext(LoadingDispatch);
 
+    const defaultAfter = formatDate(addHours(new Date(), -8), SRC_DATE_TIME_FORMAT);
+    const defaultBefore = formatDate(new Date(), SRC_DATE_TIME_FORMAT);
+
     // contains parameters shown in the filtering controls
-    const [filter, setFilter] = useState<AuditLogFilter>(initialFilter);
+    const [filter, setFilter] = useState<AuditLogFilter>({
+        after: defaultAfter,
+        before: defaultBefore,
+        ...initialFilter
+    });
 
     // contains parameters used for search
     // whenever the Search button is clicked the filters are copied here in order
     // to trigger the API call
-    const [effectiveFilter, setEffectiveFilter] = useState<AuditLogFilter>(filter);
+    const [effectiveFilter, setEffectiveFilter] = useState<AuditLogFilter & ForceSearch>({
+        ...filter,
+        force: false
+    });
 
     const {
         paginationFilter,
@@ -81,7 +141,7 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
     } = usePagination();
 
     const fetchData = useCallback(() => {
-        return apiList({ ...effectiveFilter, ...paginationFilter });
+        return apiList({ ...prepareCall(effectiveFilter), ...paginationFilter });
     }, [effectiveFilter, paginationFilter]);
 
     const { data, error, isLoading, fetch } = useApi<PaginatedAuditLogEntries>(fetchData, {
@@ -95,7 +155,7 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
             <Menu secondary={true}>
                 <Menu.Item style={{ padding: 0 }}>
                     <Form>
-                        <Form.Group widths="equal" inline={true} style={{ margin: 0 }}>
+                        <Form.Group inline={true} style={{ margin: 0 }}>
                             {showRefreshButton && (
                                 <RefreshButton loading={isLoading} clickAction={() => fetch()} />
                             )}
@@ -135,11 +195,48 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
                                 }
                             />
 
+                            <Form.Field>
+                                <Popup
+                                    trigger={
+                                        <Button
+                                            icon="calendar alternate outline"
+                                            size="large"
+                                            basic={true}
+                                        />
+                                    }
+                                    openOnTriggerClick={true}
+                                    openOnTriggerMouseEnter={false}
+                                    closeOnTriggerMouseLeave={false}>
+                                    <Form>
+                                        <DateTimeField
+                                            label="From"
+                                            value={filter.after || defaultAfter}
+                                            onChange={(data) =>
+                                                setFilter({ ...filter, after: data })
+                                            }
+                                        />
+
+                                        <DateTimeField
+                                            label="To"
+                                            value={filter.before || defaultBefore}
+                                            onChange={(data) =>
+                                                setFilter({ ...filter, before: data })
+                                            }
+                                        />
+                                    </Form>
+                                </Popup>
+                            </Form.Field>
+
                             <Form.Button
                                 content="Search"
                                 icon="search"
                                 primary={true}
-                                onClick={() => setEffectiveFilter(filter)}
+                                onClick={() =>
+                                    setEffectiveFilter((prev) => ({
+                                        ...filter,
+                                        force: !prev.force
+                                    }))
+                                }
                             />
                         </Form.Group>
                     </Form>

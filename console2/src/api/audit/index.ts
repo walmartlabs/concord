@@ -43,6 +43,8 @@ export interface AuditLogFilter {
     object?: AuditObject;
     action?: AuditAction;
     username?: string;
+    after?: string;
+    before?: string;
     details?: {
         orgName?: ConcordKey;
         projectName?: ConcordKey;
@@ -85,6 +87,8 @@ export const list = async (filter: AuditLogFilter): Promise<PaginatedAuditLogEnt
             object: filter.object,
             action: filter.action,
             username: filter.username,
+            after: filter.after,
+            before: filter.before,
             offset: offsetParam,
             limit: limitParam
         })}`
