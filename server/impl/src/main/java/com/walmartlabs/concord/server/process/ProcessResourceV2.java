@@ -278,6 +278,7 @@ public class ProcessResourceV2 implements Resource {
                 .includeWithoutProject(effectiveOrgId == null && effectiveProjectId == null)
                 .afterCreatedAt(toTimestamp(afterCreatedAt))
                 .beforeCreatedAt(toTimestamp(beforeCreatedAt))
+                .repoId(effectiveRepoId)
                 .tags(tags)
                 .status(processStatus)
                 .initiator(initiator)
