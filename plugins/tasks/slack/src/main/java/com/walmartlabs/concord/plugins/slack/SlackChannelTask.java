@@ -125,7 +125,7 @@ public class SlackChannelTask implements Task {
 
     private static Action getAction(Context ctx) {
         String s = ContextUtils.assertString(ctx, TaskParams.ACTION.getKey());
-        return Action.valueOf(s);
+        return Action.valueOf(s.toUpperCase());
     }
 
     public enum Action {

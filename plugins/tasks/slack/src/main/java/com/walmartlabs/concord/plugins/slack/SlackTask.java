@@ -37,7 +37,7 @@ public class SlackTask implements Task {
 
     @Override
     public void execute(Context ctx) {
-        Action action = Action.valueOf(ContextUtils.getString(ctx, "action", Action.SENDMESSAGE.name()).toUpperCase());
+        Action action = getAction(ctx);
 
         Map<String, Object> args = Utils.collectAgs(ctx);
 
@@ -217,6 +217,11 @@ public class SlackTask implements Task {
         m.put("ok", false);
         m.put("error", t.getMessage());
         return m;
+    }
+
+    private static Action getAction(Context ctx) {
+        String s = ContextUtils.getString(ctx, TaskParams.ACTION.getKey(), Action.SENDMESSAGE.name());
+        return Action.valueOf(s.toUpperCase());
     }
 
     private enum Action {
