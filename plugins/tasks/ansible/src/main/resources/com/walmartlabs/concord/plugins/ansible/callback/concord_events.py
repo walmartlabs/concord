@@ -13,7 +13,6 @@ import uuid
 
 import os
 import ujson as json
-from sets import Set
 
 def to_millis(t):
     return int(round(t * 1000))
@@ -213,7 +212,7 @@ class CallbackModule(CallbackBase):
             return result
 
         total_work = 0
-        hosts = Set()
+        hosts = set()
         info = []
         for play in playbook.get_plays():
             loader = play._loader
