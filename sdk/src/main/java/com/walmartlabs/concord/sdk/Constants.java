@@ -405,7 +405,9 @@ public class Constants {
 
         /**
          * Properties file with a list of default dependency versions.
+         * @deprecated replaced with the "dependencyVersions" policy.
          */
+        @Deprecated
         public static final String DEPENDENCY_VERSIONS_FILE_NAME = "dependencyversions.properties";
     }
 

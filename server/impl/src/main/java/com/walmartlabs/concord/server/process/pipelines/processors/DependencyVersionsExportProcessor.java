@@ -35,7 +35,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+/**
+ * @deprecated replaced with the "dependencyVersions" policy.
+ * @see com.walmartlabs.concord.policyengine.DependencyVersionsPolicy
+ */
 @Named
+@Deprecated
 public class DependencyVersionsExportProcessor implements PayloadProcessor {
 
     private final DependencyVersionConfiguration cfg;

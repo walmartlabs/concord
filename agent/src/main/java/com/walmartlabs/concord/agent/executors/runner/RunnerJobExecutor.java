@@ -42,7 +42,6 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.runner.model.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -272,9 +271,9 @@ public class RunnerJobExecutor implements JobExecutor {
         return paths;
     }
 
-    private void validateDependencies(RunnerJob job, Collection<DependencyEntity> resolvedDepEntities) throws IOException, ExecutionException {
-        PolicyEngineRules policyRules = readPolicyRules(job);
-        if (policyRules == null) {
+    private void validateDependencies(RunnerJob job, Collection<DependencyEntity> resolvedDepEntities) throws ExecutionException {
+        PolicyEngine policyEngine = job.getPolicyEngine();
+        if (policyEngine == null) {
             return;
         }
 
@@ -282,7 +281,7 @@ public class RunnerJobExecutor implements JobExecutor {
 
         processLog.info("Checking the dependency policy...");
 
-        CheckResult<DependencyRule, DependencyEntity> result = new PolicyEngine(policyRules).getDependencyPolicy().check(resolvedDepEntities);
+        CheckResult<DependencyRule, DependencyEntity> result = policyEngine.getDependencyPolicy().check(resolvedDepEntities);
         result.getWarn().forEach(d ->
                 processLog.info("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity().toString(), d.getRule().toString()));
         result.getDeny().forEach(d ->
@@ -467,19 +466,6 @@ public class RunnerJobExecutor implements JobExecutor {
         }
 
         return extraArgs;
-    }
-
-    private static PolicyEngineRules readPolicyRules(RunnerJob job) throws IOException {
-        Path workDir = job.getPayloadDir();
-
-        Path policyFile = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(Constants.Files.POLICY_FILE_NAME);
-
-        if (!Files.exists(policyFile)) {
-            return null;
-        }
-
-        return new ObjectMapper().readValue(policyFile.toFile(), PolicyEngineRules.class);
     }
 
     private static String getLogLevel(RunnerJob job) {

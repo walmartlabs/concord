@@ -27,6 +27,8 @@ import com.walmartlabs.concord.agent.ExecutionException;
 import com.walmartlabs.concord.agent.JobRequest;
 import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJobExecutorConfiguration;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.PolicyEngineRules;
 import com.walmartlabs.concord.runner.model.*;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -42,7 +44,7 @@ import java.util.UUID;
 public class RunnerJob {
 
     @SuppressWarnings("unchecked")
-    public static RunnerJob from(RunnerJobExecutorConfiguration runnerExecutorCfg, JobRequest jobRequest, ProcessLogFactory processLogFactory) throws ExecutionException {
+    public static RunnerJob from(RunnerJobExecutorConfiguration runnerExecutorCfg, JobRequest jobRequest, ProcessLogFactory processLogFactory) throws ExecutionException, IOException {
         Map<String, Object> cfg = Collections.emptyMap();
 
         Path payloadDir = jobRequest.getPayloadDir();
@@ -65,7 +67,19 @@ public class RunnerJob {
         } catch (IOException e) {
             throw new ExecutionException("Error while creating runner log", e);
         }
-        return new RunnerJob(jobRequest.getInstanceId(), payloadDir, cfg, runnerCfg, log);
+
+        Path policyFile = payloadDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(Constants.Files.POLICY_FILE_NAME);
+
+        PolicyEngine policyEngine = null;
+        if (Files.exists(policyFile)) {
+            PolicyEngineRules rules = createObjectMapper().readValue(policyFile.toFile(), PolicyEngineRules.class);
+            if (rules != null) {
+                policyEngine = new PolicyEngine(rules);
+            }
+        }
+
+        return new RunnerJob(jobRequest.getInstanceId(), payloadDir, cfg, runnerCfg, log, policyEngine);
     }
 
     private final UUID instanceId;
@@ -74,14 +88,16 @@ public class RunnerJob {
     private final RunnerConfiguration runnerCfg;
     private final boolean debugMode;
     private final RunnerLog log;
+    private final PolicyEngine policyEngine;
 
-    private RunnerJob(UUID instanceId, Path payloadDir, Map<String, Object> processCfg, RunnerConfiguration runnerCfg, RunnerLog log) {
+    private RunnerJob(UUID instanceId, Path payloadDir, Map<String, Object> processCfg, RunnerConfiguration runnerCfg, RunnerLog log, PolicyEngine policyEngine) {
         this.instanceId = instanceId;
         this.payloadDir = payloadDir;
         this.processCfg = processCfg;
         this.runnerCfg = runnerCfg;
         this.debugMode = debugMode(processCfg);
         this.log = log;
+        this.policyEngine = policyEngine;
     }
 
     public UUID getInstanceId() {
@@ -108,6 +124,10 @@ public class RunnerJob {
         return log;
     }
 
+    public PolicyEngine getPolicyEngine() {
+        return policyEngine;
+    }
+
     private static boolean debugMode(Map<String, Object> processCfg) {
         Object v = processCfg.get(Constants.Request.DEBUG_KEY);
         if (v instanceof String) {
@@ -128,7 +148,7 @@ public class RunnerJob {
                 .build();
 
         // TODO replace with immutables?
-        return new RunnerJob(instanceId, payloadDir, processCfg, cfg, log);
+        return new RunnerJob(instanceId, payloadDir, processCfg, cfg, log, policyEngine);
     }
 
     @Override

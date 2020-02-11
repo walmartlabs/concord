@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -42,6 +43,7 @@ public class PolicyEngineRules {
     private final Map<String, Object> customRule;
     private final JsonStoreRule jsonStoreRule;
     private final Map<String, Object> defaultProcessCfg;
+    private final List<DependencyVersionsPolicy.Dependency> dependencyVersions;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -53,7 +55,8 @@ public class PolicyEngineRules {
                              @JsonProperty("entity") PolicyRules<EntityRule> entityRules,
                              @JsonProperty("processCfg") Map<String, Object> processCfg,
                              @JsonProperty("jsonStore") JsonStoreRule jsonStoreRule,
-                             @JsonProperty("defaultProcessCfg") Map<String, Object> defaultProcessCfg) {
+                             @JsonProperty("defaultProcessCfg") Map<String, Object> defaultProcessCfg,
+                             @JsonProperty("dependencyVersions")List<DependencyVersionsPolicy.Dependency> dependencyVersions) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -67,6 +70,7 @@ public class PolicyEngineRules {
         this.customRule = new HashMap<>();
         this.jsonStoreRule = jsonStoreRule;
         this.defaultProcessCfg = defaultProcessCfg;
+        this.dependencyVersions = dependencyVersions;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -109,6 +113,11 @@ public class PolicyEngineRules {
     @JsonProperty("defaultProcessCfg")
     public Map<String, Object> getDefaultProcessCfg() {
         return defaultProcessCfg;
+    }
+
+    @JsonProperty("dependencyVersions")
+    public List<DependencyVersionsPolicy.Dependency> getDependencyVersions() {
+        return dependencyVersions;
     }
 
     @JsonAnySetter

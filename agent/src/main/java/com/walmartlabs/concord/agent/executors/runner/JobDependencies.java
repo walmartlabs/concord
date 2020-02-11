@@ -21,6 +21,7 @@ package com.walmartlabs.concord.agent.executors.runner;
  */
 
 import com.walmartlabs.concord.agent.ExecutionException;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,10 @@ import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.dependencymanager.DependencyManager.MAVEN_SCHEME;
+import static com.walmartlabs.concord.policyengine.DependencyVersionsPolicy.Dependency;
 
 public class JobDependencies {
 
@@ -40,6 +43,10 @@ public class JobDependencies {
 
     public static Collection<URI> get(RunnerJob job) throws ExecutionException {
         Collection<URI> uris = getDependencyUris(job);
+        if (uris.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         Map<String, String> versions = getDependencyVersions(job);
         if (versions.isEmpty()) {
             return uris;
@@ -143,6 +150,17 @@ public class JobDependencies {
     }
 
     private static Map<String, String> getDependencyVersions(RunnerJob job) throws ExecutionException {
+        Map<String, String> result = getDependencyVersionsFromFile(job);
+
+        PolicyEngine pe = job.getPolicyEngine();
+        if (pe != null) {
+            result.putAll(pe.getDefaultDependencyVersionsPolicy().get().stream()
+                    .collect(Collectors.toMap(Dependency::getArtifact, Dependency::getVersion)));
+        }
+        return result;
+    }
+
+    private static Map<String, String> getDependencyVersionsFromFile(RunnerJob job) throws ExecutionException {
         Path workDir = job.getPayloadDir();
         Path pluginsFile = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
                 .resolve(Constants.Files.DEPENDENCY_VERSIONS_FILE_NAME);

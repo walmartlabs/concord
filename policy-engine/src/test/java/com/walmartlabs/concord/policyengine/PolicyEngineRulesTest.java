@@ -23,9 +23,7 @@ package com.walmartlabs.concord.policyengine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -84,9 +82,12 @@ public class PolicyEngineRulesTest {
         Map<String, Object> defaultProcessCfg = new HashMap<>();
         defaultProcessCfg.put("x", "y");
 
+        List<DependencyVersionsPolicy.Dependency> dependencies = new ArrayList<>();
+        dependencies.add(new DependencyVersionsPolicy.Dependency("foo", "v1"));
+
         PolicyEngineRules r = new PolicyEngineRules(dependencyRules, fileRules, taskRules, workspaceRule,
                 containerRules, queueRules, protectedTasksRules, entityRules, processCfg, new JsonStoreRule(storageRule, storageDataRule),
-                defaultProcessCfg);
+                defaultProcessCfg, dependencies);
 
         r.addCustomRule("ansible", Collections.singletonMap("k", "v"));
 
