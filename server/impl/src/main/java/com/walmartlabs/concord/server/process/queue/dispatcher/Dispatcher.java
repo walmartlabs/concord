@@ -172,9 +172,23 @@ public class Dispatcher extends PeriodicTask {
 
             uniqueProjectsHistogram.update(countUniqueProjects(candidates));
 
-            // filter out the candidates that shouldn't be dispatched at the moment
-            for (Iterator<ProcessQueueEntry> it = candidates.iterator(); it.hasNext(); ) {
-                ProcessQueueEntry e = it.next();
+            // filter out agents first to avoid situations when:
+            // - there's a process with requirements that doesn't match currently available workers
+            // - and there's a bunch of processes in the same project with requirements that can be satisfied
+            // if we do the project filter first we might end up unable to process anything in the project
+            matches = matchAgents(inbox, candidates);
+
+            if (matches.isEmpty()) {
+                return matches;
+            }
+
+            // at this point only candidates with matching agent "capabilities" are left
+
+            // filter out the candidates that shouldn't be dispatched at the moment (e.g. due to concurrency limits)
+            for (Iterator<Match> it = matches.iterator(); it.hasNext(); ) {
+                Match m = it.next();
+
+                ProcessQueueEntry e = m.response;
 
                 // currently there are no filters applicable to standalone (i.e. without a project) processes
                 if (e.projectId() == null) {
@@ -205,7 +219,6 @@ public class Dispatcher extends PeriodicTask {
                 projectsToSkip.add(e.projectId());
             }
 
-            matches = match(inbox, candidates);
             if (matches.isEmpty()) {
                 // no matches, try fetching the next N records
                 offset += batchSize;
@@ -227,7 +240,10 @@ public class Dispatcher extends PeriodicTask {
         return matches;
     }
 
-    private List<Match> match(List<Request> requests, List<ProcessQueueEntry> candidates) {
+    /**
+     * Matches capabilities in the received agent requests with requirements of the candidates.
+     */
+    private List<Match> matchAgents(List<Request> requests, List<ProcessQueueEntry> candidates) {
         List<Match> results = new ArrayList<>();
 
         for (Request req : requests) {
