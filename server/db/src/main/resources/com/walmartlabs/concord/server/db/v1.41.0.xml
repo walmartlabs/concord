@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1410000" author="ibodrov@gmail.com" runInTransaction="false">
+        <!-- skip if the table is partitioned -->
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*)
+                from pg_inherits
+                join pg_class parent ON pg_inherits.inhparent = parent.oid
+                join pg_class child ON pg_inherits.inhrelid = child.oid
+                join pg_namespace nmsp_parent ON nmsp_parent.oid = parent.relnamespace
+                join pg_namespace nmsp_child ON nmsp_child.oid = child.relnamespace
+                where parent.relname = 'audit_log'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            create index concurrently IDX_AUDIT_LOG_DETAILS on AUDIT_LOG using gin (ENTRY_DETAILS)
+        </sql>
+    </changeSet>
+</databaseChangeLog>
