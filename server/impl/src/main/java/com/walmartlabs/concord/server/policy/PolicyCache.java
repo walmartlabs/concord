@@ -121,6 +121,7 @@ public class PolicyCache implements BackgroundTask {
                         .findAny()
                         .map(PolicyItem::engine)
                         .orElse(null);
+
                 if (result != null) {
                     return result;
                 }
@@ -133,6 +134,7 @@ public class PolicyCache implements BackgroundTask {
                         .findAny()
                         .map(PolicyItem::engine)
                         .orElse(null);
+
                 if (result != null) {
                     return result;
                 }
