@@ -154,9 +154,11 @@ public class JobDependencies {
 
         PolicyEngine pe = job.getPolicyEngine();
         if (pe != null) {
+            result = new HashMap<>(result); // make mutable
             result.putAll(pe.getDefaultDependencyVersionsPolicy().get().stream()
                     .collect(Collectors.toMap(Dependency::getArtifact, Dependency::getVersion)));
         }
+
         return result;
     }
 
