@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.common.IOUtils.grep;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -127,9 +128,77 @@ public class GithubEventResourceIT extends AbstractServerIT {
         projectsApi.delete(orgName, projectName);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void nonOrgEvent() throws Exception {
+        Path tmpDir = createTempDir();
+
+        File src = new File(TriggersRefreshIT.class.getResource("githubNonRepoEvent").toURI());
+        IOUtils.copy(src.toPath(), tmpDir);
+
+        Git repo = Git.init().setDirectory(tmpDir.toFile()).call();
+        repo.add().addFilepattern(".").call();
+        repo.commit().setMessage("import").call();
+
+        String gitUrl = tmpDir.toAbsolutePath().toString();
+
+        // ---
+
+        String orgName = "org_" + randomString();
+        String projectName = "test_" + randomString();
+        String repoName = "repo_" + randomString();
+
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName));
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
+                        .setUrl(gitUrl))));
+
+        // ---
+
+        TriggersApi triggersApi = new TriggersApi(getApiClient());
+
+        while (!Thread.currentThread().isInterrupted()) {
+            List<TriggerEntry> triggers = triggersApi.list(orgName, projectName, repoName);
+            if (!triggers.isEmpty()) {
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        // ---
+
+        githubEvent("githubNonRepoEvent/event.json", null, "team");
+
+        List<ProcessEntry> processes;
+
+        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
+        while (true) {
+            processes = processV2Api.list(null, orgName, null, projectName, null, null, null, null, null, ProcessEntry.StatusEnum.FINISHED.getValue(), null, null, null, null, null);
+            if (processes.size() > 0) {
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        assertEquals(1, processes.size());
+
+        // ---
+
+        ProcessEntry pe = processes.get(0);
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*EVENT:.*added_to_repository.*", ab);
+    }
+
     private void removeProcessWithLog(List<ProcessEntry> processes, String log, int expectedCount) throws Exception {
         Iterator<ProcessEntry> it = processes.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             ProcessEntry psr = it.next();
             byte[] ab = getLog(psr.getLogFileName());
             int count = grep(log, ab).size();
@@ -167,20 +236,25 @@ public class GithubEventResourceIT extends AbstractServerIT {
     }
 
     private void githubEvent(String eventFile, String repoName) throws Exception {
+        githubEvent(eventFile, repoName, "push");
+    }
+
+    private void githubEvent(String eventFile, String repoName, String eventName) throws Exception {
         String event = new String(Files.readAllBytes(Paths.get(GithubEventResourceIT.class.getResource(eventFile).toURI())));
-        event = event.replace("org-repo", repoName);
+        if (repoName != null) {
+            event = event.replace("org-repo", repoName);
+        }
 
         ApiClient client = getApiClient();
         client.addDefaultHeader("X-Hub-Signature", "sha1=" + GitHubUtils.sign(event));
 
         GitHubEventsApi gitHubEvents = new GitHubEventsApi(client);
 
-        String result = gitHubEvents.onEvent(event, "abc", "push");
+        String result = gitHubEvents.onEvent(event, "abc", eventName);
         assertEquals("ok", result);
     }
 
     private UUID createProjectAndRepo(String orgName, String projectName, String repoName, String repoUrl) throws Exception {
-
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
         ProjectOperationResponse cpr = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)

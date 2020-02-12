@@ -33,22 +33,24 @@ public final class MapMatcher {
         return compareNodes(data, conditions);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static boolean compareNodes(Object data, Object conditions) {
         if (data == null && conditions == null) {
             return true;
+        } else if (data == null && conditions instanceof String) {
+            return compareStringValues("", (String) conditions);
         } else if (data == null || conditions == null) {
             return false;
         }
 
         if (conditions instanceof Map && data instanceof Map) {
-            return compareObjectNodes((Map<String, Object>)data, (Map<String, Object>)conditions);
+            return compareObjectNodes((Map<String, Object>) data, (Map<String, Object>) conditions);
         } else if (conditions instanceof String && data instanceof String) {
-            return compareStringValues((String)data, (String)conditions);
+            return compareStringValues((String) data, (String) conditions);
         } else if (conditions instanceof Collection && data instanceof Collection) {
             return compareArrayNodes((Collection) data, (Collection) conditions);
         } else if (conditions instanceof Collection) {
-            return matchAny(data, (Collection)conditions);
+            return matchAny(data, (Collection) conditions);
         } else {
             return compareValues(data, conditions);
         }
