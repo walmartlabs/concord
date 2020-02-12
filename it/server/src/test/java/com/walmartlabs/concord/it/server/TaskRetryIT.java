@@ -26,6 +26,8 @@ import com.walmartlabs.concord.client.StartProcessResponse;
 import org.junit.Test;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
@@ -43,6 +45,30 @@ public class TaskRetryIT extends AbstractServerIT {
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
+
+        // wait for completion
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
+
+        // check logs
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*msg\": \"Hi retry!\".*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testAnsibleRetryWithExpression() throws Exception {
+        URI uri = ProcessIT.class.getResource("taskRetryWithExpression").toURI();
+        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.retryCount", "1");
+        input.put("arguments.retryDelay", "2");
+        StartProcessResponse spr = start(input);
 
         // wait for completion
 
