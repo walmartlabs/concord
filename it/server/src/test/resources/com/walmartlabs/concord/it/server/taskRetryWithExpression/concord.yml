@@ -1,0 +1,18 @@
+flows:
+  default:
+  - task: ansible2
+    in:
+      playbook: playbook/hello.yml
+      inventory:
+        local:
+          hosts:
+            - "127.0.0.1"
+          vars:
+            ansible_connection: local
+    retry:
+      in:
+        retry: true
+        extraVars:
+          msg: "Hi retry!"
+      times: ${retryCount}
+      delay: ${retryDelay}

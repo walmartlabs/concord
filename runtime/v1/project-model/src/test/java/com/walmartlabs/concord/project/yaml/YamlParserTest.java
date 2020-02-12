@@ -2254,6 +2254,42 @@ public class YamlParserTest extends AbstractYamlParserTest {
         verify(log, times(2)).log(eq("Error NOW!"));
     }
 
+    @Test
+    public void test077() throws Exception {
+        deploy("077.yml");
+
+        ProcessDefinition pd = getDefinition("main");
+
+        TestBean testBean = spy(new TestBean());
+        register("testBean", testBean);
+
+        JavaDelegate task = mock(JavaDelegate.class);
+        doThrow(new BpmnError("first error"))
+                .doNothing()
+                .when(task).execute(any());
+
+        register("testErrorTask", task);
+
+        register("__retryUtils", new YamlTaskStepConverter.RetryUtilsTask());
+
+        // ---
+        String key = UUID.randomUUID().toString();
+        start(key, "main", null);
+
+        // ---
+        ArgumentCaptor<ExecutionContext> ctxCaptor = ArgumentCaptor.forClass(ExecutionContext.class);
+        verify(task, times(2)).execute(ctxCaptor.capture());
+
+        List<ExecutionContext> retryCtx = ctxCaptor.getAllValues();
+        assertEquals("test", retryCtx.get(0).getVariable("msg"));
+        assertEquals("retry", retryCtx.get(1).getVariable("msg"));
+
+        verify(testBean, times(1)).toString(eq("end"));
+
+        verifyNoMoreInteractions(testBean);
+        verifyNoMoreInteractions(task);
+    }
+
     // FORMS (100 - 199)
 
     @Test

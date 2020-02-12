@@ -27,6 +27,8 @@ import com.walmartlabs.concord.project.yaml.KV;
 import com.walmartlabs.concord.project.yaml.YamlConverterException;
 import com.walmartlabs.concord.project.yaml.model.YamlStep;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.BpmnError;
 import io.takari.bpm.api.ExecutionContext;
@@ -45,7 +47,7 @@ import java.util.stream.Collectors;
 
 public interface StepConverter<T extends YamlStep> {
 
-    long DEFAULT_DELAY = TimeUnit.SECONDS.toMillis(5);
+    long DEFAULT_DELAY = 5;
 
     Chunk convert(ConverterContext ctx, T s) throws YamlConverterException;
 
@@ -138,6 +140,9 @@ public interface StepConverter<T extends YamlStep> {
 
         c.removeOutput(attachedRef);
 
+        VariableMapping retryCountVar = new VariableMapping(null, null, retryParams.get("times"), "__maxRetryCount", true);
+        VariableMapping delayVar = new VariableMapping(null, null, getRetryDelay(retryParams, loc), "__retryDelay", true);
+
         // retry init
         String initId = ctx.nextId();
         c.addFirstElement(new ServiceTask(initId, ExpressionType.SIMPLE, "${__retryUtils.init(execution)}", null, null, true));
@@ -150,7 +155,7 @@ public interface StepConverter<T extends YamlStep> {
         // inc retry count
         String incCounterId = ctx.nextId();
         c.addElement(new SequenceFlow(ctx.nextId(), originalEvId, incCounterId));
-        c.addElement(new ServiceTask(incCounterId, ExpressionType.SIMPLE, "${__retryUtils.inc(execution)}", null, null, true));
+        c.addElement(new ServiceTask(incCounterId, ExpressionType.SIMPLE, "${__retryUtils.inc(execution)}", Collections.singleton(retryCountVar), null, true));
 
         // retry count GW
         String retryCountGwId = ctx.nextId();
@@ -159,8 +164,8 @@ public interface StepConverter<T extends YamlStep> {
 
         // sleep
         String retryDelayId = ctx.nextId();
-        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, retryDelayId, "${__retryUtils.isRetryCountExceeded(execution, " + retryParams.get("times") + ")}"));
-        c.addElement(new ServiceTask(retryDelayId, ExpressionType.SIMPLE, "${__retryUtils.sleep(" + getRetryDelay(retryParams, loc) + ")}", null, null, true));
+        c.addElement(new SequenceFlow(ctx.nextId(), retryCountGwId, retryDelayId, "${__retryUtils.isRetryCountExceeded(execution)}"));
+        c.addElement(new ServiceTask(retryDelayId, ExpressionType.SIMPLE, "${__retryUtils.sleep(execution)}", Collections.singleton(delayVar), null, true));
 
         // retry step
         String retryId = f.apply(retryDelayId, retryParams);
@@ -288,17 +293,21 @@ public interface StepConverter<T extends YamlStep> {
         return toVarMapping(ConfigurationUtils.deepMerge(originalInVars, retryInVars));
     }
 
-    default long getRetryDelay(Map<String, Object> params, JsonLocation loc) throws YamlConverterException {
+    default Object getRetryDelay(Map<String, Object> params, JsonLocation loc) throws YamlConverterException {
         Object v = params.get("delay");
         if (v == null) {
             return DEFAULT_DELAY;
         }
 
-        if (!(v instanceof Integer)) {
-            throw new YamlConverterException("Invalid 'delay' value. Expected an integer, got: " + v + " @ " + loc);
+        if (v instanceof Integer) {
+            return v;
         }
 
-        return TimeUnit.SECONDS.toMillis((int) v);
+        if (isExpression(v)) {
+            return v;
+        }
+
+        throw new YamlConverterException("Invalid 'delay' value. Expected integer or expression, got: " + v + " @ " + loc);
     }
 
     static Set<VariableMapping> appendWithItemsVar(Set<VariableMapping> inVars) {
@@ -324,7 +333,7 @@ public interface StepConverter<T extends YamlStep> {
         return i >= 0 && s.indexOf("}", i) > i;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     static Object deepConvert(Object o) {
         if (o instanceof Seq) {
             List<Object> src = ((Seq) o).toList();
@@ -349,7 +358,7 @@ public interface StepConverter<T extends YamlStep> {
         return o;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     default ELCall createELCall(String task, Object args) {
         StringBuilder b = new StringBuilder("${");
         b.append(task).append(".call(");
@@ -512,7 +521,7 @@ public interface StepConverter<T extends YamlStep> {
                     .collect(Collectors.toSet());
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "rawtypes"})
         private static List<Object> assertItems(ExecutionContext ctx) {
             Object result = ctx.getVariable("items");
             if (result == null) {
@@ -579,13 +588,29 @@ public interface StepConverter<T extends YamlStep> {
 
         private static final Logger log = LoggerFactory.getLogger(RetryUtilsTask.class);
 
-        public void sleep(long t) {
+        public void sleep(ExecutionContext ctx) {
+            int t = assertInt(ctx, "__retryDelay");
+
             try {
-                log.info("retry delay {} sec", t / 1000);
-                Thread.sleep(t);
+                log.info("retry delay {} sec", t);
+                Thread.sleep(TimeUnit.SECONDS.toMillis(t));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+
+        private int assertInt(ExecutionContext ctx, String name) {
+            Object v = ctx.getVariable(name);
+            if (v == null) {
+                throw new IllegalArgumentException("Variable '" + name + "' not found");
+            }
+            if (v instanceof Number) {
+                return ((Number) v).intValue();
+            }
+            if (v instanceof String) {
+                return Integer.parseInt((String)v);
+            }
+            throw new IllegalArgumentException("Invalid variable '" + name + "' type, expected: integer, got: " + v.getClass());
         }
 
         @SuppressWarnings("unused")
@@ -618,11 +643,13 @@ public interface StepConverter<T extends YamlStep> {
             currentValue++;
             setLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, currentValue);
             ctx.setVariable(InternalConstants.Context.CURRENT_RETRY_COUNTER, currentValue);
+            int maxRetryCount = assertInt(ctx, "__maxRetryCount");
+            ctx.setVariable("__retryCountExceeded", currentValue <= maxRetryCount);
         }
 
         @SuppressWarnings("unused")
-        public boolean isRetryCountExceeded(ExecutionContext ctx, int maxRetryCount) {
-            return getLastVariable(ctx, InternalConstants.Context.RETRY_COUNTER, 0) <= maxRetryCount;
+        public boolean isRetryCountExceeded(ExecutionContext ctx) {
+            return (boolean) ctx.getVariable("__retryCountExceeded");
         }
 
         @SuppressWarnings("unused")

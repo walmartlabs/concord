@@ -1,0 +1,11 @@
+main:
+  - task: testErrorTask
+    in:
+      msg: "test"
+    retry:
+      in:
+        msg: "retry"
+      times: "${1}"
+      delay: "${1}"   # optional
+
+  - ${testBean.toString("end")}
