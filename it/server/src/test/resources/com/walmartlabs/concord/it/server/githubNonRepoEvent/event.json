@@ -1,0 +1,15 @@
+{
+  "action": "added_to_repository",
+  "team": {
+    "name": "github"
+  },
+  "repository": {
+    "full_name": "it-githubNonRepoEvent/Hello-World"
+  },
+  "organization": {
+    "login": "it-githubNonRepoEvent"
+  },
+  "sender": {
+    "login": "Codertocat"
+  }
+}

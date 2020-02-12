@@ -76,8 +76,15 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
     private List<TriggerEntry> listTriggers(UUID projectId, String org, String repo) {
         Map<String, String> conditions = new HashMap<>();
-        conditions.put(GITHUB_ORG_KEY, org);
-        conditions.put(GITHUB_REPO_KEY, repo);
+
+        if (org != null) {
+            conditions.put(GITHUB_ORG_KEY, org);
+        }
+
+        if (repo != null) {
+            conditions.put(GITHUB_REPO_KEY, repo);
+        }
+
         return dao.list(projectId, EVENT_SOURCE, VERSION_ID, conditions);
     }
 

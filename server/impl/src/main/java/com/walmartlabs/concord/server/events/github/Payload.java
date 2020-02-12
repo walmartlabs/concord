@@ -23,29 +23,70 @@ package com.walmartlabs.concord.server.events.github;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static com.walmartlabs.concord.server.events.github.Constants.*;
 
 public class Payload {
+
+    /**
+     * List of supported repository-level events.
+     */
+    private static final Set<String> REPOSITORY_EVENTS = asSet(
+            "commit_comment",
+            "create",
+            "delete",
+            "fork",
+            "issue_comment",
+            "issues",
+            "label",
+            "member",
+            "pull_request",
+            "pull_request_review",
+            "push",
+            "release",
+            "team_add"
+    );
+
+    /**
+     * List of supported organization-level events.
+     */
+    private static final Set<String> ORGANIZATION_EVENTS = asSet(
+            "membership",
+            "organization",
+            "org_block",
+            "repository",
+            "team"
+    );
 
     public static Payload from(String eventName, Map<String, Object> data) {
         if (data == null) {
             return null;
         }
 
-        Map<String, Object> repo = MapUtils.getMap(data, REPO_NAME_KEY, Collections.emptyMap());
-        String fullRepoName = MapUtils.getString(repo, "full_name");
-        if (fullRepoName == null) {
-            return null;
-        }
-        String[] orgRepo = fullRepoName.split("/");
-        if (orgRepo.length < 2) {
-            return null;
+        String fullRepoName = null;
+        String org = null;
+        String repo = null;
+
+        if (REPOSITORY_EVENTS.contains(eventName)) {
+            Map<String, Object> m = MapUtils.getMap(data, REPO_NAME_KEY, Collections.emptyMap());
+            fullRepoName = MapUtils.getString(m, "full_name");
+
+            if (fullRepoName != null) {
+                String[] as = fullRepoName.split("/");
+                if (as.length < 2) {
+                    return null;
+                }
+
+                org = as[0];
+                repo = as[1];
+            }
+        } else if (ORGANIZATION_EVENTS.contains(eventName)) {
+            Map<String, Object> m = MapUtils.getMap(data, ORGANIZATION_KEY, Collections.emptyMap());
+            org = MapUtils.getString(m, "login");
         }
 
-        return new Payload(eventName, fullRepoName, orgRepo[0], orgRepo[1], data);
+        return new Payload(eventName, fullRepoName, org, repo, data);
     }
 
     private final String eventName;
@@ -124,5 +165,9 @@ public class Payload {
         Map<String, Object> pr = MapUtils.getMap(event, PULL_REQUEST_EVENT, Collections.emptyMap());
         Map<String, Object> base = MapUtils.getMap(pr, "base", Collections.emptyMap());
         return MapUtils.getString(base, "ref");
+    }
+
+    private static Set<String> asSet(String... as) {
+        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(as)));
     }
 }

@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 public final class GithubUtils {
 
     /**
-     *
      * Same rules as used by git in shorten_unambiguous_ref
      * see: https://github.com/git/git/blob/v2.19.1/refs.c#L483
      */
@@ -75,9 +74,11 @@ public final class GithubUtils {
         String repoPath = getRepoPath(repoUrl);
 
         String[] u = repoPath.split("/");
-        if(u.length < 2) {
+        if (u.length < 2) {
+            // a file path perhaps?
             return null;
         }
+
         return GithubRepoInfo.builder()
                 .owner(owner(u[0]))
                 .name(name(u[1]))
@@ -115,7 +116,7 @@ public final class GithubUtils {
         int index = repoUrl.indexOf(":");
         if (index > 0) {
             int portEndIndex = repoUrl.indexOf("/", index);
-            if(portEndIndex > 0) {
+            if (portEndIndex > 0) {
                 String port = repoUrl.substring(index + 1, portEndIndex);
                 if (isPort(port)) {
                     return repoUrl.substring(portEndIndex + "/".length());
@@ -146,7 +147,7 @@ public final class GithubUtils {
         try {
             int port = Integer.parseInt(str);
             return port > 0 && port <= 65535;
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             return false;
         }
     }

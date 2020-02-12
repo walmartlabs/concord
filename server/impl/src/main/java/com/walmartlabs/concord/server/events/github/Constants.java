@@ -29,18 +29,19 @@ public final class Constants {
     public static final String AUTHOR_KEY = "author";
     public static final String COMMIT_ID_KEY = "commitId";
     public static final String ORG_NAME_KEY = "org";
+    public static final String ORGANIZATION_KEY = "organization";
     public static final String PAYLOAD_KEY = "payload";
     public static final String PROJECT_ID_KEY = "projectId";
     public static final String PROJECT_NAME_KEY = "project";
+    public static final String PULL_REQUEST_EVENT = "pull_request";
+    public static final String PUSH_EVENT = "push";
     public static final String REPO_BRANCH_KEY = "branch";
     public static final String REPO_ID_KEY = "repositoryId";
     public static final String REPO_NAME_KEY = "repository";
-    public static final String UNKNOWN_REPO_KEY = "unknownRepo";
     public static final String SENDER_KEY = "sender";
     public static final String STATUS_KEY = "status";
     public static final String TYPE_KEY = "type";
-    public static final String PULL_REQUEST_EVENT = "pull_request";
-    public static final String PUSH_EVENT = "push";
+    public static final String UNKNOWN_REPO_KEY = "unknownRepo";
     public static final String VERSION_KEY = "version";
 
     public static final String GITHUB_ORG_KEY = "githubOrg";

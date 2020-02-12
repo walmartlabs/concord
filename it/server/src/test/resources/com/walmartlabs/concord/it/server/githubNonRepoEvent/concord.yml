@@ -1,0 +1,12 @@
+flows:
+  onEvent:
+  - log: "EVENT: ${event}"
+
+triggers:
+- github:
+    version: 2
+    entryPoint: onEvent
+    conditions:
+      type: "team"
+      githubOrg: "it-githubNonRepoEvent"
+      githubRepo: ".*"
