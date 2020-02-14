@@ -20,13 +20,11 @@ package com.walmartlabs.concord.plugins.kv;
  * =====
  */
 
+import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessKvStoreApi;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.InjectVariable;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -48,59 +46,124 @@ public class KvTask implements Task {
         this.apiClientFactory = apiClientFactory;
     }
 
+    /**
+     * @deprecated left for backward compatibility, prefer {@link #remove(Context, String)}
+     */
+    @Deprecated
     public void remove(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        remove(context, key);
+    }
+
+    public void remove(@InjectVariable("context") Context ctx, String key) throws Exception {
         assertValidKey(key);
 
-        ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
+        ProcessKvStoreApi api = getApi(ctx);
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.removeKey(UUID.fromString(instanceId), key);
+            api.removeKey(ContextUtils.getTxId(ctx), key);
             return null;
         });
     }
 
+    /**
+     * @deprecated left for backward compatibility, prefer {@link #putString(Context, String, String)}
+     */
+    @Deprecated
     public void putString(@InjectVariable("txId") String instanceId, String key, String value) throws Exception {
+        putString(context, key, value);
+    }
+
+    public void putString(@InjectVariable("context") Context ctx, String key, String value) throws Exception {
         assertValidKey(key);
 
-        ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
+        ProcessKvStoreApi api = getApi(ctx);
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.putString(UUID.fromString(instanceId), key, value);
+            api.putString(ContextUtils.getTxId(ctx), key, value);
             return null;
         });
     }
 
+    /**
+     * @deprecated left for backward compatibility, prefer {@link #getString(Context, String)}
+     */
+    @Deprecated
     public String getString(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        assertValidKey(key);
-
-        ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getString(UUID.fromString(instanceId), key));
+        return getString(context, key);
     }
 
-    public void putLong(@InjectVariable("txId") String instanceId, String key, Long value) throws Exception {
+    public String getString(@InjectVariable("context") Context ctx, String key) throws Exception {
         assertValidKey(key);
 
-        ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
+        ProcessKvStoreApi api = getApi(ctx);
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
+                api.getString(ContextUtils.getTxId(ctx), key));
+    }
+
+    /**
+     * @deprecated left for backward compatibility, prefer {@link #putLong(Context, String, Long)}
+     */
+    @Deprecated
+    public void putLong(@InjectVariable("txId") String instanceId, String key, Long value) throws Exception {
+        putLong(context, key, value);
+    }
+
+    public void putLong(@InjectVariable("context") Context ctx, String key, Long value) throws Exception {
+        assertValidKey(key);
+
+        ProcessKvStoreApi api = getApi(ctx);
         ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.putLong(UUID.fromString(instanceId), key, value);
+            api.putLong(ContextUtils.getTxId(ctx), key, value);
             return null;
         });
     }
 
-    public long inc(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        return incLong(instanceId, key);
-    }
-
-    public long incLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
-        assertValidKey(key);
-
-        ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.incLong(UUID.fromString(instanceId), key));
-    }
-
+    /**
+     * @deprecated left for backward compatibility, prefer {@link #getLong(Context, String)}
+     */
+    @Deprecated
     public Long getLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        return getLong(context, key);
+    }
+
+    public Long getLong(@InjectVariable("context") Context ctx, String key) throws Exception {
         assertValidKey(key);
 
-        ProcessKvStoreApi api = new ProcessKvStoreApi(apiClientFactory.create(context));
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> api.getLong(UUID.fromString(instanceId), key));
+        ProcessKvStoreApi api = getApi(ctx);
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
+                api.getLong(ContextUtils.getTxId(ctx), key));
+    }
+
+    /**
+     * @deprecated left for backward compatibility, prefer {@link #inc(Context, String)}
+     */
+    @Deprecated
+    public long inc(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        return inc(context, key);
+    }
+
+    public long inc(@InjectVariable("context") Context ctx, String key) throws Exception {
+        return incLong(ctx, key);
+    }
+
+    /**
+     * @deprecated left for backward compatibility, prefer {@link #incLong(Context, String)}
+     */
+    @Deprecated
+    public long incLong(@InjectVariable("txId") String instanceId, String key) throws Exception {
+        return incLong(context, key);
+    }
+
+    public long incLong(@InjectVariable("context") Context ctx, String key) throws Exception {
+        assertValidKey(key);
+
+        ProcessKvStoreApi api = getApi(ctx);
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
+                api.incLong(ContextUtils.getTxId(ctx), key));
+    }
+
+    private ProcessKvStoreApi getApi(Context ctx) {
+        return new ProcessKvStoreApi(apiClientFactory.create(ApiClientConfiguration.builder()
+                .context(ctx)
+                .build()));
     }
 
     private static void assertValidKey(String s) {
