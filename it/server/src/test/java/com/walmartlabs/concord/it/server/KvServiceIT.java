@@ -85,7 +85,7 @@ public class KvServiceIT extends AbstractServerIT {
         assertLog(".*" + Pattern.quote("#aaa#bbb") + ".*", ab);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInvalidKeys() throws Exception {
         OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
         String orgName = "org_" + randomString();
@@ -118,6 +118,40 @@ public class KvServiceIT extends AbstractServerIT {
 
         byte[] ab = getLog(pe.getLogFileName());
         assertLogAtLeast(".*Keys cannot be empty or null.*", 1, ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCallFromScript() throws Exception {
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        String orgName = "org_" + randomString();
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName));
+
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        String projectName = "project_" + randomString();
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+
+        // ---
+
+        byte[] payload = archive(KvServiceIT.class.getResource("kvScript").toURI(), ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*got myKey: myValue*", ab);
     }
 
     private byte[] test(String process, String entryPoint, String testKey) throws Exception {
