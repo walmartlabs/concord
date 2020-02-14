@@ -1,5 +1,31 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- kv-tasks: allow calling from `script` environment;
+- project-model: support for expressions in retry parameters;
+- concord-server: support for non-repository GitHub events (e.g.
+`team`, `organization`, etc); 
+- concord-console: date/time filters for the audit log.
+
+### Changed
+
+- ansible: improved Python 3 compatibility;
+- concord-server: fixed the `repoId`/`repoName` filter in the
+`/api/v2/process` endpoint;
+- concord-server: fixed a bug in the process queue dispatcher when
+a process with `requirements` that cannot be satisfied could block
+other processes in the same project from being dispatched to
+workers;
+- slack-task: allow sending messages with JSON and support updates;
+- slack-task: make the `action` parameter of the `slackChannel`
+task case-insensitive;
+- concord-task: multiple process forks are now started in parallel.
+
+
+
 ## [1.40.0] - 2020-02-06
 
 ### Added
