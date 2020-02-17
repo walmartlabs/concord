@@ -67,6 +67,8 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
         private static final String PROTECTED_VAR_KEY = "__protected_vars";
 
+        private final ExecutionContextFactory<? extends ExecutionContext> ctxFactory;
+        private final ExpressionManager expressionManager;
         private final ProtectedVarContext protectedVarContext;
         private final FormService formService;
 
@@ -85,8 +87,15 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
                                        FormService formService) {
 
             super(ctxFactory, expressionManager, source, processDefinitionId, elementId);
+            this.ctxFactory = ctxFactory;
+            this.expressionManager = expressionManager;
             this.protectedVarContext = protectedVarContext;
             this.formService = formService;
+        }
+
+        @Override
+        public Object interpolate(Object v, Map<String, Object> variables) {
+            return expressionManager.interpolate(ctxFactory, ctxFactory.create(new Variables(variables)), v);
         }
 
         @Override
@@ -206,6 +215,8 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
     public static class MapBackedExecutionContext extends DefaultExecutionContextFactory.MapBackedExecutionContext implements Context {
 
+        private final ExecutionContextFactory<? extends ExecutionContext> ctxFactory;
+        private final ExpressionManager expressionManager;
         private final ExecutionContext delegate;
 
         public MapBackedExecutionContext(ExecutionContextFactory<? extends ExecutionContext> executionContextFactory,
@@ -215,7 +226,14 @@ public class ConcordExecutionContextFactory implements ExecutionContextFactory<C
 
             super(executionContextFactory, exprManager, delegate, overrides);
 
+            this.ctxFactory = executionContextFactory;
+            this.expressionManager = exprManager;
             this.delegate = delegate;
+        }
+
+        @Override
+        public Object interpolate(Object v, Map<String, Object> variables) {
+            return expressionManager.interpolate(ctxFactory, ctxFactory.create(new Variables(variables)), v);
         }
 
         @Override

@@ -677,6 +677,22 @@ public class ProcessIT extends AbstractServerIT {
         assertLog(".*Got: hello.*", ab);
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testInterpolateWithVariables() throws Exception {
+        byte[] payload = archive(ProcessIT.class.getResource("interpolateWithVars").toURI());
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(StatusEnum.FINISHED, pir.getStatus());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*two: 2*", ab);
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);
