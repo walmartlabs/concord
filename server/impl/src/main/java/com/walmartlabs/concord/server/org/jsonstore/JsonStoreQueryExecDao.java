@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.jsonstore;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -106,7 +107,21 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         if (value == null) {
             return null;
         }
-        return objectMapper.fromString(value.toString(), Object.class);
+
+        if (record.size() > 1) {
+            throw new ValidationErrorsException("Invalid query result type: expected a single column, got " + record.size() + " columns. " +
+                    "Change the query to return a single column or to build a JSON object.");
+        }
+
+        try {
+            return objectMapper.fromString(value.toString(), Object.class);
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof JsonParseException) {
+                throw new RuntimeException("Invalid JSON value: " + value + ". Expected a valid JSON object.");
+            }
+
+            throw e;
+        }
     }
 
     private static String createQuery(String src) {
