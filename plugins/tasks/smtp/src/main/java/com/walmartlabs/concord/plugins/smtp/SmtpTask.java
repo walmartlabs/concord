@@ -23,7 +23,10 @@ package com.walmartlabs.concord.plugins.smtp;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.walmartlabs.concord.sdk.*;
+import com.walmartlabs.concord.sdk.Context;
+import com.walmartlabs.concord.sdk.ContextUtils;
+import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.sdk.Task;
 import org.apache.commons.mail.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.walmartlabs.concord.sdk.MapUtils.*;
 
 @Named("smtp")
 public class SmtpTask implements Task {
@@ -76,17 +81,21 @@ public class SmtpTask implements Task {
     }
 
     private void send(Context ctx, Map<String, Object> smtp, Map<String, Object> mail) throws Exception {
-        String host = assertString(smtp, "host", "smtp");
-        int port = assertInt(smtp, "port", "smtp");
+        if (mail == null) {
+            throw new IllegalArgumentException("'mail' param is required");
+        }
+
+        String host = assertString(smtp, "host");
+        int port = assertInt(smtp, "port");
 
         mail = applyTemplate(ctx, mail);
 
-        String from = assertString(mail, "from", "mail");
-        Collection<String> to = oneOrManyStrings(mail, "to", "mail");
-        Collection<String> cc = zeroOrManyStrings(mail, "cc", "mail");
-        Collection<String> bcc = zeroOrManyStrings(mail, "bcc", "mail");
-        Collection<String> replyTo = zeroOrManyStrings(mail, "replyTo", "mail");
-        String subject = (String) mail.get("subject");
+        String from = assertString(mail, "from");
+        Collection<String> to = oneOrManyStrings(mail, "to");
+        Collection<String> cc = zeroOrManyStrings(mail, "cc");
+        Collection<String> bcc = zeroOrManyStrings(mail, "bcc");
+        Collection<String> replyTo = zeroOrManyStrings(mail, "replyTo");
+        String subject = getString(mail, "subject");
 
         try {
             Email email = createEmail(ctx, mail);
@@ -124,19 +133,17 @@ public class SmtpTask implements Task {
 
     private static Email createEmail(Context ctx, Map<String, Object> mail) throws EmailException {
         boolean isHtml = isHtml(mail);
-        String msg = assertString(mail, "message", "mail");
+        String msg = assertString(mail, "message");
         List<EmailAttachment> attachments = parseAttachments(ctx, mail);
 
         if (isHtml) {
             HtmlEmail email = new HtmlEmail();
             email.setHtmlMsg(msg);
-            if (attachments != null) {
-                processAttachments(email, attachments);
-            }
+            processAttachments(email, attachments);
             return email;
         } else {
             Email email;
-            if (attachments != null) {
+            if (!attachments.isEmpty()) {
                 MultiPartEmail mpe = new MultiPartEmail();
                 processAttachments(mpe, attachments);
                 email = mpe;
@@ -150,29 +157,27 @@ public class SmtpTask implements Task {
 
     @SuppressWarnings("unchecked")
     private static List<EmailAttachment> parseAttachments(Context ctx, Map<String, Object> mail) {
-        Object v = mail.get("attachments");
-        if (v == null) {
-            return null;
-        }
-
-        if (!(v instanceof Collection)) {
-            throw new IllegalArgumentException("invalid 'attachments' type - expected a list of attachment values, got: " + v.getClass());
+        List<Object> attachments = getList(mail, "attachments", Collections.emptyList());
+        if (attachments.isEmpty()) {
+            return Collections.emptyList();
         }
 
         Path workDir = ContextUtils.getWorkDir(ctx);
         List<EmailAttachment> result = new ArrayList<>();
-        for (Object o : (Collection) v) {
+        for (Object o : attachments) {
             EmailAttachment a = new EmailAttachment();
-            if (o instanceof String) {
+            if (o == null) {
+                continue;
+            } else if (o instanceof String) {
                 a.setPath(assertPath(workDir, (String) o));
             } else if (o instanceof Map) {
                 Map<String, Object> params = (Map<String, Object>) o;
-                a.setPath(assertPath(workDir, MapUtils.assertString(params, "path")));
-                a.setName(MapUtils.getString(params, "name"));
-                a.setDescription(MapUtils.getString(params, "description"));
-                a.setDisposition(parseDisposition(MapUtils.getString(params, "disposition")));
+                a.setPath(assertPath(workDir, assertString(params, "path")));
+                a.setName(getString(params, "name"));
+                a.setDescription(getString(params, "description"));
+                a.setDisposition(parseDisposition(getString(params, "disposition")));
             } else {
-                throw new IllegalArgumentException("invalid 'attachments' item type - expected a string or map, got: " + v.getClass());
+                throw new IllegalArgumentException("invalid 'attachments' item type - expected a string or map, got: " + o.getClass());
             }
             result.add(a);
         }
@@ -246,7 +251,7 @@ public class SmtpTask implements Task {
     }
 
     private static boolean isHtml(Map<String, Object> mailParams) {
-        String template = (String) mailParams.get("template");
+        String template = getString(mailParams, "template");
         if (template == null) {
             return false;
         }
@@ -266,57 +271,39 @@ public class SmtpTask implements Task {
     private static Map<String, Object> getTemplateParams(Map<String, Object> mailParams) {
         Object templateParam = mailParams.get("template");
         if (templateParam instanceof Map) {
-            Map<String, Object> params = (Map<String, Object>) ((Map) templateParam).get("params");
-            return params != null ? params : Collections.emptyMap();
+            Map<String, Object> p = (Map<String, Object>) templateParam;
+            return getMap(p, "params", Collections.emptyMap());
         }
         return Collections.emptyMap();
     }
 
+    @SuppressWarnings("unchecked")
     private static String getTemplateName(Map<String, Object> mailParams) {
         Object templateParam = mailParams.get("template");
+        if (templateParam == null) {
+            return null;
+        }
+
         if (templateParam instanceof String) {
             return (String) templateParam;
         } else if (templateParam instanceof Map) {
-            return (String) ((Map) templateParam).get("name");
+            Map<String, Object> p = (Map<String, Object>) templateParam;
+            return getString(p, "name");
         }
-        return null;
+
+        throw new IllegalArgumentException("invalid template param type: " + templateParam.getClass() + ". Expected String or Map");
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, Object> getCfg(Context ctx, String a, String b) {
-        Map<String, Object> m = (Map<String, Object>) ctx.getVariable(a);
+        Map<String, Object> m = ContextUtils.getMap(ctx, a);
         if (m == null) {
-            m = (Map<String, Object>) ctx.getVariable(b);
+            m = ContextUtils.getMap(ctx, b);
         }
         return m;
     }
 
-    private static String varName(String parent, String k) {
-        if (parent == null) {
-            return k;
-        }
-        return parent + "." + k;
-    }
-
-    private static String assertString(Map<String, Object> m, String k, String parent) {
-        String v = m != null ? (String) m.get(k) : null;
-        if (v == null) {
-            throw new IllegalArgumentException("'" + varName(parent, k) + "' is required");
-        }
-
-        return v;
-    }
-
-    private static int assertInt(Map<String, Object> m, String k, String parent) {
-        Integer v = (Integer) m.get(k);
-        if (v == null) {
-            throw new IllegalArgumentException("'" + varName(parent, k) + "' is required");
-        }
-        return v;
-    }
-
     @SuppressWarnings("unchecked")
-    private static Collection<String> zeroOrManyStrings(Map<String, Object> m, String k, String parent) {
+    private static Collection<String> zeroOrManyStrings(Map<String, Object> m, String k) {
         Object v = m.get(k);
 
         if (v instanceof String) {
@@ -330,7 +317,7 @@ public class SmtpTask implements Task {
             Collection<?> c = (Collection<?>) v;
             c.forEach(i -> {
                 if (!(i instanceof String)) {
-                    throw new IllegalArgumentException("'" + varName(parent, k) + "' - expected a list of string values, got: " + v);
+                    throw new IllegalArgumentException("'" + k + "' - expected a list of string values, got: " + v);
                 }
             });
             return (Collection<String>) c;
@@ -339,10 +326,10 @@ public class SmtpTask implements Task {
         return Collections.emptyList();
     }
 
-    private static Collection<String> oneOrManyStrings(Map<String, Object> m, String k, String parent) {
-        Collection<String> c = zeroOrManyStrings(m, k, parent);
+    private static Collection<String> oneOrManyStrings(Map<String, Object> m, String k) {
+        Collection<String> c = zeroOrManyStrings(m, k);
         if (c.isEmpty()) {
-            throw new IllegalArgumentException("'" + varName(parent, k) + "' - expected a single string value or a list of strings");
+            throw new IllegalArgumentException("'" + k + "' - expected a single string value or a list of strings");
         }
         return c;
     }
