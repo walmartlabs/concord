@@ -77,6 +77,11 @@ public class MockContext implements Context {
     }
 
     @Override
+    public Object interpolate(Object v, Map<String, Object> variables) {
+        throw new IllegalStateException("Not supported");
+    }
+
+    @Override
     public Map<String, Object> toMap() {
         return new HashMap<>(delegate);
     }

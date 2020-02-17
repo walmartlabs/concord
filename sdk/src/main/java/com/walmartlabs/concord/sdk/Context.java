@@ -97,6 +97,17 @@ public interface Context {
     Object interpolate(Object v);
 
     /**
+     * "Interpolates" the specified value, using the specified map's keys as
+     * variables. All expression strings will be evaluated and replaced with
+     * resulting values.
+     *
+     * @param v
+     * @param variables
+     * @return
+     */
+    Object interpolate(Object v, Map<String, Object> variables);
+
+    /**
      * Returns process variables as a {@code Map}.
      *
      * @return

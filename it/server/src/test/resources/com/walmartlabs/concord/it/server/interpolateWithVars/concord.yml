@@ -1,0 +1,8 @@
+flows:
+  default:
+    - set:
+        two: "boo"
+        vars:
+          two: 2
+
+    - log: "two: ${context.interpolate('${two}', vars)}"

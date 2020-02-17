@@ -158,17 +158,13 @@
                                 <code>java.class.nowFinal</code>
                             </item>
                             <item>
-                                <code>java.class.removed</code>
-                            </item>
-                            <item>
                                 <code>java.class.added</code>
                             </item>
                             <item>
                                 <code>java.field.serialVersionUIDUnchanged</code>
                             </item>
                             <item>
-                                <code>java.method.removed</code>
-                                <classQualifiedName>com.walmartlabs.concord.client.RepositoryValidationResponse</classQualifiedName>
+                                <code>java.method.addedToInterface</code>
                             </item>
                         </revapi.ignore>
                         <revapi.filter>

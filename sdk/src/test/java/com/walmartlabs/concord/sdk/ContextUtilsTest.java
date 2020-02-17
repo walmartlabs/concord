@@ -163,6 +163,11 @@ public class ContextUtilsTest {
         }
 
         @Override
+        public Object interpolate(Object v, Map<String, Object> variables) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public Map<String, Object> toMap() {
             throw new UnsupportedOperationException();
         }
