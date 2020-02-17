@@ -21,10 +21,7 @@ package com.walmartlabs.concord.client;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+import com.squareup.okhttp.*;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ImmutableApiClientConfiguration.Builder;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
@@ -72,12 +69,12 @@ public abstract class AbstractConcordTask implements Task {
 
     protected <T> T request(Context ctx, String uri, String method, Map<String, Object> input, Class<T> entityType) throws Exception {
         return withClient(ctx, client -> {
-            RequestBody body = input != null ? ClientUtils.createMultipartBody(input).build() : null;
+            RequestBody request = input != null ? ClientUtils.createMultipartBody(input).build() : null;
 
             Request.Builder b = new Request.Builder()
                     .url(client.getBasePath() + uri)
                     .header("Accept", "*/*")
-                    .method(method, body);
+                    .method(method, request);
 
             // we're going to use the "raw" OkHttpClient, so we need to set up the auth manually
             String apiKey = getApiKey(ctx);
@@ -95,22 +92,26 @@ public abstract class AbstractConcordTask implements Task {
                 return null;
             }
 
-            return objectMapper.readValue(resp.body().byteStream(), entityType);
+            try (ResponseBody body = resp.body()) {
+                return objectMapper.readValue(body.byteStream(), entityType);
+            }
         });
     }
 
     protected void assertResponse(Response resp) throws IOException {
         int code = resp.code();
         if (code < 200 || code >= 400) {
-            if (isJson(resp)) {
-                Object details = objectMapper.readValue(resp.body().byteStream(), Object.class);
-                String msg = extractMessage(details);
-                throw new IOException(msg);
-            } else {
-                if (code == 401) {
-                    throw new IOException("Request error: " + code + ", please verify the credentials used");
+            try (ResponseBody body = resp.body()) {
+                if (isJson(resp)) {
+                    Object details = objectMapper.readValue(body.byteStream(), Object.class);
+                    String msg = extractMessage(details);
+                    throw new IOException(msg);
                 } else {
-                    throw new IOException("Request error: " + code);
+                    if (code == 401) {
+                        throw new IOException("Request error: " + code + ", please verify the credentials used");
+                    } else {
+                        throw new IOException("Request error: " + code);
+                    }
                 }
             }
         }
@@ -142,10 +143,6 @@ public abstract class AbstractConcordTask implements Task {
         }
 
         return details.toString();
-    }
-
-    protected Map<String, Object> createCfg(Context ctx) {
-        return createCfg(ctx, (String[]) null);
     }
 
     protected Map<String, Object> createCfg(Context ctx, String... keys) {
