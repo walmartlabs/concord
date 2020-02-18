@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
-import com.walmartlabs.concord.server.process.form.ConcordFormService;
+import com.walmartlabs.concord.server.process.form.FormServiceV1;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,7 +50,7 @@ public class ChangeUserProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        Map<String, Object> runAsParams = (Map<String, Object>) cfg.get(ConcordFormService.INTERNAL_RUN_AS_KEY);
+        Map<String, Object> runAsParams = (Map<String, Object>) cfg.get(FormServiceV1.INTERNAL_RUN_AS_KEY);
         if (runAsParams == null) {
             return chain.process(payload);
         }

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -36,7 +37,9 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableImports.class)
 @JsonDeserialize(as = ImmutableImports.class)
-public interface Imports {
+public interface Imports extends Serializable  {
+
+    long serialVersionUID = 1L;
 
     @Value.Parameter
     List<Import> items();

@@ -1,0 +1,19 @@
+flows:
+  main:
+    - form: myForm
+      yield: true
+      saveSubmittedBy: true
+      fields:
+        - firstName: {type: "string"}
+        - lastName: {type: "string"}
+      runAs:
+        username:
+          - "userA"
+          - "userB"
+      values:
+        myField: "a different value"
+
+forms:
+  myForm:
+    - fullName: { label: "Name", type: "string", pattern: ".* .*", readonly: true, placeholder: "Place name here" }
+    - age: { label: "Age", type: "int", min: 21, max: 100 }

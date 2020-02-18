@@ -1,0 +1,3 @@
+flows:
+  main:
+    - call: 123

@@ -1,0 +1,3 @@
+forms:
+  myForm:
+    - fullName: { label: "Name", type: "string", pattern: ".* .*", readonly: true, placeholder: "Place name here", error: 1 }

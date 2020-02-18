@@ -24,7 +24,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessHeartbeatApi;
-import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

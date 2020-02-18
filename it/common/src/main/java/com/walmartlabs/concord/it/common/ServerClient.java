@@ -27,6 +27,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
 import com.walmartlabs.concord.client.*;
+import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -221,27 +222,27 @@ public class ServerClient {
         return waitForStatus(api, instanceId, ProcessEntry.StatusEnum.FAILED, ProcessEntry.StatusEnum.FINISHED);
     }
 
-    public static void assertLog(String pattern, byte[] ab) throws IOException {
+    public static void assertLog(@Language("RegExp") String pattern, byte[] ab) throws IOException {
         String msg = "Expected: " + pattern + "\n"
                 + "Got: " + new String(ab);
         assertEquals(msg, 1, grep(pattern, ab).size());
     }
 
-    public static void assertNoLog(String pattern, byte[] ab) throws IOException {
+    public static void assertNoLog(@Language("RegExp") String pattern, byte[] ab) throws IOException {
         String msg = "Expected: " + pattern + "\n"
                 + "Got: " + new String(ab);
         assertEquals(msg, 0, grep(pattern, ab).size());
     }
 
-    public static void assertLog(String pattern, int times, byte[] ab) throws IOException {
+    public static void assertLog(@Language("RegExp") String pattern, int times, byte[] ab) throws IOException {
         assertEquals(times, grep(pattern, ab).size());
     }
 
-    public static void assertLogAtLeast(String pattern, int times, byte[] ab) throws IOException {
+    public static void assertLogAtLeast(@Language("RegExp") String pattern, int times, byte[] ab) throws IOException {
         assertTrue(times <= grep(pattern, ab).size());
     }
 
-    public void waitForLog(String logFileName, String pattern) throws ApiException, IOException, InterruptedException {
+    public void waitForLog(String logFileName, @Language("RegExp") String pattern) throws ApiException, IOException, InterruptedException {
         int retries = 5;
 
         while (true) {

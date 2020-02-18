@@ -23,13 +23,13 @@ package com.walmartlabs.concord.server.process.form;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.form.ConcordFormFields;
 import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
+import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import io.takari.bpm.form.Form;
 import io.takari.bpm.model.form.DefaultFormFields;
 import io.takari.bpm.model.form.FormDefinition;
 import io.takari.bpm.model.form.FormField;
-import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
@@ -41,162 +41,25 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.common.form.ConcordFormFields.FieldOptions.READ_ONLY;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public final class FormUtils {
 
-    private static final String RUN_AS_USERNAME_PATH = Constants.Forms.RUN_AS_KEY + "." +
-            Constants.Forms.RUN_AS_USERNAME_KEY;
-
-    private static final String RUN_AS_LDAP_GROUP_PATH = Constants.Forms.RUN_AS_KEY + "." +
-            Constants.Forms.RUN_AS_LDAP_KEY + "." +
-            Constants.Forms.RUN_AS_GROUP_KEY;
-
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
 
-    /**
-     * Returns the name of the users which can submit the form or an empty collection if no restrictions are specified.
-     */
-    @SuppressWarnings("unchecked")
-    public static Set<String> getRunAsUsers(String formName, Map<String, Object> runAsParams) {
-        if (runAsParams == null) {
-            return Collections.emptySet();
+    public static Map<String, String> mergeErrors(List<ValidationError> errors) {
+        if (errors == null || errors.isEmpty()) {
+            return null;
         }
 
-        Object v = runAsParams.get(Constants.Forms.RUN_AS_USERNAME_KEY);
-        if (v == null) {
-            return Collections.emptySet();
+        // TODO merge multiple errors
+        Map<String, String> m = new HashMap<>();
+        for (ValidationError e : errors) {
+            m.put(e.fieldName(), e.error());
         }
-
-        if (v instanceof String) {
-            return Collections.singleton((String) v);
-        } else if (v instanceof Collection) {
-            Collection<Object> items = (Collection<Object>) v;
-
-            Set<String> result = new HashSet<>();
-            for (Object item : items) {
-                if (item instanceof String) {
-                    result.add((String) item);
-                } else {
-                    throw new ValidationErrorsException("Expected a string or a list of strings value, got: " + item + ". " +
-                            "Check the '" + RUN_AS_USERNAME_PATH + "' parameter of '" + formName + "' form definition.");
-                }
-            }
-            return result;
-        }
-
-        throw new ValidationErrorsException("Invalid form definition: " + formName + ". " +
-                "Expected a username definition, got: " + v);
-    }
-
-    /**
-     * Returns a collection of LDAP groups that can submit the form or an empty collection if no restrictions are
-     * specified.
-     * <p>
-     * This method takes care of all our different ways to specify the form's LDAP groups.
-     * Because form options are evaluated at the runtime, we can't transform all syntax variants into a single one
-     * on the YAML parsing phase, we need to coerce the data at the runtime.
-     * <p>
-     * <h2>Supported syntax variants</h2>
-     * <p>
-     * The original, single value:
-     * <pre>
-     * runAs:
-     *   ldap:
-     *     group: "aGroupName"
-     * </pre>
-     * <p>
-     * The updated, multi value:
-     * <pre>
-     * runAs:
-     *   ldap:
-     *     - group: "aGroupName"
-     *     - group: "bGroupName"
-     * </pre>
-     * <p>
-     * The recommended multivalue:
-     * <pre>
-     * runAs:
-     *   ldap:
-     *     group:
-     *     - "aGroupName"
-     *     - "bGroupName"
-     * </pre>
-     */
-    @SuppressWarnings("unchecked")
-    public static Set<String> getRunAsLdapGroups(String formName, Map<String, Object> runAsParams) {
-        if (runAsParams == null) {
-            return Collections.emptySet();
-        }
-
-        Object ldap = runAsParams.get(Constants.Forms.RUN_AS_LDAP_KEY);
-        if (ldap == null) {
-            return Collections.emptySet();
-        }
-
-        // the recommended syntax
-        if (ldap instanceof Map) {
-            // ldap:
-            //   group: VALUE
-            Map<Object, Object> m = (Map<Object, Object>) ldap;
-            final Object value = m.get(Constants.Forms.RUN_AS_GROUP_KEY);
-
-            // a single string value
-            if (value instanceof String) {
-                return Collections.singleton((String) value);
-            }
-
-            // a collection of strings (or something else, but that would be an error)
-            if (value instanceof Collection) {
-                Collection<Object> items = (Collection<Object>) value;
-
-                Set<String> result = new HashSet<>();
-                for (Object i : items) {
-                    if (i instanceof String) {
-                        result.add((String) i);
-                    } else {
-                        throw invalidLdapGroupElement(formName, RUN_AS_LDAP_GROUP_PATH, i);
-                    }
-                }
-                return result;
-            }
-        }
-
-        if (ldap instanceof Collection) {
-            // ldap:
-            // - VALUE
-            // - VALUE
-            Collection<Object> items = (Collection<Object>) ldap;
-            return items.stream()
-                    .map(o -> parseOldGroupDefinition(formName, o))
-                    .collect(Collectors.toSet());
-        }
-
-        throw new ValidationErrorsException("Invalid form definition: " + formName + ". " +
-                "Expected a LDAP group definition, got: " + ldap);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static String parseOldGroupDefinition(String formName, Object item) {
-        if (item instanceof Map) {
-            Map<Object, Object> m = (Map<Object, Object>) item;
-            Object o = m.get(Constants.Forms.RUN_AS_GROUP_KEY);
-            if (o instanceof String) {
-                return (String) o;
-            } else {
-                throw invalidLdapGroupElement(formName, RUN_AS_LDAP_GROUP_PATH, o);
-            }
-        }
-
-        throw invalidLdapGroupElement(formName, RUN_AS_LDAP_GROUP_PATH, item);
-    }
-
-    private static ValidationErrorsException invalidLdapGroupElement(String formName, String k, Object v) {
-        return new ValidationErrorsException("Expected a string value or a group definition, " +
-                "got: " + v + ". Check the '" + k + "' parameter of '" + formName + "' form definition");
+        return m;
     }
 
     public static Map<String, Object> convert(MultivaluedMap<String, String> data) {

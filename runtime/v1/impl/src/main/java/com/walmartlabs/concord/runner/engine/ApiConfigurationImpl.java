@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runner.engine;
  */
 
 import com.walmartlabs.concord.runner.ContextUtils;
-import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 

@@ -26,7 +26,7 @@ import com.cronutils.parser.CronParser;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Strings;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.process.loader.model.SourceMap;
 import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -40,7 +40,7 @@ public class ProjectValidator {
     private static final CronParser parser =
             new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
-    public static Result validate(ProjectDefinition pd) {
+    public static Result validate(ProcessDefinition pd) {
         List<String> errors = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
 
@@ -51,7 +51,7 @@ public class ProjectValidator {
         return new Result(errors, warnings);
     }
 
-    private static void validateTrigger(ProjectDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
+    private static void validateTrigger(ProcessDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
         validateEntryPoint(pd, t, errors, warnings);
 
         validateSpec(t, errors);
@@ -68,7 +68,7 @@ public class ProjectValidator {
                 .forEach(v -> validateRegex(t, errors, v));
     }
 
-    private static void validateEntryPoint(ProjectDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
+    private static void validateEntryPoint(ProcessDefinition pd, Trigger t, List<String> errors, List<String> warnings) {
         String entryPoint = getEntryPoint(t);
 
         if (Strings.isNullOrEmpty(entryPoint)) {

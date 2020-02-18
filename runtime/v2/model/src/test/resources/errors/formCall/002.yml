@@ -1,0 +1,6 @@
+flows:
+  main:
+    - form: "boo"
+      a:
+      yield: true
+      b:

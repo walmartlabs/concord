@@ -1,0 +1,5 @@
+flows:
+  main:
+    - task: "boo"
+      out:
+        k: "v"

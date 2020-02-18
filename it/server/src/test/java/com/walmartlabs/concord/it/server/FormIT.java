@@ -44,7 +44,8 @@ public class FormIT extends AbstractServerIT {
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);
 
-        waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
+        assertEquals(StatusEnum.SUSPENDED, pe.getStatus());
 
         // ---
 
@@ -419,9 +420,12 @@ public class FormIT extends AbstractServerIT {
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        StartProcessResponse spr = start(payload);
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.formNameVar", "myForm");
+        StartProcessResponse spr = start(input);
 
+        ProcessApi processApi = new ProcessApi(getApiClient());
         waitForStatus(processApi, spr.getInstanceId(), StatusEnum.SUSPENDED);
 
         // ---

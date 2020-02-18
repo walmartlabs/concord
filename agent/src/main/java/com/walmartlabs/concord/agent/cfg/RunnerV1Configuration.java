@@ -25,54 +25,18 @@ import com.typesafe.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
-
-import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
-import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
 @Named
 @Singleton
-public class RunnerV1Configuration {
-
-    private final Path path;
-    private final Path cfgDir;
-    private final String javaCmd;
-    private final boolean securityManagerEnabled;
+public class RunnerV1Configuration extends AbstractRunnerConfiguration {
 
     @Inject
     public RunnerV1Configuration(Config cfg) {
-        String path = getStringOrDefault(cfg, "runnerV1.path", () -> {
-            try {
-                Properties props = new Properties();
-                props.load(RunnerV1Configuration.class.getResourceAsStream("runnerV1.properties"));
-                return props.getProperty("path");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        this.path = Paths.get(path);
-        this.cfgDir = getDir(cfg, "runnerV1.cfgDir");
-        this.javaCmd = cfg.getString("runnerV1.javaCmd");
-        this.securityManagerEnabled = cfg.getBoolean("runnerV1.securityManagerEnabled");
+        super("runnerV1", cfg);
     }
 
-    public Path getPath() {
-        return path;
-    }
-
-    public Path getCfgDir() {
-        return cfgDir;
-    }
-
-    public String getJavaCmd() {
-        return javaCmd;
-    }
-
-    public boolean isSecurityManagerEnabled() {
-        return securityManagerEnabled;
+    @Override
+    public String getRuntimeName() {
+        return "concord-v1";
     }
 }

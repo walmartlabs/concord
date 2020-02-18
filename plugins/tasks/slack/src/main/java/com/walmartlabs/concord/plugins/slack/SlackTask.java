@@ -154,8 +154,8 @@ public class SlackTask implements Task {
                             Collection<Object> attachments,
                             boolean ignoreErrors) {
 
-        try (SlackClient client = new SlackClient(slackCfg)) {
-            SlackClient.Response r = client.message(channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
+        try {
+            SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
             if (!r.isOk()) {
                 log.warn("Error sending a Slack message: {}", r.getError());
             } else {

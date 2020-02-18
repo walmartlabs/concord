@@ -31,8 +31,8 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinitionUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -163,12 +163,12 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
             activeProfiles = Collections.emptyList();
         }
 
-        ProjectDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
+        ProcessDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
         if (pd == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> m = ProjectDefinitionUtils.getVariables(pd, activeProfiles);
+        Map<String, Object> m = ProcessDefinitionUtils.getVariables(pd, activeProfiles);
         return m != null ? m : Collections.emptyMap();
     }
 

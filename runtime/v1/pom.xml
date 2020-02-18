@@ -17,6 +17,5 @@
     <modules>
         <module>project-model</module>
         <module>impl</module>
-        <module>model</module>
     </modules>
 </project>

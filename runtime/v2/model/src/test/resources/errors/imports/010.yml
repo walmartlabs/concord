@@ -1,0 +1,8 @@
+imports:
+  - git:
+      name: "org/repo"
+      version: "dev"
+      path: "root"
+      dest: "tmp"
+      secret:
+        org: "default"

@@ -1,0 +1,12 @@
+flows:
+  main:
+    - form: "boo"
+      yield: true
+      saveSubmittedBy: true
+      runAs:
+        username:
+          - "userA"
+          - "userB"
+      values:
+          a: "b"
+      fields: "er"

@@ -1,0 +1,4 @@
+main:
+  - set:
+      obj.name: "Concord"
+      obj.msg: "Hello, ${obj.name}"

@@ -1,0 +1,3 @@
+flows:
+  main:
+    - parallel: 1

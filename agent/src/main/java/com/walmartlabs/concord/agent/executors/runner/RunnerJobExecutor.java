@@ -27,10 +27,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.walmartlabs.concord.agent.ExecutionException;
-import com.walmartlabs.concord.agent.JobInstance;
-import com.walmartlabs.concord.agent.JobRequest;
-import com.walmartlabs.concord.agent.Utils;
+import com.walmartlabs.concord.agent.*;
 import com.walmartlabs.concord.agent.executors.JobExecutor;
 import com.walmartlabs.concord.agent.executors.runner.ProcessPool.ProcessEntry;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
@@ -42,7 +39,7 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.DependencyRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.immutables.value.Value;
@@ -110,7 +107,7 @@ public class RunnerJobExecutor implements JobExecutor {
     }
 
     @Override
-    public JobInstance exec(JobRequest jobRequest) throws Exception {
+    public JobInstance exec(ConfiguredJobRequest jobRequest) throws Exception {
         RunnerJob job = RunnerJob.from(cfg, jobRequest, logFactory);
         return exec(job);
     }
@@ -318,7 +315,8 @@ public class RunnerJobExecutor implements JobExecutor {
                 .logLevel(getLogLevel(job))
                 .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
                 .runnerPath(cfg.runnerPath().toAbsolutePath())
-                .runnerCfgPath(runnerCfgFile.toAbsolutePath());
+                .runnerCfgPath(runnerCfgFile.toAbsolutePath())
+                .mainClass(cfg.runnerMainClass());
 
         if (jvmParams != null) {
             runner.jvmParams(jvmParams);
@@ -583,6 +581,8 @@ public class RunnerJobExecutor implements JobExecutor {
         Path runnerPath();
 
         Path runnerCfgDir();
+
+        String runnerMainClass();
 
         boolean runnerSecurityManagerEnabled();
 

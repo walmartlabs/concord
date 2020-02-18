@@ -30,7 +30,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.process.loader.model.Trigger;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -80,7 +80,7 @@ public class TriggerManager extends AbstractDao {
         this.githubTriggerEnricher = githubTriggerEnricher;
     }
 
-    public void refresh(UUID projectId, UUID repoId, ProjectDefinition pd) {
+    public void refresh(UUID projectId, UUID repoId, ProcessDefinition pd) {
         UUID orgId = projectDao.getOrgId(projectId);
         for (Trigger t : pd.triggers()) {
             policyManager.checkEntity(orgId, projectId, EntityType.TRIGGER, EntityAction.CREATE, null, toMap(orgId, projectId, t));

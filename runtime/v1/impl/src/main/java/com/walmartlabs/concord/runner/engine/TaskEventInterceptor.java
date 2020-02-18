@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runner.ContextUtils;
-import com.walmartlabs.concord.runner.model.EventConfiguration;
+import com.walmartlabs.concord.runtime.common.cfg.EventConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;

@@ -33,6 +33,7 @@ public class RunnerCommandBuilder {
     private String logLevel;
     private Path extraDockerVolumesFile;
     private List<String> jvmParams;
+    private String mainClass;
 
     public RunnerCommandBuilder() {
     }
@@ -69,6 +70,11 @@ public class RunnerCommandBuilder {
 
     public RunnerCommandBuilder jvmParams(List<String> jvmParams) {
         this.jvmParams = jvmParams;
+        return this;
+    }
+
+    public RunnerCommandBuilder mainClass(String mainClass) {
+        this.mainClass = mainClass;
         return this;
     }
 
@@ -119,7 +125,10 @@ public class RunnerCommandBuilder {
         l.add(runner);
 
         // main class
-        l.add("com.walmartlabs.concord.runner.Main");
+        if (mainClass == null) {
+            mainClass = "com.walmartlabs.concord.runner.Main";
+        }
+        l.add(mainClass);
 
         l.add(runnerCfgPath.toString());
 

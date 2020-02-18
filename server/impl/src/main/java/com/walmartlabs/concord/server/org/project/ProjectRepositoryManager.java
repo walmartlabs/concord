@@ -31,7 +31,7 @@ import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.loader.ProjectLoader;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import org.jooq.DSLContext;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -178,7 +178,7 @@ public class ProjectRepositoryManager {
 
     public ProjectValidator.Result validateRepository(UUID projectId, RepositoryEntry repo) {
         try {
-            ProjectDefinition pd = repositoryManager.withLock(repo.getUrl(), () -> {
+            ProcessDefinition pd = repositoryManager.withLock(repo.getUrl(), () -> {
                 Repository repository = repositoryManager.fetch(projectId, repo);
                 ProjectLoader.Result result = projectLoader.loadProject(repository.path(), importsNormalizerFactory.forProject(repo.getProjectId()), Collections.emptyMap());
                 return result.projectDefinition();

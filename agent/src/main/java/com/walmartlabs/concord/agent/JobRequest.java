@@ -33,6 +33,7 @@ public class JobRequest {
 
     public static JobRequest from(ProcessResponse resp, Path workDir, ProcessLogFactory logFactory) {
         RemoteProcessLog log = logFactory.createRemoteLog(resp.getProcessId());
+
         return new JobRequest(Type.RUNNER, resp.getProcessId(),
                 workDir,
                 resp.getOrgName(),
@@ -40,8 +41,8 @@ public class JobRequest {
                 resp.getRepoPath(),
                 resp.getCommitId(),
                 resp.getSecretName(),
-                log,
-                resp.getImports());
+                resp.getImports(),
+                log);
     }
 
     private final Type type;
@@ -52,8 +53,21 @@ public class JobRequest {
     private final String repoPath;
     private final String commitId;
     private final String secretName;
-    private final ProcessLog log;
     private final Imports imports;
+    private final ProcessLog log;
+
+    protected JobRequest(JobRequest src) {
+        this(src.type,
+                src.instanceId,
+                src.payloadDir,
+                src.orgName,
+                src.repoUrl,
+                src.repoPath,
+                src.commitId,
+                src.secretName,
+                src.imports,
+                src.log);
+    }
 
     protected JobRequest(Type type,
                          UUID instanceId,
@@ -63,8 +77,8 @@ public class JobRequest {
                          String repoPath,
                          String commitId,
                          String secretName,
-                         ProcessLog log,
-                         Imports imports) {
+                         Imports imports,
+                         ProcessLog log) {
 
         this.type = type;
         this.instanceId = instanceId;
@@ -74,8 +88,9 @@ public class JobRequest {
         this.repoPath = repoPath;
         this.commitId = commitId;
         this.secretName = secretName;
-        this.log = log;
         this.imports = imports != null ? imports : Imports.builder().build();
+
+        this.log = log;
     }
 
     public Type getType() {
@@ -110,12 +125,12 @@ public class JobRequest {
         return secretName;
     }
 
-    public ProcessLog getLog() {
-        return log;
-    }
-
     public Imports getImports() {
         return imports;
+    }
+
+    public ProcessLog getLog() {
+        return log;
     }
 
     @Override

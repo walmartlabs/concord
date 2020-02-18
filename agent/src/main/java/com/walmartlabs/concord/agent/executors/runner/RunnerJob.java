@@ -29,7 +29,7 @@ import com.walmartlabs.concord.agent.executors.runner.RunnerJobExecutor.RunnerJo
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
-import com.walmartlabs.concord.runner.model.*;
+import com.walmartlabs.concord.runtime.common.cfg.*;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
