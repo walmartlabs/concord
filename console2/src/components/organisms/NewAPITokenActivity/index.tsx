@@ -19,111 +19,85 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { Button, Message, Icon } from 'semantic-ui-react';
+import { useContext, useState } from 'react';
+import { Button, Icon, Message } from 'semantic-ui-react';
+import { push as pushHistory } from 'connected-react-router';
 
 import { RequestError } from '../../../api/common';
-import { CreateTokenResponse } from '../../../state/data/apiTokens';
-import { push as pushHistory } from 'connected-react-router';
-import { actions, State } from '../../../state/data/apiTokens';
-import { NewAPITokenForm, NewAPITokenFormValues, RequestErrorMessage } from '../../molecules';
-import { NewTokenEntry } from '../../../api/profile/api_token';
+import { NewAPITokenForm, RequestErrorMessage, WithCopyToClipboard } from '../../molecules';
+import {
+    create as apiCreate,
+    CreateApiKeyResult,
+    NewTokenEntry
+} from '../../../api/profile/api_token';
+import { ReduxStore } from '../../../App';
 
-interface StateProps {
-    submitting: boolean;
-    error: RequestError;
-    response?: CreateTokenResponse;
-}
-
-interface DispatchProps {
-    submit: (values: NewAPITokenFormValues) => void;
-    reset: () => void;
-    done: () => void;
-}
-
-type Props = StateProps & DispatchProps;
-
-export class NewAPITokenActivity extends React.PureComponent<Props> {
-    componentDidMount() {
-        this.props.reset();
+const renderResponse = (response: CreateApiKeyResult, done: () => void, error?: RequestError) => {
+    if (error) {
+        return <RequestErrorMessage error={error} />;
     }
 
-    renderResponse() {
-        const { response, done, error } = this.props;
+    const { key } = response;
 
-        if (!response) {
-            return;
+    return (
+        <>
+            <Message success={true}>
+                <Message.Header>API Token created</Message.Header>
+                <Message.Content>
+                    <div>
+                        <b>Token: </b>
+                        <WithCopyToClipboard value={key}>
+                            <span style={{ fontFamily: 'monospace' }}>{key}</span>
+                        </WithCopyToClipboard>
+                        <p>
+                            <Icon color="black" name="info circle" />
+                            <strong>Store this token for future use.</strong>
+                        </p>
+                    </div>
+                </Message.Content>
+            </Message>
+
+            <Button primary={true} content={'Done'} onClick={() => done()} />
+        </>
+    );
+};
+
+export default () => {
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState<RequestError>();
+    const [response, setResponse] = useState<CreateApiKeyResult>();
+
+    const postData = async (t: NewTokenEntry) => {
+        try {
+            setError(undefined);
+            setSubmitting(true);
+            setResponse(await apiCreate(t));
+        } catch (e) {
+            setError(e);
+        } finally {
+            setSubmitting(false);
         }
+    };
 
-        if (error) {
-            return <RequestErrorMessage error={error} />;
-        }
+    const store = useContext(ReduxStore);
 
-        const { key } = response;
-
-        return (
-            <>
-                <Message success={true}>
-                    <Message.Header>API Token created</Message.Header>
-                    <Message.Content>
-                        <div>
-                            <b>Token: </b>
-                            {key}
-                            <p>
-                                <Icon color="black" name="info circle" />
-                                <strong>Store this token for future use.</strong>
-                            </p>
-                        </div>
-                    </Message.Content>
-                </Message>
-
-                <Button primary={true} content={'Done'} onClick={() => done()} />
-            </>
+    if (!error && response) {
+        return renderResponse(
+            response,
+            () => store.dispatch(pushHistory(`/profile/api-token`)),
+            error
         );
     }
 
-    render() {
-        const { error, submitting, submit, response } = this.props;
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
 
-        if (!error && response) {
-            return this.renderResponse();
-        }
-
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
-
-                <NewAPITokenForm
-                    submitting={submitting}
-                    onSubmit={submit}
-                    initial={{
-                        name: ''
-                    }}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ tokens }: { tokens: State }): StateProps => ({
-    submitting: tokens.createToken.running,
-    error: tokens.createToken.error,
-    response: tokens.createToken.response as CreateTokenResponse
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    submit: (entry: NewTokenEntry) => {
-        dispatch(actions.createToken(entry));
-    },
-
-    reset: () => {
-        dispatch(actions.reset());
-    },
-
-    done: () => {
-        dispatch(pushHistory(`/profile/api-token`));
-    }
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewAPITokenActivity);
+            <NewAPITokenForm
+                submitting={submitting}
+                onSubmit={(t) => postData(t)}
+                initial={{ name: '' }}
+            />
+        </>
+    );
+};

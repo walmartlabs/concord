@@ -19,77 +19,58 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
-import { actions, State } from '../../../state/data/apiTokens';
-import { SingleOperationPopup, RequestErrorMessage } from '../../molecules';
+import { useState } from 'react';
 import { Button } from 'semantic-ui-react';
 
-interface ExternalProps {
+import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
+import { RequestErrorMessage, SingleOperationPopup } from '../../molecules';
+import { deleteToken as apiDelete } from '../../../api/profile/api_token';
+
+interface Props {
     id: ConcordId;
     name: ConcordKey;
-}
-
-interface StateProps {
-    deleting: boolean;
-    success: boolean;
-    error: RequestError;
-}
-
-interface DispatchProps {
-    reset: () => void;
-    onConfirm: (id: ConcordId) => void;
     onDone: () => void;
 }
 
-type Props = ExternalProps & StateProps & DispatchProps;
+export default ({ id, name, onDone }: Props) => {
+    const [running, setRunning] = useState(false);
+    const [error, setError] = useState<RequestError>();
+    const [response, setResponse] = useState<GenericOperationResult>();
 
-class APITokenDeleteActivity extends React.PureComponent<Props> {
-    render() {
-        const { success, error, reset, deleting, onConfirm, onDone, id, name } = this.props;
+    const postData = async () => {
+        try {
+            setError(undefined);
+            setRunning(true);
+            setResponse(await apiDelete(id));
+        } catch (e) {
+            setError(e);
+        } finally {
+            setRunning(false);
+        }
+    };
 
-        return (
-            <>
-                {error && <RequestErrorMessage error={error} />}
+    return (
+        <>
+            {error && <RequestErrorMessage error={error} />}
 
-                <SingleOperationPopup
-                    trigger={(onClick) => (
-                        <Button negative={true} icon="delete" content="Delete" onClick={onClick} />
-                    )}
-                    title="Delete API Token?"
-                    introMsg={
-                        <p>
-                            Are you sure you want to delete the <b>{name}</b> API token?
-                        </p>
-                    }
-                    running={deleting}
-                    runningMsg={<p>Removing the API Token...</p>}
-                    success={success}
-                    successMsg={<p>The API Token was removed successfully.</p>}
-                    error={error}
-                    reset={reset}
-                    onConfirm={() => onConfirm(id)}
-                    onDone={onDone}
-                />
-            </>
-        );
-    }
-}
-
-const mapStateToProps = ({ tokens }: { tokens: State }): StateProps => ({
-    deleting: tokens.deleteToken.running,
-    success: !!tokens.deleteToken.response && tokens.deleteToken.response.ok,
-    error: tokens.deleteToken.error
-});
-
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { id }: ExternalProps
-): DispatchProps => ({
-    reset: () => dispatch(actions.reset()),
-    onConfirm: () => dispatch(actions.deleteToken(id)),
-    onDone: () => dispatch(actions.listTokens())
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(APITokenDeleteActivity);
+            <SingleOperationPopup
+                trigger={(onClick) => (
+                    <Button negative={true} icon="delete" content="Delete" onClick={onClick} />
+                )}
+                title="Delete API Token?"
+                introMsg={
+                    <p>
+                        Are you sure you want to delete the <b>{name}</b> API token?
+                    </p>
+                }
+                running={running}
+                runningMsg={<p>Removing the API Token...</p>}
+                success={response ? response.ok : false}
+                successMsg={<p>The API Token was removed successfully.</p>}
+                error={error}
+                onConfirm={postData}
+                onDone={onDone}
+            />
+        </>
+    );
+};

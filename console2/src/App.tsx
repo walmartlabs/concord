@@ -66,6 +66,8 @@ export const LoadingDispatch = React.createContext<Dispatch<LoadingAction>>(
     {} as Dispatch<LoadingAction>
 );
 
+export const ReduxStore = React.createContext(store);
+
 export const LoadingState = React.createContext(false);
 
 const App = () => {

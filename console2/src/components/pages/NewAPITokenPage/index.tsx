@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Menu } from 'semantic-ui-react';
-import NewAPITokenActivity from '../../organisms/NewAPITokenActivity';
+import { NewAPITokenActivity } from '../../organisms';
 
 class NewAPITokenPage extends React.PureComponent {
     render() {
