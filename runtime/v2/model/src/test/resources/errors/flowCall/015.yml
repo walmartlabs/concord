@@ -1,0 +1,15 @@
+flows:
+  main:
+    - call: "boo"
+      out: "result"
+      in:
+        k: "v"
+        k2: 2
+        k3: false
+      withItems: 1
+      retry:
+        times: 1
+        delay: 1
+        in:
+          k: "v"
+      trash: value

@@ -91,6 +91,11 @@ public class Constants {
     public static class Request {
 
         /**
+         * Runtime to use.
+         */
+        public static final String RUNTIME_KEY = "runtime";
+
+        /**
          * Key of a process arguments object in a request data JSON.
          */
         public static final String ARGUMENTS_KEY = "arguments";
@@ -340,6 +345,11 @@ public class Constants {
          * Directory which contains process' forms.
          */
         public static final String JOB_FORMS_DIR_NAME = "forms";
+
+        /**
+         * Directory which contains process' V2 forms.
+         */
+        public static final String JOB_FORMS_V2_DIR_NAME = "V2forms";
 
         /**
          * Directory which contains submitted form files.

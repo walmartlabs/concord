@@ -35,6 +35,10 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-forms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-sdk</artifactId>
         </dependency>
         <dependency>
@@ -44,6 +48,10 @@
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v1</groupId>
             <artifactId>concord-project-model-v1</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+            <artifactId>concord-runtime-model-v2</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>

@@ -119,6 +119,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.walmartlabs.concord</groupId>
+                <artifactId>concord-forms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.walmartlabs.concord.runtime.v1</groupId>
                 <artifactId>concord-project-model-v1</artifactId>
                 <version>${project.version}</version>
@@ -149,8 +154,23 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-                <artifactId>concord-runtime-model-v1</artifactId>
+                <groupId>com.walmartlabs.concord.runtime</groupId>
+                <artifactId>concord-runtime-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                <artifactId>concord-runtime-model-v2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                <artifactId>concord-runtime-vm-v2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                <artifactId>concord-runtime-sdk-v2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

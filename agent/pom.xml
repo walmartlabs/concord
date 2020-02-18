@@ -17,6 +17,9 @@
         <runnerV1.path>
             ${project.basedir}/../runtime/v1/impl/target/concord-runtime-impl-v1-${project.version}-jar-with-dependencies.jar
         </runnerV1.path>
+        <runnerV2.path>
+            ${project.basedir}/../runtime/v2/runner/target/concord-runner-v2-${project.version}-jar-with-dependencies.jar
+        </runnerV2.path>
     </properties>
 
     <dependencies>
@@ -53,10 +56,9 @@
             <artifactId>concord-repository</artifactId>
         </dependency>
 
-        <!-- V1 -->
         <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-            <artifactId>concord-runtime-model-v1</artifactId>
+            <groupId>com.walmartlabs.concord.runtime</groupId>
+            <artifactId>concord-runtime-common</artifactId>
         </dependency>
 
         <dependency>
@@ -203,6 +205,13 @@
                                     <version>${project.version}</version>
                                     <classifier>jar-with-dependencies</classifier>
                                     <destFileName>runner-v1.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+                                    <artifactId>concord-runner-v2</artifactId>
+                                    <version>${project.version}</version>
+                                    <classifier>jar-with-dependencies</classifier>
+                                    <destFileName>runner-v2.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}/runner</outputDirectory>

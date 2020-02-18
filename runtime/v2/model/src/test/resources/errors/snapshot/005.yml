@@ -1,0 +1,6 @@
+flows:
+  main:
+    - snapshot: "test"
+      meta:
+        k: "v"
+      trash: 1

@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
-import com.walmartlabs.concord.server.process.form.ConcordFormService;
+import com.walmartlabs.concord.server.process.form.FormServiceV1;
 import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
@@ -78,7 +78,7 @@ public class ProjectProcessResource implements Resource {
     private final OrganizationDao orgDao;
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
-    private final ConcordFormService formService;
+    private final FormServiceV1 formService;
     private final ResponseTemplates responseTemplates;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
@@ -88,7 +88,7 @@ public class ProjectProcessResource implements Resource {
                                   OrganizationDao orgDao,
                                   ProcessQueueDao queueDao,
                                   ProcessQueueManager processQueueManager,
-                                  ConcordFormService formService,
+                                  FormServiceV1 formService,
                                   OrganizationManager orgManager,
                                   ProjectDao projectDao,
                                   RepositoryDao repositoryDao) {

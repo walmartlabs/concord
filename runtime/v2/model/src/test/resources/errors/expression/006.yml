@@ -1,0 +1,5 @@
+flows:
+  main:
+    - expr: "${boo}"
+      out: "result"
+      meta: 1

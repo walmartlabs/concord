@@ -28,7 +28,7 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.*;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.loader.ProjectLoader;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.repository.RepositoryManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
@@ -162,7 +162,7 @@ public class TriggerResource implements Resource {
     }
 
     private void refresh(RepositoryEntry repo) {
-        ProjectDefinition pd;
+        ProcessDefinition pd;
         try {
             pd = repositoryManager.withLock(repo.getUrl(), () -> {
                 Repository repository = repositoryManager.fetch(repo.getProjectId(), repo);

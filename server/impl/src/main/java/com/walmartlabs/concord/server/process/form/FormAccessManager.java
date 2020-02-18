@@ -34,6 +34,7 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -63,21 +64,31 @@ public class FormAccessManager {
         }
 
         Map<String, Object> opts = f.getOptions();
-        if (opts == null || opts.get(Constants.Forms.RUN_AS_KEY) == null) {
+        if (opts == null) {
             return f;
         }
 
-        Map<String, Object> runAsParams = (Map<String, Object>) opts.get(Constants.Forms.RUN_AS_KEY);
+        Map<String, Serializable> runAsParams = (Map<String, Serializable>) opts.get(Constants.Forms.RUN_AS_KEY);
+
+        assertFormAccess(formName, runAsParams);
+
+        return f;
+    }
+
+    public void assertFormAccess(String formName, Map<String, Serializable> runAsParams) {
+        if (runAsParams == null || runAsParams.isEmpty()) {
+            return;
+        }
 
         UserPrincipal p = UserPrincipal.assertCurrent();
 
-        Set<String> expectedUsers = FormUtils.getRunAsUsers(formName, runAsParams);
+        Set<String> expectedUsers = com.walmartlabs.concord.forms.FormUtils.getRunAsUsers(formName, runAsParams);
         if (!expectedUsers.isEmpty() && !expectedUsers.contains(p.getUsername())) {
             throw new UnauthorizedException("The current user (" + p.getUsername() + ") doesn't have " +
                     "the necessary permissions to access the form.");
         }
 
-        Set<String> groups = FormUtils.getRunAsLdapGroups(formName, runAsParams);
+        Set<String> groups = com.walmartlabs.concord.forms.FormUtils.getRunAsLdapGroups(formName, runAsParams);
         if (!groups.isEmpty()) {
             Set<String> userLdapGroups = Optional.ofNullable(LdapPrincipal.getCurrent())
                     .map(LdapPrincipal::getGroups)
@@ -91,10 +102,9 @@ public class FormAccessManager {
                         "the necessary permissions to resume process. Expected LDAP group(s) '" + groups + "'");
             }
         }
-
-        return f;
     }
 
+    // TODO: move to the formManager
     private Form getForm(ProcessKey processKey, String formName) {
         String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
                 Constants.Files.JOB_STATE_DIR_NAME,

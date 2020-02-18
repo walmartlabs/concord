@@ -1,0 +1,5 @@
+flows:
+  main:
+    - try:
+        - "${exp}"
+      trash:

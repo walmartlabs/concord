@@ -1,0 +1,5 @@
+main:
+  - set:
+      commitEvent:
+        event: 'push'
+        branch: '${event.branch}'

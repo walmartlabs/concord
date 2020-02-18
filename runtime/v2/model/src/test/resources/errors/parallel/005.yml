@@ -1,0 +1,7 @@
+flows:
+  main:
+    - parallel:
+        - "${exp}"
+      meta:
+        m1: "v1"
+      trash:

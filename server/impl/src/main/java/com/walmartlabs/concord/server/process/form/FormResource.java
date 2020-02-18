@@ -20,22 +20,13 @@ package com.walmartlabs.concord.server.process.form;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.common.form.ConcordFormValidatorLocale;
-import com.walmartlabs.concord.common.form.DefaultConcordFormValidatorLocale;
-import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
-import com.walmartlabs.concord.server.process.form.ConcordFormService.FormSubmitResult;
-import com.walmartlabs.concord.server.process.form.FormUtils.ValidationException;
-import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import io.takari.bpm.form.Form;
-import io.takari.bpm.form.FormSubmitResult.ValidationError;
-import io.takari.bpm.model.form.FormDefinition;
-import io.takari.bpm.model.form.FormField;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.Resource;
 
@@ -44,8 +35,11 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static com.walmartlabs.concord.server.process.state.ProcessStateManager.path;
 
 @Named
 @Singleton
@@ -53,15 +47,15 @@ import java.util.*;
 @Path("/api/v1/process")
 public class FormResource implements Resource {
 
-    private static final String FORMS_RESOURCES_PATH = "forms";
-
-    private final ConcordFormService formService;
-    private final ConcordFormValidatorLocale validatorLocale;
+    private final ProcessStateManager stateManager;
+    private final FormResourceV1 formResourceV1;
+    private final FormResourceV2 formResourceV2;
 
     @Inject
-    public FormResource(ConcordFormService formService) {
-        this.formService = formService;
-        this.validatorLocale = new DefaultConcordFormValidatorLocale();
+    public FormResource(ProcessStateManager stateManager, FormResourceV1 formResourceV1, FormResourceV2 formResourceV2) {
+        this.stateManager = stateManager;
+        this.formResourceV1 = formResourceV1;
+        this.formResourceV2 = formResourceV2;
     }
 
     @GET
@@ -69,90 +63,32 @@ public class FormResource implements Resource {
     @Path("/{processInstanceId}/form")
     @Produces(MediaType.APPLICATION_JSON)
     public List<FormListEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId) {
-        PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
-
-        try {
-            return formService.list(processKey);
-        } catch (Exception e) {
-            throw new ConcordApplicationException("Error while retrieving a list of forms: " + processKey, e);
+        if (isV2(processInstanceId)) {
+            return formResourceV2.list(processInstanceId);
+        } else {
+            return formResourceV1.list(processInstanceId);
         }
     }
 
     /**
      * Return the current state of a form instance.
-     *
-     * @param formName
-     * @return
      */
     @GET
     @ApiOperation("Get the current state of a form")
     @Path("/{processInstanceId}/form/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
-    @SuppressWarnings("unchecked")
     public FormInstanceEntry get(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                                  @ApiParam @PathParam("formName") String formName) {
 
-        PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
-
-        Form form = formService.get(processKey, formName);
-        if (form == null) {
-            throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processKey, Status.NOT_FOUND);
+        if (isV2(processInstanceId)) {
+            return formResourceV2.get(processInstanceId, formName);
+        } else {
+            return formResourceV1.get(processInstanceId, formName);
         }
-
-        FormDefinition fd = form.getFormDefinition();
-
-        Map<String, Object> env = form.getEnv();
-
-        Map<String, Object> data = env != null ? (Map<String, Object>) env.get(fd.getName()) : Collections.emptyMap();
-        if (data == null) {
-            data = new HashMap<>();
-        }
-
-        Map<String, Object> extra = null;
-        boolean yield = false;
-        Map<String, Object> opts = form.getOptions();
-        if (opts != null) {
-            extra = (Map<String, Object>) opts.get("values");
-            yield = (boolean) opts.getOrDefault("yield", false);
-        }
-
-        if (extra != null) {
-            data = ConfigurationUtils.deepMerge(data, extra);
-        }
-
-        Map<String, Object> allowedValues = form.getAllowedValues();
-        if (allowedValues == null) {
-            allowedValues = Collections.emptyMap();
-        }
-
-        List<FormInstanceEntry.Field> fields = new ArrayList<>();
-        for (FormField f : fd.getFields()) {
-            String fieldName = f.getName();
-
-            FormInstanceEntry.Cardinality c = map(f.getCardinality());
-            String type = f.getType();
-
-            Object value = data.get(fieldName);
-            Object allowedValue = allowedValues.get(fieldName);
-
-            fields.add(new FormInstanceEntry.Field(fieldName, f.getLabel(), type, c, value, allowedValue, f.getOptions()));
-        }
-
-        String pbk = form.getProcessBusinessKey();
-        String name = fd.getName();
-        String resourcePath = FORMS_RESOURCES_PATH + "/" + name;
-        boolean isCustomForm = formService.exists(processKey, resourcePath);
-
-        return new FormInstanceEntry(pbk, name, fields, isCustomForm, yield);
     }
 
     /**
      * Submit form instance's data, potentially resuming a suspended process.
-     *
-     * @param processInstanceId
-     * @param formName
-     * @param data
-     * @return
      */
     @POST
     @ApiOperation(value = "Submit JSON form data")
@@ -163,35 +99,17 @@ public class FormResource implements Resource {
                                      @ApiParam @PathParam("formName") String formName,
                                      @ApiParam Map<String, Object> data) {
 
-        PartialProcessKey processKey = PartialProcessKey.from(processInstanceId);
-
-        Form form = formService.get(processKey, formName);
-        if (form == null) {
-            throw new ConcordApplicationException("Form " + formName + " not found. Process ID: " + processInstanceId, Status.NOT_FOUND);
+        if (isV2(processInstanceId)) {
+            return formResourceV2.submit(processInstanceId, formName, data);
+        } else {
+            return formResourceV1.submit(processInstanceId, formName, data);
         }
-
-        try {
-            data = FormUtils.convert(validatorLocale, form, data);
-        } catch (ValidationException e) {
-            Map<String, String> errors = Collections.singletonMap(e.getField().getName(), e.getMessage());
-            return new FormSubmitResponse(processInstanceId, errors);
-        }
-
-        FormSubmitResult result = formService.submit(processKey, formName, data);
-
-        Map<String, String> errors = mergeErrors(result.getErrors());
-        return new FormSubmitResponse(result.getProcessInstanceId(), errors);
     }
 
     /**
      * Submit form instance's data, potentially resuming a suspended process.
      * The method must have a different {@code @Path} than {@link #submit(UUID, String, Map)} to avoid
      * conflicts in the Swagger spec/clients.
-     *
-     * @param processInstanceId
-     * @param formName
-     * @param data
-     * @return
      */
     @POST
     @ApiOperation(value = "Submit multipart form data")
@@ -202,39 +120,17 @@ public class FormResource implements Resource {
                                      @PathParam("formName") String formName,
                                      MultipartInput data) {
 
-        Map<String, Object> m = MultipartUtils.toMap(data);
-        return submit(processInstanceId, formName, m);
-    }
-
-    private static FormInstanceEntry.Cardinality map(FormField.Cardinality c) {
-        if (c == null) {
-            return null;
-        }
-
-        switch (c) {
-            case ANY:
-                return FormInstanceEntry.Cardinality.ANY;
-            case AT_LEAST_ONE:
-                return FormInstanceEntry.Cardinality.AT_LEAST_ONE;
-            case ONE_AND_ONLY_ONE:
-                return FormInstanceEntry.Cardinality.ONE_AND_ONLY_ONE;
-            case ONE_OR_NONE:
-                return FormInstanceEntry.Cardinality.ONE_OR_NONE;
-            default:
-                throw new IllegalArgumentException("Unsupported cardinality type: " + c);
+        if (isV2(processInstanceId)) {
+            return formResourceV2.submit(processInstanceId, formName, data);
+        } else {
+            return formResourceV1.submit(processInstanceId, formName, data);
         }
     }
 
-    private static Map<String, String> mergeErrors(List<ValidationError> errors) {
-        if (errors == null || errors.isEmpty()) {
-            return null;
-        }
-
-        // TODO merge multiple errors
-        Map<String, String> m = new HashMap<>();
-        for (ValidationError e : errors) {
-            m.put(e.getFieldName(), e.getError());
-        }
-        return m;
+    private boolean isV2(UUID processInstanceId) {
+        String resource = path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME,
+                Constants.Files.JOB_STATE_DIR_NAME,
+                Constants.Files.JOB_FORMS_V2_DIR_NAME);
+        return stateManager.exists(PartialProcessKey.from(processInstanceId), resource);
     }
 }

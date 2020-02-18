@@ -73,12 +73,15 @@ public class Worker implements Runnable {
             // ...and download the saved process state from the server
             downloadState(jobRequest);
 
+            // load the process' configuration
+            ConfiguredJobRequest configuredJobRequest = ConfiguredJobRequest.from(jobRequest);
+
             // execute the job
-            jobInstance = executor.exec(jobRequest);
+            jobInstance = executor.exec(configuredJobRequest);
             jobInstance.waitForCompletion();
 
             // successful completion
-            log.info("run -> done with {}", jobRequest);
+            log.info("run -> done with {}", configuredJobRequest);
             completionCallback.onStatusChange(StatusEnum.FINISHED);
         } catch (Exception e) {
             // unwrap the exception if needed

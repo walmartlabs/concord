@@ -1,0 +1,5 @@
+flows:
+  main:
+    - snapshot: "ZZZ"
+      meta:
+        m1: "v1"

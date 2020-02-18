@@ -1,0 +1,4 @@
+flows:
+  main:
+    - expr: "${boo}"
+      out: 123

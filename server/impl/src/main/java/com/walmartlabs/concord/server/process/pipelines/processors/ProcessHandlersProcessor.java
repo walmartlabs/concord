@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinition;
-import com.walmartlabs.concord.server.process.loader.model.ProjectDefinitionUtils;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.server.process.loader.model.ProcessDefinitionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         Set<String> handlers = new HashSet<>();
 
-        ProjectDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
+        ProcessDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
         if (pd == null) {
             return chain.process(payload);
         }
@@ -63,7 +63,7 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private static void update(Payload payload, ProjectDefinition pd, Collection<String> profiles, Set<String> handlers, String flow, String disableFlag) {
+    private static void update(Payload payload, ProcessDefinition pd, Collection<String> profiles, Set<String> handlers, String flow, String disableFlag) {
         if (hasFlow(pd, profiles, flow)) {
             boolean suppressed = getBoolean(payload, disableFlag);
             if (suppressed) {
@@ -75,8 +75,8 @@ public class ProcessHandlersProcessor implements PayloadProcessor {
         }
     }
 
-    private static boolean hasFlow(ProjectDefinition pd, Collection<String> profiles, String key) {
-        return ProjectDefinitionUtils.getFlow(pd, profiles, key) != null;
+    private static boolean hasFlow(ProcessDefinition pd, Collection<String> profiles, String key) {
+        return ProcessDefinitionUtils.getFlow(pd, profiles, key) != null;
     }
 
     private static boolean getBoolean(Payload payload, String key) {

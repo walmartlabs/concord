@@ -1,0 +1,4 @@
+imports:
+  - git:
+      name: "org/repo"
+      version: 123

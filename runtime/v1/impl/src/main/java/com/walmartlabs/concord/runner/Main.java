@@ -40,7 +40,8 @@ import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.ProcessErrorProcessor;
-import com.walmartlabs.concord.runner.model.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.StateManager;
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
@@ -155,13 +156,18 @@ public class Main {
             Collection<Event> resultEvents;
 
             // check if we need to resume the process from a saved point
-            String eventName = readResumeEvent(baseDir);
-            if (eventName == null) {
+            Set<String> eventNames = StateManager.readResumeEvents(baseDir);
+            if (eventNames == null || eventNames.isEmpty()) {
                 // running fresh
                 // let's check if there are some saved variables (e.g. from the parent process)
                 Variables vars = readSavedVariables(baseDir);
                 resultEvents = start(engine, vars, req, instanceId, baseDir);
             } else {
+                if (eventNames.size() > 1) {
+                    throw new IllegalStateException("Runtime v1 supports resuming for only one event at the time. Got: " + eventNames);
+                }
+
+                String eventName = eventNames.iterator().next();
                 resultEvents = resume(engine, req, instanceId, baseDir, eventName);
             }
 
@@ -262,22 +268,6 @@ public class Main {
         }
     }
 
-    private static String readResumeEvent(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
-                .resolve(InternalConstants.Files.RESUME_MARKER_FILE_NAME);
-
-        if (!Files.exists(p)) {
-            return null;
-        }
-
-        try {
-            return new String(Files.readAllBytes(p));
-        } catch (IOException e) {
-            throw new ExecutionException("Error while reading the resume event: " + e.getMessage(), e);
-        }
-    }
-
     private static Variables readSavedVariables(Path baseDir) {
         Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
@@ -342,7 +332,7 @@ public class Main {
         }
     }
 
-    @SuppressWarnings({"unchecked", "deprecation"})
+    @SuppressWarnings({"unchecked"})
     private static Map<String, Object> createArgs(String instanceId, Path workDir, Map<String, Object> cfg) {
         Map<String, Object> m = new LinkedHashMap<>();
 

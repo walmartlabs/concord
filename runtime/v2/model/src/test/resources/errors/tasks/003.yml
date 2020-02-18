@@ -1,0 +1,4 @@
+flows:
+  main:
+    - task: "boo"
+      out: 123

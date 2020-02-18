@@ -1,0 +1,6 @@
+flows:
+  main:
+    - form: "boo"
+      yield: true
+      saveSubmittedBy: true
+      runAs: "one"

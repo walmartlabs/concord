@@ -1,0 +1,5 @@
+flows:
+  main:
+    - expr: "${boo}"
+      out:
+        k: "v"

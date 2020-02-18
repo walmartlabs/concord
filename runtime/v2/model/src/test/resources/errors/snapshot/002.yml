@@ -1,0 +1,4 @@
+flows:
+  main:
+    - snapshot: "test"
+      trash: "boo"

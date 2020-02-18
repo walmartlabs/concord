@@ -1,0 +1,19 @@
+flows:
+  main:
+    - task: "boo"
+      out: "result"
+      in:
+        k: "v"
+        k2: 2
+        k3: false
+      withItems: 1
+      retry:
+        times: 1
+        delay: 2
+        in:
+          k: "retry-1"
+          k2: "retry-2"
+          k3:
+            kk: "vv"
+      meta:
+        m1: "v1"

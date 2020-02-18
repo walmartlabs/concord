@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.executors;
  * =====
  */
 
+import com.walmartlabs.concord.agent.ConfiguredJobRequest;
 import com.walmartlabs.concord.agent.JobInstance;
 import com.walmartlabs.concord.agent.JobRequest;
 
@@ -27,5 +28,5 @@ public interface JobExecutor {
 
     JobRequest.Type acceptsType();
 
-    JobInstance exec(JobRequest jobRequest) throws Exception;
+    JobInstance exec(ConfiguredJobRequest jobRequest) throws Exception;
 }
