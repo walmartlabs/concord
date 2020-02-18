@@ -33,6 +33,7 @@ export { default as FindLdapGroupField } from './FindLdapGroupField';
 export { default as FindTeamDropdown } from './FindTeamDropdown';
 export { default as FindUserField } from './FindUserField';
 export { default as Login } from './Login';
+export { default as NewAPITokenActivity } from './NewAPITokenActivity';
 export { default as NewProjectActivity } from './NewProjectActivity';
 export { default as NewSecretActivity } from './NewSecretActivity';
 export { default as NewStorageActivity } from './NewStorageActivity';

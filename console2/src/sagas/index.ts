@@ -29,7 +29,6 @@ import { sagas as Search } from '../state/data/search';
 import { sagas as Secrets } from '../state/data/secrets';
 import { sagas as Session } from '../state/session';
 import { sagas as Teams } from '../state/data/teams';
-import { sagas as Tokens } from '../state/data/apiTokens';
 import { sagas as Triggers } from '../state/data/triggers';
 import { sagas as UserActivity } from '../state/data/userActivity';
 
@@ -44,7 +43,6 @@ export default function* root() {
         fork(Secrets),
         fork(Session),
         fork(Teams),
-        fork(Tokens),
         fork(Triggers),
         fork(UserActivity)
     ]);

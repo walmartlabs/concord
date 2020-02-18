@@ -51,7 +51,7 @@ interface Props {
     error?: RequestError;
     errorRenderer?: (error: RequestErrorData) => React.ReactNode;
 
-    reset: () => void;
+    reset?: () => void;
     onConfirm: () => void;
     onDone?: () => void;
 
@@ -75,7 +75,7 @@ class SingleOperationPopup extends React.Component<Props, State> {
 
     handleOpen(event?: React.SyntheticEvent) {
         this.stopPropagation(event);
-        this.props.reset();
+        this.props.reset && this.props.reset();
         this.setState({ open: true });
     }
 
