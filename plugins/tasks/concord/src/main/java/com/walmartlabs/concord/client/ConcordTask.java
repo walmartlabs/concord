@@ -556,10 +556,11 @@ public class ConcordTask extends AbstractConcordTask {
                 futures.add(forkOne(ctx, cfg));
             }
 
-            // collect all futures, effectively blocking until all forks are started
-            for (Future<UUID> f : futures) {
-                ids.add(f.get().toString());
-            }
+        }
+
+        // collect all futures, effectively blocking until all forks are started
+        for (Future<UUID> f : futures) {
+            ids.add(f.get().toString());
         }
 
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
