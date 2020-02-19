@@ -37,23 +37,19 @@ public class DateTimeTask implements Task {
         return new Date();
     }
 
-    public String currentWithZone(String zone, String pattern) {
-            return ZonedDateTime.now(ZoneId.of(zone)).format(DateTimeFormatter.ofPattern(pattern));
-    }
-
-    public String currentWithZone(String zone) {
-        return ZonedDateTime.now(ZoneId.of(zone)).toString();
-    }
-
     public String current(String pattern) {
-        return new SimpleDateFormat(pattern).format(new Date());
+        return DateTimeFormatter.ofPattern(pattern).format(ZonedDateTime.now());
+    }
+
+    public String currentWithZone(String zone, String pattern) {
+        return DateTimeFormatter.ofPattern(pattern).format(ZonedDateTime.now(ZoneId.of(zone)));
     }
 
     public String format(Date date, String pattern) {
         return new SimpleDateFormat(pattern).format(date);
     }
 
-    public Date parse(String dateStr, String format) throws ParseException {
-        return new SimpleDateFormat(format).parse(dateStr);
+    public Date parse(String src, String pattern) throws ParseException {
+        return new SimpleDateFormat(pattern).parse(src);
     }
 }
