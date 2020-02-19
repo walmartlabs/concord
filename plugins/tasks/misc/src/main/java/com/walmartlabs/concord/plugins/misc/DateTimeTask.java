@@ -25,6 +25,9 @@ import com.walmartlabs.concord.sdk.Task;
 import javax.inject.Named;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Named("datetime")
@@ -32,6 +35,14 @@ public class DateTimeTask implements Task {
 
     public Date current() {
         return new Date();
+    }
+
+    public String currentWithZone(String zone, String pattern) {
+            return ZonedDateTime.now(ZoneId.of(zone)).format(DateTimeFormatter.ofPattern(pattern));
+    }
+
+    public String currentWithZone(String zone) {
+        return ZonedDateTime.now(ZoneId.of(zone)).toString();
     }
 
     public String current(String pattern) {
