@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.StringUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlaybookStats;
@@ -127,7 +128,7 @@ public class PlaybookInfoProcessor implements EventProcessor {
                         ps.setObject(1, p.instanceId());
                         ps.setTimestamp(2, p.instanceCreatedAt());
                         ps.setObject(3, p.playbookId());
-                        ps.setObject(4, p.name());
+                        ps.setString(4, StringUtils.abbreviate(p.name(), ANSIBLE_PLAYBOOK_STATS.NAME.getDataType().length()));
                         ps.setTimestamp(5, p.startedAt());
                         ps.setLong(6, p.hostCount());
                         ps.setInt(7, p.playCount());

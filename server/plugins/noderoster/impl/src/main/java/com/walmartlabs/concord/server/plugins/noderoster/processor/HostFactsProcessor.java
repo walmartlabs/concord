@@ -146,7 +146,7 @@ public class HostFactsProcessor implements Processor {
             NodeRosterHostFacts f = NODE_ROSTER_HOST_FACTS.as("f");
 
             String update = tx.update(f)
-                    .set(f.FACTS, (JSONB) null) //cast to jsonb
+                    .set(f.FACTS, (JSONB) null)
                     .where(f.INSTANCE_ID.eq(value((UUID) null))
                             .and(f.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
                                     .and(f.HOST_ID.eq(value((UUID) null)))))

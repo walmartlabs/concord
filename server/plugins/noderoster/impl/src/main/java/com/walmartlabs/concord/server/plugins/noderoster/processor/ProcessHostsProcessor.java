@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.noderoster.processor;
  * =====
  */
 
+import com.walmartlabs.concord.common.StringUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.plugins.noderoster.HostManager;
 import com.walmartlabs.concord.server.plugins.noderoster.db.NodeRosterDB;
@@ -118,7 +119,7 @@ public class ProcessHostsProcessor implements Processor {
                     q.bind(value(i.instanceId()),
                             value(i.instanceCreatedAt()),
                             value(i.host()),
-                            value(i.initiator()),
+                            value(StringUtils.abbreviate(i.initiator(), h.INITIATOR.getDataType().length())),
                             value(i.initiatorId()),
                             value(i.projectId()));
                 }
