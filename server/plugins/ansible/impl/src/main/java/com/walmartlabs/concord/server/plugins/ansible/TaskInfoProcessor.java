@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.StringUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -230,7 +231,7 @@ public class TaskInfoProcessor implements EventProcessor {
                     ps.setObject(3, i.key().playbookId());
                     ps.setObject(4, i.key().playId());
                     ps.setObject(5, i.key().taskId());
-                    ps.setString(6, i.details().taskName());
+                    ps.setString(6, StringUtils.abbreviate(i.details().taskName(), a.TASK_NAME.getDataType().length()));
                     ps.setLong(7, i.details().order());
                     ps.setInt(8, i.details().stats().okCount);
                     ps.setLong(9, i.details().stats().failedCount);

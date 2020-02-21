@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.plugins.noderoster;
+package com.walmartlabs.concord.common;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,24 @@ package com.walmartlabs.concord.server.plugins.noderoster;
  * =====
  */
 
-import com.walmartlabs.concord.common.StringUtils;
+public final class StringUtils {
 
-import javax.inject.Named;
+    public static String abbreviate(String str, int maxWidth) {
+        if (str == null) {
+            return null;
+        }
 
-import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHosts.NODE_ROSTER_HOSTS;
+        if (maxWidth < 4) {
+            throw new IllegalArgumentException("Minimum abbreviation width is 4");
+        }
 
-@Named
-public class HostNormalizer {
+        if (str.length() <= maxWidth) {
+            return str;
+        }
 
-    public String normalize(String host) {
-        // TODO implement, add metrics
-        return StringUtils.abbreviate(host.toLowerCase(), NODE_ROSTER_HOSTS.NORMALIZED_HOSTNAME.getDataType().length());
+        return str.substring(0, maxWidth - 3) + "...";
+    }
+
+    private StringUtils() {
     }
 }

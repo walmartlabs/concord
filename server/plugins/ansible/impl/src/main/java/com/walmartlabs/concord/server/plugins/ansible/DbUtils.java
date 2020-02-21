@@ -36,6 +36,10 @@ public final class DbUtils {
     public static <E> void upsert(DSLContext tx, List<E> items,
                                   Update<E> update, Insert<E> insert) {
 
+        if (items.isEmpty()) {
+            return;
+        }
+
         tx.connection(conn -> {
             int[] updated = update.call(tx, conn, items);
             List<E> forInsert = new ArrayList<>();

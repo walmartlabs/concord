@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.noderoster.processor;
  * =====
  */
 
+import com.walmartlabs.concord.common.StringUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.plugins.noderoster.HostManager;
 import com.walmartlabs.concord.server.plugins.noderoster.db.NodeRosterDB;
@@ -229,7 +230,7 @@ public class HostArtifactsProcessor implements Processor {
                         .onConflictDoNothing());
 
                 for (HostArtifactItem i : e.getValue()) {
-                    q.bind(value(i.instanceId()), value(i.instanceCreatedAt()), value(i.host()), value(i.artifactUrl()));
+                    q.bind(value(i.instanceId()), value(i.instanceCreatedAt()), value(i.host()), value(StringUtils.abbreviate(i.artifactUrl(), h.ARTIFACT_URL.getDataType().length())));
                 }
 
                 q.execute();

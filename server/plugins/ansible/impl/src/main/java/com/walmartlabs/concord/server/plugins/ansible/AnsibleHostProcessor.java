@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.common.StringUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import org.immutables.value.Value;
@@ -36,7 +37,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleHosts.ANSIBLE_HOSTS;
 import static org.jooq.impl.DSL.*;
@@ -109,11 +109,6 @@ public class AnsibleHostProcessor implements EventProcessor {
         }
 
         public void insert(DSLContext tx, List<HostItem> items) {
-            List<HostItem> hosts = removeInvalidItems(items);
-            if (hosts.isEmpty()) {
-                return;
-            }
-
             DbUtils.upsert(tx, items, Dao::update, Dao::insert);
         }
 
@@ -147,8 +142,8 @@ public class AnsibleHostProcessor implements EventProcessor {
 
                     ps.setObject(6, h.key().instanceId());
                     ps.setTimestamp(7, h.key().instanceCreatedAt());
-                    ps.setString(8, h.key().host());
-                    ps.setString(9, h.key().hostGroup());
+                    ps.setString(8, StringUtils.abbreviate(h.key().host(), ANSIBLE_HOSTS.HOST.getDataType().length()));
+                    ps.setString(9, StringUtils.abbreviate(h.key().hostGroup(), ANSIBLE_HOSTS.HOST_GROUP.getDataType().length()));
                     ps.setObject(10, h.key().playbookId());
 
                     ps.addBatch();
@@ -175,8 +170,8 @@ public class AnsibleHostProcessor implements EventProcessor {
                     ps.setObject(1, h.key().instanceId());
                     ps.setTimestamp(2, h.key().instanceCreatedAt());
                     ps.setObject(3, h.key().playbookId());
-                    ps.setString(4, h.key().host());
-                    ps.setString(5, h.key().hostGroup());
+                    ps.setString(4, StringUtils.abbreviate(h.key().host(), ANSIBLE_HOSTS.HOST.getDataType().length()));
+                    ps.setString(5, StringUtils.abbreviate(h.key().hostGroup(), ANSIBLE_HOSTS.HOST_GROUP.getDataType().length()));
                     ps.setString(6, h.status().name());
                     ps.setLong(7, h.duration());
                     ps.setLong(8, h.eventSeq());
@@ -193,14 +188,6 @@ public class AnsibleHostProcessor implements EventProcessor {
                     .when(inline(HostStatus.UNREACHABLE.name()), inline(HostStatus.UNREACHABLE.weight()))
                     .when(inline(HostStatus.OK.name()), inline(HostStatus.OK.weight()))
                     .otherwise(inline(HostStatus.OK.weight));
-        }
-
-        private static List<HostItem> removeInvalidItems(List<HostItem> items) {
-            return items.stream()
-                    .filter(i -> i.key().host().length() < ANSIBLE_HOSTS.HOST.getDataType().length())
-                    .filter(i -> i.key().hostGroup().length() < ANSIBLE_HOSTS.HOST_GROUP.getDataType().length())
-                    .collect(Collectors.toList());
-
         }
     }
 
