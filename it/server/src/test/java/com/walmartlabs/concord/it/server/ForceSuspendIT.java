@@ -58,7 +58,7 @@ public class ForceSuspendIT extends AbstractServerIT {
 
         // ---
 
-        processApi.resume(pir.getInstanceId(), eventName, null);
+        processApi.resume(pir.getInstanceId(), eventName, null, null);
         pir = waitForCompletion(processApi, spr.getInstanceId());
 
         ab = getLog(pir.getLogFileName());
