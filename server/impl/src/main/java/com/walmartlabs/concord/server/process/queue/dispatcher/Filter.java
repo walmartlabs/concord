@@ -23,7 +23,11 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import org.jooq.DSLContext;
 
+import java.util.List;
+
 public interface Filter {
 
-    boolean apply(DSLContext tx, ProcessQueueEntry e);
+    boolean apply(DSLContext tx, ProcessQueueEntry e, List<ProcessQueueEntry> startingProcesses);
+
+    void cleanup();
 }

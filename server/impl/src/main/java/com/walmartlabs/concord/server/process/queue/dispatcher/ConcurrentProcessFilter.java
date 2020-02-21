@@ -46,11 +46,6 @@ import java.util.*;
 @Named
 public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
 
-    private static final List<ProcessStatus> RUNNING_PROCESS_STATUSES = Arrays.asList(
-            ProcessStatus.STARTING,
-            ProcessStatus.RUNNING,
-            ProcessStatus.RESUMING);
-
     private static final Set<ProcessStatus> FINAL_STATUSES = ImmutableSet.of(
             ProcessStatus.SUSPENDED,
             ProcessStatus.FINISHED,
@@ -58,24 +53,31 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
             ProcessStatus.CANCELLED,
             ProcessStatus.TIMED_OUT);
 
+    private final ConcurrentProcessFilterDao dao;
     private final PolicyManager policyManager;
 
     @Inject
-    public ConcurrentProcessFilter(PolicyManager policyManager, ProcessQueueManager processQueueManager) {
+    public ConcurrentProcessFilter(PolicyManager policyManager, ProcessQueueManager processQueueManager, ConcurrentProcessFilterDao dao) {
         super(processQueueManager);
         this.policyManager = policyManager;
+        this.dao = dao;
     }
 
     @Override
-    protected List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item) {
+    public void cleanup() {
+        dao.cleanup();
+    }
+
+    @Override
+    protected List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item, List<ProcessQueueEntry> startingProcesses) {
         PolicyEngine pe = getPolicyEngine(item.orgId(), item.projectId(), item.initiatorId(), item.parentInstanceId());
         if (pe == null) {
             return Collections.emptyList();
         }
 
         CheckResult<ConcurrentProcessRule, List<UUID>> result = pe.getConcurrentProcessPolicy().check(
-                () -> processesPerOrg(tx, item.orgId()),
-                () -> processesPerProject(tx, item.projectId()));
+                () -> processesPerOrg(tx, item.orgId(), startingProcesses),
+                () -> processesPerProject(tx, item.projectId(), startingProcesses));
 
         if (result.getDeny().isEmpty()) {
             return Collections.emptyList();
@@ -111,23 +113,31 @@ public class ConcurrentProcessFilter extends WaitProcessFinishFilter {
         return policyManager.get(orgId, prjId, userId);
     }
 
-    private List<UUID> processesPerOrg(DSLContext tx, UUID orgId) {
-        ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
-        Projects p = Projects.PROJECTS.as("p");
-        return tx.select(q.INSTANCE_ID)
-                .from(q)
-                .innerJoin(p).on(q.PROJECT_ID.eq(p.PROJECT_ID))
-                .where(p.ORG_ID.eq(orgId)
-                        .and(q.CURRENT_STATUS.in(RUNNING_PROCESS_STATUSES)))
-                .fetch(Record1::value1);
+    private List<UUID> processesPerOrg(DSLContext tx, UUID orgId, List<ProcessQueueEntry> startingProcesses) {
+        if (orgId == null) {
+            return Collections.emptyList();
+        }
+
+        List<UUID> result = new ArrayList<>(dao.processesPerOrg(tx, orgId));
+        for (ProcessQueueEntry p : startingProcesses) {
+            if (orgId.equals(p.orgId())) {
+                result.add(p.key().getInstanceId());
+            }
+        }
+        return result;
     }
 
-    private List<UUID> processesPerProject(DSLContext tx, UUID projectId) {
-        ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
-        return tx.select(q.INSTANCE_ID)
-                .from(q)
-                .where(q.PROJECT_ID.eq(projectId)
-                        .and(q.CURRENT_STATUS.in(RUNNING_PROCESS_STATUSES)))
-                .fetch(Record1::value1);
+    private List<UUID> processesPerProject(DSLContext tx, UUID projectId, List<ProcessQueueEntry> startingProcesses) {
+        if (projectId == null) {
+            return Collections.emptyList();
+        }
+
+        List<UUID> result = new ArrayList<>(dao.processesPerProject(tx, projectId));
+        for (ProcessQueueEntry p : startingProcesses) {
+            if (projectId.equals(p.projectId())) {
+                result.add(p.key().getInstanceId());
+            }
+        }
+        return result;
     }
 }

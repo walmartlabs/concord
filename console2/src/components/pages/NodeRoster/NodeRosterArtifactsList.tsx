@@ -117,7 +117,7 @@ const NodeRosterArtifactsList = ({ forceRefresh }: ExternalProps) => {
 
             {error && <RequestErrorActivity error={error} />}
 
-            <Table celled={true} selectable={true}>
+            <Table celled={true} selectable={!disabled} style={disabled ? { opacity: 0.4 } : {}}>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell width={8}>Hostname</Table.HeaderCell>
