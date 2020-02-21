@@ -18,7 +18,7 @@ different systems together using scenarios and plugins created by users.
 Dependencies:
 - [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 - [Docker Community Edition](https://www.docker.com/community-edition)
-- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 8 or greater)
+- (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 10 or greater)
 
 ```shell
 git clone ...
@@ -36,13 +36,13 @@ You can build docker images using this commands:
 
 ### Console
 
+See the [console2/README.md](./console2/README.md) file.
 ```shell
 cd ./console2
 npm install # Install dependencies
 ```
 
-Verify that the `proxy` property in [console2/package.json](console2/package.json)
-is set to the Server's API address.
+
 
 Start the console in dev mode by running:
 ```shell
