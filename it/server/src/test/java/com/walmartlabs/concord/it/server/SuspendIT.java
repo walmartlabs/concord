@@ -62,7 +62,7 @@ public class SuspendIT extends AbstractServerIT {
         Map<String, Object> args = Collections.singletonMap("testValue", testValue);
         Map<String, Object> req = Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
 
-        processApi.resume(spr.getInstanceId(), "ev1", req);
+        processApi.resume(spr.getInstanceId(), "ev1", null, req);
 
         pir = waitForCompletion(processApi, spr.getInstanceId());
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());

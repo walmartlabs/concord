@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
@@ -391,11 +392,6 @@ public class ProcessResource implements Resource {
 
     /**
      * Resumes an existing process.
-     *
-     * @param instanceId
-     * @param eventName
-     * @param req
-     * @return
      */
     @POST
     @ApiOperation("Resume a process")
@@ -405,9 +401,14 @@ public class ProcessResource implements Resource {
     @WithTimer
     public ResumeProcessResponse resume(@ApiParam @PathParam("id") UUID instanceId,
                                         @ApiParam @PathParam("eventName") @NotNull String eventName,
+                                        @ApiParam @QueryParam("saveAs") String saveAs,
                                         @ApiParam Map<String, Object> req) {
 
         PartialProcessKey processKey = PartialProcessKey.from(instanceId);
+
+        if (saveAs != null && !saveAs.isEmpty() && req != null) {
+            req = ConfigurationUtils.toNested(saveAs, req);
+        }
 
         Payload payload;
         try {
