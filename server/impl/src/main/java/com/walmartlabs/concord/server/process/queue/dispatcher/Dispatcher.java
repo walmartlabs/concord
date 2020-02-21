@@ -87,7 +87,6 @@ public class Dispatcher extends PeriodicTask {
 
     private final int batchSize;
 
-    private final Histogram uniqueProjectsHistogram;
     private final Histogram dispatchedCountHistogram;
     private final Timer responseTimer;
 
@@ -114,7 +113,6 @@ public class Dispatcher extends PeriodicTask {
 
         this.batchSize = cfg.getDispatcherBatchSize();
 
-        this.uniqueProjectsHistogram = metricRegistry.histogram("process-queue-dispatcher-unique-projects");
         this.dispatchedCountHistogram = metricRegistry.histogram("process-queue-dispatcher-dispatched-count");
         this.responseTimer = metricRegistry.timer("process-queue-dispatcher-response-timer");
     }
@@ -138,8 +136,14 @@ public class Dispatcher extends PeriodicTask {
         // take a global lock to avoid races
         List<Match> matches = dao.txResult(tx -> {
             locks.lock(tx, LOCK_KEY);
-            return match(tx, l);
+            try {
+                return match(tx, l);
+            } finally {
+                filters.forEach(Filter::cleanup);
+            }
         });
+
+        dispatchedCountHistogram.update(matches.size());
 
         // no matches, retry after a delay
         if (matches.isEmpty()) {
@@ -159,70 +163,35 @@ public class Dispatcher extends PeriodicTask {
         List<Request> inbox = new ArrayList<>(requests);
 
         int offset = 0;
-        Set<UUID> projectsToSkip = new HashSet<>();
-
-        List<Match> matches;
+        List<Match> matches = new ArrayList<>();
         while (true) {
             // fetch the next few ENQUEUED processes from the DB
-            List<ProcessQueueEntry> candidates = new ArrayList<>(dao.next(tx, offset, batchSize));
-            if (candidates.isEmpty() || inbox.isEmpty()) {
-                // no potential candidates or no requests left to process
+            List<ProcessQueueEntry> candidates = dao.next(tx, offset, batchSize);
+            if (candidates.isEmpty()) {
+                // no potential candidates left to process
                 return Collections.emptyList();
             }
 
-            uniqueProjectsHistogram.update(countUniqueProjects(candidates));
-
-            // filter out agents first to avoid situations when:
-            // - there's a process with requirements that doesn't match currently available workers
-            // - and there's a bunch of processes in the same project with requirements that can be satisfied
-            // if we do the project filter first we might end up unable to process anything in the project
-            matches = matchAgents(inbox, candidates);
-
-            if (matches.isEmpty()) {
-                return matches;
-            }
-
-            // at this point only candidates with matching agent "capabilities" are left
-
             // filter out the candidates that shouldn't be dispatched at the moment (e.g. due to concurrency limits)
-            for (Iterator<Match> it = matches.iterator(); it.hasNext(); ) {
-                Match m = it.next();
-
-                ProcessQueueEntry e = m.response;
-
-                // currently there are no filters applicable to standalone (i.e. without a project) processes
-                if (e.projectId() == null) {
+            for (ProcessQueueEntry e : candidates) {
+                // find request/agent who can handle process
+                Request req = findRequest(e, inbox);
+                if (req == null) {
                     continue;
                 }
 
-                // see below
-                if (projectsToSkip.contains(e.projectId())) {
-                    it.remove();
-                    continue;
+                // "startingProcesses" are the currently collected "matches"
+                // we keep them in a separate collection to simplify the filtering
+                List<ProcessQueueEntry> startingProcesses = matches.stream().map(m -> m.response).collect(Collectors.toList());
+
+                if (pass(tx, e, startingProcesses)) {
+                    matches.add(new Match(req, e));
+                    inbox.remove(req);
+
+                    if (inbox.isEmpty()) {
+                        break;
+                    }
                 }
-
-                if (!pass(tx, e)) {
-                    // the candidate didn't pass the filter or can't lock the queue
-                    // skip to the next candidate (of a different project)
-                    it.remove();
-                }
-
-                // only one process per project can be dispatched at the time, currently the filters are not
-                // designed to run multiple times per dispatch "tick"
-
-                // TODO
-                // this can be improved if filters accepted a list of candidates and returned a list of
-                // those who passed. However, statistically each batch of candidates contains unique project IDs
-                // so "multi-entry" filters are less effective and just complicate things
-                // in the future we might need to consider batching up candidates by project IDs and using sharded
-                // locks
-                projectsToSkip.add(e.projectId());
-            }
-
-            if (matches.isEmpty()) {
-                // no matches, try fetching the next N records
-                offset += batchSize;
-                continue;
             }
 
             for (Match m : matches) {
@@ -233,60 +202,46 @@ public class Dispatcher extends PeriodicTask {
                 inbox.remove(m.request);
             }
 
-            dispatchedCountHistogram.update(matches.size());
-            break;
+            if (inbox.isEmpty()) {
+                break;
+            }
+
+            offset += batchSize;
         }
 
         return matches;
     }
 
-    /**
-     * Matches capabilities in the received agent requests with requirements of the candidates.
-     */
-    private List<Match> matchAgents(List<Request> requests, List<ProcessQueueEntry> candidates) {
-        List<Match> results = new ArrayList<>();
-
+    private static Request findRequest(ProcessQueueEntry candidate, List<Request> requests) {
         for (Request req : requests) {
-            ProcessQueueEntry candidate = findCandidate(req.request, candidates);
-            if (candidate == null) {
-                continue;
-            }
-
-            // the process can be matched only once, remove the match from the list of candidates
-            candidates.remove(candidate);
-
-            results.add(new Match(req, candidate));
-        }
-
-        return results;
-    }
-
-    @SuppressWarnings("unchecked")
-    private ProcessQueueEntry findCandidate(ProcessRequest req, List<ProcessQueueEntry> candidates) {
-        if (candidates.isEmpty()) {
-            return null;
-        }
-
-        Map<String, Object> capabilities = req.getCapabilities();
-
-        for (ProcessQueueEntry c : candidates) {
-            Map<String, Object> requirements = c.requirements();
-            if (requirements == null) {
-                requirements = Collections.emptyMap();
-            }
-
-            Map<String, Object> m = (Map<String, Object>) requirements.getOrDefault("agent", Collections.emptyMap());
+            Map<String, Object> capabilities = req.request.getCapabilities();
+            Map<String, Object> m = getAgentRequirements(candidate);
             if (MapMatcher.matches(capabilities, m)) {
-                return c;
+                return req;
             }
         }
 
         return null;
     }
 
-    private boolean pass(DSLContext tx, ProcessQueueEntry e) {
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getAgentRequirements(ProcessQueueEntry entry) {
+        Map<String, Object> requirements = entry.requirements();
+        if (requirements == null) {
+            return Collections.emptyMap();
+        }
+
+        Object agent = requirements.get("agent");
+        if (agent instanceof Map) {
+            return (Map<String, Object>) agent;
+        }
+
+        return Collections.emptyMap();
+    }
+
+    private boolean pass(DSLContext tx, ProcessQueueEntry e, List<ProcessQueueEntry> startingProcesses) {
         for (Filter f : filters) {
-            if (!f.apply(tx, e)) {
+            if (!f.apply(tx, e, startingProcesses)) {
                 return false;
             }
         }
@@ -323,17 +278,6 @@ public class Dispatcher extends PeriodicTask {
         }
 
         logManager.info(item.key(), "Acquired by: " + channel.getUserAgent());
-    }
-
-    private static int countUniqueProjects(List<ProcessQueueEntry> candidates) {
-        if (candidates.isEmpty()) {
-            return 0;
-        }
-
-        return candidates.stream()
-                .map(ProcessQueueEntry::projectId)
-                .collect(Collectors.toSet())
-                .size();
     }
 
     @Named

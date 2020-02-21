@@ -49,8 +49,8 @@ public abstract class WaitProcessFinishFilter implements Filter {
     }
 
     @Override
-    public boolean apply(DSLContext tx, ProcessQueueEntry e) {
-        List<UUID> processes = findProcess(tx, e);
+    public boolean apply(DSLContext tx, ProcessQueueEntry e, List<ProcessQueueEntry> startingProcesses) {
+        List<UUID> processes = findProcess(tx, e, startingProcesses);
         if (processes.isEmpty()) {
             return true;
         }
@@ -65,7 +65,7 @@ public abstract class WaitProcessFinishFilter implements Filter {
         return false;
     }
 
-    protected abstract List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item);
+    protected abstract List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item, List<ProcessQueueEntry> startingProcesses);
 
     protected Set<ProcessStatus> getFinalStatuses() {
         return FINAL_STATUSES;

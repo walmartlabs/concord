@@ -21,25 +21,16 @@ package com.walmartlabs.concord.server.process.queue.dispatcher;
  */
 
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
-import org.jooq.Record1;
-import org.jooq.SelectConditionStep;
-import org.jooq.SelectJoinStep;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import static com.walmartlabs.concord.db.PgUtils.jsonbText;
-import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.*;
 
 /**
  * Handles "exclusive" processes.
@@ -51,54 +42,42 @@ public class ExclusiveProcessFilter extends WaitProcessFinishFilter {
 
     private static final String WAIT_MODE = "wait";
 
-    private static final List<ProcessStatus> RUNNING_PROCESS_STATUSES = Arrays.asList(
-            ProcessStatus.STARTING,
-            ProcessStatus.SUSPENDED,
-            ProcessStatus.RUNNING,
-            ProcessStatus.RESUMING);
+    private final ExclusiveProcessFilterDao dao;
 
     @Inject
-    public ExclusiveProcessFilter(ProcessQueueManager processQueueManager) {
+    public ExclusiveProcessFilter(ProcessQueueManager processQueueManager, ExclusiveProcessFilterDao dao) {
         super(processQueueManager);
+        this.dao = dao;
     }
 
     @Override
-    protected List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item) {
+    public void cleanup() {
+        dao.cleanup();
+    }
+
+    @Override
+    protected List<UUID> findProcess(DSLContext tx, ProcessQueueEntry item, List<ProcessQueueEntry> startingProcesses) {
         if (item.projectId() == null) {
             return Collections.emptyList();
         }
 
         boolean isWaitMode = WAIT_MODE.equals(MapUtils.getString(item.exclusive(), "mode"));
-        String group = MapUtils.getString(item.exclusive(), "group");
+        String group = getGroup(item);
         if (group == null || !isWaitMode) {
             return Collections.emptyList();
         }
 
-        ProcessQueue q = ProcessQueue.PROCESS_QUEUE.as("q");
-        SelectConditionStep<Record1<UUID>> s = tx.select(q.INSTANCE_ID)
-                .from(q)
-                .where(q.PROJECT_ID.eq(item.projectId())
-                        .and(q.CURRENT_STATUS.in(RUNNING_PROCESS_STATUSES)
-                                .and( jsonbText(q.EXCLUSIVE, "group").eq(group))));
-
-        // parent's
-        if (item.parentInstanceId() != null) {
-            SelectJoinStep<Record1<UUID>> parents = tx.withRecursive("parents").as(
-                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID).from(PROCESS_QUEUE)
-                            .where(PROCESS_QUEUE.INSTANCE_ID.eq(item.parentInstanceId()))
-                            .unionAll(
-                                    select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.PARENT_INSTANCE_ID)
-                                            .from(PROCESS_QUEUE)
-                                            .join(name("parents"))
-                                            .on(PROCESS_QUEUE.INSTANCE_ID.eq(
-                                                    field(name("parents", "PARENT_INSTANCE_ID"), UUID.class)))))
-                    .select(field("parents.INSTANCE_ID", UUID.class))
-                    .from(name("parents"));
-
-            s.and(q.INSTANCE_ID.notIn(parents));
+        List<UUID> result = new ArrayList<>(dao.findProcess(tx, item, group));
+        for (ProcessQueueEntry p : startingProcesses) {
+            if (item.projectId().equals(p.projectId()) && group.equals(getGroup(p))) {
+                result.add(p.key().getInstanceId());
+            }
         }
+        return result;
+    }
 
-        return s.fetch(Record1::value1);
+    private static String getGroup(ProcessQueueEntry entry) {
+        return MapUtils.getString(entry.exclusive(), "group");
     }
 
     @Override
