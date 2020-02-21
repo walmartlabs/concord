@@ -16,6 +16,7 @@ $ npm ci
 
 To update `package-lock.json` run
 ```bash
+$ ../mvnw clean package # only for the first run
 $ ../mvnw com.github.eirslett:frontend-maven-plugin:npm -Darguments=install
 ```
 

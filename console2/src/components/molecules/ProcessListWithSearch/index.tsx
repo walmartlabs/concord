@@ -38,7 +38,6 @@ import {
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
-    UPDATED_AT_COLUMN,
     TAGS_COLUMN
 } from '../ProcessList';
 import { ProcessFilters } from '../../../api/process';
@@ -49,8 +48,7 @@ const defaultColumns = [
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN,
-    UPDATED_AT_COLUMN
+    CREATED_AT_COLUMN
 ];
 
 // columns used on the list of a project's processes
@@ -58,8 +56,7 @@ const withoutProjectColumns = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN,
-    UPDATED_AT_COLUMN
+    CREATED_AT_COLUMN
 ];
 
 // columns that are available in filters

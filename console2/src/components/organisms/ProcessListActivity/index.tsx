@@ -35,8 +35,7 @@ import {
     INITIATOR_COLUMN,
     REPO_COLUMN,
     INSTANCE_ID_COLUMN,
-    PROJECT_COLUMN,
-    UPDATED_AT_COLUMN
+    PROJECT_COLUMN
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
@@ -47,8 +46,7 @@ const defaultColumns = [
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN,
-    UPDATED_AT_COLUMN
+    CREATED_AT_COLUMN
 ];
 
 const withoutProjectColumns = [
@@ -56,8 +54,7 @@ const withoutProjectColumns = [
     INSTANCE_ID_COLUMN,
     REPO_COLUMN,
     INITIATOR_COLUMN,
-    CREATED_AT_COLUMN,
-    UPDATED_AT_COLUMN
+    CREATED_AT_COLUMN
 ];
 
 export interface ProcessSearchFilter {

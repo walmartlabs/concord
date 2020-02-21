@@ -38,7 +38,6 @@ import {
     REPO_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
-    UPDATED_AT_COLUMN,
     STATUS_COLUMN
 } from '../../molecules/ProcessList';
 
@@ -133,8 +132,7 @@ class UserProcesses extends React.PureComponent<SessionProps & StateProps & Disp
                         PROJECT_COLUMN,
                         REPO_COLUMN,
                         INITIATOR_COLUMN,
-                        CREATED_AT_COLUMN,
-                        UPDATED_AT_COLUMN
+                        CREATED_AT_COLUMN
                     ]}
                 />
             </>

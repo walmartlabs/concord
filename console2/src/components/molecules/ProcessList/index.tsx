@@ -70,13 +70,8 @@ export const INITIATOR_COLUMN: ColumnDefinition = {
 export const CREATED_AT_COLUMN: ColumnDefinition = {
     caption: 'Created',
     source: 'createdAt',
-    render: 'timestamp'
-};
-
-export const UPDATED_AT_COLUMN: ColumnDefinition = {
-    caption: 'Updated',
-    source: 'lastUpdatedAt',
-    render: 'timestamp'
+    render: 'timestamp',
+    singleLine: true
 };
 
 export const TAGS_COLUMN: ColumnDefinition = {
@@ -194,7 +189,8 @@ const renderColumnCaption = (
         <Table.HeaderCell
             style={{ whiteSpace: 'nowrap' }}
             key={c.caption}
-            collapsing={c.collapsing}>
+            collapsing={c.collapsing}
+            singleLine={c.singleLine}>
             {c.caption}
             {searchFilter}
         </Table.HeaderCell>

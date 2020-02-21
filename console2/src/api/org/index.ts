@@ -49,6 +49,7 @@ export interface ColumnDefinition {
     source: string;
     textAlign?: 'center' | 'left' | 'right';
     collapsing?: boolean;
+    singleLine?: boolean;
     render?:
         | 'process-link'
         | 'process-status'
