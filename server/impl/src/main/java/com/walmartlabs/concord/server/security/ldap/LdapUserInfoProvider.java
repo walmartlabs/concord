@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
+import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
@@ -41,11 +42,16 @@ public class LdapUserInfoProvider implements UserInfoProvider {
 
     private final UserDao userDao;
     private final LdapManager ldapManager;
+    private final LdapConfiguration cfg;
 
     @Inject
-    public LdapUserInfoProvider(UserDao userDao, LdapManager ldapManager) {
+    public LdapUserInfoProvider(UserDao userDao,
+                                LdapManager ldapManager,
+                                LdapConfiguration cfg) {
+
         this.userDao = userDao;
         this.ldapManager = ldapManager;
+        this.cfg = cfg;
     }
 
     @Override
@@ -66,6 +72,12 @@ public class LdapUserInfoProvider implements UserInfoProvider {
 
     @Override
     public UUID create(String username, String userDomain, String displayName, String email, Set<String> roles) {
+        if (!cfg.isAutoCreateUsers()) {
+            // unfortunately there's no easy way to throw a custom authentication error and keep the original message
+            // this will result in a 401 response with an empty body anyway
+            throw new ConcordApplicationException("Automatic creation of users is disabled.");
+        }
+
         UserInfo info = getInfo(null, username, userDomain);
         if (info == null) {
             throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
