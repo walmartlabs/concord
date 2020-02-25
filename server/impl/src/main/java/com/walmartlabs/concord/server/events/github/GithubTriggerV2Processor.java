@@ -146,7 +146,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         @Override
         public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
             Object projectInfoConditions = trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
-            if (projectInfoConditions == null) {
+            if (projectInfoConditions == null || payload.getFullRepoName() == null) {
                 return;
             }
 
