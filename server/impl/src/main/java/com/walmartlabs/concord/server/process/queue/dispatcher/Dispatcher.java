@@ -252,32 +252,35 @@ public class Dispatcher extends PeriodicTask {
     private void sendResponse(Match match) {
         WebSocketChannel channel = match.request.channel;
         long correlationId = match.request.request.getCorrelationId();
-
         ProcessQueueEntry item = match.response;
 
-        SecretReference secret = null;
-        if (item.repoId() != null) {
-            secret = dao.getSecretReference(item.repoId());
+        try {
+            SecretReference secret = null;
+            if (item.repoId() != null) {
+                secret = dao.getSecretReference(item.repoId());
+            }
+
+            // backward compatibility with old process queue entries that are not normalized
+            Imports imports = importsNormalizerFactory.forProject(item.projectId())
+                    .normalize(item.imports());
+
+            ProcessResponse resp = new ProcessResponse(correlationId,
+                    item.key().getInstanceId(),
+                    secret != null ? secret.orgName : null,
+                    item.repoUrl(),
+                    item.repoPath(),
+                    item.commitId(),
+                    secret != null ? secret.secretName : null,
+                    imports);
+
+            if (!channelManager.sendResponse(channel.getChannelId(), resp)) {
+                log.warn("sendResponse ['{}'] -> failed", correlationId);
+            }
+
+            logManager.info(item.key(), "Acquired by: " + channel.getUserAgent());
+        } catch (Exception e) {
+            log.error("sendResponse ['{}'] -> failed (instanceId: {})", correlationId, item.key().getInstanceId());
         }
-
-        // backward compatibility with old process queue entries that are not normalized
-        Imports imports = importsNormalizerFactory.forProject(item.projectId())
-                .normalize(item.imports());
-
-        ProcessResponse resp = new ProcessResponse(correlationId,
-                item.key().getInstanceId(),
-                secret != null ? secret.orgName : null,
-                item.repoUrl(),
-                item.repoPath(),
-                item.commitId(),
-                secret != null ? secret.secretName : null,
-                imports);
-
-        if (!channelManager.sendResponse(channel.getChannelId(), resp)) {
-            log.warn("sendResponse ['{}'] -> failed", correlationId);
-        }
-
-        logManager.info(item.key(), "Acquired by: " + channel.getUserAgent());
     }
 
     @Named

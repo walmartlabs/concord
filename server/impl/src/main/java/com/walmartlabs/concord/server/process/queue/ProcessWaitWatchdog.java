@@ -89,21 +89,23 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     public void performTask() {
         Timestamp lastUpdatedAt = null;
         while (true) {
-            WaitingProcess p = dao.nextWaitItem(lastUpdatedAt, cfg.getPollLimit());
-            if (p == null) {
+            List<WaitingProcess> processes = dao.nextWaitItems(lastUpdatedAt, cfg.getPollLimit());
+            if (processes.isEmpty()) {
                 return;
             }
 
-            WaitType type = p.waits().type();
-            processHandler(type, p);
-            lastUpdatedAt = p.lastUpdatedAt();
+            for (WaitingProcess p : processes) {
+                WaitType type = p.waits().type();
+                processHandler(type, p);
+                lastUpdatedAt = p.lastUpdatedAt();
+            }
         }
     }
 
     private void processHandler(WaitType type, WaitingProcess p) {
         ProcessWaitHandler<AbstractWaitCondition> handler = processWaitHandlers.get(type);
         if (handler == null) {
-            log.warn("performTask ['{}'] -> handler '{}' not found", p.instanceId(), type);
+            log.warn("processHandler ['{}'] -> handler '{}' not found", p.instanceId(), type);
             return;
         }
 
@@ -156,7 +158,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             this.objectMapper = objectMapper;
         }
 
-        public WaitingProcess nextWaitItem(Timestamp lastUpdatedAt, int pollLimit) {
+        public List<WaitingProcess> nextWaitItems(Timestamp lastUpdatedAt, int pollLimit) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
                 SelectConditionStep<Record5<UUID, String, Timestamp, Timestamp, JSONB>> s = tx.select(
@@ -174,7 +176,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
                 return s.orderBy(q.LAST_UPDATED_AT)
                         .limit(pollLimit)
-                        .fetchOne(r -> WaitingProcess.builder()
+                        .fetch(r -> WaitingProcess.builder()
                                 .instanceId(r.value1())
                                 .status(ProcessStatus.valueOf(r.value2()))
                                 .instanceCreatedAt(r.value3())
