@@ -120,19 +120,19 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             return "ok";
         }
 
-        Payload payload = Payload.from(eventName, data);
-        if (payload == null) {
-            log.warn("event ['{}', '{}'] -> can't parse payload: '{}'", deliveryId, eventName, data);
-            return "ok";
-        }
-
         if (githubCfg.isLogEvents()) {
             auditLog.add(AuditObject.EXTERNAL_EVENT, AuditAction.ACCESS)
                     .field("source", EVENT_SOURCE)
                     .field("eventId", deliveryId)
                     .field("githubEvent", eventName)
-                    .field("payload", payload)
+                    .field("payload", data)
                     .log();
+        }
+
+        Payload payload = Payload.from(eventName, data);
+        if (payload == null) {
+            log.warn("event ['{}', '{}'] -> can't parse payload", deliveryId, eventName);
+            return "ok";
         }
 
         List<GithubTriggerProcessor.Result> results = new ArrayList<>();

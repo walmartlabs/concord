@@ -76,6 +76,10 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
 
     @Override
     public void process(String eventName, Payload payload, UriInfo uriInfo, List<Result> result) {
+        if (payload.getFullRepoName() == null) {
+            return;
+        }
+
         // support for hooks restricted to a specific repository
         GithubKey githubKey = GithubKey.getCurrent();
         UUID hookProjectId = githubKey.getProjectId();

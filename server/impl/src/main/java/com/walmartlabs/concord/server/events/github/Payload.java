@@ -43,10 +43,12 @@ public class Payload {
             "member",
             "pull_request",
             "pull_request_review",
+            "pull_request_review_comment",
             "push",
             "release",
-            "team_add"
-    );
+            "team_add",
+            "repository"
+        );
 
     /**
      * List of supported organization-level events.
@@ -55,7 +57,6 @@ public class Payload {
             "membership",
             "organization",
             "org_block",
-            "repository",
             "team"
     );
 
@@ -84,6 +85,8 @@ public class Payload {
         } else if (ORGANIZATION_EVENTS.contains(eventName)) {
             Map<String, Object> m = MapUtils.getMap(data, ORGANIZATION_KEY, Collections.emptyMap());
             org = MapUtils.getString(m, "login");
+        } else {
+            return null;
         }
 
         return new Payload(eventName, fullRepoName, org, repo, data);
@@ -126,13 +129,18 @@ public class Payload {
     }
 
     public String getBranch() {
-        if (PUSH_EVENT.equalsIgnoreCase(eventName)) {
-            return getBranchPush(data);
-        } else if (PULL_REQUEST_EVENT.equalsIgnoreCase(eventName)) {
-            return getBranchPullRequest(data);
+        switch (eventName.toLowerCase()) {
+            case PUSH_EVENT:
+            case "create":
+            case "delete":
+                return getRef(data);
+            case PULL_REQUEST_EVENT:
+            case "pull_request_review":
+            case "pull_request_review_comment":
+                return getBranchPullRequest(data);
+            default:
+                return null;
         }
-
-        return null;
     }
 
     public String getSender() {
@@ -152,7 +160,7 @@ public class Payload {
         return data;
     }
 
-    private static String getBranchPush(Map<String, Object> event) {
+    private static String getRef(Map<String, Object> event) {
         String ref = MapUtils.getString(event, "ref");
         if (ref == null) {
             return null;
