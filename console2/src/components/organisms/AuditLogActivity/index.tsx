@@ -40,13 +40,13 @@ import { FindUserField, RequestErrorActivity } from '../../organisms';
 import { RefreshButton } from '../../atoms';
 
 // date-fns format used to parse date-time strings set by the UI component
-const SRC_DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
+export const SRC_DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 // date-fns format used to convert UI date-time strings into the API's date-time format
-const DST_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+export const DST_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 // date-time format used by the UI component (pickers)
-const UI_DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm';
+export const UI_DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm';
 
-const formatForApi = (s: string) =>
+export const formatForApi = (s: string) =>
     formatDate(parseDate(s, SRC_DATE_TIME_FORMAT, new Date()), DST_DATE_TIME_FORMAT);
 
 // converts timestamps from the UI format to the format accepted by the API

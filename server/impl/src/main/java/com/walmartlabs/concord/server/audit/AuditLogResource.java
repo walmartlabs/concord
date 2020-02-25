@@ -68,12 +68,15 @@ public class AuditLogResource implements Resource {
 
     // array of the allowed keys in "/api/v1/audit?details.[fieldName]=[value]"
     private static final String[] ALLOWED_DETAILS_KEYS = {
+            "eventId",
+            "fullRepoName",
             "orgId",
             "orgName",
             "projectId",
             "projectName",
             "secretId",
             "secretName",
+            "source",
             "jsonStoreId",
             "jsonStoreName",
             "teamId",
@@ -146,13 +149,15 @@ public class AuditLogResource implements Resource {
         UUID effectiveSecretId = getEffectiveSecretId(effectiveOrgId, details);
         UUID effectiveJsonStoreId = getEffectiveJsonStoreId(effectiveOrgId, details);
         UUID effectiveTeamId = getEffectiveTeamId(effectiveOrgId, details);
+        String source = details.get("source");
 
         // only admins are allowed to proceed without any entity filters
         if (effectiveOrgId == null
                 && effectiveProjectId == null
                 && effectiveSecretId == null
                 && effectiveJsonStoreId == null
-                && effectiveTeamId == null) {
+                && effectiveTeamId == null
+                && source == null) {
 
             if (!Roles.isAdmin()) {
                 throw new UnauthorizedException("Only admins can retrieve audit events without filtering by entity.");
@@ -179,6 +184,24 @@ public class AuditLogResource implements Resource {
 
         if (effectiveTeamId != null) {
             filterBuilder.putDetails("teamId", effectiveTeamId);
+        }
+
+        if (source != null) {
+            filterBuilder.putDetails("source", source);
+        }
+
+        if (details.get("eventId") != null) {
+            filterBuilder.putDetails("eventId", details.get("eventId"));
+        }
+
+        if (details.get("githubEvent") != null) {
+            filterBuilder.putDetails("githubEvent", details.get("githubEvent"));
+        }
+
+        if (details.get("fullRepoName") != null) {
+            filterBuilder.putDetails("payload",
+                    Collections.singletonMap("repository",
+                            Collections.singletonMap("full_name", details.get("fullRepoName"))));
         }
 
         return auditDao.list(filterBuilder

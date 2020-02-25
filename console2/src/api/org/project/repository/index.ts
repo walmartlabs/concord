@@ -27,6 +27,8 @@ import {
     OperationResult
 } from '../../../common';
 
+import { get as getProject } from '../index';
+
 export interface RepositoryMeta {
     profiles?: string[];
     entryPoints?: string[];
@@ -78,6 +80,19 @@ export interface RepositoryValidationResponse {
     errors?: string[];
     warnings?: string[];
 }
+
+export const get = async (
+    orgName: ConcordKey,
+    projectName: ConcordKey,
+    repoName: ConcordKey
+): Promise<RepositoryEntry> => {
+    const project = await getProject(orgName, projectName);
+    const repo = project.repositories === undefined ? undefined : project.repositories[repoName];
+    if (repo === undefined) {
+        return Promise.reject({ message: 'Repository not found' });
+    }
+    return repo;
+};
 
 export const createOrUpdate = (
     orgName: ConcordKey,
