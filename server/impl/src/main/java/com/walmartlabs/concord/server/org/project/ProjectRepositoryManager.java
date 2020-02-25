@@ -83,7 +83,7 @@ public class ProjectRepositoryManager {
     }
 
     public void createOrUpdate(DSLContext tx, UUID projectId, RepositoryEntry entry) {
-        ProjectEntry project = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, false);
+        ProjectEntry project = projectAccessManager.assertAccess(projectId, ResourceAccessLevel.WRITER, true);
 
         UUID secretId = entry.getSecretId();
         if (secretId == null && entry.getSecretName() != null) {
