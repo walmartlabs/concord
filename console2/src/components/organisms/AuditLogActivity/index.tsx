@@ -100,8 +100,8 @@ const DateTimeField = (props: {
             label={props.label}
             dateTimeFormat={UI_DATE_TIME_FORMAT}
             closable={true}
-            animation={undefined}
-            duration={10}
+            animation={'none' as any} // workaround for jittery animations in Chrome
+            duration={0}
             onChange={(ev: {}, data: any) => props.onChange(data.value as string)}
         />
     </Form.Field>
@@ -115,7 +115,7 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
     const dispatch = React.useContext(LoadingDispatch);
 
     const defaultAfter = formatDate(addHours(new Date(), -8), SRC_DATE_TIME_FORMAT);
-    const defaultBefore = formatDate(new Date(), SRC_DATE_TIME_FORMAT);
+    const defaultBefore = formatDate(addHours(new Date(), 1), SRC_DATE_TIME_FORMAT);
 
     // contains parameters shown in the filtering controls
     const [filter, setFilter] = useState<AuditLogFilter>({
@@ -206,7 +206,8 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
                                     }
                                     openOnTriggerClick={true}
                                     openOnTriggerMouseEnter={false}
-                                    closeOnTriggerMouseLeave={false}>
+                                    closeOnTriggerMouseLeave={false}
+                                    closeOnDocumentClick={false}>
                                     <Form>
                                         <DateTimeField
                                             label="From"
