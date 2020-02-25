@@ -21,6 +21,7 @@ import { ConcordKey, EntityOwner, fetchJson, queryParams } from '../common';
 
 // must match the keys of com.walmartlabs.concord.server.audit.AuditObject enum
 export enum AuditObject {
+    EXTERNAL_EVENT = 'EXTERNAL_EVENT',
     JSON_STORE = 'JSON_STORE',
     JSON_STORE_DATA = 'JSON_STORE_DATA',
     JSON_STORE_QUERY = 'JSON_STORE_QUERY',
@@ -46,6 +47,10 @@ export interface AuditLogFilter {
     after?: string;
     before?: string;
     details?: {
+        eventId?: string;
+        fullRepoName?: string;
+        githubEvent?: string;
+        source?: string;
         orgName?: ConcordKey;
         projectName?: ConcordKey;
         secretName?: ConcordKey;

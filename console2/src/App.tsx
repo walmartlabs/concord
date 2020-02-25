@@ -28,7 +28,6 @@ import {
     AboutPage,
     AddRepositoryPage,
     CustomResourcePage,
-    EditRepositoryPage,
     LoginPage,
     LogoutPage,
     NewProjectPage,
@@ -47,7 +46,8 @@ import {
     JsonStorePage,
     TeamPage,
     UnauthorizedPage,
-    UserActivityPage
+    UserActivityPage,
+    RepositoryPage
 } from './components/pages';
 import { Layout } from './components/templates';
 import { actions as session } from './state/session';
@@ -113,8 +113,7 @@ const App = () => {
 
                                             <Route
                                                 path="/org/:orgName/project/:projectName/repository/:repoName"
-                                                exact={true}
-                                                component={EditRepositoryPage}
+                                                component={RepositoryPage}
                                             />
 
                                             <Route
