@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -135,6 +135,7 @@ public class GeneralTriggerIT extends AbstractServerIT {
         eea.event("testTrigger", eventParam);
 
         // second process
+        // we assume that the first process is in the RUNNING status when the second process is created
         eea.event("testTrigger", eventParam);
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED, ProcessEntry.StatusEnum.CANCELLED);
@@ -219,7 +220,7 @@ public class GeneralTriggerIT extends AbstractServerIT {
             ProcessEntry pir = waitForStatus(processApi, p.getInstanceId(), first, more);
             ProcessEntry pe = ps.put(pir.getStatus(), pir);
             if (pe != null) {
-                throw new RuntimeException("already got process with '" + pe.getStatus() + "' status, id: " + pe.getInstanceId());
+                throw new RuntimeException("already got a process with '" + pe.getStatus() + "' status, id: " + pe.getInstanceId());
             }
         }
         return ps;

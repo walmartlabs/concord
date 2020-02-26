@@ -28,6 +28,8 @@ import { LocalTimestamp, ProcessStatusIcon } from '../../molecules';
 import { TableSearchFilter } from '../../atoms';
 import { ProcessFilters } from '../../../api/process';
 
+import './styles.css';
+
 export const STATUS_COLUMN: ColumnDefinition = {
     caption: 'Status',
     source: 'status',
@@ -334,22 +336,38 @@ class ProcessList extends React.Component<Props, State> {
         if (!data || data.length === 0) {
             if (showHeader) {
                 return (
-                    <Table celled={true} attached="bottom" selectable={true}>
-                        <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
-                        <Table.Body>
-                            <Table.Row style={{ fontWeight: 'bold' }}>
-                                <Table.Cell colSpan={columns.length}>No data available</Table.Cell>
-                            </Table.Row>
-                        </Table.Body>
-                    </Table>
+                    <div className={'container'}>
+                        <Table
+                            celled={true}
+                            attached="bottom"
+                            selectable={true}
+                            style={{ borderBottom: 'none' }}>
+                            <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
+                            <Table.Body>
+                                <Table.Row style={{ fontWeight: 'bold' }}>
+                                    <Table.Cell colSpan={columns.length}>
+                                        No data available
+                                    </Table.Cell>
+                                </Table.Row>
+                            </Table.Body>
+                        </Table>
+                    </div>
                 );
             } else {
                 return (
                     <>
                         {canBeFiltered && (
-                            <Table celled={true} attached="bottom" selectable={true}>
-                                <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
-                            </Table>
+                            <div className={'container'}>
+                                <Table
+                                    celled={true}
+                                    attached="bottom"
+                                    selectable={true}
+                                    style={{ borderBottom: 'none' }}>
+                                    <Table.Header>
+                                        {this.renderTableHeader(data, columns)}
+                                    </Table.Header>
+                                </Table>
+                            </div>
                         )}
                         <h3>No processes found.</h3>
                     </>
@@ -358,11 +376,13 @@ class ProcessList extends React.Component<Props, State> {
         }
 
         return (
-            <Table celled={true} attached="bottom" selectable={true}>
-                <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
+            <div style={{ overflowX: 'auto' }} className={'container'}>
+                <Table celled={true} attached="bottom" selectable={true}>
+                    <Table.Header>{this.renderTableHeader(data, columns)}</Table.Header>
 
-                <Table.Body>{data.map((p) => this.renderTableRow(p, columns))}</Table.Body>
-            </Table>
+                    <Table.Body>{data.map((p) => this.renderTableRow(p, columns))}</Table.Body>
+                </Table>
+            </div>
         );
     }
 }

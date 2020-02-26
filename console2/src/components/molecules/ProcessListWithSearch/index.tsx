@@ -42,6 +42,8 @@ import {
 } from '../ProcessList';
 import { ProcessFilters } from '../../../api/process';
 
+import '../ProcessList/styles.css';
+
 // list of columns for the default process list configuration
 const defaultColumns = [
     STATUS_COLUMN,
@@ -285,44 +287,58 @@ class ProcessListWithSearch extends React.Component<Props, State> {
             <>
                 {loadError && <RequestErrorMessage error={loadError} />}
 
-                <Table attached="top" basic={true} style={{ borderBottom: 0 }}>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell collapsing={true}>
-                                <Button
-                                    basic={true}
-                                    icon="refresh"
-                                    loading={loading}
-                                    onClick={this.onRefresh}
-                                />
-                            </Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true}>
-                                <BulkProcessActionDropdown
-                                    data={this.state.selectedProcessIds}
-                                    refresh={this.onRefresh}
-                                />
-                            </Table.HeaderCell>
-                            <Table.HeaderCell>
-                                {hasFilter(processFilters, filterColumns) &&
-                                    this.renderFilterLabels(filterColumns, processFilters, loading)}
-                            </Table.HeaderCell>
-                            <Table.HeaderCell collapsing={true} style={{ fontWeight: 'normal' }}>
-                                {usePagination && (
-                                    <PaginationToolBar
-                                        filterProps={paginationFilter}
-                                        handleLimitChange={(limit) => this.handleLimitChange(limit)}
-                                        handleNext={this.handleNext}
-                                        handlePrev={this.handlePrev}
-                                        handleFirst={this.handleFirst}
-                                        disablePrevious={prev === undefined}
-                                        disableNext={next === undefined}
-                                        disableFirst={prev === undefined}
+                <div className={'container'}>
+                    <Table attached="top" basic={true} style={{ borderBottom: 'none' }}>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell
+                                    collapsing={true}
+                                    style={{ borderBottom: 'none' }}>
+                                    <Button
+                                        basic={true}
+                                        icon="refresh"
+                                        loading={loading}
+                                        onClick={this.onRefresh}
                                     />
-                                )}
-                            </Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                </Table>
+                                </Table.HeaderCell>
+                                <Table.HeaderCell
+                                    collapsing={true}
+                                    style={{ borderBottom: 'none' }}>
+                                    <BulkProcessActionDropdown
+                                        data={this.state.selectedProcessIds}
+                                        refresh={this.onRefresh}
+                                    />
+                                </Table.HeaderCell>
+                                <Table.HeaderCell style={{ borderBottom: 'none' }}>
+                                    {hasFilter(processFilters, filterColumns) &&
+                                        this.renderFilterLabels(
+                                            filterColumns,
+                                            processFilters,
+                                            loading
+                                        )}
+                                </Table.HeaderCell>
+                                <Table.HeaderCell
+                                    collapsing={true}
+                                    style={{ fontWeight: 'normal', borderBottom: 'none' }}>
+                                    {usePagination && (
+                                        <PaginationToolBar
+                                            filterProps={paginationFilter}
+                                            handleLimitChange={(limit) =>
+                                                this.handleLimitChange(limit)
+                                            }
+                                            handleNext={this.handleNext}
+                                            handlePrev={this.handlePrev}
+                                            handleFirst={this.handleFirst}
+                                            disablePrevious={prev === undefined}
+                                            disableNext={next === undefined}
+                                            disableFirst={prev === undefined}
+                                        />
+                                    )}
+                                </Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
+                    </Table>
+                </div>
 
                 <ProcessList
                     data={processes}
