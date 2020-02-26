@@ -6,6 +6,7 @@ configuration:
 flows:
   onTestTrigger:
     - log: "Hello from exclusive trigger!"
+    - "${sleep.ms(10000)}"
 
 triggers:
 - testTrigger:
