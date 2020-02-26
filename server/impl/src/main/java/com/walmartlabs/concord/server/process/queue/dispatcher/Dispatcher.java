@@ -168,8 +168,7 @@ public class Dispatcher extends PeriodicTask {
             // fetch the next few ENQUEUED processes from the DB
             List<ProcessQueueEntry> candidates = dao.next(tx, offset, batchSize);
             if (candidates.isEmpty()) {
-                // no potential candidates left to process
-                return Collections.emptyList();
+                break;
             }
 
             // filter out the candidates that shouldn't be dispatched at the moment (e.g. due to concurrency limits)
@@ -194,19 +193,18 @@ public class Dispatcher extends PeriodicTask {
                 }
             }
 
-            for (Match m : matches) {
-                ProcessQueueEntry candidate = m.response;
-
-                // mark the process as STARTING
-                queueManager.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
-                inbox.remove(m.request);
-            }
-
             if (inbox.isEmpty()) {
                 break;
             }
 
             offset += batchSize;
+        }
+
+        for (Match m : matches) {
+            ProcessQueueEntry candidate = m.response;
+
+            // mark the process as STARTING
+            queueManager.updateStatus(tx, candidate.key(), ProcessStatus.STARTING);
         }
 
         return matches;
