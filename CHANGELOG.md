@@ -1,5 +1,44 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-console: the repository edit page was redesigned to include
+the new "Events" tab. Currently, the "Events" tab allows users to see
+incoming GitHub events which can be used to debug trigger conditions
+or monitor the repository traffic;
+- concord-server: new `saveAs` parameter in the process resume
+endpoint. Allows saving the received JSON body as the specified
+process `configuration` value;
+- misc-tasks: new `datetime.currentWithZone` methods to get
+the current date/time for a specific time zone;
+- concord-sdk: new `Context#interpolate(Object, Map<String, Object>)`
+method to interpolate values using the specified `Map` as variables.
+
+### Changed
+
+- concord-server: process "wait conditions" (locks, waiting for other
+processes, etc) are now processed in batches;
+- concord-server: the process queue dispatcher now able to handle
+multiple processes per projects at the time;
+- ansible, noderoster: trim the data (host names, host groups and
+task names) before inserting it into the DB;
+- concord-console: the `lastUpdatedAt` column was removed from all
+default process lists. It still can be used in custom column
+configurations;
+- concord-tasks: fixed a bug causing duplicate entries in the `jobIds`
+variable when multiple forks start;
+- concord-server: better validation of JSON Store query results.
+The server expects single column results with valid JSON objects as
+values and will report so if the query results don't pass the
+validation;
+- smtp-tasks: better validation of input parameters;
+- concord-tasks: make sure the API response's body is closed, prevent
+leaks. 
+
+
+
 ## [1.41.0] - 2020-02-13
 
 ### Added
