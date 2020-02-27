@@ -64,7 +64,8 @@ public final class PayloadUtils {
             }
 
             if (c.before(Calendar.getInstance())) {
-                throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, can't be in the past: " + v);
+                throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, can't be in the past: " + v +
+                        " Current server time: " + DatatypeConverter.printDateTime(Calendar.getInstance()));
             }
 
             return c.toInstant();
