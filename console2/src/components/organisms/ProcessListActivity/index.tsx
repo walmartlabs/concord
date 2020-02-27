@@ -35,12 +35,25 @@ import {
     INITIATOR_COLUMN,
     REPO_COLUMN,
     INSTANCE_ID_COLUMN,
-    PROJECT_COLUMN
+    PROJECT_COLUMN,
+    UPDATED_AT_COLUMN
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
 import { ProcessFilters } from '../../../api/process';
 
+// list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
+// of the custom column configuration
+const builtInColumns = [
+    STATUS_COLUMN,
+    INSTANCE_ID_COLUMN,
+    PROJECT_COLUMN,
+    INITIATOR_COLUMN,
+    CREATED_AT_COLUMN,
+    UPDATED_AT_COLUMN
+];
+
+// list of columns visible by default
 const defaultColumns = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
@@ -49,6 +62,7 @@ const defaultColumns = [
     CREATED_AT_COLUMN
 ];
 
+// list of columns visible by default for views without the project column
 const withoutProjectColumns = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
@@ -122,7 +136,7 @@ const addBuiltInColumns = (columns?: ColumnDefinition[]): ColumnDefinition[] | u
 
     return columns.map((c) => {
         if (c.builtin) {
-            const b = defaultColumns.find((x) => x.source === c.builtin);
+            const b = builtInColumns.find((x) => x.source === c.builtin);
             if (!b) {
                 return {
                     caption: `Built-in column not found: ${c.builtin}`,
