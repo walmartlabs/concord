@@ -72,8 +72,13 @@ export const INITIATOR_COLUMN: ColumnDefinition = {
 export const CREATED_AT_COLUMN: ColumnDefinition = {
     caption: 'Created',
     source: 'createdAt',
-    render: 'timestamp',
-    singleLine: true
+    render: 'timestamp'
+};
+
+export const UPDATED_AT_COLUMN: ColumnDefinition = {
+    caption: 'Updated',
+    source: 'lastUpdatedAt',
+    render: 'timestamp'
 };
 
 export const TAGS_COLUMN: ColumnDefinition = {
