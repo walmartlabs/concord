@@ -44,7 +44,6 @@ const NewStorageQueryPage = (props: RouteComponentProps<RouteProps>) => {
         <div ref={stickyRef}>
             <MainToolbar
                 loading={loading}
-                refresh={() => console.log('refresh')}
                 stickyRef={stickyRef}
                 breadcrumbs={renderBreadcrumbs(orgName, storeName)}
             />

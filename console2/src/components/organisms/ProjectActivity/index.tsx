@@ -126,7 +126,6 @@ class ProjectActivity extends React.PureComponent<Props> {
     }
 
     static renderConfiguration(p: ProjectEntry) {
-        console.log('p', p);
         return <ProjectConfigurationActivity orgName={p.orgName} projectName={p.name} />;
     }
 
