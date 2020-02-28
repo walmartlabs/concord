@@ -1,0 +1,12 @@
+flows:
+  default:
+    - task: ansible
+      in:
+        playbook: "playbook.yml"
+        enableLogFiltering: "${Boolean.valueOf(doFilter)}"
+        inventory:
+          local:
+            hosts:
+              - "127.0.0.1"
+            vars:
+              ansible_connection: "local"

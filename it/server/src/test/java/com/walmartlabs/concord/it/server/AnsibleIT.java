@@ -558,4 +558,44 @@ public class AnsibleIT extends AbstractServerIT {
         byte[] ab = getLog(pir.getLogFileName());
         assertLog(".*Hello!.*", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testLogFiltering() throws Exception {
+        // run w/o filtering first
+
+        URI dir = AnsibleIT.class.getResource("ansibleLogFiltering").toURI();
+        byte[] payload = archive(dir, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("arguments.doFilter", false);
+        input.put("archive", payload);
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        byte[] ab = getLog(pir.getLogFileName());
+        assertLog(".*Hello! my_password=.*", ab);
+
+        // and then run with the filtering enabled
+
+        input = new HashMap<>();
+        input.put("arguments.doFilter", true);
+        input.put("archive", payload);
+
+        spr = start(input);
+
+        // ---
+
+        pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        ab = getLog(pir.getLogFileName());
+        assertNoLog(".*Hello! my_password=.*", ab);
+        assertLog(".*SENSITIVE INFORMATION.*", ab);
+    }
 }

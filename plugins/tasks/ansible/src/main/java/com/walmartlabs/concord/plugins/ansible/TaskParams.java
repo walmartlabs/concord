@@ -51,6 +51,8 @@ public enum TaskParams implements HasKey {
 
     ENABLE_POLICY("enablePolicy"),
 
+    ENABLE_LOG_FILTERING("enableLogFiltering"),
+
     EXIT_CODE_KEY("exitCode"),
 
     EXTRA_ENV_KEY("extraEnv"),
