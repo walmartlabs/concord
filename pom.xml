@@ -69,8 +69,9 @@
         <scm.connection>scm:git:https://github.com/walmartlabs/concord.git</scm.connection>
 
         <docker.plugin.version>0.30.0</docker.plugin.version>
-        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <jooq.version>3.12.1</jooq.version>
+        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <maven.dependency.plugin.version>3.1.1</maven.dependency.plugin.version>
         <node.version>10.11.0</node.version>
     </properties>
 
@@ -300,6 +301,11 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${maven.dependency.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
