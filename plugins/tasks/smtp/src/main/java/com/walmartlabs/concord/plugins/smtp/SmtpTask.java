@@ -97,6 +97,7 @@ public class SmtpTask implements Task {
         Collection<String> replyTo = zeroOrManyStrings(mail, "replyTo");
         String subject = getString(mail, "subject");
 
+        boolean debug = ContextUtils.getBoolean(ctx, "debug", false);
         try {
             Email email = createEmail(ctx, mail);
 
@@ -124,9 +125,18 @@ public class SmtpTask implements Task {
             email.setSubject(subject);
 
             String msgId = email.send();
-            log.info("send [{}, {}] -> done, msgId: {}", smtp, mail, msgId);
+
+            if (debug) {
+                log.info("send [{}, {}] -> done, msgId: {}", smtp, mail, msgId);
+            } else {
+                log.info("send -> done, msgId: {}", msgId);
+            }
         } catch (Exception e) {
-            log.error("send [{}, {}] -> error", smtp, mail, e);
+            if (debug) {
+                log.error("send [{}, {}] -> error", smtp, mail, e);
+            } else {
+                log.error("send -> error", e);
+            }
             throw e;
         }
     }
