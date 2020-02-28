@@ -39,7 +39,7 @@ public class InvalidFieldDefinitionException extends YamlProcessingException {
     }
 
     @Override
-    public YamlProcessingException getCause() {
+    public synchronized YamlProcessingException getCause() {
         return cause;
     }
 

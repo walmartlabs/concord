@@ -44,7 +44,7 @@ public class Operator {
             namespace = "default";
         }
 
-        KubernetesClient client = new DefaultKubernetesClient()
+        KubernetesClient client = new DefaultKubernetesClient() // NOSONAR
                 .inNamespace(namespace);
 
         String baseUrl = getEnv("CONCORD_BASE_URL", "http://192.168.99.1:8001"); // use minikube/vbox host's default address

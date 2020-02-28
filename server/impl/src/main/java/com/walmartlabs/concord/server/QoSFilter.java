@@ -184,6 +184,7 @@ public class QoSFilter implements Filter {
             }
         } catch (InterruptedException e) {
             ((HttpServletResponse) response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            Thread.currentThread().interrupt();
         } finally {
             if (accepted) {
                 for (int p = queues.length - 1; p >= 0; --p) {

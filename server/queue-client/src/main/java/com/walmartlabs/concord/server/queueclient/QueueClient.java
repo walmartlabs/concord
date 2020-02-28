@@ -42,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class QueueClient {
 
@@ -133,7 +134,7 @@ public class QueueClient {
         private long lastRequestTimestamp;
         private long lastResponseTimestamp;
 
-        private volatile State state;
+        private AtomicReference<State> state;
 
         public Worker(QueueClientConfiguration cfg, List<RequestEntry> requests) throws URISyntaxException {
             this.agentId = cfg.getAgentId();
@@ -147,7 +148,7 @@ public class QueueClient {
             this.maxNoActivityPeriod = cfg.getMaxNoActivityPeriod();
             this.connectTimeout = cfg.getConnectTimeout();
 
-            this.state = State.CONNECTING;
+            this.state = new AtomicReference<>(State.CONNECTING);
         }
 
         private void mainLoop() {
@@ -156,10 +157,10 @@ public class QueueClient {
             Session session = null;
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    switch (state) {
+                    switch (state.get()) {
                         case CONNECTING: {
                             session = connect(destUris[destUriIndex]);
-                            state = State.CONNECTED;
+                            state.set(State.CONNECTED);
                             lastRequestTimestamp = System.currentTimeMillis();
                             lastResponseTimestamp = lastRequestTimestamp;
                             log.info("connect ['{}'] -> done", destUris[destUriIndex]);
@@ -174,14 +175,14 @@ public class QueueClient {
                         case DISCONNECTING: {
                             close(session);
                             session = null;
-                            state = State.CONNECTING;
+                            state.set(State.CONNECTING);
                             sleep(RECONNECT_DELAY);
                             break;
                         }
                     }
                 } catch (Exception e) {
                     log.error("mainLoop -> error", e);
-                    state = State.DISCONNECTING;
+                    state.set(State.DISCONNECTING);
 
                     if (++destUriIndex >= destUris.length) {
                         destUriIndex = 0;
@@ -232,7 +233,7 @@ public class QueueClient {
 
         @Override
         public void onWebSocketClose(int statusCode, String reason) {
-            state = State.DISCONNECTING;
+            state.set(State.DISCONNECTING);
             log.info("onWebSocketClose [{}, '{}'] -> done", statusCode, reason);
         }
 
@@ -247,7 +248,7 @@ public class QueueClient {
         }
 
         public void disconnect() {
-            state = State.DISCONNECTING;
+            state.set(State.DISCONNECTING);
         }
 
         private Session connect(URI destUri) throws Exception {
@@ -289,7 +290,7 @@ public class QueueClient {
             boolean sent = send(session, e.request);
             if (!sent) {
                 e.cancel();
-                state = State.DISCONNECTING;
+                state.set(State.DISCONNECTING);
                 return;
             }
 
@@ -374,7 +375,8 @@ public class QueueClient {
         }
     }
 
-    private class RequestEntry {
+    private static class RequestEntry {
+
         private final Message request;
         private final SettableFuture<Message> future;
 
