@@ -64,19 +64,21 @@ public final class TriggerInternalIdCalculator {
         return result;
     }
 
-    private static Map<String, Object> toSortedMap(Map<String, Object> map) {
+    // use LinkedHashMap instead of Map, because LinkedHashMap is serializable
+    private static LinkedHashMap<String, Object> toSortedMap(Map<String, Object> map) {
         if (map == null) {
-            return Collections.emptyMap();
+            return new LinkedHashMap<>();
         }
 
-        Map<String, Object> result = new LinkedHashMap<>();
+        LinkedHashMap<String, Object> result = new LinkedHashMap<>();
         map.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(e -> result.put(e.getKey(), toSorted(e.getValue())));
+
         return result;
     }
 
-    private static byte[] serialize(Map<String, Object> map) {
+    private static byte[] serialize(LinkedHashMap<String, Object> map) {
         if (map == null) {
             return new byte[0];
         }

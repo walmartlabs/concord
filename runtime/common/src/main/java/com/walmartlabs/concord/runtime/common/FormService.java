@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -64,9 +65,8 @@ public class FormService {
     }
 
     public List<Form> list() {
-        try {
-            return Files.list(dir)
-                    .map(this::read)
+        try (Stream<Path> list = Files.list(dir)) {
+            return list.map(this::read)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new RuntimeException("Error while getting a list of forms: " + e.getMessage(), e);

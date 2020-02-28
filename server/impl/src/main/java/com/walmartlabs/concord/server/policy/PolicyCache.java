@@ -97,7 +97,7 @@ public class PolicyCache implements BackgroundTask {
         } catch (Exception e) {
             synchronized (refreshMutex) {
                 lastRefreshRequestAt = System.currentTimeMillis();
-                refreshMutex.notify();
+                refreshMutex.notifyAll();
             }
         }
     }

@@ -145,7 +145,9 @@ public class AnsibleCallbacks {
 
         try {
             this.eventSenderFuture.get(1, TimeUnit.MINUTES);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException | TimeoutException e) {
             log.warn("Error while stopping the event sending thread", e);
         }
 

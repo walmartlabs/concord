@@ -229,7 +229,7 @@ public abstract class AbstractEventResource {
     private static <T> T resolve(Future<T> f) {
         try {
             return f.get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) { // NOSONAR
             throw new RuntimeException(e);
         }
     }
