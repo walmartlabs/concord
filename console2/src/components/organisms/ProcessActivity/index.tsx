@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Icon, Menu } from 'semantic-ui-react';
@@ -37,10 +38,9 @@ import {
     ProcessWaitActivity
 } from '../index';
 import ProcessToolbar from './Toolbar';
-import { useCallback, useRef } from 'react';
 import { usePolling } from '../../../api/usePolling';
-import { useState } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
+import { useStatusFavicon } from './favicon';
 
 export type TabLink =
     | 'status'
@@ -79,6 +79,8 @@ const ProcessActivity = (props: ExternalProps) => {
         setProcess(process);
         return !isFinal(process.status);
     }, [props.instanceId]);
+
+    useStatusFavicon(process);
 
     const refreshHandler = useCallback(() => {
         toggleRefresh((prevState) => !prevState);
