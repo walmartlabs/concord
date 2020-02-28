@@ -104,6 +104,7 @@ const RepositoryEventsActivity = ({
     } = usePagination();
 
     const repoFullNameRef = useRef<string | undefined>('');
+    const [isCalendarOpen, setCalendarOpen] = useState(false);
     const [eventTypeFilter, setEventTypeFilter] = useState<string>();
     const [eventIdFilter, setEventIdFilter] = useState<string>();
     const [eventIdFilterError, setEventIdFilterError] = useState<boolean>();
@@ -192,7 +193,9 @@ const RepositoryEventsActivity = ({
                                             basic={true}
                                         />
                                     }
-                                    openOnTriggerClick={true}
+                                    open={isCalendarOpen}
+                                    onClose={() => setCalendarOpen(false)}
+                                    onOpen={() => setCalendarOpen(true)}
                                     openOnTriggerMouseEnter={false}
                                     closeOnTriggerMouseLeave={false}
                                     closeOnDocumentClick={false}>
@@ -226,6 +229,7 @@ const RepositoryEventsActivity = ({
                                         eventId: eventIdFilter
                                     });
                                     resetOffset(0);
+                                    setCalendarOpen(false);
                                 }}
                                 disabled={disabled || !searchEnabled}
                             />
@@ -250,27 +254,29 @@ const RepositoryEventsActivity = ({
 
             {error && <RequestErrorActivity error={error} />}
 
-            <Table
-                celled={true}
-                selectable={!disabled && data !== undefined && data.items.length > 0}
-                style={disabled ? { opacity: 0.4 } : {}}>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell collapsing={true} width={2}>
-                            ID
-                        </Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true} width={1}>
-                            Date
-                        </Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true} width={2}>
-                            Type
-                        </Table.HeaderCell>
-                        <Table.HeaderCell width={11}>Payload</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
+            <div style={{ overflowX: 'auto' }}>
+                <Table
+                    celled={true}
+                    selectable={!disabled && data !== undefined && data.items.length > 0}
+                    style={disabled ? { opacity: 0.4 } : {}}>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell collapsing={true} width={2}>
+                                ID
+                            </Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true} width={1}>
+                                Date
+                            </Table.HeaderCell>
+                            <Table.HeaderCell collapsing={true} width={2}>
+                                Type
+                            </Table.HeaderCell>
+                            <Table.HeaderCell width={11}>Payload</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
 
-                <Table.Body>{renderItems(data)}</Table.Body>
-            </Table>
+                    <Table.Body>{renderItems(data)}</Table.Body>
+                </Table>
+            </div>
         </>
     );
 };
