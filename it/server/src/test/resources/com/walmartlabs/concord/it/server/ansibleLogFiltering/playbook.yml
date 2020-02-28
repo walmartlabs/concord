@@ -1,0 +1,6 @@
+---
+- hosts: all
+  tasks:
+    - debug:
+        msg: "Hello! my_password='n0N30fUr8uS1N3sS'"
+        verbosity: 0
