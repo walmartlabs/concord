@@ -46,6 +46,7 @@ public class Payload {
             "pull_request_review_comment",
             "push",
             "release",
+            "team",
             "team_add",
             "repository"
         );
@@ -56,8 +57,7 @@ public class Payload {
     private static final Set<String> ORGANIZATION_EVENTS = asSet(
             "membership",
             "organization",
-            "org_block",
-            "team"
+            "org_block"
     );
 
     public static Payload from(String eventName, Map<String, Object> data) {
