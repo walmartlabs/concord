@@ -128,6 +128,20 @@ public class RepositoryDao extends AbstractDao {
         }
     }
 
+    public void clearSecretMappingBySecretId(DSLContext tx, UUID secretId) {
+        tx.update(REPOSITORIES)
+                .setNull(REPOSITORIES.SECRET_ID)
+                .where(REPOSITORIES.SECRET_ID.eq(secretId))
+                .execute();
+    }
+
+    public void clearSecretMappingByProjectId(DSLContext tx, UUID projectId) {
+        tx.update(REPOSITORIES)
+                .setNull(REPOSITORIES.SECRET_ID)
+                .where(REPOSITORIES.PROJECT_ID.eq(projectId))
+                .execute();
+    }
+
     public void delete(UUID repoId) {
         tx(tx -> delete(tx, repoId));
     }
@@ -191,6 +205,12 @@ public class RepositoryDao extends AbstractDao {
 
             return select.fetch(this::toEntry);
         }
+    }
+
+    public List<RepositoryEntry> findBySecretId(DSLContext tx, UUID secretId) {
+        return selectRepositoryEntry(tx)
+                .where(REPOSITORIES.SECRET_ID.eq(secretId))
+                .fetch(this::toEntry);
     }
 
     public void updateMeta(DSLContext tx, UUID id, Map<String, Object> meta) {

@@ -24,8 +24,8 @@ import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
-import com.walmartlabs.concord.server.org.EntityOwner;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
+import com.walmartlabs.concord.server.org.*;
+import com.walmartlabs.concord.server.org.secret.SecretDao;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
@@ -52,33 +52,42 @@ public class ProjectManager {
     private final PolicyManager policyManager;
     private final ProjectDao projectDao;
     private final RepositoryDao repositoryDao;
+    private final SecretDao secretDao;
     private final ProjectRepositoryManager projectRepositoryManager;
     private final ProjectAccessManager accessManager;
     private final SecretManager secretManager;
     private final AuditLog auditLog;
     private final EncryptedProjectValueManager encryptedValueManager;
     private final UserManager userManager;
+    private final OrganizationManager organizationManager;
+    private final OrganizationDao organizationDao;
 
     @Inject
     public ProjectManager(PolicyManager policyManager,
                           ProjectDao projectDao,
                           RepositoryDao repositoryDao,
+                          SecretDao secretDao,
                           ProjectRepositoryManager projectRepositoryManager,
                           ProjectAccessManager accessManager,
                           SecretManager secretManager,
                           AuditLog auditLog,
                           EncryptedProjectValueManager encryptedValueManager,
-                          UserManager userManager) {
+                          UserManager userManager,
+                          OrganizationManager organizationManager,
+                          OrganizationDao organizationDao) {
 
         this.policyManager = policyManager;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
+        this.secretDao = secretDao;
         this.projectRepositoryManager = projectRepositoryManager;
         this.accessManager = accessManager;
         this.secretManager = secretManager;
         this.auditLog = auditLog;
         this.encryptedValueManager = encryptedValueManager;
         this.userManager = userManager;
+        this.organizationManager = organizationManager;
+        this.organizationDao = organizationDao;
     }
 
     public ProjectEntry get(UUID projectId) {
@@ -146,13 +155,28 @@ public class ProjectManager {
         Map<String, RepositoryEntry> repos = entry.getRepositories();
         assertSecrets(orgId, repos);
 
+        OrganizationEntry organizationEntry = null;
+
+        if (entry.getOrgId() != null) {
+            organizationEntry = organizationManager.assertAccess(entry.getOrgId(), true);
+        } else if (entry.getOrgName() != null) {
+            organizationEntry = organizationManager.assertAccess(entry.getOrgName(), true);
+        }
+
+        UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : orgId;
+
         projectDao.tx(tx -> {
             RawPayloadMode rawPayloadMode = entry.getRawPayloadMode();
             if (rawPayloadMode == null && entry.getAcceptsRawPayload() != null && entry.getAcceptsRawPayload()) {
                 rawPayloadMode = RawPayloadMode.ORG_MEMBERS;
             }
 
-            projectDao.update(tx, orgId, projectId, entry.getVisibility(), entry.getName(),
+             if(!orgIdUpdate.equals(orgId)) {
+                 secretDao.updateProjectScopeByProjectId(tx, orgId, projectId, null);
+                 repositoryDao.clearSecretMappingByProjectId(tx, projectId);
+             }
+
+            projectDao.update(tx, orgIdUpdate, projectId, entry.getVisibility(), entry.getName(),
                     entry.getDescription(), entry.getCfg(), rawPayloadMode, updatedOwnerId, entry.getMeta());
 
             if (repos != null) {

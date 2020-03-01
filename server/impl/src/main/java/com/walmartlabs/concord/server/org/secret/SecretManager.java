@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.common.secret.KeyPair;
 import com.walmartlabs.concord.common.secret.SecretEncryptedByType;
 import com.walmartlabs.concord.common.secret.UsernamePassword;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
@@ -34,6 +35,7 @@ import com.walmartlabs.concord.server.org.*;
 import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
+import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.secret.SecretDao.SecretDataEntry;
 import com.walmartlabs.concord.server.org.secret.provider.SecretStoreProvider;
 import com.walmartlabs.concord.server.org.secret.store.SecretStore;
@@ -78,6 +80,8 @@ public class SecretManager {
     private final SecretStoreProvider secretStoreProvider;
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
+    private final RepositoryDao repositoryDao;
+    private final OrganizationDao organizationDao;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -88,7 +92,9 @@ public class SecretManager {
                          SecretStoreConfiguration secretCfg,
                          SecretStoreProvider secretStoreProvider,
                          UserDao userDao,
-                         ProjectAccessManager projectAccessManager) {
+                         ProjectAccessManager projectAccessManager,
+                         RepositoryDao repositoryDao,
+                         OrganizationDao organizationDao) {
 
         this.policyManager = policyManager;
         this.processQueueManager = processQueueManager;
@@ -99,6 +105,8 @@ public class SecretManager {
         this.secretStoreProvider = secretStoreProvider;
         this.auditLog = auditLog;
         this.projectAccessManager = projectAccessManager;
+        this.repositoryDao = repositoryDao;
+        this.organizationDao = organizationDao;
     }
 
     @WithTimer
@@ -260,16 +268,16 @@ public class SecretManager {
         String newPassword = req.newStorePassword();
 
         if (e.getEncryptedBy() == SecretEncryptedByType.SERVER_KEY && (currentPassword != null || newPassword != null)) {
-            throw new ConcordApplicationException("The secret is encrypted with the server's key, can't use or set 'storePassword'", Status.BAD_REQUEST);
+            throw new ConcordApplicationException("The secret is encrypted with the server's key, the '" + Constants.Multipart.STORE_PASSWORD + "' cannot be changed", Status.BAD_REQUEST);
         }
 
         Map<String, Object> updated = new HashMap<>();
-
         byte[] newData = req.data();
+
         if (newData != null) {
             // updating the data and/or the store password
             if (e.getEncryptedBy() == SecretEncryptedByType.PASSWORD && currentPassword == null) {
-                throw new ConcordApplicationException("Updating the secret's data requires the original 'storePassword'", Status.BAD_REQUEST);
+                throw new ConcordApplicationException("Updating the secret's data requires the original '" + Constants.Multipart.STORE_PASSWORD + "'", Status.BAD_REQUEST);
             }
 
             if (e.getType() != SecretType.DATA) {
@@ -286,21 +294,42 @@ public class SecretManager {
         }
 
         String pwd = currentPassword;
+
         if (newPassword != null && !newPassword.equals(currentPassword)) {
             pwd = req.newStorePassword();
-            updated.put("storePassword", true);
+            updated.put(Constants.Multipart.STORE_PASSWORD, true);
         }
+
+        byte[] newEncryptedData;
 
         if (newData != null) {
             // encrypt the supplied data
             byte[] salt = secretCfg.getSecretStoreSalt();
-            newData = SecretUtils.encrypt(newData, getPwd(pwd), salt);
+            newEncryptedData = SecretUtils.encrypt(newData, getPwd(pwd), salt);
+        } else {
+            newEncryptedData = null;
         }
+
+        OrganizationEntry organizationEntry = null;
+
+        if (req.orgId() != null) {
+            organizationEntry = orgManager.assertAccess(req.orgId(), true);
+        } else if (req.orgName() != null) {
+            organizationEntry = orgManager.assertAccess(req.orgName(), true);
+        }
+
+        UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : e.getOrgId();
 
         UUID projectId = req.projectId();
         String projectName = req.projectName() == null ? "" : req.projectName();
 
-        if (projectId != null || !projectName.isEmpty()) {
+        if (!orgIdUpdate.equals(e.getOrgId())) {
+            // set the project ID and project name as null when the updated org ID is not same as the current orgId
+            projectId = null;
+            projectName = null;
+        }
+
+        if (projectId != null || projectName != null) {
             ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), projectId, projectName, ResourceAccessLevel.READER, true);
             projectId = entry.getId();
             if (!entry.getOrgId().equals(e.getOrgId())) {
@@ -308,7 +337,16 @@ public class SecretManager {
             }
         }
 
-        secretDao.update(e.getId(), req.name(), newData, req.visibility(), projectId);
+        UUID finalProjectId = projectId;
+
+        secretDao.tx(tx -> {
+            if (!orgIdUpdate.equals(e.getOrgId())) {
+                // update repository mapping to null when org is changing
+                repositoryDao.clearSecretMappingBySecretId(tx, e.getId());
+            }
+
+            secretDao.update(tx, e.getId(), req.name(), newEncryptedData, req.visibility(), finalProjectId, orgIdUpdate);
+        });
 
         Map<String, Object> changes = DiffUtils.compare(e, secretDao.get(e.getId()));
         changes.put("updated", updated);

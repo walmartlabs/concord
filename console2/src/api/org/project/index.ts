@@ -84,6 +84,7 @@ export interface NewProjectEntry {
 export interface UpdateProjectEntry {
     id?: ConcordId;
     name?: ConcordKey;
+    orgId?: ConcordId;
     description?: string;
     visibility?: ProjectVisibility;
     rawPayloadMode?: RawPayloadMode;

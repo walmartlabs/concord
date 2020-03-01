@@ -38,6 +38,7 @@ import {
     AuditLogActivity,
     PublicKeyPopup,
     SecretDeleteActivity,
+    SecretOrganizationChangeActivity,
     SecretProjectActivity,
     SecretRenameActivity,
     SecretTeamAccessActivity,
@@ -178,6 +179,13 @@ class SecretActivity extends React.PureComponent<Props> {
                         secretId={data.id}
                         secretName={data.name}
                         projectId={data.projectId}
+                    />
+
+                    <Header as="h4">Organization</Header>
+                    <SecretOrganizationChangeActivity
+                        orgName={data.orgName}
+                        secretName={data.name}
+                        orgId={data.orgId}
                     />
 
                     <Header as="h4">Delete Secret</Header>

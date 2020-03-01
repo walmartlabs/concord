@@ -24,15 +24,12 @@ import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.ConcurrentProcessRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
-import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.queue.ProcessCompletionCondition;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.jooq.DSLContext;
-import org.jooq.Record1;
 
 import javax.inject.Inject;
 import javax.inject.Named;

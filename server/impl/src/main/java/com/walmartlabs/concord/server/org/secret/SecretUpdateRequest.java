@@ -60,6 +60,12 @@ public interface SecretUpdateRequest extends Serializable {
     UUID projectId();
 
     @Nullable
+    UUID orgId();
+
+    @Nullable
+    String orgName();
+
+    @Nullable
     @ApiModelProperty(dataType = "string")
     byte[] data();
 }

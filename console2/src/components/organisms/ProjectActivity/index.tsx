@@ -35,7 +35,8 @@ import {
     EncryptValueActivity,
     ProjectOwnerChangeActivity,
     ProjectRawPayloadModeActivity,
-    ProjectTeamAccessActivity
+    ProjectTeamAccessActivity,
+    ProjectOrganizationChangeActivity
 } from '../../organisms';
 import { NotFoundPage } from '../../pages';
 import CheckpointView from '../CheckpointView';
@@ -171,6 +172,13 @@ class ProjectActivity extends React.PureComponent<Props> {
                         projectId={p.id}
                         projectName={p.name}
                         owner={p.owner}
+                    />
+
+                    <Header as="h4">Organization</Header>
+                    <ProjectOrganizationChangeActivity
+                        projectName={p.name}
+                        orgName={p.orgName}
+                        orgId={p.orgId}
                     />
 
                     <Header as="h4">Delete project</Header>

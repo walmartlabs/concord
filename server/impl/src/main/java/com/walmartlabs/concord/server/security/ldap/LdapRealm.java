@@ -44,7 +44,6 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.UUID;
 
 @Named
