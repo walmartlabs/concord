@@ -1,6 +1,6 @@
 configuration:
   dependencies:
-  - "mvn://com.walmartlabs.concord.plugins:ldap-task:1.22.0"
+  - "mvn://com.walmartlabs.concord.plugins:ldap-task:1.23.1"
 
 flows:
   default:
