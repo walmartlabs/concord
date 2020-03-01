@@ -23,10 +23,9 @@ package com.walmartlabs.concord.server.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
+import com.walmartlabs.concord.server.events.oneops.OneOpsTriggerProcessor;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
-import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
@@ -50,9 +49,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * Handles external OneOps events.
+ * At the moment supports only VM replacement events. Other event types might
+ * require additional support code in {@link OneOpsTriggerProcessor}.
+ */
 @Named
 @Singleton
 @Api(value = "Events", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
@@ -63,37 +68,24 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
 
     private static final String EVENT_SOURCE = "oneops";
 
-    private static final String ORG_KEY = "org";
-    private static final String ASM_KEY = "asm";
-    private static final String ENV_KEY = "env";
-    private static final String PLATFORM_KEY = "platform";
-    private static final String STATE_KEY = "state";
-    private static final String TYPE_KEY = "type";
-    private static final String COMPONENT_KEY = "component";
-    private static final String SOURCE_KEY = "source";
-    private static final String SUBJECT_KEY = "subject";
-    private static final String DEPLOYMENT_STATE_KEY = "deploymentState";
-    private static final String IPS_KEY = "ips";
-    private static final String AUTHOR_KEY = "author";
-
-    private final TriggersDao triggersDao;
     private final ObjectMapper objectMapper;
+    private final List<OneOpsTriggerProcessor> processors;
 
     @Inject
     public OneOpsEventResource(ExternalEventsConfiguration cfg,
                                ProcessManager processManager,
-                               TriggersDao triggersDao,
                                ProjectDao projectDao,
                                RepositoryDao repositoryDao,
                                TriggersConfiguration triggersCfg,
                                UserManager userManager,
                                ProcessSecurityContext processSecurityContext,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               List<OneOpsTriggerProcessor> processors) {
 
         super(cfg, processManager, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
 
-        this.triggersDao = triggersDao;
         this.objectMapper = objectMapper;
+        this.processors = processors;
     }
 
     @POST
@@ -110,18 +102,14 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        Map<String, Object> triggerConditions = buildConditions(event);
-        Map<String, Object> triggerEvent = buildTriggerEvent(event, triggerConditions);
+        List<OneOpsTriggerProcessor.Result> results = new ArrayList<>();
+        processors.forEach(p -> p.process(event, results));
 
-        String eventId = String.valueOf(event.get("cmsId"));
-
-        List<TriggerEntry> triggers = triggersDao.list(EVENT_SOURCE).stream()
-                .filter(t -> DefaultEventFilter.filter(triggerConditions, t))
-                .collect(Collectors.toList());
-
-        List<PartialProcessKey> processKeys = process(eventId, EVENT_SOURCE, triggerEvent, triggers, null);
-
-        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, triggerConditions, triggerEvent, processKeys.size());
+        for (OneOpsTriggerProcessor.Result result : results) {
+            String eventId = String.valueOf(event.get("cmsId"));
+            List<PartialProcessKey> processKeys = process(eventId, EVENT_SOURCE, result.event(), result.triggers(), null);
+            log.info("event ['{}'] -> done, {} processes started", eventId, processKeys.size());
+        }
 
         return Response.ok().build();
     }
@@ -140,118 +128,5 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         }
 
         return event(m);
-    }
-
-    private static Map<String, Object> buildTriggerEvent(Map<String, Object> event,
-                                                         Map<String, Object> conditions) {
-
-        Map<String, Object> result = new HashMap<>(conditions);
-        result.put("payload", event);
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> buildConditions(Map<String, Object> event) {
-        Map<String, Object> cis = getCis(event);
-        Map<String, Object> payload = (Map<String, Object>) event.get("payload");
-
-        Map<String, Object> result = new HashMap<>();
-        result.put(STATE_KEY, get("ciState", cis));
-        result.put(COMPONENT_KEY, get("ciClassName", cis));
-        result.put(TYPE_KEY, get("type", event));
-        result.put(SOURCE_KEY, get("source", event));
-        result.put(SUBJECT_KEY, get("subject", event));
-        result.put(DEPLOYMENT_STATE_KEY, get("deploymentState", payload));
-
-        result.put(IPS_KEY, getIPs(event));
-        result.put(AUTHOR_KEY, payload.get("createdBy"));
-
-        // example: /testing/twst/localtest/bom/sts/1
-        //          / org   /asm /env      /.../platform/...
-        String[] nsPath = getNsPath(event);
-        if (nsPath != null) {
-            addKey(ORG_KEY, nsPath, 0, result);
-            addKey(ASM_KEY, nsPath, 1, result);
-            addKey(ENV_KEY, nsPath, 2, result);
-            // ignore bom
-            addKey(PLATFORM_KEY, nsPath, 4, result);
-        }
-
-        return result;
-    }
-
-    private static String get(String key, Map<String, Object> event) {
-        return String.valueOf(event.get(key));
-    }
-
-    private static String[] getNsPath(Map<String, Object> event) {
-        Map<String, Object> cis = getCis(event);
-        if (cis == null) {
-            return null;
-        }
-
-        String nsPath = (String) cis.get("nsPath");
-        if (nsPath == null) {
-            return new String[0];
-        }
-
-        if (nsPath.startsWith("/")) {
-            nsPath = nsPath.substring(1);
-        }
-
-        return nsPath.split("/");
-    }
-
-    private static Map<String, Object> getCis(Map<String, Object> event) {
-        List<Map<String, Object>> cisItems = getCisItems(event);
-        if (cisItems.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return cisItems.get(0);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<Map<String, Object>> getCisItems(Map<String, Object> event) {
-        Object cisElement = event.get("cis");
-        if (cisElement == null) {
-            return Collections.emptyList();
-        }
-
-        if (cisElement instanceof List) {
-            return (List<Map<String, Object>>) cisElement;
-        }
-
-        return Collections.emptyList();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Set<String> getIPs(Map<String, Object> event) {
-        List<Map<String, Object>> cisItems = getCisItems(event);
-        if (cisItems.isEmpty()) {
-            return Collections.emptySet();
-        }
-
-        Set<String> result = new HashSet<>();
-        for (Map<String, Object> i : cisItems) {
-            Object attrs = i.get("ciAttributes");
-            if (attrs == null) {
-                continue;
-            }
-
-            Map<String, Object> m = (Map<String, Object>) attrs;
-            Object v = m.get("public_ip");
-            if (v == null) {
-                continue;
-            }
-
-            result.add(v.toString());
-        }
-        return result;
-    }
-
-    private static void addKey(String key, String[] values, int valueIndex, Map<String, Object> result) {
-        if (values.length > valueIndex) {
-            result.put(key, values[valueIndex]);
-        }
     }
 }

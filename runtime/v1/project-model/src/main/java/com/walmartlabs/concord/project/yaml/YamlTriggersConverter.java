@@ -38,7 +38,8 @@ public final class YamlTriggersConverter {
     private static Map<String, TriggerConverter> createConverters() {
         Map<String, TriggerConverter> converters = new HashMap<>();
         converters.put("manual", new ManualTriggerConverter());
-        converters.put("github", new GithubTriggerConverter());
+        converters.put("github", new DefaultTriggerConverter());
+        converters.put("oneops", new DefaultTriggerConverter());
         return converters;
     }
 
@@ -81,19 +82,18 @@ public final class YamlTriggersConverter {
         public DefaultTriggerConverter() {
             super(TRIGGER_CONFIG_KEYS);
         }
-    }
 
-    private static class GithubTriggerConverter extends DefaultTriggerConverter {
-
-        @Override
         @SuppressWarnings("unchecked")
         public Trigger convert(YamlTrigger trigger) {
             Map<String, Object> opts = (Map<String, Object>) StepConverter.deepConvert(trigger.getOptions());
-            int version = MapUtils.getInt(opts, "version", 1);
+            int version = MapUtils.getInt(opts, Constants.Trigger.VERSION, 1);
             if (version == 1) {
                 return super.convert(trigger);
             }
+            return getV2Trigger(trigger, opts);
+        }
 
+        private Trigger getV2Trigger(YamlTrigger trigger, Map<String, Object> opts) {
             Map<String, Object> cfg = new HashMap<>();
             for (String key : TRIGGER_CONFIG_KEYS) {
                 Object v = opts.remove(key);
@@ -103,13 +103,14 @@ public final class YamlTriggersConverter {
             }
 
             Map<String, Object> params = new HashMap<>();
-            params.put("version", version);
-            params.putAll(MapUtils.getMap(opts, "conditions", Collections.emptyMap()));
+            params.put("version", 2);
+            params.putAll(MapUtils.getMap(opts, Constants.Trigger.CONDITIONS, Collections.emptyMap()));
             List<String> activeProfiles = MapUtils.getList(opts, Constants.Request.ACTIVE_PROFILES_KEY, null);
             Map<String, Object> arguments = MapUtils.getMap(opts, Constants.Request.ARGUMENTS_KEY, null);
 
-            return new Trigger("github", activeProfiles, arguments, params, cfg, convertSourceMap(trigger));
+            return new Trigger(trigger.getEventSource(), activeProfiles, arguments, params, cfg, convertSourceMap(trigger));
         }
+
     }
 
     private static abstract class AbstractTriggerConverter implements TriggerConverter {

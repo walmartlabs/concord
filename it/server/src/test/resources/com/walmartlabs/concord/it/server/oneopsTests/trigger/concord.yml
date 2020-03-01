@@ -1,0 +1,27 @@
+triggers:
+  - oneops:
+      org: "myorgname"
+      asm: "myassemblyname"
+      env: "prod"
+      platform: "myplatformname"
+      type: "deployment"
+      deploymentState: "complete"
+      entryPoint: oneopsTriggerFlow
+
+  - oneops:
+      version: 2
+      conditions:
+        org: "myorgname"
+        asm: "myassemblyname"
+        env: "qa"
+        platform: "myplatformname"
+        type: "deployment"
+        deploymentState: "complete"
+      entryPoint: oneopsTriggerFlowV2
+
+flows:
+  oneopsTriggerFlow:
+    - log: "Oneops has completed a deployment trigger version 1"
+
+  oneopsTriggerFlowV2:
+    - log: "Oneops has completed a deployment trigger version 2"

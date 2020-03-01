@@ -1,0 +1,105 @@
+{
+  "cmsId":2201338847,
+  "severity":"info",
+  "type":"deployment",
+  "source":"deployment",
+  "subject":"myorgname/myassemblyname/qa : Deployment completed successfully.",
+  "text":"16 work-orders relying on instance(s) in bad state.",
+  "nsPath":"/myorgname/myassemblyname/qa/bom",
+  "payload":{
+    "deploymentState":"complete",
+    "updatedBy":"oneops-system",
+    "comments":"",
+    "ops":"16 work-orders relying on instance(s) in bad state.",
+    "createdBy":"admin",
+    "deploymentId":"2201338847",
+    "organization":{
+      "owner":"testuser@my.org",
+      "name":"myorgname",
+      "id":2119985.0,
+      "tags":{
+        "CCCID":"05-US.07479",
+        "pillar":"Test Pillar",
+        "VP":"Test User",
+        "dept":"05",
+        "costcenter":"07479",
+        "CTOdirect":"Test CTODirect",
+        "CTO":"Test CTO King"
+      }
+    },
+    "assembly":{
+      "owner":"testuser@my.org",
+      "name":"myassemblyname",
+      "id":1.3101082E7,
+      "tags":{
+        "trproductid":"9"
+      }
+    }
+  },
+  "timestamp":1580163213384,
+  "manifestCiId":0,
+  "cis":[
+    {
+      "nsId":30819132,
+      "ciAttributes":{
+        "metadata":"{\"owner\":\"testuser@my.org\",\"mgmt_url\":\"https://web.qa.oneops.com\",\"organization\":\"myorg\",\"assembly\":\"myassembly\",\"environment\":\"qa\",\"platform\":\"myplatformname\",\"component\":\"30799465\",\"instance\":\"412832054\",\"trproductid\":\"9\"}",
+        "allow_rules":"[\"-p tcp --dport 22\"]",
+        "public_ip":"10.36.78.212",
+        "iptables_enabled":"false",
+        "timezone":"UTC",
+        "allow_loopback":"true",
+        "additional_search_domains":"[]",
+        "private_ip":"10.1.1.1",
+        "applied_compliance":"{}",
+        "dns_record":"10.1.1.1",
+        "hostname":"myhostname",
+        "cores":"4",
+        "accelerated_flag":"false",
+        "drop_policy":"true",
+        "hypervisor":"myhypervisor-test.com",
+        "instance_state":"ACTIVE",
+        "require_public_ip":"false",
+        "deny_rules":"[]",
+        "osname":"redhat-6.9 Linux 2.6.32-696.28.1.el6.x86_64 #1 SMP Thu Apr 26 04:27:41 EDT 2018 x86_64 x86_64 GNU/Linux",
+        "server_image_name":"RHEL-6.9-x86_64 RC12",
+        "limits":"{}",
+        "ram":"11532",
+        "server_image_id":"6c4e169a-d56b-4d85-9322-87978d2af20a",
+        "dhclient":"false",
+        "availability_zone":"az2",
+        "instance_name":"my-instancename-qa-412832054",
+        "hosts":"{}",
+        "task_state":"",
+        "sshd_config":"{\"Ciphers\":\"aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128,arcfour\",\"Macs\":\"hmac-sha1,hmac-ripemd160\"}",
+        "repo_list":"[]",
+        "ostype":"redhat-6.9",
+        "proxy_map":"{}",
+        "host_id":"34bcaee707889792351b20f1aad4bb9d54683981834ae4da53c59d2f",
+        "tags":"{}",
+        "vm_state":"active",
+        "sysctl":"{\"net.ipv4.tcp_mem\":\"1529280 2039040 3058560\",\"net.ipv4.udp_mem\":\"1529280 2039040 3058560\",\"fs.file-max\":\"1611021\"}",
+        "instance_id":"e618a6e7-69a4-46bc-b975-ad2e6bc3762d",
+        "pam_groupdn":"",
+        "size":"L",
+        "image_id":"",
+        "nat_rules":"[]"
+      },
+      "attrProps":{
+      },
+      "altNs":{
+      },
+      "ciId":412832054,
+      "ciName":"compute-355303109-23",
+      "ciClassName":"bom.Compute",
+      "impl":"oo::chef-11.4.0",
+      "nsPath":"/myorgname/myassemblyname/qa/bom/myplatformname/1",
+      "ciGoid":"30819132-1243-412832054",
+      "ciState":"default",
+      "lastAppliedRfcId":831828210,
+      "createdBy":"mytestuser",
+      "updatedBy":"mytestuser:controller",
+      "created":1580162840629,
+      "updated":1580162840629
+    }
+  ]
+}

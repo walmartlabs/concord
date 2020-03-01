@@ -321,10 +321,11 @@ public class SecretManager {
         UUID orgIdUpdate = organizationEntry != null ? organizationEntry.getId() : e.getOrgId();
 
         UUID projectId = req.projectId();
-        String projectName = req.projectName() == null ? "" : req.projectName();
+        String projectName = req.projectName();
 
         if (!orgIdUpdate.equals(e.getOrgId())) {
-            // set the project ID and project name as null when the updated org ID is not same as the current orgId
+            // set the project ID and project name as null when the updated org ID is not same as the current org ID
+            // when a secret is changing orgs, the project link must be set to null
             projectId = null;
             projectName = null;
         }

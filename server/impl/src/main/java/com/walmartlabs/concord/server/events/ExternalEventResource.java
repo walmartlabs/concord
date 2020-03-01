@@ -22,10 +22,9 @@ package com.walmartlabs.concord.server.events;
 
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
+import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerProcessor;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
-import com.walmartlabs.concord.server.org.triggers.TriggersDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
@@ -49,11 +48,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+/**
+ * Handles generic external events.
+ * Receives arbitrary JSON bodies and matches them with whatever is configured
+ * in the trigger.
+ */
 @Named
 @Singleton
 @Api(value = "External Events", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
@@ -62,21 +66,20 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
 
     private static final Logger log = LoggerFactory.getLogger(ExternalEventResource.class);
 
-    private final TriggersDao triggersDao;
+    private final List<ExternalEventTriggerProcessor> processors;
 
     @Inject
     public ExternalEventResource(ExternalEventsConfiguration cfg,
                                  ProcessManager processManager,
-                                 TriggersDao triggersDao,
                                  ProjectDao projectDao,
                                  RepositoryDao repositoryDao,
                                  TriggersConfiguration triggersCfg,
                                  UserManager userManager,
-                                 ProcessSecurityContext processSecurityContext) {
+                                 ProcessSecurityContext processSecurityContext,
+                                 List<ExternalEventTriggerProcessor> processors) {
 
         super(cfg, processManager, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
-
-        this.triggersDao = triggersDao;
+        this.processors = processors;
     }
 
     @POST
@@ -96,13 +99,14 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
 
         String eventId = (String) event.computeIfAbsent("id", s -> UUID.randomUUID().toString());
 
-        List<TriggerEntry> triggers = triggersDao.list(eventName).stream()
-                .filter(t -> DefaultEventFilter.filter(event, t))
-                .collect(Collectors.toList());
+        List<ExternalEventTriggerProcessor.Result> results = new ArrayList<>();
+        processors.forEach(p -> p.process(eventName, event, results));
 
-        List<PartialProcessKey> processKeys = process(eventId, eventName, event, triggers, null);
-
-        log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, processKeys.size());
+        for (ExternalEventTriggerProcessor.Result r : results) {
+            List<PartialProcessKey> processKeys =
+                    process(eventId, eventName, r.event(), r.triggers(), null);
+            log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, processKeys.size());
+        }
 
         return Response.ok().build();
     }

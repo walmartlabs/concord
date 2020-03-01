@@ -6,9 +6,17 @@ configuration:
 flows:
   onTestTrigger:
     - log: "Hello from exclusive trigger!"
-    - "${sleep.ms(10000)}"
+
+  onTestTriggerv2:
+    - log: "Hello from exclusive trigger v2!"
 
 triggers:
   - testTrigger:
       entryPoint: onTestTrigger
       key1: "value1"
+
+  - testTriggerv2:
+      entryPoint: onTestTriggerv2
+      version: 2
+      conditions:
+        key1: "value2"

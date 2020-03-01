@@ -3,9 +3,9 @@ flows:
     - log: "Hello from exclusive trigger!"
 
 triggers:
-- testTrigger:
-    entryPoint: onTestTrigger
-    key1: "value1"
-    exclusive:
-      group: "RED"
-      mode: "cancel"
+  - testTrigger:
+      entryPoint: onTestTrigger
+      key1: "value1"
+      exclusive:
+        group: "RED"
+        mode: "cancel"

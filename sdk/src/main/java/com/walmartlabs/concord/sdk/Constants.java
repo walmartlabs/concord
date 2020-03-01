@@ -268,6 +268,17 @@ public class Constants {
          * Used to match on the registered repositories in GitHub triggers.
          */
         public static final String REPOSITORY_INFO = "repositoryInfo";
+
+        /**
+         * {@code conditions} field. Used to match the specified parameters
+         * with the incoming event's payload.
+         */
+        public static final String CONDITIONS = "conditions";
+
+        /**
+         * {@code version} field. Used to specify the trigger's syntax version.
+         */
+        public static final String VERSION = "version";
     }
 
     /**
