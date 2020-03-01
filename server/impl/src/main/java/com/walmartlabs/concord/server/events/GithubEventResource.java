@@ -62,6 +62,13 @@ import java.util.Map;
 import static com.walmartlabs.concord.server.events.github.Constants.COMMIT_ID_KEY;
 import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURCE;
 
+/**
+ * Handles external GitHub events.
+ * Uses a custom authentication mechanism,
+ * see {@link com.walmartlabs.concord.server.security.GithubAuthenticatingFilter}.
+ *
+ * See also https://developer.github.com/webhooks/
+ */
 @Named
 @Singleton
 @Api(value = "GitHub Events", authorizations = {})

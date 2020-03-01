@@ -29,14 +29,9 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
-import static com.walmartlabs.concord.it.common.ServerClient.waitForStatus;
-import static junit.framework.TestCase.assertNotNull;
-
-public class GeneralTriggerIT extends AbstractServerIT {
+public class GeneralTriggerIT extends AbstractGeneralTriggerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testExclusive() throws Exception {
@@ -88,8 +83,7 @@ public class GeneralTriggerIT extends AbstractServerIT {
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.CANCELLED), ".*Process\\(es\\) with exclusive group 'RED' is already in the queue. Current process has been cancelled.*");
 
         // ---
-
-        projectsApi.delete(orgName, projectName);
+        orgApi.delete(orgName, "yes");
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -143,8 +137,7 @@ public class GeneralTriggerIT extends AbstractServerIT {
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.CANCELLED), ".*Process\\(es\\) with exclusive group 'RED' is already in the queue. Current process has been cancelled.*");
 
         // ---
-
-        projectsApi.delete(orgName, projectName);
+        orgApi.delete(orgName, "yes");
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -197,50 +190,6 @@ public class GeneralTriggerIT extends AbstractServerIT {
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.CANCELLED), ".*Process\\(es\\) with exclusive group 'TRIGGER' is already in the queue. Current process has been cancelled.*");
 
         // ---
-
-        projectsApi.delete(orgName, projectName);
-    }
-
-    private Map<ProcessEntry.StatusEnum, ProcessEntry> waitProcesses(
-            String orgName, String projectName, ProcessEntry.StatusEnum first, ProcessEntry.StatusEnum... more) throws Exception {
-        ProcessApi processApi = new ProcessApi(getApiClient());
-
-        List<ProcessEntry> processes;
-        while (true) {
-            processes = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
-
-            if (processes.size() == 1 + (more != null ? more.length : 0)) {
-                break;
-            }
-            Thread.sleep(1000);
-        }
-
-        Map<ProcessEntry.StatusEnum, ProcessEntry> ps = new HashMap<>();
-        for (ProcessEntry p : processes) {
-            ProcessEntry pir = waitForStatus(processApi, p.getInstanceId(), first, more);
-            ProcessEntry pe = ps.put(pir.getStatus(), pir);
-            if (pe != null) {
-                throw new RuntimeException("already got a process with '" + pe.getStatus() + "' status, id: " + pe.getInstanceId());
-            }
-        }
-        return ps;
-    }
-
-    private void assertProcessLog(ProcessEntry pir, String log) throws Exception {
-        assertNotNull(pir);
-        byte[] ab = getLog(pir.getLogFileName());
-        assertLog(log, ab);
-    }
-
-    private List<TriggerEntry> waitForTriggers(String orgName, String projectName, String repoName, int expectedCount) throws Exception {
-        TriggersApi triggerResource = new TriggersApi(getApiClient());
-        while (true) {
-            List<TriggerEntry> l = triggerResource.list(orgName, projectName, repoName);
-            if (l != null && l.size() == expectedCount) {
-                return l;
-            }
-
-            Thread.sleep(1000);
-        }
+        orgApi.delete(orgName, "yes");
     }
 }

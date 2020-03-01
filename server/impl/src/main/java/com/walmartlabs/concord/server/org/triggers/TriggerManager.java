@@ -25,6 +25,7 @@ import com.google.common.collect.ListMultimap;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.policy.EntityAction;
@@ -151,13 +152,16 @@ public class TriggerManager extends AbstractDao {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, Object> merge(Map<String, Object> cfg, String key, Map<String, Object> original) {
         if (cfg == null) {
             return original;
         }
 
-        Map<String, Object> defaults = (Map<String, Object>) cfg.getOrDefault(key, Collections.emptyMap());
-        return ConfigurationUtils.deepMerge(defaults, original);
+        Map<String, Object> m = MapUtils.getMap(cfg, key, null);
+        if (m == null) {
+            m = MapUtils.getMap(cfg, "_", Collections.emptyMap());
+        }
+
+        return ConfigurationUtils.deepMerge(m, original);
     }
 }

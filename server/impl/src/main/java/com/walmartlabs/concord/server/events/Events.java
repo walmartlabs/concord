@@ -29,6 +29,9 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.server.events.github.Constants.*;
 
+/**
+ * Internal Concord "events". Used in the repository refresh mechanism.
+ */
 public class Events {
 
     public static final String CONCORD_EVENT = "concord";

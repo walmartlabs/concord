@@ -7,7 +7,9 @@ flows:
 
 triggers:
   - concord:
-      event: "repository.*"
+      version: 2
+      conditions:
+        event: "repository.*"
       entryPoint: "onChange"
 
   - github:
