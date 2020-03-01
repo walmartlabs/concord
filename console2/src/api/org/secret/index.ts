@@ -277,6 +277,24 @@ export const create = (
     return fetchJson(`/api/v1/org/${orgName}/secret`, opts);
 };
 
+export const changeOrganization = (
+    orgName: ConcordKey,
+    secretName: ConcordKey,
+    newOrgId: ConcordId
+): Promise<GenericOperationResult> => {
+    const opts = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            orgId: newOrgId
+        })
+    };
+
+    return fetchJson(`/api/v1/org/${orgName}/secret/${secretName}`, opts);
+};
+
 export const getPublicKey = (orgName: string, secretName: string): Promise<PublicKeyResponse> =>
     fetchJson(`/api/v1/org/${orgName}/secret/${secretName}/public`);
 

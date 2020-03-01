@@ -141,6 +141,14 @@ public class SecretDao extends AbstractDao {
         }
     }
 
+    public void updateProjectScopeByProjectId(DSLContext tx, UUID orgId, UUID projectId, UUID newProjectId) {
+        tx.update(SECRETS)
+                .set(SECRETS.PROJECT_ID, newProjectId)
+                .where(SECRETS.ORG_ID.eq(orgId))
+                .and(SECRETS.PROJECT_ID.eq(projectId))
+                .execute();
+    }
+
     public void updateData(UUID id, byte[] data) {
         tx(tx -> updateData(tx, id, data));
     }
@@ -156,35 +164,35 @@ public class SecretDao extends AbstractDao {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public void update(UUID id, String newName, byte[] data, SecretVisibility visibility, UUID projectId) {
+    public void update(UUID id, String newName, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
+        tx(tx -> update(tx, id, newName, data, visibility, projectId, orgId));
+    }
 
+    public void update(DSLContext tx, UUID id, String newName, byte[] data, SecretVisibility visibility, UUID projectId, UUID orgId) {
+        UpdateSetMoreStep<SecretsRecord> u = tx.update(SECRETS).set(SECRETS.PROJECT_ID, projectId);
 
-        tx(tx -> {
-            UpdateSetFirstStep<SecretsRecord> u = tx.update(SECRETS);
+        if (newName != null) {
+            u.set(SECRETS.SECRET_NAME, newName);
+        }
 
-            if (newName != null) {
-                u.set(SECRETS.SECRET_NAME, newName);
-            }
+        if (visibility != null) {
+            u.set(SECRETS.VISIBILITY, visibility.toString());
+        }
 
-            if (visibility != null) {
-                u.set(SECRETS.VISIBILITY, visibility.toString());
-            }
+        if (data != null) {
+            u.set(SECRETS.SECRET_DATA, data);
+        }
 
-            if (data != null) {
-                u.set(SECRETS.SECRET_DATA, data);
-            }
+        if (orgId != null) {
+            u.set(SECRETS.ORG_ID, orgId);
+        }
 
-            u.set(SECRETS.PROJECT_ID, projectId);
+        int i = u.where(SECRETS.SECRET_ID.eq(id))
+                .execute();
 
-            int i = ((UpdateSetMoreStep<SecretsRecord>) u)
-                    .where(SECRETS.SECRET_ID.eq(id))
-                    .execute();
-
-            if (i != 1) {
-                throw new DataAccessException("Invalid number of rows updated: " + i);
-            }
-        });
+        if (i != 1) {
+            throw new DataAccessException("Invalid number of rows updated: " + i);
+        }
     }
 
     public void update(DSLContext tx, UUID id, UUID orgId, UUID projectId, String name, SecretType type, SecretEncryptedByType encryptedByType, SecretVisibility visibility, byte[] data) {

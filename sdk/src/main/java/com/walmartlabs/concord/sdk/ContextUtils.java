@@ -116,6 +116,10 @@ public final class ContextUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> T getVariable(Context ctx, String name, T defaultValue) {
+        if (ctx == null) {
+            return defaultValue;
+        }
+
         T result = (T) ctx.getVariable(name);
 
         if (result != null) {
