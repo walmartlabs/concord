@@ -34,7 +34,7 @@ public final class RequestContext {
     }
 
     public static void clear() {
-        holder.set(null);
+        holder.remove();
     }
 
     public static RequestContext get() {

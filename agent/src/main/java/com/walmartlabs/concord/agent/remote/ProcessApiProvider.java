@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.api;
+package com.walmartlabs.concord.agent.remote;
 
 /*-
  * *****

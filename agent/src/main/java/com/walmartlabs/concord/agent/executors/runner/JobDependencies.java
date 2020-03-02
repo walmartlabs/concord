@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.dependencymanager.DependencyManager.MAVEN_SCHEME;
 import static com.walmartlabs.concord.policyengine.DependencyVersionsPolicy.Dependency;
 
-public class JobDependencies {
+public final class JobDependencies {
 
     private static final Logger log = LoggerFactory.getLogger(JobDependencies.class);
 
@@ -202,7 +202,7 @@ public class JobDependencies {
             int i = s.lastIndexOf(':');
             if (i >= 0 && i + 1 < s.length()) {
                 String id = s.substring(0, i);
-                String v = s.substring(i + 1, s.length());
+                String v = s.substring(i + 1);
                 return new IdAndVersion(id, v);
             }
 
@@ -216,5 +216,8 @@ public class JobDependencies {
             this.id = id;
             this.version = version;
         }
+    }
+
+    private JobDependencies() {
     }
 }
