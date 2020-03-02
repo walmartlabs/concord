@@ -54,7 +54,7 @@ const ProcessAnsibleActivityOld = ({ instanceId, loadingHandler, forceRefresh }:
     const [ansibleHosts, setAnsibleHosts] = useState<AnsibleHost[]>([]);
     const [ansibleHostsNext, setAnsibleHostsNext] = useState<number>();
     const [ansibleHostsPrev, setAnsibleHostsPrev] = useState<number>();
-    const [ansibleHostsFilter, setAnsibleHostsFilter] = useState();
+    const [ansibleHostsFilter, setAnsibleHostsFilter] = useState({});
 
     const fetchAnsibleHosts = useCallback(
         async (filter: SearchFilter) => {

@@ -44,7 +44,7 @@ export interface Props {
 const EditStoreQueryForm = (props: Props) => {
     const { onSubmit, onExecute, submitting, executing, initialQuery } = props;
 
-    const [queryError, setQueryError] = useState();
+    const [queryError, setQueryError] = useState<ValidateResult>();
     const [isValidating, setIsValidating] = useState(false);
     const [isEditorReady, setIsEditorReady] = useState(false);
     const valueGetter = useRef<() => string>(() => '');

@@ -21,7 +21,6 @@
 import { InjectedFormikProps, withFormik } from 'formik';
 import * as React from 'react';
 import { Button, Divider, Form, Popup, Segment } from 'semantic-ui-react';
-import { Error } from 'tslint/lib/error';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { isRepositoryExists } from '../../../api/service/console';
