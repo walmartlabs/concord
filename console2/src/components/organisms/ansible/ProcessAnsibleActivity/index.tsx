@@ -76,12 +76,12 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
     const [ansibleHostGroups, setAnsibleHostGroups] = useState<string[]>([]);
     const [ansibleHostsNext, setAnsibleHostsNext] = useState<number>();
     const [ansibleHostsPrev, setAnsibleHostsPrev] = useState<number>();
-    const [ansibleHostsFilter, setAnsibleHostsFilter] = useState();
+    const [ansibleHostsFilter, setAnsibleHostsFilter] = useState({});
     const [failedAnsibleHosts, setFailedAnsibleHosts] = useState<AnsibleHost[]>();
     const [failedAnsibleHostGroups, setFailedAnsibleHostGroups] = useState<string[]>([]);
     const [failedAnsibleHostsNext, setFailedAnsibleHostsNext] = useState<number>();
     const [failedAnsibleHostsPrev, setFailedAnsibleHostsPrev] = useState<number>();
-    const [failedAnsibleHostsFilter, setFailedAnsibleHostsFilter] = useState();
+    const [failedAnsibleHostsFilter, setFailedAnsibleHostsFilter] = useState({});
     const [failedTasks, setFailedTasks] = useState<ProcessEventEntry<AnsibleEvent>[]>();
     const [playStats, setPlayStats] = useState<PlayInfoEntry[]>();
     const [taskStats, setTaskStats] = useState<TaskInfoEntry[]>();
@@ -191,10 +191,10 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
         setTaskStats(undefined);
         setAnsibleHosts(undefined);
         setAnsibleHostGroups([]);
-        setAnsibleHostsFilter(undefined);
+        setAnsibleHostsFilter({});
         setFailedAnsibleHosts(undefined);
         setFailedAnsibleHostGroups([]);
-        setFailedAnsibleHostsFilter(undefined);
+        setFailedAnsibleHostsFilter({});
         setFailedTasks(undefined);
     }, []);
 

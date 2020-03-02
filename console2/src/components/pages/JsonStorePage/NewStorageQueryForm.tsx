@@ -57,8 +57,8 @@ const NewStorageQueryForm = ({
     initial
 }: Props) => {
     const [queryName, setQueryName] = useState(initial.name);
-    const [queryNameError, setQueryNameError] = useState();
-    const [queryError, setQueryError] = useState();
+    const [queryNameError, setQueryNameError] = useState<string>();
+    const [queryError, setQueryError] = useState<ValidateResult>();
     const [isValidating, setIsValidating] = useState(false);
     const [isEditorReady, setIsEditorReady] = useState(false);
     const valueGetter = useRef<() => string>(() => initial.query);

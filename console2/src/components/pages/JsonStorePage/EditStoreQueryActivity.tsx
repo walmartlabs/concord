@@ -46,8 +46,8 @@ const EditStoreQueryActivity = (props: ExternalProps) => {
     const { orgName, storeName, queryName, forceRefresh } = props;
 
     const dispatch = React.useContext(LoadingDispatch);
-    const [query, setQuery] = useState();
-    const [queryForExecute, setQueryForExecute] = useState();
+    const [query, setQuery] = useState('');
+    const [queryForExecute, setQueryForExecute] = useState('');
 
     const loadQuery = useCallback(() => {
         return apiGetQuery(orgName, storeName, queryName);

@@ -47,7 +47,7 @@ const NewStorageQueryActivity = (props: ExternalProps) => {
     const { orgName, storeName } = props;
 
     const dispatch = React.useContext(LoadingDispatch);
-    const [queryForExecute, setQueryForExecute] = useState();
+    const [queryForExecute, setQueryForExecute] = useState('');
     const [values, setValues] = useState(INIT_VALUES);
 
     const postQuery = useCallback(() => {
