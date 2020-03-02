@@ -91,9 +91,15 @@ public class RunnerCommandBuilder {
         }
 
         // default JVM parameters
+        // speeds up the start, we don't care much about all potential optimizations done by HotSpot
+        l.add("-client");
+        // don't do bytecode verification
         l.add("-noverify");
+        // enable support for calling vararg methods in JUEL
         l.add("-Djavax.el.varArgs=true");
+        // avoid blocking on crypto
         l.add("-Djava.security.egd=file:/dev/./urandom");
+        // avoid some performance issues by preferring IPv4 instead of IPv6
         l.add("-Djava.net.preferIPv4Stack=true");
         // workaround for JDK-8142508
         l.add("-Dsun.zip.disableMemoryMapping=true");
