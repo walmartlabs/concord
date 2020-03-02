@@ -59,7 +59,6 @@ public class Agent {
 
     private final QueueClient queueClient;
     private final ProcessLogFactory processLogFactory;
-    private final StateFetcher stateFetcher;
     private final ProcessApi processApi;
     private final WorkerFactory workerFactory;
 
@@ -71,7 +70,6 @@ public class Agent {
                  DockerConfiguration dockerCfg,
                  QueueClient queueClient,
                  ProcessLogFactory processLogFactory,
-                 StateFetcher stateFetcher,
                  ProcessApi processApi,
                  WorkerFactory workerFactory) {
 
@@ -80,7 +78,6 @@ public class Agent {
         this.queueClient = queueClient;
 
         this.processLogFactory = processLogFactory;
-        this.stateFetcher = stateFetcher;
         this.processApi = processApi;
         this.workerFactory = workerFactory;
     }

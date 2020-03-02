@@ -101,4 +101,7 @@ public final class MapMatcher {
     private static boolean compareValues(Object dataValue, Object conditionValue) {
         return dataValue.equals(conditionValue);
     }
+
+    private MapMatcher() {
+    }
 }

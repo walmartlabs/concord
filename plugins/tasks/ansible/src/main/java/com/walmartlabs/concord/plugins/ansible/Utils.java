@@ -40,7 +40,7 @@ public final class Utils {
 
     public static String assertArgSafe(String s) {
         if (s == null) {
-            return s;
+            return null;
         }
 
         if (s.contains("'")) {

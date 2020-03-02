@@ -500,7 +500,7 @@ public class GitClient {
         try {
             Files.delete(tempFile);
         } catch (IOException e) {
-            log.warn("can't delete tmp file: " + tempFile);
+            log.warn("can't delete tmp file: {}", tempFile);
         }
     }
 

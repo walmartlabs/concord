@@ -36,7 +36,11 @@ public final class PrivilegedAction {
             currentDomain.set(domain);
             return f.call();
         } finally {
-            currentDomain.set(prevDomain);
+            if (prevDomain == null) {
+                currentDomain.remove();
+            } else {
+                currentDomain.set(prevDomain);
+            }
         }
     }
 

@@ -51,17 +51,15 @@ public final class GrammarV2 {
     public static final Parser.Ref<Atom, YamlList> arrayOfValues = Parser.ref();
     public static final Parser.Ref<Atom, YamlObject> object = Parser.ref();
 
-    public static Parser<Atom, Serializable> anyVal = value.map(YamlValue::getValue);
-    public static Parser<Atom, String> stringVal = value.map(v -> v.getValue(YamlValueType.STRING));
-    public static Parser<Atom, Integer> intVal = value.map(v -> v.getValue(YamlValueType.INT));
-    public static Parser<Atom, Boolean> booleanVal = value.map(v -> v.getValue(YamlValueType.BOOLEAN));
-    public static Parser<Atom, Map<String, Serializable>> mapVal = value.map(v -> v.getValue(YamlValueType.OBJECT));
-    public static Parser<Atom, List<Serializable>> arrayVal = value.map(v -> v.getValue(YamlValueType.ARRAY));
-    public static Parser<Atom, Serializable> nonNullVal = value.map(v -> {
+    public static final Parser<Atom, Serializable> anyVal = value.map(YamlValue::getValue);
+    public static final Parser<Atom, String> stringVal = value.map(v -> v.getValue(YamlValueType.STRING));
+    public static final Parser<Atom, Boolean> booleanVal = value.map(v -> v.getValue(YamlValueType.BOOLEAN));
+    public static final Parser<Atom, Map<String, Serializable>> mapVal = value.map(v -> v.getValue(YamlValueType.OBJECT));
+    public static final Parser<Atom, Serializable> nonNullVal = value.map(v -> {
         assertNotNull(v);
         return v.getValue();
     });
-    public static Parser<Atom, Integer> maybeInt = _val(JsonToken.VALUE_NUMBER_INT).map(v -> v.getValue(YamlValueType.INT));
+    public static final Parser<Atom, Integer> maybeInt = _val(JsonToken.VALUE_NUMBER_INT).map(v -> v.getValue(YamlValueType.INT));
 
     public static final Parser.Ref<Atom, List<Step>> stepsVal = Parser.ref();
 
