@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import org.immutables.value.Value;
 
@@ -70,5 +71,16 @@ public interface ProcessConfiguration extends Serializable {
 
     static ImmutableProcessConfiguration.Builder builder() {
         return ImmutableProcessConfiguration.builder();
+    }
+
+    static ProcessConfiguration merge(ProcessConfiguration a, ProcessConfiguration b) {
+        return ProcessConfiguration.builder().from(a)
+                // TODO: entryPoint has default value...
+                .entryPoint(b.entryPoint())
+                .addAllDependencies(b.dependencies())
+                .arguments(ConfigurationUtils.deepMerge(a.arguments(), b.arguments()))
+                .initiator(b.initiator() != null ? b.initiator() : a.initiator())
+                .currentUser(b.currentUser() != null ? b.currentUser() : a.currentUser())
+                .build();
     }
 }

@@ -26,7 +26,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.process.loader.v1.ProcessDefinitionV1;
 import com.walmartlabs.concord.server.process.loader.v2.ProcessDefinitionV2;
@@ -50,21 +52,23 @@ public class ProjectLoader {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectLoader.class);
 
+    private final ObjectMapper objectMapper;
     private final com.walmartlabs.concord.project.ProjectLoader v1;
     private final com.walmartlabs.concord.runtime.v2.ProjectLoaderV2 v2;
 
     @Inject
-    public ProjectLoader(ImportManager importManager) {
+    public ProjectLoader(ObjectMapper objectMapper, ImportManager importManager) {
+        this.objectMapper = objectMapper;
         this.v1 = new com.walmartlabs.concord.project.ProjectLoader(importManager);
-        this.v2 = new com.walmartlabs.concord.runtime.v2.ProjectLoaderV2();
+        this.v2 = new com.walmartlabs.concord.runtime.v2.ProjectLoaderV2(importManager);
     }
 
-    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, Map<String, Object> overrides) throws Exception {
+    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer) throws Exception {
         if (isV2(workDir)) {
-            return toResult(v2.load(workDir));
+            return toResult(v2.load(workDir, importsNormalizer::normalize));
         }
 
-        return toResult(v1.loadProject(workDir, importsNormalizer::normalize, overrides));
+        return toResult(v1.loadProject(workDir, importsNormalizer::normalize));
     }
 
     private static Result toResult(com.walmartlabs.concord.project.ProjectLoader.Result r) {

@@ -63,12 +63,9 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        // configuration from the user request
-        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
-
         try {
             UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-            ProjectLoader.Result result = projectLoader.loadProject(workDir, importsNormalizer.forProject(projectId), cfg);
+            ProjectLoader.Result result = projectLoader.loadProject(workDir, importsNormalizer.forProject(projectId));
 
             List<Snapshot> snapshots = result.snapshots();
             for (Snapshot s : snapshots) {
@@ -79,6 +76,9 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
 
             payload = payload.putHeader(Payload.IMPORTS, pd.imports());
+
+            // configuration from the user request
+            Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
 
             // save the runtime type in the process configuration
             // makes it easier to select the correct implementation on the agent - no need to

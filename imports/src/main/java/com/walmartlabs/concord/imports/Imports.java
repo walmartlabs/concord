@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,8 +43,10 @@ public interface Imports extends Serializable  {
 
     long serialVersionUID = 1L;
 
-    @Value.Parameter
-    List<Import> items();
+    @Value.Default
+    default List<Import> items() {
+        return Collections.emptyList();
+    }
 
     @JsonIgnore
     default boolean isEmpty() {
@@ -50,10 +54,17 @@ public interface Imports extends Serializable  {
     }
 
     static Imports of(List<Import> items) {
-        return builder().addAllItems(items).build();
+        return builder().items(items).build();
     }
 
     static ImmutableImports.Builder builder() {
         return ImmutableImports.builder();
+    }
+
+    static Imports merge(Imports a, Imports b) {
+        List<Import> result = new ArrayList<>();
+        result.addAll(a.items());
+        result.addAll(b.items());
+        return Imports.of(result);
     }
 }

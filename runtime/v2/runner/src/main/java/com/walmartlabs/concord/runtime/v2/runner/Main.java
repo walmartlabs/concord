@@ -135,8 +135,9 @@ public class Main {
             return ProcessConfiguration.builder().build();
         }
 
+        //TODO: singleton?
+        ObjectMapper om = new ObjectMapper();
         try (InputStream in = Files.newInputStream(p)) {
-            ObjectMapper om = new ObjectMapper();
             return om.readValue(in, ProcessConfiguration.class);
         }
     }
@@ -149,6 +150,7 @@ public class Main {
             throw new IllegalArgumentException("Path to the runner configuration file is required");
         }
 
+        //TODO: singleton?
         ObjectMapper om = new ObjectMapper();
         try (InputStream in = Files.newInputStream(src)) {
             return om.readValue(in, RunnerConfiguration.class);

@@ -144,7 +144,7 @@ public class Main {
         Collection<String> activeProfiles = getActiveProfiles(req);
 
         // load the project
-        ProjectDefinition project = loadProject(baseDir, req);
+        ProjectDefinition project = loadProject(baseDir);
 
         // read the list of metadata variables
         Set<String> metaVariables = getMetaVariables(req);
@@ -257,11 +257,11 @@ public class Main {
         return (Collection<String>) v;
     }
 
-    private static ProjectDefinition loadProject(Path baseDir, Map<String, Object> configuration) throws ExecutionException {
+    private static ProjectDefinition loadProject(Path baseDir) throws ExecutionException {
         try {
             // assume all imports were processed by the agent
             return new ProjectLoader(new NoopImportManager())
-                    .loadProject(baseDir, new NoopImportsNormalizer(), configuration)
+                    .loadProject(baseDir, new NoopImportsNormalizer())
                     .getProjectDefinition();
         } catch (Exception e) {
             throw new ExecutionException("Error while loading a project", e);

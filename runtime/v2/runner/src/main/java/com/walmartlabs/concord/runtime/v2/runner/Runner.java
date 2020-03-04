@@ -21,7 +21,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.google.inject.Injector;
+import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.FormService;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
@@ -73,8 +75,9 @@ public class Runner {
         statusCallback.onRunning(instanceId);
         log.debug("start ['{}'] -> running...", entryPoint);
 
-        ProjectLoaderV2 loader = new ProjectLoaderV2();
-        ProcessDefinition processDefinition = loader.load(workDir).getProjectDefinition();
+        // assume all imports were processed by the agent
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer()).getProjectDefinition();
 
         Command cmd = CompilerUtils.compile(compiler, processDefinition, entryPoint);
         State state = new InMemoryState(cmd);

@@ -20,18 +20,21 @@ package com.walmartlabs.concord.project.runtime.v2.parser;
  * =====
  */
 
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.net.URI;
 import java.nio.file.Paths;
 
+import static org.mockito.Mockito.mock;
+
 public abstract class AbstractParserTest {
 
     protected static ProcessDefinition load(String resource) throws Exception {
         URI uri = ClassLoader.getSystemResource(resource).toURI();
 
-        ProjectLoaderV2 loader = new ProjectLoaderV2();
+        ProjectLoaderV2 loader = new ProjectLoaderV2(mock(ImportManager.class));
         return loader.loadFromFile(Paths.get(uri)).getProjectDefinition();
     }
 }
