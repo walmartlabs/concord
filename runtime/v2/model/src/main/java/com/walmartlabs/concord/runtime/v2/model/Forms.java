@@ -25,6 +25,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,5 +63,12 @@ public interface Forms extends Serializable  {
 
     static ImmutableForms.Builder builder() {
         return ImmutableForms.builder();
+    }
+
+    static Forms merge(Forms a, Forms b) {
+        List<Form> result = new ArrayList<>();
+        result.addAll(a.items());
+        result.addAll(b.items());
+        return Forms.of(result, null);
     }
 }

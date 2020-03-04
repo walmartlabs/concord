@@ -70,25 +70,15 @@ public class ProjectLoader {
     /**
      * Loads the project definition using the supplied path. Processes the configured
      * imports, templates and extra directories with project files.
-     */
-    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer) throws Exception {
-        return loadProject(workDir, importsNormalizer, Collections.emptyMap());
-    }
-
-    /**
-     * Loads the project definition using the supplied path. Processes the configured
-     * imports, templates and extra directories with project files.
      *
      * @param workDir       the directory containing the project files. If {@code imports} are
      *                      configured, the directory will be used as a target for repository
      *                      checkouts.
-     * @param configuration additional project configuration. Can contain templates
-     *                      and/or resource paths.
      */
-    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer, Map<String, Object> configuration) throws Exception {
+    public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer) throws Exception {
         workDir = workDir.normalize().toAbsolutePath();
 
-        ProjectDefinition initial = initialLoad(workDir, configuration);
+        ProjectDefinition initial = initialLoad(workDir);
         Resources resources = initial.getResources();
 
         Imports imports = importsNormalizer.normalize(initial.getImports());
@@ -158,9 +148,8 @@ public class ProjectLoader {
      * Performs the initial load of the project files. Loads only the root concord.yml
      * (if available), doesn't process imports, templates, etc.
      */
-    private ProjectDefinition initialLoad(Path baseDir, Map<String, Object> configurationDefaults) throws IOException {
-        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser)
-                .withConfigurationDefaults(configurationDefaults);
+    private ProjectDefinition initialLoad(Path baseDir) throws IOException {
+        ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
         for (String n : PROJECT_FILE_NAMES) {
             Path p = baseDir.resolve(n);
@@ -186,7 +175,6 @@ public class ProjectLoader {
 
         private final YamlParser parser;
 
-        private Map<String, Object> configuration;
         private Map<String, ProcessDefinition> flows;
         private Map<String, FormDefinition> forms;
         private Map<String, Profile> profiles;
@@ -194,11 +182,6 @@ public class ProjectLoader {
 
         private ProjectDefinitionBuilder(YamlParser parser) {
             this.parser = parser;
-        }
-
-        public ProjectDefinitionBuilder withConfigurationDefaults(Map<String, Object> configuration) {
-            this.configuration = configuration;
-            return this;
         }
 
         public void addProjectFile(Path baseDir, Path file) throws IOException {
@@ -334,10 +317,6 @@ public class ProjectLoader {
         }
 
         public ProjectDefinition build() {
-            if (configuration == null) {
-                configuration = new HashMap<>();
-            }
-
             if (flows == null) {
                 flows = new HashMap<>();
             }
@@ -350,7 +329,7 @@ public class ProjectLoader {
                 profiles = new HashMap<>();
             }
 
-            Map<String, Object> configuration = new LinkedHashMap<>(this.configuration);
+            Map<String, Object> configuration = new LinkedHashMap<>();
             List<String> dependencies = new ArrayList<>();
             List<Trigger> triggers = new ArrayList<>();
             Imports imports = Imports.builder().build();

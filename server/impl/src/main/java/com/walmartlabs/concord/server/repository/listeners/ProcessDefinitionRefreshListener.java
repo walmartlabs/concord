@@ -55,7 +55,7 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
 
     @Override
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
-        ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), Collections.emptyMap())
+        ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()))
                 .projectDefinition();
 
         Set<String> entryPoints = pd.flows().keySet();

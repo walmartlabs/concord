@@ -48,4 +48,15 @@ public interface Profile extends Serializable {
     default Map<String, List<Step>> flows() {
         return Collections.emptyMap();
     }
+
+    static ImmutableProfile.Builder builder() {
+        return ImmutableProfile.builder();
+    }
+
+    static Profile merge(Profile a, Profile b) {
+        return Profile.builder().from(a)
+                .configuration(ProcessConfiguration.merge(a.configuration(), b.configuration()))
+                .putAllFlows(b.flows())
+                .build();
+    }
 }

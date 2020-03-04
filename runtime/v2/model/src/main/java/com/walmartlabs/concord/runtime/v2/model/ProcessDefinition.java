@@ -28,6 +28,7 @@ import org.immutables.value.Value;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,6 +63,7 @@ public interface ProcessDefinition extends Serializable {
         return Collections.emptyMap();
     }
 
+    @Value.Default
     default List<Trigger> triggers() {
         return Collections.emptyList();
     }
@@ -74,5 +76,26 @@ public interface ProcessDefinition extends Serializable {
     @Value.Default
     default Forms forms() {
         return Forms.builder().build();
+    }
+
+    static ImmutableProcessDefinition.Builder builder() {
+        return ImmutableProcessDefinition.builder();
+    }
+
+    static ProcessDefinition merge(ProcessDefinition a, ProcessDefinition b) {
+        Map<String, Profile> profiles = new HashMap<>(a.profiles());
+        for (Map.Entry<String, Profile> p : b.profiles().entrySet()) {
+            Profile pa = profiles.getOrDefault(p.getKey(), Profile.builder().build());
+            profiles.put(p.getKey(), Profile.merge(pa, p.getValue()));
+        }
+
+        return ProcessDefinition.builder().from(a)
+                .configuration(ProcessConfiguration.merge(a.configuration(), b.configuration()))
+                .putAllFlows(b.flows())
+                .profiles(profiles)
+                .addAllTriggers(b.triggers())
+                .imports(Imports.merge(a.imports(), b.imports()))
+                .forms(Forms.merge(a.forms(), b.forms()))
+                .build();
     }
 }

@@ -34,7 +34,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
-import java.util.Collections;
 
 @Named
 public class TriggerRefreshListener implements RepositoryRefreshListener {
@@ -59,7 +58,7 @@ public class TriggerRefreshListener implements RepositoryRefreshListener {
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
         log.info("refresh ['{}'] ->  triggers", repo.getId());
 
-        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()), Collections.emptyMap());
+        ProjectLoader.Result result = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()));
 
         ProcessDefinition pd = result.projectDefinition();
         ProjectValidator.Result validationResult = ProjectValidator.validate(pd);

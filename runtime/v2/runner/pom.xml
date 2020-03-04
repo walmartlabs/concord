@@ -46,6 +46,10 @@
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-imports</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>javax.inject</groupId>
