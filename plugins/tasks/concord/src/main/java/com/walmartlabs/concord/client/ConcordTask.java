@@ -27,7 +27,6 @@ import com.walmartlabs.concord.sdk.*;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.inject.Named;
 import javax.xml.bind.DatatypeConverter;
 import java.io.File;
@@ -89,6 +88,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String SYNC_KEY = "sync";
     private static final String TAGS_KEY = "tags";
     private static final String SUSPEND_KEY = "suspend";
+    private static final String REQUIREMENTS_KEY = "requirements";
 
     private static final String SUSPEND_MARKER = "__concordTaskSuspend";
     private static final String RESUME_EVENT_NAME = "concordTask";
@@ -659,7 +659,8 @@ public class ConcordTask extends AbstractConcordTask {
                 START_AT_KEY,
                 SYNC_KEY,
                 TAGS_KEY,
-                SUSPEND_KEY);
+                SUSPEND_KEY,
+                REQUIREMENTS_KEY);
 
         if (job != null) {
             m.putAll(job);
