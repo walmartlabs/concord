@@ -12,4 +12,4 @@ flows:
      out: rsp
      ignoreErrors: true
 
-  - log: "Response status code: ${rsp.statusCode}"
+  - log: "statusCode: ${rsp.statusCode}"

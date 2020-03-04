@@ -106,17 +106,17 @@ public class SimpleHttpClient {
 
             httpResponse = callWithTimeout(() -> this.client.execute(request), config.getRequestTimeout());
 
-            if (isUnAuthorized(httpResponse.getStatusLine().getStatusCode())) {
-                throw new UnauthorizedException("Authorization required for " + request.getURI().toURL());
+            int code = httpResponse.getStatusLine().getStatusCode();
+            if (isUnauthorized(code) && !config.isIgnoreErrors()) {
+                throw new UnauthorizedException("Authorization required for " + request.getURI().toURL() + "(code: " + code + ")");
             }
 
             log.info("Response status code: {}", httpResponse.getStatusLine().getStatusCode());
 
-            Map<String, Object> response = new HashMap<>();
-
             Family statusCodeFamily = Family.familyOf(httpResponse.getStatusLine().getStatusCode());
-
             boolean isSuccess = Family.SUCCESSFUL == statusCodeFamily;
+
+            Map<String, Object> response = new HashMap<>();
             if (isSuccess) {
                 content = processResponse(httpResponse, config);
                 response.put("content", content);
@@ -308,7 +308,7 @@ public class SimpleHttpClient {
      * @param statusCode http status code
      * @return true if statusCode is UNAUTHORIZED (401)
      */
-    private boolean isUnAuthorized(int statusCode) {
+    private boolean isUnauthorized(int statusCode) {
         return HttpStatus.SC_UNAUTHORIZED == statusCode;
     }
 
