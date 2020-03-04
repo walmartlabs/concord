@@ -391,7 +391,7 @@ public class HttpTaskIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pir.getStatus());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*Response status code: 401*", ab);
+        assertLog(".*statusCode: 401*", ab);
         assertLog(".*Success response: false*", ab);
     }
 
