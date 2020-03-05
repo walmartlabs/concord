@@ -25,6 +25,7 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
+import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -38,8 +39,6 @@ import java.util.stream.Stream;
 
 // TODO rename to ProcessDefinitionLoader?
 public class ProjectLoaderV2 {
-
-    public static final String[] PROJECT_FILE_NAMES = {".concord.yml", "concord.yml"};
 
     private final ImportManager importManager;
 
@@ -90,7 +89,7 @@ public class ProjectLoaderV2 {
     }
 
     private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir) throws IOException {
-        for (String fileName : PROJECT_FILE_NAMES) {
+        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             if (Files.exists(p)) {
                 return parser.parse(baseDir, p);

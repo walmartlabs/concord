@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
@@ -27,19 +28,21 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Named
 public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
+
+    private static final Set<String> PROJECT_ROOT_FILE_NAMES = new HashSet<>(Arrays.asList(Constants.Files.PROJECT_ROOT_FILE_NAMES));
 
     private final ProcessLogManager logManager;
     private final ProjectDao projectDao;
@@ -60,19 +63,11 @@ public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        ProcessKey processKey = payload.getProcessKey();
-
-        Path archive = payload.getAttachment(Payload.WORKSPACE_ARCHIVE);
-        if (archive == null) {
+        if (!hasRawPayloadAttachment(payload)) {
             return chain.process(payload);
         }
 
         assertAcceptsRawPayload(payload);
-
-        if (!Files.exists(archive)) {
-            logManager.error(processKey, "No input archive found: " + archive);
-            throw new ProcessException(processKey, "No input archive found: " + archive, Status.BAD_REQUEST);
-        }
 
         return chain.process(payload);
     }
@@ -117,5 +112,19 @@ public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
             default:
                 throw new IllegalArgumentException("Unsupported raw payload mode: " + m);
         }
+    }
+
+    /**
+     * @return {@code true} if the payload contains any file we consider
+     * a "raw payload" attachment: workspace archives, concord.yml, etc.
+     */
+    private boolean hasRawPayloadAttachment(Payload payload) {
+        if (payload.getAttachment(Payload.WORKSPACE_ARCHIVE) != null) {
+            return true;
+        }
+
+        return payload.getAttachments().keySet().stream()
+                .anyMatch(k -> PROJECT_ROOT_FILE_NAMES.contains(k) ||
+                        (k.startsWith(Constants.Files.PROJECT_FILES_DIR_NAME + "/") && k.endsWith(".yml")));
     }
 }

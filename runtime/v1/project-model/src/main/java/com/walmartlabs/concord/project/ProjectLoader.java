@@ -48,8 +48,6 @@ import java.util.*;
 
 public class ProjectLoader {
 
-    public static final String[] PROJECT_FILE_NAMES = {".concord.yml", "concord.yml"}; // NOSONAR
-
     private final ImportManager importManager;
     private final YamlParser parser = new YamlParser();
 
@@ -96,7 +94,7 @@ public class ProjectLoader {
             }
         }
 
-        for (String n : PROJECT_FILE_NAMES) {
+        for (String n : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = assertLocal(workDir, workDir.resolve(n));
             if (Files.exists(p)) {
                 b.addProjectFile(workDir, p);
@@ -134,7 +132,7 @@ public class ProjectLoader {
     }
 
     public static boolean isConcordFileExists(Path repoPath) {
-        for (String projectFileName : ProjectLoader.PROJECT_FILE_NAMES) {
+        for (String projectFileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path projectFile = repoPath.resolve(projectFileName);
             if (Files.exists(projectFile)) {
                 return true;
@@ -151,7 +149,7 @@ public class ProjectLoader {
     private ProjectDefinition initialLoad(Path baseDir) throws IOException {
         ProjectDefinitionBuilder b = new ProjectDefinitionBuilder(parser);
 
-        for (String n : PROJECT_FILE_NAMES) {
+        for (String n : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(n);
             if (Files.exists(p)) {
                 b.addProjectFile(baseDir, p);
