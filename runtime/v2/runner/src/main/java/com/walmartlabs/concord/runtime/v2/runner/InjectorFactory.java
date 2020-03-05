@@ -70,9 +70,17 @@ public class InjectorFactory {
         Module tasks = new AbstractModule() {
             @Override
             protected void configure() {
-                TaskHolder holder = new TaskHolder();
-                bindListener(new SubClassesOf(Task.class), new TaskClassesListener(holder));
-                bind(TaskHolder.class).toInstance(holder);
+                TaskHolder<com.walmartlabs.concord.sdk.Task> v1Holder = new TaskHolder<>();
+                bindListener(new SubClassesOf(com.walmartlabs.concord.sdk.Task.class), new TaskClassesListener<>(v1Holder));
+
+                TaskHolder<Task> v2Holder = new TaskHolder<>();
+                bindListener(new SubClassesOf(Task.class), new TaskClassesListener<>(v2Holder));
+
+                bind(new TypeLiteral<TaskHolder<com.walmartlabs.concord.sdk.Task>>() {
+                }).annotatedWith(TaskHolder.V1.class).toInstance(v1Holder);
+
+                bind(new TypeLiteral<TaskHolder<Task>>() {
+                }).annotatedWith(TaskHolder.V2.class).toInstance(v2Holder);
             }
         };
 
@@ -122,17 +130,18 @@ public class InjectorFactory {
         return urls;
     }
 
-    private static class TaskClassesListener implements TypeListener {
+    private static class TaskClassesListener<T> implements TypeListener {
 
-        private final TaskHolder holder;
+        private final TaskHolder<T> holder;
 
-        private TaskClassesListener(TaskHolder holder) {
+        public TaskClassesListener(TaskHolder<T> holder) {
             this.holder = holder;
         }
 
+        @Override
         @SuppressWarnings("unchecked")
-        public <T> void hear(TypeLiteral<T> typeLiteral, TypeEncounter<T> typeEncounter) {
-            Class<?> klass = typeLiteral.getRawType();
+        public <I> void hear(TypeLiteral<I> typeLiteral, TypeEncounter<I> typeEncounter) {
+            Class<T> klass = (Class<T>) typeLiteral.getRawType();
 
             Named n = klass.getAnnotation(Named.class);
             if (n == null) {
@@ -146,7 +155,7 @@ public class InjectorFactory {
                 return;
             }
 
-            holder.add(key, (Class<? extends Task>) klass);
+            holder.add(key, klass);
         }
     }
 
