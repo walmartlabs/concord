@@ -148,8 +148,12 @@ public class ProjectAccessManager {
         });
     }
 
+    /**
+     * @return {@code true} if the current user is a member of a team that has
+     * access to the specified project.
+     */
     public boolean isTeamMember(UUID projectId) {
         UserPrincipal principal = UserPrincipal.assertCurrent();
-        return projectDao.hasAccessLevel(projectId, principal.getId(), ResourceAccessLevel.READER);
+        return projectDao.hasAccessLevel(projectId, principal.getId(), ResourceAccessLevel.atLeast(ResourceAccessLevel.READER));
     }
 }

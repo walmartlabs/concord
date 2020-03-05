@@ -111,7 +111,7 @@ public class ProjectLoader {
     }
 
     private static boolean isV2(Path workDir) {
-        for (String filename : ProjectLoaderV2.PROJECT_FILE_NAMES) {
+        for (String filename : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path src = workDir.resolve(filename);
             try {
                 if (Files.exists(src)) {

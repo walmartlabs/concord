@@ -38,6 +38,9 @@ public enum ResourceAccessLevel {
      */
     READER;
 
+    /**
+     * @return an array of access levels that are the same or higher as the specified level.
+     */
     public static ResourceAccessLevel[] atLeast(ResourceAccessLevel r) {
         switch (r) {
             case OWNER:
