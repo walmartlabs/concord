@@ -20,28 +20,41 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.google.inject.BindingAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Retention;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TaskHolder {
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+public class TaskHolder<T> {
 
     private static final Logger log = LoggerFactory.getLogger(TaskHolder.class);
 
-    private final Map<String, Class<? extends Task>> classes = new HashMap<>();
+    @Retention(RUNTIME)
+    @BindingAnnotation
+    public @interface V1 {
+    }
 
-    public void add(String key, Class<? extends Task> value) {
+    @Retention(RUNTIME)
+    @BindingAnnotation
+    public @interface V2 {
+    }
+
+    private final Map<String, Class<T>> classes = new HashMap<>();
+
+    public void add(String key, Class<T> value) {
         log.debug("Registering {} as '{}'...", value, key);
-        Class<? extends Task> old = classes.put(key, value);
+        Class<T> old = classes.put(key, value);
         if (old != null) {
             throw new IllegalStateException("Non-unique task name: " + key);
         }
     }
 
-    public Class<? extends Task> get(String key) {
+    public Class<T> get(String key) {
         return classes.get(key);
     }
 }
