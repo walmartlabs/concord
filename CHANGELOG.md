@@ -1,5 +1,36 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-tasks: ability to pass `requirements` into the called
+process;
+- concord-server: `v2` syntax for generic and OneOps triggers;
+- concord-server, concord-console: ability to move project and
+secrets across organizations;
+- smtp-tasks: disable debug output by default, add `debug` option;
+- concord-console: show the process status in the window's favicon.
+
+### Changed
+
+- concord-server: fixed the raw payload mode check. Now if the
+project's raw payload mode is set to "Only team members", the server
+correctly looks for team members with `READER` access level or
+higher;
+- http-tasks: honor the `ignoreErrors` value when handling
+"unauhorized" (401) responses;
+- ansible: the sensitive data filter is now opt-in by default and
+can be enabled with the new `enableLogFiltering` parameter;
+- concord-server: fixed handling of GitHub `team` events. Now it
+correctly calculates the appropriate `githubRepo` values;
+- concord-server: if `startAt` value is in the past, log the current
+server time in the error message;
+- concord-console: make `lastUpdatedAt` available as one of
+the built-in columns again.
+
+
+
 ## [1.42.0] - 2020-02-26
 
 ### Added
