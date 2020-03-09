@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.Map;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+@Ignore
 public class SlackClientTest {
 
     @Before

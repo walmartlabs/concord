@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.process;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.inject.Injector;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -51,15 +50,15 @@ public class ProcessSecurityContext {
 
     private static final String PRINCIPAL_FILE_PATH = ".concord/current_user";
 
+    private final SecurityManager securityManager;
     private final ProcessStateManager stateManager;
-    private final Injector injector;
     private final Cache<PartialProcessKey, PrincipalCollection> principalCache;
     private final UserManager userManager;
 
     @Inject
-    public ProcessSecurityContext(ProcessStateManager stateManager, Injector injector, UserManager userManager) {
+    public ProcessSecurityContext(SecurityManager securityManager, ProcessStateManager stateManager, UserManager userManager) {
+        this.securityManager = securityManager;
         this.stateManager = stateManager;
-        this.injector = injector;
         this.userManager = userManager;
         this.principalCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(1, TimeUnit.MINUTES)
@@ -106,7 +105,6 @@ public class ProcessSecurityContext {
             throw new UnauthorizedException("User '" + userID + "'not found");
         }
 
-        SecurityManager securityManager = injector.getInstance(SecurityManager.class);
         ThreadContext.bind(securityManager);
 
         SimplePrincipalCollection principals = new SimplePrincipalCollection();
@@ -126,7 +124,6 @@ public class ProcessSecurityContext {
     public <T> T runAsCurrentUser(ProcessKey processKey, Callable<T> c) throws Exception {
         PrincipalCollection principals = getPrincipals(processKey);
 
-        SecurityManager securityManager = injector.getInstance(SecurityManager.class);
         ThreadContext.bind(securityManager);
 
         Subject subject = new Subject.Builder()

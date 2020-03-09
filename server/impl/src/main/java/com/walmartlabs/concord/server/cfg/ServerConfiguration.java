@@ -20,50 +20,79 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
+import com.walmartlabs.ollie.config.Config;
 import org.eclipse.jetty.server.CustomRequestLog;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.Serializable;
 
-/**
- * These configuration parameters cannot be put into the configuration file as
- * they are needed before {@link com.walmartlabs.ollie.OllieServer} is
- * instantiated.
- */
+@Named
+@Singleton
 public class ServerConfiguration implements Serializable {
 
     public static final String ACCESS_LOG_FORMAT = CustomRequestLog.EXTENDED_NCSA_FORMAT + " %{ms}T";
 
-    private static final String ACCESS_LOG_PATH_KEY = "ACCESS_LOG_PATH";
-    private static final String ACCESS_LOG_RETAIN_DAYS_KEY = "ACCESS_LOG_RETAIN_DAYS";
-    private static final String API_PORT_KEY = "API_PORT";
-    private static final String BASE_RESOURCE_PATH_KEY = "BASE_RESOURCE_PATH";
-    private static final String SECURE_COOKIES_KEY = "SECURE_COOKIES";
-    private static final String SESSION_TIMEOUT_KEY = "SESSION_TIMEOUT";
-    private static final String REQUEST_HEADER_SIZE_KEY = "REQUEST_HEADER_SIZE";
+    @Inject
+    @Config("server.port")
+    private int port;
 
-    public static final int port;
-    public static final boolean secureCookies;
-    public static final int sessionTimeout;
-    public static final String accessLogPath;
-    public static final int accessLogRetainDays;
-    public static final String baseResourcePath;
-    public static final int requestHeaderSize;
+    @Inject
+    @Config("server.secureCookies")
+    private boolean secureCookies;
 
-    static {
-        port = Integer.parseInt(getEnv(API_PORT_KEY, "8001"));
-        secureCookies = Boolean.parseBoolean(getEnv(SECURE_COOKIES_KEY, "false"));
-        sessionTimeout = Integer.parseInt(getEnv(SESSION_TIMEOUT_KEY, "1800")); // 30 min
-        accessLogPath = getEnv(ACCESS_LOG_PATH_KEY, null);
-        accessLogRetainDays = Integer.parseInt(getEnv(ACCESS_LOG_RETAIN_DAYS_KEY, "7"));
-        baseResourcePath = getEnv(BASE_RESOURCE_PATH_KEY, null);
-        requestHeaderSize = Integer.parseInt(getEnv(REQUEST_HEADER_SIZE_KEY, "16384"));
+    @Inject
+    @Config("server.sessionTimeout")
+    private int sessionTimeout;
+
+    @Inject
+    @Nullable
+    @Config("server.accessLogPath")
+    private String accessLogPath;
+
+    @Inject
+    @Config("server.accessLogRetainDays")
+    private int accessLogRetainDays;
+
+    @Inject
+    @Nullable
+    @Config("server.baseResourcePath")
+    private String baseResourcePath;
+
+    @Inject
+    @Config("server.requestHeaderSize")
+    private int requestHeaderSize;
+
+    public int getPort() {
+        return port;
     }
 
-    private static String getEnv(String k, String defaultValue) {
-        String v = System.getenv(k);
-        if (v == null) {
-            return defaultValue;
-        }
-        return v;
+    public boolean isSecureCookies() {
+        return secureCookies;
+    }
+
+    public int getSessionTimeout() {
+        return sessionTimeout;
+    }
+
+    @Nullable
+    public String getAccessLogPath() {
+        return accessLogPath;
+    }
+
+    public int getAccessLogRetainDays() {
+        return accessLogRetainDays;
+    }
+
+    @Nullable
+    public String getBaseResourcePath() {
+        return baseResourcePath;
+    }
+
+    public int getRequestHeaderSize() {
+        return requestHeaderSize;
     }
 }
+
