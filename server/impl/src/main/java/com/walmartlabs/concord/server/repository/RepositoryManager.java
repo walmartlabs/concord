@@ -31,7 +31,7 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.AccessScope;
-import com.walmartlabs.concord.server.process.loader.ProjectLoader;
+import com.walmartlabs.concord.runtime.loader.ProjectLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

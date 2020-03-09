@@ -20,7 +20,7 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import io.takari.bpm.model.SourceMap;
+import com.walmartlabs.concord.runtime.loader.model.SourceMap;
 
 import javax.el.ELContext;
 import javax.el.ELException;

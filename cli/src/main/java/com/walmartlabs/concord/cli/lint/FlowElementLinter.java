@@ -20,11 +20,9 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import io.takari.bpm.model.AbstractElement;
-import io.takari.bpm.model.ProcessDefinition;
-import io.takari.bpm.model.SourceAwareProcessDefinition;
-import io.takari.bpm.model.SourceMap;
+import com.walmartlabs.concord.runtime.loader.model.FlowDefinition;
+import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.loader.model.Step;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,10 +38,10 @@ public abstract class FlowElementLinter implements Linter {
     }
 
     @Override
-    public List<LintResult> apply(ProjectDefinition pd) {
+    public List<LintResult> apply(ProcessDefinition pd) {
         notify(">> " + getStartMessage());
 
-        Map<String, ProcessDefinition> flows = pd.getFlows();
+        Map<String, FlowDefinition> flows = pd.flows();
         if (flows == null || flows.isEmpty()) {
             return Collections.emptyList();
         }
@@ -55,21 +53,15 @@ public abstract class FlowElementLinter implements Linter {
         return results;
     }
 
-    private List<LintResult> apply(ProcessDefinition pd) {
+    private List<LintResult> apply(FlowDefinition pd) {
         List<LintResult> results = new ArrayList<>();
 
-        for (AbstractElement e : pd.getChildren()) {
+        for (Step e : pd.steps()) {
             if (!accepts(e)) {
                 continue;
             }
 
-            SourceMap sm = null;
-            if (pd instanceof SourceAwareProcessDefinition) {
-                SourceAwareProcessDefinition sapd = (SourceAwareProcessDefinition) pd;
-                sm = sapd.getSourceMaps().get(e.getId());
-            }
-
-            List<LintResult> r = apply(e, sm);
+            List<LintResult> r = apply(e);
             if (r != null) {
                 results.addAll(r);
             }
@@ -78,9 +70,9 @@ public abstract class FlowElementLinter implements Linter {
         return results;
     }
 
-    protected abstract boolean accepts(AbstractElement element);
+    protected abstract boolean accepts(Step element);
 
-    protected abstract List<LintResult> apply(AbstractElement element, SourceMap sourceMap);
+    protected abstract List<LintResult> apply(Step element);
 
     protected abstract String getStartMessage();
 

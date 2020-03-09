@@ -20,11 +20,11 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import com.walmartlabs.concord.project.model.ProjectDefinition;
+import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
 
 import java.util.List;
 
 public interface Linter {
 
-    List<LintResult> apply(ProjectDefinition pd);
+    List<LintResult> apply(ProcessDefinition pd);
 }

@@ -26,9 +26,9 @@ import com.walmartlabs.concord.cli.lint.LintResult.Type;
 import com.walmartlabs.concord.cli.lint.Linter;
 import com.walmartlabs.concord.cli.lint.TaskCallLinter;
 import com.walmartlabs.concord.imports.NoopImportManager;
-import com.walmartlabs.concord.project.ProjectLoader;
-import com.walmartlabs.concord.project.model.ProjectDefinition;
-import io.takari.bpm.model.SourceMap;
+import com.walmartlabs.concord.runtime.loader.ProjectLoader;
+import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.loader.model.SourceMap;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Ansi;
 import picocli.CommandLine.Model.CommandSpec;
@@ -66,8 +66,7 @@ public class Lint implements Callable<Integer> {
         }
 
         ProjectLoader loader = new ProjectLoader(new NoopImportManager());
-        ProjectDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer())
-                .getProjectDefinition();
+        ProcessDefinition pd = loader.loadProject(targetDir, new DummyImportsNormalizer()).projectDefinition();
 
         List<LintResult> lintResults = new ArrayList<>();
         linters().forEach(l -> lintResults.addAll(l.apply(pd)));
@@ -78,10 +77,11 @@ public class Lint implements Callable<Integer> {
         }
 
         println("Found:");
-        println("  profiles: " + pd.getProfiles().size());
-        println("  flows: " + pd.getFlows().size());
-        println("  forms: " + pd.getForms().size());
-        println("  triggers: " + pd.getTriggers().size());
+        println("  imports: " + pd.imports().items().size());
+        println("  profiles: " + pd.profiles().size());
+        println("  flows: " + pd.flows().size());
+        println("  forms: " + pd.forms().size());
+        println("  triggers: " + pd.triggers().size());
         println("  (not counting dynamically imported resources)");
 
         println();
@@ -123,7 +123,7 @@ public class Lint implements Callable<Integer> {
 
             SourceMap sm = r.getSourceMap();
             if (sm != null) {
-                msg.append("@ [").append(sm.getSource()).append("] line: ").append(sm.getLine()).append(", col: ").append(sm.getColumn());
+                msg.append("@ [").append(sm.source()).append("] line: ").append(sm.line()).append(", col: ").append(sm.column());
             }
 
             msg.append("\n\t").append(r.getMessage());

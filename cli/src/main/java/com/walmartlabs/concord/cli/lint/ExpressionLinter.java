@@ -20,10 +20,9 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import io.takari.bpm.model.AbstractElement;
-import io.takari.bpm.model.ExpressionType;
-import io.takari.bpm.model.ServiceTask;
-import io.takari.bpm.model.SourceMap;
+import com.walmartlabs.concord.runtime.loader.model.ExpressionStep;
+import com.walmartlabs.concord.runtime.loader.model.SourceMap;
+import com.walmartlabs.concord.runtime.loader.model.Step;
 
 import javax.el.ELException;
 import java.util.Collections;
@@ -36,23 +35,18 @@ public class ExpressionLinter extends FlowElementLinter {
     }
 
     @Override
-    protected List<LintResult> apply(AbstractElement element, SourceMap sourceMap) {
-        ServiceTask task = (ServiceTask) element;
+    protected List<LintResult> apply(Step element) {
+        ExpressionStep task = (ExpressionStep) element;
 
-        ExpressionType type = task.getType();
-        if (type != ExpressionType.SIMPLE) {
-            return null;
-        }
-
-        String expr = task.getExpression();
+        String expr = task.expression();
         notify("  Validating expression: " + expr);
 
         if (expr == null || expr.trim().isEmpty()) {
             String msg = "Empty or null expression";
-            return Collections.singletonList(LintResult.error(sourceMap, msg));
+            return Collections.singletonList(LintResult.error(element.location(), msg));
         }
 
-        LintResult r = validate(expr, sourceMap);
+        LintResult r = validate(expr, element.location());
         if (r != null) {
             return Collections.singletonList(r);
         }
@@ -61,8 +55,8 @@ public class ExpressionLinter extends FlowElementLinter {
     }
 
     @Override
-    protected boolean accepts(AbstractElement element) {
-        return element instanceof ServiceTask;
+    protected boolean accepts(Step element) {
+        return element instanceof ExpressionStep;
     }
 
     @Override

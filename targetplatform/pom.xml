@@ -131,6 +131,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.walmartlabs.concord.runtime</groupId>
+                <artifactId>concord-runtime-loader</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
                 <artifactId>concord-sdk</artifactId>
                 <version>${project.version}</version>
