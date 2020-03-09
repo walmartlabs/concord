@@ -20,10 +20,10 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.server.process.loader.model.ProcessDefinitionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
