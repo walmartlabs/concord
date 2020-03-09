@@ -77,7 +77,7 @@ export default ({ data, onClose }: Props) => {
     return (
         <>
             <Modal dimmer="inverted" open={open} onClose={handleClose}>
-                <Modal.Header>Query results</Modal.Header>
+                <Modal.Header>Query results (max rows: 50)</Modal.Header>
                 <Modal.Content scrolling={true}>
                     {showRaw
                         ? renderRawView(data, () => setShowRaw(false))
