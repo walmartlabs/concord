@@ -27,12 +27,12 @@ import io.takari.parc.Seq;
 
 import java.util.List;
 
+import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.expression;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 import static io.takari.parc.Combinators.*;
-import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.*;
 
 public final class FormsGrammar {
 
@@ -44,7 +44,7 @@ public final class FormsGrammar {
                                     // will throw exception
                                     optionsValue.getValue(YamlValueType.FORM_FIELD);
                                 }
-                                YamlObject options = (YamlObject)optionsValue;
+                                YamlObject options = (YamlObject) optionsValue;
                                 return FormFieldParser.parse(a.name, a.location, options);
                             }))),
                     YamlValueType.FORM_FIELD);
@@ -63,13 +63,10 @@ public final class FormsGrammar {
                             .location(f.location)
                             .build()));
 
-    public static final Parser<Atom, Forms> forms =
-            field("forms", atom ->
-                    orError(
-                        betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                                many(form).map(Seq::toList)
-                                        .map(forms -> Forms.of(forms, atom.location))),
-                                YamlValueType.FORMS));
+    private static final Parser<Atom, Forms> forms =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    many(form).map(Seq::toList)
+                            .map(forms -> Forms.of(forms, null)));
 
     private static Parser<Atom, ImmutableFormCallOptions.Builder> formCallFieldsOption(ImmutableFormCallOptions.Builder o) {
         return orError(or(formFieldsArray.map(o::fields), expression.map(o::fieldsExpression)), YamlValueType.FORM_CALL_FIELDS);
@@ -91,6 +88,8 @@ public final class FormsGrammar {
                     stringVal.bind(formName ->
                             formCallOptions.map(options -> new FormCall(a.location, formName, options))));
 
+    public static final Parser<Atom, Forms> formsVal =
+            orError(forms, YamlValueType.FORMS);
 
     private FormsGrammar() {
     }

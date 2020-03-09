@@ -22,7 +22,6 @@ package com.walmartlabs.concord.svm;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Describes the state of the VM.

@@ -26,17 +26,20 @@ import com.walmartlabs.concord.runtime.v2.parser.YamlValueType;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
+@SuppressWarnings("rawtypes")
 public class InvalidValueTypeException extends YamlProcessingException {
 
     private final YamlValueType[] expectedType;
     private final YamlValueType actualType;
     private final String valueKey;
+    private final String message;
 
-    private InvalidValueTypeException(String valueKey, YamlValueType[] expectedType, YamlValueType actualType, JsonLocation location) {
+    private InvalidValueTypeException(String valueKey, YamlValueType[] expectedType, YamlValueType actualType, String message, JsonLocation location) {
         super(location);
         this.expectedType = expectedType;
         this.actualType = actualType;
         this.valueKey = valueKey;
+        this.message = message;
     }
 
     public YamlValueType[] getExpectedType() {
@@ -56,6 +59,9 @@ public class InvalidValueTypeException extends YamlProcessingException {
         String msg = buildPrefix() + ", expected: " + typeToString(expectedType) + ", got: " + actualType;
         if (actualType == YamlValueType.NULL) {
             msg += ". Remove attribute or complete the definition";
+        }
+        if (message != null) {
+            msg += ". Error info: " + message;
         }
         return msg;
     }
@@ -87,6 +93,7 @@ public class InvalidValueTypeException extends YamlProcessingException {
         private YamlValueType[] expectedType;
         private YamlValueType actualType;
         private JsonLocation location;
+        private String message;
 
         public Builder from(InvalidValueTypeException e) {
             this.expectedType = e.getExpectedType();
@@ -111,13 +118,18 @@ public class InvalidValueTypeException extends YamlProcessingException {
             return this;
         }
 
+        public Builder message(String message) {
+            this.message = message;
+            return this;
+        }
+
         public Builder location(JsonLocation location) {
             this.location = location;
             return this;
         }
 
         public InvalidValueTypeException build() {
-            return new InvalidValueTypeException(valueKey, expectedType, actualType, location);
+            return new InvalidValueTypeException(valueKey, expectedType, actualType, message, location);
         }
     }
 }

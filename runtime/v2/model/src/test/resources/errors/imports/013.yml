@@ -4,7 +4,7 @@ imports:
       version: "dev"
       path: "root"
       dest: "tmp"
+      trash: "XXX"
       secret:
         org: "default"
         name: "test"
-      trash: "XXX"

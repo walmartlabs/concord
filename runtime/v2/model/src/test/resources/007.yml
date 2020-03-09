@@ -1,0 +1,18 @@
+imports:
+  - git:
+      url: "https://github.com/me/my_private_repo.git"
+      name: "test"
+      version: "1.2.3"
+      path: "/"
+      dest: "/dest"
+      exclude:
+        - "a"
+        - "b"
+      secret:
+        name: "my_secret_key"
+  - git:
+      url: "https://github.com/walmartlabs/concord.git"
+      path: "examples/hello_world"
+  - mvn:
+      url: "mvn://groupId:artifactId:version"
+      dest: "/dest"

@@ -29,7 +29,8 @@ import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.expres
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.mapVal;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.maybeInt;
 import static io.takari.parc.Combinators.or;
 
 public final class CommonGrammar {

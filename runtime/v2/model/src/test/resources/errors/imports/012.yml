@@ -1,2 +1,4 @@
 imports:
-  - git-trash
+  - git:
+      name: "org/repo"
+      exclude: "dev"

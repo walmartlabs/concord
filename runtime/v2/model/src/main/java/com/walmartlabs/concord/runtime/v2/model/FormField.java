@@ -21,8 +21,8 @@ package com.walmartlabs.concord.runtime.v2.model;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
-import org.immutables.value.Value;
 import com.walmartlabs.concord.forms.FormField.Cardinality;
+import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
