@@ -177,10 +177,11 @@ public class JsonStoreQueryResource implements Resource {
     @WithTimer
     public List<Object> execQuery(@PathParam("orgName") @ConcordKey String orgName,
                                   @PathParam("storeName") @ConcordKey String storeName,
+                                  @QueryParam("maxLimit") @DefaultValue("10") int maxLimit,
                                   String text) {
 
         try {
-            return storeQueryManager.exec(orgName, storeName, text);
+            return storeQueryManager.exec(orgName, storeName, text, maxLimit);
         } catch (Exception e) {
             throw new ConcordApplicationException("Error while executing a query: " + e.getMessage(), e);
         }

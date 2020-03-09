@@ -25,10 +25,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.JsonStorageDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.Alias;
-import net.sf.jsqlparser.expression.CastExpression;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.JdbcParameter;
+import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -38,10 +35,7 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.StatementVisitorAdapter;
 import net.sf.jsqlparser.statement.create.table.ColDataType;
-import net.sf.jsqlparser.statement.select.FromItem;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
+import net.sf.jsqlparser.statement.select.*;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.QueryPart;
@@ -81,11 +75,11 @@ public class JsonStoreQueryExecDao extends AbstractDao {
             throw new ValidationErrorsException("Query not found: " + queryName);
         }
 
-        return execSql(q.storeId(), q.text(), params);
+        return execSql(q.storeId(), q.text(), params, null);
     }
 
-    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params) {
-        String sql = createQuery(query);
+    public List<Object> execSql(UUID storeId, String query, Map<String, Object> params, Integer maxLimit) {
+        String sql = createQuery(query, maxLimit);
 
         try (DSLContext tx = DSL.using(cfg)) {
             // TODO we should probably inspect the query to determine whether we need to bind the params or not
@@ -124,7 +118,7 @@ public class JsonStoreQueryExecDao extends AbstractDao {
         }
     }
 
-    private static String createQuery(String src) {
+    private static String createQuery(String src, Integer maxLimit) {
         try {
             Statement st = CCJSqlParserUtil.parse(src);
             st.accept(new StatementVisitorAdapter() {
@@ -173,6 +167,25 @@ public class JsonStoreQueryExecDao extends AbstractDao {
                             Expression where = eq;
                             if (plainSelect.getWhere() != null) {
                                 where = new AndExpression(plainSelect.getWhere(), eq);
+                            }
+
+                            if (maxLimit != null) {
+                                long limitValue = maxLimit;
+                                if (plainSelect.getLimit() != null) {
+                                    Limit limit = plainSelect.getLimit();
+                                    Expression rowCountExpr = limit.getRowCount();
+                                    if (rowCountExpr instanceof LongValue) {
+                                        LongValue v = (LongValue) rowCountExpr;
+                                        if (v.getValue() < maxLimit) {
+                                            limitValue = v.getValue();
+                                        }
+                                    }
+
+                                }
+
+                                Limit limit = new Limit();
+                                limit.setRowCount(new LongValue(limitValue));
+                                plainSelect.setLimit(limit);
                             }
 
                             plainSelect.setWhere(where);

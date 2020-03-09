@@ -349,5 +349,5 @@ export const executeQuery = (
         },
         body: query
     };
-    return fetchJson(`/api/v1/org/${orgName}/jsonstore/${storeName}/execQuery`, opts);
+    return fetchJson(`/api/v1/org/${orgName}/jsonstore/${storeName}/execQuery?maxLimit=50`, opts);
 };

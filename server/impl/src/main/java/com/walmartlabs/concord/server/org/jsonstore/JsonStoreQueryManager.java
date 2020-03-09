@@ -135,10 +135,10 @@ public class JsonStoreQueryManager {
         return execDao.exec(store.id(), queryName, params);
     }
 
-    public List<Object> exec(String orgName, String storeName, String text) {
+    public List<Object> exec(String orgName, String storeName, String text, int maxLimit) {
         OrganizationEntry org = orgManager.assertAccess(orgName, true);
         JsonStoreEntry store = jsonStoreAccessManager.assertAccess(org.getId(), null, storeName, ResourceAccessLevel.READER, true);
-        return execDao.execSql(store.id(), text, null);
+        return execDao.execSql(store.id(), text, null, maxLimit);
     }
 
     private static void validateQuery(String text) {
