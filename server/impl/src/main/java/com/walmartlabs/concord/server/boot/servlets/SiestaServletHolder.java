@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.server.boot.servlets;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,30 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.ollie.config.Config;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.sonatype.siesta.server.SiestaServlet;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import javax.servlet.annotation.WebServlet;
 
+/**
+ * Binds {@link SiestaServlet} to Concord's API paths.
+ */
 @Named
 @Singleton
-public class CustomFormConfiguration {
-
-    private Path baseDir;
+@WebServlet({
+        "/api/*",
+        "/events/github/*"
+})
+public class SiestaServletHolder extends ServletHolder {
 
     @Inject
-    public CustomFormConfiguration(@Nullable @Config("forms.baseDir") String baseDir) throws IOException {
-        this.baseDir = baseDir != null ? Paths.get(baseDir) : IOUtils.createTempDir("formserv");
-    }
+    public SiestaServletHolder(SiestaServlet siestaServlet) {
+        super(siestaServlet);
 
-    public Path getBaseDir() {
-        return baseDir;
+        // necessary to support multiple API roots
+        setInitParameter("resteasy.servlet.mapping.prefix", "/");
     }
 }

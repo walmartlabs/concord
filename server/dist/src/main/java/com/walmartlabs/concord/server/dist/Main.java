@@ -30,14 +30,14 @@ public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         SLF4JBridgeHandler.install();
 
         Version v = Version.getCurrent();
         log.info("Starting Concord Server ({}, {}, {})...", v.getVersion(), v.getCommitId(), v.getEnv());
 
         long t1 = System.currentTimeMillis();
-        new ConcordServer().start();
+        ConcordServer.start();
         long t2 = System.currentTimeMillis();
         log.info("main -> started in {}ms", (t2 - t1));
     }

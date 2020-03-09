@@ -62,6 +62,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
     @Inject
     public SessionKeyRealm(ProcessSecurityContext processSecurityContext,
                            ProcessQueueManager processQueueManager) {
+
         this.processSecurityContext = processSecurityContext;
         this.processQueueManager = processQueueManager;
     }

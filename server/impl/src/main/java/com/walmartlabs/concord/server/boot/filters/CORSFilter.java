@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server;
+package com.walmartlabs.concord.server.boot.filters;
 
 /*-
  * *****
@@ -23,11 +23,17 @@ package com.walmartlabs.concord.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Named
+@Singleton
+@WebFilter({"/api/*", "/logs/*", "/forms/*"})
 public class CORSFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(CORSFilter.class);

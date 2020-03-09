@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.server.metrics;
+package com.walmartlabs.concord.server.boot;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,12 @@ package com.walmartlabs.concord.server.metrics;
  * =====
  */
 
-import com.google.inject.AbstractModule;
-import com.google.inject.matcher.Matchers;
-import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 
-public class MetricModule extends AbstractModule {
+/**
+ * Provides a way to configure additional {@link org.eclipse.jetty.server.Handler}.
+ */
+public interface ContextHandlerConfigurator {
 
-    @Override
-    protected void configure() {
-        MetricInterceptor i = new MetricInterceptor();
-        requestInjection(i);
-        bindInterceptor(Matchers.any(), Matchers.annotatedWith(WithTimer.class), i);
-
-        bindListener(Matchers.any(), new MetricTypeListener());
-    }
+    void configure(ContextHandlerCollection collection);
 }

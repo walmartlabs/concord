@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.server.boot;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,29 @@ package com.walmartlabs.concord.server.cfg;
  * =====
  */
 
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.ollie.config.Config;
+import com.walmartlabs.concord.server.sdk.BackgroundTask;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Set;
 
 @Named
 @Singleton
-public class CustomFormConfiguration {
+public class BackgroundTasks {
 
-    private Path baseDir;
+    private final Set<BackgroundTask> tasks;
 
     @Inject
-    public CustomFormConfiguration(@Nullable @Config("forms.baseDir") String baseDir) throws IOException {
-        this.baseDir = baseDir != null ? Paths.get(baseDir) : IOUtils.createTempDir("formserv");
+    public BackgroundTasks(Set<BackgroundTask> tasks) {
+        this.tasks = tasks;
     }
 
-    public Path getBaseDir() {
-        return baseDir;
+    public synchronized void start() {
+        tasks.forEach(BackgroundTask::start);
+    }
+
+    public synchronized void stop() {
+        tasks.forEach(BackgroundTask::stop);
     }
 }

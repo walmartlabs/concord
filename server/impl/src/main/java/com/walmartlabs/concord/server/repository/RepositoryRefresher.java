@@ -81,8 +81,10 @@ public class RepositoryRefresher extends AbstractDao {
     public void refresh(List<UUID> repositoryIds) {
         List<RepositoryEntry> repositories = repositoryIds.stream()
                 .map(repositoryDao::get)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        for(RepositoryEntry r : repositories) {
+
+        for (RepositoryEntry r : repositories) {
             try {
                 refresh(r);
             } catch (Exception e) {
