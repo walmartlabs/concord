@@ -53,14 +53,17 @@ public class InjectorFactory {
     private final ClassLoader parentClassLoader;
     private final WorkingDirectory workDir;
     private final RunnerConfiguration runnerCfg;
+    private final ServicesModule servicesModule;
 
     public InjectorFactory(ClassLoader parentClassLoader,
                            WorkingDirectory workDir,
-                           RunnerConfiguration runnerCfg) {
+                           RunnerConfiguration runnerCfg,
+                           ServicesModule services) {
 
         this.parentClassLoader = parentClassLoader;
         this.workDir = workDir;
         this.runnerCfg = runnerCfg;
+        this.servicesModule = services;
     }
 
     public Injector create() throws IOException {
@@ -88,7 +91,8 @@ public class InjectorFactory {
                 new ConfigurationModule(workDir, runnerCfg),
                 tasks,
                 new SpaceModule(new URLClassSpace(parentClassLoader)),
-                new SpaceModule(new URLClassSpace(dependenciesClassLoader)));
+                new SpaceModule(new URLClassSpace(dependenciesClassLoader)),
+                servicesModule);
 
         return Guice.createInjector(m);
     }

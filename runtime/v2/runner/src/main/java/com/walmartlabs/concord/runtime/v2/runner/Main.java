@@ -43,7 +43,11 @@ public class Main {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
 
         ClassLoader parentClassLoader = Main.class.getClassLoader();
-        Injector injector = new InjectorFactory(parentClassLoader, new WorkingDirectory(workDir), runnerCfg)
+        Injector injector = new InjectorFactory(parentClassLoader, new WorkingDirectory(workDir), runnerCfg,
+                ServicesModule.builder()
+                        // TODO: add SecretService implementation
+                        // TODO: add DockerService implementation
+                        .build())
                 .create();
 
         // if "pre-forking" is used then the runner starts with an empty
