@@ -29,7 +29,6 @@ import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
-import com.walmartlabs.concord.server.security.sso.SsoHandler;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -52,10 +51,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Named
 @Singleton
@@ -77,6 +73,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private final ApiKeyDao apiKeyDao;
     private final SecretStoreConfiguration secretCfg;
+    private final Set<AuthenticationHandler> authenticationHandlers;
 
     @InjectMeter
     private final Meter successAuths;
@@ -84,20 +81,18 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     @InjectMeter
     private final Meter failedAuths;
 
-    private final SsoHandler ssoHandler;
-
     @Inject
     public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao,
                                        SecretStoreConfiguration secretCfg,
+                                       Set<AuthenticationHandler> authenticationHandlers,
                                        Meter successAuths,
-                                       Meter failedAuths,
-                                       SsoHandler ssoHandler) {
+                                       Meter failedAuths) {
 
         this.apiKeyDao = apiKeyDao;
         this.secretCfg = secretCfg;
+        this.authenticationHandlers = authenticationHandlers;
         this.successAuths = successAuths;
         this.failedAuths = failedAuths;
-        this.ssoHandler = ssoHandler;
     }
 
     @Override
@@ -121,9 +116,11 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             return createFromAuthHeader(req);
         }
 
-        AuthenticationToken token = ssoHandler.createToken(request, response);
-        if (token != null) {
-            return token;
+        for (AuthenticationHandler handler : authenticationHandlers) {
+            AuthenticationToken token = handler.createToken(request, response);
+            if (token != null) {
+                return token;
+            }
         }
 
         return new UsernamePasswordToken();
@@ -135,7 +132,14 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             boolean loggedIn = executeLogin(request, response);
 
             if (!loggedIn) {
-                boolean processed = ssoHandler.onAccessDenied(request, response);
+                boolean processed = false;
+                for (AuthenticationHandler handler : authenticationHandlers) {
+                    processed = handler.onAccessDenied(request, response);
+                    if (processed) {
+                        break;
+                    }
+                }
+
                 if (!processed) {
                     HttpServletResponse resp = WebUtils.toHttp(response);
                     resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

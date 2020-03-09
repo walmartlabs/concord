@@ -16,6 +16,7 @@
 
     <modules>
         <module>ansible</module>
+        <module>iam-sso</module>
         <module>kafka-event-sink</module>
         <module>noderoster</module>
     </modules>

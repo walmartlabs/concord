@@ -315,6 +315,11 @@
                 <artifactId>concord-noderoster-plugin-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins</groupId>
+                <artifactId>iam-sso</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- Ollie -->
             <dependency>
