@@ -83,12 +83,7 @@ const eventTypeOptions = [
     { value: 'repository', text: 'repository' }
 ];
 
-const RepositoryEventsActivity = ({
-    orgName,
-    projectName,
-    repoName,
-    forceRefresh
-}: ExternalProps) => {
+export default ({ orgName, projectName, repoName, forceRefresh }: ExternalProps) => {
     const dispatch = React.useContext(LoadingDispatch);
 
     const defaultAfter = formatDate(addHours(new Date(), -8), SRC_DATE_TIME_FORMAT);
@@ -284,17 +279,17 @@ const RepositoryEventsActivity = ({
 const renderItems = (data?: PaginatedAuditLogEntries) => {
     if (!data) {
         return (
-            <tr>
+            <Table.Row>
                 <Table.Cell colSpan={4}>&nbsp;</Table.Cell>
-            </tr>
+            </Table.Row>
         );
     }
 
     if (data.items.length === 0) {
         return (
-            <tr style={{ fontWeight: 'bold' }}>
+            <Table.Row style={{ fontWeight: 'bold' }}>
                 <Table.Cell colSpan={4}>No data available</Table.Cell>
-            </tr>
+            </Table.Row>
         );
     }
 
@@ -304,7 +299,7 @@ const renderItems = (data?: PaginatedAuditLogEntries) => {
 const renderTableRow = (idx: number, h: AuditLogEntry) => {
     const d = h.details as EventDetails;
     return (
-        <Table.Row key={idx}>
+        <Table.Row key={idx} verticalAlign="top">
             <Table.Cell collapsing={true}>{d.eventId}</Table.Cell>
             <Table.Cell collapsing={true}>
                 <LocalTimestamp value={h.entryDate} />
@@ -412,5 +407,3 @@ const owner = (str: string) => {
     }
     return str;
 };
-
-export default RepositoryEventsActivity;
