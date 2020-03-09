@@ -105,7 +105,7 @@ export default ({ orgId, orgName, secretName }: Props) => {
                                 onClick={onClick}
                             />
                         )}
-                        title="Move project?"
+                        title="Move secret?"
                         introMsg={
                             <>
                                 <p>
