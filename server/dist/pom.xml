@@ -27,7 +27,10 @@
         <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
             <artifactId>concord-noderoster-plugin</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins</groupId>
+            <artifactId>iam-sso</artifactId>
         </dependency>
 
         <dependency>

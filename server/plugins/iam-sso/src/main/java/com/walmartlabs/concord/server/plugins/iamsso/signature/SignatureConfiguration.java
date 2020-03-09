@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.server.plugins.iamsso.signature;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2020 Walmart Inc.
+ * Copyright (C) 2017 - 2019 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,17 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import org.apache.shiro.web.filter.mgt.FilterChainManager;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.SignedJWT;
 
-/**
- * Provides a way to configure Shiro's filter chains.
- */
-public interface FilterChainConfigurator {
+public interface SignatureConfiguration {
 
-    void configure(FilterChainManager manager);
-
-    default int priority() {
-        return 0;
-    }
+    /**
+     * Verify a signed JWT.
+     *
+     * @param jwt signed JWT
+     * @return <code>true</code> if signature verified
+     * @throws JOSEException exception
+     */
+    boolean verify(SignedJWT jwt) throws JOSEException;
 }

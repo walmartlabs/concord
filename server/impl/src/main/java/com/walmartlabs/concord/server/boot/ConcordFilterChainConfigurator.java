@@ -65,4 +65,11 @@ public class ConcordFilterChainConfigurator implements FilterChainConfigurator {
         manager.addFilter("github", githubAuthenticatingFilter);
         manager.createChain("/events/github/**", "github");
     }
+
+    @Override
+    public int priority() {
+        // because most of the filters here are using "wide" patterns
+        // like /api/** we need to run this configurator last
+        return 100;
+    }
 }

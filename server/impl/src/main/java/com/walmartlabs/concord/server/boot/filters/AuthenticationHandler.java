@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.server.boot.filters;
 
 /*-
  * *****
@@ -20,16 +20,15 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import org.apache.shiro.web.filter.mgt.FilterChainManager;
+import org.apache.shiro.authc.AuthenticationToken;
 
-/**
- * Provides a way to configure Shiro's filter chains.
- */
-public interface FilterChainConfigurator {
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import java.io.IOException;
 
-    void configure(FilterChainManager manager);
+public interface AuthenticationHandler {
 
-    default int priority() {
-        return 0;
-    }
+    AuthenticationToken createToken(ServletRequest request, ServletResponse response);
+
+    boolean onAccessDenied(ServletRequest request, ServletResponse response) throws IOException;
 }

@@ -345,15 +345,6 @@
             <artifactId>concord-queue-client</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>json-smart</artifactId>
-        </dependency>
-
         <!-- JDK9+ compatibility -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
