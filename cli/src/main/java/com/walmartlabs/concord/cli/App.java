@@ -25,7 +25,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-@Command(name = "concord", subcommands = Lint.class)
+@Command(name = "concord", subcommands = {Lint.class, Run.class})
 public class App implements Runnable {
 
     @Spec

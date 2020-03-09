@@ -1,0 +1,52 @@
+configuration:
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.42.1-SNAPSHOT"
+
+flows:
+  default:
+  - task: ansible
+    in:
+      # location of the playbook
+      playbook: playbook/hello.yml
+
+      disableConcordCallbacks: true
+
+      # remote server auth
+      auth:
+        privateKey:
+          # remote user's name
+          user: "brig"
+          # remote server's key
+          secret:
+            name: 'test'
+
+      # inventory data, should match the playbook's host groups
+      inventory:
+        local:
+          hosts:
+          - "localhost"
+
+      # pass additional variables to the playbook
+      extraVars:
+        greetings: "Hi there!"
+
+
+
+#configuration:
+#  dependencies:
+#    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.42.0"
+#
+#flows:
+#  default:
+#    - task: ansible
+#      in:
+#        disableConcordCallbacks: true
+#        playbook: playbook/hello.yml
+#        inventory:
+#          local:
+#            hosts:
+#              - "127.0.0.1"
+#            vars:
+#              ansible_connection: "local"
+#        extraVars:
+#          greetings: "Hi there!"

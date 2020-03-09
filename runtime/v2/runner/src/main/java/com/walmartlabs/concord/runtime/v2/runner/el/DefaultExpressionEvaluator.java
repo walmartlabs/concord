@@ -66,7 +66,6 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         composite.add(new InjectVariableResolver());
         composite.add(new GlobalVariableResolver(ctx.globalVariables()));
 
-
         Runtime rt = ctx.execution().runtime();
         TaskProvider taskProvider = rt.getService(TaskProvider.class);
         composite.add(new TaskResolver(taskProvider));

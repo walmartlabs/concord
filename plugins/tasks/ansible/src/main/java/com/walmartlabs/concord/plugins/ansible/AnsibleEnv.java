@@ -33,8 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.sdk.ContextUtils.getMap;
-import static com.walmartlabs.concord.sdk.ContextUtils.getString;
+import static com.walmartlabs.concord.sdk.ContextUtils.*;
 
 public class AnsibleEnv {
 
@@ -49,7 +48,7 @@ public class AnsibleEnv {
     private Map<String, String> env = Collections.emptyMap();
 
     public AnsibleEnv(Context context, ApiConfiguration apiCfg, boolean debug) {
-        this.txId = getString(context, Constants.Context.TX_ID_KEY);
+        this.txId = getTxId(context).toString();
         this.context = context;
         this.apiCfg = apiCfg;
         this.debug = debug;
