@@ -53,4 +53,21 @@ public class YamlList extends YamlValue {
                 .map(YamlValue::getValue)
                 .collect(Collectors.toList());
     }
+
+    public <T> List<T> getListValue(YamlValueType<T> itemExpectedType) {
+        return values.stream()
+                .map(v -> v.getValue(itemExpectedType))
+                .collect(Collectors.toList());
+    }
+
+    public <T> List<T> getListValue(ValueConverter<T> converter) {
+        return values.stream()
+                .map(converter::convert)
+                .collect(Collectors.toList());
+    }
+
+    interface ValueConverter<T> {
+
+        T convert(YamlValue value);
+    }
 }

@@ -23,12 +23,15 @@ package com.walmartlabs.concord.runtime.v2.parser;
 import com.fasterxml.jackson.core.JsonLocation;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+
 @Value.Immutable
 public interface UnknownOption {
 
     @Value.Parameter
     String key();
 
+    @Nullable
     @Value.Parameter
     YamlValueType type();
 

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.model;
 import com.fasterxml.jackson.core.JsonLocation;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;

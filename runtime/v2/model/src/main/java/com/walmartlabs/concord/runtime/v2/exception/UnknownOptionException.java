@@ -70,7 +70,11 @@ public class UnknownOptionException extends YamlProcessingException {
     }
 
     private String toString(UnknownOption o) {
-        return "'" + o.key() + "' [" + o.type() + "] @ " + JsonLocationConverter.toShortString(o.location());
+        String type = "";
+        if (o.type() != null) {
+            type = " [" + o.type() + "]";
+        }
+        return "'" + o.key() + "'" + type + " @ " + JsonLocationConverter.toShortString(o.location());
     }
 
     public static Builder builder() {

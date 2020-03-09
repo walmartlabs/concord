@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.sdk.Constants;
 

@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import com.walmartlabs.concord.imports.Import;
+import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.*;
 
 import java.io.Serializable;
@@ -34,8 +36,11 @@ public class YamlValueType<T> {
     public static final YamlValueType<Float> FLOAT = type("FLOAT");
     public static final YamlValueType<Boolean> BOOLEAN = type("BOOLEAN");
     public static final YamlValueType<String> STRING = type("STRING");
+    public static final YamlValueType<String> PATTERN = type("PATTERN");
     public static final YamlValueType<Object> NULL = type("NULL");
     public static final YamlValueType<List<Serializable>> ARRAY = array("ARRAY", null);
+    public static final YamlValueType<List<String>> ARRAY_OF_PATTERN = array("ARRAY_OF_PATTERN", PATTERN);
+    public static final YamlValueType<List<String>> ARRAY_OF_STRING = array("ARRAY_OF_STRING", STRING);
     public static final YamlValueType<Map<String, Serializable>> OBJECT = map("OBJECT");
 
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
@@ -57,6 +62,16 @@ public class YamlValueType<T> {
     public static final YamlValueType<ImmutableFormCallOptions.Builder> FORM_CALL_FIELDS = type("ARRAY_OF_FORM_FIELD or EXPRESSION");
     public static final YamlValueType<ImmutableRetry.Builder> RETRY_TIMES = type("INT or EXPRESSION");
     public static final YamlValueType<ImmutableRetry.Builder> RETRY_DELAY = type("INT or EXPRESSION");
+    public static final YamlValueType<Imports> IMPORTS = type("IMPORTS");
+    public static final YamlValueType<Import> IMPORT = type("IMPORT");
+    public static final YamlValueType<Import.GitDefinition> GIT_IMPORT = type("GIT_IMPORT");
+    public static final YamlValueType<Import.MvnDefinition> MVN_IMPORT = type("MVN_IMPORT");
+    public static final YamlValueType<Import.SecretDefinition> IMPORT_SECRET = type("IMPORT_SECRET");
+    public static final YamlValueType<Map<String, List<Step>>> FLOWS = type("FLOWS");
+    public static final YamlValueType<KV<String, List<Step>>> FLOW = type("FLOW");
+    public static final YamlValueType<Map<String, Profile>> PROFILES = type("PROFILES");
+    public static final YamlValueType<KV<String, Profile>> PROFILE = type("PROFILE");
+    public static final YamlValueType<ProcessConfiguration> PROCESS_CFG = type("CONFIGURATION");
 
     private final String name;
     private final String description;

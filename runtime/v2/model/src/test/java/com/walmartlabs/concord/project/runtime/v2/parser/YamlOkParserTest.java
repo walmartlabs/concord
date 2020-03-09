@@ -21,6 +21,8 @@ package com.walmartlabs.concord.project.runtime.v2.parser;
  */
 
 import com.walmartlabs.concord.forms.FormField.Cardinality;
+import com.walmartlabs.concord.imports.Import;
+import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.junit.Test;
@@ -243,6 +245,44 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertNotNull(fd.location());
         assertNotNull(fd.fields());
         assertEquals(2, fd.fields().size());
+    }
+
+    // Imports Definition Test
+    @Test
+    public void test007() throws Exception {
+        ProcessDefinition pd = load("007.yml");
+
+        Imports imports = pd.imports();
+        assertNotNull(imports);
+
+        assertEquals(3, imports.items().size());
+
+        Import i = imports.items().get(0);
+        assertEquals("git", i.type());
+        Import.GitDefinition g = (Import.GitDefinition)i;
+        assertEquals("https://github.com/me/my_private_repo.git", g.url());
+        assertEquals("test", g.name());
+        assertEquals("1.2.3", g.version());
+        assertEquals("/", g.path());
+        assertEquals("/dest", g.dest());
+        assertEquals(Arrays.asList("a", "b"), g.exclude());
+        assertEquals(Import.SecretDefinition.builder().name("my_secret_key").build(), g.secret());
+
+        assertEquals("git", imports.items().get(1).type());
+        assertEquals("mvn", imports.items().get(2).type());
+    }
+
+    // Configuration Definition Test
+    @Test
+    public void test008() throws Exception {
+        ProcessDefinition pd = load("008.yml");
+
+        ProcessConfiguration cfg = pd.configuration();
+        assertNotNull(cfg);
+
+        assertEquals("main-test", cfg.entryPoint());
+        assertEquals(Arrays.asList("d1", "d2"), cfg.dependencies());
+        assertEquals(Collections.singletonMap("k", "v"), cfg.arguments());
     }
 
     private static void assertMeta(StepOptions o) {

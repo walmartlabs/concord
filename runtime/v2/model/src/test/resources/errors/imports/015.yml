@@ -1,0 +1,6 @@
+imports:
+  - git:
+      name: "org/repo"
+      exclude:
+        - "dev"
+        - 1

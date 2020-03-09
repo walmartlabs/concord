@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -31,9 +32,7 @@ import com.google.common.collect.Lists;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidFieldDefinitionException;
 import com.walmartlabs.concord.runtime.v2.exception.YamlParserException;
 import com.walmartlabs.concord.runtime.v2.exception.YamlProcessingException;
-import com.walmartlabs.concord.runtime.v2.model.Forms;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.Step;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,11 +46,11 @@ public class YamlParserV2 {
 
     public YamlParserV2() {
         ObjectMapper om = new ObjectMapper(new YAMLFactory()
-                .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION));
+                .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION))
+                .disable(MapperFeature.USE_ANNOTATIONS);
 
         SimpleModule module = new SimpleModule();
-        module.addDeserializer(Step.class, YamlDeserializersV2.getStepDeserializer());
-        module.addDeserializer(Forms.class, YamlDeserializersV2.getFormsDeserializer());
+        module.addDeserializer(ProcessDefinition.class, YamlDeserializersV2.getProcessDefinitionDeserializer());
 
         om.registerModule(module);
         om.registerModule(new GuavaModule());
@@ -63,6 +62,8 @@ public class YamlParserV2 {
     public ProcessDefinition parse(Path baseDir, Path file) throws IOException {
         try {
             return objectMapper.readValue(file.toFile(), ProcessDefinition.class);
+        } catch (YamlProcessingException e) {
+            throw new YamlParserException(buildErrorMessage("(" + baseDir.relativize(file) + "): Error", e));
         } catch (Exception e) {
             if (e instanceof JsonProcessingException) {
                 JsonProcessingException jpe = (JsonProcessingException) e;
@@ -73,11 +74,6 @@ public class YamlParserV2 {
     }
 
     private static YamlParserException toErr(String msg, JsonProcessingException jpe) {
-        if (jpe.getCause() instanceof YamlProcessingException) {
-            YamlProcessingException e = (YamlProcessingException) jpe.getCause();
-            return new YamlParserException(buildErrorMessage(msg, e));
-        }
-
         String loc = JsonLocationConverter.toShortString(jpe.getLocation());
         String originalMsg = jpe.getOriginalMessage();
         return new YamlParserException(msg + " @ " + loc + ". " + originalMsg);

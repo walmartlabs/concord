@@ -31,6 +31,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ExitGrammar.exit;
 import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.exprFull;
@@ -55,6 +57,8 @@ public final class GrammarV2 {
     public static final Parser<Atom, String> stringVal = value.map(v -> v.getValue(YamlValueType.STRING));
     public static final Parser<Atom, Boolean> booleanVal = value.map(v -> v.getValue(YamlValueType.BOOLEAN));
     public static final Parser<Atom, Map<String, Serializable>> mapVal = value.map(v -> v.getValue(YamlValueType.OBJECT));
+    public static final Parser<Atom, List<String>> regexpArrayVal = value.map(v -> asList(v, YamlValueType.ARRAY_OF_PATTERN).getListValue(GrammarV2::regexpConverter));
+    public static final Parser<Atom, List<String>> stringArrayVal = value.map(v -> asList(v, YamlValueType.ARRAY_OF_STRING).getListValue(YamlValueType.STRING));
     public static final Parser<Atom, Serializable> nonNullVal = value.map(v -> {
         assertNotNull(v);
         return v.getValue();
@@ -63,6 +67,7 @@ public final class GrammarV2 {
 
     public static final Parser.Ref<Atom, List<Step>> stepsVal = Parser.ref();
 
+    @SuppressWarnings("rawtypes")
     private static YamlValueType toType(JsonToken t) {
         switch (t) {
             case VALUE_STRING:
@@ -103,7 +108,7 @@ public final class GrammarV2 {
                         betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                                 many(satisfyToken(JsonToken.FIELD_NAME).bind(a ->
                                         value.map(v -> new KV<>(a.name, v)))))
-                                .map(a -> new YamlObject(toMap(a), t.location)))));
+                                .map(a -> new YamlObject(valueToMap(a), t.location)))));
     }
 
     static {
@@ -119,9 +124,9 @@ public final class GrammarV2 {
         ));
     }
 
-    private static final Parser<Atom, Step> stepObject = label("Process definition step (complex)",
+    private static final Parser<Atom, Step> stepObject =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(parallelBlock, group, exprFull), choice(taskFull, callFull, callForm), snapshot, taskShort)));
+                    choice(choice(parallelBlock, group, exprFull), choice(taskFull, callFull, callForm), snapshot, taskShort));
 
     // step := exit | exprShort | parallelBlock | stepObject
     private static final Parser<Atom, Step> step = orError(choice(exit, exprShort, stepObject), YamlValueType.STEP);
@@ -137,7 +142,13 @@ public final class GrammarV2 {
         return step;
     }
 
-    public static Map<String, YamlValue> toMap(Seq<KV<String, YamlValue>> values) {
+    public static <K, V> Map<K, V> toMap(Seq<KV<K, V>> values) {
+        Map<K, V> m = new LinkedHashMap<>();
+        values.stream().forEach(kv -> m.put(kv.getKey(), kv.getValue()));
+        return m;
+    }
+
+    private static Map<String, YamlValue> valueToMap(Seq<KV<String, YamlValue>> values) {
         if (values == null) {
             return Collections.emptyMap();
         }
@@ -157,6 +168,35 @@ public final class GrammarV2 {
                 .expected(YamlValueType.NON_NULL)
                 .actual(v.getType())
                 .build();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static YamlList asList(YamlValue value, YamlValueType listType) {
+        if (YamlValueType.ARRAY != value.getType()) {
+            // will throw exception
+            value.getValue(listType);
+        }
+        return (YamlList) value;
+    }
+
+    private static String regexpConverter(YamlValue v) {
+        if (v.getType() != YamlValueType.STRING) {
+            // will throw exception
+            v.getValue(YamlValueType.PATTERN);
+        }
+
+        String p = v.getValue(YamlValueType.STRING);
+        try {
+            Pattern.compile(p);
+            return p;
+        } catch (PatternSyntaxException e) {
+            throw new InvalidValueTypeException.Builder()
+                    .location(v.getLocation())
+                    .expected(YamlValueType.PATTERN)
+                    .actual(v.getType())
+                    .message(e.getMessage())
+                    .build();
+        }
     }
 
     private GrammarV2() {

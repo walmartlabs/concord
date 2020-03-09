@@ -26,7 +26,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.walmartlabs.concord.runtime.v2.model.Forms;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import io.takari.parc.Input;
 import io.takari.parc.Parser;
@@ -38,38 +38,21 @@ import java.util.List;
 
 public final class YamlDeserializersV2 {
 
-    private static final JsonDeserializer<Step> stepDeserializer = new StepDeserializer();
-    private static final JsonDeserializer<Forms> formsDeserializer = new FormsDeserializer();
+    private static final JsonDeserializer<ProcessDefinition> processDefinitionDeserializer = new ProcessDefinitionDeserializer();
 
-    public static JsonDeserializer<Step> getStepDeserializer() {
-        return stepDeserializer;
+    public static JsonDeserializer<ProcessDefinition> getProcessDefinitionDeserializer() {
+        return processDefinitionDeserializer;
     }
 
-    public static JsonDeserializer<Forms> getFormsDeserializer() {
-        return formsDeserializer;
-    }
+    private static final class ProcessDefinitionDeserializer extends StdDeserializer<ProcessDefinition> {
 
-    private static final class StepDeserializer extends StdDeserializer<Step> {
-
-        protected StepDeserializer() {
+        protected ProcessDefinitionDeserializer() {
             super(Step.class);
         }
 
         @Override
-        public Step deserialize(JsonParser json, DeserializationContext ctx) throws IOException {
-            return parse(json, GrammarV2.getProcessStep());
-        }
-    }
-
-    private static final class FormsDeserializer extends StdDeserializer<Forms> {
-
-        protected FormsDeserializer() {
-            super(Forms.class);
-        }
-
-        @Override
-        public Forms deserialize(JsonParser json, DeserializationContext ctx) throws IOException {
-            return parse(json, FormsGrammar.forms);
+        public ProcessDefinition deserialize(JsonParser json, DeserializationContext ctx) throws IOException {
+            return parse(json, ProcessDefinitionGrammar.processDefinition);
         }
     }
 
