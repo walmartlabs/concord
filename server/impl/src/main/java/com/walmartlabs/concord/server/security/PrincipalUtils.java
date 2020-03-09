@@ -96,7 +96,7 @@ public final class PrincipalUtils {
 
                 Set<String> permissions = r.getPermissions();
                 if (permissions != null) {
-                    permissions.forEach(s -> i.addStringPermission(s));
+                    permissions.forEach(i::addStringPermission);
                 }
             });
         }

@@ -119,15 +119,23 @@ public class ConsoleService implements Resource {
     public UserResponse whoami() {
         UserPrincipal p = UserPrincipal.getCurrent();
         if (p == null) {
-            throw new ConcordApplicationException("Can't determine current user: entry not found",
+            throw new ConcordApplicationException("Can't determine current user: pricipal not found",
                     Status.INTERNAL_SERVER_ERROR);
         }
 
-        String displayName = null;
+        UserEntry u = p.getUser();
+        if (u == null) {
+            throw new ConcordApplicationException("Can't determine current user: user entry not found",
+                    Status.INTERNAL_SERVER_ERROR);
+        }
 
-        LdapPrincipal l = LdapPrincipal.getCurrent();
-        if (l != null) {
-            displayName = l.getDisplayName();
+        String displayName = u.getDisplayName();
+
+        if (displayName == null) {
+            LdapPrincipal l = LdapPrincipal.getCurrent();
+            if (l != null) {
+                displayName = l.getDisplayName();
+            }
         }
 
         if (displayName == null) {
