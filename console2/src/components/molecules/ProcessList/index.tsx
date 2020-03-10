@@ -59,7 +59,9 @@ export const PROJECT_COLUMN: ColumnDefinition = {
 export const REPO_COLUMN: ColumnDefinition = {
     caption: 'Repository',
     source: 'repoName',
-    render: 'repo-link'
+    render: 'repo-link',
+    searchValueType: 'string',
+    searchType: 'substring'
 };
 
 export const INITIATOR_COLUMN: ColumnDefinition = {

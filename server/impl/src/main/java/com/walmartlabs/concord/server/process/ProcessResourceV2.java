@@ -252,15 +252,8 @@ public class ProcessResourceV2 implements Resource {
         }
 
         UUID effectiveRepoId = repoId;
-        if (effectiveRepoId == null && repoName != null) {
-            if (effectiveProjectId == null) {
-                throw new ValidationErrorsException("Project name or ID is required.");
-            }
-
+        if (effectiveRepoId == null && repoName != null && effectiveProjectId != null) {
             effectiveRepoId = repositoryDao.getId(effectiveProjectId, repoName);
-            if (effectiveRepoId == null) {
-                throw new ConcordApplicationException("Repository not found: " + repoName, Response.Status.NOT_FOUND);
-            }
         }
 
         // collect all metadata filters, we assume that they have "meta." prefix in their query parameter names
@@ -279,6 +272,7 @@ public class ProcessResourceV2 implements Resource {
                 .afterCreatedAt(toTimestamp(afterCreatedAt))
                 .beforeCreatedAt(toTimestamp(beforeCreatedAt))
                 .repoId(effectiveRepoId)
+                .repoName(repoName)
                 .tags(tags)
                 .status(processStatus)
                 .initiator(initiator)
