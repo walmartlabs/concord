@@ -568,6 +568,18 @@ public class ProcessQueueDao extends AbstractDao {
             }
         }
 
+        if (filter.repoName() != null && filter.repoId() == null) {
+            SelectConditionStep<Record1<UUID>> repoIdSelect = select(REPOSITORIES.REPO_ID)
+                    .from(REPOSITORIES)
+                    .where(REPOSITORIES.REPO_NAME.startsWith(filter.repoName()));
+
+            if (filter.projectId() != null) {
+                repoIdSelect = repoIdSelect.and(REPOSITORIES.PROJECT_ID.eq(filter.projectId()));
+            }
+
+            query.addConditions(PROCESS_QUEUE.REPO_ID.in(repoIdSelect));
+        }
+
         if (filter.initiator() != null) {
             query.addConditions(USERS.USERNAME.startsWith(filter.initiator()));
         }
