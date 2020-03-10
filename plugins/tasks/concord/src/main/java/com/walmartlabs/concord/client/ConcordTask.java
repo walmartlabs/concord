@@ -89,6 +89,7 @@ public class ConcordTask extends AbstractConcordTask {
     private static final String TAGS_KEY = "tags";
     private static final String SUSPEND_KEY = "suspend";
     private static final String REQUIREMENTS_KEY = "requirements";
+    private static final String META_KEY = "meta";
 
     private static final String SUSPEND_MARKER = "__concordTaskSuspend";
     private static final String RESUME_EVENT_NAME = "concordTask";
@@ -660,7 +661,8 @@ public class ConcordTask extends AbstractConcordTask {
                 SYNC_KEY,
                 TAGS_KEY,
                 SUSPEND_KEY,
-                REQUIREMENTS_KEY);
+                REQUIREMENTS_KEY,
+                META_KEY);
 
         if (job != null) {
             m.putAll(job);
@@ -787,6 +789,11 @@ public class ConcordTask extends AbstractConcordTask {
         Collection<String> outVars = (Collection<String>) cfg.get(OUT_VARS_KEY);
         if (outVars != null && !outVars.isEmpty()) {
             req.put(Constants.Request.OUT_EXPRESSIONS_KEY, outVars);
+        }
+
+        Object meta = cfg.get(META_KEY);
+        if (meta != null) {
+            req.put(Constants.Request.META, meta);
         }
 
         return req;
