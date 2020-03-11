@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.server.plugins.noderoster.HostManager;
 import com.walmartlabs.concord.server.plugins.noderoster.db.NodeRosterDB;
 import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostFacts;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -122,6 +123,7 @@ public class HostFactsProcessor implements Processor {
             tx(tx -> insert(tx, items));
         }
 
+        @WithTimer
         private void insert(DSLContext tx, List<HostFactsItem> items) {
             tx.connection(conn -> {
                 int[] updated = update(tx, conn, items);
@@ -142,6 +144,7 @@ public class HostFactsProcessor implements Processor {
             });
         }
 
+        @WithTimer
         private int[] update(DSLContext tx, Connection conn, List<HostFactsItem> items) throws SQLException {
             NodeRosterHostFacts f = NODE_ROSTER_HOST_FACTS.as("f");
 
@@ -165,6 +168,7 @@ public class HostFactsProcessor implements Processor {
             }
         }
 
+        @WithTimer
         private void insert(DSLContext tx, Connection conn, List<HostFactsItem> items) throws SQLException {
             NodeRosterHostFacts f = NODE_ROSTER_HOST_FACTS.as("f");
 
