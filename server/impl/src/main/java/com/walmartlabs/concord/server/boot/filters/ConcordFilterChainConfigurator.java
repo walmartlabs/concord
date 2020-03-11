@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.server.boot.filters;
 
 /*-
  * *****
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
+import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
 import com.walmartlabs.concord.server.boot.filters.ConcordAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.LocalRequestFilter;
