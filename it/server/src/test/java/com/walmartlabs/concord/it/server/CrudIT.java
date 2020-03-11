@@ -29,6 +29,7 @@ import org.junit.runner.RunWith;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -674,6 +675,69 @@ public class CrudIT extends AbstractServerIT {
 
         GenericOperationResult r = rolesApi.delete(roleName);
         assertEquals(GenericOperationResult.ResultEnum.DELETED, r.getResult());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testChangeOrganization() throws Exception {
+
+        String orgName = "Default";
+        String secondOrgName = "SecondOrg_" + randomString();
+
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+
+        UUID defaultOrgId = organizationsApi.get(orgName).getId();
+
+        // create a second organization
+        CreateOrganizationResponse createOrgResponse = organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(secondOrgName)
+                .setVisibility(OrganizationEntry.VisibilityEnum.PUBLIC));
+        assertTrue(createOrgResponse.isOk());
+        assertNotNull(createOrgResponse.getId());
+
+        // -- test change org for project
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        String projectName = "project_" + randomString();
+
+        // create a project in Default org
+        ProjectOperationResponse createResp = projectsApi.createOrUpdate(orgName, new ProjectEntry().setName(projectName));
+        assertTrue(createResp.isOk());
+        assertNotNull(createResp.getId());
+
+        // -- move project to second organization by org Name
+        ProjectOperationResponse moveResponse = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        .setName(projectName)
+        .setOrgName(secondOrgName));
+        assertTrue(moveResponse.isOk());
+        assertEquals("UPDATED", moveResponse.getResult().getValue());
+        assertNotNull(projectsApi.get(secondOrgName, projectName));
+
+        // -- move project back to Default organization by org Id
+        moveResponse = projectsApi.createOrUpdate(secondOrgName, new ProjectEntry()
+        .setName(projectName)
+        .setOrgId(defaultOrgId));
+        assertTrue(moveResponse.isOk());
+        assertEquals("UPDATED", moveResponse.getResult().getValue());
+        assertNotNull(projectsApi.get(orgName, projectName));
+
+        // -- test change org for secret
+        SecretsApi secretsApi = new SecretsApi(getApiClient());
+        String secretName = "secret_" + randomString();
+
+        // create a secret in Default org
+        addPlainSecret(orgName, secretName, false, null, "hey".getBytes());
+
+        // -- move secret to second organization by org Name
+        GenericOperationResult moveSecretResponse = secretsApi.update(orgName, secretName,
+                new SecretUpdateRequest().setOrgName(secondOrgName));
+        assertTrue(moveSecretResponse.isOk());
+        assertEquals("UPDATED", moveSecretResponse.getResult().getValue());
+        assertNotNull(secretsApi.get(secondOrgName, secretName));
+
+        // -- move secret back to Default organization by org Id
+        moveSecretResponse = secretsApi.update(secondOrgName, secretName, new SecretUpdateRequest().setOrgId(defaultOrgId));
+        assertTrue(moveSecretResponse.isOk());
+        assertEquals("UPDATED", moveSecretResponse.getResult().getValue());
+        assertNotNull(secretsApi.get(orgName, secretName));
     }
 
     private static OrganizationEntry findOrganization(List<OrganizationEntry> l, String name) {
