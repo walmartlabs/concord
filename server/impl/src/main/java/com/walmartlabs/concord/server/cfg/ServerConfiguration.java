@@ -65,6 +65,9 @@ public class ServerConfiguration implements Serializable {
     @Config("server.requestHeaderSize")
     private int requestHeaderSize;
 
+    @Inject
+    private CORSConfiguration corsConfiguration;
+
     public int getPort() {
         return port;
     }
@@ -93,6 +96,23 @@ public class ServerConfiguration implements Serializable {
 
     public int getRequestHeaderSize() {
         return requestHeaderSize;
+    }
+
+    public CORSConfiguration getCORSConfiguration() {
+        return corsConfiguration;
+    }
+
+    @Named
+    @Singleton
+    public static class CORSConfiguration implements Serializable {
+
+        @Inject
+        @Config("server.cors.allowOrigin")
+        private String allowOrigin;
+
+        public String getAllowOrigin() {
+            return allowOrigin;
+        }
     }
 }
 
