@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.annotation.WebServlet;
@@ -33,6 +34,7 @@ import javax.servlet.annotation.WebServlet;
 @WebServlet("/forms/*")
 public class FormServletHolder extends ServletHolder {
 
+    @Inject
     public FormServletHolder(CustomFormConfiguration cfg) {
         super(DefaultServlet.class);
 
