@@ -478,9 +478,11 @@ public class SimpleHttpClient {
     }
 
     private Map<String, String> getHeaders(Header[] headers) {
-        return Arrays.stream(headers)
-                .filter(h -> !"Authorization".equalsIgnoreCase(h.getName()))
-                .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+        Map<String, String> result = new HashMap<>();
+        for (Header h : headers) {
+            result.put(h.getName(), h.getValue());
+        }
+        return result;
     }
 
     /**
