@@ -210,4 +210,39 @@ public class AnsibleLookupIT extends AbstractServerIT {
         assertNoLog(".*Implicit org: ssh-rsa" + ".*", ab);
         assertLogAtLeast(".*ENABLING NO_LOG.*", 2, ab);
     }
+
+    /**
+     * Verify that {@code lookup('concord_data_secret', ...)} returns a valid value.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSecretValue() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String secretName = "mySecret_" + randomString();
+        String secretValue = "hello_" + randomString();
+        addPlainSecret(orgName, secretName, false, null, secretValue.getBytes());
+
+        // ---
+
+        byte[] payload = archive(AnsibleLookupIT.class.getResource("ansibleLookupSecretDataValue").toURI(), ITConstants.DEPENDENCIES_DIR);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.orgName", orgName);
+        input.put("arguments.secretName", secretName);
+
+        StartProcessResponse spr = start(input);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Value: " + secretValue + ".*", ab);
+    }
 }

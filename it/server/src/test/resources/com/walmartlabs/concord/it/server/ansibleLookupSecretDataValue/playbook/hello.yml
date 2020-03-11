@@ -1,0 +1,6 @@
+---
+- hosts: local
+  tasks:
+  - debug:
+      msg: "Value: {{ lookup('concord_data_secret', orgName, secretName, None) }}"
+      verbosity: 0

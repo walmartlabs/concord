@@ -45,6 +45,6 @@ class LookupModule(LookupBase):
         if r.status_code != requests.codes.ok:
             raise AnsibleError('Invalid server response: ' + str(r.status_code))
 
-        ret.append(str(r.content))
+        ret.append(str(r.text))
 
         return ret
