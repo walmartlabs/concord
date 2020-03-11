@@ -30,6 +30,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 
 import java.io.*;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -81,6 +82,10 @@ public final class PrincipalUtils {
     }
 
     public static AuthorizationInfo toAuthorizationInfo(PrincipalCollection principals) {
+        return toAuthorizationInfo(principals, null);
+    }
+
+    public static AuthorizationInfo toAuthorizationInfo(PrincipalCollection principals, List<String> extraRoles) {
         SimpleAuthorizationInfo i = new SimpleAuthorizationInfo();
 
         UserPrincipal p = principals.oneByType(UserPrincipal.class);
@@ -99,6 +104,10 @@ public final class PrincipalUtils {
                     permissions.forEach(i::addStringPermission);
                 }
             });
+        }
+
+        if (extraRoles != null) {
+            extraRoles.forEach(i::addRole);
         }
 
         return i;

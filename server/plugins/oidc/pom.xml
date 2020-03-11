@@ -56,6 +56,16 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.sisu</groupId>
+            <artifactId>org.eclipse.sisu.inject</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.ollie</groupId>
             <artifactId>ollie</artifactId>
             <scope>provided</scope>
