@@ -57,7 +57,13 @@ public final class HttpTaskUtils {
      */
     static String getBasicAuthorization(Map<String, String> basicAuthParams) {
         if (basicAuthParams.get(TOKEN_KEY) != null) {
-            return String.valueOf(basicAuthParams.get(TOKEN_KEY));
+            String token = String.valueOf(basicAuthParams.get(TOKEN_KEY));
+            try {
+                Base64.getDecoder().decode(token);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid auth token value. Expected a base64 encoded string, got: " + token);
+            }
+            return token;
         } else {
             return getBasicAuthorization(basicAuthParams.get(USERNAME_KEY), basicAuthParams.get(PASSWORD_KEY));
         }
