@@ -4,14 +4,14 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * *****
  * Concord
  * -----
- * Copyright (C) 2020 Ivan Bodrov
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
@@ -28,25 +30,37 @@ import org.pac4j.core.engine.DefaultCallbackLogic;
 import org.pac4j.core.engine.DefaultLogoutLogic;
 import org.pac4j.core.http.adapter.JEEHttpActionAdapter;
 import org.pac4j.oidc.client.OidcClient;
+import org.pac4j.oidc.config.OidcConfiguration;
 
-import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
-@Named("oidc")
-@Singleton
-public class Pac4JConfigProvider implements Provider<Config> {
+@Named
+public class PluginModule extends AbstractModule {
 
-    private final OidcClient<?> client;
+    public static final String CLIENT_NAME = "oidc";
 
-    @Inject
-    public Pac4JConfigProvider(OidcClient<?> client) {
-        this.client = client;
+    @Provides
+    public OidcConfiguration oidcConfiguration(PluginConfiguration cfg) {
+        OidcConfiguration oidcCfg = new OidcConfiguration();
+        oidcCfg.setClientId(cfg.getClientId());
+        oidcCfg.setSecret(cfg.getSecret());
+        oidcCfg.setDiscoveryURI(cfg.getDiscoveryUri());
+        return oidcCfg;
     }
 
-    @Override
-    public Config get() {
+    @Provides
+    @Singleton
+    public OidcClient<?> oidcClient(PluginConfiguration cfg, OidcConfiguration oidcCfg) {
+        OidcClient<?> client = new OidcClient<>(oidcCfg);
+        client.setName(CLIENT_NAME);
+        client.setCallbackUrl(cfg.getUrlBase() + OidcCallbackFilter.URL);
+        return client;
+    }
+
+    @Provides
+    @Named("oidc")
+    public Config pac4jConfig(OidcClient<?> client) {
         Config config = new Config();
         config.setSessionStore(new JEESessionStore());
         config.setCallbackLogic(new DefaultCallbackLogic<Object, JEEContext>());

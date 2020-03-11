@@ -43,10 +43,12 @@ public class OidcRealm extends AuthorizingRealm {
 
     private static final String REALM_NAME = "oidc";
 
+    private final PluginConfiguration cfg;
     private final UserManager userManager;
 
     @Inject
-    public OidcRealm(UserManager userManager) {
+    public OidcRealm(PluginConfiguration cfg, UserManager userManager) {
+        this.cfg = cfg;
         this.userManager = userManager;
 
         setCredentialsMatcher((token, info) -> {
@@ -88,6 +90,6 @@ public class OidcRealm extends AuthorizingRealm {
             return null;
         }
 
-        return PrincipalUtils.toAuthorizationInfo(principals);
+        return PrincipalUtils.toAuthorizationInfo(principals, cfg.getRoles());
     }
 }
