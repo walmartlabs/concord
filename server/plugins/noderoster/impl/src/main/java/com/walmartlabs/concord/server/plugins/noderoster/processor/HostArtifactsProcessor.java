@@ -26,6 +26,7 @@ import com.walmartlabs.concord.server.plugins.noderoster.HostManager;
 import com.walmartlabs.concord.server.plugins.noderoster.db.NodeRosterDB;
 import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterHostArtifacts;
 import com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.records.NodeRosterHostArtifactsRecord;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
@@ -220,6 +221,7 @@ public class HostArtifactsProcessor implements Processor {
             tx(tx -> insert(tx, items));
         }
 
+        @WithTimer
         private void insert(DSLContext tx, List<HostArtifactItem> items) {
             NodeRosterHostArtifacts h = NODE_ROSTER_HOST_ARTIFACTS.as("ha");
 

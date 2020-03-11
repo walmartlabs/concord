@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.ProcessEvents;
 import com.walmartlabs.concord.server.jooq.tables.ProcessQueue;
 import com.walmartlabs.concord.server.plugins.noderoster.cfg.NodeRosterEventsConfiguration;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.*;
 
 import javax.inject.Inject;
@@ -101,6 +102,7 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
             this.objectMapper = new ObjectMapper();
         }
 
+        @WithTimer
         public List<AnsibleEvent> list(EventMarker marker, Timestamp startTimestamp, int count) {
             return txResult(tx -> {
                 ProcessQueue pq = PROCESS_QUEUE.as("pq");

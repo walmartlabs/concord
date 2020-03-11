@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.Tables;
 import com.walmartlabs.concord.server.jooq.tables.EventProcessorMarker;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -55,6 +56,7 @@ public class EventMarkerDao extends AbstractDao {
         return super.txResult(t);
     }
 
+    @WithTimer
     public EventMarker get(String processorName) {
         EventProcessorMarker m = Tables.EVENT_PROCESSOR_MARKER.as("m");
 
@@ -73,6 +75,7 @@ public class EventMarkerDao extends AbstractDao {
                 .build();
     }
 
+    @WithTimer
     public void update(DSLContext tx, String processorName, long eventSeq) {
         EventProcessorMarker m = Tables.EVENT_PROCESSOR_MARKER.as("m");
         tx.insertInto(m)
