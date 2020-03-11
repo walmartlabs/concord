@@ -6,6 +6,7 @@ from ansible.module_utils.six import string_types
 from ansible.playbook.block import Block
 from ansible.playbook.handler import Handler
 from ansible.template import Templar
+from ansible.utils.unsafe_proxy import AnsibleUnsafeText
 
 import time
 import datetime
@@ -112,6 +113,8 @@ class CallbackModule(CallbackBase):
             return tuple(self._trunc_long_items(o) for o in obj)
         elif isinstance(obj, dict):
             return dict((k, self._trunc_long_items(v)) for (k,v) in obj.items())
+        elif isinstance(obj, AnsibleUnsafeText):
+            return self._trunc_long_items(str(obj))
         else:
             return obj
 
