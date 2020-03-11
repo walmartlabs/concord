@@ -20,9 +20,11 @@ package com.walmartlabs.concord.server.boot.filters;
  * =====
  */
 
+import com.walmartlabs.concord.server.cfg.ServerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.*;
@@ -38,6 +40,13 @@ public class CORSFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(CORSFilter.class);
 
+    private final ServerConfiguration cfg;
+
+    @Inject
+    public CORSFilter(ServerConfiguration cfg) {
+        this.cfg = cfg;
+    }
+
     @Override
     public void init(FilterConfig filterConfig) {
         log.info("CORS filter enabled");
@@ -46,7 +55,7 @@ public class CORSFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletResponse httpResp = (HttpServletResponse) response;
-        httpResp.setHeader("Access-Control-Allow-Origin", "*");
+        httpResp.setHeader("Access-Control-Allow-Origin", cfg.getCORSConfiguration().getAllowOrigin());
         httpResp.setHeader("Access-Control-Allow-Methods", "*");
         httpResp.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Range, Cookie, Origin");
         httpResp.setHeader("Access-Control-Expose-Headers", "cache-control," +
