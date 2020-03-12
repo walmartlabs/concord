@@ -1,6 +1,6 @@
 import errno
 import os
-import ujson as json
+import json
 from ansible.plugins.callback import CallbackBase
 from concord_ansible_stats import ConcordAnsibleStats
 

@@ -5,7 +5,7 @@ class ConcordAnsibleStats:
 
     @staticmethod
     def build_stats_data(stats):
-        failures = stats.failures.keys()
+        failures = list(stats.failures.keys())
 
         unreachable = [e for e in stats.dark.keys()
                        if e not in failures]
