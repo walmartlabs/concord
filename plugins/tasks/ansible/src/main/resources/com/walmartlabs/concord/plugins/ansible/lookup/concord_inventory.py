@@ -8,8 +8,7 @@ from ansible.parsing.splitter import parse_kv
 
 import os
 import requests
-import ujson as json
-
+import json
 
 def _parse_parameters(term):
     first_split = term.split(' ', 1)

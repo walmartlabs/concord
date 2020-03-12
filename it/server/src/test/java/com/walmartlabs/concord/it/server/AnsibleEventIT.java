@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 public class AnsibleEventIT extends AbstractServerIT {
 
@@ -53,7 +53,7 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null,-1);
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null, -1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
@@ -97,7 +97,7 @@ public class AnsibleEventIT extends AbstractServerIT {
         // ---
 
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
-        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null,-1);
+        List<ProcessEventEntry> l = eventsApi.list(pir.getInstanceId(), null, null, null, null, null, null, -1);
         assertFalse(l.isEmpty());
 
         long cnt = l.stream().filter(e -> {
@@ -116,5 +116,43 @@ public class AnsibleEventIT extends AbstractServerIT {
         }).count();
 
         assertEquals(1, cnt);
+    }
+
+    /**
+     * Runs a playbook that fails on one of the steps.
+     * Verifies that failed host events are correctly recorded.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testFailedHosts() throws Exception {
+        URI uri = ProcessIT.class.getResource("ansibleFailedHosts").toURI();
+        byte[] payload = archive(uri, ITConstants.DEPENDENCIES_DIR);
+
+        // ---
+
+        StartProcessResponse spr = start(payload);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FAILED, pe.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*'msg' is undefined.*", ab);
+
+        // ---
+
+        ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
+        List<ProcessEventEntry> l = eventsApi.list(pe.getInstanceId(), "ANSIBLE", null, null, null, "post", null, -1);
+        assertFalse(l.isEmpty());
+
+        for (ProcessEventEntry e : l) {
+            Map<String, Object> m = e.getData();
+            if (m.get("task").equals("fail") && m.get("status").equals("FAILED")) {
+                return;
+            }
+        }
+
+        fail("Can't find the required events");
     }
 }

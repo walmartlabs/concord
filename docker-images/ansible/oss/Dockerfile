@@ -41,7 +41,6 @@ RUN pip install --upgrade --ignore-installed \
     pyvmomi \
     pywinrm==0.4.1 \
     requests_kerberos \
-    ujson \
     virtualenv
 
 USER concord

@@ -1,0 +1,5 @@
+---
+- hosts: local
+  tasks:
+  - fail:
+      msg: "echo {{ msg }}"

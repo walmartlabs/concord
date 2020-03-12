@@ -13,7 +13,7 @@ import datetime
 import uuid
 
 import os
-import ujson as json
+import json
 
 def to_millis(t):
     return int(round(t * 1000))
