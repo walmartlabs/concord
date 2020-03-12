@@ -9,6 +9,7 @@ WORKDIR /workspace
 
 RUN yum -y install \
     gcc \
+    gcc-c++ \
     krb5-devel \
     krb5-libs \
     krb5-workstation \
@@ -41,6 +42,7 @@ RUN pip install --upgrade --ignore-installed \
     pyvmomi \
     pywinrm==0.4.1 \
     requests_kerberos \
+    ujson \
     virtualenv
 
 USER concord
