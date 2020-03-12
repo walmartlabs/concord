@@ -1,5 +1,39 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: configurable CORS origin;
+- concord-console: ability to filter processes by a repository
+name;
+- new server plugin: `oidc`. Allows user authentication using an
+OpenID Connect provider;
+- concord-tasks: `meta` field can now be specified when starting or
+forking processes using the `concord` task;
+- concord-cli: initial support for running v2 flows;
+- runtime-v2: support for `imports`;
+- runtime-v2: support for running v1 tasks.
+
+### Changed
+
+- ansible: no longer requires `ujson` Python module. The module is
+still included into the `concord-ansible` image for backward
+compatibility with older version of the Ansible plugin;
+- ansible: when recording events make sure that "unsafe strings"
+(`AnsibleUnsafeText`) are truncated just like regular strings. This
+prevents large amount of data from getting into the event's payload;
+- ansible: fix `concord_data_secret` lookup when used with Python 3;
+- http-tasks: show `Authorization` header value in `debug` mode;
+- http-tasks: validate the `auth.basic.token` value;
+- concord-console: limit the number of rows returned when running
+JSON store queries;
+- concord-console: fixed the secret move popup's message;
+- concord-console: fixed vertical alignment in the repository events
+table.
+
+
+
 ## [1.43.0] - 2020-03-05
 
 ### Added
