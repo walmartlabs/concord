@@ -79,6 +79,8 @@
     docker_container:
       name: db
       image: library/postgres:10
+      env:
+        POSTGRES_PASSWORD: "q1"
       restart_policy: always
       state: started
       ports:
