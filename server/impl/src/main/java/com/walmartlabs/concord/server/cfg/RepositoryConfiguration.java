@@ -56,6 +56,10 @@ public class RepositoryConfiguration {
     private long maxAge;
 
     @Inject
+    @Config("repositoryCache.lockCount")
+    private int lockCount;
+
+    @Inject
     public RepositoryConfiguration(@Config("repositoryCache.cacheDir") @Nullable String cacheDir,
                                    @Config("repositoryCache.cacheInfoDir") @Nullable String cacheInfoDir) throws IOException {
 
@@ -71,6 +75,10 @@ public class RepositoryConfiguration {
 
     public long getLockTimeout() {
         return lockTimeout;
+    }
+
+    public int getLockCount() {
+        return lockCount;
     }
 
     public boolean isConcordFileValidationEnabled() {

@@ -36,6 +36,7 @@ public class RepositoryCacheConfiguration {
 
     private final Path cacheDir;
     private final long lockTimeout;
+    private final int lockCount;
     private final long maxAge;
     private final Path infoDir;
 
@@ -43,6 +44,7 @@ public class RepositoryCacheConfiguration {
     public RepositoryCacheConfiguration(Config cfg) {
         this.cacheDir = getDir(cfg, "repositoryCache.cacheDir");
         this.lockTimeout = cfg.getDuration("repositoryCache.lockTimeout", TimeUnit.MILLISECONDS);
+        this.lockCount = cfg.getInt("repositoryCache.lockCount");
         this.maxAge = cfg.getDuration("repositoryCache.maxAge", TimeUnit.MILLISECONDS);
         this.infoDir = getDir(cfg, "repositoryCache.cacheInfoDir");
     }
@@ -53,6 +55,10 @@ public class RepositoryCacheConfiguration {
 
     public long getLockTimeout() {
         return lockTimeout;
+    }
+
+    public int getLockCount() {
+        return lockCount;
     }
 
     public long getMaxAge() {
