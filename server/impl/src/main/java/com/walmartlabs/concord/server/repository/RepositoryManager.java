@@ -84,6 +84,7 @@ public class RepositoryManager {
                 repoCfg.getCacheInfoDir(),
                 repoCfg.getLockTimeout(),
                 repoCfg.getMaxAge(),
+                repoCfg.getLockCount(),
                 objectMapper);
     }
 

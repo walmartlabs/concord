@@ -44,7 +44,7 @@ public class RepositoryCache {
     private final long lockTimeout;
     private final long maxCacheAge;
 
-    private final Striped<Lock> locks = Striped.lock(64);
+    private final Striped<Lock> locks;
 
     private long nextCleanup = -1;
 
@@ -52,12 +52,14 @@ public class RepositoryCache {
                            Path repoJournalPath,
                            long lockTimeout,
                            long maxCacheAge,
+                           int lockCount,
                            ObjectMapper objectMapper) throws IOException {
 
         this.cacheDir = cacheDir;
         this.lockTimeout = lockTimeout;
         this.accessJournal = maxCacheAge > 0 ? new RepositoryAccessJournal(objectMapper, repoJournalPath) : null;
         this.maxCacheAge = maxCacheAge;
+        this.locks = Striped.lock(lockCount);
     }
 
     public Path getPath(String repositoryUrl) {
