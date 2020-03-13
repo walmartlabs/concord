@@ -34,52 +34,51 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        Path workDir = Paths.get(System.getProperty("user.dir"));
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
 
+        // create the inject with all dependencies and services available before
+        // the actual process' working directory is ready to go
+        // it allows us to load all dependencies and have them available
+        // in "pre-fork" situations
         ClassLoader parentClassLoader = Main.class.getClassLoader();
-        Injector injector = new InjectorFactory(parentClassLoader, new WorkingDirectory(workDir), runnerCfg,
-                ServicesModule.builder()
-                        // TODO: add SecretService implementation
-                        // TODO: add DockerService implementation
-                        .build())
-                .create();
+        Injector injector = InjectorFactory.createDefault(parentClassLoader, runnerCfg);
 
-        // if "pre-forking" is used then the runner starts with an empty
-        // working directory and must wait for the instanceId file to appear
-        // which indicates that the working directory is ready and contains
-        // the process' files
-        UUID instanceId = waitForInstanceId(workDir);
-
-        Runner runner = new Runner.Builder(instanceId, workDir)
+        Runner runner = new Runner.Builder()
                 .injector(injector)
                 .listener(injector.getInstance(EventRecordingExecutionListener.class))
                 .build();
 
-        ProcessConfiguration cfg = readProcessConfiguration(workDir);
+        ProcessConfiguration cfg = injector.getInstance(ProcessConfiguration.class);
+        validate(cfg);
+
+        // TODO replace with injections
+        WorkingDirectory workDir = injector.getInstance(WorkingDirectory.class);
 
         // use LinkedHashMap to preserve the order of the keys
         Map<String, Object> processArgs = new LinkedHashMap<>(cfg.arguments());
         // save the current process ID as an argument, flows and plugins expect it to be a string value
-        processArgs.put(Constants.Context.TX_ID_KEY, instanceId.toString());
+        processArgs.put(Constants.Context.TX_ID_KEY, cfg.instanceId().toString());
 
         ProcessSnapshot snapshot;
-        Set<String> events = StateManager.readResumeEvents(workDir); // TODO make it an interface
+        Set<String> events = StateManager.readResumeEvents(workDir.getValue()); // TODO make it an interface
         if (events == null || events.isEmpty()) {
             snapshot = start(runner, cfg, processArgs);
         } else {
-            snapshot = resume(runner, workDir, cfg, processArgs, events);
+            snapshot = resume(runner, workDir.getValue(), cfg, processArgs, events);
         }
 
         if (isSuspended(snapshot)) {
-            StateManager.finalizeSuspendedState(workDir, snapshot, getEvents(snapshot));  // TODO make it an interface
+            StateManager.finalizeSuspendedState(workDir.getValue(), snapshot, getEvents(snapshot)); // TODO make it an interface
         } else {
-            StateManager.cleanupState(workDir);  // TODO make it an interface
+            StateManager.cleanupState(workDir.getValue()); // TODO make it an interface
         }
     }
 
@@ -112,40 +111,6 @@ public class Main {
         return state;
     }
 
-    /**
-     * Waits until an instanceId file appears in the specified directory
-     * then reads it and parses as UUID.
-     */
-    private static UUID waitForInstanceId(Path workDir) throws IOException {
-        Path p = workDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
-        while (true) {
-            if (Files.exists(p)) {
-                String s = new String(Files.readAllBytes(p));
-                return UUID.fromString(s.trim());
-            }
-
-            // TODO maybe use something more sophisticated, like a file watcher
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    private static ProcessConfiguration readProcessConfiguration(Path workDir) throws IOException {
-        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
-        if (!Files.exists(p)) {
-            return ProcessConfiguration.builder().build();
-        }
-
-        //TODO: singleton?
-        ObjectMapper om = new ObjectMapper();
-        try (InputStream in = Files.newInputStream(p)) {
-            return om.readValue(in, ProcessConfiguration.class);
-        }
-    }
-
     private static RunnerConfiguration readRunnerConfiguration(String[] args) throws IOException {
         Path src;
         if (args.length > 0) {
@@ -161,13 +126,19 @@ public class Main {
         }
     }
 
-    public static boolean isSuspended(ProcessSnapshot snapshot) {
+    private static boolean isSuspended(ProcessSnapshot snapshot) {
         return snapshot.vmState().threadStatus().entrySet().stream()
                 .anyMatch(e -> e.getValue() == ThreadStatus.SUSPENDED);
     }
 
-    public static Set<String> getEvents(ProcessSnapshot snapshot) {
+    private static Set<String> getEvents(ProcessSnapshot snapshot) {
         // TODO validate for uniqueness?
         return new HashSet<>(snapshot.vmState().getEventRefs().values());
+    }
+
+    private static void validate(ProcessConfiguration cfg) {
+        if (cfg.instanceId() == null) {
+            throw new IllegalStateException("ProcessConfiguration -> instanceId cannot be null");
+        }
     }
 }

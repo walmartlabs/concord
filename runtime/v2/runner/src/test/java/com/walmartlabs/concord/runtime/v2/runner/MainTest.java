@@ -21,6 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.walmartlabs.concord.common.IOUtils;
@@ -31,12 +33,18 @@ import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ImmutableProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.DefaultVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
 import com.walmartlabs.concord.sdk.Constants;
+import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import javax.annotation.Nullable;
+import javax.inject.Named;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -44,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertEquals;
@@ -97,10 +106,13 @@ public class MainTest {
 
         save(newProcessConfiguration()
                 .putArguments("name", "Concord")
+                .putDefaultTaskVariables("testDefaults", Collections.singletonMap("a", "a-value"))
                 .build());
 
         byte[] log = start();
         assertLog(log, ".*Hello, Concord!.*");
+        assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
+        assertLog(log, ".*" + Pattern.quote("defaultsTyped:Defaults{a=a-value}") + ".*");
 
         verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/status"))
                 .withRequestBody(equalTo("RUNNING")));
@@ -239,6 +251,34 @@ public class MainTest {
             }
 
             fail("Expected a log entry: " + pattern + ", got: \n" + new String(ab));
+        }
+    }
+
+    @Named("testDefaults")
+    static class TestDefaults implements Task {
+
+        @DefaultVariables("testDefaults")
+        Map<String, Object> defaultsMap;
+
+        @DefaultVariables
+        Defaults defaultsTyped;
+
+        @Override
+        public Serializable execute(TaskContext ctx) {
+            System.out.println("defaultsMap:" + defaultsMap);
+            System.out.println("defaultsTyped:" + defaultsTyped);
+            return null;
+        }
+
+        @Value.Immutable
+        @JsonSerialize(as = ImmutableDefaults.class)
+        @JsonDeserialize(as = ImmutableDefaults.class)
+        public interface Defaults {
+
+            String a();
+
+            @Nullable
+            String b();
         }
     }
 }

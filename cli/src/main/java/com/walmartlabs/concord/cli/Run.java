@@ -94,18 +94,23 @@ public class Run implements Callable<Integer> {
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .dependencies(DependencyResolver.resolve(processDefinition, depsCacheDir, verbose))
                 .build();
-        ProcessConfiguration cfg = processDefinition.configuration();
+
+        ProcessConfiguration cfg = ProcessConfiguration.builder()
+                .from(processDefinition.configuration())
+                .instanceId(instanceId)
+                .build();
 
         ClassLoader parentClassLoader = Main.class.getClassLoader();
         Injector injector = new InjectorFactory(parentClassLoader, new WorkingDirectory(targetDir), runnerCfg,
                 ServicesModule.builder()
                         .secret(new SecretServiceImpl(secretStoreDir))
                         .docker(new DockerServiceImpl())
-                        .build())
+                        .build(), () -> cfg)
                 .create();
 
-        Runner runner = new Runner.Builder(instanceId, targetDir)
+        Runner runner = new Runner.Builder()
                 .injector(injector)
+                .workDir(targetDir)
                 .statusCallback(id -> {})
                 .build();
 

@@ -50,7 +50,7 @@ public class ApiClientProvider implements Provider<ApiClient> {
     @Override
     public ApiClient get() {
         return clientFactory.create(ApiClientConfiguration.builder()
-                .sessionToken(getSessionToken(workDir.getPath()))
+                .sessionToken(getSessionToken(workDir.getValue()))
                 .build());
     }
 
