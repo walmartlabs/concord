@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,15 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import java.nio.file.Path;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Map;
 
-public class WorkingDirectory {
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface DefaultVariables {
 
-    private final Path value;
-
-    public WorkingDirectory(Path value) {
-        this.value = value;
-    }
-
-    public Path getValue() {
-        return value;
-    }
+    String value() default "";
 }

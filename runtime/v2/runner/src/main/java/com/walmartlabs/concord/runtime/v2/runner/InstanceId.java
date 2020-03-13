@@ -4,7 +4,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,20 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import java.nio.file.Path;
+import java.io.Serializable;
+import java.util.UUID;
 
-public class WorkingDirectory {
+public class InstanceId implements Serializable {
 
-    private final Path value;
+    private static final long serialVersionUID = 1L;
 
-    public WorkingDirectory(Path value) {
+    private final UUID value;
+
+    public InstanceId(UUID value) {
         this.value = value;
     }
 
-    public Path getValue() {
+    public UUID getValue() {
         return value;
     }
 }

@@ -33,6 +33,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -43,6 +44,9 @@ import java.util.Map;
 public interface ProcessConfiguration extends Serializable {
 
     long serialVersionUID = 1L;
+
+    @Nullable
+    UUID instanceId();
 
     // TODO activeProfiles
 
@@ -69,13 +73,18 @@ public interface ProcessConfiguration extends Serializable {
     @Nullable
     Map<String, Object> currentUser();
 
+    @Value.Default
+    default Map<String, Map<String, Object>> defaultTaskVariables() {
+        return Collections.emptyMap();
+    }
+
     static ImmutableProcessConfiguration.Builder builder() {
         return ImmutableProcessConfiguration.builder();
     }
 
     static ProcessConfiguration merge(ProcessConfiguration a, ProcessConfiguration b) {
         return ProcessConfiguration.builder().from(a)
-                // TODO: entryPoint has default value...
+                // TODO entryPoint has default value, it shouldn't override a non-default value
                 .entryPoint(b.entryPoint())
                 .addAllDependencies(b.dependencies())
                 .arguments(ConfigurationUtils.deepMerge(a.arguments(), b.arguments()))

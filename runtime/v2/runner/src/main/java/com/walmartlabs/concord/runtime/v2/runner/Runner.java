@@ -143,10 +143,10 @@ public class Runner {
 
     public static class Builder {
 
-        private final UUID instanceId;
-        private final Path workDir;
-
         private Injector injector;
+
+        private Path workDir;
+        private UUID instanceId;
 
         private Compiler compiler;
         private ContextFactory contextFactory;
@@ -158,13 +158,18 @@ public class Runner {
         private ProcessStatusCallback statusCallback;
         private Collection<ExecutionListener> listeners;
 
-        public Builder(UUID instanceId, Path workDir) {
-            this.instanceId = instanceId;
-            this.workDir = workDir;
-        }
-
         public Builder injector(Injector injector) {
             this.injector = injector;
+            return this;
+        }
+
+        public Builder workDir(Path workDir) {
+            this.workDir = workDir;
+            return this;
+        }
+
+        public Builder instanceId(UUID instanceId) {
+            this.instanceId = instanceId;
             return this;
         }
 
@@ -217,6 +222,14 @@ public class Runner {
         }
 
         public Runner build() {
+            if (workDir == null) {
+                workDir = inject(WorkingDirectory.class, "workDir").getValue();
+            }
+
+            if (instanceId == null) {
+                instanceId = inject(InstanceId.class, "instanceId").getValue();
+            }
+
             if (compiler == null) {
                 compiler = inject(Compiler.class, "compiler");
             }

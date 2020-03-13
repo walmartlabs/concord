@@ -20,13 +20,16 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.loader.model.SourceMap;
 import com.walmartlabs.concord.runtime.loader.model.Step;
 import com.walmartlabs.concord.runtime.loader.model.TaskCallStep;
-import com.walmartlabs.concord.runtime.loader.model.SourceMap;
 
 import javax.el.ELException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class TaskCallLinter extends FlowElementLinter {
 

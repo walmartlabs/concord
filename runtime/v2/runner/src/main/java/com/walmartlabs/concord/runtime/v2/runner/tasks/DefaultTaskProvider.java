@@ -42,22 +42,25 @@ public class DefaultTaskProvider implements TaskProvider {
     private final Injector injector;
     private final TaskHolder<com.walmartlabs.concord.sdk.Task> v1Holder;
     private final TaskHolder<Task> v2Holder;
+    private final DefaultVariableInjector defaultVariableInjector;
 
     @Inject
     public DefaultTaskProvider(Injector injector,
                                @TaskHolder.V1 TaskHolder<com.walmartlabs.concord.sdk.Task> v1Holder,
-                               @TaskHolder.V2 TaskHolder<Task> v2Holder) {
+                               @TaskHolder.V2 TaskHolder<Task> v2Holder,
+                               DefaultVariableInjector defaultVariableInjector) {
 
         this.v1Holder = v1Holder;
         this.v2Holder = v2Holder;
         this.injector = injector;
+        this.defaultVariableInjector = defaultVariableInjector;
     }
 
     @Override
     public Task createTask(Context ctx, String key) {
         Class<? extends Task> klass = v2Holder.get(key);
         if (klass != null) {
-            return injector.getInstance(klass);
+            return defaultVariableInjector.inject(injector.getInstance(klass));
         }
 
         Class<? extends com.walmartlabs.concord.sdk.Task> klassV1 = v1Holder.get(key);

@@ -31,6 +31,7 @@ public class ServicesModule extends AbstractModule {
 
     private ServicesModule(SecretService secretService,
                            DockerService dockerService) {
+
         this.secretService = secretService;
         this.dockerService = dockerService;
     }
@@ -48,7 +49,7 @@ public class ServicesModule extends AbstractModule {
         if (dockerService != null) {
             bind(DockerService.class).toInstance(dockerService);
         }
-     }
+    }
 
     public static class Builder {
 
