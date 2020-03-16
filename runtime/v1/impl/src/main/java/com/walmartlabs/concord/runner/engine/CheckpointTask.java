@@ -26,11 +26,13 @@ import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Named;
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Named("checkpoint")
-public class CheckpointTask implements Task {
+public class CheckpointTask implements Task, LogTagMetadataProvider {
 
     private static final Pattern PATTERN = Pattern.compile("^[0-9a-zA-Z][0-9a-zA-Z_@.\\-~ ]{1,128}$");
 
@@ -48,5 +50,11 @@ public class CheckpointTask implements Task {
         ctx.setVariable("checkpointId", checkpointId.toString());
 
         ctx.suspend(checkpointName, Collections.singletonMap("checkpointId", checkpointId.toString()), false);
+    }
+
+    @Override
+    public Map<String, Object> createLogTagMetadata(Context ctx) {
+        String checkpointName = (String) ctx.getVariable("checkpointName");
+        return Collections.singletonMap("checkpointName", checkpointName);
     }
 }

@@ -67,6 +67,7 @@ public class CheckpointsIT extends AbstractServerIT {
         waitForCompletion(processApi, spr.getInstanceId());
 
         ab = getLog(pir.getLogFileName());
+
         assertLog(".*==Start.*", ab);
         assertLog(".*==Middle.*", ab);
         assertLog(".*==End.*", 2, ab);
@@ -76,6 +77,7 @@ public class CheckpointsIT extends AbstractServerIT {
 
         waitForCompletion(processApi, spr.getInstanceId());
         ab = getLog(pir.getLogFileName());
+
         assertLog(".*==Start.*", ab);
         assertLog(".*==Middle.*", 2, ab);
         assertLog(".*==End.*", 3, ab);
@@ -257,6 +259,31 @@ public class CheckpointsIT extends AbstractServerIT {
         assertLog(".*checkpoint test " + xValue + ".*", 1, ab);
     }
 
+    /**
+     * Verifies the {@code LogTagMetadataProvider} feature.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testTags() throws Exception {
+        byte[] payload = archive(CheckpointsIT.class.getResource("checkpoints").toURI());
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+
+        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        byte[] ab = getLog(pir.getLogFileName());
+
+        assertLog(".*__logTag.*phase.*pre.*meta.*checkpointName.*ONE.*", ab);
+        assertLog(".*__logTag.*phase.*post.*meta.*checkpointName.*ONE.*", ab);
+        assertLog(".*__logTag.*phase.*pre.*meta.*checkpointName.*TWO.*", ab);
+        assertLog(".*__logTag.*phase.*post.*meta.*checkpointName.*TWO.*", ab);
+    }
+
     private void restoreFromCheckpoint(UUID instanceId, String name) throws ApiException {
         CheckpointApi checkpointApi = new CheckpointApi(getApiClient());
         ProcessEventsApi eventsApi = new ProcessEventsApi(getApiClient());
@@ -313,7 +340,7 @@ public class CheckpointsIT extends AbstractServerIT {
         assertEquals(paramName, params.get("source"));
         assertEquals(paramName, params.get("target"));
         assertNotNull(params.get("resolved"));
-        return (String)params.get("resolved");
+        return (String) params.get("resolved");
     }
 
     @SuppressWarnings("unchecked")

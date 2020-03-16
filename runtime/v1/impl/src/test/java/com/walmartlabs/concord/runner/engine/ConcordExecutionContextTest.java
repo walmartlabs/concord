@@ -49,9 +49,9 @@ public class ConcordExecutionContextTest {
     public void testProtectedVariable() {
         ConcordExecutionContext ctx = ctx();
 
-        varContext.preTask("task", null);
+        varContext.preTask("task", null, null);
         ctx.setProtectedVariable("s", "s-var");
-        varContext.postTask("task", null);
+        varContext.postTask("task", null,null);
 
         assertEquals("s-var", ctx.getVariable("s"));
         assertEquals("s-var", ctx.getProtectedVariable("s"));
