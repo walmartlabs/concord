@@ -23,6 +23,7 @@ package com.walmartlabs.concord.repository;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
 
 @Value.Immutable
 public interface GitClientConfiguration {
@@ -33,6 +34,11 @@ public interface GitClientConfiguration {
     @Value.Default
     default boolean shallowClone() {
         return true;
+    }
+
+    @Value.Default
+    default Duration fetchTimeout() {
+        return Duration.ofMinutes(10L);
     }
 
     @Value.Default

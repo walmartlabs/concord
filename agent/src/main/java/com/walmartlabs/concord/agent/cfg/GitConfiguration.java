@@ -26,6 +26,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.time.Duration;
+
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
 
 @Named
@@ -34,6 +36,7 @@ public class GitConfiguration {
 
     private final String token;
     private final boolean shallowClone;
+    private final Duration fetchTimeout;
     private final int httpLowSpeedLimit;
     private final int httpLowSpeedTime;
     private final int sshTimeout;
@@ -43,6 +46,7 @@ public class GitConfiguration {
     public GitConfiguration(Config cfg) {
         this.token = getStringOrDefault(cfg, "git.oauth", () -> null);
         this.shallowClone = cfg.getBoolean("git.shallowClone");
+        this.fetchTimeout = cfg.getDuration("git.fetchTimeout");
         this.httpLowSpeedLimit = cfg.getInt("git.httpLowSpeedLimit");
         this.httpLowSpeedTime = cfg.getInt("git.httpLowSpeedTime");
         this.sshTimeout = cfg.getInt("git.sshTimeout");
@@ -55,6 +59,10 @@ public class GitConfiguration {
 
     public boolean isShallowClone() {
         return shallowClone;
+    }
+
+    public Duration getFetchTimeout() {
+        return fetchTimeout;
     }
 
     public int getHttpLowSpeedLimit() {
