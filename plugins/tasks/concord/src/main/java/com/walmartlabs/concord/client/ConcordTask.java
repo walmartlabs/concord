@@ -796,6 +796,11 @@ public class ConcordTask extends AbstractConcordTask {
             req.put(Constants.Request.META, meta);
         }
 
+        Map<String, Object> requirements = getMap(cfg, Constants.Request.REQUIREMENTS, Collections.emptyMap());
+        if (!requirements.isEmpty()) {
+            req.put(Constants.Request.REQUIREMENTS, new HashMap<>(requirements));
+        }
+
         return req;
     }
 
