@@ -38,14 +38,14 @@ public class ProtectedVarContext implements TaskInterceptor {
     }
 
     @Override
-    public void preTask(String taskName, Context ctx) {
+    public void preTask(String taskName, Object instance, Context ctx) {
         if (policyEngine != null && policyEngine.getProtectedTasksPolicy().isProtected(taskName)) {
             threadLocalScope.set(token);
         }
     }
 
     @Override
-    public void postTask(String taskName, Context ctx) {
+    public void postTask(String taskName, Object instance, Context ctx) {
         threadLocalScope.remove();
     }
 

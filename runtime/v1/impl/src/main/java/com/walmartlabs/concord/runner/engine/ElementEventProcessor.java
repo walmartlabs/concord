@@ -34,6 +34,7 @@ import io.takari.bpm.model.SourceMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -58,7 +59,6 @@ public class ElementEventProcessor {
     }
 
     public void process(ElementEvent event, EventParamsBuilder builder, Predicate<AbstractElement> filter) throws ExecutionException {
-
         ProcessDefinition pd = processDefinitionProvider.getById(event.getProcessDefinitionId());
         if (pd == null) {
             throw new RuntimeException("Process definition not found: " + event.getProcessDefinitionId());
@@ -107,6 +107,7 @@ public class ElementEventProcessor {
     }
 
     public interface EventParamsBuilder {
+
         Map<String, Object> build(AbstractElement element);
     }
 

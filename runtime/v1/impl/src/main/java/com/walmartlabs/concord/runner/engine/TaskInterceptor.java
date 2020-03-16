@@ -23,9 +23,26 @@ package com.walmartlabs.concord.runner.engine;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionException;
 
+/**
+ * Activates before and after task call.
+ */
 public interface TaskInterceptor {
-    
-    void preTask(String taskName, Context ctx) throws ExecutionException;
 
-    void postTask(String taskName, Context ctx) throws ExecutionException;
+    /**
+     * Activates before the task call.
+     *
+     * @param taskName name of the called task
+     * @param instance the task's instance that is being called
+     * @param ctx      the current process context
+     */
+    void preTask(String taskName, Object instance, Context ctx) throws ExecutionException;
+
+    /**
+     * Activates after the task call.
+     *
+     * @param taskName name of the called task
+     * @param instance the task's instance that was being called
+     * @param ctx      the current process context
+     */
+    void postTask(String taskName, Object instance, Context ctx) throws ExecutionException;
 }

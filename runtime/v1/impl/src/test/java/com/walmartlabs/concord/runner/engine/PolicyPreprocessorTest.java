@@ -69,13 +69,13 @@ public class PolicyPreprocessorTest {
 
         // ---
         PolicyPreprocessor pp = new PolicyPreprocessor(workDir);
-        pp.preTask("ansible", ctx);
+        pp.preTask("ansible", null, ctx);
 
         String processedPolicy = new String(Files.readAllBytes(policyFile));
         assertEquals(EXPECTED_PROCESSED_POLICY, processedPolicy);
 
         // ---
-        pp.postTask("ansible", ctx);
+        pp.postTask("ansible", null, ctx);
         String restoredPolicy = new String(Files.readAllBytes(policyFile));
         assertEquals(originalPolicy, restoredPolicy);
     }

@@ -45,7 +45,7 @@ public class PolicyPreprocessor implements TaskInterceptor {
     }
 
     @Override
-    public void preTask(String taskName, Context ctx) throws ExecutionException {
+    public void preTask(String taskName, Object instance, Context ctx) throws ExecutionException {
         if (!needProcess(taskName)) {
             return;
         }
@@ -55,7 +55,7 @@ public class PolicyPreprocessor implements TaskInterceptor {
     }
 
     @Override
-    public void postTask(String taskName, Context ctx) throws ExecutionException {
+    public void postTask(String taskName, Object instance, Context ctx) throws ExecutionException {
         if (!needProcess(taskName)) {
             return;
         }

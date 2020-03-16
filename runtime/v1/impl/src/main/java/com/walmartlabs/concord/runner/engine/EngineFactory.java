@@ -208,29 +208,29 @@ public class EngineFactory {
             // check JavaDelegate first because tasks can implement both JavaDelegate and Task
             if (task instanceof JavaDelegate) {
                 JavaDelegate d = (JavaDelegate) task;
-                preTask(taskName, (Context) ctx);
+                preTask(taskName, task, (Context) ctx);
                 d.execute(ctx);
-                postTask(taskName, (Context) ctx);
+                postTask(taskName, task, (Context) ctx);
             } else if (task instanceof Task) {
                 Task t = (Task) task;
-                preTask(taskName, (Context) ctx);
+                preTask(taskName, task, (Context) ctx);
                 t.execute((Context) ctx);
-                postTask(taskName, (Context) ctx);
+                postTask(taskName, task, (Context) ctx);
             } else {
                 throw new ExecutionException("Unsupported task type: " + task + ": tasks must implement either " +
                         Task.class.getName() + " or " + JavaDelegate.class.getName() + " interfaces");
             }
         }
 
-        private void preTask(String taskName, Context ctx) throws ExecutionException {
+        private void preTask(String taskName, Object instance, Context ctx) throws ExecutionException {
             for (TaskInterceptor i : interceptors) {
-                i.preTask(taskName, ctx);
+                i.preTask(taskName, instance, ctx);
             }
         }
 
-        private void postTask(String taskName, Context ctx) throws ExecutionException {
+        private void postTask(String taskName, Object instance, Context ctx) throws ExecutionException {
             for (TaskInterceptor i : interceptors) {
-                i.postTask(taskName, ctx);
+                i.postTask(taskName, instance, ctx);
             }
         }
     }

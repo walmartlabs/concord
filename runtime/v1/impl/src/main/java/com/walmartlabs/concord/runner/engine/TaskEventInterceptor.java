@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runner.engine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,10 +53,11 @@ public class TaskEventInterceptor implements TaskInterceptor {
     }
 
     @Override
-    public void preTask(String taskName, Context ctx) throws ExecutionException {
+    public void preTask(String taskName, Object instance, Context ctx) throws ExecutionException {
         UUID correlationId = UUID.randomUUID();
 
-        TaskTag.pre(taskName, correlationId).log();
+        Map<String, Object> logMetaData = getLogMetaData(instance, ctx);
+        TaskTag.pre(taskName, instance, correlationId, logMetaData).log();
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
@@ -75,11 +76,12 @@ public class TaskEventInterceptor implements TaskInterceptor {
     }
 
     @Override
-    public void postTask(String taskName, Context ctx) throws ExecutionException {
+    public void postTask(String taskName, Object instance, Context ctx) throws ExecutionException {
         UUID correlationId = (UUID) ctx.getVariable(EVENT_CORRELATION_KEY);
         Long preEventTime = (Long) ctx.getVariable(EVENT_CREATED_AT_KEY);
 
-        TaskTag.post(taskName, correlationId).log();
+        Map<String, Object> logMetaData = getLogMetaData(instance, ctx);
+        TaskTag.post(taskName, instance, correlationId, logMetaData).log();
 
         eventProcessor.process(buildEvent(ctx), (element) -> {
             Map<String, Object> params = new HashMap<>();
@@ -93,11 +95,25 @@ public class TaskEventInterceptor implements TaskInterceptor {
             if (preEventTime != null) {
                 params.put("duration", System.currentTimeMillis() - preEventTime);
             }
+            if (logMetaData != null) {
+                params.put("logMetaData", logMetaData);
+            }
             return params;
         });
 
         ctx.removeVariable(EVENT_CORRELATION_KEY);
         ctx.removeVariable(EVENT_CREATED_AT_KEY);
+    }
+
+    private Map<String, Object> getLogMetaData(Object task, Context ctx) {
+        Class<?> clazz = task.getClass();
+
+        if (LogTagMetadataProvider.class.isAssignableFrom(clazz)) {
+            LogTagMetadataProvider p = (LogTagMetadataProvider) task;
+            return p.createLogTagMetadata(ctx);
+        }
+
+        return null;
     }
 
     private List<VariableMapping> getInParams(Context ctx, AbstractElement element) {
@@ -165,6 +181,8 @@ public class TaskEventInterceptor implements TaskInterceptor {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class VariableMapping implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+
         private final String source;
         private final String sourceExpression;
         private final Object sourceValue;
@@ -210,22 +228,26 @@ public class TaskEventInterceptor implements TaskInterceptor {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private static final class TaskTag implements Serializable {
 
-        public static TaskTag pre(String taskName, UUID correlationId) {
-            return new TaskTag("pre", taskName, correlationId);
+        private static final long serialVersionUID = 1L;
+
+        public static TaskTag pre(String taskName, Object task, UUID correlationId, Map<String, Object> meta) {
+            return new TaskTag("pre", taskName, correlationId, meta);
         }
 
-        public static TaskTag post(String taskName, UUID correlationId) {
-            return new TaskTag("post", taskName, correlationId);
+        public static TaskTag post(String taskName, Object task, UUID correlationId, Map<String, Object> meta) {
+            return new TaskTag("post", taskName, correlationId, meta);
         }
 
         private final String phase;
         private final String taskName;
         private final UUID correlationId;
+        private final Map<String, Object> meta;
 
-        private TaskTag(String phase, String taskName, UUID correlationId) {
+        private TaskTag(String phase, String taskName, UUID correlationId, Map<String, Object> meta) {
             this.phase = phase;
             this.taskName = taskName;
             this.correlationId = correlationId;
+            this.meta = meta;
         }
 
         public String getPhase() {
@@ -240,10 +262,14 @@ public class TaskEventInterceptor implements TaskInterceptor {
             return correlationId;
         }
 
+        public Map<String, Object> getMeta() {
+            return meta;
+        }
+
         private void log() throws ExecutionException {
             try {
                 System.out.print("__logTag:");
-                System.out.println(objectMapper.writeValueAsString(new TaskTag(phase, taskName, correlationId)));
+                System.out.println(objectMapper.writeValueAsString(this));
             } catch (IOException e) {
                 throw new ExecutionException("Error while writing the task's tag: (" + phase + ", " + taskName + ")", e);
             }
