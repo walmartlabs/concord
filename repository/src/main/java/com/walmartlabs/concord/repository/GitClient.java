@@ -36,10 +36,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
@@ -52,6 +49,7 @@ public class GitClient {
     private static final Logger log = LoggerFactory.getLogger(GitClient.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
+    private static final long DEFAULT_TIMEOUT = 30000L;
 
     private final GitClientConfiguration cfg;
 
@@ -65,7 +63,7 @@ public class GitClient {
     }
 
     public RepositoryInfo getInfo(Path path) {
-        String result = launchCommand(path, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
+        String result = launchCommand(path, DEFAULT_TIMEOUT, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
         String[] info = result.split("\n");
         if (info.length < 2) {
             return null;
@@ -87,7 +85,7 @@ public class GitClient {
             cloneCommand(uri, secret, shallow, dest);
         }
 
-        launchCommand(dest, "config", "remote.origin.url", uri);
+        launchCommand(dest, DEFAULT_TIMEOUT, "config", "remote.origin.url", uri);
 
         List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
         fetchCommand(uri, refspecs, secret, shallow, dest);
@@ -101,16 +99,20 @@ public class GitClient {
 
         checkoutCommand(rev.name(), dest);
 
-        launchCommand(dest, "clean", "-fdx");
+        launchCommand(dest, DEFAULT_TIMEOUT, "clean", "-fdx");
 
         if (hasGitModules(dest)) {
             fetchSubmodules(secret, dest);
 
-            launchCommand(dest, "submodule", "foreach", "git", "reset", "--hard");
+            launchCommand(dest, DEFAULT_TIMEOUT, "submodule", "foreach", "git", "reset", "--hard");
         }
     }
 
-    private void fetchCommand(String url, List<RefSpec> refspecs, Secret secret, boolean shallow, Path dest) {
+    private void fetchCommand(String url,
+                              List<RefSpec> refspecs,
+                              Secret secret,
+                              boolean shallow,
+                              Path dest) {
         log.info("Fetching upstream changes from '{}'", hideSensitiveData(url));
 
         List<String> args = new ArrayList<>();
@@ -127,12 +129,12 @@ public class GitClient {
             args.add(r.toString());
         }
 
-        launchCommandWithCredentials(dest, args, secret);
+        launchCommandWithCredentials(dest, cfg.fetchTimeout().toMillis(), args, secret);
     }
 
     private void fetchSubmodules(Secret secret, Path dest) {
-        launchCommand(dest, "submodule", "init");
-        launchCommand(dest, "submodule", "sync");
+        launchCommand(dest, DEFAULT_TIMEOUT, "submodule", "init");
+        launchCommand(dest, DEFAULT_TIMEOUT, "submodule", "sync");
 
         List<String> args = new ArrayList<>();
         args.add("submodule");
@@ -144,7 +146,7 @@ public class GitClient {
         String[] modulePaths;
 
         try {
-            modulePaths =launchCommand(dest, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
+            modulePaths =launchCommand(dest, DEFAULT_TIMEOUT, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
                     .split("\\r?\\n");
         } catch (RepositoryException e) {
             log.warn("fetchSubmodules ['{}'] -> error while retrieving the list of submodules: {}", dest, e.getMessage());
@@ -166,7 +168,7 @@ public class GitClient {
 
             String pUrl = processUrl(url, secret);
             if (!pUrl.equals(url)) {
-                launchCommand(dest, "config", "submodule." + moduleName + ".url", pUrl);
+                launchCommand(dest, DEFAULT_TIMEOUT, "config", "submodule." + moduleName + ".url", pUrl);
             }
 
             // Find the path for this submodule
@@ -174,18 +176,18 @@ public class GitClient {
 
             List<String> perModuleArgs = new ArrayList<>(args);
             perModuleArgs.add(sModulePath);
-            launchCommandWithCredentials(dest, perModuleArgs, secret);
+            launchCommandWithCredentials(dest, cfg.fetchTimeout().toMillis(), perModuleArgs, secret);
         }
     }
 
     private String getSubmoduleUrl(Path dest, String name) {
-        String result = launchCommand(dest, "config", "--get", "submodule." + name + ".url");
+        String result = launchCommand(dest, DEFAULT_TIMEOUT, "config", "--get", "submodule." + name + ".url");
         String s = firstLine(result);
         return s != null ? s.trim() : null;
     }
 
     private String getSubmodulePath(Path dest, String name) {
-        String result = launchCommand(dest, "config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
+        String result = launchCommand(dest, DEFAULT_TIMEOUT,"config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
         String s = firstLine(result);
         return s != null ? s.trim() : null;
     }
@@ -200,7 +202,7 @@ public class GitClient {
 
     private ObjectId revParse(String revName, Path dest) {
         String arg = revName + "^{commit}";
-        String result = launchCommand(dest, "rev-parse", arg);
+        String result = launchCommand(dest, DEFAULT_TIMEOUT, "rev-parse", arg);
         String line = result.trim();
         if (line.isEmpty()) {
             throw new RepositoryException("rev-parse no content returned for " + revName);
@@ -301,16 +303,16 @@ public class GitClient {
             }
 
             // init
-            launchCommand(dest, "init");
+            launchCommand(dest, DEFAULT_TIMEOUT, "init");
 
             // fetch
             List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
             fetchCommand(url, refspecs, secret, shallow, dest);
 
-            launchCommand(dest, "config", "remote.origin.url", url);
+            launchCommand(dest, DEFAULT_TIMEOUT, "config", "remote.origin.url", url);
 
             for (RefSpec refSpec : refspecs) {
-                launchCommand(dest, "config", "--add", "remote.origin.fetch", refSpec.toString());
+                launchCommand(dest, DEFAULT_TIMEOUT, "config", "--add", "remote.origin.fetch", refSpec.toString());
             }
         } catch (IOException e) {
             log.error("cloneCommand ['{}'] -> error", dest, e);
@@ -328,10 +330,13 @@ public class GitClient {
     private void checkoutCommand(String ref, Path dest) {
         log.info("Checking out revision '{}'", ref);
 
-        launchCommand(dest, "checkout", "-f", ref);
+        launchCommand(dest, DEFAULT_TIMEOUT,  "checkout", "-f", ref);
     }
 
-    private void launchCommandWithCredentials(Path workDir, List<String> args, Secret secret) {
+    private void launchCommandWithCredentials(Path workDir,
+                                              long timeout,
+                                              List<String> args,
+                                              Secret secret) {
 
         Path key = null;
         Path ssh = null;
@@ -371,7 +376,7 @@ public class GitClient {
             env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
             env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime()));
 
-            launchCommand(workDir, env, args);
+            launchCommand(workDir, env, timeout, args);
         } catch (IOException e) {
             throw new RepositoryException("Failed to setup credentials", e);
         } finally {
@@ -381,13 +386,18 @@ public class GitClient {
         }
     }
 
-    private String launchCommand(Path workDir, String... args) throws RepositoryException {
+    private String launchCommand(Path workDir,
+                                 long timeout,
+                                 String... args) throws RepositoryException {
         List<String> listArgs = Arrays.asList(args);
         Map<String, String> env = new HashMap<>();
-        return launchCommand(workDir, env, listArgs);
+        return launchCommand(workDir, env, timeout, listArgs);
     }
 
-    private String launchCommand(Path workDir, Map<String, String> envVars, List<String> args) {
+    private String launchCommand(Path workDir,
+                                 Map<String, String> envVars,
+                                 long timeout,
+                                 List<String> args) {
 
         List<String> cmd = ImmutableList.<String>builder().add("git").addAll(args).build();
 
@@ -433,10 +443,16 @@ public class GitClient {
                 return sb;
             });
 
-            int code = p.waitFor();
+            if (!p.waitFor(timeout, TimeUnit.MILLISECONDS)) {
+                p.destroy();
+                throw new RepositoryException(String.format("Git operation timed out after %sms", timeout));
+            }
+
+            int code = p.exitValue();
             if (code != SUCCESS_EXIT_CODE) {
                 String msg = "code: " + code + ", " + hideSensitiveData(error.get().toString());
-                log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'", hideSensitiveData(String.join(" ", cmd)), code, msg);
+                log.warn("launchCommand ['{}'] -> finished with code {}, error: '{}'",
+                        hideSensitiveData(String.join(" ", cmd)), code, msg);
                 throw new RepositoryException(msg);
             }
 

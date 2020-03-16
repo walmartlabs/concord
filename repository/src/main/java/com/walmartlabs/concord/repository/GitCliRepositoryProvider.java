@@ -58,21 +58,29 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     @Override
     public void fetch(String uri, String branchOrNull, String commitId, Secret secret, Path dst) {
         String branch = getBranchOrDefault(branchOrNull);
+        RepositoryException lastException = null;
 
-        try {
-            client.fetch(uri, branch, commitId, secret, dst);
-        } catch (RepositoryException e) {
-            log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...", uri, branch, commitId, dst, e.getMessage());
-
-            try {
-                IOUtils.deleteRecursively(dst);
-            } catch (IOException ee) {
-                log.warn("fetch ['{}', '{}', '{}', '{}'] -> cleanup error: {}", uri, branch, commitId, dst, e.getMessage());
+        // try twice
+        for (int attemptNo = 0; attemptNo < 2; attemptNo++) {
+            if (attemptNo > 0) {
+                sleep(1000L);
+                log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...", uri, branch, commitId, dst, lastException.getMessage());
             }
 
-            // retry
-            client.fetch(uri, branch, commitId, secret, dst);
+            try {
+                client.fetch(uri, branch, commitId, secret, dst);
+                return;
+            } catch (RepositoryException e) {
+                lastException = e;
+                try {
+                    IOUtils.deleteRecursively(dst);
+                } catch (IOException ee) {
+                    log.warn("fetch ['{}', '{}', '{}', '{}'] -> cleanup error: {}", uri, branch, commitId, dst, e.getMessage());
+                }
+            }
         }
+
+        throw new RepositoryException("git fetch failed", lastException);
     }
 
     @Override
@@ -88,5 +96,13 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     @Override
     public RepositoryInfo getInfo(Path path) {
         return client.getInfo(path);
+    }
+
+    private static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

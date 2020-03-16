@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -40,6 +41,10 @@ public class GitConfiguration implements Serializable {
     @Inject
     @Config("git.shallowClone")
     private boolean shallowClone;
+
+    @Inject
+    @Config("git.fetchTimeout")
+    private Duration fetchTimeout;
 
     @Inject
     @Config("git.httpLowSpeedLimit")
@@ -59,6 +64,10 @@ public class GitConfiguration implements Serializable {
 
     public boolean isShallowClone() {
         return shallowClone;
+    }
+
+    public Duration getFetchTimeout() {
+        return fetchTimeout;
     }
 
     public String getOauthToken() {

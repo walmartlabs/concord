@@ -138,7 +138,7 @@ public class Worker implements Runnable {
                     r.getPayloadDir(),
                     getSecret(r)));
         } catch (Exception e) {
-            r.getLog().error("Repository export error: {}", e.getMessage());
+            r.getLog().error("Repository export error: {}", e.getMessage(), e);
             throw e;
         }
 
