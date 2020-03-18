@@ -107,15 +107,8 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         HttpServletRequest req = WebUtils.toHttp(request);
 
-        // session header takes precedence
-        if (req.getHeader(Constants.Headers.SESSION_TOKEN) != null) {
-            return createFromSessionHeader(req);
-        }
-
-        if (req.getHeader(AUTHORIZATION_HEADER) != null) {
-            return createFromAuthHeader(req);
-        }
-
+        // run plugins first, they might need to override default behaviour
+        // e.g. use their own `Authorization: Bearer` headers
         for (AuthenticationHandler handler : authenticationHandlers) {
             AuthenticationToken token = handler.createToken(request, response);
             if (token != null) {
@@ -123,6 +116,17 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             }
         }
 
+        // check for a session token next
+        if (req.getHeader(Constants.Headers.SESSION_TOKEN) != null) {
+            return createFromSessionHeader(req);
+        }
+
+        // check for a regular API token
+        if (req.getHeader(AUTHORIZATION_HEADER) != null) {
+            return createFromAuthHeader(req);
+        }
+
+        // no dice
         return new UsernamePasswordToken();
     }
 

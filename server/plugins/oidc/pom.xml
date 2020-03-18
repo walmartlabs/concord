@@ -27,6 +27,11 @@
             <artifactId>pac4j-oidc</artifactId>
             <version>${pac4j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-http</artifactId>
+            <version>${pac4j.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
