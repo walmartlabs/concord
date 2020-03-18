@@ -56,6 +56,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -129,6 +130,7 @@ public class SimpleHttpClient {
 
             response.put("success", isSuccess);
             response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
+            response.put("headers", getHeaders(httpResponse.getAllHeaders()));
 
             return new ClientResponse(response);
 
@@ -477,7 +479,11 @@ public class SimpleHttpClient {
         return responseInfo;
     }
 
-    private Map<String, String> getHeaders(Header[] headers) {
+    private static Map<String, String> getHeaders(Header[] headers) {
+        if (headers == null) {
+            return Collections.emptyMap();
+        }
+
         Map<String, String> result = new HashMap<>();
         for (Header h : headers) {
             result.put(h.getName(), h.getValue());
