@@ -135,7 +135,8 @@ const StoreDataList = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
                             href={`/api/v1/org/${orgName}/jsonstore/${storeName}/item/${encodeURIComponent(
                                 d
                             )}`}
-                            target="_blank">
+                            target="_blank"
+                            style={{ backgroundColor: idx % 2 === 0 ? '#F5F5F5' : '#FFFFFF' }}>
                             <List.Content floated="right">
                                 <StoreDataDeleteActivity
                                     orgName={orgName}

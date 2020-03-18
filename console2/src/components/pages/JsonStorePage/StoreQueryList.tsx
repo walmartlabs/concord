@@ -148,7 +148,8 @@ const StoreQueryList = ({ orgName, storeName, forceRefresh }: ExternalProps) => 
                         <List.Item
                             key={idx}
                             as="a"
-                            href={`#/org/${orgName}/jsonstore/${storeName}/query/${d.name}/edit`}>
+                            href={`#/org/${orgName}/jsonstore/${storeName}/query/${d.name}/edit`}
+                            style={{ backgroundColor: idx % 2 === 0 ? '#F5F5F5' : '#FFFFFF' }}>
                             <List.Content floated="right">
                                 <StoreQueryDeleteActivity
                                     orgName={orgName}

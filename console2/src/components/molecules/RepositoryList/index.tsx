@@ -81,7 +81,7 @@ class RepositoryList extends React.PureComponent<Props> {
         }
 
         return (
-            <Table>
+            <Table striped>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell collapsing={true} />
