@@ -24,7 +24,10 @@ import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.util.WebUtils;
 import org.pac4j.core.context.JEEContext;
+import org.pac4j.core.credentials.TokenCredentials;
 import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.oidc.config.OidcConfiguration;
+import org.pac4j.oidc.credentials.authenticator.UserInfoOidcAuthenticator;
 import org.pac4j.oidc.profile.OidcProfile;
 
 import javax.inject.Inject;
@@ -41,11 +44,16 @@ import java.util.Optional;
 @Singleton
 public class OidcAuthenticationHandler implements AuthenticationHandler {
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String HEADER_PREFIX = "Bearer";
+
     private final PluginConfiguration cfg;
+    private final OidcConfiguration oidcCfg;
 
     @Inject
-    public OidcAuthenticationHandler(PluginConfiguration cfg) {
+    public OidcAuthenticationHandler(PluginConfiguration cfg, OidcConfiguration oidcCfg) {
         this.cfg = cfg;
+        this.oidcCfg = oidcCfg;
     }
 
     @Override
@@ -56,11 +64,30 @@ public class OidcAuthenticationHandler implements AuthenticationHandler {
 
         HttpServletRequest req = WebUtils.toHttp(request);
         HttpServletResponse resp = WebUtils.toHttp(response);
-
         JEEContext context = new JEEContext(req, resp);
-        ProfileManager<OidcProfile> profileManager = new ProfileManager<>(context);
 
-        Optional<OidcProfile> profile = profileManager.get(true);
+        Optional<OidcProfile> profile;
+
+        // check the token first
+        String header = req.getHeader(AUTHORIZATION_HEADER);
+        if (header != null) {
+            String[] as = header.split(" ");
+            if (as.length != 2 || !as[0].equals(HEADER_PREFIX)) {
+                return null;
+            }
+
+            TokenCredentials credentials = new TokenCredentials(as[1].trim());
+
+            UserInfoOidcAuthenticator authenticator = new UserInfoOidcAuthenticator(oidcCfg);
+            authenticator.validate(credentials, context);
+
+            // we know that UserInfoOidcAuthenticator produces OidcProfile, so we can cast to it here
+            profile = Optional.ofNullable((OidcProfile) credentials.getUserProfile());
+        } else {
+            ProfileManager<OidcProfile> profileManager = new ProfileManager<>(context);
+            profile = profileManager.get(true);
+        }
+
         return profile.map(OidcToken::new).orElse(null);
     }
 

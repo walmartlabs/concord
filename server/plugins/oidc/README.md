@@ -12,7 +12,7 @@ concord-server {
         enabled = true
         clientId = "********************"
         secret = "****************************************"
-        discoveryUri = "https://myorg.okta.com/.well-known/openid-configuration"
+        discoveryUri = "https://myorg.okta.com/oauth2/default/.well-known/openid-configuration"
         urlBase = "http://localhost:8001"
         afterLoginUrl = "http://localhost:8001"
         afterLogoutUrl = "http://localhost:8001/#/logout/done"
@@ -22,6 +22,8 @@ concord-server {
     }
 }
 ```
+
+### Interactive Login
 
 Configure the Concord Console to use custom logout/login URLs:
 - create a `cfg.js` (use [the default file](../../../console2/public/cfg.js) as an example):
@@ -38,3 +40,13 @@ Configure the Concord Console to use custom logout/login URLs:
 
 When accessing the Concord Console you should be redirected to the OpenID Connect
 provider's sign-in page.
+
+### API Tokens
+
+- get an access token from the ID provider. For Okta, you can use
+[the implicit flow](https://developer.okta.com/docs/guides/implement-implicit/use-flow/).
+The token must allow `openid`, `email` and `profile` scopes;
+- call a Concord API endpoint using the token:
+  ```
+  curl -ik -H 'Authorization: Bearer TOKEN' http://localhost:8001/api/service/console/whoami
+  ```
