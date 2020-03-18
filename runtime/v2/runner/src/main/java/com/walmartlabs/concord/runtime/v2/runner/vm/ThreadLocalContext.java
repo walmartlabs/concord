@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner.context;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,25 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
-import java.util.Map;
+/**
+ * Thread-local {@link Context} instance.
+ * Can be used to fetch the current context during execution of expressions or tasks.
+ */
+public class ThreadLocalContext {
 
-public final class ContextUtils {
+    private static final ThreadLocal<Context> value = new ThreadLocal<>();
 
-    @SuppressWarnings("unchecked")
-    public static String getSessionKey(GlobalVariables vars) {
-        // TODO validation
-        Map<String, Object> m = (Map<String, Object>) vars.get(Constants.Request.PROCESS_INFO_KEY);
-        return (String) m.get("sessionKey");
+    public static Context get() {
+        return value.get();
     }
 
-    private ContextUtils() {
+    static void set(Context ctx) {
+        value.set(ctx);
+    }
+
+    static void clear() {
+        value.remove();
     }
 }

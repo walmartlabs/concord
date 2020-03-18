@@ -38,6 +38,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Calls the specified task. Responsible for preparing the task's input
@@ -59,7 +60,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
-        Context ctx = contextFactory.create(runtime, state, threadId);
+        Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
 
         TaskCall call = getStep();
         String taskName = call.getName();
@@ -72,12 +73,15 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         Map<String, Object> input = prepareInput(expressionEvaluator, ctx, opts);
 
         Serializable result;
+        ThreadLocalContext.set(ctx);
         try {
             result = t.execute(new TaskContextImpl(ctx, taskName, input));
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            ThreadLocalContext.clear();
         }
 
         String out = opts.out();

@@ -60,7 +60,7 @@ public class DefaultTaskProvider implements TaskProvider {
     public Task createTask(Context ctx, String key) {
         Class<? extends Task> klass = v2Holder.get(key);
         if (klass != null) {
-            return defaultVariableInjector.inject(injector.getInstance(klass));
+            return defaultVariableInjector.inject(key, injector.getInstance(klass));
         }
 
         Class<? extends com.walmartlabs.concord.sdk.Task> klassV1 = v1Holder.get(key);

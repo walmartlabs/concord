@@ -51,11 +51,6 @@ public class Main {
         ClassLoader parentClassLoader = Main.class.getClassLoader();
         Injector injector = InjectorFactory.createDefault(parentClassLoader, runnerCfg);
 
-        Runner runner = new Runner.Builder()
-                .injector(injector)
-                .listener(injector.getInstance(EventRecordingExecutionListener.class))
-                .build();
-
         ProcessConfiguration cfg = injector.getInstance(ProcessConfiguration.class);
         validate(cfg);
 
@@ -66,6 +61,11 @@ public class Main {
         Map<String, Object> processArgs = new LinkedHashMap<>(cfg.arguments());
         // save the current process ID as an argument, flows and plugins expect it to be a string value
         processArgs.put(Constants.Context.TX_ID_KEY, cfg.instanceId().toString());
+
+        Runner runner = new Runner.Builder()
+                .injector(injector)
+                .listener(injector.getInstance(EventRecordingExecutionListener.class))
+                .build();
 
         ProcessSnapshot snapshot;
         Set<String> events = StateManager.readResumeEvents(workDir.getValue()); // TODO make it an interface

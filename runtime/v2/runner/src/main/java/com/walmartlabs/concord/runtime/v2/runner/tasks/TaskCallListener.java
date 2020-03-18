@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.sdk;
+package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 /*-
  * *****
@@ -20,14 +20,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public interface TaskCallListener {
 
-@Target({ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface DefaultVariables {
-
-    String value() default "";
+    void onEvent(TaskCallEvent event);
 }

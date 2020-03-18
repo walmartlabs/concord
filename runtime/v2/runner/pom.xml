@@ -50,6 +50,10 @@
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-imports</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-policy-engine</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>javax.inject</groupId>
@@ -62,6 +66,10 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>aopalliance</groupId>
+            <artifactId>aopalliance</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

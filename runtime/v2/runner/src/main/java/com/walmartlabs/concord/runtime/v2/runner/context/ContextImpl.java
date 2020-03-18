@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
@@ -31,31 +32,39 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.util.UUID;
+
 public class ContextImpl implements Context {
 
     private final GlobalVariables globalVariables;
+    private final Compiler compiler;
+    private final ExpressionEvaluator expressionEvaluator;
     private final ThreadId currentThreadId;
     private final Runtime runtime;
     private final State state;
     private final ProcessDefinition processDefinition;
-    private final Compiler compiler;
-    private final ExpressionEvaluator expressionEvaluator;
+    private final Step currentStep;
+    private final UUID correlationId;
 
     public ContextImpl(GlobalVariables globalVariables,
+                       Compiler compiler,
+                       ExpressionEvaluator expressionEvaluator,
                        ThreadId currentThreadId,
                        Runtime runtime,
                        State state,
                        ProcessDefinition processDefinition,
-                       Compiler compiler,
-                       ExpressionEvaluator expressionEvaluator) {
+                       Step currentStep,
+                       UUID correlationId) {
 
         this.globalVariables = globalVariables;
+        this.compiler = compiler;
+        this.expressionEvaluator = expressionEvaluator;
         this.currentThreadId = currentThreadId;
         this.runtime = runtime;
         this.state = state;
         this.processDefinition = processDefinition;
-        this.compiler = compiler;
-        this.expressionEvaluator = expressionEvaluator;
+        this.currentStep = currentStep;
+        this.correlationId = correlationId;
     }
 
     @Override
@@ -84,6 +93,16 @@ public class ContextImpl implements Context {
             @Override
             public ProcessDefinition processDefinition() {
                 return processDefinition;
+            }
+
+            @Override
+            public Step currentStep() {
+                return currentStep;
+            }
+
+            @Override
+            public UUID correlationId() {
+                return correlationId;
             }
         };
     }
