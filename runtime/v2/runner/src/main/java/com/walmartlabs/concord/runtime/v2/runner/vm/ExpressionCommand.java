@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * Evaluates the specified {@link Expression} step and (optionally) saves
@@ -57,7 +58,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
-        Context ctx = contextFactory.create(runtime, state, threadId);
+        Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
 
         Expression step = getStep();
         String expr = step.getExpr();
@@ -65,6 +66,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
         ExpressionOptions opts = step.getOptions();
         String out = opts != null ? opts.out() : null;
 
+        ThreadLocalContext.set(ctx);
         try {
             Object v = ee.eval(ctx, expr, Object.class);
             if (out != null) {
@@ -79,6 +81,8 @@ public class ExpressionCommand extends StepCommand<Expression> {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            ThreadLocalContext.clear();
         }
     }
 }

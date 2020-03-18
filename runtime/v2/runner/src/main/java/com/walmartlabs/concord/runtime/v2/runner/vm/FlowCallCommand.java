@@ -52,7 +52,7 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
-        Context ctx = contextFactory.create(runtime, state, threadId);
+        Context ctx = contextFactory.create(runtime, state, threadId, getStep());
 
         FlowCall call = getStep();
         FlowCallOptions opts = call.getOptions();

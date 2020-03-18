@@ -44,11 +44,11 @@ public class DefaultVariableInjector {
         this.objectMapper = new ObjectMapper();
     }
 
-    public Task inject(Task task) {
+    public Task inject(String taskName, Task task) {
         Class<?> clazz = task.getClass();
         while (clazz != null) {
             for (Field f : clazz.getDeclaredFields()) {
-                String v = getAnnotationValue(f, getTaskName(task));
+                String v = getAnnotationValue(f, taskName);
                 if (v == null) {
                     continue;
                 }

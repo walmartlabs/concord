@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
@@ -68,7 +69,11 @@ public class WithItemsWrapper implements Command {
 
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
-        Context ctx = contextFactory.create(runtime, state, threadId);
+        Step currentStep = null;
+        if (cmd instanceof StepCommand) {
+            currentStep = ((StepCommand<?>) cmd).getStep();
+        }
+        Context ctx = contextFactory.create(runtime, state, threadId, currentStep);
 
         value = Interpolator.interpolate(expressionEvaluator, ctx, value, Serializable.class);
 

@@ -114,6 +114,7 @@ public class InjectorFactory {
         Module m = new WireModule(
                 new ConfigurationModule(workDir, runnerCfg, processConfigurationProvider),
                 tasks,
+                new TaskCallInterceptorModule(),
                 new SpaceModule(new URLClassSpace(parentClassLoader)),
                 new SpaceModule(new URLClassSpace(dependenciesClassLoader)),
                 servicesModule);

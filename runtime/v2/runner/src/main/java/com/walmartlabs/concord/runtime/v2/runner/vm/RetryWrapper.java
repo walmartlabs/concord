@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.Retry;
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -66,13 +67,13 @@ public class RetryWrapper implements Command {
 
         int times = retry.times();
         if (retry.timesExpression() != null) {
-            Context ctx = contextFactory.create(runtime, state, threadId);
+            Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
             times = expressionEvaluator.eval(ctx, retry.timesExpression(), Integer.class);
         }
 
         long delay = retry.delay();
         if (retry.delayExpression() != null) {
-            Context ctx = contextFactory.create(runtime, state, threadId);
+            Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
             delay = expressionEvaluator.eval(ctx, retry.delayExpression(), Long.class);
         }
 
@@ -83,6 +84,13 @@ public class RetryWrapper implements Command {
         inner.setLocal(RETRY_ATTEMPT_NUMBER, 0);
 
         state.pushFrame(threadId, inner);
+    }
+
+    private Step getCurrentStep() {
+        if (cmd instanceof StepCommand) {
+            return ((StepCommand<?>) cmd).getStep();
+        }
+        return null;
     }
 
     public static class NextRetry implements Command {

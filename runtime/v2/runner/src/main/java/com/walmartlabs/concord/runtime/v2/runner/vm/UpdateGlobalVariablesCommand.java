@@ -63,7 +63,7 @@ public class UpdateGlobalVariablesCommand implements Command {
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
 
-        Context ctx = contextFactory.create(runtime, state, threadId);
+        Context ctx = contextFactory.create(runtime, state, threadId, null);
         Map<String, Object> m = Interpolator.interpolate(expressionEvaluator, ctx, input, Map.class);
 
         GlobalVariables globalVariables = runtime.getService(GlobalVariables.class);

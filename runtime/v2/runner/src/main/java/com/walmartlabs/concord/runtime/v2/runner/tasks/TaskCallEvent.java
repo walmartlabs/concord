@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.sdk;
+package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,35 +20,48 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.UUID;
 
-public interface Execution {
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface TaskCallEvent {
 
-    // TODO add current flow name
-
-    ThreadId currentThreadId();
-
-    Runtime runtime();
-
-    State state();
+    Phase phase();
 
     ProcessDefinition processDefinition();
 
     @Nullable
     Step currentStep();
 
-    /**
-     * ID of the current task or expression call. Can be used by plugins to correlate their events
-     * with the task's event.
-     */
+    String taskName();
+
+    String methodName();
+
+    @AllowNulls
+    Map<String, Object> input();
+
     UUID correlationId();
 
-    // TODO add suspend()
+    @Nullable
+    Object out();
+
+    @Nullable
+    Long duration();
+
+    static ImmutableTaskCallEvent.Builder builder() {
+        return ImmutableTaskCallEvent.builder();
+    }
+
+    enum Phase {
+
+        PRE,
+        POST
+    }
 }

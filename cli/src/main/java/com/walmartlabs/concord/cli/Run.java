@@ -117,7 +117,7 @@ public class Run implements Callable<Integer> {
         Map<String, Object> args = new LinkedHashMap<>(extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
-        args.put("processInfo", Collections.singletonMap("sessionKey", "none"));
+        args.put("processInfo", Collections.singletonMap("sessionKey", "none")); // TODO constants
 
         try {
             runner.start(cfg.entryPoint(), args);

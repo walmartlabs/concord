@@ -20,15 +20,20 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+
+import java.util.UUID;
 
 public interface ContextFactory {
 
     /**
      * Creates new {@link Context} instance with frame-local overrides for global variables.
      */
-    Context create(Runtime runtime, State state, ThreadId currentThreadId);
+    Context create(Runtime runtime, State state, ThreadId currentThreadId, Step currentStep);
+
+    Context create(Runtime runtime, State state, ThreadId currentThreadId, Step currentStep, UUID correlationId);
 }
