@@ -109,6 +109,29 @@ public final class GrammarOptions {
         return options(Arrays.asList(o1, o2, o3, o4, o5, o6, o7));
     }
 
+    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
+                                                    Option<? extends O> o2,
+                                                    Option<? extends O> o3,
+                                                    Option<? extends O> o4,
+                                                    Option<? extends O> o5,
+                                                    Option<? extends O> o6,
+                                                    Option<? extends O> o7,
+                                                    Option<? extends O> o8) {
+        return options(Arrays.asList(o1, o2, o3, o4, o5, o6, o7, o8));
+    }
+
+    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
+                                                    Option<? extends O> o2,
+                                                    Option<? extends O> o3,
+                                                    Option<? extends O> o4,
+                                                    Option<? extends O> o5,
+                                                    Option<? extends O> o6,
+                                                    Option<? extends O> o7,
+                                                    Option<? extends O> o8,
+                                                    Option<? extends O> o9) {
+        return options(Arrays.asList(o1, o2, o3, o4, o5, o6, o7, o8, o9));
+    }
+
     public static <O> Parser<Atom, List<O>> options(List<Option<? extends O>> options) {
         return in -> {
             // TODO: skip check if no mandatory options

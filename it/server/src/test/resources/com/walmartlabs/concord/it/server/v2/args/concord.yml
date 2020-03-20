@@ -1,4 +1,5 @@
-runtime: concord-v2
+configuration:
+  runtime: "concord-v2"
 
 flows:
   default:

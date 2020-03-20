@@ -69,7 +69,7 @@ public class YamlParserV2 {
                 JsonProcessingException jpe = (JsonProcessingException) e;
                 throw toErr("(" + baseDir.relativize(file) + "): Error", jpe);
             }
-            throw new YamlParserException("Error while loading a project file: " + baseDir.relativize(file), e);
+            throw new YamlParserException("Error while loading a project file '" + baseDir.relativize(file) +"', " + e.getMessage());
         }
     }
 

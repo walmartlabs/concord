@@ -135,7 +135,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test011() throws Exception {
-        String msg = "(011.yml): Error @ line: 2, col: 5. Unknown options: ['git-trash' @ line: 2, col: 5], expected: [git, mvn]. Remove options or fix indentation\n" +
+        String msg = "(011.yml): Error @ line: 2, col: 5. Unknown options: ['git-trash' @ line: 2, col: 5], expected: [git, mvn]. Remove invalid options and/or fix indentation\n" +
                 "\twhile processing steps:\n" +
                 "\t'imports' @ line: 1, col: 1";
 
@@ -155,7 +155,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test013() throws Exception {
-        String msg = "(013.yml): Error @ line: 7, col: 14. Unknown options: ['trash' [STRING] @ line: 7, col: 14], expected: [name, url, version, path, dest, exclude, secret]. Remove options or fix indentation\n" +
+        String msg = "(013.yml): Error @ line: 7, col: 14. Unknown options: ['trash' [STRING] @ line: 7, col: 14], expected: [name, url, version, path, dest, exclude, secret]. Remove invalid options and/or fix indentation\n" +
                 "\twhile processing steps:\n" +
                 "\t'git' @ line: 2, col: 5\n" +
                 "\t\t'imports' @ line: 1, col: 1";
@@ -198,11 +198,301 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
-    @Ignore
     public void test101() throws Exception {
-        String msg = "XXX";
+        String msg = "(001.yml): Error @ line: 1, col: 11. Invalid value type, expected: TRIGGER, got: STRING\n" +
+                "\twhile processing steps:\n" +
+                "\t'triggers' @ line: 1, col: 1";
 
         assertErrorMessage("errors/triggers/001.yml", msg);
+    }
+
+    @Test
+    public void test102() throws Exception {
+        String msg = "(002.yml): Error @ line: 2, col: 12. Invalid value type, expected: GITHUB_TRIGGER, got: NULL. Remove attribute or complete the definition\n" +
+                "\twhile processing steps:\n" +
+                "\t'github' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/002.yml", msg);
+    }
+
+    @Test
+    public void test103() throws Exception {
+        String msg = "(003.yml): Error @ line: 3, col: 16. Invalid value type, expected: INT, got: STRING\n" +
+                "\twhile processing steps:\n" +
+                "\t'version' @ line: 3, col: 16\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/003.yml", msg);
+    }
+
+    @Test
+    public void test104() throws Exception {
+        String msg = "(004.yml): Error @ n/a. Mandatory parameters 'entryPoint, conditions' not found\n" +
+                "\twhile processing steps:\n" +
+                "\t'github' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/004.yml", msg);
+    }
+
+    @Test
+    public void test105() throws Exception {
+        String msg = "(005.yml): Error @ line: 4, col: 19. Invalid value type, expected: STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'entryPoint' @ line: 4, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/005.yml", msg);
+    }
+
+    @Test
+    public void test106() throws Exception {
+        String msg = "(006.yml): Error @ n/a. Mandatory parameter 'conditions' not found\n" +
+                "\twhile processing steps:\n" +
+                "\t'github' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/006.yml", msg);
+    }
+
+    @Test
+    public void test107() throws Exception {
+        String msg = "(007.yml): Error @ line: 5, col: 19. Invalid value type, expected: GITHUB_TRIGGER_CONDITIONS, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'conditions' @ line: 5, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/007.yml", msg);
+    }
+
+    @Test
+    public void test108() throws Exception {
+        String msg = "(008.yml): Error @ n/a. Mandatory parameter 'type' not found\n" +
+                "\twhile processing steps:\n" +
+                "\t'conditions' @ line: 5, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/008.yml", msg);
+    }
+
+    @Test
+    public void test109() throws Exception {
+        String msg = "(009.yml): Error @ line: 7, col: 23. Invalid value type, expected: ARRAY_OF_STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'activeProfiles' @ line: 7, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/009.yml", msg);
+    }
+
+    @Test
+    public void test110() throws Exception {
+        String msg = "(010.yml): Error @ line: 9, col: 21. Invalid value type, expected: BOOLEAN, got: STRING\n" +
+                "\twhile processing steps:\n" +
+                "\t'useInitiator' @ line: 9, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/010.yml", msg);
+    }
+
+    @Test
+    public void test111() throws Exception {
+        String msg = "(011.yml): Error @ line: 10, col: 25. Invalid value type, expected: BOOLEAN, got: STRING\n" +
+                "\twhile processing steps:\n" +
+                "\t'useEventCommitId' @ line: 10, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/011.yml", msg);
+    }
+
+    @Test
+    public void test112() throws Exception {
+        String msg = "(012.yml): Error @ line: 11, col: 18. Invalid value type, expected: STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'exclusive' @ line: 11, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/012.yml", msg);
+    }
+
+    @Test
+    public void test113() throws Exception {
+        String msg = "(013.yml): Error @ line: 12, col: 18. Invalid value type, expected: OBJECT, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'arguments' @ line: 12, col: 7\n" +
+                "\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/013.yml", msg);
+    }
+
+    @Test
+    public void test114() throws Exception {
+        String msg = "(014.yml): Error @ line: 14, col: 20. Invalid value type, expected: PATTERN, got: STRING. Error info: Dangling meta character '*' near index 0\n" +
+                "*\n" +
+                "^\n" +
+                "\twhile processing steps:\n" +
+                "\t'githubOrg' @ line: 14, col: 9\n" +
+                "\t\t'conditions' @ line: 12, col: 7\n" +
+                "\t\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/014.yml", msg);
+    }
+
+    @Test
+    public void test115() throws Exception {
+        String msg = "(015.yml): Error @ n/a. Version 1 of github trigger not supported\n" +
+                "\twhile processing steps:\n" +
+                "\t'github' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/015.yml", msg);
+    }
+
+    @Test
+    public void test116() throws Exception {
+        String msg = "(016.yml): Error @ line: 2, col: 10. Invalid value type, expected: CRON_TRIGGER, got: NULL. Remove attribute or complete the definition\n" +
+                "\twhile processing steps:\n" +
+                "\t'cron' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/016.yml", msg);
+    }
+
+    @Test
+    public void test117() throws Exception {
+        String msg = "(017.yml): Error @ n/a. Mandatory parameter 'entryPoint' not found\n" +
+                "\twhile processing steps:\n" +
+                "\t'cron' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/017.yml", msg);
+    }
+
+    @Test
+    public void test118() throws Exception {
+        String msg = "(018.yml): Error @ line: 3, col: 13. Invalid value type, expected: STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'spec' @ line: 3, col: 7\n" +
+                "\t\t'cron' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/018.yml", msg);
+    }
+
+    @Test
+    public void test119() throws Exception {
+        String msg = "(019.yml): Error @ line: 4, col: 19. Invalid value type, expected: STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'entryPoint' @ line: 4, col: 7\n" +
+                "\t\t'cron' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/019.yml", msg);
+    }
+
+    @Test
+    public void test120() throws Exception {
+        String msg = "(020.yml): Error @ line: 5, col: 23. Invalid value type, expected: ARRAY_OF_STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'activeProfiles' @ line: 5, col: 7\n" +
+                "\t\t'cron' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/020.yml", msg);
+    }
+
+    @Test
+    public void test121() throws Exception {
+        String msg = "(021.yml): Error @ line: 7, col: 18. Invalid value type, expected: OBJECT, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'arguments' @ line: 7, col: 7\n" +
+                "\t\t'cron' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/021.yml", msg);
+    }
+
+    @Test
+    public void test122() throws Exception {
+        String msg = "(022.yml): Error @ line: 2, col: 12. Invalid value type, expected: MANUAL_TRIGGER, got: NULL. Remove attribute or complete the definition\n" +
+                "\twhile processing steps:\n" +
+                "\t'manual' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/022.yml", msg);
+    }
+
+    @Test
+    public void test123() throws Exception {
+        String msg = "(023.yml): Error @ n/a. Mandatory parameter 'entryPoint' not found\n" +
+                "\twhile processing steps:\n" +
+                "\t'manual' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/023.yml", msg);
+    }
+
+    @Test
+    public void test124() throws Exception {
+        String msg = "(024.yml): Error @ line: 5, col: 23. Invalid value type, expected: ARRAY_OF_STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'activeProfiles' @ line: 5, col: 7\n" +
+                "\t\t'manual' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/024.yml", msg);
+    }
+
+    @Test
+    public void test125() throws Exception {
+        String msg = "(025.yml): Error @ n/a. Version 1 of oneops trigger not supported\n" +
+                "\twhile processing steps:\n" +
+                "\t'oneops' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/025.yml", msg);
+    }
+
+    @Test
+    public void test126() throws Exception {
+        String msg = "(026.yml): Error @ n/a. Mandatory parameter 'conditions' not found\n" +
+                "\twhile processing steps:\n" +
+                "\t'oneops' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/026.yml", msg);
+    }
+
+    @Test
+    public void test127() throws Exception {
+        String msg = "(027.yml): Error @ line: 7, col: 14. Unknown options: ['trash' [STRING] @ line: 7, col: 14], expected: [useInitiator, entryPoint, activeProfiles, arguments, exclusive, conditions, version]. Remove invalid options and/or fix indentation\n" +
+                "\twhile processing steps:\n" +
+                "\t'oneops' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/027.yml", msg);
+    }
+
+    @Test
+    public void test128() throws Exception {
+        String msg = "(028.yml): Error @ line: 5, col: 19. Invalid value type, expected: OBJECT, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'conditions' @ line: 5, col: 7\n" +
+                "\t\t'example' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/028.yml", msg);
     }
 
     @Test
@@ -403,7 +693,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test215() throws Exception {
         String msg =
-                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [in, out, meta, withItems, retry]. Remove options or fix indentation\n" +
+                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [in, out, meta, withItems, retry]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'task' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -651,7 +941,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test315() throws Exception {
         String msg =
-                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [in, out, meta, withItems, retry]. Remove options or fix indentation\n" +
+                "(015.yml): Error @ line: 15, col: 14. Unknown options: ['trash' [STRING] @ line: 15, col: 14], expected: [in, out, meta, withItems, retry]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'call' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -713,7 +1003,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test402() throws Exception {
         String msg =
-                "(002.yml): Error @ line: 4, col: 14. Unknown options: ['trash' [STRING] @ line: 4, col: 14], expected: [meta]. Remove options or fix indentation\n" +
+                "(002.yml): Error @ line: 4, col: 14. Unknown options: ['trash' [STRING] @ line: 4, col: 14], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'snapshot' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -751,7 +1041,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test405() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [INT] @ line: 6, col: 14], expected: [meta]. Remove options or fix indentation\n" +
+                "(005.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [INT] @ line: 6, col: 14], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'snapshot' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -764,7 +1054,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Ignore
     public void test500() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [INT] @ line: 6, col: 14], expected: [meta]. Remove options or fix indentation\n" +
+                "(005.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [INT] @ line: 6, col: 14], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'snapshot' @ line: 3, col: 7";
 
@@ -951,7 +1241,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test703() throws Exception {
         String msg =
-                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [error, withItems, meta]. Remove options or fix indentation\n" +
+                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [error, withItems, meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'try' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1002,7 +1292,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test707() throws Exception {
         String msg =
-                "(007.yml): Error @ line: 11, col: 13. Unknown options: ['trash' [NULL] @ line: 11, col: 13], expected: [error, withItems, meta]. Remove options or fix indentation\n" +
+                "(007.yml): Error @ line: 11, col: 13. Unknown options: ['trash' [NULL] @ line: 11, col: 13], expected: [error, withItems, meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'try' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1062,7 +1352,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test803() throws Exception {
         String msg =
-                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [meta]. Remove options or fix indentation\n" +
+                "(003.yml): Error @ line: 5, col: 13. Unknown options: ['trash' [NULL] @ line: 5, col: 13], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'parallel' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1087,7 +1377,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test805() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 7, col: 13. Unknown options: ['trash' [NULL] @ line: 7, col: 13], expected: [meta]. Remove options or fix indentation\n" +
+                "(005.yml): Error @ line: 7, col: 13. Unknown options: ['trash' [NULL] @ line: 7, col: 13], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'parallel' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1153,7 +1443,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test905() throws Exception {
         String msg =
-                "(005.yml): Error @ line: 3, col: 17. Unknown options: ['error' [INT] @ line: 3, col: 123], expected: [label, value, allow, type, pattern, inputType, readOnly, placeholder, search]. Remove options or fix indentation\n" +
+                "(005.yml): Error @ line: 3, col: 17. Unknown options: ['error' [INT] @ line: 3, col: 123], expected: [label, value, allow, type, pattern, inputType, readOnly, placeholder, search]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'fullName' @ line: 3, col: 7\n" +
                         "\t\t'myForm' @ line: 2, col: 3\n" +
@@ -1259,7 +1549,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1002() throws Exception {
         String msg =
-                "(002.yml): Error @ line: 4, col: 9. Unknown options: ['a' [NULL] @ line: 4, col: 9, 'b' [NULL] @ line: 6, col: 9], expected: [yield, saveSubmittedBy, runAs, values, fields]. Remove options or fix indentation\n" +
+                "(002.yml): Error @ line: 4, col: 9. Unknown options: ['a' [NULL] @ line: 4, col: 9, 'b' [NULL] @ line: 6, col: 9], expected: [yield, saveSubmittedBy, runAs, values, fields]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'form' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
@@ -1478,7 +1768,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [entryPoint, dependencies, arguments]. Remove options or fix indentation\n" +
+                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [runtime, entryPoint, dependencies, arguments]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'configuration' @ line: 1, col: 1";
 

@@ -28,7 +28,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class YamlValueType<T> {
+public final class YamlValueType<T> {
 
     public static final YamlValueType<Object> NON_NULL = type("NON_NULL");
 
@@ -72,29 +72,35 @@ public class YamlValueType<T> {
     public static final YamlValueType<Map<String, Profile>> PROFILES = type("PROFILES");
     public static final YamlValueType<KV<String, Profile>> PROFILE = type("PROFILE");
     public static final YamlValueType<ProcessConfiguration> PROCESS_CFG = type("CONFIGURATION");
+    public static final YamlValueType<Trigger> TRIGGER = type("TRIGGER");
+    public static final YamlValueType<List<Trigger>> TRIGGERS = array("TRIGGER", TRIGGER);
+    public static final YamlValueType<Trigger> GITHUB_TRIGGER = type("GITHUB_TRIGGER");
+    public static final YamlValueType<Map<String, Object>> GITHUB_TRIGGER_CONDITIONS = type("GITHUB_TRIGGER_CONDITIONS");
+    public static final YamlValueType<Trigger> CRON_TRIGGER = type("CRON_TRIGGER");
+    public static final YamlValueType<Trigger> MANUAL_TRIGGER = type("MANUAL_TRIGGER");
+    public static final YamlValueType<Trigger> ONEOPS_TRIGGER = type("ONEOPS_TRIGGER");
+    public static final YamlValueType<Trigger> GENERIC_TRIGGER = type("GENERIC_TRIGGER");
 
     private final String name;
-    private final String description;
 
-    private YamlValueType(String name, String description) {
+    private YamlValueType(String name) {
         this.name = name;
-        this.description = description;
     }
 
     @Override
     public String toString() {
-        return name + (description != null ? " (" + description + ")" : "");
+        return name;
     }
 
     private static <T> YamlValueType<T> type(String name) {
-        return new YamlValueType<T>(name, null);
+        return new YamlValueType<>(name);
     }
 
     private static <T> YamlValueType<List<T>> array(String name, YamlValueType<T> arrayValueType) {
-        return new YamlValueType<>(name, null);
+        return new YamlValueType<>(name);
     }
 
     private static <T> YamlValueType<Map<String, T>> map(String name) {
-        return new YamlValueType<>(name, null);
+        return new YamlValueType<>(name);
     }
 }

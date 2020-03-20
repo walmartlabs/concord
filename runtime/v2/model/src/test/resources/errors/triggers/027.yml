@@ -1,0 +1,7 @@
+triggers:
+  - oneops:
+      version: 2
+      entryPoint: "main"
+      conditions:
+        k: "v"
+      trash: "boom"

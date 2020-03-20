@@ -42,7 +42,6 @@ public class ProcessV2IT extends AbstractServerIT {
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
         input.put("arguments.name", "Concord");
-        input.put("runtime", "concord-v2"); // TODO constants
 
         StartProcessResponse spr = start(input);
 

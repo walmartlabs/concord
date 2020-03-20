@@ -1,0 +1,14 @@
+triggers:
+  - github:
+      version: 2
+      entryPoint: "onGithub"
+      activeProfiles:
+          - "one"
+      useInitiator: true
+      useEventCommitId: true
+      exclusive: "red"
+      arguments:
+        k: "v"
+      conditions:
+        type: "push"
+        githubOrg: "*"

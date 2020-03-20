@@ -1,0 +1,5 @@
+triggers:
+  - github:
+      version: 2
+      entryPoint: "onGithub"
+      conditions: 1

@@ -1,0 +1,48 @@
+triggers:
+  - github:
+      version: 2
+      useInitiator: true
+      entryPoint: onPush
+      conditions:
+        type: push
+
+  - github:
+      version: 2
+      useInitiator: true
+      entryPoint: onPush2
+      conditions:
+        type: push2
+
+  - cron:
+      spec: "* 12 * * *"
+      entryPoint: eventOutput
+      activeProfiles:
+        - myProfile
+      arguments:
+        name: "Concord"
+
+  - manual:
+      name: Deploy Dev and Test
+      entryPoint: deployDev
+      activeProfiles:
+        - devProfile
+      arguments:
+        runTests: true
+
+  - example:
+      version: 2
+      entryPoint: exampleFLow
+      conditions:
+        aField: "aValue"
+
+  - oneops:
+      version: 2
+      conditions:
+        org: "myOrganization"
+        asm: "myAssembly"
+        env: "myEnvironment"
+        platform: "myPlatform"
+        type: "deployment"
+        deploymentState: "complete"
+      useInitiator: true
+      entryPoint: onDeployment

@@ -48,6 +48,11 @@ public interface ProcessConfiguration extends Serializable {
     @Nullable
     UUID instanceId();
 
+    @Value.Default
+    default String runtime() {
+        return "concord-v2";
+    }
+
     // TODO activeProfiles
 
     @Value.Default

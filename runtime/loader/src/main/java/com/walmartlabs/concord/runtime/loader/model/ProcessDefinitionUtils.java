@@ -40,10 +40,10 @@ public final class ProcessDefinitionUtils {
     }
 
     public static Map<String, Object> getVariables(ProcessDefinition project, Collection<String> activeProfiles) {
-        Map<String, Object> variables = asMap(project.configuration());
+        Map<String, Object> cfg = asMap(project.configuration());
         Map<String, Profile> profiles = project.profiles();
 
-        return overlay(variables, profiles, activeProfiles, p -> asMap(p.configuration()),
+        return overlay(cfg, profiles, activeProfiles, p -> asMap(p.configuration()),
                 ConfigurationUtils::deepMerge);
     }
 
@@ -59,6 +59,7 @@ public final class ProcessDefinitionUtils {
                                               Map<String, Profile> profiles,
                                               Collection<String> activeProfiles,
                                               Function<Profile, Map<String, T>> selector) {
+
         return overlay(initial, profiles, activeProfiles, selector, (a, b) -> {
             a.putAll(b);
             return a;
