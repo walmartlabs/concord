@@ -33,6 +33,7 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.stringVal;
 import static com.walmartlabs.concord.runtime.v2.parser.ProfilesGrammar.profilesVal;
+import static com.walmartlabs.concord.runtime.v2.parser.TriggersGrammar.triggersVal;
 
 public final class ProcessDefinitionGrammar {
 
@@ -44,7 +45,7 @@ public final class ProcessDefinitionGrammar {
                                     optional("configuration", processCfgVal.map(o::configuration)),
                                     optional("flows", flowsVal.map(o::flows)),
                                     optional("profiles", profilesVal.map(o::profiles)),
-//                                    optional("triggers", stringVal.map(o::triggers)),
+                                    optional("triggers", triggersVal.map(o::triggers)),
                                     optional("forms", FormsGrammar.formsVal.map(o::forms)),
                                     optional("imports", ImportsGrammar.importsVal.map(o::imports))))
                             .map(ImmutableProcessDefinition.Builder::build));

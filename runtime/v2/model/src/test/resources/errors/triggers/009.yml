@@ -1,0 +1,7 @@
+triggers:
+  - github:
+      version: 2
+      entryPoint: "onGithub"
+      conditions:
+        type: "push"
+      activeProfiles: 1

@@ -1,0 +1,6 @@
+triggers:
+  - github:
+      version: 2
+      entryPoint: 123
+      conditions:
+        type: "push"

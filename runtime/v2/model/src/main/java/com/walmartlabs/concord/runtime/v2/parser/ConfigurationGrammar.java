@@ -30,12 +30,16 @@ import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 
+/**
+ * Grammar for the {@code configuration} section of Concord YAML files.
+ */
 public final class ConfigurationGrammar {
 
     private static final Parser<Atom, ProcessConfiguration> cfg =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                     with(ImmutableProcessConfiguration::builder,
                             o -> options(
+                                    optional("runtime", stringVal.map(o::runtime)),
                                     optional("entryPoint", stringVal.map(o::entryPoint)),
                                     optional("dependencies", stringArrayVal.map(o::dependencies)),
                                     optional("arguments", mapVal.map(o::arguments))))

@@ -90,6 +90,8 @@ public class Constants {
      */
     public static class Request {
 
+        public static final String CONFIGURATION_KEY = "configuration";
+
         /**
          * Runtime to use.
          */

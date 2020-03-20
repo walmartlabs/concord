@@ -37,7 +37,7 @@ public class TriggerV2 implements Trigger, Serializable {
 
     public TriggerV2(com.walmartlabs.concord.runtime.v2.model.Trigger delegate) {
         this.delegate = delegate;
-        this.sourceMap = new SourceMapV2(delegate.sourceMap());
+        this.sourceMap = SourceMap.from(delegate.location());
     }
 
     @Override

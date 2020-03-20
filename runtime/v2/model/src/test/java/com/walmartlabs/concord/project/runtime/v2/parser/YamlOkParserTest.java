@@ -285,6 +285,34 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(Collections.singletonMap("k", "v"), cfg.arguments());
     }
 
+    @Test
+    public void test009() throws Exception {
+        ProcessDefinition pd = load("009.yml");
+
+        List<Trigger> triggers = pd.triggers();
+        assertNotNull(triggers);
+
+        assertEquals(6, triggers.size());
+
+        Trigger t = triggers.get(0);
+        assertEquals("github", t.name());
+
+        t = triggers.get(1);
+        assertEquals("github", t.name());
+
+        t = triggers.get(2);
+        assertEquals("cron", t.name());
+
+        t = triggers.get(3);
+        assertEquals("manual", t.name());
+
+        t = triggers.get(4);
+        assertEquals("example", t.name());
+
+        t = triggers.get(5);
+        assertEquals("oneops", t.name());
+    }
+
     private static void assertMeta(StepOptions o) {
         assertNotNull(o.meta());
         assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());

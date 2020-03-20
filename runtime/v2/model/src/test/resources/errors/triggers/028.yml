@@ -1,0 +1,5 @@
+triggers:
+  - example:
+      version: 2
+      entryPoint: exampleFLow
+      conditions: 1

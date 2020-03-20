@@ -54,10 +54,12 @@ public final class GrammarV2 {
     public static final Parser.Ref<Atom, YamlObject> object = Parser.ref();
 
     public static final Parser<Atom, Serializable> anyVal = value.map(YamlValue::getValue);
+    public static final Parser<Atom, Integer> intVal = value.map(v -> v.getValue(YamlValueType.INT));
     public static final Parser<Atom, String> stringVal = value.map(v -> v.getValue(YamlValueType.STRING));
     public static final Parser<Atom, Boolean> booleanVal = value.map(v -> v.getValue(YamlValueType.BOOLEAN));
     public static final Parser<Atom, Map<String, Serializable>> mapVal = value.map(v -> v.getValue(YamlValueType.OBJECT));
     public static final Parser<Atom, List<String>> regexpArrayVal = value.map(v -> asList(v, YamlValueType.ARRAY_OF_PATTERN).getListValue(GrammarV2::regexpConverter));
+    public static final Parser<Atom, String> regexpVal = value.map(GrammarV2::regexpConverter);
     public static final Parser<Atom, List<String>> stringArrayVal = value.map(v -> asList(v, YamlValueType.ARRAY_OF_STRING).getListValue(YamlValueType.STRING));
     public static final Parser<Atom, Serializable> nonNullVal = value.map(v -> {
         assertNotNull(v);

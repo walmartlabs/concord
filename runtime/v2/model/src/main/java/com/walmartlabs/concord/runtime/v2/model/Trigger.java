@@ -21,11 +21,11 @@ package com.walmartlabs.concord.runtime.v2.model;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +62,12 @@ public interface Trigger extends Serializable {
         return Collections.emptyList();
     }
 
-    @Nullable
-    SourceMap sourceMap();
+    @Value.Default
+    default JsonLocation location() {
+        return JsonLocation.NA;
+    }
+
+    static ImmutableTrigger.Builder builder() {
+        return ImmutableTrigger.builder();
+    }
 }

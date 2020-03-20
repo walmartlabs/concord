@@ -64,7 +64,7 @@ public class UnknownOptionException extends YamlProcessingException {
             msg += ", expected: " + expectedOptions.toString();
         }
 
-        msg += ". Remove options or fix indentation";
+        msg += ". Remove invalid options and/or fix indentation";
 
         return msg;
     }
