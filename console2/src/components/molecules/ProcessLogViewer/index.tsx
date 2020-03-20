@@ -288,8 +288,15 @@ class ProcessLogViewer extends React.Component<Props, State> {
                         this.scrollAnchorRef = scroll;
                     }}
                 />
-                <Transition animation="fade up" duration={550} visible={window.scrollY > 164}>
-                    <div className="scrollToTopButton" onClick={() => window.scrollTo({ top: 0 })}>
+                <Transition animation="fade up" duration={550}>
+                    <div
+                        className="scrollToTopButton"
+                        onClick={() => {
+                            window.scrollTo({ top: 0 });
+                            this.setState({
+                                scrollAnchorRef: false
+                            });
+                        }}>
                         <Icon name="chevron circle up" size="huge" />
                     </div>
                 </Transition>
