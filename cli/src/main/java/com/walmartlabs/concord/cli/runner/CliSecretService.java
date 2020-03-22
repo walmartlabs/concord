@@ -24,19 +24,17 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.SecretService;
 
-import javax.inject.Singleton;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-@Singleton
-public class SecretServiceImpl implements SecretService {
+public class CliSecretService implements SecretService {
 
     private final Path secretStoreDir;
 
-    public SecretServiceImpl(Path secretStoreDir) {
+    public CliSecretService(Path secretStoreDir) {
         this.secretStoreDir = secretStoreDir;
     }
 

@@ -22,8 +22,6 @@ package com.walmartlabs.concord.cli;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.DependencyResolver;
-import com.walmartlabs.concord.cli.runner.DockerServiceImpl;
-import com.walmartlabs.concord.cli.runner.SecretServiceImpl;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.StateManager;
@@ -32,8 +30,10 @@ import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Main;
-import com.walmartlabs.concord.runtime.v2.runner.*;
+import com.walmartlabs.concord.runtime.v2.runner.Runner;
+import com.walmartlabs.concord.runtime.v2.runner.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -62,10 +62,10 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
     private Map<String, String> extraVars = new LinkedHashMap<>();
 
-    @Option(names = { "--deps-cache-dir"}, description = "additional process variables")
+    @Option(names = {"--deps-cache-dir"}, description = "additional process variables")
     private Path depsCacheDir = Paths.get(System.getProperty("user.dir"));
 
-    @Option(names = { "--secret-dir"}, description = "secret store dir")
+    @Option(names = {"--secret-dir"}, description = "secret store dir")
     private Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secret");
 
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
@@ -101,17 +101,18 @@ public class Run implements Callable<Integer> {
                 .build();
 
         ClassLoader parentClassLoader = Main.class.getClassLoader();
-        Injector injector = new InjectorFactory(parentClassLoader, new WorkingDirectory(targetDir), runnerCfg,
-                ServicesModule.builder()
-                        .secret(new SecretServiceImpl(secretStoreDir))
-                        .docker(new DockerServiceImpl())
-                        .build(), () -> cfg)
+        Injector injector = new InjectorFactory(parentClassLoader,
+                new WorkingDirectory(targetDir),
+                runnerCfg,
+                () -> cfg,
+                new CliServicesModule(secretStoreDir))
                 .create();
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
                 .workDir(targetDir)
-                .statusCallback(id -> {})
+                .statusCallback(id -> {
+                })
                 .build();
 
         Map<String, Object> args = new LinkedHashMap<>(extraVars);

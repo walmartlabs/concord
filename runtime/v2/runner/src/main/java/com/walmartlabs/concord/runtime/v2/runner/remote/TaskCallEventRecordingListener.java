@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.tasks;
+package com.walmartlabs.concord.runtime.v2.runner.remote;
 
 /*-
  * *****
@@ -30,12 +30,12 @@ import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.InstanceId;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -43,8 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Named
-@Singleton
 public class TaskCallEventRecordingListener implements TaskCallListener {
 
     private static final Logger log = LoggerFactory.getLogger(TaskCallEventRecordingListener.class);
