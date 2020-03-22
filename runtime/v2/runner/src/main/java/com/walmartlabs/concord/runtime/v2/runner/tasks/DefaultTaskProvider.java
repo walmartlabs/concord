@@ -58,11 +58,13 @@ public class DefaultTaskProvider implements TaskProvider {
 
     @Override
     public Task createTask(Context ctx, String key) {
+        // check if there's a v2 task first
         Class<? extends Task> klass = v2Holder.get(key);
         if (klass != null) {
             return defaultVariableInjector.inject(key, injector.getInstance(klass));
         }
 
+        // fall back to v1, dynamically create the wrapper
         Class<? extends com.walmartlabs.concord.sdk.Task> klassV1 = v1Holder.get(key);
         if (klassV1 != null) {
             com.walmartlabs.concord.sdk.Task v1Task = injector.getInstance(klassV1);

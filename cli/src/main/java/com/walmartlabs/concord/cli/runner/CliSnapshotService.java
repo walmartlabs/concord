@@ -20,21 +20,14 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
-import com.walmartlabs.concord.sdk.DockerService;
+import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
+import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.State;
 
-import java.io.IOException;
-
-public class DockerServiceImpl implements DockerService {
+public class CliSnapshotService implements SnapshotService {
 
     @Override
-    public Process start(Context ctx, DockerContainerSpec spec) throws IOException {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException {
-        throw new UnsupportedOperationException("not implemented");
+    public void create(String name, Runtime runtime, State state) {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 }

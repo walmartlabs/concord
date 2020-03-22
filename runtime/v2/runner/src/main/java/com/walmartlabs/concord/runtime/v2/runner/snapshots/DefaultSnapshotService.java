@@ -22,14 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.snapshots;
 
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
-import org.eclipse.sisu.Typed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
-
-@Named
-@Typed
 public class DefaultSnapshotService implements SnapshotService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSnapshotService.class);

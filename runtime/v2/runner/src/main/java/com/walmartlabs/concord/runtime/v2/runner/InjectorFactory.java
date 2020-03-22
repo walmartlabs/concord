@@ -45,48 +45,41 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-// TODO refactor as a builder
+// TODO refactor as a builder?
 public class InjectorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(InjectorFactory.class);
 
     public static Injector createDefault(ClassLoader parentClassLoader, RunnerConfiguration runnerCfg) throws IOException {
-        ServicesModule services = ServicesModule.builder()
-                // TODO: add SecretService implementation
-                // TODO: add DockerService implementation
-                .build();
-
         Path src = Paths.get(System.getProperty("user.dir"));
 
         Provider<ProcessConfiguration> processCfgProvider = new DefaultProcessConfigurationProvider(src);
         WorkingDirectory workDir = new WorkingDirectory(src);
 
-        return new InjectorFactory(parentClassLoader, workDir, runnerCfg, services, processCfgProvider)
+        return new InjectorFactory(parentClassLoader, workDir, runnerCfg, processCfgProvider, new DefaultServicesModule())
                 .create();
     }
 
     private final ClassLoader parentClassLoader;
     private final WorkingDirectory workDir;
     private final RunnerConfiguration runnerCfg;
-    private final ServicesModule servicesModule;
+    private final Module[] modules;
     private final Provider<ProcessConfiguration> processConfigurationProvider;
 
     public InjectorFactory(ClassLoader parentClassLoader,
                            WorkingDirectory workDir,
                            RunnerConfiguration runnerCfg,
-                           ServicesModule services,
-                           Provider<ProcessConfiguration> processConfigurationProvider) {
+                           Provider<ProcessConfiguration> processConfigurationProvider,
+                           Module... modules) {
 
         this.parentClassLoader = parentClassLoader;
         this.workDir = workDir;
         this.runnerCfg = runnerCfg;
-        this.servicesModule = services;
+        this.modules = modules;
         this.processConfigurationProvider = processConfigurationProvider;
     }
 
@@ -111,13 +104,17 @@ public class InjectorFactory {
             }
         };
 
-        Module m = new WireModule(
-                new ConfigurationModule(workDir, runnerCfg, processConfigurationProvider),
-                tasks,
-                new TaskCallInterceptorModule(),
-                new SpaceModule(new URLClassSpace(parentClassLoader)),
-                new SpaceModule(new URLClassSpace(dependenciesClassLoader)),
-                servicesModule);
+        List<Module> l = new ArrayList<>();
+        l.add(new ConfigurationModule(workDir, runnerCfg, processConfigurationProvider));
+        l.add(tasks);
+        l.add(new TaskCallInterceptorModule());
+        l.add(new SpaceModule(new URLClassSpace(parentClassLoader)));
+        l.add(new SpaceModule(new URLClassSpace(dependenciesClassLoader)));
+        if (modules != null) {
+            l.addAll(Arrays.asList(modules));
+        }
+
+        Module m = new WireModule(l);
 
         return Guice.createInjector(m);
     }

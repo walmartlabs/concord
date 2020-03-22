@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +40,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 @Named
-@Singleton
 public class DockerServiceImpl implements DockerService {
 
     private static final Logger log = LoggerFactory.getLogger(DockerServiceImpl.class);

@@ -34,8 +34,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Named
-@Singleton
 public class ApiClientProvider implements Provider<ApiClient> {
 
     private final ApiClientFactory clientFactory;

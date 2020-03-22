@@ -50,7 +50,6 @@ import java.util.UUID;
 public class SecretServiceImpl implements SecretService {
 
     private static final int RETRY_COUNT = 3;
-
     private static final long RETRY_INTERVAL = 5000;
 
     private final ApiClientFactory clientFactory;
@@ -172,7 +171,7 @@ public class SecretServiceImpl implements SecretService {
         return new String(r.getData());
     }
 
-    private <T extends Secret > T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
+    private <T extends Secret> T get(Context ctx, String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
         return new SecretClient(clientFactory.create(ctx)).getData(assertOrgName(ctx, orgName), secretName, password, type);
     }
 
@@ -184,7 +183,7 @@ public class SecretServiceImpl implements SecretService {
 
         Map<String, Object> pi = (Map<String, Object>) ctx.getVariable(Constants.Request.PROJECT_INFO_KEY);
         return Optional.ofNullable(pi)
-                .map(p -> (String)p.get("orgName"))
+                .map(p -> (String) p.get("orgName"))
                 .orElseThrow(() -> new IllegalArgumentException("Organization name not specified"));
     }
 

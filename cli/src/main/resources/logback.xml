@@ -5,6 +5,8 @@
         </encoder>
     </appender>
 
+    <logger name="com.walmartlabs.concord.dependencymanager" level="WARN"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
