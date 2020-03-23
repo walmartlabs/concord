@@ -20,6 +20,9 @@ package com.walmartlabs.concord.db;
  * =====
  */
 
+import java.util.Collections;
+import java.util.Map;
+
 public interface DatabaseConfiguration {
 
     default String driverClassName() {
@@ -35,4 +38,8 @@ public interface DatabaseConfiguration {
     int maxPoolSize();
 
     long maxLifetime();
+
+    default Map<String, Object> changeLogParameters() {
+        return Collections.emptyMap();
+    }
 }

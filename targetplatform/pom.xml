@@ -202,6 +202,11 @@
             </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord.server</groupId>
+                <artifactId>liquibase-ext</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.walmartlabs.concord.server</groupId>
                 <artifactId>concord-server-db</artifactId>
                 <version>${project.version}</version>
             </dependency>

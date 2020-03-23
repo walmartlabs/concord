@@ -15,6 +15,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>liquibase-ext</module>
         <module>db</module>
         <module>sdk</module>
         <module>impl</module>
