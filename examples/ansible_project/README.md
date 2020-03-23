@@ -45,7 +45,7 @@ and necessary runtime dependencies.
 ```
 curl -v \
 -H "Content-Type: application/json" \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+-H "Authorization: API_TOKEN" \
 -d '{ "name": "myProject", "cfg": { "template": "ansible" }, "repositories": { "myRepo": {"url": "git@github.com:my/repo.git", "secret": "mySecret" } } }' \
 http://localhost:8001/api/v1/org/Default/project
 ```
@@ -64,7 +64,7 @@ The `secret` parameters is the name of the key created on the step 2.
 ```
 curl -v \
 -H "Content-Type: application/json" \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+-H "Authorization: API_TOKEN" \
 -d '{ "username": "myUser" }' \
 http://localhost:8001/api/v1/user
 ```
@@ -83,7 +83,7 @@ Use the `username` value of the user created in the previous step.
 ```
 curl -v \
 -H "Content-Type: application/json" \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+-H "Authorization: API_TOKEN" \
 -d '{ "username": "myUser" }' \
 http://localhost:8001/api/v1/apikey
 ```
@@ -91,7 +91,7 @@ http://localhost:8001/api/v1/apikey
 ```json
 {
     "ok": true,
-    "key": "auBy4eDWrKWsyhiDp3AQiw"
+    "key": "API_TOKEN"
 }
 ```
 
@@ -124,7 +124,7 @@ Make a call:
 
 ```
 curl -v \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+-H "Authorization: API_TOKEN" \
 -F org=Default \
 -F project=myProject \
 -F repo=myRepo \
@@ -154,7 +154,7 @@ You can download Ansible play's statistics with this request:
 
 ```
 curl -v \
--H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+-H "Authorization: API_TOKEN" \
 http://localhost:8001/api/v1/process/33c8f91e-db14-11e6-8d94-a3efec7ccd7b/attachment/ansible_stats.json
 ```
 

@@ -6,7 +6,7 @@ Example of running an Ansible playbook on a remote host without creating a proje
 
 1. Upload the remote ssh key to the server:
 ```
-curl -H "Authorization: auBy4eDWrKWsyhiDp3AQiw" \
+curl -H "Authorization: API_TOKEN" \
 -F private=@/path/to/id_rsa \
 -F public=@/path/to/id_rsa.pub \
 -F storePassword=mySecretPassword \

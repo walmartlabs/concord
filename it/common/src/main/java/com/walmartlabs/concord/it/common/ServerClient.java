@@ -39,7 +39,7 @@ import static org.junit.Assert.*;
 public class ServerClient {
 
     /**
-     * As defined in db/src/main/resources/com/walmartlabs/concord/server/db/v0.0.1.xml
+     * As defined in server.conf
      */
     public static final String DEFAULT_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
 

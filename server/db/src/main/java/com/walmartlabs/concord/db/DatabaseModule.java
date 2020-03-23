@@ -49,7 +49,7 @@ public class DatabaseModule extends AbstractModule {
                 // can't inject a set of objects with the same qualifier, filter manually
                 .filter(p -> p.getClass().getAnnotation(MainDB.class) != null)
                 .sorted(Comparator.comparingInt(DatabaseChangeLogProvider::order))
-                .forEach(p -> DataSourceUtils.migrateDb(ds, p));
+                .forEach(p -> DataSourceUtils.migrateDb(ds, p, cfg.changeLogParameters()));
 
         return ds;
     }

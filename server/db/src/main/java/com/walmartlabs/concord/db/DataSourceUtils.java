@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.Map;
 
 public final class DataSourceUtils {
 
@@ -46,7 +47,6 @@ public final class DataSourceUtils {
 
     private static final int MIGRATION_MAX_RETRIES = 10;
     private static final int MIGRATION_RETRY_DELAY = 10000;
-
 
     public static DataSource createDataSource(DatabaseConfiguration cfg,
                                               String poolName,
@@ -70,11 +70,28 @@ public final class DataSourceUtils {
     }
 
     public static void migrateDb(DataSource ds, DatabaseChangeLogProvider p) {
+        migrateDb(ds, p, null);
+    }
+
+    /**
+     * Migrate a database using the provided changelog and Liquibase parameters.
+     *
+     * @param dataSource        datasource to use for migration
+     * @param changeLogProvider provider of the changelog
+     * @param changeLogParams   Liquibase parameters to use during the migration
+     */
+    public static void migrateDb(DataSource dataSource,
+                                 DatabaseChangeLogProvider changeLogProvider,
+                                 Map<String, Object> changeLogParams) {
+
         int retries = MIGRATION_MAX_RETRIES;
         for (int i = 0; i < retries; i++) {
-            try (Connection c = ds.getConnection()) {
-                log.info("get -> performing '{}' migration...", p);
-                migrateDb(c, p.getChangeLogPath(), p.getChangeLogTable(), p.getLockTable());
+            try (Connection c = dataSource.getConnection()) {
+                log.info("get -> performing '{}' migration...", changeLogProvider);
+                String logPath = changeLogProvider.getChangeLogPath();
+                String logTable = changeLogProvider.getChangeLogTable();
+                String lockTable = changeLogProvider.getLockTable();
+                migrateDb(c, logPath, logTable, lockTable, changeLogParams);
                 log.info("get -> done");
                 break;
             } catch (Exception e) {
@@ -93,17 +110,6 @@ public final class DataSourceUtils {
         }
     }
 
-    private static void migrateDb(Connection conn, String logPath, String logTable, String lockTable) throws Exception {
-        LogFactory.getInstance().setDefaultLoggingLevel(LogLevel.WARNING);
-
-        Database db = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
-        db.setDatabaseChangeLogTableName(logTable);
-        db.setDatabaseChangeLogLockTableName(lockTable);
-
-        Liquibase lb = new Liquibase(logPath, new ClassLoaderResourceAccessor(), db);
-        lb.update((String) null);
-    }
-
     public static Configuration createJooqConfiguration(DataSource ds) {
         Settings settings = new Settings();
         settings.setRenderSchema(false);
@@ -113,6 +119,27 @@ public final class DataSourceUtils {
                 .set(settings)
                 .set(ds)
                 .set(SQLDialect.POSTGRES);
+    }
+
+    private static void migrateDb(Connection conn,
+                                  String logPath,
+                                  String logTable,
+                                  String lockTable,
+                                  Map<String, Object> params) throws Exception {
+
+        LogFactory.getInstance().setDefaultLoggingLevel(LogLevel.WARNING);
+
+        Database db = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
+        db.setDatabaseChangeLogTableName(logTable);
+        db.setDatabaseChangeLogLockTableName(lockTable);
+
+        Liquibase lb = new Liquibase(logPath, new ClassLoaderResourceAccessor(), db);
+
+        if (params != null) {
+            params.forEach(lb::setChangeLogParameter);
+        }
+
+        lb.update((String) null);
     }
 
     private DataSourceUtils() {

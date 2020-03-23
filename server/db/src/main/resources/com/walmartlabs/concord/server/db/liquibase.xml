@@ -2,7 +2,7 @@
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
     <include file="v0.0.1.xml" relativeToChangelogFile="true"/>
     <include file="v0.2.0.xml" relativeToChangelogFile="true"/>
@@ -82,5 +82,6 @@
     <include file="v1.40.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.41.0.xml" relativeToChangelogFile="true"/>
     <include file="v1.43.0.xml" relativeToChangelogFile="true"/>
+    <include file="v1.45.0.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
