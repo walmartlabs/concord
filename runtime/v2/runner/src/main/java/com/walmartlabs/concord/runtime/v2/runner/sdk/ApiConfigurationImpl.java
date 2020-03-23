@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.sdk;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -53,7 +52,13 @@ public class ApiConfigurationImpl implements ApiConfiguration {
         return runnerCfg.api().readTimeout();
     }
 
+    @Override
     public String getSessionToken(Context ctx) {
-        return ContextUtils.getSessionToken(ctx);
+        return runnerCfg.api().sessionToken();
+    }
+
+    @Override
+    public String sessionToken() {
+        return runnerCfg.api().sessionToken();
     }
 }

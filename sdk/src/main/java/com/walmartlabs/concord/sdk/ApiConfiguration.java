@@ -42,7 +42,13 @@ public interface ApiConfiguration {
     int readTimeout();
 
     /**
+     * @deprecated use sessionToken();
      * @return the current session token that can be used to talk to the API.
      */
     String getSessionToken(Context ctx);
+
+    /**
+     * @return the current session token that can be used to talk to the API.
+     */
+    String sessionToken();
 }

@@ -25,6 +25,9 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 
+import java.nio.file.Path;
+import java.util.UUID;
+
 public class DummyContext implements Context {
 
     private final GlobalVariables globalVariables;
@@ -36,6 +39,16 @@ public class DummyContext implements Context {
     @Override
     public GlobalVariables globalVariables() {
         return globalVariables;
+    }
+
+    @Override
+    public Path workingDirectory() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public UUID processInstanceId() {
+        throw new IllegalStateException("Not implemented");
     }
 
     @Override

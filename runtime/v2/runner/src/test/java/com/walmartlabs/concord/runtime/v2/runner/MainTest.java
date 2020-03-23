@@ -50,7 +50,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -171,9 +170,6 @@ public class MainTest {
         // the runner's configuration file
         Path runnnerCfgFile = createRunnerCfgFile();
 
-        // the session key to talk to the API
-        saveSessionKey();
-
         PrintStream oldOut = System.out;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -197,7 +193,6 @@ public class MainTest {
     private ImmutableProcessConfiguration.Builder newProcessConfiguration() {
         Map<String, Object> m = new HashMap<>();
         m.put("txId", instanceId.toString());
-        m.put("processInfo", Collections.singletonMap("sessionKey", sessionKey));
 
         return ProcessConfiguration.builder()
                 .arguments(m);
@@ -211,22 +206,23 @@ public class MainTest {
                     .agentId(UUID.randomUUID().toString())
                     .api(ApiConfiguration.builder()
                             .baseUrl("http://localhost:" + wireMock.port())
+                            .sessionToken(sessionKey)
                             .build())
                     .build());
         }
         return dst;
     }
 
-    private void saveSessionKey() throws IOException {
-        Path dst = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(Constants.Files.SESSION_TOKEN_FILE_NAME);
-
-        if (!Files.exists(dst.getParent())) {
-            Files.createDirectories(dst.getParent());
-        }
-
-        Files.write(dst, sessionKey.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-    }
+//    private void saveSessionKey() throws IOException {
+//        Path dst = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
+//                .resolve(Constants.Files.SESSION_TOKEN_FILE_NAME);
+//
+//        if (!Files.exists(dst.getParent())) {
+//            Files.createDirectories(dst.getParent());
+//        }
+//
+//        Files.write(dst, sessionKey.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+//    }
 
     private void saveProcessConfiguration(Map<String, Object> args) throws IOException {
         if (args == null || args.isEmpty()) {

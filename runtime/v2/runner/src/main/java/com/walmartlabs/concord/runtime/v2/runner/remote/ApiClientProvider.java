@@ -23,43 +23,26 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.runtime.v2.runner.WorkingDirectory;
-import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
-import javax.inject.Singleton;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class ApiClientProvider implements Provider<ApiClient> {
 
     private final ApiClientFactory clientFactory;
-    private final WorkingDirectory workDir;
+    private final RunnerConfiguration runnerCfg;
 
     @Inject
-    public ApiClientProvider(ApiClientFactory clientFactory, WorkingDirectory workDir) {
+    public ApiClientProvider(ApiClientFactory clientFactory, RunnerConfiguration runnerCfg) {
         this.clientFactory = clientFactory;
-        this.workDir = workDir;
+        this.runnerCfg = runnerCfg;
     }
 
     @Override
     public ApiClient get() {
         return clientFactory.create(ApiClientConfiguration.builder()
-                .sessionToken(getSessionToken(workDir.getValue()))
+                .sessionToken(runnerCfg.api().sessionToken())
                 .build());
-    }
-
-    private static String getSessionToken(Path baseDir) {
-        Path p = baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(Constants.Files.SESSION_TOKEN_FILE_NAME);
-
-        try {
-            return new String(Files.readAllBytes(p));
-        } catch (IOException e) {
-            throw new RuntimeException("Error while reading the session token file: " + p, e);
-        }
     }
 }

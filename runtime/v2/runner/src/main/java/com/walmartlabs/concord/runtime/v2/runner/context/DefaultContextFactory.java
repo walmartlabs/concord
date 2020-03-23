@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.InstanceId;
+import com.walmartlabs.concord.runtime.v2.runner.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesWithFrameOverrides;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
@@ -32,12 +34,22 @@ import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 import org.eclipse.sisu.Typed;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.UUID;
 
 @Named
 @Typed
 public class DefaultContextFactory implements ContextFactory {
+
+    private final WorkingDirectory workingDirectory;
+    private final InstanceId processInstanceId;
+
+    @Inject
+    public DefaultContextFactory(WorkingDirectory workingDirectory, InstanceId processInstanceId) {
+        this.workingDirectory = workingDirectory;
+        this.processInstanceId = processInstanceId;
+    }
 
     @Override
     public Context create(Runtime runtime, State state, ThreadId currentThreadId, Step currentStep) {
@@ -52,7 +64,7 @@ public class DefaultContextFactory implements ContextFactory {
         Compiler compiler = runtime.getService(Compiler.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
-        Context ctx = new ContextImpl(globalVariables, compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId);
+        Context ctx = new ContextImpl(globalVariables, compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(), processInstanceId.getValue());
         return new IntermediateGlobalsContext(ctx, new GlobalVariablesWithFrameOverrides(state, currentThreadId, globalVariables));
     }
 }

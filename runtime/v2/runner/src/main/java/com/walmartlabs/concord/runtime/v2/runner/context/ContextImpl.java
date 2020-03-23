@@ -32,6 +32,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.nio.file.Path;
 import java.util.UUID;
 
 public class ContextImpl implements Context {
@@ -45,6 +46,8 @@ public class ContextImpl implements Context {
     private final ProcessDefinition processDefinition;
     private final Step currentStep;
     private final UUID correlationId;
+    private final Path workingDir;
+    private final UUID processInstanceId;
 
     public ContextImpl(GlobalVariables globalVariables,
                        Compiler compiler,
@@ -54,7 +57,9 @@ public class ContextImpl implements Context {
                        State state,
                        ProcessDefinition processDefinition,
                        Step currentStep,
-                       UUID correlationId) {
+                       UUID correlationId,
+                       Path workingDir,
+                       UUID processInstanceId) {
 
         this.globalVariables = globalVariables;
         this.compiler = compiler;
@@ -65,11 +70,23 @@ public class ContextImpl implements Context {
         this.processDefinition = processDefinition;
         this.currentStep = currentStep;
         this.correlationId = correlationId;
+        this.workingDir = workingDir;
+        this.processInstanceId = processInstanceId;
     }
 
     @Override
     public GlobalVariables globalVariables() {
         return globalVariables;
+    }
+
+    @Override
+    public Path workingDirectory() {
+        return workingDir;
+    }
+
+    @Override
+    public UUID processInstanceId() {
+        return processInstanceId;
     }
 
     @Override

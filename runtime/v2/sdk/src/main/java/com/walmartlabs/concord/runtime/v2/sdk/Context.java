@@ -20,12 +20,25 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import java.nio.file.Path;
+import java.util.UUID;
+
 public interface Context {
 
     /**
      * Provides access to global variables of the current process.
      */
     GlobalVariables globalVariables();
+
+    /**
+     * Provides process current working directory.
+     */
+    Path workingDirectory();
+
+    /**
+     * Process identifier.
+     */
+    UUID processInstanceId();
 
     /**
      * Provides access to the low-level details of the current process.

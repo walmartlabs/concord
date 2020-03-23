@@ -34,7 +34,6 @@ import io.takari.bpm.model.SourceMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;

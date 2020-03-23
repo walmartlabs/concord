@@ -96,6 +96,7 @@ public class Run implements Callable<Integer> {
                 .build();
 
         ProcessConfiguration cfg = ProcessConfiguration.builder()
+                .arguments(processDefinition.configuration().arguments())
                 .from(processDefinition.configuration())
                 .instanceId(instanceId)
                 .build();
@@ -115,7 +116,8 @@ public class Run implements Callable<Integer> {
                 })
                 .build();
 
-        Map<String, Object> args = new LinkedHashMap<>(extraVars);
+        Map<String, Object> args = new LinkedHashMap<>(cfg.arguments());
+        args.putAll(extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
         args.put("processInfo", Collections.singletonMap("sessionKey", "none")); // TODO constants
