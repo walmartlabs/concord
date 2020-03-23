@@ -28,6 +28,8 @@ import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingLi
 import com.walmartlabs.concord.runtime.v2.runner.snapshots.DefaultSnapshotService;
 import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
+import com.walmartlabs.concord.runtime.v2.sdk.FileService;
+import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 
 public class DefaultServicesModule extends AbstractModule {
 
@@ -37,7 +39,8 @@ public class DefaultServicesModule extends AbstractModule {
 
         bind(SnapshotService.class).to(DefaultSnapshotService.class);
         // TODO bind(DockerService.class)
-        // TODO bind(SecretService.class)
+        bind(SecretService.class).to(DefaultSecretService.class);
+        bind(FileService.class).to(DefaultFileService.class);
 
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallEventRecordingListener.class);

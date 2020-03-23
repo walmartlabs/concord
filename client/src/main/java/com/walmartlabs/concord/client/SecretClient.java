@@ -20,6 +20,7 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
+import com.google.gson.reflect.TypeToken;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.ApiResponse;
@@ -30,20 +31,29 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Secret;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class SecretClient {
 
-    private static final int RETRY_COUNT = 3;
-
-    private static final long RETRY_INTERVAL = 5000;
+    private static final int DEFAULT_RETRY_COUNT = 3;
+    private static final long DEFAULT_RETRY_INTERVAL = 5000;
 
     private final ApiClient apiClient;
+    private final int retryCount;
+    private final long retryInterval;
 
     public SecretClient(ApiClient apiClient) {
+        this(apiClient, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_INTERVAL);
+    }
+
+    public SecretClient(ApiClient apiClient, int retryCount, long retryInterval) {
         this.apiClient = apiClient;
+        this.retryCount = retryCount;
+        this.retryInterval = retryInterval;
     }
 
     public <T extends Secret> T getData(String orgName, String secretName, String password, SecretEntry.TypeEnum type) throws Exception {
@@ -59,7 +69,7 @@ public class SecretClient {
         params.put("storePassword", pwd);
 
         try {
-            r = ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL,
+            r = ClientUtils.withRetry(retryCount, retryInterval,
                     () -> ClientUtils.postData(apiClient, path, params, File.class));
 
             if (r.getData() == null) {
@@ -85,6 +95,30 @@ public class SecretClient {
                 Files.delete(r.getData().toPath());
             }
         }
+    }
+
+    public byte[] decryptString(UUID instanceId, byte[] input) throws Exception {
+        String path = "/api/v1/process/" + instanceId + "/decrypt";
+        ApiResponse<byte[]> r = ClientUtils.withRetry(retryCount, retryInterval, () -> {
+            Type returnType = new TypeToken<byte[]>() {
+            }.getType();
+            return ClientUtils.postData(apiClient, path, input, returnType);
+        });
+        return r.getData();
+    }
+
+    public String encryptString(UUID instanceId, String orgName, String projectName, String input) throws Exception {
+        String path = "/api/v1/org/" + orgName + "/project/" + projectName + "/encrypt";
+        Map<String, String> headerParams = new HashMap<>();
+        headerParams.put("Content-Type", "text/plain;charset=UTF-8");
+        ApiResponse<EncryptValueResponse> r = ClientUtils.withRetry(retryCount, retryInterval,
+                () -> ClientUtils.postData(apiClient, path, input, headerParams, EncryptValueResponse.class));
+
+        if (r.getStatusCode() == 200 && r.getData().isOk()) {
+            return r.getData().getData();
+        }
+
+        throw new ApiException("Error encrypting string. Status code:" + r.getStatusCode() + " Data: " + r.getData());
     }
 
     @SuppressWarnings("unchecked")

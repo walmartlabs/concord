@@ -1008,8 +1008,6 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Project is required", Status.BAD_REQUEST);
         }
 
-        ProcessKey processKey = ProcessKey.from(entry);
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         try {
             int read;

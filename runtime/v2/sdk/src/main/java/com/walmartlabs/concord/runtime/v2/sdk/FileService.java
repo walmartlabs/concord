@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -20,24 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import java.io.Serializable;
-import java.util.UUID;
+import java.io.IOException;
+import java.nio.file.Path;
 
-/**
- * Contains ID of the current process.
- * Can be @Inject-ed into services.
- */
-public class InstanceId implements Serializable {
+public interface FileService {
 
-    private static final long serialVersionUID = 1L;
+    Path createTempFile(String prefix, String suffix) throws IOException;
 
-    private final UUID value;
-
-    public InstanceId(UUID value) {
-        this.value = value;
-    }
-
-    public UUID getValue() {
-        return value;
-    }
+    Path createTempDirectory(String prefix) throws IOException;
 }

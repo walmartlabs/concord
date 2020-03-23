@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 @Value.Immutable
@@ -59,6 +60,14 @@ public interface ApiConfiguration {
     }
 
     /**
+     * Socket write timeout (ms)
+     */
+    @Value.Default
+    default int writeTimeout() {
+        return 30000;
+    }
+
+    /**
      * Number of retries if an API call fails.
      */
     @Value.Default
@@ -75,6 +84,9 @@ public interface ApiConfiguration {
     default int retryInterval() {
         return 5000;
     }
+
+    @Nullable
+    String sessionToken();
 
     /**
      * Max interval (in ms) without heartbeat before the process fails.

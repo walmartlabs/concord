@@ -23,7 +23,9 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 
 public class TaskContextImpl implements TaskContext {
 
@@ -40,6 +42,16 @@ public class TaskContextImpl implements TaskContext {
     @Override
     public GlobalVariables globalVariables() {
         return delegate.globalVariables();
+    }
+
+    @Override
+    public Path workingDirectory() {
+        return delegate.workingDirectory();
+    }
+
+    @Override
+    public UUID processInstanceId() {
+        return delegate.processInstanceId();
     }
 
     @Override

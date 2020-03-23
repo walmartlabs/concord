@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Named("checkpoint")
 public class CheckpointTask implements Task, LogTagMetadataProvider {

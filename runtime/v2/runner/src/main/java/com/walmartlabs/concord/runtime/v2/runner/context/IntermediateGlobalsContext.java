@@ -28,6 +28,9 @@ import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.Runtime;
 
+import java.nio.file.Path;
+import java.util.UUID;
+
 /**
  * Context with additional temporary global variables.
  */
@@ -44,6 +47,16 @@ public class IntermediateGlobalsContext implements Context {
     @Override
     public GlobalVariables globalVariables() {
         return globalVariables;
+    }
+
+    @Override
+    public Path workingDirectory() {
+        return delegate.workingDirectory();
+    }
+
+    @Override
+    public UUID processInstanceId() {
+        return delegate.processInstanceId();
     }
 
     @Override

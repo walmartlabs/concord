@@ -56,4 +56,9 @@ public class ApiConfigurationImpl implements ApiConfiguration {
     public String getSessionToken(Context ctx) {
         return ContextUtils.getSessionToken(ctx);
     }
+
+    @Override
+    public String sessionToken() {
+        return runnerCfg.api().sessionToken();
+    }
 }

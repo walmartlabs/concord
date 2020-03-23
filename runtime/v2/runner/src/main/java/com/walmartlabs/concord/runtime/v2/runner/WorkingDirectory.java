@@ -22,6 +22,10 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import java.nio.file.Path;
 
+/**
+ * Contains path to the current process' working directory.
+ * Can be @Inject-ed into services.
+ */
 public class WorkingDirectory {
 
     private final Path value;
