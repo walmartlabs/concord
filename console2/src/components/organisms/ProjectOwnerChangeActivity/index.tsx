@@ -22,7 +22,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordId, ConcordKey, EntityOwner, Owner, RequestError } from '../../../api/common';
+import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/projects';
 import { EntityOwnerChangeForm, RequestErrorMessage } from '../../molecules';
 
@@ -30,7 +30,7 @@ interface ExternalProps {
     orgName: ConcordKey;
     projectId: ConcordId;
     projectName: ConcordKey;
-    owner: EntityOwner;
+    ownerId?: ConcordId;
 }
 
 interface StateProps {
@@ -43,35 +43,24 @@ interface DispatchProps {
         orgName: ConcordKey,
         projectId: ConcordId,
         projectName: ConcordKey,
-        owner: Owner
+        ownerId: ConcordId
     ) => void;
 }
 
 type Props = ExternalProps & StateProps & DispatchProps;
 
 class ProjectOwnerChangeActivity extends React.PureComponent<Props> {
-    constructor(props: Props) {
-        super(props);
-
-        this.state = { dirty: false, showConfirm: false, value: props.owner };
-    }
-
     render() {
-        const { error, changing, change, orgName, projectId, projectName, owner } = this.props;
+        const { error, changing, change, orgName, projectId, projectName, ownerId } = this.props;
 
         return (
             <>
                 {error && <RequestErrorMessage error={error} />}
                 <EntityOwnerChangeForm
-                    originalOwner={owner || { username: '' }}
+                    originalOwnerId={ownerId}
                     confirmationHeader="Change project owner?"
                     confirmationContent="Are you sure you want to change the project's owner?"
-                    onSubmit={(value) =>
-                        change(orgName, projectId, projectName, {
-                            username: value.username,
-                            userDomain: value.userDomain
-                        })
-                    }
+                    onSubmit={(value) => change(orgName, projectId, projectName, value)}
                     submitting={changing}
                 />
             </>
@@ -85,7 +74,7 @@ const mapStateToProps = ({ projects }: { projects: State }): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    change: (orgName, projectId, projectName, owner) =>
-        dispatch(actions.changeProjectOwner(orgName, projectId, projectName, owner))
+    change: (orgName, projectId, projectName, ownerId) =>
+        dispatch(actions.changeProjectOwner(orgName, projectId, projectName, ownerId))
 });
 export default connect(mapStateToProps, mapDispatchToProps)(ProjectOwnerChangeActivity);

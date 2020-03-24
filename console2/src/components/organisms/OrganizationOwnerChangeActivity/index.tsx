@@ -22,7 +22,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 
-import { ConcordId, ConcordKey, EntityOwner, Owner, RequestError } from '../../../api/common';
+import { ConcordId, ConcordKey, EntityOwner, RequestError } from '../../../api/common';
 import { actions, State } from '../../../state/data/orgs';
 import { RequestErrorMessage } from '../../molecules';
 import EntityOwnerChangeForm from '../../molecules/EntityOwnerChangeForm';
@@ -39,7 +39,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
-    change: (orgId: ConcordId, orgName: ConcordKey, owner: Owner) => void;
+    change: (orgId: ConcordId, orgName: ConcordKey, ownerId: ConcordId) => void;
 }
 
 type Props = ExternalProps & StateProps & DispatchProps;
@@ -58,15 +58,10 @@ class OrganizationOwnerChangeActivity extends React.PureComponent<Props> {
             <>
                 {error && <RequestErrorMessage error={error} />}
                 <EntityOwnerChangeForm
-                    originalOwner={owner || { username: '' }}
+                    originalOwnerId={owner?.id}
                     confirmationHeader="Change organization owner?"
                     confirmationContent="Are you sure you want to change the organization's owner?"
-                    onSubmit={(value) =>
-                        change(orgId, orgName, {
-                            username: value.username,
-                            userDomain: value.userDomain
-                        })
-                    }
+                    onSubmit={(value) => change(orgId, orgName, value)}
                     submitting={changing}
                 />
             </>
@@ -80,6 +75,6 @@ const mapStateToProps = ({ orgs }: { orgs: State }): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    change: (orgId, orgName, owner) => dispatch(actions.changeOwner(orgId, orgName, owner))
+    change: (orgId, orgName, ownerId) => dispatch(actions.changeOwner(orgId, orgName, ownerId))
 });
 export default connect(mapStateToProps, mapDispatchToProps)(OrganizationOwnerChangeActivity);

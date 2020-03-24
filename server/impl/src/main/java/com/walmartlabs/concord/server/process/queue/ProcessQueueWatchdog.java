@@ -164,6 +164,8 @@ public class ProcessQueueWatchdog implements ScheduledTask {
         }
 
         private void process(PollEntry entry, ProcessEntry parent) {
+            String username = userDao.getUsername(parent.initiatorId);
+
             Map<String, Object> req = new HashMap<>();
             req.put(Constants.Request.ENTRY_POINT_KEY, entry.flow);
             req.put(Constants.Request.TAGS_KEY, null); // clear tags
@@ -171,7 +173,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             PartialProcessKey childKey = PartialProcessKey.create();
             try {
                 Payload payload = payloadManager.createFork(childKey, parent.processKey, entry.handlerKind,
-                        parent.initiatorId, userDao.get(parent.initiatorId).getName(), parent.projectId, req, null,
+                        parent.initiatorId, username, parent.projectId, req, null,
                         null, parent.imports);
 
                 processManager.startFork(payload);

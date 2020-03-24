@@ -25,7 +25,7 @@ import Editor from '@monaco-editor/react';
 
 import { ConcordKey } from '../../../api/common';
 import { isStorageQueryExists } from '../../../api/service/console';
-import { storageQuery, storageQueryAlreadyExistsError } from '../../../validation';
+import { storageQuery, jsonStoreQueryAlreadyExistsError } from '../../../validation';
 import { useCallback, useRef, useState } from 'react';
 
 import './styles.css';
@@ -176,7 +176,7 @@ const validateName = async (
     }
     const exists = await isStorageQueryExists(orgName, storeName, name);
     if (exists) {
-        return Promise.resolve(storageQueryAlreadyExistsError(name));
+        return Promise.resolve(jsonStoreQueryAlreadyExistsError(name));
     }
     return Promise.resolve(undefined);
 };

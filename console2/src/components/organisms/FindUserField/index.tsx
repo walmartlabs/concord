@@ -76,6 +76,9 @@ export const renderUser = (username: string, userDomain?: string, displayName?: 
         : renderUsername(username, userDomain);
 };
 
+/**
+ * @deprecated see FindUserField2
+ */
 class FindUserField extends React.PureComponent<Props, InternalState> {
     constructor(props: Props) {
         super(props);

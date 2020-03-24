@@ -20,12 +20,12 @@ package com.walmartlabs.concord.server.policy;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.loader.model.Trigger;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.jsonstore.JsonStoreVisibility;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.secret.SecretType;
 import com.walmartlabs.concord.server.org.secret.SecretVisibility;
-import com.walmartlabs.concord.runtime.loader.model.Trigger;
 import com.walmartlabs.concord.server.user.UserEntry;
 
 import java.util.Collections;

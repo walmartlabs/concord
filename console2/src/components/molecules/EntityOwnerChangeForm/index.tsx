@@ -21,20 +21,15 @@
 import * as React from 'react';
 
 import { Confirm, Form } from 'semantic-ui-react';
-import { UserSearchResult } from '../../../api/service/console';
-import { FindUserField } from '../../organisms';
-
-interface Owner {
-    username: string;
-    userDomain?: string;
-    displayName?: string;
-}
+import { FindUserField2 } from '../../organisms';
+import { UserEntry } from '../../../api/user';
+import { ConcordId } from '../../../api/common';
 
 interface Props {
-    originalOwner: Owner;
+    originalOwnerId?: ConcordId;
     confirmationHeader: string;
     confirmationContent: string;
-    onSubmit: (owner: Owner) => void;
+    onSubmit: (value: ConcordId) => void;
     submitting: boolean;
     disabled?: boolean;
 }
@@ -42,20 +37,19 @@ interface Props {
 interface State {
     dirty: boolean;
     showConfirm: boolean;
-    value: Owner;
+    value?: ConcordId;
 }
 
 class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
     constructor(props: Props) {
         super(props);
 
-        this.state = { dirty: false, showConfirm: false, value: props.originalOwner };
+        this.state = { dirty: false, showConfirm: false, value: props.originalOwnerId };
     }
 
-    onSelect(i: UserSearchResult) {
-        const { originalOwner } = this.props;
-        const dirty = originalOwner.username !== i.username;
-        this.setState({ dirty, value: i });
+    onSelect(i: UserEntry) {
+        const dirty = this.props.originalOwnerId !== i.id;
+        this.setState({ dirty, value: i.id });
     }
 
     handleShowConfirm(ev: React.SyntheticEvent<{}>) {
@@ -74,6 +68,10 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
 
     handleSubmit() {
         const { value } = this.state;
+        if (!value) {
+            return;
+        }
+
         this.props.onSubmit(value);
     }
 
@@ -81,7 +79,7 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
         const { dirty } = this.state;
         const {
             submitting,
-            originalOwner,
+            originalOwnerId,
             confirmationHeader,
             confirmationContent,
             disabled
@@ -92,20 +90,10 @@ class EntityOwnerChangeForm extends React.PureComponent<Props, State> {
                 <Form loading={submitting}>
                     <Form.Group widths={3}>
                         <Form.Field disabled={disabled}>
-                            <FindUserField
+                            <FindUserField2
                                 placeholder="Search for a user..."
-                                defaultUsername={
-                                    originalOwner !== undefined ? originalOwner.username : ''
-                                }
-                                defaultUserDomain={
-                                    originalOwner !== undefined
-                                        ? originalOwner.userDomain
-                                        : undefined
-                                }
-                                defaultDisplayName={
-                                    originalOwner !== undefined ? originalOwner.displayName : ''
-                                }
-                                onSelect={(u: any) => this.onSelect(u)}
+                                defaultUserId={originalOwnerId}
+                                onSelect={(u: UserEntry) => this.onSelect(u)}
                             />
                         </Form.Field>
 

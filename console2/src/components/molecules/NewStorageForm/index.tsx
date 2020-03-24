@@ -26,7 +26,7 @@ import { ValidateResult } from 'react-hook-form/dist/types';
 
 import { ConcordKey } from '../../../api/common';
 import { StorageVisibility } from '../../../api/org/jsonstore';
-import { storage as validation, storageAlreadyExistsError } from '../../../validation';
+import { storage as validation, jsonStoreAlreadyExistsError } from '../../../validation';
 import { isStorageExists } from '../../../api/service/console';
 
 interface FormValues {
@@ -118,7 +118,7 @@ const validateName = async (orgName: ConcordKey, name: string): Promise<Validate
 
     const exists = await isStorageExists(orgName, name);
     if (exists) {
-        return Promise.resolve(storageAlreadyExistsError(name));
+        return Promise.resolve(jsonStoreAlreadyExistsError(name));
     }
     return Promise.resolve(undefined);
 };

@@ -26,7 +26,6 @@ import {
     fetchJson,
     GenericOperationResult,
     OperationResult,
-    Owner,
     queryParams
 } from '../../common';
 import { RepositoryEntry } from './repository';
@@ -173,7 +172,7 @@ export const rename = (
 export const changeOwner = (
     orgName: ConcordKey,
     projectId: ConcordId,
-    owner: Owner
+    ownerId: ConcordId
 ): Promise<ProjectOperationResult> => {
     const opts = {
         method: 'POST',
@@ -182,7 +181,7 @@ export const changeOwner = (
         },
         body: JSON.stringify({
             id: projectId,
-            owner: { username: owner.username, userDomain: owner.userDomain }
+            owner: { id: ownerId }
         })
     };
 

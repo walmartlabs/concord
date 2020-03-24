@@ -110,6 +110,7 @@ public class UserDao extends AbstractDao {
         return get(id);
     }
 
+    // TODO add "include" option
     public UserEntry get(UUID id) {
         try (DSLContext tx = DSL.using(cfg)) {
             Record7<UUID, String, String, String, String, String, Boolean> r =
@@ -265,5 +266,30 @@ public class UserDao extends AbstractDao {
                     .where(USERS.USER_ID.eq(id))
                     .execute();
         });
+    }
+
+    // TODO add "include" option
+    public List<UserEntry> list(String filter, int offset, int limit) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.IS_DISABLED)
+                    .from(USERS)
+                    .where(USERS.IS_DISABLED.isFalse())
+                    .and(value(filter).isNotNull()
+                            .and(USERS.USERNAME.containsIgnoreCase(filter)
+                            .or(USERS.DISPLAY_NAME.containsIgnoreCase(filter))
+                            .or(USERS.USER_EMAIL.containsIgnoreCase(filter))))
+                    .orderBy(USERS.DISPLAY_NAME, USERS.USERNAME)
+                    .offset(offset)
+                    .limit(limit)
+                    .fetch(r -> new UserEntry(r.get(USERS.USER_ID),
+                            r.get(USERS.USERNAME),
+                            r.get(USERS.DOMAIN),
+                            r.get(USERS.DISPLAY_NAME),
+                            null,
+                            UserType.valueOf(r.get(USERS.USER_TYPE)),
+                            r.get(USERS.USER_EMAIL),
+                            null,
+                            r.get(USERS.IS_DISABLED)));
+        }
     }
 }

@@ -36,7 +36,7 @@ import { EntityOwnerPopup, LocalTimestamp, PaginationToolBar } from '../../molec
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 import { LoadingDispatch } from '../../../App';
 import { useApi } from '../../../hooks/useApi';
-import { FindUserField, RequestErrorActivity } from '../../organisms';
+import { FindUserField2, RequestErrorActivity } from '../../organisms';
 import { RefreshButton } from '../../atoms';
 
 // date-fns format used to parse date-time strings set by the UI component
@@ -161,11 +161,11 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
                             )}
 
                             <Form.Field>
-                                <FindUserField
+                                <FindUserField2
                                     placeholder="User"
-                                    onSelect={(value) =>
-                                        setFilter({ ...filter, username: value.username })
-                                    }
+                                    onSelect={(value) => {
+                                        setFilter((prev) => ({ ...prev, userId: value.id }));
+                                    }}
                                 />
                             </Form.Field>
 

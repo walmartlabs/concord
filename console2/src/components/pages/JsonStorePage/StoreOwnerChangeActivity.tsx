@@ -22,7 +22,7 @@ import * as React from 'react';
 import { useCallback, useState } from 'react';
 
 import { changeOwner as apiChangeOwner } from '../../../api/org/jsonstore';
-import { ConcordKey, GenericOperationResult, Owner } from '../../../api/common';
+import { ConcordId, ConcordKey, GenericOperationResult } from '../../../api/common';
 import EntityOwnerChangeForm from '../../molecules/EntityOwnerChangeForm';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
 import { useApi } from '../../../hooks/useApi';
@@ -30,7 +30,7 @@ import { useApi } from '../../../hooks/useApi';
 interface ExternalProps {
     orgName: ConcordKey;
     storeName: ConcordKey;
-    initialOwner?: Owner;
+    initialOwnerId?: ConcordId;
     disabled: boolean;
 }
 
@@ -38,13 +38,12 @@ const StoreOwnerChangeActivity = ({
     orgName,
     storeName,
     disabled,
-    initialOwner
+    initialOwnerId
 }: ExternalProps) => {
-    // using object for making same request after submit error
-    const [value, setValue] = useState({ owner: initialOwner });
+    const [value, setValue] = useState(initialOwnerId);
 
     const postData = useCallback(() => {
-        return apiChangeOwner(orgName, storeName, value.owner!);
+        return apiChangeOwner(orgName, storeName, value!);
     }, [orgName, storeName, value]);
 
     const { error, isLoading, fetch, clearState } = useApi<GenericOperationResult>(postData, {
@@ -53,13 +52,8 @@ const StoreOwnerChangeActivity = ({
     });
 
     const ownerChangeHandler = useCallback(
-        (value: Owner) => {
-            setValue({
-                owner: {
-                    username: value.username,
-                    userDomain: value.userDomain
-                }
-            });
+        (value: ConcordId) => {
+            setValue(value);
             clearState();
             fetch();
         },
@@ -70,7 +64,7 @@ const StoreOwnerChangeActivity = ({
         <>
             {error && <RequestErrorActivity error={error} />}
             <EntityOwnerChangeForm
-                originalOwner={initialOwner || { username: '' }}
+                originalOwnerId={initialOwnerId}
                 confirmationHeader="Change storage owner?"
                 confirmationContent="Are you sure you want to change the storage's owner?"
                 onSubmit={ownerChangeHandler}

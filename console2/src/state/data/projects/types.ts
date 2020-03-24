@@ -20,13 +20,7 @@
 
 import { Action } from 'redux';
 
-import {
-    ConcordId,
-    ConcordKey,
-    GenericOperationResult,
-    Owner,
-    RequestError
-} from '../../../api/common';
+import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
 import { State as SessionState } from '../../../state/session';
 import {
@@ -85,7 +79,7 @@ export interface ChangeProjectOwnerRequest extends Action {
     orgName: ConcordKey;
     projectId: ConcordId;
     projectName: ConcordKey;
-    owner: Owner;
+    ownerId: ConcordId;
 }
 
 export interface DeleteProjectRequest extends Action {
