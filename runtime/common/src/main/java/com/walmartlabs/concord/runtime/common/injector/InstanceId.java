@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.common.injector;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,25 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import java.nio.file.Path;
+import java.io.Serializable;
+import java.util.UUID;
 
 /**
- * Contains path to the current process' working directory.
+ * Contains ID of the current process.
  * Can be @Inject-ed into services.
+ * @apiNote v2 only
  */
-public class WorkingDirectory {
+public class InstanceId implements Serializable {
 
-    private final Path value;
+    private static final long serialVersionUID = 1L;
 
-    public WorkingDirectory(Path value) {
+    private final UUID value;
+
+    public InstanceId(UUID value) {
         this.value = value;
     }
 
-    public Path getValue() {
+    public UUID getValue() {
         return value;
     }
 }

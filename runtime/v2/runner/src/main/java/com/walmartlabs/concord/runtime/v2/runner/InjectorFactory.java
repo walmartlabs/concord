@@ -21,13 +21,15 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.google.inject.*;
-import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.injector.InjectorUtils;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
+import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskHolder;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.V2;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
 import com.walmartlabs.concord.sdk.Constants;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
@@ -36,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -60,7 +61,12 @@ public class InjectorFactory {
         Provider<ProcessConfiguration> processCfgProvider = new DefaultProcessConfigurationProvider(src);
         WorkingDirectory workDir = new WorkingDirectory(src);
 
-        return new InjectorFactory(parentClassLoader, workDir, runnerCfg, processCfgProvider, new DefaultServicesModule())
+        return new InjectorFactory(parentClassLoader,
+                workDir,
+                runnerCfg,
+                processCfgProvider,
+                new DefaultServicesModule(),
+                new V1CompatModule())
                 .create();
     }
 
@@ -90,17 +96,11 @@ public class InjectorFactory {
         Module tasks = new AbstractModule() {
             @Override
             protected void configure() {
-                TaskHolder<com.walmartlabs.concord.sdk.Task> v1Holder = new TaskHolder<>();
-                bindListener(new SubClassesOf(com.walmartlabs.concord.sdk.Task.class), new TaskClassesListener<>(v1Holder));
-
-                TaskHolder<Task> v2Holder = new TaskHolder<>();
-                bindListener(new SubClassesOf(Task.class), new TaskClassesListener<>(v2Holder));
-
-                bind(new TypeLiteral<TaskHolder<com.walmartlabs.concord.sdk.Task>>() {
-                }).annotatedWith(TaskHolder.V1.class).toInstance(v1Holder);
+                TaskHolder<Task> holder = new TaskHolder<>();
+                bindListener(InjectorUtils.subClassesOf(Task.class), InjectorUtils.taskClassesListener(holder));
 
                 bind(new TypeLiteral<TaskHolder<Task>>() {
-                }).annotatedWith(TaskHolder.V2.class).toInstance(v2Holder);
+                }).annotatedWith(V2.class).toInstance(holder);
             }
         };
 
@@ -154,49 +154,6 @@ public class InjectorFactory {
         }
 
         return urls;
-    }
-
-    private static class TaskClassesListener<T> implements TypeListener {
-
-        private final TaskHolder<T> holder;
-
-        public TaskClassesListener(TaskHolder<T> holder) {
-            this.holder = holder;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public <I> void hear(TypeLiteral<I> typeLiteral, TypeEncounter<I> typeEncounter) {
-            Class<T> klass = (Class<T>) typeLiteral.getRawType();
-
-            Named n = klass.getAnnotation(Named.class);
-            if (n == null) {
-                log.warn("Task class without @Named: {}", klass);
-                return;
-            }
-
-            String key = n.value();
-            if ("".equals(key)) {
-                log.warn("Task class without a @Named value: {}", klass);
-                return;
-            }
-
-            holder.add(key, klass);
-        }
-    }
-
-    private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {
-
-        private final Class<?> baseClass;
-
-        private SubClassesOf(Class<?> baseClass) {
-            this.baseClass = baseClass;
-        }
-
-        @Override
-        public boolean matches(TypeLiteral<?> t) {
-            return baseClass.isAssignableFrom(t.getRawType());
-        }
     }
 
     private static class ConfigurationModule extends AbstractModule {

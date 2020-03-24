@@ -33,7 +33,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Main;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
-import com.walmartlabs.concord.runtime.v2.runner.WorkingDirectory;
+import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
 import javax.el.ELContext;
@@ -30,10 +30,10 @@ import java.util.Iterator;
 
 public class TaskResolver extends ELResolver {
 
-    private final TaskProvider taskProvider;
+    private final TaskProviders taskProviders;
 
-    public TaskResolver(TaskProvider taskProvider) {
-        this.taskProvider = taskProvider;
+    public TaskResolver(TaskProviders taskProviders) {
+        this.taskProviders = taskProviders;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class TaskResolver extends ELResolver {
             String key = (String) property;
 
             Context ctx = ResolverUtils.getContext(context);
-            Object o = taskProvider.createTask(ctx, key);
+            Object o = taskProviders.createTask(ctx, key);
             if (o != null) {
                 context.setPropertyResolved(true);
             }

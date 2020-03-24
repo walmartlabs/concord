@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.v1.compat;
 
 /*-
  * *****
@@ -20,24 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import java.io.Serializable;
-import java.util.UUID;
+import com.google.inject.BindingAnnotation;
 
-/**
- * Contains ID of the current process.
- * Can be @Inject-ed into services.
- */
-public class InstanceId implements Serializable {
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-    private static final long serialVersionUID = 1L;
-
-    private final UUID value;
-
-    public InstanceId(UUID value) {
-        this.value = value;
-    }
-
-    public UUID getValue() {
-        return value;
-    }
+// TODO we might not need it if we instantiate TaskProvider directly
+@Retention(RetentionPolicy.RUNTIME)
+@BindingAnnotation
+public @interface V1 {
 }
+

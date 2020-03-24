@@ -21,13 +21,17 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ThreadStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +45,21 @@ import java.util.Set;
 
 public class Main {
 
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
+    private final Injector injector;
+    private final ProcessConfiguration cfg;
+    private final WorkingDirectory workDir;
+    private final EventRecordingExecutionListener eventRecordingExecutionListener;
+
+    @Inject
+    public Main(Injector injector, ProcessConfiguration cfg, WorkingDirectory workDir, EventRecordingExecutionListener eventRecordingExecutionListener) {
+        this.injector = injector;
+        this.cfg = cfg;
+        this.workDir = workDir;
+        this.eventRecordingExecutionListener = eventRecordingExecutionListener;
+    }
+
     public static void main(String[] args) throws Exception {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
 
@@ -51,11 +70,34 @@ public class Main {
         ClassLoader parentClassLoader = Main.class.getClassLoader();
         Injector injector = InjectorFactory.createDefault(parentClassLoader, runnerCfg);
 
-        ProcessConfiguration cfg = injector.getInstance(ProcessConfiguration.class);
-        validate(cfg);
+        try {
+            Main main = injector.getInstance(Main.class);
+            main.execute();
 
-        // TODO replace with injections
-        WorkingDirectory workDir = injector.getInstance(WorkingDirectory.class);
+            System.exit(0);
+        } catch (Throwable t) {
+            log.error("main -> unhandled exception", t);
+            System.exit(1);
+        }
+    }
+
+    private static RunnerConfiguration readRunnerConfiguration(String[] args) throws IOException {
+        Path src;
+        if (args.length > 0) {
+            src = Paths.get(args[0]);
+        } else {
+            throw new IllegalArgumentException("Path to the runner configuration file is required");
+        }
+
+        //TODO: singleton?
+        ObjectMapper om = new ObjectMapper();
+        try (InputStream in = Files.newInputStream(src)) {
+            return om.readValue(in, RunnerConfiguration.class);
+        }
+    }
+
+    public void execute() throws Exception {
+        validate(cfg);
 
         // use LinkedHashMap to preserve the order of the keys
         Map<String, Object> processArgs = new LinkedHashMap<>(cfg.arguments());
@@ -64,7 +106,7 @@ public class Main {
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
-                .listener(injector.getInstance(EventRecordingExecutionListener.class))
+                .listener(eventRecordingExecutionListener)
                 .build();
 
         ProcessSnapshot snapshot;
@@ -79,6 +121,12 @@ public class Main {
             StateManager.finalizeSuspendedState(workDir.getValue(), snapshot, getEvents(snapshot)); // TODO make it an interface
         } else {
             StateManager.cleanupState(workDir.getValue()); // TODO make it an interface
+        }
+    }
+
+    private static void validate(ProcessConfiguration cfg) {
+        if (cfg.instanceId() == null) {
+            throw new IllegalStateException("ProcessConfiguration -> instanceId cannot be null");
         }
     }
 
@@ -111,21 +159,6 @@ public class Main {
         return state;
     }
 
-    private static RunnerConfiguration readRunnerConfiguration(String[] args) throws IOException {
-        Path src;
-        if (args.length > 0) {
-            src = Paths.get(args[0]);
-        } else {
-            throw new IllegalArgumentException("Path to the runner configuration file is required");
-        }
-
-        //TODO: singleton?
-        ObjectMapper om = new ObjectMapper();
-        try (InputStream in = Files.newInputStream(src)) {
-            return om.readValue(in, RunnerConfiguration.class);
-        }
-    }
-
     private static boolean isSuspended(ProcessSnapshot snapshot) {
         return snapshot.vmState().threadStatus().entrySet().stream()
                 .anyMatch(e -> e.getValue() == ThreadStatus.SUSPENDED);
@@ -134,11 +167,5 @@ public class Main {
     private static Set<String> getEvents(ProcessSnapshot snapshot) {
         // TODO validate for uniqueness?
         return new HashSet<>(snapshot.vmState().getEventRefs().values());
-    }
-
-    private static void validate(ProcessConfiguration cfg) {
-        if (cfg.instanceId() == null) {
-            throw new IllegalStateException("ProcessConfiguration -> instanceId cannot be null");
-        }
     }
 }
