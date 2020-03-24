@@ -10,42 +10,42 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>concord-runtime-sdk-v2</artifactId>
+    <artifactId>concord-runner-v2-v1-compat</artifactId>
     <packaging>takari-jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
-            <artifactId>concord-runtime-model-v2</artifactId>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
-            <artifactId>concord-runtime-vm-v2</artifactId>
+            <artifactId>concord-runtime-sdk-v2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.runtime</groupId>
+            <artifactId>concord-runtime-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.sisu</groupId>
             <artifactId>org.eclipse.sisu.inject</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>org.immutables</groupId>
-            <artifactId>value</artifactId>
-            <scope>provided</scope>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.errorprone</groupId>
-            <artifactId>error_prone_annotations</artifactId>
-            <scope>provided</scope>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
         </dependency>
     </dependencies>
 
@@ -58,6 +58,10 @@
                 <configuration>
                     <proc>proc</proc>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

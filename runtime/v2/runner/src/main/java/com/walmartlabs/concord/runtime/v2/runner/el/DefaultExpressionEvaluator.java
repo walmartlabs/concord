@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
@@ -67,8 +67,8 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         composite.add(new GlobalVariableResolver(ctx.globalVariables()));
 
         Runtime rt = ctx.execution().runtime();
-        TaskProvider taskProvider = rt.getService(TaskProvider.class);
-        composite.add(new TaskResolver(taskProvider));
+        TaskProviders taskProviders = rt.getService(TaskProviders.class);
+        composite.add(new TaskResolver(taskProviders));
 
         return composite;
     }

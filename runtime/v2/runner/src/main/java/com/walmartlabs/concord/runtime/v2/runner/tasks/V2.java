@@ -4,14 +4,14 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.google.inject.BindingAnnotation;
 
-public interface TaskProvider {
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-    Task createTask(Context ctx, String key);
+// TODO we might not need it if we instantiate TaskProvider directly
+@Retention(RetentionPolicy.RUNTIME)
+@BindingAnnotation
+public @interface V2 {
 }
+

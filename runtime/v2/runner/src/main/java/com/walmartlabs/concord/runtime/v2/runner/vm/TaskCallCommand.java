@@ -26,7 +26,7 @@ import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.context.TaskContextImpl;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
@@ -56,7 +56,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
-        TaskProvider taskProvider = runtime.getService(TaskProvider.class);
+        TaskProviders taskProviders = runtime.getService(TaskProviders.class);
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
@@ -64,7 +64,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         TaskCall call = getStep();
         String taskName = call.getName();
-        Task t = taskProvider.createTask(ctx, taskName);
+        Task t = taskProviders.createTask(ctx, taskName);
         if (t == null) {
             throw new IllegalStateException("Task not found: " + taskName);
         }

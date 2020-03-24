@@ -25,6 +25,7 @@ import com.walmartlabs.concord.client.SecretClient;
 import com.walmartlabs.concord.client.SecretEntry;
 import com.walmartlabs.concord.common.secret.BinaryDataSecret;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.sdk.Secret;

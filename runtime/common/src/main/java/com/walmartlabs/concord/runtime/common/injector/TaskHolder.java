@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.tasks;
+package com.walmartlabs.concord.runtime.common.injector;
 
 /*-
  * *****
@@ -20,29 +20,15 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
-import com.google.inject.BindingAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Retention;
 import java.util.HashMap;
 import java.util.Map;
-
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 public class TaskHolder<T> {
 
     private static final Logger log = LoggerFactory.getLogger(TaskHolder.class);
-
-    @Retention(RUNTIME)
-    @BindingAnnotation
-    public @interface V1 {
-    }
-
-    @Retention(RUNTIME)
-    @BindingAnnotation
-    public @interface V2 {
-    }
 
     private final Map<String, Class<T>> classes = new HashMap<>();
 

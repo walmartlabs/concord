@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
 import com.walmartlabs.concord.sdk.Constants;
 

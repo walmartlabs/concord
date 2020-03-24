@@ -23,6 +23,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.FormService;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -30,11 +32,12 @@ import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesImpl;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateGlobalVariablesCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -51,7 +54,7 @@ public class Runner {
     private final Path workDir;
     private final Compiler compiler;
     private final ContextFactory contextFactory;
-    private final TaskProvider taskProvider;
+    private final TaskProviders taskProviders;
     private final ExpressionEvaluator expressionEvaluator;
     private final SnapshotService snapshotService;
     private final FormService formService;
@@ -63,7 +66,7 @@ public class Runner {
         this.workDir = b.workDir;
         this.compiler = b.compiler;
         this.contextFactory = b.contextFactory;
-        this.taskProvider = b.taskProvider;
+        this.taskProviders = b.taskProviders;
         this.expressionEvaluator = b.expressionEvaluator;
         this.snapshotService = b.snapshotService;
         this.formService = b.formService;
@@ -126,7 +129,7 @@ public class Runner {
         // collect all "services" that we might need in runtime
         m.put(Compiler.class, compiler);
         m.put(ContextFactory.class, contextFactory);
-        m.put(TaskProvider.class, taskProvider);
+        m.put(TaskProviders.class, taskProviders);
         m.put(ExpressionEvaluator.class, expressionEvaluator);
         m.put(SnapshotService.class, snapshotService);
         m.put(ProcessDefinition.class, processDefinition);
@@ -150,7 +153,7 @@ public class Runner {
 
         private Compiler compiler;
         private ContextFactory contextFactory;
-        private TaskProvider taskProvider;
+        private TaskProviders taskProviders;
         private ExpressionEvaluator expressionEvaluator;
         private SnapshotService snapshotService;
         private FormService formService;
@@ -184,7 +187,16 @@ public class Runner {
         }
 
         public Builder taskProvider(TaskProvider taskProvider) {
-            this.taskProvider = taskProvider;
+            if (this.taskProviders == null) {
+                this.taskProviders = new TaskProviders();
+            }
+
+            this.taskProviders.register(taskProvider);
+            return this;
+        }
+
+        public Builder taskProviders(TaskProviders taskProviders) {
+            this.taskProviders = taskProviders;
             return this;
         }
 
@@ -238,8 +250,8 @@ public class Runner {
                 contextFactory = inject(ContextFactory.class, "contextFactory");
             }
 
-            if (taskProvider == null) {
-                taskProvider = inject(TaskProvider.class, "taskProvider");
+            if (taskProviders == null) {
+                taskProviders = inject(TaskProviders.class, "taskProviders");
             }
 
             if (expressionEvaluator == null) {

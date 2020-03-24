@@ -20,22 +20,23 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.inject.Injector;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableProcessConfiguration;
+import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.DefaultVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
 import com.walmartlabs.concord.sdk.Constants;
 import org.immutables.value.Value;
 import org.junit.After;
@@ -54,8 +55,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class MainTest {
 
@@ -67,14 +67,13 @@ public class MainTest {
     private UUID instanceId;
     private String sessionKey;
     private FormService formService;
+    private ProcessConfiguration processConfiguration;
 
     @Before
     public void setUp() throws IOException {
         workDir = Files.createTempDirectory("test");
 
         instanceId = UUID.randomUUID();
-        Path instanceIdFile = workDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
-        Files.write(instanceIdFile, instanceId.toString().getBytes());
 
         sessionKey = "abc"; // TODO random
 
@@ -103,7 +102,7 @@ public class MainTest {
     public void test() throws Exception {
         deploy("hello");
 
-        save(newProcessConfiguration()
+        save(ProcessConfiguration.builder()
                 .putArguments("name", "Concord")
                 .putDefaultTaskVariables("testDefaults", Collections.singletonMap("a", "a-value"))
                 .build());
@@ -121,8 +120,7 @@ public class MainTest {
     public void testForm() throws Exception {
         deploy("form");
 
-        save(newProcessConfiguration()
-                .build());
+        save(ProcessConfiguration.builder().build());
 
         byte[] log = start();
         assertLog(log, ".*Before.*");
@@ -139,8 +137,22 @@ public class MainTest {
         data.put("fullName", "John Smith");
         data.put("age", 33);
 
-        log = resume(myForm.eventName(), Collections.singletonMap("arguments", Collections.singletonMap("myForm", data)));
+        log = resume(myForm.eventName(), ProcessConfiguration.builder().arguments(Collections.singletonMap("myForm", data)).build());
         assertLog(log, ".*After.*John Smith.*");
+    }
+
+    @Test
+    public void testUnknownTask() throws Exception {
+        deploy("unknownTask");
+
+        save(ProcessConfiguration.builder().build());
+
+        try {
+            start();
+            fail("must fail");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("not found: unknown"));
+        }
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -148,27 +160,32 @@ public class MainTest {
         IOUtils.copy(src, workDir);
     }
 
-    private void save(ProcessConfiguration cfg) throws IOException {
-        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
-        try (OutputStream out = Files.newOutputStream(p)) {
-            ObjectMapper om = new ObjectMapper();
-            om.writeValue(out, cfg);
-        }
+    private void save(ProcessConfiguration cfg) {
+        this.processConfiguration = ProcessConfiguration.builder().from(cfg)
+                .instanceId(instanceId)
+                .build();
     }
 
     private byte[] start() throws Exception {
         return run();
     }
 
-    private byte[] resume(String eventName, Map<String, Object> cfg) throws Exception {
+    private byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {
         StateManager.saveResumeEvent(workDir, eventName); // TODO use interface
-        saveProcessConfiguration(cfg);
+        if (cfg != null) {
+            save(cfg);
+        }
         return run();
     }
 
     private byte[] run() throws Exception {
-        // the runner's configuration file
-        Path runnnerCfgFile = createRunnerCfgFile();
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .agentId(UUID.randomUUID().toString())
+                .api(ApiConfiguration.builder()
+                        .baseUrl("http://localhost:" + wireMock.port())
+                        .sessionToken(sessionKey)
+                        .build())
+                .build();
 
         PrintStream oldOut = System.out;
 
@@ -177,8 +194,17 @@ public class MainTest {
         System.setOut(out);
 
         try {
-            System.setProperty("user.dir", workDir.toAbsolutePath().toString());
-            Main.main(new String[]{runnnerCfgFile.toAbsolutePath().toString()});
+//            System.setProperty("user.dir", workDir.toAbsolutePath().toString());
+            ClassLoader parentClassLoader = Main.class.getClassLoader();
+            Injector injector = new InjectorFactory(parentClassLoader,
+                    new WorkingDirectory(workDir),
+                    runnerCfg,
+                    () -> processConfiguration,
+                    new DefaultServicesModule(),
+                    new V1CompatModule())
+                    .create();
+
+            injector.getInstance(Main.class).execute();
         } finally {
             out.flush();
             System.setOut(oldOut);
@@ -188,51 +214,6 @@ public class MainTest {
         System.out.write(ab, 0, ab.length);
 
         return ab;
-    }
-
-    private ImmutableProcessConfiguration.Builder newProcessConfiguration() {
-        Map<String, Object> m = new HashMap<>();
-        m.put("txId", instanceId.toString());
-
-        return ProcessConfiguration.builder()
-                .arguments(m);
-    }
-
-    private Path createRunnerCfgFile() throws IOException {
-        Path dst = Files.createTempFile("runner", ".json");
-        try (OutputStream out = Files.newOutputStream(dst)) {
-            ObjectMapper om = new ObjectMapper();
-            om.writeValue(out, RunnerConfiguration.builder()
-                    .agentId(UUID.randomUUID().toString())
-                    .api(ApiConfiguration.builder()
-                            .baseUrl("http://localhost:" + wireMock.port())
-                            .sessionToken(sessionKey)
-                            .build())
-                    .build());
-        }
-        return dst;
-    }
-
-//    private void saveSessionKey() throws IOException {
-//        Path dst = workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
-//                .resolve(Constants.Files.SESSION_TOKEN_FILE_NAME);
-//
-//        if (!Files.exists(dst.getParent())) {
-//            Files.createDirectories(dst.getParent());
-//        }
-//
-//        Files.write(dst, sessionKey.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-//    }
-
-    private void saveProcessConfiguration(Map<String, Object> args) throws IOException {
-        if (args == null || args.isEmpty()) {
-            return;
-        }
-
-        Path dst = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
-        try (OutputStream out = Files.newOutputStream(dst)) {
-            new ObjectMapper().writeValue(out, args);
-        }
     }
 
     private static void assertLog(byte[] ab, String pattern) throws IOException {
