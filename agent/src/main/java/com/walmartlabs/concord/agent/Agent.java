@@ -65,6 +65,8 @@ public class Agent {
     private final Map<UUID, Worker> activeWorkers = new ConcurrentHashMap<>();
     private final AtomicBoolean maintenanceMode = new AtomicBoolean(false);
 
+    private volatile Semaphore workersAvailable;
+
     @Inject
     public Agent(AgentConfiguration agentCfg,
                  DockerConfiguration dockerCfg,
@@ -87,7 +89,7 @@ public class Agent {
 
         int workersCount = agentCfg.getWorkersCount();
         log.info("run -> using {} worker(s)", workersCount);
-        Semaphore workersAvailable = new Semaphore(workersCount);
+        workersAvailable = new Semaphore(workersCount);
 
         // listen for maintenance mode requests
         startMaintenanceModeNotifier(queueClient);
@@ -156,7 +158,10 @@ public class Agent {
 
                 @Override
                 public Status getMaintenanceModeStatus() {
-                    long cnt = activeWorkers.size();
+                    long availableWorkers = (workersAvailable != null)
+                            ? workersAvailable.availablePermits()
+                            : 0L;
+                    long cnt = agentCfg.getWorkersCount() - availableWorkers;
                     return new Status(maintenanceMode.get(), cnt);
                 }
             });
@@ -183,8 +188,8 @@ public class Agent {
     private CompletionCallback createStatusCallback(UUID instanceId, Semaphore workersAvailable) {
         return new CompletionCallback() {
 
-            // guard agains misuse: the callback must be called only once - when the process reaches its
-            // final status (successful or not)
+            // guard against misuse: the callback must be called only once - when
+            // the process reaches its final status (successful or not)
             private volatile boolean called = false;
 
             @Override
