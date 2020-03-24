@@ -18,7 +18,53 @@
  * =====
  */
 
+import { ConcordId, fetchJson, queryParams } from '../common';
+
 export enum UserType {
     LDAP = 'LDAP',
     LOCAL = 'LOCAL'
 }
+
+export interface UserEntry {
+    id: ConcordId;
+    name: string;
+    domain?: string;
+    type: UserType;
+    displayName?: string;
+    email?: string;
+}
+
+export interface PaginatedUserEntries {
+    items: UserEntry[];
+    next: boolean;
+}
+
+export const get = async (id: ConcordId): Promise<UserEntry> => fetchJson(`/api/v2/user/${id}`);
+
+export const list = async (
+    offset: number,
+    limit: number,
+    filter?: string
+): Promise<PaginatedUserEntries> => {
+    const offsetParam = offset > 0 && limit > 0 ? offset * limit : offset;
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: UserEntry[] = await fetchJson(
+        `/api/v2/user?${queryParams({
+            offset: offsetParam,
+            limit: limitParam,
+            filter
+        })}`
+    );
+
+    const hasMoreElements: boolean = !!limit && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data,
+        next: hasMoreElements
+    };
+};

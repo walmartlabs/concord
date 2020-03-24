@@ -96,12 +96,12 @@ const StoreSettings = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
 
             <Segment color="red" disabled={disabled}>
                 <Header as="h4" disabled={disabled}>
-                    Storage owner
+                    JSON store owner
                 </Header>
                 <StoreOwnerChangeActivity
                     orgName={orgName}
                     storeName={storeName}
-                    initialOwner={data?.owner}
+                    initialOwnerId={data?.owner?.id}
                     disabled={disabled}
                 />
 

@@ -25,10 +25,10 @@ import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Strings;
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.loader.model.SourceMap;
 import com.walmartlabs.concord.runtime.loader.model.Trigger;
+import com.walmartlabs.concord.sdk.Constants;
 import org.sonatype.siesta.ValidationErrorsException;
 
 import java.io.Serializable;

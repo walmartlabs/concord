@@ -204,6 +204,7 @@ public class OrganizationManager {
         if (!Roles.isAdmin()) {
             throw new AuthorizationException("Only admins or owners are allowed to update organizations");
         }
+
         return entry;
     }
 

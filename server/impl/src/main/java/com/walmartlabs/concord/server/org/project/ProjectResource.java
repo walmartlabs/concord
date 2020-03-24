@@ -52,7 +52,6 @@ import java.util.*;
 public class ProjectResource implements Resource {
 
     private final OrganizationManager orgManager;
-    private final RepositoryDao repositoryDao;
     private final ProjectDao projectDao;
     private final ProjectManager projectManager;
     private final ProjectAccessManager accessManager;
@@ -67,8 +66,7 @@ public class ProjectResource implements Resource {
                            ProjectAccessManager accessManager,
                            OrganizationDao orgDao,
                            TeamDao teamDao,
-                           EncryptedProjectValueManager encryptedValueManager,
-                           RepositoryDao repositoryDao) {
+                           EncryptedProjectValueManager encryptedValueManager) {
 
         this.orgManager = orgManager;
         this.projectDao = projectDao;
@@ -77,7 +75,6 @@ public class ProjectResource implements Resource {
         this.encryptedValueManager = encryptedValueManager;
         this.orgDao = orgDao;
         this.teamDao = teamDao;
-        this.repositoryDao = repositoryDao;
     }
 
     @POST

@@ -25,7 +25,6 @@ import {
     GenericOperationResult,
     EntityOwner,
     queryParams,
-    Owner,
     OperationResult
 } from '../../common';
 import { ResourceAccessEntry } from '../index';
@@ -183,7 +182,7 @@ export const updateVisibility = (
 export const changeOwner = (
     orgName: ConcordKey,
     storeName: ConcordKey,
-    owner: Owner
+    ownerId: ConcordId
 ): Promise<GenericOperationResult> => {
     const opts = {
         method: 'POST',
@@ -192,7 +191,7 @@ export const changeOwner = (
         },
         body: JSON.stringify({
             name: storeName,
-            owner
+            owner: { id: ownerId }
         })
     };
 

@@ -25,7 +25,6 @@ import {
     OperationResult,
     EntityOwner,
     EntityType,
-    Owner,
     queryParams
 } from '../common';
 
@@ -147,7 +146,7 @@ export const checkResult = (entity: EntityType, orgName: ConcordKey): Promise<Ch
 
 export const changeOwner = (
     orgId: ConcordId,
-    owner: Owner
+    ownerId: ConcordId
 ): Promise<OrganizationOperationResult> => {
     const opts = {
         method: 'POST',
@@ -156,7 +155,7 @@ export const changeOwner = (
         },
         body: JSON.stringify({
             id: orgId,
-            owner: { username: owner.username, userDomain: owner.userDomain }
+            owner: { id: ownerId }
         })
     };
 

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =====
  */
-import { ConcordKey, EntityOwner, fetchJson, queryParams } from '../common';
+import { ConcordId, ConcordKey, EntityOwner, fetchJson, queryParams } from '../common';
 
 // must match the keys of com.walmartlabs.concord.server.audit.AuditObject enum
 export enum AuditObject {
@@ -43,6 +43,7 @@ export enum AuditAction {
 export interface AuditLogFilter {
     object?: AuditObject;
     action?: AuditAction;
+    userId?: ConcordId;
     username?: string;
     after?: string;
     before?: string;
@@ -91,6 +92,7 @@ export const list = async (filter: AuditLogFilter): Promise<PaginatedAuditLogEnt
             ...detailsParam,
             object: filter.object,
             action: filter.action,
+            userId: filter.userId,
             username: filter.username,
             after: filter.after,
             before: filter.before,

@@ -39,9 +39,10 @@ export const projectAlreadyExistsError = (n: string) => `Project already exists:
 
 export const secretAlreadyExistsError = (n: string) => `Secret already exists: ${n}`;
 
-export const storageAlreadyExistsError = (n: string) => `Storage already exists: ${n}`;
+export const jsonStoreAlreadyExistsError = (n: string) => `JSON store already exists: ${n}`;
 
-export const storageQueryAlreadyExistsError = (n: string) => `Storage query already exists: ${n}`;
+export const jsonStoreQueryAlreadyExistsError = (n: string) =>
+    `JSON store query already exists: ${n}`;
 
 export const repositoryAlreadyExistsError = (n: string) => `Repository already exists: ${n}`;
 

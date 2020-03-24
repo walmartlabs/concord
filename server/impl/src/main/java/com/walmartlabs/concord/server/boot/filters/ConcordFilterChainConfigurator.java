@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.boot.filters;
  */
 
 import com.walmartlabs.concord.server.boot.FilterChainConfigurator;
-import com.walmartlabs.concord.server.boot.filters.ConcordAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.LocalRequestFilter;
 import org.apache.shiro.web.filter.mgt.FilterChainManager;

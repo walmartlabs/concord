@@ -22,7 +22,7 @@ import { push as pushHistory } from 'connected-react-router';
 import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 
-import { ConcordId, ConcordKey, Owner } from '../../../api/common';
+import { ConcordId, ConcordKey } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
 import { reducers as sessionReducers } from '../../../state/session';
 import {
@@ -63,8 +63,8 @@ import {
     DeleteRepositoryState,
     GetProjectRequest,
     ListProjectsRequest,
-    Pagination,
     PaginatedProjects,
+    Pagination,
     ProjectDataResponse,
     ProjectTeamAccessRequest,
     ProjectTeamAccessState,
@@ -177,13 +177,13 @@ export const actions = {
         orgName: ConcordKey,
         projectId: ConcordId,
         projectName: ConcordKey,
-        owner: Owner
+        ownerId: ConcordId
     ): ChangeProjectOwnerRequest => ({
         type: actionTypes.CHANGE_PROJECT_OWNER_REQUEST,
         orgName,
         projectId,
         projectName,
-        owner
+        ownerId
     }),
 
     deleteProject: (orgName: ConcordKey, projectName: ConcordKey): DeleteProjectRequest => ({
@@ -576,9 +576,9 @@ function* onRename({ orgName, projectId, projectName }: RenameProjectRequest) {
     }
 }
 
-function* onChangeOwner({ orgName, projectId, projectName, owner }: ChangeProjectOwnerRequest) {
+function* onChangeOwner({ orgName, projectId, projectName, ownerId }: ChangeProjectOwnerRequest) {
     try {
-        yield call(apiChangeOwner, orgName, projectId, owner);
+        yield call(apiChangeOwner, orgName, projectId, ownerId);
         yield put({
             type: actionTypes.CHANGE_PROJECT_OWNER_RESPONSE
         });
@@ -663,6 +663,7 @@ function* onValidateRepository({ orgName, projectName, repoName }: ValidateRepos
         yield handleErrors(actionTypes.VALIDATE_REPOSITORY_RESPONSE, e);
     }
 }
+
 function* onGetTeamAccess({ orgName, projectName }: ProjectTeamAccessRequest) {
     try {
         const response = yield call(getProjectAccess, orgName, projectName);

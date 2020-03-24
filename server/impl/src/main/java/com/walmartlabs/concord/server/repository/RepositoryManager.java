@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.repository.*;
+import com.walmartlabs.concord.runtime.loader.ProjectLoader;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
@@ -31,7 +32,6 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.secret.SecretManager;
 import com.walmartlabs.concord.server.org.secret.SecretManager.AccessScope;
-import com.walmartlabs.concord.runtime.loader.ProjectLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
