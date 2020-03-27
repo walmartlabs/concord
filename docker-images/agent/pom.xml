@@ -21,6 +21,12 @@
     <!-- default dependencies, will be copied into the agent's local .m2 -->
     <dependencies>
         <dependency>
+            <groupId>com.walmartlabs.concord</groupId>
+            <artifactId>concord-targetplatform</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>concord-tasks</artifactId>
             <version>${project.version}</version>
