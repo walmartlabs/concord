@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>takari</artifactId>
         <groupId>io.takari</groupId>
+        <artifactId>takari</artifactId>
         <version>27</version>
     </parent>
 
