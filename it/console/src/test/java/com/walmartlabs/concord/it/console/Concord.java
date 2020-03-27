@@ -22,8 +22,17 @@ package com.walmartlabs.concord.it.console;
 
 public final class Concord {
 
-    public static final String ADMIN_API_KEY = "auBy4eDWrKWsyhiDp3AQiw";
+    public static final String ADMIN_API_KEY = getApiKey();
 
     private Concord() {
+    }
+
+    private static String getApiKey() {
+        String s = System.getenv("IT_DEFAULT_API_KEY");
+        if (s == null) {
+            throw new IllegalStateException("The default (admin) API key must be configured via IT_DEFAULT_API_KEY environment variable. " +
+                    "The value must match the db.changeLogParameters.defaultAdminToken value in the server's configuration file");
+        }
+        return s;
     }
 }

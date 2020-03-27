@@ -220,13 +220,14 @@
                     <skipTests>${skip.it.tests}</skipTests>
                     <environmentVariables>
                         <CONCORD_TMP_DIR>${tmp.dir}</CONCORD_TMP_DIR>
+                        <IT_CUSTOM_AGENTS>true</IT_CUSTOM_AGENTS>
+                        <IT_DEFAULT_API_KEY>cTFxMXExcTE=</IT_DEFAULT_API_KEY>
                         <IT_DEPS_DIR>${deps.dir}</IT_DEPS_DIR>
                         <IT_DOCKER_ANSIBLE_IMAGE>${ansible.image}</IT_DOCKER_ANSIBLE_IMAGE>
                         <IT_DOCKER_HOST_ADDR>${docker.host.addr}</IT_DOCKER_HOST_ADDR>
+                        <IT_LDAP_URL>ldap://localhost:${it.ldap.port}</IT_LDAP_URL>
                         <IT_PROJECT_VERSION>${project.version}</IT_PROJECT_VERSION>
                         <IT_SERVER_PORT>${it.server.port}</IT_SERVER_PORT>
-                        <IT_LDAP_URL>ldap://localhost:${it.ldap.port}</IT_LDAP_URL>
-                        <IT_CUSTOM_AGENTS>true</IT_CUSTOM_AGENTS>
                     </environmentVariables>
                     <systemProperties>
                         <java.io.tmpdir>${tmp.dir}</java.io.tmpdir>
