@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli.runner;
+package com.walmartlabs.concord.runtime.v2.runner;
 
 /*-
  * *****
@@ -20,14 +20,11 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
+public interface SynchronizationService {
 
-public class CliSnapshotService implements SnapshotService {
+    boolean hasPoint();
 
-    @Override
-    public void create(String name, Runtime runtime, State state) {
-        throw new UnsupportedOperationException("not implemented yet");
-    }
+    void maintain();
+
+    void point(Runnable callback);
 }

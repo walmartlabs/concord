@@ -21,12 +21,17 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.cli.runner.CliCheckpointService;
 import com.walmartlabs.concord.cli.runner.CliDockerService;
 import com.walmartlabs.concord.cli.runner.CliSecretService;
-import com.walmartlabs.concord.cli.runner.CliSnapshotService;
-import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultSynchronizationService;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.sdk.DockerService;
 import com.walmartlabs.concord.sdk.SecretService;
+import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 
 import java.nio.file.Path;
 
@@ -41,8 +46,11 @@ public class CliServicesModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(SecretService.class).toInstance(new CliSecretService(secretStoreDir));
-
-        bind(SnapshotService.class).to(CliSnapshotService.class);
+        bind(CheckpointService.class).to(CliCheckpointService.class);
         bind(DockerService.class).to(CliDockerService.class);
+        bind(SynchronizationService.class).to(DefaultSynchronizationService.class);
+
+        Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
+        taskProviders.addBinding().to(TaskV2Provider.class);
     }
 }

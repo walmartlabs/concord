@@ -23,10 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingListener;
-import com.walmartlabs.concord.runtime.v2.runner.snapshots.DefaultSnapshotService;
-import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
@@ -39,7 +39,9 @@ public class DefaultServicesModule extends AbstractModule {
     protected void configure() {
         bind(ApiClient.class).toProvider(ApiClientProvider.class);
 
-        bind(SnapshotService.class).to(DefaultSnapshotService.class);
+        bind(CheckpointService.class).to(DefaultCheckpointService.class);
+        bind(SynchronizationService.class).to(DefaultSynchronizationService.class);
+
         // TODO bind(DockerService.class)
         bind(SecretService.class).to(DefaultSecretService.class);
         bind(FileService.class).to(DefaultFileService.class);

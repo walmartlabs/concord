@@ -24,19 +24,21 @@ import com.walmartlabs.concord.svm.commands.PopFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+
+import static com.walmartlabs.concord.svm.ExecutionListener.Result.BREAK;
 
 public class VM {
 
     private static final Logger log = LoggerFactory.getLogger(VM.class);
 
     private final RuntimeFactory runtimeFactory;
-    private final Collection<ExecutionListener> listeners;
+    private final ExecutionListenerHolder listeners;
 
     public VM(RuntimeFactory runtimeFactory, Collection<ExecutionListener> listeners) {
         this.runtimeFactory = runtimeFactory;
-        this.listeners = new ArrayList<>(listeners);
+        this.listeners = new ExecutionListenerHolder(this, listeners);
     }
 
     /**
@@ -45,8 +47,7 @@ public class VM {
     public void start(State state) throws Exception {
         log.debug("start -> start");
 
-        Runtime runtime = runtimeFactory.create(this);
-        eval(runtime, state, state.getRootThreadId());
+        execute(state);
 
         log.debug("start -> done");
     }
@@ -62,15 +63,9 @@ public class VM {
             throw new IllegalStateException("Can't find eventRef: " + eventRef);
         }
 
-        Runtime rt = runtimeFactory.create(this);
+        wakeSuspended(state);
 
-        // start all forked threads
-        wakeDependencies(rt, state, eventThreadId);
-
-        // run the root thread in the caller's (Java) thread
-        ThreadId rootThreadId = state.getRootThreadId();
-        state.setStatus(rootThreadId, ThreadStatus.READY);
-        eval(rt, state, rootThreadId);
+        execute(state);
 
         log.debug("resume ['{}'] -> done", eventRef);
     }
@@ -80,7 +75,7 @@ public class VM {
      * Doesn't firing any {@link #listeners} and doesn't unwind the stack in
      * case or errors.
      */
-    public void run(State state, Command cmd) throws Exception {
+    public void run(State state, Command cmd) {
         log.debug("run ['{}'] -> start", cmd);
 
         Runtime rt = runtimeFactory.create(this);
@@ -117,16 +112,52 @@ public class VM {
                     continue;
                 }
 
+                boolean stop = false;
                 try {
-                    fireBeforeCommand(runtime, state, threadId, cmd);
+                    if (listeners.fireBeforeCommand(runtime, state, threadId, cmd) == BREAK) {
+                        stop = true;
+                    }
+
                     cmd.eval(runtime, state, threadId);
-                    fireAfterCommand(runtime, state, threadId, cmd);
+
+                    if (listeners.fireAfterCommand(runtime, state, threadId, cmd) == BREAK) {
+                        stop = true;
+                    }
                 } catch (Exception e) {
                     unwind(state, threadId, e);
+                }
+
+                if (stop) {
+                    break;
                 }
             }
         } finally {
             state.gc();
+        }
+    }
+
+    private void execute(State state) throws Exception {
+        Runtime runtime = runtimeFactory.create(this);
+        while (true) {
+            // if we're restoring from a previously saved state or we had new threads created
+            // on the previous iteration we need to spawn all READY threads
+            for (Map.Entry<ThreadId, ThreadStatus> e : state.threadStatus().entrySet()) {
+                if (e.getKey() != state.getRootThreadId() && e.getValue() == ThreadStatus.READY) {
+                    runtime.spawn(state, e.getKey());
+                }
+            }
+
+            eval(runtime, state, state.getRootThreadId());
+
+            if (listeners.fireAfterEval(runtime, state) == BREAK) {
+                break;
+            }
+
+            wakeSuspended(state);
+
+            if (listeners.fireAfterWakeUp(runtime, state) == BREAK) {
+                break;
+            }
         }
     }
 
@@ -164,30 +195,12 @@ public class VM {
         }
     }
 
-    private void wakeDependencies(Runtime rt, State state, ThreadId id) {
-        ThreadId rootId = state.getRootThreadId();
-
-        // go though the tree of threads, starting from the suspended thread
-        while (id != null && !rootId.equals(id)) {
-            ThreadStatus status = state.getStatus(id);
-            if (status == ThreadStatus.SUSPENDED) {
-                state.setStatus(id, ThreadStatus.READY);
-                rt.spawn(state, id);
+    private static void wakeSuspended(State state) {
+        Map<ThreadId, String> events = state.getEventRefs();
+        for (Map.Entry<ThreadId, ThreadStatus> e : state.threadStatus().entrySet()) {
+            if (!events.containsKey(e.getKey()) && e.getValue() == ThreadStatus.SUSPENDED) {
+                state.setStatus(e.getKey(), ThreadStatus.READY);
             }
-
-            id = state.getParentThreadId(id);
-        }
-    }
-
-    private void fireBeforeCommand(Runtime runtime, State state, ThreadId threadId, Command cmd) {
-        for (ExecutionListener l : listeners) {
-            l.beforeCommand(runtime, this, state, threadId, cmd);
-        }
-    }
-
-    private void fireAfterCommand(Runtime runtime, State state, ThreadId threadId, Command cmd) {
-        for (ExecutionListener l : listeners) {
-            l.afterCommand(runtime, this, state, threadId, cmd);
         }
     }
 }

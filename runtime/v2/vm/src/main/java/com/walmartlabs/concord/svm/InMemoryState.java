@@ -153,17 +153,6 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
-    public ThreadId getParentThreadId(ThreadId id) {
-        synchronized (this) {
-            return children.entrySet().stream()
-                    .filter(e -> e.getValue().contains(id))
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .orElse(null);
-        }
-    }
-
-    @Override
     public void setEventRef(ThreadId threadId, String eventRef) {
         // TODO check for uniqueness
 

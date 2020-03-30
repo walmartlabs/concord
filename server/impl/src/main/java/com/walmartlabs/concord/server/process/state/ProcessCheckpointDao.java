@@ -99,9 +99,9 @@ public class ProcessCheckpointDao extends AbstractDao {
         });
     }
 
-    public boolean export(ProcessKey processKey, UUID checkpointId, Path dest) {
+    public String export(ProcessKey processKey, UUID checkpointId, Path dest) {
         return txResult(tx -> {
-            String sql = tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_DATA)
+            String sql = tx.select(PROCESS_CHECKPOINTS.CHECKPOINT_DATA, PROCESS_CHECKPOINTS.CHECKPOINT_NAME)
                     .from(PROCESS_CHECKPOINTS)
                     .where(PROCESS_CHECKPOINTS.CHECKPOINT_ID.eq(checkpointId)
                             .and(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(processKey.getInstanceId())
@@ -116,14 +116,14 @@ public class ProcessCheckpointDao extends AbstractDao {
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) {
-                            return false;
+                            return null;
                         }
 
                         try (InputStream in = rs.getBinaryStream(1)) {
                             Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
                         }
+                        return rs.getString(2);
                     }
-                    return true;
                 }
             });
         });

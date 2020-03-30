@@ -146,8 +146,8 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         assertEquals(1, main.size());
 
-        assertTrue(main.get(0) instanceof Snapshot);
-        Snapshot t = (Snapshot) main.get(0);
+        assertTrue(main.get(0) instanceof Checkpoint);
+        Checkpoint t = (Checkpoint) main.get(0);
         assertEquals("ZZZ", t.getName());
 
         // meta

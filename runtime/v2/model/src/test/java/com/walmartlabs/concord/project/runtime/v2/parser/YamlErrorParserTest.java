@@ -979,25 +979,25 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test400() throws Exception {
         String msg =
-                "(000.yml): Error @ line: 3, col: 16. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
+                "(000.yml): Error @ line: 3, col: 18. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
                         "\twhile processing steps:\n" +
-                        "\t'snapshot' @ line: 3, col: 7\n" +
+                        "\t'checkpoint' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
                         "\t\t\t'flows' @ line: 1, col: 1";
 
-        assertErrorMessage("errors/snapshot/000.yml", msg);
+        assertErrorMessage("errors/checkpoint/000.yml", msg);
     }
 
     @Test
     public void test401() throws Exception {
         String msg =
-                "(001.yml): Error @ line: 3, col: 17. Invalid value type, expected: STRING, got: INT\n" +
+                "(001.yml): Error @ line: 3, col: 19. Invalid value type, expected: STRING, got: INT\n" +
                         "\twhile processing steps:\n" +
-                        "\t'snapshot' @ line: 3, col: 7\n" +
+                        "\t'checkpoint' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
                         "\t\t\t'flows' @ line: 1, col: 1";
 
-        assertErrorMessage("errors/snapshot/001.yml", msg);
+        assertErrorMessage("errors/checkpoint/001.yml", msg);
     }
 
     @Test
@@ -1005,11 +1005,11 @@ public class YamlErrorParserTest extends AbstractParserTest {
         String msg =
                 "(002.yml): Error @ line: 4, col: 14. Unknown options: ['trash' [STRING] @ line: 4, col: 14], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
-                        "\t'snapshot' @ line: 3, col: 7\n" +
+                        "\t'checkpoint' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
                         "\t\t\t'flows' @ line: 1, col: 1";
 
-        assertErrorMessage("errors/snapshot/002.yml", msg);
+        assertErrorMessage("errors/checkpoint/002.yml", msg);
     }
 
     @Test
@@ -1018,11 +1018,11 @@ public class YamlErrorParserTest extends AbstractParserTest {
                 "(003.yml): Error @ line: 4, col: 13. Invalid value type, expected: OBJECT, got: STRING\n" +
                         "\twhile processing steps:\n" +
                         "\t'meta' @ line: 4, col: 7\n" +
-                        "\t\t'snapshot' @ line: 3, col: 7\n" +
+                        "\t\t'checkpoint' @ line: 3, col: 7\n" +
                         "\t\t\t'main' @ line: 2, col: 3\n" +
                         "\t\t\t\t'flows' @ line: 1, col: 1";
 
-        assertErrorMessage("errors/snapshot/003.yml", msg);
+        assertErrorMessage("errors/checkpoint/003.yml", msg);
     }
 
     @Test
@@ -1031,11 +1031,11 @@ public class YamlErrorParserTest extends AbstractParserTest {
                 "(004.yml): Error @ line: 4, col: 12. Invalid value type, expected: OBJECT, got: NULL. Remove attribute or complete the definition\n" +
                         "\twhile processing steps:\n" +
                         "\t'meta' @ line: 4, col: 7\n" +
-                        "\t\t'snapshot' @ line: 3, col: 7\n" +
+                        "\t\t'checkpoint' @ line: 3, col: 7\n" +
                         "\t\t\t'main' @ line: 2, col: 3\n" +
                         "\t\t\t\t'flows' @ line: 1, col: 1";
 
-        assertErrorMessage("errors/snapshot/004.yml", msg);
+        assertErrorMessage("errors/checkpoint/004.yml", msg);
     }
 
     @Test
@@ -1043,11 +1043,11 @@ public class YamlErrorParserTest extends AbstractParserTest {
         String msg =
                 "(005.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [INT] @ line: 6, col: 14], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
-                        "\t'snapshot' @ line: 3, col: 7\n" +
+                        "\t'checkpoint' @ line: 3, col: 7\n" +
                         "\t\t'main' @ line: 2, col: 3\n" +
                         "\t\t\t'flows' @ line: 1, col: 1";
 
-        assertErrorMessage("errors/snapshot/005.yml", msg);
+        assertErrorMessage("errors/checkpoint/005.yml", msg);
     }
 
     @Test
@@ -1056,7 +1056,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
         String msg =
                 "(005.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [INT] @ line: 6, col: 14], expected: [meta]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
-                        "\t'snapshot' @ line: 3, col: 7";
+                        "\t'checkpoint' @ line: 3, col: 7";
 
         assertErrorMessage("errors/exit/000.yml", msg);
     }

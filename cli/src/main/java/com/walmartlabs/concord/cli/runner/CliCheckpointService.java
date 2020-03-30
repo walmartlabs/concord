@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner.snapshots;
+package com.walmartlabs.concord.cli.runner;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.snapshots;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
 
-public interface SnapshotService {
+public class CliCheckpointService implements CheckpointService {
 
-    void create(String name, Runtime runtime, State state);
+    @Override
+    public void create(String name, Runtime runtime, ProcessSnapshot snapshot) {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
 }

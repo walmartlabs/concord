@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.compiler;
+package com.walmartlabs.concord.runtime.v2.runner.checkpoints;
 
 /*-
  * *****
@@ -20,23 +20,11 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Snapshot;
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.runner.vm.SnapshotCommand;
-import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
+import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.State;
 
-import javax.inject.Named;
+public interface CheckpointService {
 
-@Named
-public class SnapshotCompiler implements StepCompiler<Snapshot> {
-
-    @Override
-    public boolean accepts(Step step) {
-        return step instanceof Snapshot;
-    }
-
-    @Override
-    public Command compile(CompilerContext context, Snapshot step) {
-        return new SnapshotCommand(step.getName());
-    }
+    void create(String name, Runtime runtime, ProcessSnapshot snapshot);
 }

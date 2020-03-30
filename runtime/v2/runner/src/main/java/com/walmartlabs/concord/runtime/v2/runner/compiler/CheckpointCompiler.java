@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.snapshots;
+package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 /*-
  * *****
@@ -20,17 +20,23 @@ package com.walmartlabs.concord.runtime.v2.runner.snapshots;
  * =====
  */
 
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.walmartlabs.concord.runtime.v2.model.Checkpoint;
+import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.vm.CheckpointCommand;
+import com.walmartlabs.concord.svm.Command;
 
-public class DefaultSnapshotService implements SnapshotService {
+import javax.inject.Named;
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultSnapshotService.class);
+@Named
+public class CheckpointCompiler implements StepCompiler<Checkpoint> {
 
     @Override
-    public void create(String name, Runtime runtime, State state) {
-        log.info("create ['{}'] -> done", name);
+    public boolean accepts(Step step) {
+        return step instanceof Checkpoint;
+    }
+
+    @Override
+    public Command compile(CompilerContext context, Checkpoint step) {
+        return new CheckpointCommand(step.getName());
     }
 }

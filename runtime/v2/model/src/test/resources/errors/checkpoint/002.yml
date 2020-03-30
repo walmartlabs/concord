@@ -1,4 +1,4 @@
 flows:
   main:
-    - snapshot: "test"
+    - checkpoint: "test"
       trash: "boo"

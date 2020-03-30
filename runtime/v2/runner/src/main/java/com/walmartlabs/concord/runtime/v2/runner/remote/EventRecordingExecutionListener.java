@@ -31,6 +31,7 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
+import com.walmartlabs.concord.svm.ExecutionListener.Result;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -58,16 +59,16 @@ public class EventRecordingExecutionListener implements ExecutionListener {
     }
 
     @Override
-    public void afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+    public Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
         // TODO consider using marker interfaces to determine which step/command should produce ELEMENT events
 
         if (!(cmd instanceof StepCommand)) {
-            return;
+            return Result.CONTINUE;
         }
 
         StepCommand<?> s = (StepCommand<?>) cmd;
         if ((s.getStep() instanceof TaskCall) || (s.getStep() instanceof Expression)) {
-            return;
+            return Result.CONTINUE;
         }
 
         JsonLocation loc = s.getStep().getLocation();
@@ -88,6 +89,8 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         } catch (ApiException e) {
             log.warn("afterCommand [{}] -> error while sending an event to the server: {}", cmd, e.getMessage());
         }
+
+        return Result.CONTINUE;
     }
 
     private static String getDescription(Step step) {

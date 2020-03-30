@@ -1,6 +1,6 @@
 flows:
   main:
-    - snapshot: "test"
+    - checkpoint: "test"
       meta:
         k: "v"
       trash: 1
