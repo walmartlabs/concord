@@ -1,5 +1,43 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v1: save the current flow name in the process' metadata;
+- runtime-v2: initial support for checkpoints;
+- runtime-v2: support for multiple `TaskProvider` instances;
+- runtime-v2: initial implementation of `SecretService` and
+`FileService`;
+- concord-server: option to generate the default admin API token on
+start;
+- runtime-v2: support for triggers;
+- runtime-v2: process event recording;
+- http-tasks: response headers are now saved into the result
+variable;
+- concord-console: alternate shading for actionable tables and lists;
+- concord-server, concord-agent: configurable repository locks.
+The maximum number of concurrent Git operations can now be configured
+in the Server and Agent configuration files;
+- runtime-v2: initial support for task defaults (default task
+variables).
+
+### Changed
+
+- concord-console: some of user selection fields (e.g. a project
+owner field) now perform search using the DB data, without accessing
+external AD/LDAP servers;
+- concord-agent: fixed a potential race condition when
+the maintenance mode is activated;
+- dependency-manager: disable Aether caching, allows
+`snapshotPolicy.updatePolicy` to work correctly;
+- concord-console: make the scroll up button always visible;
+- concord-tasks: `requirements` are now correctly passed into the API
+request;
+- vagrant: fixed the database container startup.
+
+
+
 ## [1.44.0] - 2020-03-12
 
 ### Added
