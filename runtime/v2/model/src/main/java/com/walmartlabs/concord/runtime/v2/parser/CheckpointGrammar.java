@@ -20,19 +20,19 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Snapshot;
+import com.walmartlabs.concord.runtime.v2.model.Checkpoint;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.simpleOptions;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.stringVal;
 
-public final class SnapshotGrammar {
+public final class CheckpointGrammar {
 
-    public static final Parser<Atom, Snapshot> snapshot =
-            satisfyField("snapshot", YamlValueType.SNAPSHOT, a -> stringVal.bind(name ->
-                    simpleOptions.map(options -> new Snapshot(a.location, name, options))));
+    public static final Parser<Atom, Checkpoint> checkpoint =
+            satisfyField("checkpoint", YamlValueType.CHECKPOINT, a -> stringVal.bind(name ->
+                    simpleOptions.map(options -> new Checkpoint(a.location, name, options))));
 
-    private SnapshotGrammar() {
+    private CheckpointGrammar() {
     }
 }

@@ -1,0 +1,4 @@
+flows:
+  default:
+    - checkpoint: "A"
+    - log: "Hello, ${name}!"

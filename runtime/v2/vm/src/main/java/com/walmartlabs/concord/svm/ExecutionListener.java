@@ -20,11 +20,43 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
+/**
+ * Provides a way to listen for different execution stages.
+ * Each method can decide whether to continue the specific execution stage
+ * or stop it by returning a {@link Result} value.
+ */
 public interface ExecutionListener {
 
-    default void beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+    /**
+     * Called before the next command in the stack is executed.
+     */
+    default Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+        return Result.CONTINUE;
     }
 
-    default void afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+    /**
+     * Called after the last command in the stack was executed.
+     */
+    default Result afterCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+        return Result.CONTINUE;
+    }
+
+    /**
+     * Called after each eval loop iteration.
+     */
+    default Result afterEval(Runtime runtime, VM vm, State state) {
+        return Result.CONTINUE;
+    }
+
+    /**
+     * Called after suspended threads are woken up.
+     */
+    default Result afterWakeUp(Runtime runtime, VM vm, State state) {
+        return Result.CONTINUE;
+    }
+
+    enum Result {
+        CONTINUE,
+        BREAK
     }
 }

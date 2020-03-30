@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.vm;
+package com.walmartlabs.concord.runtime.v2.model;
 
 /*-
  * *****
@@ -20,27 +20,22 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
-import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
-public class SnapshotCommand implements Command {
+public class Checkpoint extends AbstractStep<SimpleOptions> {
 
     private static final long serialVersionUID = 1L;
 
     private final String name;
 
-    public SnapshotCommand(String name) {
+    public Checkpoint(JsonLocation location, String name, SimpleOptions options) {
+        super(location, options);
+
         this.name = name;
     }
 
-    @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
-        state.peekFrame(threadId).pop();
-
-        SnapshotService snapshotService = runtime.getService(SnapshotService.class);
-        snapshotService.create(name, runtime, state);
+    public String getName() {
+        return name;
     }
 }

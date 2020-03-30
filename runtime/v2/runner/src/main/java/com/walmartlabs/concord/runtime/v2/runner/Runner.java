@@ -28,10 +28,10 @@ import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.snapshots.SnapshotService;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesImpl;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateGlobalVariablesCommand;
@@ -56,8 +56,9 @@ public class Runner {
     private final ContextFactory contextFactory;
     private final TaskProviders taskProviders;
     private final ExpressionEvaluator expressionEvaluator;
-    private final SnapshotService snapshotService;
+    private final CheckpointService checkpointService;
     private final FormService formService;
+    private final SynchronizationService synchronizationService;
     private final ProcessStatusCallback statusCallback;
     private final Collection<ExecutionListener> listeners;
 
@@ -68,8 +69,9 @@ public class Runner {
         this.contextFactory = b.contextFactory;
         this.taskProviders = b.taskProviders;
         this.expressionEvaluator = b.expressionEvaluator;
-        this.snapshotService = b.snapshotService;
+        this.checkpointService = b.checkpointService;
         this.formService = b.formService;
+        this.synchronizationService = b.synchronizationService;
         this.statusCallback = b.statusCallback;
         this.listeners = b.listeners;
     }
@@ -131,16 +133,20 @@ public class Runner {
         m.put(ContextFactory.class, contextFactory);
         m.put(TaskProviders.class, taskProviders);
         m.put(ExpressionEvaluator.class, expressionEvaluator);
-        m.put(SnapshotService.class, snapshotService);
+        m.put(CheckpointService.class, checkpointService);
         m.put(ProcessDefinition.class, processDefinition);
         m.put(GlobalVariables.class, globalVariables);
         m.put(FormService.class, formService);
+        m.put(SynchronizationService.class, synchronizationService);
 
         Map<Class<?>, ?> services = Collections.unmodifiableMap(m);
         return vm -> new DefaultRuntime(vm, services);
     }
 
     private VM createVM(ProcessDefinition processDefinition, GlobalVariables globalVariables) {
+        Collection<ExecutionListener> listeners = new ArrayList<>();
+        listeners.add(new SynchronizationServiceListener(synchronizationService));
+        listeners.addAll(this.listeners);
         return new VM(createRuntimeFactory(processDefinition, globalVariables), listeners);
     }
 
@@ -155,8 +161,9 @@ public class Runner {
         private ContextFactory contextFactory;
         private TaskProviders taskProviders;
         private ExpressionEvaluator expressionEvaluator;
-        private SnapshotService snapshotService;
+        private CheckpointService checkpointService;
         private FormService formService;
+        private SynchronizationService synchronizationService;
 
         private ProcessStatusCallback statusCallback;
         private Collection<ExecutionListener> listeners;
@@ -205,13 +212,18 @@ public class Runner {
             return this;
         }
 
-        public Builder snapshotService(SnapshotService snapshotService) {
-            this.snapshotService = snapshotService;
+        public Builder snapshotService(CheckpointService checkpointService) {
+            this.checkpointService = checkpointService;
             return this;
         }
 
         public Builder formService(FormService formService) {
             this.formService = formService;
+            return this;
+        }
+
+        public Builder synchronizationService(SynchronizationService synchronizationService) {
+            this.synchronizationService = synchronizationService;
             return this;
         }
 
@@ -258,8 +270,8 @@ public class Runner {
                 expressionEvaluator = inject(ExpressionEvaluator.class, "expressionEvaluator");
             }
 
-            if (snapshotService == null) {
-                snapshotService = inject(SnapshotService.class, "snapshotService");
+            if (checkpointService == null) {
+                checkpointService = inject(CheckpointService.class, "snapshotService");
             }
 
             if (formService == null) {
@@ -269,6 +281,10 @@ public class Runner {
                 Path formsDir = stateDir.resolve(Constants.Files.JOB_FORMS_V2_DIR_NAME);
 
                 formService = new FormService(formsDir);
+            }
+
+            if (synchronizationService == null) {
+                synchronizationService = inject(SynchronizationService.class, "synchronizationService");
             }
 
             if (statusCallback == null) {

@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.common;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -119,6 +120,22 @@ public final class StateManager {
         } catch (ClassNotFoundException | IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void archive(Path baseDir, Serializable state, Path result) throws IOException {
+        saveState(baseDir, state);
+
+        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(result))) {
+            zip(zip, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
+            zip(zip, Constants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+        }
+    }
+
+    private static void zip(ZipArchiveOutputStream zip, String name, Path src) throws IOException {
+        if (Files.notExists(src)) {
+            return;
+        }
+        IOUtils.zip(zip, name, src);
     }
 
     private static void saveState(Path baseDir, Serializable state) throws IOException {

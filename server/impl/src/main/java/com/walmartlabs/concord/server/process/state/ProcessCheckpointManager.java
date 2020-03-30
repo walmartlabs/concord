@@ -33,7 +33,9 @@ import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
@@ -85,18 +87,19 @@ public class ProcessCheckpointManager {
     /**
      * Restore process to a saved checkpoint.
      */
-    public String restoreCheckpoint(ProcessKey processKey, UUID checkpointId) {
+    public CheckpointInfo restoreCheckpoint(ProcessKey processKey, UUID checkpointId) {
         try (TemporaryPath checkpointArchive = IOUtils.tempFile("checkpoint", ".zip")) {
 
-            boolean hasCheckpoint = export(processKey, checkpointId, checkpointArchive.path());
-            if (!hasCheckpoint) {
+            String checkpointName = export(processKey, checkpointId, checkpointArchive.path());
+            if (checkpointName == null) {
                 return null;
             }
 
             try (TemporaryPath extractedDir = IOUtils.tempDir("unzipped-checkpoint")) {
                 IOUtils.unzip(checkpointArchive.path(), extractedDir.path());
 
-                String checkpointName = readCheckpointName(extractedDir.path());
+                // TODO: only for v1 runtime
+                String eventName = readCheckpointEventName(extractedDir.path());
 
                 stateManager.deleteDirectory(processKey, Constants.Files.CONCORD_SYSTEM_DIR_NAME);
                 stateManager.deleteDirectory(processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
@@ -109,7 +112,7 @@ public class ProcessCheckpointManager {
                     queueDao.updateMeta(processKey, Collections.singletonMap("out", out));
                 }
 
-                return checkpointName;
+                return CheckpointInfo.of(checkpointName, eventName);
             }
         } catch (Exception e) {
             throw new RuntimeException("Restore checkpoint '" + checkpointId + "' error", e);
@@ -146,17 +149,33 @@ public class ProcessCheckpointManager {
                 "the necessary permissions to restore the process using a checkpoint: " + e.instanceId());
     }
 
-    private String readCheckpointName(Path checkpointDir) throws IOException {
+    @Value.Immutable
+    public interface CheckpointInfo {
+
+        String name();
+
+        @Nullable
+        String eventName();
+
+        static CheckpointInfo of(String name, String eventName) {
+            return ImmutableCheckpointInfo.builder()
+                    .name(name)
+                    .eventName(eventName)
+                    .build();
+        }
+    }
+
+    private String readCheckpointEventName(Path checkpointDir) throws IOException {
         Path checkpoint = checkpointDir.resolve(CHECKPOINT_META_FILE_NAME);
         if (!Files.exists(checkpoint)) {
-            throw new RuntimeException("Invalid checkpoint archive: " + checkpointDir);
+            return null;
         }
         String checkpointName = new String(Files.readAllBytes(checkpoint));
         Files.delete(checkpoint);
         return checkpointName;
     }
 
-    private boolean export(ProcessKey processKey, UUID checkpointId, Path dest) throws IOException {
+    private String export(ProcessKey processKey, UUID checkpointId, Path dest) {
         return checkpointDao.export(processKey, checkpointId, dest);
     }
 }

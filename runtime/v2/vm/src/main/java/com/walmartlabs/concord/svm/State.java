@@ -20,13 +20,14 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Describes the state of the VM.
  */
-public interface State {
+public interface State extends Serializable {
 
     /**
      * Adds a frame to the specified thread. The added frame becomes the current frame of the thread.
@@ -84,11 +85,6 @@ public interface State {
      * Returns a next thread ID. Unique per {@link State} instance.
      */
     ThreadId nextThreadId();
-
-    /**
-     * Returns the parent thread ID for the specified child thread ID.
-     */
-    ThreadId getParentThreadId(ThreadId id);
 
     /**
      * Adds a new event reference to the specified thread. If the thread suspends

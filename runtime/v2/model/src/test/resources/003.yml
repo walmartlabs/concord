@@ -1,5 +1,5 @@
 flows:
   main:
-    - snapshot: "ZZZ"
+    - checkpoint: "ZZZ"
       meta:
         m1: "v1"

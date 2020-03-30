@@ -218,22 +218,22 @@ public class ProcessManager {
             throw new ConcordApplicationException("Unable to restore a checkpoint, the process is " + s);
         }
 
-        String eventName = checkpointManager.restoreCheckpoint(processKey, checkpointId);
-        if (eventName == null) {
+        ProcessCheckpointManager.CheckpointInfo checkpointInfo = checkpointManager.restoreCheckpoint(processKey, checkpointId);
+        if (checkpointInfo == null) {
             throw new ConcordApplicationException("Checkpoint " + checkpointId + " not found");
         }
 
         Payload payload;
         try {
-            payload = payloadManager.createResumePayload(processKey, eventName, null);
+            payload = payloadManager.createResumePayload(processKey, checkpointInfo.eventName(), null);
         } catch (IOException e) {
-            log.error("restore ['{}', '{}'] -> error creating a payload: {}", processKey, eventName, e);
+            log.error("restore ['{}', '{}'] -> error creating a payload: {}", processKey, checkpointInfo.name(), e);
             throw new ConcordApplicationException("Error creating a payload", e);
         }
 
         queueManager.updateStatus(processKey, ProcessStatus.SUSPENDED, Collections.singletonMap("checkpointId", checkpointId));
 
-        logManager.info(processKey,"Restoring from checkpoint '{}'", eventName);
+        logManager.info(processKey,"Restoring from checkpoint '{}'", checkpointInfo.name());
 
         resume(payload);
     }

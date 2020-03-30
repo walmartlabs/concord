@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.matching.MultipartValuePattern;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
@@ -89,6 +90,10 @@ public class MainTest {
         wireMock.stubFor(post(urlPathEqualTo("/api/v1/process/" + instanceId + "/event"))
                 .willReturn(aResponse()
                         .withStatus(201)));
+
+        wireMock.stubFor(post(urlPathEqualTo("/api/v1/process/" + instanceId + "/checkpoint"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
     }
 
     @After
@@ -155,6 +160,25 @@ public class MainTest {
         }
     }
 
+    @Test
+    public void testCheckpoints() throws Exception {
+        deploy("checkpoints");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("name", "Concord")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*Hello, Concord!.*");
+
+        verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/status"))
+                .withRequestBody(equalTo("RUNNING")));
+
+        MultipartValuePattern checkpoint = aMultipart().withName("name").withBody(equalTo("A")).build();
+        verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/checkpoint"))
+                .withRequestBodyPart(checkpoint));
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -194,7 +218,6 @@ public class MainTest {
         System.setOut(out);
 
         try {
-//            System.setProperty("user.dir", workDir.toAbsolutePath().toString());
             ClassLoader parentClassLoader = Main.class.getClassLoader();
             Injector injector = new InjectorFactory(parentClassLoader,
                     new WorkingDirectory(workDir),
