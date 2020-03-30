@@ -4,7 +4,6 @@
 
 ### Added
 
-- runtime-v1: save the current flow name in the process' metadata;
 - runtime-v2: initial support for checkpoints;
 - runtime-v2: support for multiple `TaskProvider` instances;
 - runtime-v2: initial implementation of `SecretService` and
