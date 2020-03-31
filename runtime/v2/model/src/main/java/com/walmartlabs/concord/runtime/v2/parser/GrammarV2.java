@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import static com.walmartlabs.concord.runtime.v2.parser.CheckpointGrammar.checkpoint;
 import static com.walmartlabs.concord.runtime.v2.parser.ExitGrammar.exit;
 import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.exprFull;
 import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.exprShort;
@@ -42,7 +43,6 @@ import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.callForm;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GroupGrammar.group;
 import static com.walmartlabs.concord.runtime.v2.parser.ParallelGrammar.parallelBlock;
-import static com.walmartlabs.concord.runtime.v2.parser.CheckpointGrammar.checkpoint;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskFull;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskShort;
 import static io.takari.parc.Combinators.*;

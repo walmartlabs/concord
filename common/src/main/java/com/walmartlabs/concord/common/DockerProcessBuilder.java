@@ -35,7 +35,7 @@ import java.util.*;
 
 public class DockerProcessBuilder {
 
-    public static DockerProcessBuilder from(Context ctx, DockerContainerSpec spec) {
+    public static DockerProcessBuilder from(UUID txId, DockerContainerSpec spec) {
         DockerProcessBuilder b = new DockerProcessBuilder(spec.image())
                 .name(spec.name())
                 .user(Optional.ofNullable(spec.user()).orElse(DEFAULT_USER))
@@ -65,10 +65,14 @@ public class DockerProcessBuilder {
         }
 
         // system stuff
-        String txId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
-        b.addLabel(CONCORD_TX_ID_LABEL, txId);
+        b.addLabel(CONCORD_TX_ID_LABEL, txId.toString());
 
         return b;
+    }
+
+    public static DockerProcessBuilder from(Context ctx, DockerContainerSpec spec) {
+        String txId = (String) ctx.getVariable(Constants.Context.TX_ID_KEY);
+        return from(UUID.fromString(txId), spec);
     }
 
     private static final Logger log = LoggerFactory.getLogger(DockerProcessBuilder.class);
