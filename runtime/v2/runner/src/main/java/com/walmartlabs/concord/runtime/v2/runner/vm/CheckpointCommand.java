@@ -25,8 +25,10 @@ import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
-import com.walmartlabs.concord.svm.*;
+import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.State;
+import com.walmartlabs.concord.svm.ThreadId;
 
 public class CheckpointCommand implements Command {
 

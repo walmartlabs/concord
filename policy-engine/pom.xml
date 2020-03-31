@@ -23,6 +23,10 @@
             <artifactId>concord-sdk</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
+            <artifactId>concord-runtime-sdk-v2</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

@@ -32,16 +32,15 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TaskCallEventRecordingListener implements TaskCallListener {
 
@@ -65,7 +64,7 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         m.put("phase", event.phase().name().toLowerCase());
 
         if (event.input() != null && eventConfiguration.recordTaskInVars()) {
-            m.put("in", maskVars(event.input(), eventConfiguration.inVarsBlacklist()));
+            m.put("in", maskVars(convertInput(event.input()), eventConfiguration.inVarsBlacklist()));
         }
 
         if (event.out() != null && eventConfiguration.recordTaskOutVars()) {
@@ -148,5 +147,28 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         Map<String, Object> v = (Map<String, Object>) vars;
         return maskVars(v, blackList);
+    }
+
+    private static Map<String, Object> convertInput(Object[] input) {
+        if (input == null || input.length == 0) {
+            return Collections.emptyMap();
+        }
+
+        if (input.length == 1) {
+            if (input[0] instanceof TaskContext) {
+                return ((TaskContext) input[0]).input();
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        for (int i = 0; i < input.length; i++) {
+            Object arg = input[i];
+            if (arg instanceof Context) {
+                arg = "context";
+            }
+            result.put(String.valueOf(i), arg);
+        }
+
+        return result;
     }
 }

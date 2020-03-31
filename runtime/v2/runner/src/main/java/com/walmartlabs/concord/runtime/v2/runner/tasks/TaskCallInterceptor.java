@@ -25,7 +25,6 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ThreadLocalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
@@ -33,10 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TaskCallInterceptor implements MethodInterceptor {
 
@@ -83,32 +79,9 @@ public class TaskCallInterceptor implements MethodInterceptor {
                 .phase(phase)
                 .correlationId(execution.correlationId())
                 .currentStep(execution.currentStep())
-                .input(getInput(invocation.getArguments()))
+                .input(invocation.getArguments())
                 .methodName(invocation.getMethod().getName())
                 .processDefinition(execution.processDefinition())
                 .taskName(taskName);
-    }
-
-    private static Map<String, Object> getInput(Object[] arguments) {
-        if (arguments == null || arguments.length == 0) {
-            return Collections.emptyMap();
-        }
-
-        if (arguments.length == 1) {
-            if (arguments[0] instanceof TaskContext) {
-                return ((TaskContext) arguments[0]).input();
-            }
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        for (int i = 0; i < arguments.length; i++) {
-            Object arg = arguments[i];
-            if (arg instanceof Context) {
-                arg = "context";
-            }
-            result.put(String.valueOf(i), arg);
-        }
-
-        return result;
     }
 }
