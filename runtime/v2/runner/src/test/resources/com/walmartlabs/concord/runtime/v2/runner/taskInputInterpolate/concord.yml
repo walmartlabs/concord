@@ -1,0 +1,10 @@
+flows:
+  default:
+    - task: wrapExpression
+      in:
+        expression: "myFavoriteExpression"
+      out: name
+
+    - task: log
+      in:
+        msg: "Hello, ${name}!"

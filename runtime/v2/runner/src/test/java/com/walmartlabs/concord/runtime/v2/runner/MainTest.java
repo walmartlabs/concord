@@ -193,6 +193,17 @@ public class MainTest {
         }
     }
 
+    @Test
+    public void testTaskInputInterpolate() throws Exception {
+        deploy("taskInputInterpolate");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*Hello, " + Pattern.quote("${myFavoriteExpression}") + "!.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -293,6 +304,15 @@ public class MainTest {
 
             @Nullable
             String b();
+        }
+    }
+
+    @Named("wrapExpression")
+    static class WrapExpressionTask implements Task {
+
+        @Override
+        public Serializable execute(TaskContext ctx) {
+            return "${" + ctx.input().get("expression") + "}";
         }
     }
 
