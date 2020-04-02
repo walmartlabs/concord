@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 
 @Named
 @Singleton
@@ -33,7 +34,7 @@ public class LdapGroupSyncConfiguration  implements Serializable {
 
     @Inject
     @Config("ldapGroupSync.interval")
-    private long interval;
+    private Duration interval;
 
     @Inject
     @Config("ldapGroupSync.fetchLimit")
@@ -47,7 +48,7 @@ public class LdapGroupSyncConfiguration  implements Serializable {
     @Config("ldapGroupSync.minAgeSync")
     private String minAgeSync;
 
-    public long getInterval() {
+    public Duration getInterval() {
         return interval;
     }
 
