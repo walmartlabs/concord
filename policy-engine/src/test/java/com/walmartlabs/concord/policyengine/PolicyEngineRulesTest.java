@@ -43,9 +43,9 @@ public class PolicyEngineRulesTest {
         FileRule f3 = new FileRule("msg3", "3K", "FILE", Collections.singletonList("name3"));
         PolicyRules<FileRule> fileRules = new PolicyRules<>(Collections.singletonList(f1), Collections.singletonList(f2), Collections.singletonList(f3));
 
-        TaskRule t1 = new TaskRule("msg1", "taskName1", "methodName1", Collections.singletonList(new TaskRule.Param(1, "name1", true, Collections.singletonList("values"))));
-        TaskRule t2 = new TaskRule("msg2", "taskName2", "methodName2", Collections.singletonList(new TaskRule.Param(2, "name1", true, Collections.singletonList("values"))));
-        TaskRule t3 = new TaskRule("msg3", "taskName3", "methodName3", Collections.singletonList(new TaskRule.Param(3, "name1", true, Collections.singletonList("values"))));
+        TaskRule t1 = new TaskRule("msg1", "taskName1", "methodName1", Collections.singletonList(new TaskRule.Param(1, "name1", true, Collections.singletonList("values"))), Collections.singletonList(new TaskRule.TaskResult("task1", "name", null)));
+        TaskRule t2 = new TaskRule("msg2", "taskName2", "methodName2", Collections.singletonList(new TaskRule.Param(2, "name1", true, Collections.singletonList("values"))), null);
+        TaskRule t3 = new TaskRule("msg3", "taskName3", "methodName3", Collections.singletonList(new TaskRule.Param(3, "name1", true, Collections.singletonList("values"))), null);
         PolicyRules<TaskRule> taskRules = new PolicyRules<>(Collections.singletonList(t1), Collections.singletonList(t2), Collections.singletonList(t3));
 
         WorkspaceRule workspaceRule = new WorkspaceRule("msg", 12345L, Collections.singleton("a"));

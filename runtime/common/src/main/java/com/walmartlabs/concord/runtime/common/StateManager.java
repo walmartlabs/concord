@@ -21,15 +21,14 @@ package com.walmartlabs.concord.runtime.common;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.sdk.Constants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -128,6 +127,36 @@ public final class StateManager {
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(result))) {
             zip(zip, Constants.Files.JOB_ATTACHMENTS_DIR_NAME + "/", baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
             zip(zip, Constants.Files.CONCORD_SYSTEM_DIR_NAME + "/", baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+        }
+    }
+
+    public static void persist(Path baseDir, String storeName, Serializable object) throws IOException {
+        Path storageDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve("storage"); // TODO: constants
+
+        if (!Files.exists(storageDir)) {
+            Files.createDirectories(storageDir);
+        }
+
+        Path storage = storageDir.resolve(storeName);
+        try (OutputStream out = Files.newOutputStream(storage, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            SerializationUtils.serialize(out, object);
+        }
+    }
+
+    public static <T extends Serializable> T load(Path baseDir, String storageName, Class<T> expectedType) {
+        Path storage = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve("storage")
+                .resolve(storageName); // TODO: constants
+
+        if (Files.notExists(storage)) {
+            return null;
+        }
+
+        try (InputStream in = Files.newInputStream(storage)) {
+            return SerializationUtils.deserialize(in, expectedType);
+        } catch (IOException e) {
+            throw new RuntimeException("Error while reading persisted storage " + storageName + ": " + e.getMessage(), e);
         }
     }
 

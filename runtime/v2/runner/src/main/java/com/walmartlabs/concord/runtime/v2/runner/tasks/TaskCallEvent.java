@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Value.Immutable
@@ -52,6 +53,9 @@ public interface TaskCallEvent {
 
     @Nullable
     Long duration();
+
+    @Nullable
+    Serializable result();
 
     static ImmutableTaskCallEvent.Builder builder() {
         return ImmutableTaskCallEvent.builder();

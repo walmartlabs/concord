@@ -72,7 +72,7 @@ public class TaskCallInterceptor implements MethodInterceptor {
         CheckResult<TaskRule, String> result = holder.getEngine().getTaskPolicy().check(
                 n.value(),
                 invocation.getMethod().getName(),
-                invocation.getArguments());
+                invocation.getArguments(), null);
 
         result.getWarn().forEach(d -> {
             log.warn("Potentially restricted task call '{}' (task policy {})", n.value(), d.getRule().toString());

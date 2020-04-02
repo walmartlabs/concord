@@ -1,0 +1,6 @@
+flows:
+  default:
+    - task: testTask
+      in:
+        k: v
+    - log: "Hello!"

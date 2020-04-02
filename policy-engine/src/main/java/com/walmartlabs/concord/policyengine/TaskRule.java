@@ -36,18 +36,21 @@ public class TaskRule implements Serializable {
     private final String taskName;
     private final String method;
     private final List<Param> params;
+    private final List<TaskResult> taskResults;
 
     @JsonCreator
     public TaskRule(
             @JsonProperty("msg") String msg,
             @JsonProperty("name") String taskName,
             @JsonProperty("method") String method,
-            @JsonProperty("params") List<Param> params) {
+            @JsonProperty("params") List<Param> params,
+            @JsonProperty("taskResults") List<TaskResult> taskResults) {
 
         this.msg = msg;
         this.taskName = taskName;
         this.method = method;
         this.params = Optional.ofNullable(params).orElse(Collections.emptyList());
+        this.taskResults = Optional.ofNullable(taskResults).orElse(Collections.emptyList());
     }
 
     public String getMsg() {
@@ -65,6 +68,10 @@ public class TaskRule implements Serializable {
 
     public List<Param> getParams() {
         return params;
+    }
+
+    public List<TaskResult> getTaskResults() {
+        return taskResults;
     }
 
     @Override
@@ -90,6 +97,7 @@ public class TaskRule implements Serializable {
                 .append("taskName", taskName)
                 .append("method", method)
                 .append("params", params)
+                .append("taskResults", taskResults)
                 .toString();
     }
 
@@ -155,6 +163,48 @@ public class TaskRule implements Serializable {
                     .append("protected", protectedVariable)
                     .append("values", values)
                     .toString();
+        }
+    }
+
+    static class TaskResult {
+
+        private final String task;
+        private final String result;
+        private final List<Object> values;
+
+        public TaskResult(@JsonProperty("task") String task,
+                          @JsonProperty("result") String result,
+                          @JsonProperty("values") List<Object> values) {
+            this.task = task;
+            this.result = result;
+            this.values = Optional.ofNullable(values).orElse(Collections.emptyList());
+        }
+
+        public String getTask() {
+            return task;
+        }
+
+        public String getResult() {
+            return result;
+        }
+
+        public List<Object> getValues() {
+            return values;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TaskResult that = (TaskResult) o;
+            return Objects.equals(task, that.task) &&
+                    Objects.equals(result, that.result) &&
+                    Objects.equals(values, that.values);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(task, result, values);
         }
     }
 }

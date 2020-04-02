@@ -1,0 +1,23 @@
+{
+  "task":{
+    "deny":[
+      {
+        "method":"execute",
+        "taskResults": [
+          {
+            "task": "testTask",
+            "result":"k",
+            "values":[
+              "v"
+            ]
+          }
+        ],
+        "name":"log.*"
+      }
+    ],
+    "warn":[
+    ],
+    "allow":[
+    ]
+  }
+}
