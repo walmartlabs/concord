@@ -45,8 +45,8 @@ public final class TriggersGrammar {
                 with(ImmutableMap::<String, Object>builder,
                         o -> options(
                                 mandatory("type", stringVal.map(v -> o.put("type", v))),
-                                optional("githubOrg", regexpVal.map(v -> o.put("githubOrg", v))),
-                                optional("githubRepo", regexpVal.map(v -> o.put("githubRepo", v))),
+                                optional("githubOrg", patternOrArrayVal.map(v -> o.put("githubOrg", v))),
+                                optional("githubRepo", patternOrArrayVal.map(v -> o.put("githubRepo", v))),
                                 optional("githubHost", regexpVal.map(v -> o.put("githubHost", v))),
                                 optional("branch", regexpVal.map(v -> o.put("branch", v))),
                                 optional("sender", regexpVal.map(v -> o.put("sender", v))),

@@ -42,6 +42,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<List<String>> ARRAY_OF_PATTERN = array("ARRAY_OF_PATTERN", PATTERN);
     public static final YamlValueType<List<String>> ARRAY_OF_STRING = array("ARRAY_OF_STRING", STRING);
     public static final YamlValueType<Map<String, Serializable>> OBJECT = map("OBJECT");
+    public static final YamlValueType<Object> PATTERN_OR_ARRAY = type("PATTERN_OR_ARRAY");
 
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<TaskCall> TASK = type("TASK");

@@ -27,10 +27,7 @@ import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -66,6 +63,7 @@ public final class GrammarV2 {
         return v.getValue();
     });
     public static final Parser<Atom, Integer> maybeInt = _val(JsonToken.VALUE_NUMBER_INT).map(v -> v.getValue(YamlValueType.INT));
+    public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
 
     public static final Parser.Ref<Atom, List<Step>> stepsVal = Parser.ref();
 
@@ -199,6 +197,15 @@ public final class GrammarV2 {
                     .message(e.getMessage())
                     .build();
         }
+    }
+
+    private static Object patternOrArrayConverter(YamlValue v) {
+        if (v.getType() == YamlValueType.STRING) {
+            return regexpConverter(v);
+        }
+
+        YamlList list = asList(v, YamlValueType.PATTERN_OR_ARRAY);
+        return list.getListValue(GrammarV2::regexpConverter);
     }
 
     private GrammarV2() {
