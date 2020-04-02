@@ -34,6 +34,6 @@ public class Main {
         Injector injector = Guice.createInjector(new WireModule(new SpaceModule(new URLClassSpace(cl))));
 
         Agent a = injector.getInstance(Agent.class);
-        a.run();
+        a.start();
     }
 }

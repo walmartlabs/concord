@@ -33,6 +33,9 @@ import javax.inject.Inject;
 public final class ConcordServer {
 
     @Inject
+    private Injector injector;
+
+    @Inject
     private BackgroundTasks tasks;
 
     @Inject
@@ -61,6 +64,10 @@ public final class ConcordServer {
             tasks.stop();
             tasks = null;
         }
+    }
+
+    public Injector getInjector() {
+        return injector;
     }
 
     private ConcordServer() {
