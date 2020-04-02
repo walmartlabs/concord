@@ -31,7 +31,6 @@ export { default as EditRepositoryActivity } from './EditRepositoryActivity';
 export { default as EncryptValueActivity } from './EncryptValueActivity';
 export { default as FindLdapGroupField } from './FindLdapGroupField';
 export { default as FindTeamDropdown } from './FindTeamDropdown';
-export { default as FindUserField } from './FindUserField';
 export { default as FindUserField2 } from './FindUserField2';
 export { default as FindOrganizationsField } from './FindOrganizationsField';
 export { default as Login } from './Login';

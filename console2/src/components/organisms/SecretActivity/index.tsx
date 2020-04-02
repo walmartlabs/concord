@@ -24,7 +24,7 @@ import { AnyAction, Dispatch } from 'redux';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Divider, Grid, Header, Icon, Loader, Menu, Segment, Table } from 'semantic-ui-react';
 
-import { ConcordKey, RequestError } from '../../../api/common';
+import { ConcordKey, Owner, RequestError } from '../../../api/common';
 import {
     SecretEncryptedByType,
     SecretEntry,
@@ -45,7 +45,6 @@ import {
     SecretVisibilityActivity
 } from '../../organisms';
 import { NotFoundPage } from '../../pages';
-import { renderUser } from '../FindUserField';
 
 export type TabLink = 'info' | 'settings' | 'access' | 'audit' | null;
 
@@ -73,6 +72,14 @@ const visibilityToText = (v: SecretVisibility) =>
 const encryptedByToText = (t: SecretEncryptedByType) =>
     t === SecretEncryptedByType.SERVER_KEY ? 'Server key' : 'Password';
 
+const renderUser = (e: Owner) => {
+    if (!e.userDomain) {
+        return e.username;
+    }
+
+    return `${e.username}@${e.userDomain}`;
+};
+
 class SecretActivity extends React.PureComponent<Props> {
     static renderPublicKey(data: SecretEntry) {
         return <PublicKeyPopup orgName={data.orgName} secretName={data.name} />;
@@ -94,15 +101,7 @@ class SecretActivity extends React.PureComponent<Props> {
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Owner</Table.Cell>
-                                <Table.Cell>
-                                    {data.owner
-                                        ? renderUser(
-                                              data.owner.username,
-                                              data.owner.userDomain,
-                                              data.owner.displayName
-                                          )
-                                        : '-'}
-                                </Table.Cell>
+                                <Table.Cell>{data.owner ? renderUser(data.owner) : '-'}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Actions</Table.Cell>
