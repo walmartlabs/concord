@@ -330,6 +330,11 @@ public class SecretManager {
             projectName = null;
         }
 
+        if (projectName != null && projectName.trim().isEmpty()) {
+            // empty project name is same as null project
+            projectName = null;
+        }
+
         if (projectId != null || projectName != null) {
             ProjectEntry entry = projectAccessManager.assertAccess(e.getOrgId(), projectId, projectName, ResourceAccessLevel.READER, true);
             projectId = entry.getId();
