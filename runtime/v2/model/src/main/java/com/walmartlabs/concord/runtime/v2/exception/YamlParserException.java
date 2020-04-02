@@ -27,8 +27,4 @@ public class YamlParserException extends IOException {
     public YamlParserException(String message) {
         super(message);
     }
-
-    public YamlParserException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

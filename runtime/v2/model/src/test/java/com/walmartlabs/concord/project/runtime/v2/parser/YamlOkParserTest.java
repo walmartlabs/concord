@@ -313,6 +313,36 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals("oneops", t.name());
     }
 
+    // Full form of IF definition
+    @Test
+    public void test010() throws Exception {
+        ProcessDefinition pd = load("010.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        IfStep ifStep = (IfStep) main.get(0);
+        assertEquals("${myVar > 0}", ifStep.getExpression());
+        assertEquals(2, ifStep.getThenSteps().size());
+        assertEquals(1, ifStep.getElseSteps().size());
+    }
+
+    // Switch full definition
+    @Test
+    public void test011() throws Exception {
+        ProcessDefinition pd = load("012.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        SwitchStep switchStep = (SwitchStep) main.get(0);
+        assertEquals("${myVar}", switchStep.getExpression());
+        assertEquals(2, switchStep.getCaseSteps().size());
+        assertEquals("red", switchStep.getCaseSteps().get(0).getKey());
+        assertEquals("green", switchStep.getCaseSteps().get(1).getKey());
+        assertEquals(1, switchStep.getDefaultSteps().size());
+    }
+
     private static void assertMeta(StepOptions o) {
         assertNotNull(o.meta());
         assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());

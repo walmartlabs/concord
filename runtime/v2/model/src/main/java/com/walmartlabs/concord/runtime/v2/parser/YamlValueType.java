@@ -47,6 +47,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<TaskCall> TASK = type("TASK");
     public static final YamlValueType<Expression> EXPRESSION = type("EXPRESSION");
+    public static final YamlValueType<String> EXPRESSION_VAL = type("EXPRESSION");
     public static final YamlValueType<Retry> RETRY = type("RETRY");
     public static final YamlValueType<Checkpoint> CHECKPOINT = type("CHECKPOINT");
     public static final YamlValueType<ExitStep> EXIT = type("EXIT");
@@ -81,6 +82,8 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Trigger> MANUAL_TRIGGER = type("MANUAL_TRIGGER");
     public static final YamlValueType<Trigger> ONEOPS_TRIGGER = type("ONEOPS_TRIGGER");
     public static final YamlValueType<Trigger> GENERIC_TRIGGER = type("GENERIC_TRIGGER");
+    public static final YamlValueType<IfStep> IF = type("IF");
+    public static final YamlValueType<SwitchStep> SWITCH = type("SWITCH");
 
     private final String name;
 

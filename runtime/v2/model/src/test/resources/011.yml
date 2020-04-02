@@ -1,0 +1,6 @@
+flows:
+  default:
+    - if: "${myVar > 0}"
+      then:
+        - log: "it's clearly non-zero"
+        - log: "yep"

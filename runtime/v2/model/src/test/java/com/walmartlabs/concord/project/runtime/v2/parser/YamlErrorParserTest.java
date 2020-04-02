@@ -1787,6 +1787,154 @@ public class YamlErrorParserTest extends AbstractParserTest {
         assertErrorMessage("errors/configuration/006.yml", msg);
     }
 
+    @Test
+    public void test1400() throws Exception {
+        String msg =
+                "(000.yml): Error @ line: 3, col: 10. Invalid value type, expected: EXPRESSION, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'if' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/000.yml", msg);
+    }
+
+    @Test
+    public void test1401() throws Exception {
+        String msg =
+                "(001.yml): Error @ line: 3, col: 11. Invalid value type, expected: EXPRESSION, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'if' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/001.yml", msg);
+    }
+
+    @Test
+    public void test1402() throws Exception {
+        String msg =
+                "(002.yml): Error @ n/a. Mandatory parameter 'then' not found\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'if' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/002.yml", msg);
+    }
+
+    @Test
+    public void test1403() throws Exception {
+        String msg =
+                "(003.yml): Error @ line: 4, col: 12. Invalid value type, expected: ARRAY_OF_STEP, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'then' @ line: 4, col: 7\n" +
+                        "\t\t'if' @ line: 3, col: 7\n" +
+                        "\t\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/003.yml", msg);
+    }
+
+    @Test
+    public void test1404() throws Exception {
+        String msg =
+                "(004.yml): Error @ line: 6, col: 10. Unknown options: ['el' [NULL] @ line: 6, col: 10], expected: [then, else, meta]. Remove invalid options and/or fix indentation\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'if' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/004.yml", msg);
+    }
+
+    @Test
+    public void test1405() throws Exception {
+        String msg =
+                "(005.yml): Error @ line: 6, col: 12. Invalid value type, expected: ARRAY_OF_STEP, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'else' @ line: 6, col: 7\n" +
+                        "\t\t'if' @ line: 3, col: 7\n" +
+                        "\t\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/005.yml", msg);
+    }
+
+    @Test
+    public void test1406() throws Exception {
+        String msg =
+                "(006.yml): Error @ line: 8, col: 13. Unknown options: ['trash' [NULL] @ line: 8, col: 13], expected: [then, else, meta]. Remove invalid options and/or fix indentation\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'if' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/006.yml", msg);
+    }
+
+    @Test
+    public void test1407() throws Exception {
+        String msg =
+                "(007.yml): Error @ line: 8, col: 12. Invalid value type, expected: OBJECT, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'meta' @ line: 8, col: 7\n" +
+                        "\t\t'if' @ line: 3, col: 7\n" +
+                        "\t\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/if/007.yml", msg);
+    }
+
+    @Test
+    public void test1500() throws Exception {
+        String msg =
+                "(000.yml): Error @ line: 3, col: 14. Invalid value type, expected: EXPRESSION, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'switch' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/switch/000.yml", msg);
+    }
+
+    @Test
+    public void test1501() throws Exception {
+        String msg =
+                "(001.yml): Error @ line: 3, col: 7. No branch labels defined\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'switch' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/switch/001.yml", msg);
+    }
+
+    @Test
+    public void test1502() throws Exception {
+        String msg =
+                "(002.yml): Error @ line: 4, col: 11. Invalid value type, expected: ARRAY_OF_STEP, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'switch' @ line: 3, col: 7\n" +
+                        "\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/switch/002.yml", msg);
+    }
+
+    @Test
+    public void test1503() throws Exception {
+        String msg =
+                "(003.yml): Error @ line: 6, col: 15. Invalid value type, expected: ARRAY_OF_STEP, got: NULL. Remove attribute or complete the definition\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'default' @ line: 6, col: 7\n" +
+                        "\t\t'switch' @ line: 3, col: 7\n" +
+                        "\t\t\t'main' @ line: 2, col: 3\n" +
+                        "\t\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/switch/003.yml", msg);
+    }
+
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);

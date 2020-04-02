@@ -204,6 +204,83 @@ public class MainTest {
         assertLog(log, ".*Hello, " + Pattern.quote("${myFavoriteExpression}") + "!.*");
     }
 
+    @Test
+    public void testIfExpression() throws Exception {
+        deploy("if-expression");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", "1")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*it's clearly non-zero.*");
+
+        verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/status"))
+                .withRequestBody(equalTo("RUNNING")));
+    }
+
+    @Test
+    public void testSwitchExpressionCaseFound() throws Exception {
+        deploy("switch-expression-full");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", "red")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*It's red.*");
+    }
+
+    @Test
+    public void testSwitchExpressionCaseNotFound() throws Exception {
+        deploy("switch-expression-full");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", "red1")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*I don't know what it is.*");
+    }
+
+    @Test
+    public void testSwitchExpressionDefault() throws Exception {
+        deploy("switch-expression-default");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", "red1")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*I don't know what it is.*");
+    }
+
+    @Test
+    public void testSwitchExpressionCaseExpression() throws Exception {
+        deploy("switch-expression-case-expression");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", "red")
+                .putArguments("aKnownValue", "red")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*Yes, I recognize this red.*");
+    }
+
+    @Test
+    public void testSwitchExpressionCaseExpressionDefault() throws Exception {
+        deploy("switch-expression-case-expression");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("myVar", "boo")
+                .putArguments("aKnownValue", "red")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*Nope.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

@@ -1,0 +1,4 @@
+flows:
+  main:
+    - if: "${myVar > 0}"
+      then:

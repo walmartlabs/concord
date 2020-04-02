@@ -27,8 +27,7 @@ import com.walmartlabs.concord.runtime.v2.model.ImmutableExpressionOptions;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import io.takari.parc.Parser;
 
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
@@ -47,6 +46,7 @@ public final class ExpressionGrammar {
     });
 
     public static final Parser<Atom, String> expression = expressionParser.map(expr -> (String)expr.value);
+    public static final Parser<Atom, String> expressionVal = orError(expressionParser.map(expr -> (String)expr.value), YamlValueType.EXPRESSION_VAL);
 
     private static final Parser<Atom, ExpressionOptions> expressionOptions =
             with(ExpressionOptions::builder,
