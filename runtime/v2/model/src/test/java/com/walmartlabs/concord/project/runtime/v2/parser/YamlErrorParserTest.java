@@ -496,6 +496,18 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void test129() throws Exception {
+        String msg = "(029.yml): Error @ line: 8, col: 13. Invalid value type, expected: PATTERN, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'githubOrg' @ line: 7, col: 9\n" +
+                "\t\t'conditions' @ line: 5, col: 7\n" +
+                "\t\t\t'github' @ line: 2, col: 5\n" +
+                "\t\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/029.yml", msg);
+    }
+
+    @Test
     public void test200() throws Exception {
         String msg =
                 "(000.yml): Error @ line: 3, col: 12. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
