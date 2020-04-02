@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.46.0] - 2020-04-02
 
 ### Added
 
@@ -18,8 +18,6 @@ process;
 
 ### Changed
 
--  concord-server, concord-agent: externalize default git operation
-timeout duration. Increase default value to ten minutes;
 - concord-server, concord-agent: externalize default git operation
 timeout duration. Increase default value to ten minutes;
 - concord-server: treat empty project name as null when updating
