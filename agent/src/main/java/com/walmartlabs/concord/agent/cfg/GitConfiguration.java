@@ -36,6 +36,7 @@ public class GitConfiguration {
 
     private final String token;
     private final boolean shallowClone;
+    private final Duration defaultOperationTimeout;
     private final Duration fetchTimeout;
     private final int httpLowSpeedLimit;
     private final int httpLowSpeedTime;
@@ -46,6 +47,7 @@ public class GitConfiguration {
     public GitConfiguration(Config cfg) {
         this.token = getStringOrDefault(cfg, "git.oauth", () -> null);
         this.shallowClone = cfg.getBoolean("git.shallowClone");
+        this.defaultOperationTimeout = cfg.getDuration("git.defaultOperationTimeout");
         this.fetchTimeout = cfg.getDuration("git.fetchTimeout");
         this.httpLowSpeedLimit = cfg.getInt("git.httpLowSpeedLimit");
         this.httpLowSpeedTime = cfg.getInt("git.httpLowSpeedTime");
@@ -59,6 +61,10 @@ public class GitConfiguration {
 
     public boolean isShallowClone() {
         return shallowClone;
+    }
+
+    public Duration getDefaultOperationTimeout() {
+        return defaultOperationTimeout;
     }
 
     public Duration getFetchTimeout() {

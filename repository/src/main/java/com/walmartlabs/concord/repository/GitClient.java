@@ -49,8 +49,8 @@ public class GitClient {
     private static final Logger log = LoggerFactory.getLogger(GitClient.class);
 
     private static final int SUCCESS_EXIT_CODE = 0;
-    private static final long DEFAULT_TIMEOUT = 30000L;
 
+    private final long defaultTimeout;
     private final GitClientConfiguration cfg;
 
     private final List<String> sensitiveData;
@@ -60,10 +60,11 @@ public class GitClient {
         this.cfg = cfg;
         this.sensitiveData = cfg.oauthToken() != null ? Collections.singletonList(cfg.oauthToken()) : Collections.emptyList();
         this.executor = Executors.newCachedThreadPool();
+        this.defaultTimeout = cfg.defaultOperationTimeout().toMillis();
     }
 
     public RepositoryInfo getInfo(Path path) {
-        String result = launchCommand(path, DEFAULT_TIMEOUT, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
+        String result = launchCommand(path, defaultTimeout, "log", "-1", "--format=%H%n%an (%ae)%n%s%n%b");
         String[] info = result.split("\n");
         if (info.length < 2) {
             return null;
@@ -85,7 +86,7 @@ public class GitClient {
             cloneCommand(uri, secret, shallow, dest);
         }
 
-        launchCommand(dest, DEFAULT_TIMEOUT, "config", "remote.origin.url", uri);
+        launchCommand(dest, defaultTimeout, "config", "remote.origin.url", uri);
 
         List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
         fetchCommand(uri, refspecs, secret, shallow, dest);
@@ -99,12 +100,12 @@ public class GitClient {
 
         checkoutCommand(rev.name(), dest);
 
-        launchCommand(dest, DEFAULT_TIMEOUT, "clean", "-fdx");
+        launchCommand(dest, defaultTimeout, "clean", "-fdx");
 
         if (hasGitModules(dest)) {
             fetchSubmodules(secret, dest);
 
-            launchCommand(dest, DEFAULT_TIMEOUT, "submodule", "foreach", "git", "reset", "--hard");
+            launchCommand(dest, defaultTimeout, "submodule", "foreach", "git", "reset", "--hard");
         }
     }
 
@@ -133,8 +134,8 @@ public class GitClient {
     }
 
     private void fetchSubmodules(Secret secret, Path dest) {
-        launchCommand(dest, DEFAULT_TIMEOUT, "submodule", "init");
-        launchCommand(dest, DEFAULT_TIMEOUT, "submodule", "sync");
+        launchCommand(dest, defaultTimeout, "submodule", "init");
+        launchCommand(dest, defaultTimeout, "submodule", "sync");
 
         List<String> args = new ArrayList<>();
         args.add("submodule");
@@ -146,7 +147,7 @@ public class GitClient {
         String[] modulePaths;
 
         try {
-            modulePaths =launchCommand(dest, DEFAULT_TIMEOUT, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
+            modulePaths =launchCommand(dest, defaultTimeout, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
                     .split("\\r?\\n");
         } catch (RepositoryException e) {
             log.warn("fetchSubmodules ['{}'] -> error while retrieving the list of submodules: {}", dest, e.getMessage());
@@ -168,7 +169,7 @@ public class GitClient {
 
             String pUrl = processUrl(url, secret);
             if (!pUrl.equals(url)) {
-                launchCommand(dest, DEFAULT_TIMEOUT, "config", "submodule." + moduleName + ".url", pUrl);
+                launchCommand(dest, defaultTimeout, "config", "submodule." + moduleName + ".url", pUrl);
             }
 
             // Find the path for this submodule
@@ -181,13 +182,13 @@ public class GitClient {
     }
 
     private String getSubmoduleUrl(Path dest, String name) {
-        String result = launchCommand(dest, DEFAULT_TIMEOUT, "config", "--get", "submodule." + name + ".url");
+        String result = launchCommand(dest, defaultTimeout, "config", "--get", "submodule." + name + ".url");
         String s = firstLine(result);
         return s != null ? s.trim() : null;
     }
 
     private String getSubmodulePath(Path dest, String name) {
-        String result = launchCommand(dest, DEFAULT_TIMEOUT,"config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
+        String result = launchCommand(dest, defaultTimeout,"config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
         String s = firstLine(result);
         return s != null ? s.trim() : null;
     }
@@ -202,7 +203,7 @@ public class GitClient {
 
     private ObjectId revParse(String revName, Path dest) {
         String arg = revName + "^{commit}";
-        String result = launchCommand(dest, DEFAULT_TIMEOUT, "rev-parse", arg);
+        String result = launchCommand(dest, defaultTimeout, "rev-parse", arg);
         String line = result.trim();
         if (line.isEmpty()) {
             throw new RepositoryException("rev-parse no content returned for " + revName);
@@ -303,16 +304,16 @@ public class GitClient {
             }
 
             // init
-            launchCommand(dest, DEFAULT_TIMEOUT, "init");
+            launchCommand(dest, defaultTimeout, "init");
 
             // fetch
             List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
             fetchCommand(url, refspecs, secret, shallow, dest);
 
-            launchCommand(dest, DEFAULT_TIMEOUT, "config", "remote.origin.url", url);
+            launchCommand(dest, defaultTimeout, "config", "remote.origin.url", url);
 
             for (RefSpec refSpec : refspecs) {
-                launchCommand(dest, DEFAULT_TIMEOUT, "config", "--add", "remote.origin.fetch", refSpec.toString());
+                launchCommand(dest, defaultTimeout, "config", "--add", "remote.origin.fetch", refSpec.toString());
             }
         } catch (IOException e) {
             log.error("cloneCommand ['{}'] -> error", dest, e);
@@ -330,7 +331,7 @@ public class GitClient {
     private void checkoutCommand(String ref, Path dest) {
         log.info("Checking out revision '{}'", ref);
 
-        launchCommand(dest, DEFAULT_TIMEOUT,  "checkout", "-f", ref);
+        launchCommand(dest, defaultTimeout, "checkout", "-f", ref);
     }
 
     private void launchCommandWithCredentials(Path workDir,

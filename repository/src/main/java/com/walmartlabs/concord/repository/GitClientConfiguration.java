@@ -37,6 +37,11 @@ public interface GitClientConfiguration {
     }
 
     @Value.Default
+    default Duration defaultOperationTimeout() {
+        return Duration.ofMinutes(10L);
+    }
+
+    @Value.Default
     default Duration fetchTimeout() {
         return Duration.ofMinutes(10L);
     }
