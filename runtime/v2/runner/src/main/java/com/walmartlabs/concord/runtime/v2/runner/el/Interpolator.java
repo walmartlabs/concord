@@ -92,6 +92,10 @@ public final class Interpolator {
         return expectedType.cast(v);
     }
 
+    public static boolean hasExpression(String s) {
+        return s.contains("${");
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Map<Object, Object> interpolateMap(ExpressionEvaluator ee, Context ctx, Map<Object, Object> v, Map container) {
         Context iCtx = new IntermediateGlobalsContext(ctx, new GlobalVariablesWithOverrides(ctx.globalVariables(), container));
@@ -107,10 +111,6 @@ public final class Interpolator {
         }
 
         return container;
-    }
-
-    private static boolean hasExpression(String s) {
-        return s.contains("${");
     }
 
     /**
