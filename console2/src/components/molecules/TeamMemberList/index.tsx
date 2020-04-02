@@ -22,11 +22,9 @@ import * as React from 'react';
 import { Button, Container, Form, Menu, Table } from 'semantic-ui-react';
 
 import { NewTeamUserEntry, TeamRole, TeamUserEntry } from '../../../api/org/team';
-import { UserSearchResult } from '../../../api/service/console';
-import { UserType } from '../../../api/user';
+import { UserEntry, UserType } from '../../../api/user';
 import { TeamRoleDropdown } from '../../molecules';
-import { FindUserField } from '../../organisms';
-import { renderUser } from '../../organisms/FindUserField';
+import { FindUserField2 } from '../../organisms';
 
 interface Entry extends NewTeamUserEntry {
     added: boolean;
@@ -44,6 +42,16 @@ interface Props {
     submitting: boolean;
     submit: (users: NewTeamUserEntry[]) => void;
 }
+
+const renderUser = (e: NewTeamUserEntry) => {
+    if (!e.userDomain) {
+        return e.displayName ? `${e.displayName} (${e.username})` : e.username;
+    }
+
+    return e.displayName
+        ? `${e.displayName} (${e.username}@${e.userDomain})`
+        : `${e.username}@${e.userDomain}`;
+};
 
 const toState = (data: TeamUserEntry[]): Entry[] =>
     data.map((e) => ({ ...e, added: false, deleted: false }));
@@ -80,12 +88,12 @@ class EntryList extends React.Component<Props, State> {
         this.setState({ data, dirty: true });
     }
 
-    handleAddUser(u: UserSearchResult) {
+    handleAddUser(u: UserEntry) {
         const { data } = this.state;
         // TODO support for LOCAL users
         const e = {
-            username: u.username,
-            userDomain: u.userDomain,
+            username: u.name,
+            userDomain: u.domain,
             displayName: u.displayName,
             userType: UserType.LDAP,
             role: TeamRole.MEMBER,
@@ -115,11 +123,9 @@ class EntryList extends React.Component<Props, State> {
                             <Container fluid={true} textAlign="left">
                                 <Form>
                                     <Form.Field>
-                                        <FindUserField
+                                        <FindUserField2
                                             placeholder="Add a team member"
-                                            onSelect={(u: UserSearchResult) =>
-                                                this.handleAddUser(u)
-                                            }
+                                            onSelect={(u: UserEntry) => this.handleAddUser(u)}
                                         />
                                     </Form.Field>
                                 </Form>
@@ -174,9 +180,7 @@ class EntryList extends React.Component<Props, State> {
                         <Table.Body>
                             {data.map((e, idx) => (
                                 <Table.Row key={idx} negative={e.deleted} positive={e.added}>
-                                    <Table.Cell>
-                                        {renderUser(e.username, e.userDomain, e.displayName)}
-                                    </Table.Cell>
+                                    <Table.Cell>{renderUser(e)}</Table.Cell>
                                     <Table.Cell>{e.userType}</Table.Cell>
                                     <Table.Cell>
                                         {editMode ? (

@@ -35,6 +35,8 @@ interface Result {
     description: string;
 }
 
+const renderDescription = (e: UserEntry): string => (e.email ? `${e.name} - ${e.email}` : e.name);
+
 const renderTitle = (e: UserEntry) => (e.displayName ? e.displayName : e.name);
 
 export default ({ defaultUserId, placeholder, onSelect }: Props) => {
@@ -71,7 +73,7 @@ export default ({ defaultUserId, placeholder, onSelect }: Props) => {
         const r = items.map((i) => ({
             key: i.id,
             title: renderTitle(i),
-            description: i.email ? i.email : i.name
+            description: renderDescription(i)
         }));
 
         setResults(r);
