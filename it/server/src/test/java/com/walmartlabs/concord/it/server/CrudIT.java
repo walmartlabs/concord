@@ -369,16 +369,39 @@ public class CrudIT extends AbstractServerIT {
         String repoName = "repo_" + randomString();
 
         ProjectsApi projectsApi = new ProjectsApi(getApiClient());
-        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+        ProjectOperationResponse projectResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setName(projectName)
                 .setRepositories(Collections.singletonMap(repoName, new RepositoryEntry()
                         .setName(repoName)
                         .setUrl("git@test:/test")
                         .setSecretName(secretName))));
+        UUID projectId = projectResp.getId();
 
         // ---
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
+        SecretUpdateRequest updateReq;
+
+        // --  Update secret project name
+
+        updateReq = new SecretUpdateRequest();
+        updateReq.setProjectName(projectName);
+        secretsApi.update(orgName, secretName, updateReq);
+        updateReq.setProjectName("");
+        secretsApi.update(orgName, secretName, updateReq);
+        updateReq.setProjectName(null);
+        secretsApi.update(orgName, secretName, updateReq);
+
+        // --  Update secret project ID
+
+        updateReq = new SecretUpdateRequest();
+        updateReq.setProjectId(projectId);
+        secretsApi.update(orgName, secretName, updateReq);
+        updateReq.setProjectId(null);
+        secretsApi.update(orgName, secretName, updateReq);
+
+        // --  Delete secret
+
         secretsApi.delete(orgName, secretName);
 
         /// ---
