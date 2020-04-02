@@ -75,6 +75,13 @@ public class UserDao extends AbstractDao {
                 .execute());
     }
 
+    public void enable(UUID id) {
+        tx(tx -> tx.update(USERS)
+                .set(USERS.IS_DISABLED, inline(false))
+                .where(USERS.USER_ID.eq(id))
+                .execute());
+    }
+
     public void disable(UUID id) {
         tx(tx -> tx.update(USERS)
                 .set(USERS.IS_DISABLED, inline(true))

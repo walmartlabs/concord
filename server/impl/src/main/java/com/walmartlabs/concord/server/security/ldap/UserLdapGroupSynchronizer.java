@@ -43,6 +43,10 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static org.jooq.impl.DSL.currentTimestamp;
 
+/**
+ * Responsible for AD/LDAP group synchronization and enabling/disabling users
+ * based on whether they have active groups or not.
+ */
 @Named("user-ldap-group-sync")
 @Singleton
 public class UserLdapGroupSynchronizer implements ScheduledTask {
@@ -66,7 +70,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     @Override
     public long getIntervalInSec() {
-        return cfg.getInterval();
+        return cfg.getInterval().getSeconds();
     }
 
     @Override
@@ -87,13 +91,27 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         try {
             Set<String> groups = ldapManager.getGroups(u.username, u.domain);
             if (groups == null) {
-                userDao.disable(u.userId);
-                log.info("processUser ['{}'] -> not found in LDAP, user is disabled", u.username);
+                disableUser(u);
             } else {
+                enableUser(u);
                 ldapGroupsDao.update(u.userId, groups);
             }
         } catch (Exception e) {
             log.error("processUser ['{}'] -> error", u.username, e);
+        }
+    }
+
+    private void enableUser(UserItem u) {
+        if (u.isDisabled) {
+            userDao.enable(u.userId);
+            log.info("enableUser ['{}'] -> user found active in LDAP", u.username);
+        }
+    }
+
+    private void disableUser(UserItem u) {
+        if (!u.isDisabled) {
+            userDao.disable(u.userId);
+            log.info("disableUser ['{}'] -> not found in LDAP, user is disabled", u.username);
         }
     }
 
@@ -106,13 +124,12 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         }
 
         public List<UserItem> list(int limit, Field<Timestamp> cutoff) {
-            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN)
+            return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.IS_DISABLED)
                     .from(USERS)
                     .where(USERS.USER_TYPE.eq(UserType.LDAP.name()))
                     .and(USERS.LAST_GROUP_SYNC_DT.isNull().or(USERS.LAST_GROUP_SYNC_DT.lessThan(cutoff)))
-                    .and(USERS.IS_DISABLED.isFalse())
                     .limit(limit)
-                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3())));
+                    .fetch(r -> new UserItem(r.value1(), r.value2(), r.value3(), r.value4())));
         }
     }
 
@@ -121,11 +138,13 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
         private final UUID userId;
         private final String username;
         private final String domain;
+        private final boolean isDisabled;
 
-        private UserItem(UUID userId, String username, String domain) {
+        private UserItem(UUID userId, String username, String domain, Boolean isDisabled) {
             this.userId = userId;
             this.username = username;
             this.domain = domain;
+            this.isDisabled = isDisabled;
         }
     }
 }
