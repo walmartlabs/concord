@@ -87,4 +87,22 @@ public class ExecutionListenerHolder {
 
         return result;
     }
+
+    public void fireBeforeProcessStart() {
+        for (ExecutionListener l : listeners) {
+            l.beforeProcessStart();
+        }
+    }
+
+    public void fireBeforeProcessResume() {
+        for (ExecutionListener l : listeners) {
+            l.beforeProcessResume();
+        }
+    }
+
+    public void fireAfterProcessEnd(State state) {
+        for (ExecutionListener l : listeners) {
+            l.afterProcessEnd(state);
+        }
+    }
 }

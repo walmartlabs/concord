@@ -30,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
@@ -44,6 +45,7 @@ public class DefaultServicesModule extends AbstractModule {
         bind(CheckpointService.class).to(DefaultCheckpointService.class);
         bind(DockerService.class).to(DefaultDockerService.class);
         bind(FileService.class).to(DefaultFileService.class);
+        bind(PersistenceService.class).to(DefaultPersistenceService.class);
         bind(PolicyEngine.class).toProvider(PolicyEngineProvider.class);
         bind(SecretService.class).to(DefaultSecretService.class);
         bind(SynchronizationService.class).to(DefaultSynchronizationService.class);
@@ -54,5 +56,6 @@ public class DefaultServicesModule extends AbstractModule {
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallEventRecordingListener.class);
         taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
+        taskCallListeners.addBinding().to(TaskResultListener.class);
     }
 }

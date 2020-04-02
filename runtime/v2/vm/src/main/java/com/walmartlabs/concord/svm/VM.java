@@ -47,7 +47,11 @@ public class VM {
     public void start(State state) throws Exception {
         log.debug("start -> start");
 
+        listeners.fireBeforeProcessStart();
+
         execute(state);
+
+        listeners.fireAfterProcessEnd(state);
 
         log.debug("start -> done");
     }
@@ -65,7 +69,11 @@ public class VM {
 
         wakeSuspended(state);
 
+        listeners.fireBeforeProcessResume();
+
         execute(state);
+
+        listeners.fireAfterProcessEnd(state);
 
         log.debug("resume ['{}'] -> done", eventRef);
     }

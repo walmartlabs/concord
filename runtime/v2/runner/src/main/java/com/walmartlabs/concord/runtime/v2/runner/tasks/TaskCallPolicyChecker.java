@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 import com.walmartlabs.concord.policyengine.CheckResult;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.TaskRule;
+import com.walmartlabs.concord.runtime.v2.runner.TaskResultService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +34,12 @@ public class TaskCallPolicyChecker implements TaskCallListener {
     private static final Logger log = LoggerFactory.getLogger(TaskCallPolicyChecker.class);
 
     private final PolicyEngine policyEngine;
+    private final TaskResultService taskResultService;
 
     @Inject
-    public TaskCallPolicyChecker(PolicyEngine policyEngine) {
+    public TaskCallPolicyChecker(PolicyEngine policyEngine, TaskResultService taskResultService) {
         this.policyEngine = policyEngine;
+        this.taskResultService = taskResultService;
     }
 
     @Override
@@ -48,7 +51,8 @@ public class TaskCallPolicyChecker implements TaskCallListener {
         CheckResult<TaskRule, String> result = policyEngine.getTaskPolicy().check(
                 event.taskName(),
                 event.methodName(),
-                event.input());
+                event.input(),
+                taskResultService.getResults());
 
         result.getWarn().forEach(d -> log.warn("Potentially restricted task call '{}' (task policy {})", event.taskName(), d.getRule()));
         result.getDeny().forEach(d -> log.error("Task call '{}' is forbidden by the task policy {}", event.taskName(), d.getRule()));

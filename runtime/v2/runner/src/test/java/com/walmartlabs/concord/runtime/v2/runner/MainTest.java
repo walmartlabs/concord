@@ -179,6 +179,20 @@ public class MainTest {
                 .withRequestBodyPart(checkpoint));
     }
 
+    @Test
+    public void testTaskResultPolicy() throws Exception {
+        deploy("taskResultPolicy");
+
+        save(ProcessConfiguration.builder().build());
+
+        try {
+            start();
+            fail("exception expected");
+        } catch (Exception e) {
+            assertEquals("Found forbidden tasks", e.getMessage());
+        }
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -279,6 +293,15 @@ public class MainTest {
 
             @Nullable
             String b();
+        }
+    }
+
+    @Named("testTask")
+    static class TestTask implements Task {
+
+        @Override
+        public Serializable execute(TaskContext ctx) throws Exception {
+            return new HashMap<>(ctx.input());
         }
     }
 }

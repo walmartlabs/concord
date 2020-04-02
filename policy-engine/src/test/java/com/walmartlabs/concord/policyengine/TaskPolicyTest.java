@@ -22,8 +22,8 @@ package com.walmartlabs.concord.policyengine;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.Serializable;
+import java.util.*;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -32,7 +32,7 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByTaskName() {
-        TaskRule r = new TaskRule(null, "taskName-.*", null, null);
+        TaskRule r = new TaskRule(null, "taskName-.*", null, null, null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -44,8 +44,8 @@ public class TaskPolicyTest {
 
     @Test
     public void testAllowByTaskName() {
-        TaskRule allowRule = new TaskRule(null, "taskName-1234", null, null);
-        TaskRule denyRule = new TaskRule(null, ".*", null, null);
+        TaskRule allowRule = new TaskRule(null, "taskName-1234", null, null, null);
+        TaskRule denyRule = new TaskRule(null, ".*", null, null, null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(Collections.singletonList(allowRule), null, Collections.singletonList(denyRule));
 
@@ -57,7 +57,7 @@ public class TaskPolicyTest {
 
     @Test
     public void testDenyByMethodName() {
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", null);
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", null, null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -69,8 +69,8 @@ public class TaskPolicyTest {
 
     @Test
     public void testAllowByMethodName() {
-        TaskRule allowRule = new TaskRule(null, "taskName-1234", "foo", null);
-        TaskRule denyRule = new TaskRule(null, ".*", ".*", null);
+        TaskRule allowRule = new TaskRule(null, "taskName-1234", "foo", null, null);
+        TaskRule denyRule = new TaskRule(null, ".*", ".*", null, null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(Collections.singletonList(allowRule), null, Collections.singletonList(denyRule));
 
@@ -85,7 +85,7 @@ public class TaskPolicyTest {
         TaskRule.Param p1 = new TaskRule.Param(1, null, false, Collections.singletonList("value-1"));
         TaskRule.Param p2 = new TaskRule.Param(0, null, false, Collections.singletonList("value-2"));
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Arrays.asList(p1, p2));
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Arrays.asList(p1, p2), null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -99,7 +99,7 @@ public class TaskPolicyTest {
     public void testDenyByMapStringParam() {
         TaskRule.Param p1 = new TaskRule.Param(1, "k", false, Collections.singletonList("v"));
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1));
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1), null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -113,7 +113,7 @@ public class TaskPolicyTest {
     public void testDenyByMapMapStringParam() {
         TaskRule.Param p1 = new TaskRule.Param(1, "k.kk", false, Collections.singletonList("v"));
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1));
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1), null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -127,7 +127,7 @@ public class TaskPolicyTest {
     public void testDenyByMapMapStringParamNull() {
         TaskRule.Param p1 = new TaskRule.Param(1, "k.kk", false, Collections.singletonList(null));
 
-        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1));
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", Collections.singletonList(p1), null);
 
         PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
 
@@ -137,13 +137,56 @@ public class TaskPolicyTest {
         assertDeny(policy, "taskName-12", "foo", "xxx", Collections.singletonMap("k1", "v"));
     }
 
+    @Test
+    public void testDenyByTaskResultsSimpleObject() {
+        TaskRule.TaskResult tr1 = new TaskRule.TaskResult("taskName-12", null, Collections.singletonList("result1"));
+
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", null, Collections.singletonList(tr1));
+
+        PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
+
+        TaskPolicy policy = new TaskPolicy(rules);
+
+        // ---
+        assertDenyByTaskResults(policy, "taskName-12", "foo", Collections.singletonMap("taskName-12", Collections.singletonList("result1")));
+    }
+
+    @Test
+    public void testDenyByTaskResultsMap() {
+        TaskRule.TaskResult tr1 = new TaskRule.TaskResult("taskName-12", "k.k1", Collections.singletonList("result1"));
+
+        TaskRule r = new TaskRule(null, "taskName-.*", "foo", null, Collections.singletonList(tr1));
+
+        PolicyRules<TaskRule> rules = new PolicyRules<>(null, null, Collections.singletonList(r));
+
+        TaskPolicy policy = new TaskPolicy(rules);
+
+        // ---
+        List<Serializable> taskResults = new ArrayList<>();
+        taskResults.add("result12");
+        taskResults.add(singletonMap("k", singletonMap("k1", "result1")));
+
+        assertDenyByTaskResults(policy, "taskName-12", "foo", Collections.singletonMap("taskName-12", taskResults));
+    }
+
     private static void assertDeny(TaskPolicy policy, String taskName, String methodName, Object...params) {
-        CheckResult<TaskRule, String> result = policy.check(taskName, methodName, params);
+        CheckResult<TaskRule, String> result = policy.check(taskName, methodName, params, null);
         assertFalse(result.getDeny().isEmpty());
     }
 
     private static void assertAllow(TaskPolicy policy, String taskName, String methodName, Object...params) {
-        CheckResult<TaskRule, String> result = policy.check(taskName, methodName, params);
+        CheckResult<TaskRule, String> result = policy.check(taskName, methodName, params, null);
         assertTrue(result.getDeny().isEmpty());
+    }
+
+    private static void assertDenyByTaskResults(TaskPolicy policy, String taskName, String methodName, Map<String, List<Serializable>> taskResults) {
+        CheckResult<TaskRule, String> result = policy.check(taskName, methodName, null, taskResults);
+        assertFalse(result.getDeny().isEmpty());
+    }
+
+    private static HashMap<String, Serializable> singletonMap(String k, Serializable v) {
+        HashMap<String, Serializable> result = new HashMap<>();
+        result.put(k, v);
+        return result;
     }
 }

@@ -55,6 +55,24 @@ public interface ExecutionListener {
         return Result.CONTINUE;
     }
 
+    /**
+     * Called before the process executes its first step.
+     */
+    default void beforeProcessStart() {
+    }
+
+    /**
+     * Called before the process resumes the execution.
+     */
+    default void beforeProcessResume() {
+    }
+
+    /**
+     * Called after the process calls the last step.
+     */
+    default void afterProcessEnd(State state) {
+    }
+
     enum Result {
         CONTINUE,
         BREAK

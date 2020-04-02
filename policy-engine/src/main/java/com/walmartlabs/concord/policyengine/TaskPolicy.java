@@ -23,9 +23,8 @@ package com.walmartlabs.concord.policyengine;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
 import com.walmartlabs.concord.sdk.Context;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.io.Serializable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.policyengine.Utils.matches;
@@ -38,25 +37,25 @@ public class TaskPolicy {
         this.rules = rules;
     }
 
-    public CheckResult<TaskRule, String> check(String taskName, String methodName, Object[] params) {
+    public CheckResult<TaskRule, String> check(String taskName, String methodName, Object[] params, Map<String, List<Serializable>> taskResults) {
         if (rules == null || rules.isEmpty()) {
             return CheckResult.success();
         }
 
         for(TaskRule r : rules.getAllow()) {
-            if (matchRule(taskName, methodName, params, r)) {
+            if (matchRule(taskName, methodName, params, taskResults, r)) {
                 return CheckResult.success();
             }
         }
 
         for(TaskRule r : rules.getDeny()) {
-            if (matchRule(taskName, methodName, params, r)) {
+            if (matchRule(taskName, methodName, params, taskResults, r)) {
                 return CheckResult.error(new CheckResult.Item<>(r, methodName));
             }
         }
 
         for(TaskRule r : rules.getWarn()) {
-            if (matchRule(taskName, methodName, params, r)) {
+            if (matchRule(taskName, methodName, params, taskResults, r)) {
                 return CheckResult.warn(new CheckResult.Item<>(r, methodName));
             }
         }
@@ -64,7 +63,25 @@ public class TaskPolicy {
         return CheckResult.success();
     }
 
-    private boolean matchRule(String taskName, String methodName, Object[] params, TaskRule r) {
+    public Set<String> getTaskResults() {
+        if (rules == null || rules.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<String> result = new HashSet<>();
+        rules.getAllow().forEach(r -> collectTaskNames(r.getTaskResults(), result));
+        rules.getDeny().forEach(r -> collectTaskNames(r.getTaskResults(), result));
+        rules.getWarn().forEach(r -> collectTaskNames(r.getTaskResults(), result));
+        return result;
+    }
+
+    private static void collectTaskNames(List<TaskRule.TaskResult> taskResults, Set<String> result) {
+        for (TaskRule.TaskResult tr : taskResults) {
+            result.add(tr.getTask());
+        }
+    }
+
+    private boolean matchRule(String taskName, String methodName, Object[] params, Map<String, List<Serializable>> taskResults, TaskRule r) {
         if (!matches(r.getTaskName(), taskName)) {
             return false;
         }
@@ -73,16 +90,20 @@ public class TaskPolicy {
             return false;
         }
 
-        if (!paramsMatches(r.getParams(), params)) {
-            return false;
+        if (paramsMatches(r.getParams(), params)) {
+            return true;
         }
 
-        return true;
+        if (taskResultsMatches(r.getTaskResults(), taskResults)) {
+            return true;
+        }
+
+        return false;
     }
 
-    private boolean paramsMatches(List<TaskRule.Param> r, Object[] params) {
+    private static boolean paramsMatches(List<TaskRule.Param> r, Object[] params) {
         if (params == null) {
-            return false;
+            return r.isEmpty();
         }
 
         for (TaskRule.Param p : r) {
@@ -109,11 +130,17 @@ public class TaskPolicy {
         }
 
         if (param instanceof Map) {
+            if (names == null) {
+                return false;
+            }
             Map<String, Object> m = (Map<String, Object>) param;
             String name = names[nameIndex];
             nameIndex += 1;
             return paramMatches(names, nameIndex, values, m.get(name), isProtected);
         } else if (param instanceof Context) {
+            if (names == null) {
+                return false;
+            }
             Context ctx = (Context) param;
             String name = names[nameIndex];
             nameIndex += 1;
@@ -136,6 +163,28 @@ public class TaskPolicy {
         } else {
             for (Object v : values) {
                 if (v != null && v.equals(param)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean taskResultsMatches(List<TaskRule.TaskResult> rule, Map<String, List<Serializable>> taskResults) {
+        if (rule.isEmpty() || taskResults == null) {
+            return false;
+        }
+
+        for (TaskRule.TaskResult tr : rule) {
+            String taskName = tr.getTask();
+            List<Serializable> results = taskResults.getOrDefault(taskName, Collections.emptyList());
+            String resultName = tr.getResult();
+
+            for (Object result : results) {
+                if (paramMatches(
+                        Optional.ofNullable(resultName).map(n -> n.split("\\.")).orElse(null),
+                        0, tr.getValues(), result, false)) {
                     return true;
                 }
             }

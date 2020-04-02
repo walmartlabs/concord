@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.Serializable;
 import java.util.List;
 
 public class TaskCallInterceptor implements MethodInterceptor {
@@ -69,6 +70,7 @@ public class TaskCallInterceptor implements MethodInterceptor {
         long duration = System.currentTimeMillis() - startedAt;
         listeners.forEach(l -> l.onEvent(eventBuilder(Phase.POST, execution, invocation, taskName)
                 .duration(duration)
+                .result((result instanceof Serializable) ? (Serializable)result : null)
                 .build()));
 
         return result;
