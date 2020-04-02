@@ -1,0 +1,5 @@
+flows:
+  default:
+    - switch: "${myVar}"
+      default:
+        - log: "I don't know what it is"

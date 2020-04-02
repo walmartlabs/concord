@@ -26,6 +26,11 @@ public class YamlProcessingException extends RuntimeException {
 
     private final JsonLocation location;
 
+    public YamlProcessingException(JsonLocation location, String message) {
+        super(message);
+        this.location = location;
+    }
+
     protected YamlProcessingException(JsonLocation location) {
         this.location = location;
     }

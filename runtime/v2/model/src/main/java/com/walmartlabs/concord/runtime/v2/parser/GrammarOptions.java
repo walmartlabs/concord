@@ -137,10 +137,11 @@ public final class GrammarOptions {
             // TODO: skip check if no mandatory options
             // Check mandatory options
             Result<Atom, Set<String>> yamlOptions = allOptionKeys.apply(in);
+            Set<String> opts = Collections.emptySet();
             if (yamlOptions.isSuccess()) {
-                Set<String> opts = yamlOptions.toSuccess().getResult();
-                assertMandatoryOptions(opts, options);
+                opts = yamlOptions.toSuccess().getResult();
             }
+            assertMandatoryOptions(opts, options);
 
             Result<Atom, List<O>> rp = many(_choice(options)).map(Seq::toList).apply(in);
             if (rp.isFailure()) {

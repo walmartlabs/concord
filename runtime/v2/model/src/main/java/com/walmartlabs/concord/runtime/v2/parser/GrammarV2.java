@@ -35,6 +35,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static com.walmartlabs.concord.runtime.v2.parser.CheckpointGrammar.checkpoint;
+import static com.walmartlabs.concord.runtime.v2.parser.ConditionalExpressionsGrammar.ifExpr;
+import static com.walmartlabs.concord.runtime.v2.parser.ConditionalExpressionsGrammar.switchExpr;
 import static com.walmartlabs.concord.runtime.v2.parser.ExitGrammar.exit;
 import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.exprFull;
 import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.exprShort;
@@ -129,7 +131,7 @@ public final class GrammarV2 {
 
     private static final Parser<Atom, Step> stepObject =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(parallelBlock, group, exprFull), choice(taskFull, callFull, callForm), checkpoint, taskShort));
+                    choice(choice(parallelBlock, group, exprFull), choice(taskFull, callFull, callForm), checkpoint, ifExpr, switchExpr, taskShort));
 
     // step := exit | exprShort | parallelBlock | stepObject
     private static final Parser<Atom, Step> step = orError(choice(exit, exprShort, stepObject), YamlValueType.STEP);

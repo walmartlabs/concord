@@ -1,0 +1,6 @@
+flows:
+  main:
+    - switch: "${myVar}"
+      red:
+        - log: "It's red!"
+      default:

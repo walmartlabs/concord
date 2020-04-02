@@ -1,0 +1,7 @@
+flows:
+  default:
+    - switch: ${myVar}
+      ${aKnownValue}:
+        - log: "Yes, I recognize this ${aKnownValue}"
+      default:
+        - log: "Nope"
