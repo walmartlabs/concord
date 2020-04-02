@@ -1,5 +1,33 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: support for `if` and `switch` steps;
+- runtime-v2: support for lists in `githubOrg` and `githubRepo`
+conditions in `github` triggers;
+- runtime-v2: ability to save all task call results in the process
+state for later use. Useful for implementing policies that restrict
+flow execution based on results of previously called tasks;
+- concord-server: automatically re-enable AD/LDAP user accounts
+that were previously disabled by the AD/LDAP synchronization
+process;
+- runtime-v2: `DockerService` support;
+- runtime-v2: support for task policies.
+
+### Changed
+
+-  concord-server, concord-agent: externalize default git operation
+timeout duration. Increase default value to ten minutes;
+- concord-server, concord-agent: externalize default git operation
+timeout duration. Increase default value to ten minutes;
+- concord-server: treat empty project name as null when updating
+secret. This fixes an issue preventing users from being able to
+"unlink" secrets from projects.
+
+
+
 ## [1.45.0] - 2020-03-30
 
 ### Added
