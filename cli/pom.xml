@@ -197,7 +197,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <flags>-Xmx128m</flags>
+                    <flags>-Xmx128m -client</flags>
                     <classifier>uber</classifier>
                     <outputClassifier>executable</outputClassifier>
                     <allowOtherTypes>true</allowOtherTypes>

@@ -61,6 +61,7 @@ public class Agent {
     private final ProcessLogFactory processLogFactory;
     private final ProcessApi processApi;
     private final WorkerFactory workerFactory;
+    private final ExecutorService executor;
 
     private final Map<UUID, Worker> activeWorkers = new ConcurrentHashMap<>();
     private final AtomicBoolean maintenanceMode = new AtomicBoolean(false);
@@ -82,11 +83,23 @@ public class Agent {
         this.processLogFactory = processLogFactory;
         this.processApi = processApi;
         this.workerFactory = workerFactory;
+
+        this.executor = Executors.newCachedThreadPool();
     }
 
-    public void run() throws Exception {
-        ExecutorService executor = Executors.newCachedThreadPool();
+    public void start() throws Exception {
+        executor.submit(() -> {
+            run();
+            return null;
+        });
+    }
 
+    public void stop() throws Exception {
+        queueClient.stop();
+        executor.shutdownNow();
+    }
+
+    private void run() throws Exception {
         int workersCount = agentCfg.getWorkersCount();
         log.info("run -> using {} worker(s)", workersCount);
         workersAvailable = new Semaphore(workersCount);
