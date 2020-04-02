@@ -55,6 +55,7 @@ public class RepositoryManager {
         GitClientConfiguration clientCfg = GitClientConfiguration.builder()
                 .oauthToken(gitCfg.getToken())
                 .shallowClone(gitCfg.isShallowClone())
+                .defaultOperationTimeout(gitCfg.getDefaultOperationTimeout())
                 .fetchTimeout(gitCfg.getFetchTimeout())
                 .httpLowSpeedLimit(gitCfg.getHttpLowSpeedLimit())
                 .httpLowSpeedTime(gitCfg.getHttpLowSpeedTime())

@@ -43,6 +43,10 @@ public class GitConfiguration implements Serializable {
     private boolean shallowClone;
 
     @Inject
+    @Config("git.defaultOperationTimeout")
+    private Duration defaultOperationTimeout;
+
+    @Inject
     @Config("git.fetchTimeout")
     private Duration fetchTimeout;
 
@@ -64,6 +68,10 @@ public class GitConfiguration implements Serializable {
 
     public boolean isShallowClone() {
         return shallowClone;
+    }
+
+    public Duration getDefaultOperationTimeout() {
+        return defaultOperationTimeout;
     }
 
     public Duration getFetchTimeout() {
