@@ -55,12 +55,10 @@ import java.nio.file.attribute.FileAttribute;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
 import static com.walmartlabs.concord.plugins.http.HttpTaskUtils.getHttpEntity;
@@ -112,8 +110,6 @@ public class SimpleHttpClient {
                 throw new UnauthorizedException("Authorization required for " + request.getURI().toURL() + "(code: " + code + ")");
             }
 
-            log.info("Response status code: {}", httpResponse.getStatusLine().getStatusCode());
-
             Family statusCodeFamily = Family.familyOf(httpResponse.getStatusLine().getStatusCode());
             boolean isSuccess = Family.SUCCESSFUL == statusCodeFamily;
 
@@ -132,6 +128,7 @@ public class SimpleHttpClient {
             response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
             response.put("headers", getHeaders(httpResponse.getAllHeaders()));
 
+            // TODO return a proper structure, convert later
             return new ClientResponse(response);
 
         } catch (RequestTimeoutException | IOException | UnauthorizedException e) {
@@ -146,8 +143,8 @@ public class SimpleHttpClient {
                 response.put("statusCode", httpResponse.getStatusLine().getStatusCode());
             }
 
+            // TODO return a proper structure, convert later
             return new ClientResponse(response);
-
         } finally {
             if (httpResponse != null) {
                 if (config.isDebug()) {

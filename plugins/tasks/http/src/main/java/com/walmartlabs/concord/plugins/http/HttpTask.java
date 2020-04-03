@@ -74,7 +74,8 @@ public class HttpTask implements Task {
         log.info("Request method: {}", config.getMethodType());
 
         Map<String, Object> response = SimpleHttpClient.create(config).execute().getResponse();
-        log.info("Success response: {}", response.get(SUCCESS_KEY));
+        log.info("Response status code: {}", response.get(STATUS_CODE_PARAM));
+        log.info("Success response: {}", response.get(SUCCESS_PARAM));
 
         return response;
     }
@@ -150,31 +151,59 @@ public class HttpTask implements Task {
      */
     static final class HttpTaskConstant {
 
+        // input parameters
         static final String AUTH_KEY = "auth";
         static final String BASIC_KEY = "basic";
         static final String BODY_KEY = "body";
         static final String CONNECT_TIMEOUT_KEY = "connectTimeout";
         static final String CONTENT_KEY = "content";
         static final String DEBUG_KEY = "debug";
+        static final String FOLLOW_REDIRECTS_KEY = "followRedirects";
         static final String HEADERS_KEY = "headers";
-        static final String QUERY_KEY = "query";
         static final String IGNORE_ERRORS_KEY = "ignoreErrors";
         static final String METHOD_KEY = "method";
         static final String OUT_KEY = "out";
         static final String PASSWORD_KEY = "password"; // NOSONAR
         static final String PROXY_KEY = "proxy";
+        static final String QUERY_KEY = "query";
         static final String REQUEST_KEY = "request";
         static final String REQUEST_TIMEOUT_KEY = "requestTimeout";
-        static final String REQUEST_POST_KEY = "POST";
-        static final String REQUEST_PUT_KEY = "PUT";
         static final String RESPONSE_KEY = "response";
         static final String SOCKET_TIMEOUT_KEY = "socketTimeout";
-        static final String SUCCESS_KEY = "success";
         static final String TOKEN_KEY = "token";
         static final String URL_KEY = "url";
         static final String USERNAME_KEY = "username";
-        static final String WORK_DIR_KEY = "workDir";
-        static final String FOLLOW_REDIRECTS_KEY = "followRedirects";
+
+        static final String[] ALL_KEYS = {
+                AUTH_KEY,
+                BASIC_KEY,
+                BODY_KEY,
+                CONNECT_TIMEOUT_KEY,
+                CONTENT_KEY,
+                DEBUG_KEY,
+                FOLLOW_REDIRECTS_KEY,
+                HEADERS_KEY,
+                IGNORE_ERRORS_KEY,
+                METHOD_KEY,
+                OUT_KEY,
+                PASSWORD_KEY,
+                PROXY_KEY,
+                QUERY_KEY,
+                REQUEST_KEY,
+                REQUEST_TIMEOUT_KEY,
+                RESPONSE_KEY,
+                SOCKET_TIMEOUT_KEY,
+                TOKEN_KEY,
+                URL_KEY,
+                USERNAME_KEY
+        };
+
+        // internal constants
+        static final String POST_METHOD = "POST";
+        static final String PUT_METHOD = "PUT";
+
+        static final String SUCCESS_PARAM = "success";
+        static final String STATUS_CODE_PARAM = "statusCode";
 
         private HttpTaskConstant() {
         }

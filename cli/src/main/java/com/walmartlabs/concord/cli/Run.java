@@ -26,6 +26,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
@@ -33,7 +34,6 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Main;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
-import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -44,7 +44,6 @@ import picocli.CommandLine.Spec;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -86,9 +85,8 @@ public class Run implements Callable<Integer> {
 
         UUID instanceId = UUID.randomUUID();
 
-        System.out.println("starting process '" + instanceId + "'");
-        if (!extraVars.isEmpty()) {
-            System.out.println("  with additional variables: " + extraVars);
+        if (verbose && !extraVars.isEmpty()) {
+            System.out.println("Additional variables: " + extraVars);
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
@@ -120,11 +118,11 @@ public class Run implements Callable<Integer> {
         args.putAll(extraVars);
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
-        args.put("processInfo", Collections.singletonMap("sessionKey", "none")); // TODO constants
+
+        System.out.println("Starting...");
 
         try {
             runner.start(cfg.entryPoint(), args);
-            return 0;
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
             return 1;
@@ -133,5 +131,9 @@ public class Run implements Callable<Integer> {
             IOUtils.deleteRecursively(targetDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
             IOUtils.deleteRecursively(targetDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME));
         }
+
+        System.out.println("...done!");
+
+        return 0;
     }
 }

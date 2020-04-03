@@ -40,11 +40,11 @@ public class DependencyResolver {
 
     private final DependencyManager dependencyManager;
     private final List<URI> defaultDependencies = Collections.emptyList();
-    private final boolean debug;
+    private final boolean verbose;
 
-    public DependencyResolver(DependencyManager dependencyManager, boolean debug) {
+    public DependencyResolver(DependencyManager dependencyManager, boolean verbose) {
         this.dependencyManager = dependencyManager;
-        this.debug = debug;
+        this.verbose = verbose;
     }
 
     public static Collection<String> resolve(ProcessDefinition processDefinition, Path cacheDir, boolean debug) throws Exception {
@@ -52,7 +52,9 @@ public class DependencyResolver {
     }
 
     public Collection<String> resolveDeps(ProcessDefinition processDefinition) throws Exception {
-        System.out.println("Resolving process dependencies...");
+        if (verbose) {
+            System.out.println("Resolving process dependencies...");
+        }
 
         long t1 = System.currentTimeMillis();
 
@@ -75,18 +77,16 @@ public class DependencyResolver {
 
         long t2 = System.currentTimeMillis();
 
-        if (debug) {
+        if (verbose) {
             System.out.println("Dependency resolution took " + ((t2 - t1)) + "ms");
             logDependencies(paths);
-        } else {
-            logDependencies(uris);
         }
 
         return paths;
     }
 
     private void logDependencies(Collection<?> deps) {
-        if (deps.isEmpty()) {
+        if (verbose && deps.isEmpty()) {
             System.out.println("No external dependencies.");
             return;
         }

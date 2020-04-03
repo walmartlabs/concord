@@ -22,16 +22,17 @@ package com.walmartlabs.concord.plugins.http;
 
 import com.walmartlabs.concord.plugins.http.HttpTask.RequestType;
 import com.walmartlabs.concord.plugins.http.HttpTask.ResponseType;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.walmartlabs.concord.plugins.http.HttpTask.HttpTaskConstant.*;
 import static com.walmartlabs.concord.plugins.http.HttpTask.RequestMethodType;
-import static com.walmartlabs.concord.sdk.ContextUtils.*;
 import static javax.xml.transform.OutputKeys.METHOD;
 
 /**
@@ -382,21 +383,35 @@ public class Configuration {
         }
 
         /**
-         * Invoking this method will result in a new configuration
+         * Invoking this method will result in a new configuration.
          *
          * @param ctx context use to build the configuration
          * @return new instance of this {@link Configuration}
          * @throws Exception
          */
-        @SuppressWarnings("unchecked")
         public Configuration build(Context ctx) throws Exception {
-            validateMandatory(ctx);
+            String workDir = (String) ctx.getVariable(Constants.Context.WORK_DIR_KEY);
 
-            this.url = getString(ctx, URL_KEY);
+            Map<String, Object> input = new HashMap<>(ALL_KEYS.length);
+            for (String k : ALL_KEYS) {
+                Object v = ctx.getVariable(k);
+                if (v != null) {
+                    input.put(k, v);
+                }
+            }
 
-            if (ctx.getVariable(QUERY_KEY) != null) {
-                Map<String, Object> queryParams = getMap(ctx, QUERY_KEY);
+            return build(workDir, input);
+        }
 
+        @SuppressWarnings("unchecked")
+        public Configuration build(String workDir, Map<String, Object> input) throws Exception {
+            validateMandatory(input);
+
+            this.url = MapUtils.getString(input, URL_KEY);
+
+            // query params are optional
+            Map<String, Object> queryParams = MapUtils.getMap(input, QUERY_KEY, null);
+            if (queryParams != null) {
                 URIBuilder uriBuilder = new URIBuilder(url);
                 queryParams.forEach((k, v) -> {
                     if (v instanceof Collection) {
@@ -410,98 +425,78 @@ public class Configuration {
             }
 
             // method param is optional
-            if (ctx.getVariable(METHOD_KEY) != null) {
-                String method = getString(ctx, METHOD_KEY);
+            String method = MapUtils.getString(input, METHOD_KEY, null);
+            if (method != null) {
                 if (RequestMethodType.isMember(method)) {
                     this.methodType = RequestMethodType.valueOf(method.toUpperCase());
                 } else {
-                    throw new IllegalArgumentException("'" + METHOD_KEY + ": " + ctx.getVariable(METHOD_KEY) + "' is not valid");
+                    throw new IllegalArgumentException("'" + METHOD_KEY + ": " + method + "' is not a supported HTTP method");
                 }
             }
 
             // auth param is optional
-            if (ctx.getVariable(AUTH_KEY) != null) {
-                Map<String, Object> authParams = getMap(ctx, AUTH_KEY);
-
+            Map<String, Object> authParams = MapUtils.getMap(input, AUTH_KEY, null);
+            if (authParams != null) {
                 this.encodedAuthToken = HttpTaskUtils.getBasicAuthorization(MapUtils.assertMap(authParams, BASIC_KEY));
-
             }
 
             // request param is optional
-            if (ctx.getVariable(REQUEST_KEY) != null) {
-                String request = getString(ctx, REQUEST_KEY);
+            String request = MapUtils.getString(input, REQUEST_KEY);
+            if (request != null) {
                 if (RequestType.isMember(request)) {
                     this.requestType = RequestType.valueOf(request.toUpperCase());
                 } else {
-                    throw new IllegalArgumentException("'" + REQUEST_KEY + ": " + ctx.getVariable(REQUEST_KEY) + "' is not valid");
+                    throw new IllegalArgumentException("'" + REQUEST_KEY + ": " + request + "' is not a supported request type");
                 }
             }
 
-            if (ctx.getVariable(RESPONSE_KEY) != null) {
-                String response = getString(ctx, RESPONSE_KEY);
+            // response param is optional
+            String response = MapUtils.getString(input, RESPONSE_KEY);
+            if (response != null) {
                 if (ResponseType.isMember(response)) {
                     this.responseType = ResponseType.valueOf(response.toUpperCase());
                 } else {
-                    throw new IllegalArgumentException("'" + RESPONSE_KEY + ": " + ctx.getVariable(RESPONSE_KEY) + "' is not valid");
+                    throw new IllegalArgumentException("'" + RESPONSE_KEY + ": " + response + "' is not a supported response type");
                 }
             }
-
-            this.workDir = getString(ctx, WORK_DIR_KEY);
 
             if (responseType == ResponseType.FILE && (workDir == null || workDir.isEmpty())) {
                 throw new IllegalArgumentException("Working directory is mandatory for ResponseType FILE");
             }
 
-            this.requestHeaders = getMap(ctx, HEADERS_KEY);
+            this.requestHeaders = MapUtils.getMap(input, HEADERS_KEY, null);
 
-            this.body = ctx.getVariable(BODY_KEY);
+            this.body = input.get(BODY_KEY);
 
-            if (ctx.getVariable(CONNECT_TIMEOUT_KEY) != null) {
-                this.connectTimeout = getInt(ctx, CONNECT_TIMEOUT_KEY, 0);
-            }
+            this.ignoreErrors = MapUtils.getBoolean(input, IGNORE_ERRORS_KEY, false);
 
-            if (ctx.getVariable(SOCKET_TIMEOUT_KEY) != null) {
-                this.socketTimeout = getInt(ctx, SOCKET_TIMEOUT_KEY, 0);
-            }
+            this.connectTimeout = MapUtils.getInt(input, CONNECT_TIMEOUT_KEY, 0);
 
-            if (ctx.getVariable(IGNORE_ERRORS_KEY) != null) {
-                this.ignoreErrors = getBoolean(ctx, IGNORE_ERRORS_KEY, true);
-            }
+            this.socketTimeout = MapUtils.getInt(input, SOCKET_TIMEOUT_KEY, 0);
 
-            if (ctx.getVariable(REQUEST_TIMEOUT_KEY) != null) {
-                this.requestTimeout = getInt(ctx, REQUEST_TIMEOUT_KEY, 0);
-            }
+            this.requestTimeout = MapUtils.getInt(input, REQUEST_TIMEOUT_KEY, 0);
 
-            this.proxy = getString(ctx, PROXY_KEY);
+            this.proxy = MapUtils.getString(input, PROXY_KEY);
 
-            if (ctx.getVariable(DEBUG_KEY) != null) {
-                this.debug = getBoolean(ctx, DEBUG_KEY, false);
-            }
+            this.debug = MapUtils.getBoolean(input, DEBUG_KEY, false);
 
-            if (ctx.getVariable(FOLLOW_REDIRECTS_KEY) != null) {
-                this.followRedirects = getBoolean(ctx, FOLLOW_REDIRECTS_KEY, true);
-            }
+            this.followRedirects = MapUtils.getBoolean(input, FOLLOW_REDIRECTS_KEY, true);
 
             return new Configuration(methodType, url, encodedAuthToken, requestType, responseType, workDir,
                     requestHeaders, body, connectTimeout, socketTimeout, requestTimeout, ignoreErrors, proxy, debug, followRedirects);
         }
 
-        /**
-         * Method validate the mandatory arguments
-         *
-         * @param ctx context which contains the mandatory arguments
-         */
-        private void validateMandatory(Context ctx) {
-            if (ctx.getVariable(URL_KEY) == null) {
+        private static void validateMandatory(Map<String, Object> m) {
+            if (m.get(URL_KEY) == null) {
                 throw new IllegalArgumentException("('" + URL_KEY + "') argument is missing");
-            } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD_KEY)) && ctx.getVariable(REQUEST_KEY) == null) {
-                throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");
-            } else if (REQUEST_POST_KEY.equals(ctx.getVariable(METHOD)) && ctx.getVariable(BODY_KEY) == null) {
-                throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + REQUEST_POST_KEY + "') method");
-            } else if (REQUEST_PUT_KEY.equals(ctx.getVariable(METHOD_KEY)) && ctx.getVariable(REQUEST_KEY) == null) {
-                throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + REQUEST_PUT_KEY + "') method");
-            } else if (REQUEST_PUT_KEY.equals(ctx.getVariable(METHOD)) && ctx.getVariable(BODY_KEY) == null) {
-                throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + REQUEST_PUT_KEY + "') method");
+            } else if (POST_METHOD.equals(m.get(METHOD_KEY)) && m.get(REQUEST_KEY) == null) {
+                throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + POST_METHOD + "') method");
+            } else if (POST_METHOD.equals(m.get(METHOD)) && m.get(BODY_KEY) == null) {
+                throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + POST_METHOD + "') method");
+            } else if (PUT_METHOD.equals(m.get(METHOD_KEY)) && m.get(REQUEST_KEY) == null) {
+                throw new IllegalArgumentException("('" + REQUEST_KEY + "') argument is missing for ('" + PUT_METHOD + "') method");
+            } else if (PUT_METHOD.equals(m.get(METHOD)) && m.get(BODY_KEY) == null) {
+                throw new IllegalArgumentException("('" + BODY_KEY + "') argument is missing for ('" + PUT_METHOD + "') method");
             }
         }
     }

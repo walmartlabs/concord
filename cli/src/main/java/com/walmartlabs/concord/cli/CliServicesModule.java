@@ -26,12 +26,12 @@ import com.walmartlabs.concord.cli.runner.CliCheckpointService;
 import com.walmartlabs.concord.cli.runner.CliDockerService;
 import com.walmartlabs.concord.cli.runner.CliSecretService;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultSynchronizationService;
+import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.sdk.DockerService;
 import com.walmartlabs.concord.sdk.SecretService;
-import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 
 import java.nio.file.Path;
 
