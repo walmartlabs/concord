@@ -50,14 +50,12 @@ public class Main {
     private final Injector injector;
     private final ProcessConfiguration cfg;
     private final WorkingDirectory workDir;
-    private final EventRecordingExecutionListener eventRecordingExecutionListener;
 
     @Inject
-    public Main(Injector injector, ProcessConfiguration cfg, WorkingDirectory workDir, EventRecordingExecutionListener eventRecordingExecutionListener) {
+    public Main(Injector injector, ProcessConfiguration cfg, WorkingDirectory workDir) {
         this.injector = injector;
         this.cfg = cfg;
         this.workDir = workDir;
-        this.eventRecordingExecutionListener = eventRecordingExecutionListener;
     }
 
     public static void main(String[] args) throws Exception {
@@ -67,8 +65,7 @@ public class Main {
         // the actual process' working directory is ready to go
         // it allows us to load all dependencies and have them available
         // in "pre-fork" situations
-        ClassLoader parentClassLoader = Main.class.getClassLoader();
-        Injector injector = InjectorFactory.createDefault(parentClassLoader, runnerCfg);
+        Injector injector = InjectorFactory.createDefault(runnerCfg);
 
         try {
             Main main = injector.getInstance(Main.class);
@@ -106,7 +103,6 @@ public class Main {
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
-                .listener(eventRecordingExecutionListener)
                 .build();
 
         ProcessSnapshot snapshot;

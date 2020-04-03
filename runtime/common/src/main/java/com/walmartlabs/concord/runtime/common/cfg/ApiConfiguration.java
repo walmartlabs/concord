@@ -85,6 +85,9 @@ public interface ApiConfiguration {
         return 5000;
     }
 
+    /**
+     * Authentication token for the current process.
+     */
     @Nullable
     String sessionToken();
 

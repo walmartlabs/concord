@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner;
+package com.walmartlabs.concord.runtime.v2.runner.guice;
 
 /*-
  * *****
@@ -29,7 +29,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import java.lang.reflect.Method;
 
-public class TaskCallInterceptorModule extends AbstractModule  {
+public class TaskCallInterceptorModule extends AbstractModule {
 
     private static final Matcher<? super Class<?>> V2_TASKS = Matchers.subclassesOf(Task.class);
 
@@ -42,14 +42,9 @@ public class TaskCallInterceptorModule extends AbstractModule  {
 
     @Override
     protected void configure() {
-        install(new AbstractModule() {
-            @Override
-            protected void configure() {
-                TaskCallInterceptor interceptor = new TaskCallInterceptor();
-                requestInjection(interceptor);
+        TaskCallInterceptor interceptor = new TaskCallInterceptor();
+        requestInjection(interceptor);
 
-                bindInterceptor(V2_TASKS, METHOD_MATCHER, interceptor);
-            }
-        });
+        bindInterceptor(V2_TASKS, METHOD_MATCHER, interceptor);
     }
 }

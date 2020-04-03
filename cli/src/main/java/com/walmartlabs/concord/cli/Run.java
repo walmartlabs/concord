@@ -31,8 +31,9 @@ import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.runner.guice.CurrentClasspathModule;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
-import com.walmartlabs.concord.runtime.v2.runner.Main;
+import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.sdk.Constants;
 import picocli.CommandLine.Command;
@@ -99,18 +100,17 @@ public class Run implements Callable<Integer> {
                 .instanceId(instanceId)
                 .build();
 
-        ClassLoader parentClassLoader = Main.class.getClassLoader();
-        Injector injector = new InjectorFactory(parentClassLoader,
-                new WorkingDirectory(targetDir),
+        Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
                 runnerCfg,
                 () -> cfg,
+                new ProcessDependenciesModule(targetDir, runnerCfg.dependencies()),
                 new CliServicesModule(secretStoreDir))
                 .create();
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
                 .workDir(targetDir)
-                .statusCallback(id -> {
+                .processStatusCallback(id -> {
                 })
                 .build();
 

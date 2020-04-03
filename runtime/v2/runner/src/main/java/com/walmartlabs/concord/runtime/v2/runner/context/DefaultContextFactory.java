@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,14 +32,10 @@ import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-import org.eclipse.sisu.Typed;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.UUID;
 
-@Named
-@Typed
 public class DefaultContextFactory implements ContextFactory {
 
     private final WorkingDirectory workingDirectory;

@@ -24,14 +24,10 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.svm.Command;
-import org.eclipse.sisu.Typed;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collection;
 
-@Named
-@Typed
 public class DefaultCompiler implements Compiler {
 
     private final Collection<StepCompiler<?>> compilers;

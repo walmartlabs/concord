@@ -25,9 +25,12 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.runner.CliCheckpointService;
 import com.walmartlabs.concord.cli.runner.CliDockerService;
 import com.walmartlabs.concord.cli.runner.CliSecretService;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultPersistenceService;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultSynchronizationService;
+import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
 import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
+import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.sdk.DockerService;
@@ -45,12 +48,11 @@ public class CliServicesModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new BaseRunnerModule());
+
         bind(SecretService.class).toInstance(new CliSecretService(secretStoreDir));
         bind(CheckpointService.class).to(CliCheckpointService.class);
         bind(DockerService.class).to(CliDockerService.class);
-        bind(SynchronizationService.class).to(DefaultSynchronizationService.class);
-
-        Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
-        taskProviders.addBinding().to(TaskV2Provider.class);
+        bind(PersistenceService.class).to(DefaultPersistenceService.class);
     }
 }

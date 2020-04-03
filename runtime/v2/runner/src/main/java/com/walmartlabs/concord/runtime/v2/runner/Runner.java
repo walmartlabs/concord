@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.FormService;
@@ -43,6 +44,7 @@ import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -72,7 +74,7 @@ public class Runner {
         this.checkpointService = b.checkpointService;
         this.formService = b.formService;
         this.synchronizationService = b.synchronizationService;
-        this.statusCallback = b.statusCallback;
+        this.statusCallback = b.processStatusCallback;
         this.listeners = b.listeners;
     }
 
@@ -164,8 +166,7 @@ public class Runner {
         private CheckpointService checkpointService;
         private FormService formService;
         private SynchronizationService synchronizationService;
-
-        private ProcessStatusCallback statusCallback;
+        private ProcessStatusCallback processStatusCallback;
         private Collection<ExecutionListener> listeners;
 
         public Builder injector(Injector injector) {
@@ -227,8 +228,8 @@ public class Runner {
             return this;
         }
 
-        public Builder statusCallback(ProcessStatusCallback statusCallback) {
-            this.statusCallback = statusCallback;
+        public Builder processStatusCallback(ProcessStatusCallback processStatusCallback) {
+            this.processStatusCallback = processStatusCallback;
             return this;
         }
 
@@ -287,12 +288,13 @@ public class Runner {
                 synchronizationService = inject(SynchronizationService.class, "synchronizationService");
             }
 
-            if (statusCallback == null) {
-                statusCallback = inject(ProcessStatusCallback.class, "statusCallback");
+            if (processStatusCallback == null) {
+                processStatusCallback = inject(ProcessStatusCallback.class, "processStatusCallback");
             }
 
             if (listeners == null) {
-                listeners = Collections.emptyList();
+                ExecutionListenerHolder h = injector.getInstance(ExecutionListenerHolder.class);
+                listeners = h.listeners;
             }
 
             return new Runner(this);
@@ -303,6 +305,21 @@ public class Runner {
                 return injector.getInstance(type);
             } else {
                 throw new IllegalStateException("'" + property + "' must be configured");
+            }
+        }
+
+        /**
+         * A helper class to inject the current collection of listeners.
+         * TODO find a better way?
+         */
+        @Named
+        private static class ExecutionListenerHolder {
+
+            private final Set<ExecutionListener> listeners;
+
+            @Inject
+            public ExecutionListenerHolder(Set<ExecutionListener> listeners) {
+                this.listeners = listeners;
             }
         }
     }

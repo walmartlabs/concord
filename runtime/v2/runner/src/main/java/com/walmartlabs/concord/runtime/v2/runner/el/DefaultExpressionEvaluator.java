@@ -24,13 +24,9 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;
-import org.eclipse.sisu.Typed;
 
 import javax.el.*;
-import javax.inject.Named;
 
-@Named
-@Typed
 public class DefaultExpressionEvaluator implements ExpressionEvaluator {
 
     // TODO deprecate "execution"? what about scripts - they can't use "context"?
