@@ -35,17 +35,18 @@ import java.util.Map;
 /**
  * Takes {@link #input}, interpolates its keys and values and puts the result
  * into the current {@link GlobalVariables} instance.
- * <br/><br/>
+ * <p/>
  * This command solves a "chicken-and-egg" problem of setting the initial
  * global variables (when the process starts) and updating them (when the
- * process receives a resume event). In order to evaluate expressions in
- * the input we need the runtime and we can't build the runtime until we get an
- * instance of {@link GlobalVariables}. So the solution is to create an empty
- * {@link GlobalVariables} and populate them by running this command before
- * all other commands. It is important to run this command before any other
- * commands, especially in cases when the {@code State} contains multiple
- * threads &mdash; all threads must "see" the same {@link GlobalVariables}
- * values simultaneously.
+ * process receives a resume event).
+ * <p/>
+ * In order to evaluate expressions in the input we need the runtime and
+ * we can't build the runtime until we get an instance of {@link GlobalVariables}.
+ * So the solution is to create an empty instance of {@link GlobalVariables} and
+ * populate it by running this command before all other commands. It is important
+ * to run this command before any other commands, especially in cases when
+ * the {@code State} contains multiple threads &mdash; all threads must "see"
+ * the same {@link GlobalVariables} values simultaneously.
  */
 public class UpdateGlobalVariablesCommand implements Command {
 

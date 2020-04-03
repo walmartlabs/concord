@@ -84,7 +84,7 @@
                     </div>
                     <div class="field">
                         <div class="ui checkbox">
-                            <input id="tosAgreeField" type="checkbox" name="tosAgree" value="{{values.tosAgree}}">
+                            <input id="tosAgreeField" type="checkbox" name="tosAgree" {{#if values.tosAgree}}checked{{/if}} value="true">
                             <label for="tosAgreeField">I agree to the Terms and Conditions</label>
                         </div>
                     </div>
