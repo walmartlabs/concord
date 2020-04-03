@@ -33,6 +33,6 @@ forms:
   - age: { label: "Age", type: "int", min: 21, max: 999 }
   - color: { label: "Favorite color", type: "string", allow: ["red", "green", "blue"] }
   - aFile: { label: "A file", type: "file?" }
-  - tosAgree: { label: "Terms and conditions read", type: "boolean" }
+  - tosAgree: { label: "Terms and conditions read", type: "boolean", value: true }
   - skills: { label: "Skills", type: "string*", allow: ["css", "design", "angular"]}
 
