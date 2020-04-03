@@ -27,14 +27,10 @@ import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessStatusCallback;
-import org.eclipse.sisu.Typed;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.UUID;
 
-@Named
-@Typed
 public class DefaultProcessStatusCallback implements ProcessStatusCallback {
 
     private final RunnerConfiguration cfg;

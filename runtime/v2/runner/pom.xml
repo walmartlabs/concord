@@ -149,11 +149,6 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
@@ -207,6 +202,7 @@
                     <environmentVariables>
                         <CONCORD_TMP_DIR>${java.io.tmpdir}</CONCORD_TMP_DIR>
                     </environmentVariables>
+                    <parallel>methods</parallel>
                 </configuration>
             </plugin>
         </plugins>

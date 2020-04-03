@@ -22,10 +22,10 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.matching.MultipartValuePattern;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
@@ -34,15 +34,20 @@ import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
+import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.DefaultVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.sdk.Constants;
 import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -55,20 +60,21 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class MainTest {
 
-    @Rule
-    public WireMockRule wireMock = new WireMockRule(WireMockConfiguration.options()
-            .dynamicPort());
-
     private Path workDir;
     private UUID instanceId;
-    private String sessionKey;
     private FormService formService;
     private ProcessConfiguration processConfiguration;
+
+    private ProcessStatusCallback processStatusCallback;
+    private CheckpointService checkpointService;
+    private Module testServices;
+
+    private byte[] lastLog;
 
     @Before
     public void setUp() throws IOException {
@@ -76,24 +82,32 @@ public class MainTest {
 
         instanceId = UUID.randomUUID();
 
-        sessionKey = "abc"; // TODO random
-
         Path formsDir = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
                 .resolve(Constants.Files.JOB_STATE_DIR_NAME)
                 .resolve(Constants.Files.JOB_FORMS_V2_DIR_NAME);
+
         formService = new FormService(formsDir);
 
-        wireMock.stubFor(post(urlPathEqualTo("/api/v1/process/" + instanceId + "/status"))
-                .willReturn(aResponse()
-                        .withStatus(201)));
+        processStatusCallback = mock(ProcessStatusCallback.class);
+        checkpointService = mock(CheckpointService.class);
 
-        wireMock.stubFor(post(urlPathEqualTo("/api/v1/process/" + instanceId + "/event"))
-                .willReturn(aResponse()
-                        .withStatus(201)));
+        testServices = new AbstractModule() {
+            @Override
+            protected void configure() {
+                install(new BaseRunnerModule());
 
-        wireMock.stubFor(post(urlPathEqualTo("/api/v1/process/" + instanceId + "/checkpoint"))
-                .willReturn(aResponse()
-                        .withStatus(200)));
+                bind(CheckpointService.class).toInstance(checkpointService);
+                bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
+                bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
+
+                Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
+                taskProviders.addBinding().to(TaskV2Provider.class);
+
+                Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
+                taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
+                taskCallListeners.addBinding().to(TaskResultListener.class);
+            }
+        };
     }
 
     @After
@@ -117,8 +131,7 @@ public class MainTest {
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
         assertLog(log, ".*" + Pattern.quote("defaultsTyped:Defaults{a=a-value}") + ".*");
 
-        verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/status"))
-                .withRequestBody(equalTo("RUNNING")));
+        verify(processStatusCallback, times(1)).onRunning(instanceId);
     }
 
     @Test
@@ -171,12 +184,8 @@ public class MainTest {
         byte[] log = start();
         assertLog(log, ".*Hello, Concord!.*");
 
-        verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/status"))
-                .withRequestBody(equalTo("RUNNING")));
-
-        MultipartValuePattern checkpoint = aMultipart().withName("name").withBody(equalTo("A")).build();
-        verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/checkpoint"))
-                .withRequestBodyPart(checkpoint));
+        verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
+        verify(checkpointService, times(1)).create(eq("A"), any(), any());
     }
 
     @Test
@@ -191,6 +200,8 @@ public class MainTest {
         } catch (Exception e) {
             assertEquals("Found forbidden tasks", e.getMessage());
         }
+
+        assertLog(lastLog, ".*forbidden by the task policy.*");
     }
 
     @Test
@@ -215,8 +226,7 @@ public class MainTest {
         byte[] log = start();
         assertLog(log, ".*it's clearly non-zero.*");
 
-        verify(postRequestedFor(urlPathEqualTo("/api/v1/process/" + instanceId + "/status"))
-                .withRequestBody(equalTo("RUNNING")));
+        verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
     }
 
     @Test
@@ -308,8 +318,7 @@ public class MainTest {
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .agentId(UUID.randomUUID().toString())
                 .api(ApiConfiguration.builder()
-                        .baseUrl("http://localhost:" + wireMock.port())
-                        .sessionToken(sessionKey)
+                        .baseUrl("http://localhost:8001") // TODO make optional?
                         .build())
                 .build();
 
@@ -319,29 +328,33 @@ public class MainTest {
         PrintStream out = new PrintStream(baos);
         System.setOut(out);
 
+        byte[] log;
         try {
-            ClassLoader parentClassLoader = Main.class.getClassLoader();
-            Injector injector = new InjectorFactory(parentClassLoader,
-                    new WorkingDirectory(workDir),
+            Injector injector = new InjectorFactory(new WorkingDirectory(workDir),
                     runnerCfg,
                     () -> processConfiguration,
-                    new DefaultServicesModule(),
-                    new V1CompatModule())
+                    testServices)
                     .create();
 
             injector.getInstance(Main.class).execute();
         } finally {
             out.flush();
             System.setOut(oldOut);
+
+            log = baos.toByteArray();
+            System.out.write(log, 0, log.length);
+
+            lastLog = log;
         }
 
-        byte[] ab = baos.toByteArray();
-        System.out.write(ab, 0, ab.length);
-
-        return ab;
+        return log;
     }
 
     private static void assertLog(byte[] ab, String pattern) throws IOException {
+        if (ab == null) {
+            fail("Log is empty");
+        }
+
         try (ByteArrayInputStream bais = new ByteArrayInputStream(ab);
              BufferedReader reader = new BufferedReader(new InputStreamReader(bais))) {
 
