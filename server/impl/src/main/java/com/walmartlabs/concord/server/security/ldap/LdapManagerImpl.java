@@ -100,21 +100,21 @@ public class LdapManagerImpl implements LdapManager {
         ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         ctls.setReturningAttributes(new String[]{MEMBER_OF_ATTR});
 
-        Object[] args = new Object[]{normalizeUsername(username, domain)};
-        NamingEnumeration answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
+        Object[] args = new Object[]{normalizeUsername(username, domain), username, domain};
+        NamingEnumeration<SearchResult> answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
         if (!answer.hasMoreElements()) {
             return null;
         }
 
         Set<String> result = new HashSet<>();
         while (answer.hasMoreElements()) {
-            SearchResult sr = (SearchResult) answer.next();
+            SearchResult sr = answer.next();
 
             Attributes attrs = sr.getAttributes();
             if (attrs != null) {
-                NamingEnumeration ae = attrs.getAll();
+                NamingEnumeration<? extends Attribute> ae = attrs.getAll();
                 while (ae.hasMore()) {
-                    Attribute attr = (Attribute) ae.next();
+                    Attribute attr = ae.next();
                     if (MEMBER_OF_ATTR.equals(attr.getID())) {
                         result.addAll(LdapUtils.getAllAttributeValues(attr));
                         break;
@@ -134,8 +134,8 @@ public class LdapManagerImpl implements LdapManager {
             return getPrincipal(new LdapManagerImpl.SearchFn(ctx) {
 
                 @Override
-                public NamingEnumeration lookup(SearchControls ctls) throws NamingException {
-                    Object[] args = new Object[]{normalizeUsername(username, domain)};
+                public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
+                    Object[] args = new Object[]{normalizeUsername(username, domain), username, domain};
                     return ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
                 }
 
@@ -169,7 +169,7 @@ public class LdapManagerImpl implements LdapManager {
             ctx = ctxFactory.getSystemLdapContext();
             return getPrincipal(new LdapManagerImpl.SearchFn(ctx) {
                 @Override
-                public NamingEnumeration lookup(SearchControls ctls) throws NamingException {
+                public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
                     return ctx.search(baseDn, searchDn, ctls);
                 }
 
@@ -194,21 +194,21 @@ public class LdapManagerImpl implements LdapManager {
             ctls.setReturningAttributes(cfg.getReturningAttributes().toArray(new String[0]));
         }
 
-        NamingEnumeration answer = searchFn.lookup(ctls);
+        NamingEnumeration<SearchResult> answer = searchFn.lookup(ctls);
         if (!answer.hasMoreElements()) {
             return null;
         }
 
         LdapManagerImpl.LdapPrincipalBuilder b = new LdapManagerImpl.LdapPrincipalBuilder();
 
-        SearchResult sr = (SearchResult) answer.next();
+        SearchResult sr = answer.next();
         b.nameInNamespace(sr.getNameInNamespace());
 
         Attributes attrs = sr.getAttributes();
         if (attrs != null) {
-            NamingEnumeration ae = attrs.getAll();
+            NamingEnumeration<? extends Attribute> ae = attrs.getAll();
             while (ae.hasMore()) {
-                Attribute attr = (Attribute) ae.next();
+                Attribute attr = ae.next();
                 processAttribute(b, attr);
             }
         }
@@ -231,20 +231,20 @@ public class LdapManagerImpl implements LdapManager {
             ctls.setCountLimit(10);
             Object[] args = new Object[]{filter};
 
-            NamingEnumeration answer = ctx.search(cfg.getSearchBase(), searchFilter, args, ctls);
+            NamingEnumeration<SearchResult> answer = ctx.search(cfg.getSearchBase(), searchFilter, args, ctls);
             if (!answer.hasMoreElements()) {
                 return Collections.emptyList();
             }
 
             List<E> result = new ArrayList<>();
             while (answer.hasMoreElements()) {
-                SearchResult sr = (SearchResult) answer.next();
+                SearchResult sr = answer.next();
                 Attributes attrs = sr.getAttributes();
                 if (attrs != null) {
-                    NamingEnumeration ae = attrs.getAll();
+                    NamingEnumeration<? extends Attribute> ae = attrs.getAll();
                     Map<String, String> attributes = new HashMap<>();
                     while (ae.hasMore()) {
-                        Attribute attr = (Attribute) ae.next();
+                        Attribute attr = ae.next();
                         if (attr.size() == 0) {
                             continue;
                         }
@@ -352,7 +352,7 @@ public class LdapManagerImpl implements LdapManager {
             this.ctx = ctx;
         }
 
-        public abstract NamingEnumeration lookup(SearchControls ctls) throws NamingException;
+        public abstract NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException;
 
         public abstract void handleNonUniqueResult();
     }
