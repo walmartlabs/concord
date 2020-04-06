@@ -9,10 +9,6 @@ if [[ -z "${CONCORD_TMP_DIR}" ]]; then
     export CONCORD_TMP_DIR="/tmp"
 fi
 
-if [[ -z "${AGENT_ID}" ]]; then
-    export AGENT_ID=`uuid`
-fi
-
 if [[ -z "${CONCORD_CFG_FILE}" ]]; then
     CONCORD_CFG_FILE="${BASE_DIR}/default.conf"
 fi
@@ -25,7 +21,6 @@ exec java \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \
 -Dlogback.configurationFile=com/walmartlabs/concord/agent/logback.xml \
--DagentID=${AGENT_ID} \
 -Dollie.conf=${CONCORD_CFG_FILE} \
 -cp "${BASE_DIR}/lib/*" \
 com.walmartlabs.concord.agent.Main
