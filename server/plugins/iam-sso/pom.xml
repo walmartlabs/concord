@@ -39,6 +39,11 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.sisu</groupId>
+            <artifactId>org.eclipse.sisu.inject</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <scope>provided</scope>
@@ -97,6 +102,19 @@
         <dependency>
             <groupId>com.google.errorprone</groupId>
             <artifactId>error_prone_annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- TODO ollie should provide a separate API module that only includes interfaces and annotations (such as @Config) -->
+        <dependency>
+            <groupId>com.walmartlabs.ollie</groupId>
+            <artifactId>ollie</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>provided</scope>
         </dependency>
     </dependencies>
