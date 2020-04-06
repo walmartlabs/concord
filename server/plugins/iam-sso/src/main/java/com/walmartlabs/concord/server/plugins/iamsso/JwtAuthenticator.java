@@ -22,7 +22,6 @@ package com.walmartlabs.concord.server.plugins.iamsso;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.*;
-import com.walmartlabs.concord.server.cfg.SsoConfiguration;
 import com.walmartlabs.concord.server.plugins.iamsso.encryption.EncryptionConfiguration;
 import com.walmartlabs.concord.server.plugins.iamsso.encryption.EncryptionConfigurationFactory;
 import com.walmartlabs.concord.server.plugins.iamsso.signature.SignatureConfiguration;

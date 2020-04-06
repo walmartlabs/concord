@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.cfg;
+package com.walmartlabs.concord.server.plugins.iamsso;
 
 /*-
  * *****
@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.util.Map;
 
 @Named
 @Singleton
@@ -86,6 +87,10 @@ public class SsoConfiguration implements Serializable {
     @Config("sso.domainSuffix")
     private String domainSuffix;
 
+    @Inject
+    @Config("sso.domainMapping")
+    private Map<String, String> domainMapping;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -136,5 +141,9 @@ public class SsoConfiguration implements Serializable {
 
     public String getDomainSuffix() {
         return domainSuffix;
+    }
+
+    public Map<String, String> getDomainMapping() {
+        return domainMapping;
     }
 }

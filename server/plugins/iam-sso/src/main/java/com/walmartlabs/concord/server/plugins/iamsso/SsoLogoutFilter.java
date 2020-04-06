@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.plugins.iamsso;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.SsoConfiguration;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 

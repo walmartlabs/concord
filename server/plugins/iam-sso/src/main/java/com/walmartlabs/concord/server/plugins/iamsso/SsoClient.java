@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.server.cfg.SsoConfiguration;
 import org.apache.http.HttpHeaders;
 import org.immutables.value.Value;
 import org.slf4j.Logger;

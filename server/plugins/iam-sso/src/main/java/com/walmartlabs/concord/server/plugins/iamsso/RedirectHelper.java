@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.plugins.iamsso;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.SsoConfiguration;
 import org.eclipse.jetty.util.URIUtil;
 
 import javax.inject.Inject;

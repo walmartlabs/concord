@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.plugins.iamsso;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.plugins.iamsso;
  */
 
 import com.walmartlabs.concord.server.boot.filters.AuthenticationHandler;
-import com.walmartlabs.concord.server.cfg.SsoConfiguration;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.util.WebUtils;
 
@@ -32,6 +31,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
 @Named
 public class SsoHandler implements AuthenticationHandler {
@@ -66,8 +66,9 @@ public class SsoHandler implements AuthenticationHandler {
         if (login == null) {
             return null;
         }
-        String[] usernameDomain = getUsernameDomain(login);
-        return new SsoToken(usernameDomain[0], usernameDomain[1]);
+
+        String[] as = parseDomain(login);
+        return new SsoToken(as[0], as[1]);
     }
 
     @Override
@@ -88,7 +89,7 @@ public class SsoHandler implements AuthenticationHandler {
         return false;
     }
 
-    private String[] getUsernameDomain(String s) {
+    private String[] parseDomain(String s) {
         s = s.trim();
 
         int pos = s.indexOf("\\");
@@ -96,9 +97,18 @@ public class SsoHandler implements AuthenticationHandler {
             return new String[]{s, null};
         }
 
-        String domain = s.substring(0, pos) + cfg.getDomainSuffix();
+        String domain = applyDomainMapping(s.substring(0, pos)) + cfg.getDomainSuffix();
         String username = s.substring(pos + 1);
 
         return new String[]{username, domain};
+    }
+
+    private String applyDomainMapping(String domain) {
+        Map<String, String> mapping = cfg.getDomainMapping();
+        if (mapping == null) {
+            return domain;
+        }
+
+        return mapping.getOrDefault(domain, domain);
     }
 }
