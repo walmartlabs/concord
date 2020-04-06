@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.runtime.v2.runner.context.IntermediateGlobalsContext;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 
 import java.util.*;
 
@@ -34,14 +33,7 @@ public final class Interpolator {
             return null;
         }
 
-        if (v instanceof String) {
-            String s = (String) v;
-            if (hasExpression(s)) {
-                return ee.eval(ctx, s, expectedType);
-            } else {
-                return (T) v;
-            }
-        } else if (v instanceof Map) {
+        if (v instanceof Map) {
             Map<Object, Object> m = (Map<Object, Object>) v;
             if (m.isEmpty()) {
                 return (T) m;
@@ -89,11 +81,7 @@ public final class Interpolator {
             return (T) src;
         }
 
-        return expectedType.cast(v);
-    }
-
-    public static boolean hasExpression(String s) {
-        return s.contains("${");
+        return ee.eval(ctx, v, expectedType);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -111,63 +99,6 @@ public final class Interpolator {
         }
 
         return container;
-    }
-
-    /**
-     * Simple map-backed implementation of {@link GlobalVariables}.
-     * Comparing to other implementations, this one doesn't do any defensive copying
-     * so that the underlying map with override values can be modified externally.
-     * All modifications are propagated to the delegated {@link GlobalVariables} instance.
-     */
-    private static class GlobalVariablesWithOverrides implements GlobalVariables {
-
-        private static final long serialVersionUID = 1L;
-
-        private final GlobalVariables delegate;
-        private final Map<String, Object> overrides;
-
-        private GlobalVariablesWithOverrides(GlobalVariables delegate, Map<String, Object> overrides) {
-            this.delegate = delegate;
-            this.overrides = overrides;
-        }
-
-        @Override
-        public Object get(String key) {
-            if (overrides.containsKey(key)) {
-                return overrides.get(key);
-            }
-            return delegate.get(key);
-        }
-
-        @Override
-        public void put(String key, Object value) {
-            delegate.put(key, value);
-        }
-
-        @Override
-        public void putAll(Map<String, Object> values) {
-            delegate.putAll(values);
-        }
-
-        @Override
-        public Object remove(String key) {
-            return delegate.remove(key);
-        }
-
-        @Override
-        public boolean containsKey(String key) {
-            if (overrides.containsKey(key)) {
-                return true;
-            }
-            return delegate.containsKey(key);
-        }
-
-        @Override
-        public Map<String, Object> toMap() {
-            Map<String, Object> result = new LinkedHashMap<>(delegate.toMap());
-            result.putAll(overrides);
-            return result;
-        }
     }
 
     private Interpolator() {

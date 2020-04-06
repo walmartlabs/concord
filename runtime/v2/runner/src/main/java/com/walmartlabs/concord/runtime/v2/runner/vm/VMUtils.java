@@ -20,12 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -112,6 +114,28 @@ public final class VMUtils {
             return Collections.emptyMap();
         }
         return m;
+    }
+
+    /**
+     * Combines the step input and the frame-local task input overrides.
+     * I.e. {@code retry} or a similar mechanism can produce an updated
+     * set of {@code in} variables which should override the original
+     * {@code input}.
+     */
+    public static Map<String, Object> prepareInput(ExpressionEvaluator ee,
+                                                   Context ctx,
+                                                   Map<String, Serializable> input) {
+
+        if (input == null) {
+            input = Collections.emptyMap();
+        }
+
+        Map<String, Object> result = new HashMap<>(input);
+
+        Map<String, Object> frameOverrides = VMUtils.getTaskInputOverrides(ctx);
+        result.putAll(frameOverrides);
+
+        return Collections.unmodifiableMap(ee.evalAsMap(ctx, result));
     }
 
     @SuppressWarnings("unchecked")

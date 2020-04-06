@@ -24,14 +24,10 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class FlowCallCommand extends StepCommand<FlowCall> {
@@ -56,38 +52,11 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         FlowCall call = getStep();
         FlowCallOptions opts = call.getOptions();
-        Map<String, Object> input = prepareInput(expressionEvaluator, ctx, opts);
+        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
         Frame inner = new Frame(cmd);
         VMUtils.putLocalOverrides(inner, input);
 
         state.pushFrame(threadId, inner);
-    }
-
-    // TODO shared code with TaskCallCommand
-
-    /**
-     * Combines the task input and the frame-local task input overrides.
-     * I.e. {@code retry} or a similar mechanism can produce an updated
-     * set of {@code in} variables which should override the original
-     * {@code input}.
-     */
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> prepareInput(ExpressionEvaluator ee,
-                                                    Context ctx,
-                                                    FlowCallOptions opts) {
-
-        Map<String, Serializable> input = opts.input();
-        if (input == null) {
-            input = Collections.emptyMap();
-        }
-
-        Map<String, Object> result = new HashMap<>(input);
-
-        Map<String, Object> frameOverrides = VMUtils.getTaskInputOverrides(ctx);
-        result.putAll(frameOverrides);
-
-        result = new HashMap<String, Object>(Interpolator.interpolate(ee, ctx, result, Map.class));
-        return Collections.unmodifiableMap(result);
     }
 }

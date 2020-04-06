@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Wraps a command into a "retry" loop specified by {@code retry} option.
@@ -135,7 +136,7 @@ public class RetryWrapper implements Command {
             frame.setLocal(RETRY_ATTEMPT_NUMBER, attemptNo + 1);
             // override the task's "in" if needed
             if (retry.input() != null) {
-                Map<String, Object> m = Collections.unmodifiableMap(retry.input());
+                Map<String, Object> m = Collections.unmodifiableMap(Objects.requireNonNull(retry.input()));
                 VMUtils.setTaskInputOverrides(frame, m);
             }
 

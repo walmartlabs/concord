@@ -25,7 +25,6 @@ import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.context.TaskContextImpl;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
@@ -35,7 +34,8 @@ import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Calls the specified task. Responsible for preparing the task's input
@@ -67,7 +67,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         }
 
         TaskCallOptions opts = call.getOptions();
-        Map<String, Object> input = prepareInput(expressionEvaluator, ctx, opts);
+        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
         Serializable result;
         ThreadLocalContext.set(ctx);
@@ -86,49 +86,5 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             GlobalVariables gv = runtime.getService(GlobalVariables.class);
             gv.put(out, result); // TODO a custom result structure
         }
-    }
-
-    /**
-     * Combines the task input and the frame-local task input overrides.
-     * I.e. {@code retry} or a similar mechanism can produce an updated
-     * set of {@code in} variables which should override the original
-     * {@code input}.
-     */
-    private static Map<String, Object> prepareInput(ExpressionEvaluator ee,
-                                                    Context ctx,
-                                                    TaskCallOptions opts) {
-
-        Map<String, Serializable> input = opts.input();
-        if (input == null) {
-            input = Collections.emptyMap();
-        }
-
-        Map<String, Object> result = new HashMap<>(input);
-
-        Map<String, Object> frameOverrides = VMUtils.getTaskInputOverrides(ctx);
-        result.putAll(frameOverrides);
-
-        return Collections.unmodifiableMap(interpolate(ee, ctx, result));
-    }
-
-    private static Map<String, Object> interpolate(ExpressionEvaluator ee, Context ctx, Map<String, Object> v) {
-        if (v.isEmpty()) {
-            return v;
-        }
-
-        Map<String, Object> result = new LinkedHashMap<>(v.size());
-        for (Map.Entry<String, Object> e : v.entrySet()) {
-            Object value = e.getValue();
-
-            if (value instanceof String) {
-                String s = (String) value;
-                if (Interpolator.hasExpression(s)) {
-                    value = ee.eval(ctx, s, Object.class);
-                }
-            }
-
-            result.put(e.getKey(), value);
-        }
-        return result;
     }
 }
