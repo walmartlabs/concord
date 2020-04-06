@@ -20,9 +20,9 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesImpl;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -34,13 +34,12 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.fail;
 
-@Ignore("fix the DummyContext impl first")
 public class InterpolatorTest {
 
     @Test
     @SuppressWarnings("unchecked")
     public void testMaps() {
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator();
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
 
         GlobalVariables vars = new GlobalVariablesImpl(Collections.singletonMap("name", "Concord"));
 
@@ -59,7 +58,7 @@ public class InterpolatorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testCycles() {
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator();
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
         GlobalVariables vars = new GlobalVariablesImpl();
 
         Map<String, Object> input = new LinkedHashMap<>();

@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.Command;
@@ -59,13 +58,12 @@ public class UpdateGlobalVariablesCommand implements Command {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
 
         Context ctx = contextFactory.create(runtime, state, threadId, null);
-        Map<String, Object> m = Interpolator.interpolate(expressionEvaluator, ctx, input, Map.class);
+        Map<String, Object> m = expressionEvaluator.evalAsMap(ctx, input);
 
         GlobalVariables globalVariables = runtime.getService(GlobalVariables.class);
         globalVariables.putAll(m);

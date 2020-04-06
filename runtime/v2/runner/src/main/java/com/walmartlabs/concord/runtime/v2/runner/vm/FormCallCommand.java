@@ -30,7 +30,6 @@ import com.walmartlabs.concord.runtime.v2.model.Forms;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -70,7 +69,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
         Context ctx = contextFactory.create(runtime, state, threadId, getStep());
 
         FormCall call = getStep();
-        String formName = Interpolator.interpolate(expressionEvaluator, ctx, call.getName(), String.class);
+        String formName = expressionEvaluator.eval(ctx, call.getName(), String.class);
         List<FormField> fields = assertFormFields(expressionEvaluator, ctx, formName, call);
         Form form = Form.builder()
                 .name(formName)
@@ -88,11 +87,10 @@ public class FormCallCommand extends StepCommand<FormCall> {
         log.debug("eval [{}] -> done, eventRef={}", threadId, eventRef); // TODO remove?
     }
 
-    @SuppressWarnings("unchecked")
     private FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, Context ctx) {
         FormCallOptions options = getStep().getOptions();
 
-        Map<String, Serializable> runAs = Interpolator.interpolate(expressionEvaluator, ctx, options.runAs(), Map.class);
+        Map<String, Serializable> runAs = expressionEvaluator.evalAsMap(ctx, options.runAs());
 
         return FormOptions.builder()
                 .yield(options.yield())
@@ -108,19 +106,19 @@ public class FormCallCommand extends StepCommand<FormCall> {
             Serializable defaultValue = null;
             Serializable value = values.get(f.name());
             if (value != null) {
-                defaultValue = Interpolator.interpolate(expressionEvaluator, ctx, f.defaultValue(), Serializable.class);
+                defaultValue = expressionEvaluator.eval(ctx, f.defaultValue(), Serializable.class);
             } else {
                 if (f.defaultValue() != null) {
-                    defaultValue = Interpolator.interpolate(expressionEvaluator, ctx, f.defaultValue(), Serializable.class);
+                    defaultValue = expressionEvaluator.eval(ctx, f.defaultValue(), Serializable.class);
                 }
             }
 
             Serializable allowedValue = null;
             if (f.allowedValue() != null) {
-                allowedValue = Interpolator.interpolate(expressionEvaluator, ctx, f.allowedValue(), Serializable.class);
+                allowedValue = expressionEvaluator.eval(ctx, f.allowedValue(), Serializable.class);
             }
 
-            String label = Interpolator.interpolate(expressionEvaluator, ctx, f.label(), String.class);
+            String label = expressionEvaluator.eval(ctx, f.label(), String.class);
 
             result.add(com.walmartlabs.concord.forms.FormField.builder()
                     .name(f.name())
@@ -136,16 +134,15 @@ public class FormCallCommand extends StepCommand<FormCall> {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, Context ctx, String formName, FormCall formCall) {
         FormCallOptions options = formCall.getOptions();
         if (!options.fields().isEmpty()) {
             return options.fields();
         }
 
-        // TODO
-        if (options.fieldsExpression() != null) {
-            return FormFieldParser.parse(formCall.getLocation(), Interpolator.interpolate(expressionEvaluator, ctx, options.fieldsExpression(), List.class));
+        List<Map<String, Map<String, Object>>> rawFields = expressionEvaluator.evalAsList(ctx, options.fieldsExpression());
+        if (rawFields != null) {
+            return FormFieldParser.parse(formCall.getLocation(), rawFields);
         }
 
         com.walmartlabs.concord.runtime.v2.model.Form fd = formDefinitions.get(formName);

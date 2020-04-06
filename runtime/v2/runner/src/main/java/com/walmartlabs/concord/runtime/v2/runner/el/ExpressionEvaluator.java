@@ -22,7 +22,35 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
+import java.util.List;
+import java.util.Map;
+
 public interface ExpressionEvaluator {
 
-    <T> T eval(Context ctx, String expr, Class<T> type);
+    /**
+     * Non-recursively evaluates the specified value as an expression.
+     * </p>
+     * For example:
+     * <pre>{@code
+     *  // returns a string with ${name} replaced as its value
+     *  eval(ctx, "Hello, ${name}", String.class);
+     *
+     *  List<String> items = Arrays.asList("Hello, ${name}", "Bye, ${name}");
+     *  // returns a list where each element is replaced with the evaluated value
+     *  eval(ctx, items, List.class);
+     * }</pre>
+     */
+    <T> T eval(Context ctx, Object value, Class<T> expectedType);
+
+    /**
+     * Same as {@link #eval(Context, Object, Class)}, but allows assigning
+     * the result to a generic Map without unchecked casts.
+     */
+    <K, V> Map<K, V> evalAsMap(Context ctx, Object value);
+
+    /**
+     * Same as {@link #eval(Context, Object, Class)}, but allows assigning
+     * the result to a generic List without unchecked casts.
+     */
+    <T> List<T> evalAsList(Context ctx, Object value);
 }

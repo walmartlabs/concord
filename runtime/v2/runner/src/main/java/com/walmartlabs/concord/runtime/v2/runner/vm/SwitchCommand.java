@@ -24,7 +24,6 @@ import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
 import com.walmartlabs.concord.runtime.v2.parser.KV;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -64,7 +63,7 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
             String switchResult = ee.eval(ctx, expr, String.class);
             boolean caseFound = false;
             for (KV<String, Command> kv : caseCommands) {
-                String caseLabel = interpolate(ee, ctx, kv.getKey());
+                String caseLabel = ee.eval(ctx, kv.getKey(), String.class);
                 if (Objects.equals(switchResult, caseLabel)) {
                     frame.push(kv.getValue());
                     caseFound = true;
@@ -82,17 +81,5 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         } finally {
             ThreadLocalContext.clear();
         }
-    }
-
-    private static String interpolate(ExpressionEvaluator ee, Context ctx, String caseLabel) {
-        if (caseLabel == null) {
-            return null;
-        }
-
-        if (Interpolator.hasExpression(caseLabel)) {
-            return ee.eval(ctx, caseLabel, String.class);
-        }
-
-        return caseLabel;
     }
 }
