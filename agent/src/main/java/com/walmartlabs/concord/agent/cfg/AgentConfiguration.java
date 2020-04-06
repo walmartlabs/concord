@@ -58,6 +58,7 @@ public class AgentConfiguration {
     @Inject
     public AgentConfiguration(Config cfg) {
         this.agentId = getStringOrDefault(cfg, "id", () -> UUID.randomUUID().toString());
+        log.info("Using agent ID: {}", this.agentId);
 
         this.capabilities = cfg.hasPath("capabilities") ? cfg.getObject("capabilities").unwrapped() : null;
         log.info("Using the capabilities: {}", this.capabilities);
