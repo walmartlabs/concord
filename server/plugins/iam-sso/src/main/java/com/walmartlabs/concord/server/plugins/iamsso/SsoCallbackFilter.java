@@ -20,8 +20,6 @@ package com.walmartlabs.concord.server.plugins.iamsso;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.SsoConfiguration;
-
 import javax.inject.Inject;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
