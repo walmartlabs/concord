@@ -24,10 +24,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class YamlProfile implements Serializable {
@@ -35,16 +32,19 @@ public class YamlProfile implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final Map<String, List<YamlStep>> flows;
+    private final Set<String> publicFlows;
     private final Map<String, List<YamlFormField>> forms;
     private final Map<String, Object> configuration;
 
     @JsonCreator
     public YamlProfile(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
+                       @JsonProperty("publicFlows") Set<String> publicFlows,
                        @JsonProperty("forms") Map<String, List<YamlFormField>> forms,
                        @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables) {
 
         this.flows = flows;
+        this.publicFlows = publicFlows;
         this.forms = forms;
 
         // alias "variables" to "configuration"
@@ -57,6 +57,10 @@ public class YamlProfile implements Serializable {
 
     public Map<String, List<YamlStep>> getFlows() {
         return flows;
+    }
+
+    public Set<String> getPublicFlows() {
+        return publicFlows;
     }
 
     public Map<String, List<YamlFormField>> getForms() {
@@ -92,6 +96,7 @@ public class YamlProfile implements Serializable {
     public String toString() {
         return "YamlProfile{" +
                 "flows=" + flows +
+                ", publicFlows=" + publicFlows +
                 ", forms=" + forms +
                 ", configuration=" + configuration +
                 '}';

@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.loader.model;
+package com.walmartlabs.concord.runtime.v2.parser;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,30 +20,18 @@ package com.walmartlabs.concord.runtime.loader.model;
  * =====
  */
 
-import com.walmartlabs.concord.imports.Imports;
+import io.takari.parc.Parser;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-/**
- * Common interface for v1 and v2 process definitions.
- */
-public interface ProcessDefinition {
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.orError;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 
-    String runtime();
+public class PublicFlowsGrammar {
 
-    Configuration configuration();
+    public static final Parser<Atom, Set<String>> publicFlowsVal =
+        orError(stringSetVal, YamlValueType.PUBLIC_FLOWS);
 
-    Map<String, FlowDefinition> flows();
-
-    Set<String> publicFlows();
-
-    Map<String, Profile> profiles();
-
-    List<Trigger> triggers();
-
-    Imports imports();
-
-    List<Form> forms();
+    private PublicFlowsGrammar() {
+    }
 }

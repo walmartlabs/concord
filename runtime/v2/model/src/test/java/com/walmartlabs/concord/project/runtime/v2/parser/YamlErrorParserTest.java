@@ -1935,6 +1935,33 @@ public class YamlErrorParserTest extends AbstractParserTest {
         assertErrorMessage("errors/switch/003.yml", msg);
     }
 
+    @Test
+    public void test1600() throws Exception {
+        String msg = "(000.yml): Error @ line: 1, col: 13. Invalid value type, expected: ARRAY_OF_STRING, got: NULL. Remove attribute or complete the definition\n" +
+                "\twhile processing steps:\n" +
+                "\t'publicFlows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/publicFlows/000.yml", msg);
+    }
+
+    @Test
+    public void test1601() throws Exception {
+        String msg = "(001.yml): Error @ line: 1, col: 14. Invalid value type, expected: ARRAY_OF_STRING, got: STRING\n" +
+                "\twhile processing steps:\n" +
+                "\t'publicFlows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/publicFlows/001.yml", msg);
+    }
+
+    @Test
+    public void test1602() throws Exception {
+        String msg = "(002.yml): Error @ line: 2, col: 5. Invalid value type, expected: STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'publicFlows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/publicFlows/002.yml", msg);
+    }
+
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);

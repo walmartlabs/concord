@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 public class ProcessDefinitionV2 implements ProcessDefinition, Serializable {
 
@@ -35,6 +37,7 @@ public class ProcessDefinitionV2 implements ProcessDefinition, Serializable {
 
     private final Configuration cfg;
     private final Map<String, FlowDefinition> flows;
+    private final Set<String> publicFlows;
     private final Map<String, Profile> profiles;
     private final List<Trigger> triggers;
     private final Imports imports;
@@ -46,6 +49,11 @@ public class ProcessDefinitionV2 implements ProcessDefinition, Serializable {
         this.flows = new HashMap<>();
         if (delegate.flows() != null) {
             delegate.flows().forEach((k, v) -> flows.put(k, new FlowDefinitionV2(k, v)));
+        }
+
+        this.publicFlows = new HashSet<>();
+        if (delegate.publicFlows() != null) {
+            this.publicFlows.addAll(delegate.publicFlows());
         }
 
         this.profiles = new HashMap<>();
@@ -82,6 +90,11 @@ public class ProcessDefinitionV2 implements ProcessDefinition, Serializable {
     @Override
     public Map<String, FlowDefinition> flows() {
         return flows;
+    }
+
+    @Override
+    public Set<String> publicFlows() {
+        return publicFlows;
     }
 
     @Override

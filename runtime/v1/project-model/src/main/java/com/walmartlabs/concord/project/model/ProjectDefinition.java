@@ -26,6 +26,7 @@ import io.takari.bpm.model.form.FormDefinition;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ProjectDefinition extends Profile {
 
@@ -37,6 +38,7 @@ public class ProjectDefinition extends Profile {
     private final Resources resources;
 
     public ProjectDefinition(Map<String, ProcessDefinition> flows,
+                             Set<String> publicFlows,
                              Map<String, FormDefinition> forms,
                              Map<String, Object> configuration,
                              Map<String, Profile> profiles,
@@ -44,7 +46,7 @@ public class ProjectDefinition extends Profile {
                              Imports imports,
                              Resources resources) {
 
-        super(flows, forms, configuration);
+        super(flows, publicFlows, forms, configuration);
 
         this.profiles = profiles;
         this.triggers = triggers;
@@ -53,7 +55,16 @@ public class ProjectDefinition extends Profile {
     }
 
     public ProjectDefinition(ProjectDefinition src, Imports imports) {
-        this(src.getFlows(), src.getForms(), src.getConfiguration(), src.getProfiles(), src.getTriggers(), imports, src.getResources());
+        this(
+                src.getFlows(),
+                src.getPublicFlows(),
+                src.getForms(),
+                src.getConfiguration(),
+                src.getProfiles(),
+                src.getTriggers(),
+                imports,
+                src.getResources()
+        );
     }
 
     public Map<String, Profile> getProfiles() {

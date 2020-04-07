@@ -35,6 +35,7 @@ import io.takari.bpm.model.form.FormDefinition;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.walmartlabs.concord.project.yaml.YamlImportConverter.convertImports;
 
@@ -42,13 +43,14 @@ public final class YamlProjectConverter {
 
     public static ProjectDefinition convert(YamlProject project) throws YamlConverterException {
         Map<String, ProcessDefinition> flows = convertFlows(project.getFlows());
+        Set<String> publicFlows = project.getPublicFlows();
         Map<String, FormDefinition> forms = convertForms(project.getForms());
         Map<String, Object> cfg = project.getConfiguration();
         Map<String, Profile> profiles = convertProfiles(project.getProfiles());
         List<Trigger> triggers = YamlTriggersConverter.convert(project.getTriggers());
         Imports imports = convertImports(project.getImports());
         Resources resources = convertResources(project.getResources());
-        return new ProjectDefinition(flows, forms, cfg, profiles, triggers, imports, resources);
+        return new ProjectDefinition(flows, publicFlows, forms, cfg, profiles, triggers, imports, resources);
     }
 
     public static Profile convert(YamlProfile profile) throws YamlConverterException {
@@ -71,9 +73,10 @@ public final class YamlProjectConverter {
 
     private static Profile convertProfile(YamlProfile profile) throws YamlConverterException {
         Map<String, ProcessDefinition> flows = convertFlows(profile.getFlows());
+        Set<String> publicFlows = profile.getPublicFlows();
         Map<String, FormDefinition> forms = convertForms(profile.getForms());
         Map<String, Object> cfg = profile.getConfiguration();
-        return new Profile(flows, forms, cfg);
+        return new Profile(flows, publicFlows, forms, cfg);
     }
 
     private static Map<String, ProcessDefinition> convertFlows(Map<String, List<YamlStep>> flows) throws YamlConverterException {

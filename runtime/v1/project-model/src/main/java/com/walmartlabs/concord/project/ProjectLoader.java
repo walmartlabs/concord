@@ -174,6 +174,7 @@ public class ProjectLoader {
         private final YamlParser parser;
 
         private Map<String, ProcessDefinition> flows;
+        private Set<String> publicFlows;
         private Map<String, FormDefinition> forms;
         private Map<String, Profile> profiles;
         private List<ProjectDefinition> projectDefinitions;
@@ -319,6 +320,10 @@ public class ProjectLoader {
                 flows = new HashMap<>();
             }
 
+            if (publicFlows == null) {
+                publicFlows = new HashSet<>();
+            }
+
             if (forms == null) {
                 forms = new HashMap<>();
             }
@@ -339,6 +344,10 @@ public class ProjectLoader {
                 for (ProjectDefinition pd : projectDefinitions) {
                     if (pd.getFlows() != null) {
                         flows.putAll(pd.getFlows());
+                    }
+
+                    if (pd.getPublicFlows() != null) {
+                        publicFlows.addAll(pd.getPublicFlows());
                     }
 
                     if (pd.getForms() != null) {
@@ -380,7 +389,7 @@ public class ProjectLoader {
 
             configuration.put(Constants.Request.DEPENDENCIES_KEY, dependencies);
 
-            return new ProjectDefinition(flows, forms, configuration, profiles, triggers, imports, resources);
+            return new ProjectDefinition(flows, publicFlows, forms, configuration, profiles, triggers, imports, resources);
         }
 
         private static boolean isYaml(Path p) {
@@ -403,6 +412,14 @@ public class ProjectLoader {
                 flows.putAll(b.getFlows());
             }
 
+            Set<String> publicFlows = new HashSet<>();
+            if (a.getPublicFlows() != null) {
+                publicFlows.addAll(a.getPublicFlows());
+            }
+            if (b.getFlows() != null) {
+                publicFlows.addAll(b.getPublicFlows());
+            }
+
             Map<String, FormDefinition> forms = new HashMap<>();
             if (a.getForms() != null) {
                 forms.putAll(a.getForms());
@@ -419,7 +436,7 @@ public class ProjectLoader {
                 cfg = ConfigurationUtils.deepMerge(cfg, b.getConfiguration());
             }
 
-            profiles.put(k, new Profile(flows, forms, cfg));
+            profiles.put(k, new Profile(flows, publicFlows, forms, cfg));
         }
     }
 

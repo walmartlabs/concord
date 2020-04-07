@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 public class ProcessDefinitionRefreshListener implements RepositoryRefreshListener {
@@ -54,11 +55,22 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
         ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()))
                 .projectDefinition();
 
-        Set<String> entryPoints = pd.flows().keySet();
+        Set<String> pf = pd.publicFlows();
+        if (pf == null || pf.isEmpty()) {
+            // all flows are public when no public flows defined
+            pf = new HashSet<>(pd.flows().keySet());
+        }
+
+        Set<String> entryPoints = pd.flows().keySet()
+                .stream()
+                .filter(pf::contains)
+                .collect(Collectors.toSet());
+
         List<String> profiles = new ArrayList<>(pd.profiles().keySet());
 
         Map<String, Object> meta = new HashMap<>();

@@ -25,26 +25,34 @@ import io.takari.bpm.model.form.FormDefinition;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 public class Profile implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final Map<String, ProcessDefinition> flows;
+    private final Set<String> publicFlows;
     private final Map<String, FormDefinition> forms;
     private final Map<String, Object> configuration;
 
     public Profile(Map<String, ProcessDefinition> flows,
+                   Set<String> publicFlows,
                    Map<String, FormDefinition> forms,
                    Map<String, Object> configuration) {
 
         this.flows = flows;
+        this.publicFlows = publicFlows;
         this.forms = forms;
         this.configuration = configuration;
     }
 
     public Map<String, ProcessDefinition> getFlows() {
         return flows;
+    }
+
+    public Set<String> getPublicFlows() {
+        return publicFlows;
     }
 
     public Map<String, FormDefinition> getForms() {
@@ -59,6 +67,7 @@ public class Profile implements Serializable {
     public String toString() {
         return "Profile{" +
                 "flows=" + flows +
+                ", publicFlows=" + publicFlows +
                 ", forms=" + forms +
                 ", variables=" + configuration +
                 '}';

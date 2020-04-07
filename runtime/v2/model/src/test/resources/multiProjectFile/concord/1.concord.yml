@@ -11,6 +11,9 @@ forms:
 #      stuff: "yep"
 #      entryPoint: "default"
 
+publicFlows:
+  - default
+
 configuration:
   arguments:
     abc: "xyz"

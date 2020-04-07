@@ -27,6 +27,7 @@ import com.walmartlabs.concord.runtime.v2.model.*;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class YamlValueType<T> {
 
@@ -71,6 +72,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Import.SecretDefinition> IMPORT_SECRET = type("IMPORT_SECRET");
     public static final YamlValueType<Map<String, List<Step>>> FLOWS = type("FLOWS");
     public static final YamlValueType<KV<String, List<Step>>> FLOW = type("FLOW");
+    public static final YamlValueType<Set<String>> PUBLIC_FLOWS = type("PUBLIC_FLOWS");
     public static final YamlValueType<Map<String, Profile>> PROFILES = type("PROFILES");
     public static final YamlValueType<KV<String, Profile>> PROFILE = type("PROFILE");
     public static final YamlValueType<ProcessConfiguration> PROCESS_CFG = type("CONFIGURATION");

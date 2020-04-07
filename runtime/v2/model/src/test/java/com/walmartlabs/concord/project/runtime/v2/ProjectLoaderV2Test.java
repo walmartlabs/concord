@@ -50,6 +50,7 @@ public class ProjectLoaderV2Test {
         ProcessDefinition pd = result.getProjectDefinition();
         assertNotNull(pd.flows().get("default"));
         assertNotNull(pd.forms().get("myForm"));
+        assertNotNull(pd.publicFlows().iterator().next());
 
         ProcessConfiguration cfg = pd.configuration();
         assertNotNull(cfg);
