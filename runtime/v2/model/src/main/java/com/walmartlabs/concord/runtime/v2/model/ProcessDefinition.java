@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -50,6 +51,11 @@ public interface ProcessDefinition extends Serializable {
     @Value.Default
     default Map<String, List<Step>> flows() {
         return Collections.emptyMap();
+    }
+
+    @Value.Default
+    default Set<String> publicFlows() {
+        return Collections.emptySet();
     }
 
     @Value.Default

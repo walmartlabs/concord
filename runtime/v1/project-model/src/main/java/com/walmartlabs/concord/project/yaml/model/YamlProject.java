@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class YamlProject extends YamlProfile {
 
@@ -37,6 +38,7 @@ public class YamlProject extends YamlProfile {
 
     @JsonCreator
     public YamlProject(@JsonProperty("flows") Map<String, List<YamlStep>> flows,
+                       @JsonProperty("publicFlows") Set<String> publicFlows,
                        @JsonProperty("forms") Map<String, List<YamlFormField>> forms,
                        @JsonProperty("configuration") Map<String, Object> configuration,
                        @JsonProperty("variables") Map<String, Object> variables,
@@ -45,7 +47,7 @@ public class YamlProject extends YamlProfile {
                        @JsonProperty("imports") List<YamlImport> imports,
                        @JsonProperty("resources") Map<String, Object> resources) {
 
-        super(flows, forms, configuration, variables);
+        super(flows, publicFlows, forms, configuration, variables);
         this.profiles = profiles;
         this.triggers = triggers;
         this.imports = imports;

@@ -31,6 +31,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -63,6 +65,7 @@ public final class GrammarV2 {
     public static final Parser<Atom, List<String>> regexpArrayVal = value.map(v -> asList(v, YamlValueType.ARRAY_OF_PATTERN).getListValue(GrammarV2::regexpConverter));
     public static final Parser<Atom, String> regexpVal = value.map(GrammarV2::regexpConverter);
     public static final Parser<Atom, List<String>> stringArrayVal = value.map(v -> asList(v, YamlValueType.ARRAY_OF_STRING).getListValue(YamlValueType.STRING));
+    public static final Parser<Atom, Set<String>> stringSetVal = stringArrayVal.map(HashSet::new);
     public static final Parser<Atom, Serializable> nonNullVal = value.map(v -> {
         assertNotNull(v);
         return v.getValue();

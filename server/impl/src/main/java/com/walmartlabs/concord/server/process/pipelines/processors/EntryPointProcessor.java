@@ -20,14 +20,17 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Named
 public class EntryPointProcessor implements PayloadProcessor {
@@ -57,11 +60,37 @@ public class EntryPointProcessor implements PayloadProcessor {
             s = Constants.Request.DEFAULT_ENTRY_POINT_NAME;
         }
 
+        if (!isValidEntryPoint(payload, s)) {
+            throw new ProcessException(
+                    payload.getProcessKey(),
+                    String.format("entryPoint '%s' is not a public flow", s)
+            );
+        }
+
         cfg.put(Constants.Request.ENTRY_POINT_KEY, s);
         payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
         logManager.info(payload.getProcessKey(), "Using entry point: {}", s);
 
         return chain.process(payload);
+    }
+
+    /**
+     * Determines validity of a given {@code entryPoint}
+     * @param payload payload containing public flows definition
+     * @param entryPoint process {@code entryPoint} flow
+     * @return true if {@code entryPoint} is a valid value
+     */
+    @SuppressWarnings("unchecked")
+    private static boolean isValidEntryPoint(Payload payload, String entryPoint) {
+        ProcessDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
+        Set<String> publicFlows = pd.publicFlows();
+
+        if (publicFlows == null || publicFlows.isEmpty()) {
+            // all flows are public when public definition not provided
+            return true;
+        }
+
+        return publicFlows.contains(entryPoint);
     }
 }

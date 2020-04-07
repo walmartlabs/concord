@@ -37,6 +37,7 @@ public class ProcessDefinitionV1 implements ProcessDefinition, Serializable {
 
     private final Configuration cfg;
     private final Map<String, FlowDefinition> flows;
+    private final Set<String> publicFlows;
     private final Map<String, Profile> profiles;
     private final List<Trigger> triggers;
     private final Imports imports;
@@ -48,6 +49,11 @@ public class ProcessDefinitionV1 implements ProcessDefinition, Serializable {
         this.flows = new HashMap<>();
         if (delegate.getFlows() != null) {
             delegate.getFlows().forEach((k, v) -> flows.put(k, new FlowDefinitionV1(v)));
+        }
+
+        this.publicFlows = new HashSet<>();
+        if (delegate.getPublicFlows() != null) {
+            publicFlows.addAll(delegate.getPublicFlows());
         }
 
         this.profiles = new HashMap<>();
@@ -84,6 +90,11 @@ public class ProcessDefinitionV1 implements ProcessDefinition, Serializable {
     @Override
     public Map<String, FlowDefinition> flows() {
         return flows;
+    }
+
+    @Override
+    public Set<String> publicFlows() {
+        return publicFlows;
     }
 
     @Override

@@ -1,0 +1,9 @@
+publicFlows:
+  - publicFlow
+
+flows:
+  publicFlow:
+    - log: "This is the public flow"
+
+  privateFlow:
+    - log: "This is the private flow"

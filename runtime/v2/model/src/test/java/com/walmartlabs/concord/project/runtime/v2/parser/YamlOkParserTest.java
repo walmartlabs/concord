@@ -343,6 +343,19 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(1, switchStep.getDefaultSteps().size());
     }
 
+    // publicFlows definition
+    @Test
+    public void test013() throws Exception {
+        ProcessDefinition pd = load("013.yml");
+
+        Set<String> publicFlows = pd.publicFlows();
+        Set<String> flowNames = pd.flows().keySet();
+
+        assertEquals(1, publicFlows.size());
+        assertTrue(publicFlows.contains("publicFlow"));
+        assertTrue(flowNames.contains(publicFlows.iterator().next()));
+    }
+
     private static void assertMeta(StepOptions o) {
         assertNotNull(o.meta());
         assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());
