@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -41,6 +42,21 @@ import java.util.UUID;
 public class AuditLog {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLog.class);
+
+    private static final ThreadLocal<ActionSourceParameters> threadLocalActionSource = new ThreadLocal<>();
+
+    /**
+     * Any audit log calls done inside the provided {@link Runnable} will have
+     * the specified {@link ActionSource} and its parameters added automatically.
+     */
+    public static void withActionSource(ActionSource source, Map<String, Object> params, Runnable runnable) {
+        try {
+            threadLocalActionSource.set(new ActionSourceParameters(source, params));
+            runnable.run();
+        } finally {
+            threadLocalActionSource.set(null);
+        }
+    }
 
     private final AuditConfiguration cfg;
     private final AuditDao auditDao;
@@ -83,7 +99,7 @@ public class AuditLog {
                 return this;
             }
 
-            details.put(k, v);
+            this.details.put(k, v);
             return this;
         }
 
@@ -93,6 +109,17 @@ public class AuditLog {
             }
 
             this.changes = DiffUtils.compare(prevEntry, newEntry);
+            return this;
+        }
+
+        public EntryBuilder actionSource(ActionSource source) {
+            return actionSource(source, Collections.emptyMap());
+        }
+
+        public EntryBuilder actionSource(ActionSource source, Map<String, Object> params) {
+            Map<String, Object> m = new HashMap<>(params != null ? params : Collections.emptyMap());
+            m.put("type", source);
+            this.details.put("actionSource", m);
             return this;
         }
 
@@ -117,21 +144,25 @@ public class AuditLog {
                 }
             }
 
-            Map<String, Object> actionSource = new HashMap<>();
-            SessionKeyPrincipal sessionKey = SessionKeyPrincipal.getCurrent();
-            if (sessionKey != null) {
-                // if the request was made from within a process
-                actionSource.put("type", ActionSource.PROCESS);
-
-                PartialProcessKey processKey = sessionKey.getProcessKey();
-                actionSource.put("instanceId", processKey.getInstanceId());
-            } else if (RequestUtils.isItAUIRequest()) {
-                actionSource.put("type", ActionSource.UI);
-            } else {
-                // if the request was made using the API
-                actionSource.put("type", ActionSource.API_REQUEST);
+            // save the thread-local action source
+            ActionSourceParameters actionSourceParams = threadLocalActionSource.get();
+            if (actionSourceParams != null) {
+                actionSource(actionSourceParams.source, actionSourceParams.params);
+            } else if (!details.containsKey("actionSource")) {
+                // automatically fill-in actionSource if it wasn't defined before
+                SessionKeyPrincipal sessionKey = SessionKeyPrincipal.getCurrent();
+                if (sessionKey != null) {
+                    // the request was made from within a process
+                    PartialProcessKey processKey = sessionKey.getProcessKey();
+                    actionSource(ActionSource.PROCESS, Collections.singletonMap("instanceId", processKey.getInstanceId()));
+                } else if (RequestUtils.isItAUIRequest()) {
+                    // the request was sent by the UI
+                    actionSource(ActionSource.UI);
+                } else {
+                    // the request was made using the API
+                    actionSource(ActionSource.API_REQUEST);
+                }
             }
-            details.put("actionSource", actionSource);
 
             details.put("requestId", RequestUtils.getRequestId());
 
@@ -142,6 +173,17 @@ public class AuditLog {
             auditDao.insert(userId, object, action, details);
 
             listeners.onAuditEvent(new AuditEvent(userId, object.name(), action.name(), details));
+        }
+    }
+
+    public static class ActionSourceParameters {
+
+        private final ActionSource source;
+        private final Map<String, Object> params;
+
+        private ActionSourceParameters(ActionSource source, Map<String, Object> params) {
+            this.source = source;
+            this.params = params;
         }
     }
 }

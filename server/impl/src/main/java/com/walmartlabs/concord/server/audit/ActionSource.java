@@ -34,6 +34,11 @@ public enum ActionSource {
     PROCESS,
 
     /**
+     * Initiated by Concord.
+     */
+    SYSTEM,
+
+    /**
      * Access from the UI
      */
     UI

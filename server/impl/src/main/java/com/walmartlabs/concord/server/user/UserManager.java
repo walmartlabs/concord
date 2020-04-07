@@ -20,6 +20,10 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.org.project.DiffUtils;
 import com.walmartlabs.concord.server.org.team.TeamDao;
 import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
@@ -37,12 +41,14 @@ public class UserManager {
 
     private final UserDao userDao;
     private final TeamDao teamDao;
+    private final AuditLog auditLog;
     private final Map<UserType, UserInfoProvider> userInfoProviders;
 
     @Inject
-    public UserManager(UserDao userDao, TeamDao teamDao, List<UserInfoProvider> providers) {
+    public UserManager(UserDao userDao, TeamDao teamDao, AuditLog auditLog, List<UserInfoProvider> providers) {
         this.userDao = userDao;
         this.teamDao = teamDao;
+        this.auditLog = auditLog;
 
         this.userInfoProviders = new HashMap<>();
         providers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
@@ -79,7 +85,29 @@ public class UserManager {
     }
 
     public Optional<UserEntry> update(UUID userId, String displayName, String email, UserType userType, boolean isDisabled, Set<String> roles) {
-        return Optional.ofNullable(userDao.update(userId, displayName, email, userType, isDisabled, roles));
+        UserEntry prevEntry = userDao.get(userId);
+        if (prevEntry == null) {
+            return Optional.empty();
+        }
+
+        UserEntry newEntry = userDao.update(userId, displayName, email, userType, isDisabled, roles);
+        if (newEntry == null) {
+            return Optional.empty();
+        }
+
+        Map<String, Object> changes = DiffUtils.compare(prevEntry, newEntry);
+        // some callers (e.g. the LDAP realm) update user records regardless of whether there was
+        // any actual changes or not
+        // add an audit log record only if there was any changes
+        if (!changes.isEmpty()) {
+            auditLog.add(AuditObject.USER, AuditAction.UPDATE)
+                    .field("userId", userId)
+                    .field("username", prevEntry.getName())
+                    .field("changes", changes)
+                    .log();
+        }
+
+        return Optional.of(newEntry);
     }
 
     public UserEntry create(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
@@ -94,7 +122,14 @@ public class UserManager {
         UUID teamId = TeamManager.DEFAULT_ORG_TEAM_ID;
         teamDao.upsertUser(teamId, id, TeamRole.MEMBER);
 
-        return userDao.get(id);
+        UserEntry e = userDao.get(id);
+        auditLog.add(AuditObject.USER, AuditAction.CREATE)
+                .field("userId", id)
+                .field("username", e.getName())
+                .changes(null, e)
+                .log();
+
+        return e;
     }
 
     public boolean isInOrganization(UUID orgId) {
@@ -116,6 +151,38 @@ public class UserManager {
     public UserInfo getInfo(String username, String domain, UserType type) {
         UserInfoProvider p = assertProvider(type);
         return p.getInfo(null, username, domain);
+    }
+
+    public void enable(UUID userId) {
+        if (!userDao.isDisabled(userId)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + userId))) {
+
+            // the account is already enabled, nothing to do
+            return;
+        }
+
+        userDao.enable(userId);
+
+        auditLog.add(AuditObject.USER, AuditAction.UPDATE)
+                .field("userId", userId)
+                .changes(describeStatusChange(true), describeStatusChange(false))
+                .log();
+    }
+
+    public void disable(UUID userId) {
+        if (userDao.isDisabled(userId)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + userId))) {
+
+            // the account is already disabled, nothing to do
+            return;
+        }
+
+        userDao.disable(userId);
+
+        auditLog.add(AuditObject.USER, AuditAction.UPDATE)
+                .field("userId", userId)
+                .changes(describeStatusChange(false), describeStatusChange(true))
+                .log();
     }
 
     private UserEntry get(String username, String userDomain, UserType type) {
@@ -146,5 +213,29 @@ public class UserManager {
             throw new ConcordApplicationException("Unknown user account type: " + type);
         }
         return p;
+    }
+
+    /**
+     * {@link com.walmartlabs.concord.server.org.project.DiffUtils#compare(Object, Object)}
+     * doesn't work for top-level Maps. So we have to create a temporary bean with a single
+     * field in order to record the user account's status change using the existing
+     * {@link AuditLog.EntryBuilder#changes(Object, Object)} mechanism w/o pulling
+     * the {@link UserEntry} before and after the change.
+     */
+    private static StatusChange describeStatusChange(boolean disabled) {
+        return new StatusChange(disabled);
+    }
+
+    private static class StatusChange {
+
+        private final boolean disabled;
+
+        private StatusChange(boolean disabled) {
+            this.disabled = disabled;
+        }
+
+        public boolean isDisabled() {
+            return disabled;
+        }
     }
 }

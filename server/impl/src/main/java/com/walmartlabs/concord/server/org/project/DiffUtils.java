@@ -127,7 +127,13 @@ public class DiffUtils {
                 Map<String, Object> nextO = getNew();
                 for (int n = 0; n < path.length - 1; n++) {
                     nextO.putIfAbsent(path[n], new HashMap<String, Object>());
-                    nextO = (Map<String, Object>) nextO.get(path[n]);
+
+                    Object o = nextO.get(path[n]);
+                    if (!(o instanceof Map)) {
+                        continue;
+                    }
+
+                    nextO = (Map<String, Object>) o;
                 }
 
                 nextO.put(path[path.length - 1], newObject2);
@@ -153,7 +159,13 @@ public class DiffUtils {
                 Map<String, Object> prevO = getPrevious();
                 for (int n = 0; n < path.length - 1; n++) {
                     prevO.putIfAbsent(path[n], new HashMap<String, Object>());
-                    prevO = (Map<String, Object>) prevO.get(path[n]);
+
+                    Object o = prevO.get(path[n]);
+                    if (!(o instanceof Map)) {
+                        continue;
+                    }
+
+                    prevO = (Map<String, Object>) o;
                 }
 
                 prevO.put(path[path.length - 1], newObject2);
