@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.security.apikey;
  * =====
  */
 
+import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
@@ -32,6 +33,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.jooq.exception.DataAccessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.Validate;
 import org.sonatype.siesta.ValidationErrorsException;
@@ -52,6 +56,8 @@ import java.util.UUID;
 @Api(value = "API keys", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v1/apikey")
 public class ApiKeyResource implements Resource {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiKeyResource.class);
 
     private final ApiKeyConfiguration cfg;
     private final ApiKeyDao apiKeyDao;
@@ -99,7 +105,11 @@ public class ApiKeyResource implements Resource {
         String name = trim(req.getName());
         if (name == null || name.isEmpty()) {
             // auto generate the name
-            name = "key#" + (apiKeyDao.count(userId) + 1);
+            name = "key#" + UUID.randomUUID().toString();
+        }
+
+        if (apiKeyDao.getId(userId, name) != null) {
+            throw new ValidationErrorsException("API Token with name '" + name + "' already exists");
         }
 
         String key = apiKeyDao.newApiKey();
@@ -109,8 +119,17 @@ public class ApiKeyResource implements Resource {
             expiredAt = Instant.now().plus(cfg.getExpirationPeriodDays(), ChronoUnit.DAYS);
         }
 
-        UUID id = apiKeyDao.insert(userId, key, name, expiredAt);
-        return new CreateApiKeyResponse(id, key);
+        try {
+            UUID id = apiKeyDao.insert(userId, key, name, expiredAt);
+            return new CreateApiKeyResponse(id, key);
+        } catch (DataAccessException e) {
+            if (PgUtils.isUniqueViolationError(e)) {
+                log.warn("create ['{}'] -> duplicate name error: {}", name, e.getMessage());
+                throw new ValidationErrorsException("Duplicate API key name: " + name);
+            }
+
+            throw e;
+        }
     }
 
     @DELETE
