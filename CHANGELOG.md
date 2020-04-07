@@ -1,5 +1,34 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v1, runtime-v2, concord-server: support for
+`publicFlows` - a top-level element with a list of public flows.
+Only public flows are allowed to be used as `entryPoint` values;
+- concord-server: additional audit logging for user
+management - account creation/update, enabling or disabling
+of the account;
+- iam-sso: option to convert user domain names via
+`sso.domainMapping` configuration parameter;
+- http-tasks: initial support for runtime v2.
+
+### Changed
+
+- concord-server: improved validation of API key names, improved
+handling of duplicates;
+- runtime-v2: now the runtime evaluates only top-level variables
+in task, form and flow call parameters to avoid undesirable
+"interpolation" of nested values;
+- concord-server: when executing `ldap.principalSearchFilter`
+pass username and domain values separately in additional
+arguments;
+- concord-agent: the start script no longer depends on `uuid`
+executable.
+
+
+
 ## [1.46.0] - 2020-04-02
 
 ### Added
