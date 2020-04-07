@@ -23,7 +23,9 @@ package com.walmartlabs.concord.db;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.JSONB;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
+import org.postgresql.util.PSQLException;
 
 import java.sql.Timestamp;
 
@@ -54,6 +56,12 @@ public final class PgUtils {
 
     public static Condition jsonbContains(Field<JSONB> field, JSONB value) {
         return DSL.condition("{0} @> {1}", field, DSL.value(value));
+    }
+
+    public static boolean isUniqueViolationError(DataAccessException e) {
+        Throwable cause = e.getCause();
+        // see https://www.postgresql.org/docs/10/errcodes-appendix.html
+        return cause instanceof PSQLException && ((PSQLException) e.getCause()).getSQLState().equals("23505");
     }
 
     private PgUtils() {
