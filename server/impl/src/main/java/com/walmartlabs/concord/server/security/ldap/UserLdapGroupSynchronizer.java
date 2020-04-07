@@ -23,9 +23,11 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgUtils;
+import com.walmartlabs.concord.server.audit.ActionSource;
+import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.cfg.LdapGroupSyncConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
-import com.walmartlabs.concord.server.user.UserDao;
+import com.walmartlabs.concord.server.user.UserManager;
 import com.walmartlabs.concord.server.user.UserType;
 import org.jooq.Configuration;
 import org.jooq.Field;
@@ -36,6 +38,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -53,18 +56,22 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     private static final Logger log = LoggerFactory.getLogger(UserLdapGroupSynchronizer.class);
 
-    private final LdapGroupSyncConfiguration cfg;
     private final Dao dao;
+    private final LdapGroupSyncConfiguration cfg;
     private final LdapManager ldapManager;
-    private final UserDao userDao;
     private final LdapGroupDao ldapGroupsDao;
+    private final UserManager userManager;
 
     @Inject
-    public UserLdapGroupSynchronizer(LdapGroupSyncConfiguration cfg, Dao dao, LdapManager ldapManager, UserDao userDao, LdapGroupDao ldapGroupsDao) {
-        this.cfg = cfg;
+    public UserLdapGroupSynchronizer(Dao dao, LdapGroupSyncConfiguration cfg,
+                                     LdapManager ldapManager,
+                                     LdapGroupDao ldapGroupsDao,
+                                     UserManager userManager) {
+
         this.dao = dao;
+        this.cfg = cfg;
         this.ldapManager = ldapManager;
-        this.userDao = userDao;
+        this.userManager = userManager;
         this.ldapGroupsDao = ldapGroupsDao;
     }
 
@@ -103,14 +110,16 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     private void enableUser(UserItem u) {
         if (u.isDisabled) {
-            userDao.enable(u.userId);
+            AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", "user-ldap-group-sync"),
+                    () -> userManager.enable(u.userId));
             log.info("enableUser ['{}'] -> user found active in LDAP", u.username);
         }
     }
 
     private void disableUser(UserItem u) {
         if (!u.isDisabled) {
-            userDao.disable(u.userId);
+            AuditLog.withActionSource(ActionSource.SYSTEM, Collections.singletonMap("task", "user-ldap-group-sync"),
+                    () -> userManager.disable(u.userId));
             log.info("disableUser ['{}'] -> not found in LDAP, user is disabled", u.username);
         }
     }

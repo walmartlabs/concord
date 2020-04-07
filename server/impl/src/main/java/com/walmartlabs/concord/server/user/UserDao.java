@@ -275,6 +275,15 @@ public class UserDao extends AbstractDao {
         });
     }
 
+    public Optional<Boolean> isDisabled(UUID userId) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(USERS.IS_DISABLED)
+                    .from(USERS)
+                    .where(USERS.USER_ID.eq(userId))
+                    .fetchOne(r -> Optional.ofNullable(r.get(USERS.IS_DISABLED)));
+        }
+    }
+
     // TODO add "include" option
     public List<UserEntry> list(String filter, int offset, int limit) {
         try (DSLContext tx = DSL.using(cfg)) {
@@ -283,8 +292,8 @@ public class UserDao extends AbstractDao {
                     .where(USERS.IS_DISABLED.isFalse())
                     .and(value(filter).isNotNull()
                             .and(USERS.USERNAME.containsIgnoreCase(filter)
-                            .or(USERS.DISPLAY_NAME.containsIgnoreCase(filter))
-                            .or(USERS.USER_EMAIL.containsIgnoreCase(filter))))
+                                    .or(USERS.DISPLAY_NAME.containsIgnoreCase(filter))
+                                    .or(USERS.USER_EMAIL.containsIgnoreCase(filter))))
                     .orderBy(USERS.DISPLAY_NAME, USERS.USERNAME)
                     .offset(offset)
                     .limit(limit)

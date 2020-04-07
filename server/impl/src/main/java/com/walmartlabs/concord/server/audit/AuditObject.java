@@ -34,6 +34,7 @@ public enum AuditObject {
     SECRET,
     SYSTEM,
     TEAM,
+    USER,
 
     /**
      * @deprecated superseded by {@link #JSON_STORE}
