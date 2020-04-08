@@ -172,15 +172,6 @@ export const testRepository = async (req: RepositoryTestRequest): Promise<void> 
     }
 };
 
-export interface UserSearchResult {
-    username: string;
-    userDomain?: string;
-    displayName: string;
-}
-
-export const findUsers = (filter: string): Promise<UserSearchResult[]> =>
-    fetchJson(`/api/service/console/search/users?${queryParams({ filter })}`);
-
 export interface LdapGroupSearchResult {
     groupName: string;
     displayName: string;

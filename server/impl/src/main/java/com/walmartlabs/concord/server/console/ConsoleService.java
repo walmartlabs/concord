@@ -301,29 +301,6 @@ public class ConsoleService implements Resource {
     }
 
     @GET
-    @Path("/search/users")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Validate
-    @WithTimer
-    public List<UserSearchResult> searchUsers(@QueryParam("filter") @Size(min = 5, max = 256) String filter) {
-        if (filter == null) {
-            return Collections.emptyList();
-        }
-
-        filter = filter.trim();
-        if (filter.startsWith("*")) {
-            // disallow "starts-with" filters, they can be too slow
-            return Collections.emptyList();
-        }
-
-        try {
-            return ldapManager.search(filter);
-        } catch (NamingException e) {
-            throw new ConcordApplicationException("LDAP search error: " + e.getMessage(), e);
-        }
-    }
-
-    @GET
     @Path("/search/ldapGroups")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate

@@ -49,10 +49,6 @@ public class LdapConfiguration implements Serializable {
     private String principalSearchFilter;
 
     @Inject
-    @Config("ldap.userSearchFilter")
-    private String userSearchFilter;
-
-    @Inject
     @Config("ldap.groupSearchFilter")
     private String groupSearchFilter;
 
@@ -121,10 +117,6 @@ public class LdapConfiguration implements Serializable {
 
     public String getPrincipalSearchFilter() {
         return principalSearchFilter;
-    }
-
-    public String getUserSearchFilter() {
-        return userSearchFilter;
     }
 
     public String getGroupSearchFilter() {

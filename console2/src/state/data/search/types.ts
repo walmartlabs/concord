@@ -21,17 +21,8 @@
 import { Action } from 'redux';
 import { RequestError } from '../../../api/common';
 
-import { LdapGroupSearchResult, UserSearchResult } from '../../../api/service/console';
+import { LdapGroupSearchResult } from '../../../api/service/console';
 import { RequestState } from '../common';
-
-export interface SearchUsersRequest extends Action {
-    filter: string;
-}
-
-export interface SearchUsersResponse extends Action {
-    error?: RequestError;
-    items?: UserSearchResult[];
-}
 
 export interface SearchLdapGroupsRequest extends Action {
     filter: string;
@@ -42,9 +33,7 @@ export interface SearchLdapGroupsResponse extends Action {
     items?: LdapGroupSearchResult[];
 }
 
-export type SearchUsersState = RequestState<SearchUsersResponse>;
 export type SearchLdapGroupsState = RequestState<SearchLdapGroupsResponse>;
 export interface State {
-    users: SearchUsersState;
     ldapGroups: SearchLdapGroupsState;
 }

@@ -173,6 +173,8 @@
                                     <item>.*com\.walmartlabs\.concord\.client\.ProcessApi.*</item>
                                     <item>.*com\.walmartlabs\.concord\.client\.ProcessV2Api.*</item>
                                     <item>.*com\.walmartlabs\.concord\.client\.JsonStoreQueryApi.*</item>
+                                    <item>.*com\.walmartlabs\.concord\.client\.UserSearchResult.*</item>
+                                    <item>.*com\.walmartlabs\.concord\.client\.DefaultApi.*</item>
                                 </exclude>
                             </elements>
                         </revapi.filter>
