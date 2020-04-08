@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.security.ldap;
  */
 
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
-import com.walmartlabs.concord.server.console.UserSearchResult;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.slf4j.Logger;
@@ -52,18 +51,6 @@ public class LdapManagerImpl implements LdapManager {
 
         this.cfg = cfg;
         this.ctxFactory = ctxFactory;
-    }
-
-    @Override
-    public List<UserSearchResult> search(String filter) throws NamingException {
-        return search(filter, cfg.getUserSearchFilter(), new String[]{cfg.getUserPrincipalNameProperty(), DISPLAY_NAME_ATTR},
-                attrs -> {
-                    String upn = attrs.get(cfg.getUserPrincipalNameProperty());
-                    if (upn == null) {
-                        return null;
-                    }
-                    return new UserSearchResult(getUsername(upn), getDomain(upn), attrs.get(DISPLAY_NAME_ATTR));
-                });
     }
 
     @Override

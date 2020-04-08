@@ -23,7 +23,6 @@ package com.walmartlabs.concord.server.security.ldap;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.walmartlabs.concord.server.console.UserSearchResult;
 import org.immutables.value.Value;
 
 import javax.annotation.Nonnull;
@@ -66,11 +65,6 @@ public class CachingLdapManager implements LdapManager {
                         return Optional.ofNullable(delegate.getPrincipalByDn(key));
                     }
                 });
-    }
-
-    @Override
-    public List<UserSearchResult> search(String filter) throws NamingException {
-        return delegate.search(filter);
     }
 
     @Override

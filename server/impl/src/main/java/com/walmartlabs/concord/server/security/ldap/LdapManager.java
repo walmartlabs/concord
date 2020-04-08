@@ -20,15 +20,11 @@ package com.walmartlabs.concord.server.security.ldap;
  * =====
  */
 
-import com.walmartlabs.concord.server.console.UserSearchResult;
-
 import javax.naming.NamingException;
 import java.util.List;
 import java.util.Set;
 
 public interface LdapManager {
-
-    List<UserSearchResult> search(String filter) throws NamingException;
 
     List<LdapGroupSearchResult> searchGroups(String filter) throws NamingException;
 
