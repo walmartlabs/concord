@@ -1,5 +1,16 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-agent: fix "preforking" by removing the process'
+session key from runner configuration files;
+- concord-server: removed old LDAP user search endpoint
+`/api/service/console/search/users` and all associated code.
+
+
+
 ## [1.47.0] - 2020-04-08
 
 ### Added
