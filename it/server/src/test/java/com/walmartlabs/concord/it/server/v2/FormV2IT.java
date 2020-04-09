@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server.v2;
 
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.it.server.AbstractServerIT;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -33,6 +34,8 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.*;
 
+// TODO revert after 1.47.1
+@Ignore
 public class FormV2IT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
