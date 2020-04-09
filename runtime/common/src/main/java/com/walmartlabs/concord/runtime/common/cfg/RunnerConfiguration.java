@@ -102,6 +102,7 @@ public interface RunnerConfiguration {
      * Event recording configuration.
      */
     @Value.Default
+    // TODO should be in the process configuration
     default EventConfiguration events() {
         return EventConfiguration.builder().build();
     }

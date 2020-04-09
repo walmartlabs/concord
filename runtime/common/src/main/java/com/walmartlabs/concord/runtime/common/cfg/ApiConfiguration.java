@@ -89,6 +89,7 @@ public interface ApiConfiguration {
      * Authentication token for the current process.
      */
     @Nullable
+    // TODO should be in the process configuration
     String sessionToken();
 
     /**
