@@ -34,8 +34,6 @@ import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
 
-// TODO revert after 1.47.1
-@Ignore
 public class ProcessV2IT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
