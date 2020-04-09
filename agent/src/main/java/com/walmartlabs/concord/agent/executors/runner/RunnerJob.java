@@ -183,8 +183,7 @@ public class RunnerJob {
                 .api(ApiConfiguration.builder().from(apiCfgSrc)
                         .baseUrl(execCfg.serverApiBaseUrl())
                         .maxNoHeartbeatInterval(execCfg.maxHeartbeatInterval())
-                        // TODO revert after 1.47.1
-                        // .sessionToken(readSessionToken(payloadDir))
+                        .sessionToken(readSessionToken(payloadDir))
                         .build())
                 .docker(DockerConfiguration.builder().from(dockerCfgSrc)
                         .extraVolumes(execCfg.extraDockerVolumes())

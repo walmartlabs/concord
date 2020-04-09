@@ -30,8 +30,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 
-// TODO revert after 1.47.1
-@Ignore
 public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
     @After
