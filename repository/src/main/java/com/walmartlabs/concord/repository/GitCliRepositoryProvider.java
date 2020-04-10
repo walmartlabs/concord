@@ -63,7 +63,6 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
         // try twice
         for (int attemptNo = 0; attemptNo < 2; attemptNo++) {
             if (attemptNo > 0) {
-                sleep(1000L);
                 log.warn("fetch ['{}', '{}', '{}', '{}'] -> error: {}, retrying...", uri, branch, commitId, dst, lastException.getMessage());
             }
 
@@ -96,13 +95,5 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     @Override
     public RepositoryInfo getInfo(Path path) {
         return client.getInfo(path);
-    }
-
-    private static void sleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 }
