@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -11,7 +12,7 @@
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>1.47.1</version>
+    <version>1.47.2-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -54,7 +55,8 @@
         <javers.version>3.11.1</javers.version>
         <jaxb.version>2.3.0.1</jaxb.version>
         <jetty.version>9.4.26.v20200117</jetty.version>
-        <jgit.version>5.2.0.201812061821-r</jgit.version> <!-- updating requires some changes in how the auth is set up in ITs -->
+        <jgit.version>5.2.0.201812061821-r
+        </jgit.version> <!-- updating requires some changes in how the auth is set up in ITs -->
         <jooq.version>3.12.3</jooq.version>
         <jsch.version>0.1.55</jsch.version>
         <json.smart.version>2.3</json.smart.version>
@@ -64,7 +66,8 @@
         <kafka.client.version>2.4.0</kafka.client.version>
         <kubernetes.client.version>4.8.0</kubernetes.client.version>
         <launcher.version>0.128</launcher.version>
-        <liquibase.version>3.5.1</liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
+        <liquibase.version>3.5.1
+        </liquibase.version> <!-- the newer versions (up to 3.5.3) have incorrect mappings for PG's blob/bytea -->
         <logback.version>1.2.3</logback.version>
         <maven.annotation.version>3.5</maven.annotation.version>
         <maven.api.version>3.0.5</maven.api.version>
@@ -1082,7 +1085,7 @@
         </profile>
     </profiles>
 
-  <scm>
-    <tag>1.47.1</tag>
-  </scm>
+    <scm>
+        <tag>HEAD</tag>
+    </scm>
 </project>
