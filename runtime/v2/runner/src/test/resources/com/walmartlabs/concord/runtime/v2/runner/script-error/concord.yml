@@ -1,0 +1,7 @@
+flows:
+  default:
+    - script: js
+      body: |
+        throw new Error('this is an error');
+      error:
+        - log: "error occurred: ${lastError}"

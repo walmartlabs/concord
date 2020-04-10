@@ -50,6 +50,8 @@ public class BaseRunnerModule extends AbstractModule {
         bind(PolicyEngine.class).toProvider(PolicyEngineProvider.class);
         bind(SynchronizationService.class).to(DefaultSynchronizationService.class);
         bind(ExpressionEvaluator.class).to(DefaultExpressionEvaluator.class);
+        bind(ScriptEvaluator.class).to(DefaultScriptEvaluator.class);
+        bind(ResourceResolver.class).to(DefaultResourceResolver.class);
         bind(TaskResultService.class);
 
         Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);

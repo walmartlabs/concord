@@ -1,0 +1,5 @@
+flows:
+  main:
+    - script: 1
+      body: |
+        throw new RuntimeException("kaboom!")

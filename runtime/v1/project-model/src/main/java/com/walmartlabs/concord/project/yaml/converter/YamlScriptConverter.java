@@ -38,9 +38,7 @@ public class YamlScriptConverter implements StepConverter<YamlScript> {
 
         if(body != null) {
             c.addElement(new ScriptTask(id, ScriptTask.Type.CONTENT, s.getName(), body, true));
-        }
-
-        else {
+        } else {
             c.addElement(new ScriptTask(id, ScriptTask.Type.REFERENCE, null, s.getName(), true));
         }
 

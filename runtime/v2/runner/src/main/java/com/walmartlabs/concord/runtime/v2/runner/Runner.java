@@ -62,6 +62,8 @@ public class Runner {
     private final FormService formService;
     private final SynchronizationService synchronizationService;
     private final ProcessStatusCallback statusCallback;
+    private final ResourceResolver resourceResolver;
+    private final ScriptEvaluator scriptEvaluator;
     private final Collection<ExecutionListener> listeners;
 
     private Runner(Builder b) {
@@ -74,6 +76,8 @@ public class Runner {
         this.checkpointService = b.checkpointService;
         this.formService = b.formService;
         this.synchronizationService = b.synchronizationService;
+        this.resourceResolver = b.resourceResolver;
+        this.scriptEvaluator = b.scriptEvaluator;
         this.statusCallback = b.processStatusCallback;
         this.listeners = b.listeners;
     }
@@ -140,6 +144,8 @@ public class Runner {
         m.put(GlobalVariables.class, globalVariables);
         m.put(FormService.class, formService);
         m.put(SynchronizationService.class, synchronizationService);
+        m.put(ResourceResolver.class, resourceResolver);
+        m.put(ScriptEvaluator.class, scriptEvaluator);
 
         Map<Class<?>, ?> services = Collections.unmodifiableMap(m);
         return vm -> new DefaultRuntime(vm, services);
@@ -166,6 +172,8 @@ public class Runner {
         private CheckpointService checkpointService;
         private FormService formService;
         private SynchronizationService synchronizationService;
+        private ResourceResolver resourceResolver;
+        private ScriptEvaluator scriptEvaluator;
         private ProcessStatusCallback processStatusCallback;
         private Collection<ExecutionListener> listeners;
 
@@ -286,6 +294,14 @@ public class Runner {
 
             if (synchronizationService == null) {
                 synchronizationService = inject(SynchronizationService.class, "synchronizationService");
+            }
+
+            if (resourceResolver == null) {
+                resourceResolver = inject(ResourceResolver.class, "resourceResolver");
+            }
+
+            if (scriptEvaluator == null) {
+                scriptEvaluator = inject(ScriptEvaluator.class, "scriptEvaluator");
             }
 
             if (processStatusCallback == null) {

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,44 +20,54 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
-import com.walmartlabs.concord.runtime.v2.runner.vm.SwitchCommand;
+import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
+import com.walmartlabs.concord.runtime.v2.runner.vm.RetryWrapper;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ScriptCallCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.commands.Block;
 
 import javax.inject.Named;
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Named
-public class SwitchCompiler implements StepCompiler<SwitchStep> {
+public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
     @Override
     public boolean accepts(Step step) {
-        return step instanceof SwitchStep;
+        return step instanceof ScriptCall;
     }
 
     @Override
-    public Command compile(CompilerContext context, SwitchStep step) {
-        List<Map.Entry<String, Command>> caseCommands = new ArrayList<>();
-        for (Map.Entry<String, List<Step>> kv : step.getCaseSteps()) {
-            caseCommands.add(new AbstractMap.SimpleEntry<>(kv.getKey(), compile(context, kv.getValue())));
+    public Command compile(CompilerContext context, ScriptCall step) {
+        Command cmd = new ScriptCallCommand(step);
+
+        ScriptCallOptions options = step.getOptions();
+
+        Retry retry = options.retry();
+        if (retry != null) {
+            cmd = new RetryWrapper(cmd, retry);
         }
-        Command defaultCommand = compile(context, step.getDefaultSteps());
-        return new SwitchCommand(step, caseCommands, defaultCommand);
+
+        WithItems withItems = options.withItems();
+        if (withItems != null) {
+            cmd = new WithItemsWrapper(cmd, withItems);
+        }
+
+        List<Step> errorSteps = options.errorSteps();
+        if (!errorSteps.isEmpty()) {
+            cmd = new ErrorWrapper(cmd, compile(context, errorSteps));
+        }
+
+        return cmd;
     }
 
     private static Command compile(CompilerContext context, List<Step> steps) {
-        if (steps == null) {
-            return null;
-        }
-
         return new Block(steps.stream()
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList()));
     }
+
 }

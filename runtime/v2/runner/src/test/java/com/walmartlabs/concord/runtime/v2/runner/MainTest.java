@@ -291,6 +291,39 @@ public class MainTest {
         assertLog(log, ".*Nope.*");
     }
 
+    @Test
+    public void testScriptInline() throws Exception {
+        deploy("script-inline");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*x: 1.*");
+    }
+
+    @Test
+    public void testScriptAttached() throws Exception {
+        deploy("script-attached");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*x: 1.*");
+    }
+
+    @Test
+    public void testScriptErrorBlock() throws Exception {
+        deploy("script-error");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error in <eval> at line number 1 at column number 0.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
