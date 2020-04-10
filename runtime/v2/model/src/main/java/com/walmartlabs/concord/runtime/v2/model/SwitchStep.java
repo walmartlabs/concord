@@ -25,16 +25,17 @@ import com.walmartlabs.concord.runtime.v2.parser.KV;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 import java.util.List;
+import java.util.Map;
 
 public class SwitchStep extends AbstractStep<SimpleOptions> {
 
     private static final long serialVersionUID = 1L;
 
     private final String expression;
-    private final List<KV<String, List<Step>>> caseSteps;
+    private final List<Map.Entry<String, List<Step>>> caseSteps;
     private final List<Step> defaultSteps;
 
-    public SwitchStep(JsonLocation location, String expression, List<KV<String, List<Step>>> caseSteps, List<Step> defaultSteps, SimpleOptions options) {
+    public SwitchStep(JsonLocation location, String expression, List<Map.Entry<String, List<Step>>> caseSteps, List<Step> defaultSteps, SimpleOptions options) {
         super(location, options);
 
         this.expression = expression;
@@ -46,7 +47,7 @@ public class SwitchStep extends AbstractStep<SimpleOptions> {
         return expression;
     }
 
-    public List<KV<String, List<Step>>> getCaseSteps() {
+    public List<Map.Entry<String, List<Step>>> getCaseSteps() {
         return caseSteps;
     }
 

@@ -356,6 +356,38 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertTrue(flowNames.contains(publicFlows.iterator().next()));
     }
 
+    // script definition
+    @Test
+    public void test014() throws Exception {
+        ProcessDefinition pd = load("014.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof ScriptCall);
+        ScriptCall t = (ScriptCall) main.get(0);
+        assertEquals("groovy", t.getName());
+
+        // withItems
+        assertEquals(1, t.getOptions().withItems().value());
+
+        // input
+        Map<String, Object> input = new HashMap<>();
+        input.put("k", "v1");
+        assertEquals(input, t.getOptions().input());
+
+        // retry
+        assertNotNull(t.getOptions().retry());
+        assertEquals(1, t.getOptions().retry().times());
+        assertEquals(2, t.getOptions().retry().delay());
+        Map<String, Object> retryInput = new HashMap<>();
+        retryInput.put("k", "v");
+        assertEquals(retryInput, t.getOptions().retry().input());
+
+        // meta
+        assertMeta(t.getOptions());
+    }
+
     private static void assertMeta(StepOptions o) {
         assertNotNull(o.meta());
         assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());

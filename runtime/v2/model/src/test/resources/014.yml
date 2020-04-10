@@ -1,0 +1,17 @@
+flows:
+  default:
+    - script: groovy
+      body: |
+        throw new RuntimeException("kaboom!")
+      in:
+        k: "v1"
+      error:
+        - log: "Caught an error"
+      withItems: 1
+      retry:
+        times: 1
+        delay: 2
+        in:
+          k: "v"
+      meta:
+        m1: "v1"

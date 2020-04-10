@@ -47,6 +47,7 @@ public final class YamlValueType<T> {
 
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<TaskCall> TASK = type("TASK");
+    public static final YamlValueType<ScriptCall> SCRIPT = type("SCRIPT");
     public static final YamlValueType<Expression> EXPRESSION = type("EXPRESSION");
     public static final YamlValueType<String> EXPRESSION_VAL = type("EXPRESSION");
     public static final YamlValueType<Retry> RETRY = type("RETRY");

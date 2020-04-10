@@ -66,23 +66,14 @@ public class ExpressionCommand extends StepCommand<Expression> {
         ExpressionOptions opts = step.getOptions();
         String out = opts != null ? opts.out() : null;
 
-        ThreadLocalContext.set(ctx);
-        try {
-            Object v = ee.eval(ctx, expr, Object.class);
-            if (out != null) {
-                if (v != null && !(v instanceof Serializable)) {
-                    log.warn("The expression's ('{}') result is not Serializable, it won't be preserved between process executions: {}", expr, v.getClass());
-                }
-
-                GlobalVariables gv = runtime.getService(GlobalVariables.class);
-                gv.put(out, v);
+        Object v = ThreadLocalContext.withContext(ctx, () -> ee.eval(ctx, expr, Object.class));
+        if (out != null) {
+            if (v != null && !(v instanceof Serializable)) {
+                log.warn("The expression's ('{}') result is not Serializable, it won't be preserved between process executions: {}", expr, v.getClass());
             }
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            ThreadLocalContext.clear();
+
+            GlobalVariables gv = runtime.getService(GlobalVariables.class);
+            gv.put(out, v);
         }
     }
 }

@@ -55,20 +55,11 @@ public class IfCommand extends StepCommand<IfStep> {
         IfStep step = getStep();
         String expr = step.getExpression();
 
-        ThreadLocalContext.set(ctx);
-        try {
-            boolean ifResult = ee.eval(ctx, expr, Boolean.class);
-            if (ifResult) {
-                frame.push(thenCommand);
-            } else if (elseCommand != null) {
-                frame.push(elseCommand);
-            }
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            ThreadLocalContext.clear();
+        boolean ifResult = ThreadLocalContext.withContext(ctx, () -> ee.eval(ctx, expr, Boolean.class));
+        if (ifResult) {
+            frame.push(thenCommand);
+        } else if (elseCommand != null) {
+            frame.push(elseCommand);
         }
     }
 }

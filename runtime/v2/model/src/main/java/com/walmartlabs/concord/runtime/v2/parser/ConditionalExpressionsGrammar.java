@@ -27,8 +27,10 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
 import io.takari.parc.Parser;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.parser.ExpressionGrammar.expressionVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
@@ -90,12 +92,12 @@ public final class ConditionalExpressionsGrammar {
 
     static class SwitchStepBuilder {
 
-        private List<KV<String, List<Step>>> caseSteps = new ArrayList<>();
+        private List<Map.Entry<String, List<Step>>> caseSteps = new ArrayList<>();
         private List<Step> defaultSteps;
         private SimpleOptions options;
 
         public SwitchStepBuilder caseStep(String caseLabel, List<Step> caseSteps) {
-            this.caseSteps.add(new KV<>(caseLabel, caseSteps));
+            this.caseSteps.add(new AbstractMap.SimpleEntry<>(caseLabel, caseSteps));
             return this;
         }
 

@@ -1,0 +1,5 @@
+flows:
+  main:
+    - script: "groovy"
+      body1: |
+        throw new RuntimeException("kaboom!")

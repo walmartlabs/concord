@@ -69,17 +69,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        Serializable result;
-        ThreadLocalContext.set(ctx);
-        try {
-            result = t.execute(new TaskContextImpl(ctx, taskName, input));
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            ThreadLocalContext.clear();
-        }
+        Serializable result = ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input)));
 
         String out = opts.out();
         if (out != null) {

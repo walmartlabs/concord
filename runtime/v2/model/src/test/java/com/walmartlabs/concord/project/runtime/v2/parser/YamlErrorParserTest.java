@@ -1962,6 +1962,51 @@ public class YamlErrorParserTest extends AbstractParserTest {
         assertErrorMessage("errors/publicFlows/002.yml", msg);
     }
 
+    @Test
+    public void test1700() throws Exception {
+        String msg = "(000.yml): Error @ line: 3, col: 14. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
+                "\twhile processing steps:\n" +
+                "\t'script' @ line: 3, col: 7\n" +
+                "\t\t'main' @ line: 2, col: 3\n" +
+                "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/scripts/000.yml", msg);
+    }
+
+    @Test
+    public void test1701() throws Exception {
+        String msg = "(001.yml): Error @ line: 3, col: 15. Invalid value type, expected: STRING, got: INT\n" +
+                "\twhile processing steps:\n" +
+                "\t'script' @ line: 3, col: 7\n" +
+                "\t\t'main' @ line: 2, col: 3\n" +
+                "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/scripts/001.yml", msg);
+    }
+
+    @Test
+    public void test1702() throws Exception {
+        String msg = "(002.yml): Error @ line: 4, col: 14. Unknown options: ['body1' [STRING] @ line: 4, col: 14], expected: [body, in, meta, withItems, retry, error]. Remove invalid options and/or fix indentation\n" +
+                "\twhile processing steps:\n" +
+                "\t'script' @ line: 3, col: 7\n" +
+                "\t\t'main' @ line: 2, col: 3\n" +
+                "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/scripts/002.yml", msg);
+    }
+
+    @Test
+    public void test1703() throws Exception {
+        String msg = "(003.yml): Error @ line: 7, col: 11. Invalid value type, expected: STEP, got: STRING\n" +
+                "\twhile processing steps:\n" +
+                "\t'error' @ line: 6, col: 7\n" +
+                "\t\t'script' @ line: 3, col: 7\n" +
+                "\t\t\t'main' @ line: 2, col: 3\n" +
+                "\t\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/scripts/003.yml", msg);
+    }
+
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);

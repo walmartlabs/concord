@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
-import com.walmartlabs.concord.runtime.v2.parser.KV;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -29,6 +28,7 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -36,10 +36,10 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
 
     private static final long serialVersionUID = 1L;
 
-    private final List<KV<String, Command>> caseCommands;
+    private final List<Map.Entry<String, Command>> caseCommands;
     private final Command defaultCommand;
 
-    public SwitchCommand(SwitchStep step, List<KV<String, Command>> caseCommands, Command defaultCommand) {
+    public SwitchCommand(SwitchStep step, List<Map.Entry<String, Command>> caseCommands, Command defaultCommand) {
         super(step);
         this.caseCommands = caseCommands;
         this.defaultCommand = defaultCommand;
@@ -58,28 +58,19 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         SwitchStep step = getStep();
         String expr = step.getExpression();
 
-        ThreadLocalContext.set(ctx);
-        try {
-            String switchResult = ee.eval(ctx, expr, String.class);
-            boolean caseFound = false;
-            for (KV<String, Command> kv : caseCommands) {
-                String caseLabel = ee.eval(ctx, kv.getKey(), String.class);
-                if (Objects.equals(switchResult, caseLabel)) {
-                    frame.push(kv.getValue());
-                    caseFound = true;
-                    break;
-                }
+        String switchResult = ThreadLocalContext.withContext(ctx, () -> ee.eval(ctx, expr, String.class));
+        boolean caseFound = false;
+        for (Map.Entry<String, Command> kv : caseCommands) {
+            String caseLabel = ee.eval(ctx, kv.getKey(), String.class);
+            if (Objects.equals(switchResult, caseLabel)) {
+                frame.push(kv.getValue());
+                caseFound = true;
+                break;
             }
+        }
 
-            if (!caseFound && defaultCommand != null) {
-                frame.push(defaultCommand);
-            }
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            ThreadLocalContext.clear();
+        if (!caseFound && defaultCommand != null) {
+            frame.push(defaultCommand);
         }
     }
 }
