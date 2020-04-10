@@ -70,7 +70,7 @@ public class ContainerPolicyApplier implements PolicyApplier {
         ProcessKey processKey = payload.getProcessKey();
         Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
-        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = workDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (!Files.exists(p)) {
             return;
         }

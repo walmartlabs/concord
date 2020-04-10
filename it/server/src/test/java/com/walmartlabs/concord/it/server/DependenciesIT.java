@@ -48,7 +48,7 @@ public class DependenciesIT extends AbstractServerIT {
 
         String request = "{ \"entryPoint\": \"main\", \"dependencies\": [ \"" + dep + "\" ] }";
         Path tmpDir = createTempDir();
-        Path requestFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path requestFile = tmpDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         Files.write(requestFile, Collections.singletonList(request));
 
         Path src = Paths.get(DependenciesIT.class.getResource("deps").toURI());

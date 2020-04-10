@@ -26,25 +26,28 @@ import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
+import javax.servlet.http.HttpServletRequest;
 import java.nio.file.Path;
 import java.util.*;
 
 public class Payload {
 
+    public static final HeaderKey<HttpServletRequest> SERVLET_REQUEST = HeaderKey.register("_servletRequest", HttpServletRequest.class);
     public static final HeaderKey<Imports> IMPORTS = HeaderKey.register("_imports", Imports.class);
     public static final HeaderKey<List<String>> ACTIVE_PROFILES = HeaderKey.registerList("_activeProfiles");
     public static final HeaderKey<Map<String, Object>> CONFIGURATION = HeaderKey.registerMap("_cfg");
     public static final HeaderKey<Path> BASE_DIR = HeaderKey.register("_baseDir", Path.class);
     public static final HeaderKey<Path> WORKSPACE_DIR = HeaderKey.register("_workspace", Path.class);
     public static final HeaderKey<PolicyEngine> POLICY = HeaderKey.register("_policy", PolicyEngine.class);
-    public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
     public static final HeaderKey<ProcessDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProcessDefinition.class);
+    public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
     public static final HeaderKey<String> ENTRY_POINT = HeaderKey.register("_entryPoint", String.class);
-    public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
     public static final HeaderKey<String> EVENT_NAME = HeaderKey.register("_eventName", String.class);
+    public static final HeaderKey<String> INITIATOR = HeaderKey.register("_initiator", String.class);
+    public static final HeaderKey<String> SESSION_TOKEN = HeaderKey.register("_sessionToken", String.class);
     public static final HeaderKey<TriggeredByEntry> TRIGGERED_BY = HeaderKey.register("_triggeredBy", TriggeredByEntry.class);
     public static final HeaderKey<UUID> INITIATOR_ID = HeaderKey.register("_initiatorId", UUID.class);
     public static final HeaderKey<UUID> ORGANIZATION_ID = HeaderKey.register("_orgId", UUID.class);
@@ -104,6 +107,12 @@ public class Payload {
     public Payload putHeaders(Map<String, Object> values) {
         Map<String, Object> m = new HashMap<>(headers);
         m.putAll(values);
+        return new Payload(this, m, this.attachments);
+    }
+
+    public Payload removeHeader(HeaderKey<?> key) {
+        Map<String, Object> m = new HashMap<>(headers);
+        m.remove(key.name());
         return new Payload(this, m, this.attachments);
     }
 

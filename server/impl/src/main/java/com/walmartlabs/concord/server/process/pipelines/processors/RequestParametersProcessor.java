@@ -1,25 +1,6 @@
 package com.walmartlabs.concord.server.process.pipelines.processors;
 
-/*-
- * *****
- * Concord
- * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
- * -----
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =====
- */
-
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 
@@ -28,36 +9,67 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
 
+/**
+ * Responsible for gathering process request parameters and converting
+ * them into the process configuration.
+ */
 @Named
-public class RequestInfoProcessor implements PayloadProcessor {
+public class RequestParametersProcessor implements PayloadProcessor {
 
     private static final Set<String> EXCLUDED_HEADERS = new HashSet<>(Arrays.asList(HttpHeaders.COOKIE, HttpHeaders.AUTHORIZATION));
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
+        HttpServletRequest request = payload.getHeader(Payload.SERVLET_REQUEST);
+        if (request == null) {
+            return chain.process(payload);
+        }
+
+        // configuration values from the servlet request
+        // remove the servlet request from the payload as it is not serializable
+        Map<String, Object> requestCfg = parseRequest(request);
+        if (requestCfg.isEmpty()) {
+            return chain.process(payload);
+        }
+
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             cfg = new HashMap<>();
         }
 
-        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
-        if (args == null) {
-            args = new HashMap<>();
-            cfg.put(Constants.Request.ARGUMENTS_KEY, args);
-        }
+        Map<String, Object> m = ConfigurationUtils.deepMerge(cfg, requestCfg);
+        payload = payload.putHeader(Payload.CONFIGURATION, m);
 
-        if (args.containsKey(Constants.Request.REQUEST_INFO_KEY)) {
-            return chain.process(payload);
-        }
+        // one off operation, remove the request object when we done with it
+        payload = payload.removeHeader(Payload.SERVLET_REQUEST);
 
-        args.put(Constants.Request.REQUEST_INFO_KEY, new HashMap<>());
-
-        payload = payload.putHeader(Payload.CONFIGURATION, cfg);
         return chain.process(payload);
     }
 
-    public static Map<String, Object> getRequestInfo(HttpServletRequest request) {
+    private static Map<String, Object> parseRequest(HttpServletRequest request) {
+        Map<String, Object> args = new HashMap<>();
+        for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
+            String k = e.getKey();
+            if (!k.startsWith("arguments.")) {
+                continue;
+            }
+            k = k.substring("arguments.".length());
+
+            Object v = e.getValue();
+            if (e.getValue().length == 1) {
+                v = e.getValue()[0];
+            }
+
+            Map<String, Object> m = ConfigurationUtils.toNested(k, v);
+            args = ConfigurationUtils.deepMerge(args, m);
+        }
+
+        args.put(Constants.Request.REQUEST_INFO_KEY, getRequestInfo(request));
+
+        return Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
+    }
+
+    private static Map<String, Object> getRequestInfo(HttpServletRequest request) {
         String queryString = request.getQueryString() == null ? "" : "?" + request.getQueryString();
 
         Map<String, Object> m = new HashMap<>();

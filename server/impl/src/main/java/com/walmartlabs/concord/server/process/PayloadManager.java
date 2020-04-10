@@ -35,6 +35,7 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -73,7 +74,7 @@ public class PayloadManager {
     }
 
     @WithTimer
-    public Payload createPayload(MultipartInput input, Map<String, Object> cfg) throws IOException {
+    public Payload createPayload(MultipartInput input, HttpServletRequest request) throws IOException {
         PartialProcessKey processKey = PartialProcessKey.create();
 
         UUID parentInstanceId = MultipartUtils.getUuid(input, Constants.Multipart.PARENT_INSTANCE_ID);
@@ -108,7 +109,7 @@ public class PayloadManager {
                 .outExpressions(out)
                 .initiator(initiator.getId(), initiator.getUsername())
                 .meta(meta)
-                .configuration(cfg)
+                .request(request)
                 .build();
     }
 

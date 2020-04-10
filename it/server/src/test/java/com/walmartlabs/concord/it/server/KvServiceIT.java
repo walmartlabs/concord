@@ -176,7 +176,7 @@ public class KvServiceIT extends AbstractServerIT {
         Map<String, Object> req = ImmutableMap.of("entryPoint", entryPoint,
                 "arguments", args);
 
-        Path reqFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path reqFile = tmpDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         try (Writer w = new FileWriter(reqFile.toFile())) {
             getApiClient().getJSON().getGson().toJson(req, w);
         }

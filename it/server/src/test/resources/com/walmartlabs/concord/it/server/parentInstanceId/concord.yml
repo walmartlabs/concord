@@ -1,0 +1,16 @@
+flows:
+  default:
+    - task: concord
+      in:
+        action: fork
+        entryPoint: onFork
+        sync: true
+
+    - task: concord
+      in:
+        action: start
+        payload: myPayload
+        sync: true
+
+  onFork:
+    - log: "parentInstanceId: ${parentInstanceId}"

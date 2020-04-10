@@ -35,6 +35,12 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Saves the current {@link Payload} data as a workspace file.
+ * <p/>
+ * It will be restored by {@link com.walmartlabs.concord.server.process.pipelines.EnqueueProcessPipeline},
+ * when the process transitions from NEW to ENQUEUED.
+ */
 @Named
 public class PayloadStoreProcessor implements PayloadProcessor {
 
@@ -57,6 +63,7 @@ public class PayloadStoreProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
+        // remove things that shouldn't be in the serialized payload
         Map<String, Object> headers = payload.getHeaders().entrySet().stream()
                 .filter(e -> !(e.getValue() instanceof Path))
                 .filter(e -> !(e.getKey().equals(Payload.POLICY.name())))
@@ -64,8 +71,8 @@ public class PayloadStoreProcessor implements PayloadProcessor {
 
         String serializedHeaders = serialize(headers);
 
+        // TODO use a single transaction?
         stateManager.insert(processKey.getInstanceId(), processKey.getCreatedAt(), "_initial/payload.json", serializedHeaders.getBytes());
-
         stateManager.importPath(processKey, "_initial/attachments/", payload.getHeader(Payload.BASE_DIR), (path, basicFileAttributes) -> payload.getAttachments().containsValue(path));
 
         return chain.process(payload);

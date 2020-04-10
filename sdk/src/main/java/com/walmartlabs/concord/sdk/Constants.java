@@ -341,8 +341,15 @@ public class Constants {
 
         /**
          * File which contains request data of a payload: process arguments, entry point name, etc.
+         * @deprecated see {@link #CONFIGURATION_FILE_NAME}
          */
+        @Deprecated
         public static final String REQUEST_DATA_FILE_NAME = "_main.json";
+
+        /**
+         * File which contains process configuration: process arguments, entry point name, etc.
+         */
+        public static final String CONFIGURATION_FILE_NAME = "_main.json";
 
         /**
          * Directory which contains job "attachments": reports, stats, etc.

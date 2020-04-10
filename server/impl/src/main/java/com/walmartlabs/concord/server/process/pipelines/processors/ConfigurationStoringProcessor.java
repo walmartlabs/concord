@@ -35,14 +35,14 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * Stores payload's request data as a JSON file.
+ * Stores the process' configuration as a JSON file.
  */
-public class RequestDataStoringProcessor implements PayloadProcessor {
+public class ConfigurationStoringProcessor implements PayloadProcessor {
 
     private final ProcessLogManager logManager;
 
     @Inject
-    public RequestDataStoringProcessor(ProcessLogManager logManager) {
+    public ConfigurationStoringProcessor(ProcessLogManager logManager) {
         this.logManager = logManager;
     }
 
@@ -56,7 +56,7 @@ public class RequestDataStoringProcessor implements PayloadProcessor {
         }
 
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path dst = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path dst = workspace.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
 
         try (OutputStream out = Files.newOutputStream(dst)) {
             ObjectMapper om = new ObjectMapper();

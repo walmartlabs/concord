@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 
 import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,13 +34,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
-import java.util.UUID;
 
 @Named
-@Singleton
-public class ForkDataMergingProcessor implements PayloadProcessor {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+public class ResumeConfigurationProcessor implements PayloadProcessor {
 
     @Override
     public Payload process(Chain chain, Payload payload) {
@@ -51,8 +46,11 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
         // _main.json file in the workspace
         Map<String, Object> workspaceCfg = getWorkspaceCfg(payload);
 
+        // we'll use the arguments only from the request
+        workspaceCfg.remove(Constants.Request.ARGUMENTS_KEY);
+
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg, createForkCfg(payload));
+        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg);
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
         return chain.process(payload);
@@ -61,25 +59,16 @@ public class ForkDataMergingProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     private Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path src = workspace.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (!Files.exists(src)) {
             return Collections.emptyMap();
         }
 
         try (InputStream in = Files.newInputStream(src)) {
-            return objectMapper.readValue(in, Map.class);
+            ObjectMapper om = new ObjectMapper();
+            return om.readValue(in, Map.class);
         } catch (IOException e) {
             throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
         }
-    }
-
-    private static Map<String, Object> createForkCfg(Payload payload) {
-        UUID id = payload.getHeader(Payload.PARENT_INSTANCE_ID);
-        if (id == null) {
-            return Collections.emptyMap();
-        }
-
-        return Collections.singletonMap(Constants.Request.ARGUMENTS_KEY,
-                Collections.singletonMap(Constants.Request.PARENT_INSTANCE_ID_KEY, id.toString()));
     }
 }

@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
@@ -29,6 +30,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Map;
 
+/**
+ * Responsible for saving the current user's security subject when
+ * the process resumes with {@code runAs.keep} form option.
+ */
 @Named
 public class ChangeUserProcessor implements PayloadProcessor {
 
@@ -43,20 +48,19 @@ public class ChangeUserProcessor implements PayloadProcessor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return chain.process(payload);
         }
 
-        Map<String, Object> runAsParams = (Map<String, Object>) cfg.get(FormServiceV1.INTERNAL_RUN_AS_KEY);
+        Map<String, Object> runAsParams = MapUtils.getMap(cfg, FormServiceV1.INTERNAL_RUN_AS_KEY, null);
         if (runAsParams == null) {
             return chain.process(payload);
         }
 
-        Boolean keep = (Boolean) runAsParams.get(Constants.Forms.RUN_AS_KEEP_KEY);
-        if (keep != null && keep) {
+        boolean keep = MapUtils.getBoolean(runAsParams, Constants.Forms.RUN_AS_KEEP_KEY, false);
+        if (keep) {
             securityContext.storeCurrentSubject(payload.getProcessKey());
             return currentUserInfoProcessor.process(chain, payload);
         }
