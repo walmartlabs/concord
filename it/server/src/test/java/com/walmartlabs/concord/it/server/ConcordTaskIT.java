@@ -531,4 +531,27 @@ public class ConcordTaskIT extends AbstractServerIT {
         assertLog(".*\\{x=1, y=2, z=3\\}.*", ab);
         assertLog(".*\\{a=4, b=5, c=6\\}.*", ab);
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testParentInstanceId() throws Exception {
+        byte[] payload = archive(ConcordTaskIT.class.getResource("parentInstanceId").toURI());
+
+        StartProcessResponse spr = start(payload);
+
+        // ---
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForCompletion(processApi, spr.getInstanceId());
+
+        // ---
+
+        ProcessV2Api processV2Api = new ProcessV2Api(getApiClient());
+        List<ProcessEntry> l = processV2Api.list(null, null, null, null, null, null, null, null, null, null, null, pe.getInstanceId(), null, null, null);
+        assertEquals(2, l.size());
+
+        for (ProcessEntry e : l) {
+            byte[] ab = getLog(e.getLogFileName());
+            assertLog(".*parentInstanceId: " + pe.getInstanceId() + ".*", ab);
+        }
+    }
 }

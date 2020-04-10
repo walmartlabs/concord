@@ -42,7 +42,6 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
-import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -278,7 +277,7 @@ public class ProcessResource implements Resource {
 
         Payload payload;
         try {
-            payload = payloadManager.createPayload(input, parseRequestInfo(request));
+            payload = payloadManager.createPayload(input, request);
 
             // TODO remove after deprecating the old endpoints
             payload = PayloadBuilder.basedOn(payload)
@@ -1174,15 +1173,6 @@ public class ProcessResource implements Resource {
         } catch (IOException e) {
             throw new ConcordApplicationException("Internal error", e);
         }
-    }
-
-    private static Map<String, Object> parseRequestInfo(HttpServletRequest request) {
-        Map<String, Object> requestInfo = new HashMap<>();
-        requestInfo.put(Constants.Request.REQUEST_INFO_KEY, RequestInfoProcessor.getRequestInfo(request));
-
-        Map<String, Object> cfg = new HashMap<>();
-        cfg.put(Constants.Request.ARGUMENTS_KEY, requestInfo);
-        return cfg;
     }
 
     private static Optional<Path> copyToTmp(InputStream in) {

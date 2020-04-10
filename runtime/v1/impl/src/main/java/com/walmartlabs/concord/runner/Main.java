@@ -34,7 +34,6 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
-import com.walmartlabs.concord.project.InternalConstants;
 import com.walmartlabs.concord.project.NoopImportsNormalizer;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
@@ -75,8 +74,8 @@ import java.util.stream.Stream;
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static final String RESUME_MARKER = InternalConstants.Files.RESUME_MARKER_FILE_NAME;
-    private static final String SUSPEND_MARKER = InternalConstants.Files.SUSPEND_MARKER_FILE_NAME;
+    private static final String RESUME_MARKER = Constants.Files.RESUME_MARKER_FILE_NAME;
+    private static final String SUSPEND_MARKER = Constants.Files.SUSPEND_MARKER_FILE_NAME;
 
     private final EngineFactory engineFactory;
     private final ProcessHeartbeat heartbeat;
@@ -95,7 +94,7 @@ public class Main {
 
         long t1 = System.currentTimeMillis();
 
-        Path idPath = baseDir.resolve(InternalConstants.Files.INSTANCE_ID_FILE_NAME);
+        Path idPath = baseDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         while (!Files.exists(idPath)) {
             // TODO replace with WatchService
             Thread.sleep(100);
@@ -183,7 +182,7 @@ public class Main {
                 // clear arguments
                 if (resumeCheckpointReq == null) {
                     resumeCheckpointReq = new HashMap<>(req);
-                    resumeCheckpointReq.remove(InternalConstants.Request.ARGUMENTS_KEY);
+                    resumeCheckpointReq.remove(Constants.Request.ARGUMENTS_KEY);
                 }
                 req = resumeCheckpointReq;
             } else {
@@ -203,7 +202,7 @@ public class Main {
 
     private Collection<Event> start(Engine e, Variables vars, Map<String, Object> req, String instanceId, Path baseDir) throws ExecutionException {
         // get the entry point
-        String entryPoint = (String) req.get(InternalConstants.Request.ENTRY_POINT_KEY);
+        String entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
         if (entryPoint == null) {
             throw new ExecutionException("Entry point must be set");
         }
@@ -211,10 +210,10 @@ public class Main {
         // prepare the process' arguments
         Map<String, Object> args = createArgs(instanceId, baseDir, req);
 
-        Object initiator = req.get(InternalConstants.Request.INITIATOR_KEY);
+        Object initiator = req.get(Constants.Request.INITIATOR_KEY);
         if (initiator != null) {
-            args.put(InternalConstants.Request.INITIATOR_KEY, initiator);
-            args.put(InternalConstants.Request.CURRENT_USER_KEY, initiator);
+            args.put(Constants.Request.INITIATOR_KEY, initiator);
+            args.put(Constants.Request.CURRENT_USER_KEY, initiator);
         }
 
         // start the process
@@ -229,9 +228,9 @@ public class Main {
     private Collection<Event> resume(Engine e, Map<String, Object> req, String instanceId, Path baseDir, String eventName) throws ExecutionException {
         Map<String, Object> args = createArgs(instanceId, baseDir, req);
 
-        Object currentUser = req.get(InternalConstants.Request.CURRENT_USER_KEY);
+        Object currentUser = req.get(Constants.Request.CURRENT_USER_KEY);
         if (currentUser != null) {
-            args.put(InternalConstants.Request.CURRENT_USER_KEY, currentUser);
+            args.put(Constants.Request.CURRENT_USER_KEY, currentUser);
         }
 
         log.debug("resume ['{}', '{}', '{}'] -> resuming...", instanceId, baseDir, eventName);
@@ -249,7 +248,7 @@ public class Main {
             return Collections.emptyList();
         }
 
-        Object v = cfg.get(InternalConstants.Request.ACTIVE_PROFILES_KEY);
+        Object v = cfg.get(Constants.Request.ACTIVE_PROFILES_KEY);
         if (v == null) {
             return Collections.emptyList();
         }
@@ -269,10 +268,10 @@ public class Main {
     }
 
     private static Variables readSavedVariables(Path baseDir) {
-        Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
+        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
-        Path varsFile = stateDir.resolve(InternalConstants.Files.LAST_KNOWN_VARIABLES_FILE_NAME);
+        Path varsFile = stateDir.resolve(Constants.Files.LAST_KNOWN_VARIABLES_FILE_NAME);
         if (!Files.exists(varsFile)) {
             return null;
         }
@@ -291,7 +290,7 @@ public class Main {
             return vars;
         }
 
-        Path lastErrorFile = stateDir.resolve(InternalConstants.Files.LAST_ERROR_FILE_NAME);
+        Path lastErrorFile = stateDir.resolve(Constants.Files.LAST_ERROR_FILE_NAME);
         if (!Files.exists(lastErrorFile)) {
             return vars;
         }
@@ -309,7 +308,7 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(InternalConstants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = baseDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
 
         try (InputStream in = Files.newInputStream(p)) {
             return objectMapper.readValue(in, Map.class);
@@ -320,7 +319,7 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> readPolicyRules(Path ws) throws ExecutionException {
-        Path policyFile = ws.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(InternalConstants.Files.POLICY_FILE_NAME);
+        Path policyFile = ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(Constants.Files.POLICY_FILE_NAME);
         if (!Files.exists(policyFile)) {
             return Collections.emptyMap();
         }
@@ -337,22 +336,22 @@ public class Main {
         Map<String, Object> m = new LinkedHashMap<>();
 
         // original arguments
-        Map<String, Object> args = (Map<String, Object>) cfg.get(InternalConstants.Request.ARGUMENTS_KEY);
+        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
         if (args != null) {
             m.putAll(args);
         }
 
         // instance ID
-        m.put(InternalConstants.Context.TX_ID_KEY, instanceId);
+        m.put(Constants.Context.TX_ID_KEY, instanceId);
 
         // workDir
         String dir = workDir.toAbsolutePath().toString();
-        m.put(InternalConstants.Context.WORK_DIR_KEY, dir);
+        m.put(Constants.Context.WORK_DIR_KEY, dir);
 
         // out variables
-        Object outExpr = cfg.get(InternalConstants.Request.OUT_EXPRESSIONS_KEY);
+        Object outExpr = cfg.get(Constants.Request.OUT_EXPRESSIONS_KEY);
         if (outExpr != null) {
-            m.put(InternalConstants.Context.OUT_EXPRESSIONS_KEY, outExpr);
+            m.put(Constants.Context.OUT_EXPRESSIONS_KEY, outExpr);
         }
 
         return m;
@@ -360,7 +359,7 @@ public class Main {
 
     @SuppressWarnings("unchecked")
     private Set<String> getMetaVariables(Map<String, Object> cfg) {
-        Map<String, Object> meta = (Map<String, Object>) cfg.get(InternalConstants.Request.META);
+        Map<String, Object> meta = (Map<String, Object>) cfg.get(Constants.Request.META);
         if (meta != null) {
             return meta.keySet();
         }
@@ -368,8 +367,8 @@ public class Main {
     }
 
     private static Collection<Event> finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
-        Path stateDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME)
-                .resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
+        Path stateDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(Constants.Files.JOB_STATE_DIR_NAME);
 
         try {
             Path resumeMarker = stateDir.resolve(RESUME_MARKER);
@@ -494,8 +493,8 @@ public class Main {
     }
 
     private static String getSessionToken(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(InternalConstants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(InternalConstants.Files.SESSION_TOKEN_FILE_NAME);
+        Path p = baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
+                .resolve(Constants.Files.SESSION_TOKEN_FILE_NAME);
 
         try {
             return new String(Files.readAllBytes(p));
@@ -537,7 +536,7 @@ public class Main {
 
         // payload's own libraries are stored in `./lib/` directory in the working directory
         Path baseDir = Paths.get(System.getProperty("user.dir"));
-        Path lib = baseDir.resolve(InternalConstants.Files.LIBRARIES_DIR_NAME);
+        Path lib = baseDir.resolve(Constants.Files.LIBRARIES_DIR_NAME);
         if (Files.exists(lib)) {
             try (Stream<Path> s = Files.list(lib)) {
                 s.forEach(f -> {
@@ -600,10 +599,10 @@ public class Main {
     }
 
     private static void saveLastError(Path baseDir, Throwable t) {
-        Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
+        Path attachmentsDir = baseDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
 
-        Path dst = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME)
-                .resolve(InternalConstants.Files.LAST_ERROR_FILE_NAME);
+        Path dst = attachmentsDir.resolve(Constants.Files.JOB_STATE_DIR_NAME)
+                .resolve(Constants.Files.LAST_ERROR_FILE_NAME);
 
         try (OutputStream out = Files.newOutputStream(dst, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             SerializationUtils.serialize(out, t);

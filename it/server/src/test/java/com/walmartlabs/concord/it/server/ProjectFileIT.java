@@ -106,7 +106,7 @@ public class ProjectFileIT extends AbstractServerIT {
         // create the payload
 
         String request = "{ \"entryPoint\": \"main\" }";
-        Path requestFile = tmpDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path requestFile = tmpDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         Files.write(requestFile, Collections.singletonList(request));
 
         Path src = Paths.get(DependenciesIT.class.getResource("projectfile/deps").toURI());

@@ -52,7 +52,6 @@ public class ClearStartAtProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    @SuppressWarnings("unchecked")
     private static Payload clearConfiguration(Payload payload) {
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {

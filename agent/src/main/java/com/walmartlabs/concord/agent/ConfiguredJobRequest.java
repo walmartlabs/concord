@@ -40,7 +40,7 @@ public class ConfiguredJobRequest extends JobRequest {
     public static ConfiguredJobRequest from(JobRequest req) throws ExecutionException {
         Map<String, Object> cfg = Collections.emptyMap();
 
-        Path p = req.getPayloadDir().resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = req.getPayloadDir().resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (Files.exists(p)) {
             try (InputStream in = Files.newInputStream(p)) {
                 cfg = new ObjectMapper().readValue(in, Map.class);

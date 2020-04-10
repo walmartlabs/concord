@@ -79,7 +79,7 @@ public class ForkCleanupProcessor implements PayloadProcessor {
 
     @SuppressWarnings("unchecked")
     private void clearArguments(Path workspace) throws IOException {
-        Path requestFile = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path requestFile = workspace.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (!Files.exists(requestFile)) {
             return;
         }

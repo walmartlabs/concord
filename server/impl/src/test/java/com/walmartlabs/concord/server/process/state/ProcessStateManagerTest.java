@@ -57,7 +57,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         writeTempFile(baseDir.resolve("file-2"), "456".getBytes());
 
         //
-        ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(processKey, null, baseDir);
 
@@ -102,7 +102,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
             }
         }
 
-        ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.REQUEST_DATA_FILE_NAME));
+        ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
         ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
         stateManager.importPath(processKey, "/", baseDir);
     }

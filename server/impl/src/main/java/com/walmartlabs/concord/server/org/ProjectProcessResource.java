@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.org;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.IsoDateParam;
@@ -29,7 +28,6 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
-import com.walmartlabs.concord.server.process.pipelines.processors.RequestInfoProcessor;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
@@ -117,6 +115,7 @@ public class ProjectProcessResource implements Resource {
                                    @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
                                    @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
         ProcessFilter filter = ProcessFilter.builder()
                 .orgIds(Collections.singleton(org.getId()))
@@ -191,9 +190,7 @@ public class ProjectProcessResource implements Resource {
             UUID projectId = getProjectId(orgId, projectName);
             UUID repoId = getRepoId(projectId, repoName);
 
-            Map<String, Object> requestInfo = parseRequestInfo(request);
-
-            return doStartProcess(orgId, projectId, repoId, repoBranchOrTag, repoCommitId, entryPoint, activeProfiles, requestInfo);
+            return doStartProcess(orgId, projectId, repoId, repoBranchOrTag, repoCommitId, entryPoint, activeProfiles, request);
         } catch (Exception e) {
             log.warn("startProcess ['{}', '{}', '{}', '{}', '{}'] -> error: {}", orgName, projectName, repoName, entryPoint, activeProfiles, e.getMessage());
             return processError(null, "Process error: " + e.getMessage(), e);
@@ -207,7 +204,7 @@ public class ProjectProcessResource implements Resource {
                                     String commitId,
                                     String entryPoint,
                                     String activeProfiles,
-                                    Map<String, Object> requestInfo) {
+                                    HttpServletRequest request) {
 
         Map<String, Object> cfg = new HashMap<>();
 
@@ -224,10 +221,6 @@ public class ProjectProcessResource implements Resource {
             cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, Arrays.asList(as));
         }
 
-        if (requestInfo != null) {
-            cfg.put(Constants.Request.ARGUMENTS_KEY, requestInfo);
-        }
-
         PartialProcessKey processKey = PartialProcessKey.create();
 
         try {
@@ -240,6 +233,7 @@ public class ProjectProcessResource implements Resource {
                     .entryPoint(entryPoint)
                     .initiator(initiator.getId(), initiator.getUsername())
                     .configuration(cfg)
+                    .request(request)
                     .build();
 
             processManager.start(payload);
@@ -248,13 +242,6 @@ public class ProjectProcessResource implements Resource {
         }
 
         return proceed(processKey);
-    }
-
-    private Map<String, Object> parseRequestInfo(HttpServletRequest request) {
-        Map<String, Object> args = new HashMap<>();
-        args.put("requestInfo", RequestInfoProcessor.getRequestInfo(request));
-        args.putAll(parseArguments(request));
-        return args;
     }
 
     @POST
@@ -307,28 +294,6 @@ public class ProjectProcessResource implements Resource {
         args.put("lastUpdatedAt", entry.lastUpdatedAt());
         args.put("status", entry.status().toString());
         return args;
-    }
-
-    private static Map<String, Object> parseArguments(HttpServletRequest request) {
-        Map<String, Object> result = new HashMap<>();
-
-        for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
-            String k = e.getKey();
-            if (!k.startsWith("arguments.")) {
-                continue;
-            }
-            k = k.substring("arguments.".length());
-
-            Object v = e.getValue();
-            if (e.getValue().length == 1) {
-                v = e.getValue()[0];
-            }
-
-            Map<String, Object> m = ConfigurationUtils.toNested(k, v);
-            result = ConfigurationUtils.deepMerge(result, m);
-        }
-
-        return result;
     }
 
     private UUID getOrgId(String orgName) {

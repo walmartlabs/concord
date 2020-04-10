@@ -29,6 +29,7 @@ import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.sonatype.siesta.ValidationErrorsException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -283,6 +284,15 @@ public final class PayloadBuilder {
         }
 
         payload = payload.putHeader(Payload.PROCESS_HANDLERS, handlers);
+        return this;
+    }
+
+    public PayloadBuilder request(HttpServletRequest request) {
+        if (request == null) {
+            return this;
+        }
+
+        payload = payload.putHeader(Payload.SERVLET_REQUEST, request);
         return this;
     }
 

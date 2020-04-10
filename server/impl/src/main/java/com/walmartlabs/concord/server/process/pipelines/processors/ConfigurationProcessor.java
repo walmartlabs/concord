@@ -29,7 +29,9 @@ import com.walmartlabs.concord.runtime.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
+import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
@@ -43,18 +45,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+/**
+ * Responsible for preparing the process' {@code configuration} object.
+ */
 @Named
-public class RequestDataMergingProcessor implements PayloadProcessor {
+public class ConfigurationProcessor implements PayloadProcessor {
 
     public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
-    public static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
+    private static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
     private final DefaultProcessConfiguration defaultCfg;
 
     @Inject
-    public RequestDataMergingProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultProcessConfiguration defaultCfg) {
+    public ConfigurationProcessor(ProjectDao projectDao, OrganizationDao orgDao, DefaultProcessConfiguration defaultCfg) {
         this.projectDao = projectDao;
         this.orgDao = orgDao;
         this.defaultCfg = defaultCfg;
@@ -68,17 +73,13 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         // default configuration from policy
         Map<String, Object> policyDefCfg = getDefaultCfgFromPolicy(payload);
 
-        // configuration from the policy
-        Map<String, Object> policyCfg = getPolicyCfg(payload);
-
-        // configuration from the user's request
-        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
-
         // org configuration
         Map<String, Object> orgCfg = getOrgCfg(payload);
 
+        ProjectEntry projectEntry = getProject(payload);
+
         // project configuration
-        Map<String, Object> projectCfg = getProjectCfg(payload);
+        Map<String, Object> projectCfg = getProjectCfg(projectEntry);
 
         // _main.json file in the workspace
         Map<String, Object> workspaceCfg = getWorkspaceCfg(payload);
@@ -86,15 +87,24 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         // attached to the request JSON file
         Map<String, Object> attachedCfg = getAttachedCfg(payload);
 
+        // existing configuration values from the payload
+        Map<String, Object> payloadCfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
+
         // determine the active profile names
-        List<String> activeProfiles = getActiveProfiles(ImmutableList.of(cfg, attachedCfg, workspaceCfg, projectCfg, orgCfg));
+        List<String> activeProfiles = getActiveProfiles(ImmutableList.of(payloadCfg, attachedCfg, workspaceCfg, projectCfg, orgCfg));
         payload = payload.putHeader(Payload.ACTIVE_PROFILES, activeProfiles);
 
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
+        // automatically provided variables
+        Map<String, Object> providedCfg = getProvidedCfg(payload, projectEntry);
+
+        // configuration from the policy
+        Map<String, Object> policyCfg = getPolicyCfg(payload);
+
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, cfg, policyCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(defCfg, policyDefCfg, orgCfg, projectCfg, profileCfg, workspaceCfg, attachedCfg, payloadCfg, providedCfg, policyCfg);
         m.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
 
         payload = payload.putHeader(Payload.CONFIGURATION, m);
@@ -102,13 +112,26 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         return chain.process(payload);
     }
 
-    private Map<String, Object> getProjectCfg(Payload payload) {
+    private ProjectEntry getProject(Payload payload) {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         if (projectId == null) {
+            return null;
+        }
+
+        ProjectEntry e = projectDao.get(projectId);
+        if (e == null) {
+            throw new ProcessException(payload.getProcessKey(), "Project not found: " + projectId, Status.BAD_REQUEST);
+        }
+
+        return e;
+    }
+
+    private Map<String, Object> getProjectCfg(ProjectEntry projectEntry) {
+        if (projectEntry == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, Object> m = projectDao.getConfiguration(projectId);
+        Map<String, Object> m = projectEntry.getCfg();
         return m != null ? m : Collections.emptyMap();
     }
 
@@ -145,7 +168,7 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
-        Path src = workspace.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path src = workspace.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (!Files.exists(src)) {
             return Collections.emptyMap();
         }
@@ -208,5 +231,85 @@ public class RequestDataMergingProcessor implements PayloadProcessor {
         }
 
         return DEFAULT_PROFILES;
+    }
+
+    /**
+     * Creates a process {@code configuration} object with variables that
+     * are automatically provided by Concord for any process.
+     * <p/>
+     * Created values should be applied last (or before the configuration from a policy)
+     * to avoid users from changing them via request parameters.
+     */
+    public static Map<String, Object> getProvidedCfg(Payload payload, ProjectEntry projectEntry) {
+        Map<String, Object> args = new HashMap<>();
+
+        // TODO verify that all "provided" variables are set here and only here
+
+        UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
+        if (parentInstanceId != null) {
+            args.put(Constants.Request.PARENT_INSTANCE_ID_KEY, parentInstanceId.toString());
+        }
+
+        args.put(Constants.Request.PROCESS_INFO_KEY, createProcessInfo(payload));
+        args.put(Constants.Request.PROJECT_INFO_KEY, createProjectInfo(payload, projectEntry));
+
+        return Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
+    }
+
+    private static Map<String, Object> createProjectInfo(Payload payload, ProjectEntry projectEntry) {
+        if (projectEntry == null) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("orgId", OrganizationManager.DEFAULT_ORG_ID.toString());
+            m.put("orgName", OrganizationManager.DEFAULT_ORG_NAME);
+            return m;
+        }
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("orgId", projectEntry.getOrgId());
+        m.put("orgName", projectEntry.getOrgName());
+        m.put("projectId", projectEntry.getId());
+        m.put("projectName", projectEntry.getName());
+
+        RepositoryProcessor.RepositoryInfo r = payload.getHeader(RepositoryProcessor.REPOSITORY_INFO_KEY);
+        if (r != null) {
+            m.put("repoId", r.getId());
+            m.put("repoName", r.getName());
+            m.put("repoUrl", r.getUrl());
+            m.put("repoBranch", r.getBranch());
+            m.put("repoPath", r.getPath());
+            RepositoryProcessor.CommitInfo ci = r.getCommitInfo();
+            if (ci != null) {
+                m.put("repoCommitId", ci.getId());
+                m.put("repoCommitAuthor", ci.getAuthor());
+                m.put("repoCommitMessage", escapeExpression(ci.getMessage()));
+            }
+        }
+
+        return m;
+    }
+
+    private static Map<String, Object> createProcessInfo(Payload payload) {
+        Map<String, Object> processInfo = new HashMap<>();
+
+        String token = payload.getHeader(Payload.SESSION_TOKEN);
+        if (token != null) {
+            // TODO rename to sessionToken?
+            processInfo.put("sessionKey", token);
+        }
+
+        Collection<String> activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES);
+        if (activeProfiles == null) {
+            activeProfiles = Collections.emptyList();
+        }
+        processInfo.put("activeProfiles", activeProfiles);
+
+        return processInfo;
+    }
+
+    private static String escapeExpression(String what) {
+        if (what == null) {
+            return null;
+        }
+        return what.replaceAll("\\$\\{", "\\\\\\${");
     }
 }

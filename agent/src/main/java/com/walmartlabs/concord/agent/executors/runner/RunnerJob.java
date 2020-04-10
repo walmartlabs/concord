@@ -49,7 +49,7 @@ public class RunnerJob {
 
         Path payloadDir = jobRequest.getPayloadDir();
 
-        Path p = payloadDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = payloadDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (Files.exists(p)) {
             try (InputStream in = Files.newInputStream(p)) {
                 cfg = new ObjectMapper().readValue(in, Map.class);

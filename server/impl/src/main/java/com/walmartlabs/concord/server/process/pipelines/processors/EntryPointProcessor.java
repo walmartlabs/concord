@@ -43,7 +43,6 @@ public class EntryPointProcessor implements PayloadProcessor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         String s = payload.getHeader(Payload.ENTRY_POINT);
 
@@ -81,7 +80,6 @@ public class EntryPointProcessor implements PayloadProcessor {
      * @param entryPoint process {@code entryPoint} flow
      * @return true if {@code entryPoint} is a valid value
      */
-    @SuppressWarnings("unchecked")
     private static boolean isValidEntryPoint(Payload payload, String entryPoint) {
         ProcessDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
         Set<String> publicFlows = pd.publicFlows();

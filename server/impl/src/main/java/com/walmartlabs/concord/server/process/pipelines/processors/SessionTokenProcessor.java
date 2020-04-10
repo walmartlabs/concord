@@ -4,7 +4,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,65 +34,44 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Base64;
+import java.util.UUID;
 
+/**
+ * Generates and saves the process' session token (key).
+ */
 @Named
-public class ProcessInfoProcessor implements PayloadProcessor {
+public class SessionTokenProcessor implements PayloadProcessor {
 
     private final SecretStoreConfiguration secretCfg;
     private final ProcessLogManager logManager;
 
     @Inject
-    public ProcessInfoProcessor(SecretStoreConfiguration secretCfg, ProcessLogManager logManager) {
+    public SessionTokenProcessor(SecretStoreConfiguration secretCfg, ProcessLogManager logManager) {
         this.secretCfg = secretCfg;
         this.logManager = logManager;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Payload process(Chain chain, Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
+        Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
 
-        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
-        if (cfg == null) {
-            cfg = new HashMap<>();
-        }
+        String token = createSessionToken(payload.getProcessKey());
+        payload = payload.putHeader(Payload.SESSION_TOKEN, token);
 
-        Map<String, Object> args = (Map<String, Object>) cfg.get(Constants.Request.ARGUMENTS_KEY);
-        if (args == null) {
-            args = new HashMap<>();
-            cfg.put(Constants.Request.ARGUMENTS_KEY, args);
-        }
-
-        String token = createSessionKey(payload.getProcessKey());
-        Map<String, Object> m = new HashMap<>();
-        m.put("sessionKey", token);
-
-        Collection<String> activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES);
-        if (activeProfiles == null) {
-            activeProfiles = Collections.emptyList();
-        }
-        m.put("activeProfiles", activeProfiles);
-
-        args.put(Constants.Request.PROCESS_INFO_KEY, m);
-
-        Path ws = payload.getHeader(Payload.WORKSPACE_DIR);
-        exportSessionToken(processKey, ws, token);
-
-        return chain.process(payload.putHeader(Payload.CONFIGURATION, cfg));
-    }
-
-    private void exportSessionToken(ProcessKey processKey, Path ws, String token) {
         try {
-            Path dst = Files.createDirectories(ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
+            Path dst = Files.createDirectories(workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
             Files.write(dst.resolve(Constants.Files.SESSION_TOKEN_FILE_NAME), token.getBytes());
         } catch (IOException e) {
             logManager.error(processKey, "Error while storing the session token: {}", e);
             throw new ProcessException(processKey, "Error while string the session token", e);
         }
+
+        return chain.process(payload);
     }
 
-    private String createSessionKey(PartialProcessKey processKey) {
+    private String createSessionToken(PartialProcessKey processKey) {
         byte[] salt = secretCfg.getSecretStoreSalt();
         byte[] pwd = secretCfg.getServerPwd();
 

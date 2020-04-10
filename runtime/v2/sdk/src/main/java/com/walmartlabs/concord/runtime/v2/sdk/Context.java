@@ -40,6 +40,9 @@ public interface Context {
      */
     UUID processInstanceId();
 
+    // TODO parentInstanceId?
+    // TODO move processInfo/projectInfo here?
+
     /**
      * Provides access to the low-level details of the current process.
      * @apiNote Beta API, subject to change.

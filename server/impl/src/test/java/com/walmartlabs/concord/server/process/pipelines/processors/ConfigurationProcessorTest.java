@@ -22,9 +22,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.junit.Before;
@@ -45,9 +47,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class RequestDataMergingProcessorTest {
+public class ConfigurationProcessorTest {
 
-    private RequestDataMergingProcessor p;
+    private ConfigurationProcessor p;
     private ProjectDao projectDao;
     private OrganizationDao orgDao;
 
@@ -57,7 +59,7 @@ public class RequestDataMergingProcessorTest {
         orgDao = mock(OrganizationDao.class);
 
         DefaultProcessConfiguration defaultCfg = mock(DefaultProcessConfiguration.class);
-        p = new RequestDataMergingProcessor(projectDao, orgDao, defaultCfg);
+        p = new ConfigurationProcessor(projectDao, orgDao, defaultCfg);
     }
 
     @Test
@@ -80,6 +82,8 @@ public class RequestDataMergingProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null);
+
         Map<String, Object> processCfgPolicy = new HashMap<>();
         processCfgPolicy.put("a", "a-process-cfg-policy");
         processCfgPolicy.put("process-cfg-policy", "process-cfg-policy-value");
@@ -92,7 +96,7 @@ public class RequestDataMergingProcessorTest {
 
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
-        when(projectDao.getConfiguration(eq(prjId))).thenReturn(prjCfg);
+        when(projectDao.get(eq(prjId))).thenReturn(projectEntry);
 
         Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
         payload = payload
@@ -114,6 +118,7 @@ public class RequestDataMergingProcessorTest {
         expected.put("process-cfg-policy", "process-cfg-policy-value");
 
         Map<String, Object> result = process(payload);
+        result.remove(Constants.Request.ARGUMENTS_KEY); // don't care about arguments here
         assertEquals(expected, result);
     }
 
@@ -137,9 +142,11 @@ public class RequestDataMergingProcessorTest {
         prjCfg.put("a", "a-prj");
         prjCfg.put("project", "prj-value");
 
+        ProjectEntry projectEntry = new ProjectEntry(prjId, null, null, null, null, null, prjCfg, null, null, null, null, null);
+
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
-        when(projectDao.getConfiguration(eq(prjId))).thenReturn(prjCfg);
+        when(projectDao.get(eq(prjId))).thenReturn(projectEntry);
 
         Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
         payload = payload
@@ -159,6 +166,7 @@ public class RequestDataMergingProcessorTest {
         expected.put("req", "req-value");
 
         Map<String, Object> result = process(payload);
+        result.remove(Constants.Request.ARGUMENTS_KEY); // don't care about arguments here
         assertEquals(expected, result);
     }
 

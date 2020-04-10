@@ -80,7 +80,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
     }
 
     private static ProcessConfiguration readProcessConfiguration(UUID instanceId, Path workDir) throws IOException {
-        Path p = workDir.resolve(Constants.Files.REQUEST_DATA_FILE_NAME);
+        Path p = workDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (!Files.exists(p)) {
             return ProcessConfiguration.builder()
                     .instanceId(instanceId)

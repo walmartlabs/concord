@@ -43,6 +43,7 @@ public class NewProcessPipeline extends Pipeline {
                 AssertWorkspaceArchiveProcessor.class,
                 PolicyExportProcessor.class,
                 QueuePolicyProcessor.class,
+                RequestParametersProcessor.class,
                 PayloadStoreProcessor.class,
                 SecuritySubjectProcessor.class,
                 NewQueueEntryProcessor.class);
