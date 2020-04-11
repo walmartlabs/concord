@@ -1,0 +1,11 @@
+publicFlows:
+  - "default"
+
+flows:
+  default:
+    - call: "flowA"
+    - call: "flowB"
+    - call: "flowC"
+
+  flowC:
+    - log: "Hello C!"

@@ -21,10 +21,13 @@ package com.walmartlabs.concord.runtime.loader.model;
  */
 
 import java.util.Map;
+import java.util.Set;
 
 public interface Profile {
 
     Configuration configuration();
+
+    Set<String> publicFlows();
 
     Map<String, FlowDefinition> flows();
 }
