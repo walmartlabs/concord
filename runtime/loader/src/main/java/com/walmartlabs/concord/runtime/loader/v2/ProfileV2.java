@@ -25,18 +25,20 @@ import com.walmartlabs.concord.runtime.loader.model.FlowDefinition;
 import com.walmartlabs.concord.runtime.loader.model.Profile;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ProfileV2 implements Profile, Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final Configuration cfg;
+    private final Set<String> publicFlows;
     private final Map<String, FlowDefinition> flows;
 
     public ProfileV2(com.walmartlabs.concord.runtime.v2.model.Profile delegate) {
         this.cfg = new ConfigurationV2(delegate.configuration());
+
+        this.publicFlows = delegate.publicFlows() != null ? new HashSet<>(delegate.publicFlows()) : Collections.emptySet();
 
         this.flows = new HashMap<>();
         if (delegate.flows() != null) {
@@ -47,6 +49,11 @@ public class ProfileV2 implements Profile, Serializable {
     @Override
     public Configuration configuration() {
         return cfg;
+    }
+
+    @Override
+    public Set<String> publicFlows() {
+        return publicFlows;
     }
 
     @Override

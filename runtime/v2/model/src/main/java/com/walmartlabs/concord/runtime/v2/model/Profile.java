@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -42,6 +43,11 @@ public interface Profile extends Serializable {
     @Value.Default
     default ProcessConfiguration configuration() {
         return ProcessConfiguration.builder().build();
+    }
+
+    @Value.Default
+    default Set<String> publicFlows() {
+        return Collections.emptySet();
     }
 
     @Value.Default
