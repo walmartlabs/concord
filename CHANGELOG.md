@@ -4,6 +4,15 @@
 
 ### Changed
 
+- runtime-v1, runtime-v2, concord-server: fix merging of
+`publicFlows` when profiles are used.
+
+
+
+## [1.47.1] - 2020-04-09
+
+### Changed
+
 - concord-agent: fix "preforking" by removing the process'
 session key from runner configuration files;
 - concord-server: removed old LDAP user search endpoint
