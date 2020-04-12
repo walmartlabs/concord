@@ -741,6 +741,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .triggeredBy(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.TRIGGERED_BY), TriggeredByEntry.class))
                 .timeout(r.get(PROCESS_QUEUE.TIMEOUT))
                 .imports(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class))
+                .runtime(r.get(PROCESS_QUEUE.RUNTIME))
                 .build();
     }
 

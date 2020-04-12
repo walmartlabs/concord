@@ -800,7 +800,7 @@ public class ProcessResource implements Resource {
                            @HeaderParam("range") String range) {
 
         // check the permissions, logs can contain sensitive data
-        ProcessKey processKey = assertLogAccess(instanceId);
+        ProcessKey processKey = logManager.assertLogAccess(instanceId);
 
         Integer start = null;
         Integer end = null;
@@ -1084,35 +1084,6 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Process instance not found: " + instanceId, Response.Status.NOT_FOUND);
         }
         return processKey;
-    }
-
-    private ProcessKey assertLogAccess(UUID instanceId) {
-        ProcessEntry pe = processManager.assertProcess(instanceId);
-        ProcessKey pk = ProcessKey.from(pe);
-
-        if (!processCfg.isCheckLogPermissions()) {
-            return pk;
-        }
-
-        if (Roles.isAdmin() || Roles.isGlobalReader()) {
-            return pk;
-        }
-
-        UserPrincipal principal = UserPrincipal.assertCurrent();
-
-        UUID initiatorId = pe.initiatorId();
-        if (principal.getId().equals(initiatorId)) {
-            // process owners should be able to view the process' logs
-            return pk;
-        }
-
-        if (pe.projectId() != null) {
-            projectAccessManager.assertAccess(pe.projectId(), ResourceAccessLevel.WRITER, true);
-            return pk;
-        }
-
-        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to view the process log: " + instanceId);
     }
 
     private void assertProcessAccess(ProcessEntry pe, String downloadEntity) {
