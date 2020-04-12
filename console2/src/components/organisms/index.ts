@@ -53,6 +53,7 @@ export { default as ProcessFormActivity } from './ProcessFormActivity';
 export { default as ProcessHistoryActivity } from './ProcessHistoryActivity';
 export { default as ProcessListActivity } from './ProcessListActivity';
 export { default as ProcessLogActivity } from './ProcessLogActivity';
+export { default as ProcessLogActivityV2 } from './ProcessLogActivityV2';
 export { default as ProcessRestoreActivity } from './ProcessRestoreActivity';
 export { default as ProcessStatusActivity } from './ProcessStatusActivity';
 export { default as ProcessWaitActivity } from './ProcessWaitActivity';

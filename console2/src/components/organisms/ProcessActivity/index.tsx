@@ -33,7 +33,7 @@ import {
     ProcessChildrenActivity,
     ProcessEventsActivity,
     ProcessHistoryActivity,
-    ProcessLogActivity,
+    ProcessLogActivity, ProcessLogActivityV2,
     ProcessStatusActivity,
     ProcessWaitActivity
 } from '../index';
@@ -170,12 +170,18 @@ const ProcessActivity = (props: ExternalProps) => {
                     />
                 </Route>
                 <Route path={`${baseUrl}/log`} exact={true}>
-                    <ProcessLogActivity
-                        instanceId={instanceId}
-                        processStatus={process ? process.status : undefined}
-                        loadingHandler={loadingHandler}
-                        forceRefresh={refresh}
-                    />
+                    {process?.runtime === "runtime-v1" &&
+                        <ProcessLogActivity
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}/>}
+                    {process?.runtime === "runtime-v2" &&
+                        <ProcessLogActivityV2
+                            instanceId={instanceId}
+                            processStatus={process ? process.status : undefined}
+                            loadingHandler={loadingHandler}
+                            forceRefresh={refresh}/>}
                 </Route>
                 <Route path={`${baseUrl}/history`} exact={true}>
                     <ProcessHistoryActivity

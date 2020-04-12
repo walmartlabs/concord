@@ -136,6 +136,9 @@ public interface ProcessEntry extends Serializable {
     @JsonIgnore // TODO swagger-codegen has some issues generating the client classes for this field
     Imports imports();
 
+    @Nullable
+    String runtime();
+
     @Value.Immutable
     @JsonInclude(Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableProcessCheckpointEntry.class)
