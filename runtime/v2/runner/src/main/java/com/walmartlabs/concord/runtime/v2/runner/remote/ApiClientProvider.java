@@ -23,7 +23,8 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ProcessInfo;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -31,18 +32,23 @@ import javax.inject.Provider;
 public class ApiClientProvider implements Provider<ApiClient> {
 
     private final ApiClientFactory clientFactory;
-    private final RunnerConfiguration runnerCfg;
+    private final ProcessConfiguration processCfg;
 
     @Inject
-    public ApiClientProvider(ApiClientFactory clientFactory, RunnerConfiguration runnerCfg) {
+    public ApiClientProvider(ApiClientFactory clientFactory, ProcessConfiguration processCfg) {
         this.clientFactory = clientFactory;
-        this.runnerCfg = runnerCfg;
+        this.processCfg = processCfg;
     }
 
     @Override
     public ApiClient get() {
+        String s = processCfg.processInfo().sessionToken();
+        if (s == null) {
+            throw new IllegalStateException("Can't initialize the API client: 'processInfo.sessionToken' is not defined.");
+        }
+
         return clientFactory.create(ApiClientConfiguration.builder()
-                .sessionToken(runnerCfg.api().sessionToken())
+                .sessionToken(s)
                 .build());
     }
 }

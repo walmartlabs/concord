@@ -137,7 +137,7 @@
             </dependency>
             <dependency>
                 <groupId>com.walmartlabs.concord.runtime</groupId>
-                <artifactId>concord-runtime-loader</artifactId>
+                <artifactId>concord-process-loader</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -55,7 +55,7 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.runtime</groupId>
-            <artifactId>concord-runtime-loader</artifactId>
+            <artifactId>concord-process-loader</artifactId>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>

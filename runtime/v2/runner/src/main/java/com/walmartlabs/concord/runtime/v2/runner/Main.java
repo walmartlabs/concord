@@ -95,14 +95,11 @@ public class Main {
     public void execute() throws Exception {
         validate(cfg);
 
-        // use LinkedHashMap to preserve the order of the keys
-        Map<String, Object> processArgs = new LinkedHashMap<>(cfg.arguments());
-        // save the current process ID as an argument, flows and plugins expect it to be a string value
-        processArgs.put(Constants.Context.TX_ID_KEY, cfg.instanceId().toString());
-
         Runner runner = new Runner.Builder()
                 .injector(injector)
                 .build();
+
+        Map<String, Object> processArgs = prepareProcessArgs(cfg);
 
         ProcessSnapshot snapshot;
         Set<String> events = StateManager.readResumeEvents(workDir.getValue()); // TODO make it an interface
@@ -123,6 +120,21 @@ public class Main {
         if (cfg.instanceId() == null) {
             throw new IllegalStateException("ProcessConfiguration -> instanceId cannot be null");
         }
+    }
+
+    private static Map<String, Object> prepareProcessArgs(ProcessConfiguration cfg) {
+        // use LinkedHashMap to preserve the order of the keys
+        Map<String, Object> m = new LinkedHashMap<>(cfg.arguments());
+
+        // save the current process ID as an argument, flows and plugins expect it to be a string value
+        m.put(Constants.Context.TX_ID_KEY, cfg.instanceId().toString());
+
+        // save processInfo and projectInfo variables
+        ObjectMapper objectMapper = new ObjectMapper();
+        m.put(Constants.Request.PROCESS_INFO_KEY, objectMapper.convertValue(cfg.processInfo(), Map.class));
+        m.put(Constants.Request.PROJECT_INFO_KEY, objectMapper.convertValue(cfg.projectInfo(), Map.class));
+
+        return m;
     }
 
     private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Map<String, Object> args) throws Exception {
@@ -151,6 +163,7 @@ public class Main {
         for (String event : events) {
             state = runner.resume(state, event, args);
         }
+
         return state;
     }
 

@@ -21,8 +21,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.repository.Snapshot;
-import com.walmartlabs.concord.runtime.loader.ProjectLoader;
-import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.Payload;

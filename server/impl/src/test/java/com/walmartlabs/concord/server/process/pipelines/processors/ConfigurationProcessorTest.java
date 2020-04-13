@@ -118,7 +118,9 @@ public class ConfigurationProcessorTest {
         expected.put("process-cfg-policy", "process-cfg-policy-value");
 
         Map<String, Object> result = process(payload);
-        result.remove(Constants.Request.ARGUMENTS_KEY); // don't care about arguments here
+        result.remove(Constants.Request.ARGUMENTS_KEY); // don't care about arguments and other stuff here
+        result.remove(Constants.Request.PROCESS_INFO_KEY);
+        result.remove(Constants.Request.PROJECT_INFO_KEY);
         assertEquals(expected, result);
     }
 
@@ -166,7 +168,9 @@ public class ConfigurationProcessorTest {
         expected.put("req", "req-value");
 
         Map<String, Object> result = process(payload);
-        result.remove(Constants.Request.ARGUMENTS_KEY); // don't care about arguments here
+        result.remove(Constants.Request.ARGUMENTS_KEY); // don't care about arguments and other stuff here
+        result.remove(Constants.Request.PROCESS_INFO_KEY);
+        result.remove(Constants.Request.PROJECT_INFO_KEY);
         assertEquals(expected, result);
     }
 

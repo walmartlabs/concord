@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.common.cfg;
  * =====
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -34,6 +36,7 @@ import java.util.Collections;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(as = ImmutableRunnerConfiguration.class)
 @JsonDeserialize(as = ImmutableRunnerConfiguration.class)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public interface RunnerConfiguration {
 
     /**
@@ -96,15 +99,6 @@ public interface RunnerConfiguration {
     @Value.Default
     default DockerConfiguration docker() {
         return DockerConfiguration.builder().build();
-    }
-
-    /**
-     * Event recording configuration.
-     */
-    @Value.Default
-    // TODO should be in the process configuration
-    default EventConfiguration events() {
-        return EventConfiguration.builder().build();
     }
 
     static ImmutableRunnerConfiguration.Builder builder() {

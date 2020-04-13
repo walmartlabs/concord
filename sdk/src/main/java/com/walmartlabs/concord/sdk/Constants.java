@@ -237,6 +237,11 @@ public class Constants {
          * The runner's configuration section.
          */
         public static final String RUNNER_KEY = "runner";
+
+        /**
+         * The process' session token that can be used to talk to the API.
+         */
+        public static final String SESSION_TOKEN_KEY = "sessionToken";
     }
 
     public static class Trigger {
@@ -420,6 +425,7 @@ public class Constants {
 
         /**
          * File which contains process session token.
+         * @deprecated use {@code ProcessConfiguration#sessionToken()}
          */
         public static final String SESSION_TOKEN_FILE_NAME = ".session_token";
 

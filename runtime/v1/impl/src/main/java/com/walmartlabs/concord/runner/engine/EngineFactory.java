@@ -72,23 +72,21 @@ public class EngineFactory {
 
     private final ApiClientFactory apiClientFactory;
     private final ServiceTaskRegistry taskRegistry;
-    private final RunnerConfiguration runnerCfg;
 
     @Inject
     public EngineFactory(ApiClientFactory apiClientFactory,
-                         ServiceTaskRegistry taskRegistry,
-                         RunnerConfiguration runnerCfg) {
+                         ServiceTaskRegistry taskRegistry) {
 
         this.apiClientFactory = apiClientFactory;
         this.taskRegistry = taskRegistry;
-        this.runnerCfg = runnerCfg;
     }
 
     @SuppressWarnings("deprecation")
     public Engine create(ProjectDefinition project,
                          Path baseDir,
                          Collection<String> activeProfiles,
-                         Set<String> metaVariables) {
+                         Set<String> metaVariables,
+                         EventConfiguration eventCfg) {
 
         Path attachmentsDir = baseDir.resolve(InternalConstants.Files.JOB_ATTACHMENTS_DIR_NAME);
         Path stateDir = attachmentsDir.resolve(InternalConstants.Files.JOB_STATE_DIR_NAME);
@@ -147,7 +145,7 @@ public class EngineFactory {
 
         List<TaskInterceptor> taskInterceptors = new ArrayList<>();
         taskInterceptors.add(protectedVarContext);
-        taskInterceptors.add(new TaskEventInterceptor(runnerCfg.events(), eventProcessor));
+        taskInterceptors.add(new TaskEventInterceptor(eventCfg, eventProcessor));
         taskInterceptors.add(new PolicyPreprocessor(baseDir));
 
         Engine engine = new EngineBuilder()

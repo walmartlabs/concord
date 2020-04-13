@@ -20,20 +20,13 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.Payload;
-import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.ProcessKey;
-import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -44,30 +37,16 @@ import java.util.UUID;
 public class SessionTokenProcessor implements PayloadProcessor {
 
     private final SecretStoreConfiguration secretCfg;
-    private final ProcessLogManager logManager;
 
     @Inject
-    public SessionTokenProcessor(SecretStoreConfiguration secretCfg, ProcessLogManager logManager) {
+    public SessionTokenProcessor(SecretStoreConfiguration secretCfg) {
         this.secretCfg = secretCfg;
-        this.logManager = logManager;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
-        ProcessKey processKey = payload.getProcessKey();
-        Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
-
         String token = createSessionToken(payload.getProcessKey());
         payload = payload.putHeader(Payload.SESSION_TOKEN, token);
-
-        try {
-            Path dst = Files.createDirectories(workDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME));
-            Files.write(dst.resolve(Constants.Files.SESSION_TOKEN_FILE_NAME), token.getBytes());
-        } catch (IOException e) {
-            logManager.error(processKey, "Error while storing the session token: {}", e);
-            throw new ProcessException(processKey, "Error while string the session token", e);
-        }
-
         return chain.process(payload);
     }
 
