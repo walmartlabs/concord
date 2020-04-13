@@ -1,0 +1,3 @@
+main:
+- ${execution.setVariable("name", myRealName)}
+- log: "Hello, ${name}"

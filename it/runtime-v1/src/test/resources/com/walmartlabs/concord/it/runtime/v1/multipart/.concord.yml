@@ -1,0 +1,10 @@
+flows:
+  main:
+  - log: "x=${x}"
+  - log: "y=${y}"
+  - log: "z=${z}"
+  - log: "myfile=${resource.asString('myfile.txt')}"
+
+variables:
+  arguments:
+    x: 123
