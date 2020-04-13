@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.Payload;
@@ -83,7 +84,10 @@ public class RepositoryProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
-        logManager.info(processKey, "Copying the repository's data: {}", repo);
+        logManager.info(processKey, "Copying the repository's data: {} @ {}, {}",
+                repo.getUrl(),
+                repo.getCommitId() != null ? repo.getCommitId() : repo.getBranch(),
+                repo.getPath());
 
         Path dst = payload.getHeader(Payload.WORKSPACE_DIR);
 
@@ -112,7 +116,6 @@ public class RepositoryProcessor implements PayloadProcessor {
         return chain.process(newPayload);
     }
 
-    @SuppressWarnings("unchecked")
     private RepositoryEntry getRepositoryEntry(Payload payload) {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
@@ -128,8 +131,8 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg != null) {
-            String branchOrTag = (String) cfg.getOrDefault(Constants.Request.REPO_BRANCH_OR_TAG, repo.getBranch());
-            String commitId = (String) cfg.getOrDefault(Constants.Request.REPO_COMMIT_ID, repo.getCommitId());
+            String branchOrTag = MapUtils.getString(cfg, Constants.Request.REPO_BRANCH_OR_TAG, repo.getBranch());
+            String commitId = MapUtils.getString(cfg, Constants.Request.REPO_COMMIT_ID, repo.getCommitId());
             repo = new RepositoryEntry(repo, branchOrTag, commitId);
         }
 
