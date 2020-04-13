@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.server.v2;
+package com.walmartlabs.concord.it.runtime.v2;
 
 /*-
  * *****
@@ -20,9 +20,11 @@ package com.walmartlabs.concord.it.server.v2;
  * =====
  */
 
-import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.it.server.AbstractServerIT;
-import org.junit.Ignore;
+import ca.ibodrov.concord.testcontainers.ConcordProcess;
+import ca.ibodrov.concord.testcontainers.Payload;
+import com.walmartlabs.concord.client.FormListEntry;
+import com.walmartlabs.concord.client.FormSubmitResponse;
+import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -30,29 +32,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.walmartlabs.concord.it.common.ITUtils.archive;
-import static com.walmartlabs.concord.it.common.ServerClient.*;
 import static org.junit.Assert.*;
 
-public class FormV2IT extends AbstractServerIT {
+public class FormIT extends AbstractIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
-        byte[] payload = archive(FormV2IT.class.getResource("form").toURI());
+        byte[] archive = archive(FormIT.class.getResource("form").toURI());
+
+        Payload payload = new Payload()
+                .archive(archive);
 
         // ---
 
-        ProcessApi processApi = new ProcessApi(getApiClient());
-        StartProcessResponse spr = start(payload);
+        ConcordProcess proc = concord.processes().start(payload);
 
-        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = proc.waitForStatus(ProcessEntry.StatusEnum.SUSPENDED);
         assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
 
         // ---
 
-        ProcessFormsApi formsApi = new ProcessFormsApi(getApiClient());
-
-        List<FormListEntry> forms = formsApi.list(spr.getInstanceId());
+        List<FormListEntry> forms = proc.forms();
         assertEquals(1, forms.size());
 
         // ---
@@ -71,18 +71,17 @@ public class FormV2IT extends AbstractServerIT {
         data.put("firstName", firstName);
         data.put("age", age);
 
-        FormSubmitResponse fsr = formsApi.submit(spr.getInstanceId(), formName, data);
+        FormSubmitResponse fsr = proc.submitForm(formName, data);
         assertTrue(fsr.isOk());
         assertTrue(fsr.getErrors() == null || fsr.getErrors().isEmpty());
 
-        pe = waitForCompletion(processApi, spr.getInstanceId());
+        pe = proc.waitForStatus(ProcessEntry.StatusEnum.FINISHED);
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         // ---
 
-        byte[] ab = getLog(pe.getLogFileName());
-        assertLog(".*firstName=" + firstName + ".*", ab);
-        assertLog(".*lastName=" + lastName + ".*", ab);
-        assertLog(".*age=" + age + ".*", ab);
+        proc.assertLog(".*firstName=" + firstName + ".*");
+        proc.assertLog(".*lastName=" + lastName + ".*");
+        proc.assertLog(".*age=" + age + ".*");
     }
 }
