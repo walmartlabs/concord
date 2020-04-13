@@ -86,13 +86,6 @@ public interface ApiConfiguration {
     }
 
     /**
-     * Authentication token for the current process.
-     */
-    @Nullable
-    // TODO should be in the process configuration
-    String sessionToken();
-
-    /**
      * Max interval (in ms) without heartbeat before the process fails.
      */
     @Value.Default

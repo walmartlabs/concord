@@ -20,9 +20,9 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.loader.model.FlowDefinition;
-import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.loader.model.Step;
+import com.walmartlabs.concord.process.loader.model.FlowDefinition;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.model.Step;
 
 import java.util.ArrayList;
 import java.util.Collections;

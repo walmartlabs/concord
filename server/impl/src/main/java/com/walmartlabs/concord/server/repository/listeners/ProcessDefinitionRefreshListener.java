@@ -20,8 +20,8 @@ package com.walmartlabs.concord.server.repository.listeners;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.loader.ProjectLoader;
-import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;

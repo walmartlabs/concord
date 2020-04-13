@@ -58,7 +58,7 @@ public class RunnerJob {
             }
         }
 
-        RunnerConfiguration runnerCfg = createRunnerConfiguration(payloadDir, runnerExecutorCfg, cfg);
+        RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, cfg);
         RunnerLog log;
         try {
             log = new RunnerLog(
@@ -159,33 +159,22 @@ public class RunnerJob {
                 '}';
     }
 
-    private static RunnerConfiguration createRunnerConfiguration(Path payloadDir, RunnerJobExecutorConfiguration execCfg, Map<String, Object> processCfg) {
+    private static RunnerConfiguration createRunnerConfiguration(RunnerJobExecutorConfiguration execCfg, Map<String, Object> processCfg) {
         ImmutableRunnerConfiguration.Builder b = RunnerConfiguration.builder();
-
-        ApiConfiguration apiCfgSrc = ApiConfiguration.builder().build();
-        DockerConfiguration dockerCfgSrc = DockerConfiguration.builder().build();
 
         Object v = processCfg.get(Constants.Request.RUNNER_KEY);
         if (v != null) {
             RunnerConfiguration src = createObjectMapper().convertValue(v, RunnerConfiguration.class);
-
-            // grab whatever we had in the process configuration
-            apiCfgSrc = src.api();
-            dockerCfgSrc = src.docker();
-
             b = b.from(src);
         }
 
-        // override system values
-        // TODO simplify somehow?
         return b.agentId(execCfg.agentId())
                 .debug(debugMode(processCfg))
-                .api(ApiConfiguration.builder().from(apiCfgSrc)
+                .api(ApiConfiguration.builder()
                         .baseUrl(execCfg.serverApiBaseUrl())
                         .maxNoHeartbeatInterval(execCfg.maxHeartbeatInterval())
-                        .sessionToken(readSessionToken(payloadDir))
                         .build())
-                .docker(DockerConfiguration.builder().from(dockerCfgSrc)
+                .docker(DockerConfiguration.builder()
                         .extraVolumes(execCfg.extraDockerVolumes())
                         .build())
                 .dependencyManager(DependencyManagerConfiguration.builder()
@@ -200,16 +189,5 @@ public class RunnerJob {
         om.registerModule(new GuavaModule());
         om.registerModule(new Jdk8Module());
         return om;
-    }
-
-    private static String readSessionToken(Path baseDir) {
-        Path p = baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(Constants.Files.SESSION_TOKEN_FILE_NAME);
-
-        try {
-            return new String(Files.readAllBytes(p));
-        } catch (IOException e) {
-            throw new RuntimeException("Error while reading the session token file: " + p, e);
-        }
     }
 }

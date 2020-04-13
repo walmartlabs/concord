@@ -20,9 +20,9 @@ package com.walmartlabs.concord.cli.lint;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.loader.model.ExpressionStep;
-import com.walmartlabs.concord.runtime.loader.model.SourceMap;
-import com.walmartlabs.concord.runtime.loader.model.Step;
+import com.walmartlabs.concord.process.loader.model.ExpressionStep;
+import com.walmartlabs.concord.process.loader.model.SourceMap;
+import com.walmartlabs.concord.process.loader.model.Step;
 
 import javax.el.ELException;
 import java.util.Collections;

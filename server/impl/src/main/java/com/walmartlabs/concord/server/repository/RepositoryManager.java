@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.repository.*;
-import com.walmartlabs.concord.runtime.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
