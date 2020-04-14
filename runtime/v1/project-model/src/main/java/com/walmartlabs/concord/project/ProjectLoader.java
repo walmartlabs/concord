@@ -416,7 +416,7 @@ public class ProjectLoader {
             if (a.getPublicFlows() != null) {
                 publicFlows.addAll(a.getPublicFlows());
             }
-            if (b.getFlows() != null) {
+            if (b.getPublicFlows() != null) {
                 publicFlows.addAll(b.getPublicFlows());
             }
 

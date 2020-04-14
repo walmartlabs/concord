@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,8 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.model.Profile;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -28,9 +29,7 @@ import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Named
 public class EntryPointProcessor implements PayloadProcessor {
@@ -75,16 +74,31 @@ public class EntryPointProcessor implements PayloadProcessor {
     }
 
     /**
-     * Determines validity of a given {@code entryPoint}
-     * @param payload payload containing public flows definition
+     * Determines validity of a given {@code entryPoint} based on
+     * the currently active profiles.
+     *
+     * @param payload    payload containing public flows definition
      * @param entryPoint process {@code entryPoint} flow
      * @return true if {@code entryPoint} is a valid value
      */
     private static boolean isValidEntryPoint(Payload payload, String entryPoint) {
         ProcessDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
-        Set<String> publicFlows = pd.publicFlows();
 
-        if (publicFlows == null || publicFlows.isEmpty()) {
+        Set<String> publicFlows = new HashSet<>(pd.publicFlows() != null ? pd.publicFlows() : Collections.emptySet());
+
+        List<String> activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES);
+        if (activeProfiles != null) {
+            for (String profileName : activeProfiles) {
+                Profile p = pd.profiles().get(profileName);
+                if (p == null || p.publicFlows() == null) {
+                    continue;
+                }
+
+                publicFlows.addAll(p.publicFlows());
+            }
+        }
+
+        if (publicFlows.isEmpty()) {
             // all flows are public when public definition not provided
             return true;
         }

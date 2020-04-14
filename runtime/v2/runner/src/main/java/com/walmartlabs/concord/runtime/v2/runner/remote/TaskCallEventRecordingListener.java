@@ -25,9 +25,9 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
-import com.walmartlabs.concord.runtime.common.cfg.EventConfiguration;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
@@ -51,10 +51,10 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
     private final EventConfiguration eventConfiguration;
 
     @Inject
-    public TaskCallEventRecordingListener(ApiClient apiClient, InstanceId processInstanceId, RunnerConfiguration runnerConfiguration) {
+    public TaskCallEventRecordingListener(ApiClient apiClient, InstanceId processInstanceId, ProcessConfiguration processConfiguration) {
         this.eventsApi = new ProcessEventsApi(apiClient);
         this.processInstanceId = processInstanceId;
-        this.eventConfiguration = runnerConfiguration.events();
+        this.eventConfiguration = processConfiguration.events();
     }
 
     @Override

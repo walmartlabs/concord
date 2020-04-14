@@ -25,7 +25,6 @@ import com.walmartlabs.concord.client.OrganizationsApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.it.server.AbstractGitHubTriggersIT;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Path;

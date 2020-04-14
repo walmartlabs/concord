@@ -79,6 +79,21 @@ public interface ProcessConfiguration extends Serializable {
     Map<String, Object> currentUser();
 
     @Value.Default
+    default ProcessInfo processInfo() {
+        return ProcessInfo.builder().build();
+    }
+
+    @Value.Default
+    default ProjectInfo projectInfo() {
+        return ProjectInfo.builder().build();
+    }
+
+    @Value.Default
+    default EventConfiguration events() {
+        return EventConfiguration.builder().build();
+    }
+
+    @Value.Default
     default Map<String, Map<String, Object>> defaultTaskVariables() {
         return Collections.emptyMap();
     }

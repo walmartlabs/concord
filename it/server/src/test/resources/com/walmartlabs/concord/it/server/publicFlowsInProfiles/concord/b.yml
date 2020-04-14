@@ -1,0 +1,8 @@
+profiles:
+  profileB:
+    publicFlows:
+      - "flowB"
+
+flows:
+  flowB:
+    - log: "Hello B!"
