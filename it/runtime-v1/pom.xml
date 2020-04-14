@@ -69,14 +69,14 @@
         <resources>
             <resource>
                 <filtering>false</filtering>
-                <directory>${project.basedir}/src/main/resources</directory>
+                <directory>${project.basedir}/src/test/resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
             </resource>
             <resource>
                 <filtering>true</filtering>
-                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                <directory>${project.basedir}/src/test/filtered-resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
