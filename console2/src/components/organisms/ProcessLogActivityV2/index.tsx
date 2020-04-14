@@ -21,12 +21,17 @@
 import * as React from 'react';
 
 import { ConcordId } from '../../../api/common';
-import { ProcessStatus } from '../../../api/process';
+import {isFinal, ProcessStatus} from '../../../api/process';
 
 import './styles.css';
-import {Button, Icon, Popup} from "semantic-ui-react";
-import {Link} from "react-router-dom";
-import {LogSegment} from "../../molecules";
+import {useCallback} from "react";
+import {listLogSegments as apiListLogSegments, LogSegmentEntry} from "../../../api/process/log";
+import {useState} from "react";
+import {usePolling} from "../../../api/usePolling";
+import RequestErrorActivity from "../RequestErrorActivity";
+import LogSegmentActivity from "./LogSegmentActivity";
+
+const SEGMENT_FETCH_INTERVAL = 5000;
 
 interface ExternalProps {
     instanceId: ConcordId;
@@ -40,27 +45,30 @@ const ProcessLogActivityV2 = ({
     loadingHandler,
     forceRefresh
 }: ExternalProps) => {
+
+    const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
+
+    const fetchSegments = useCallback(
+        async () => {
+            // TODO: real limit/offset
+            const limit = 30;
+            const offset = 0;
+            const segments = await apiListLogSegments(instanceId, offset, limit);
+            setSegments(segments.items);
+            return !isFinal(processStatus);
+        },
+        [instanceId, processStatus]
+    );
+
+    const error = usePolling(fetchSegments, SEGMENT_FETCH_INTERVAL, loadingHandler, forceRefresh);
+    if (error) {
+        return <RequestErrorActivity error={error} />;
+    }
+
     return (
         <>
-            <LogSegment correlationId={"xxx"} name={"System"} status={"ok"}
-                        startLoading={(correlationId, name) => console.log('start ', correlationId, name)}
-                        stopLoading={(correlationId, name) => console.log('stop ', correlationId, name)}
-                        data={["a", "b"]}/>
-
-            <LogSegment correlationId={"xxx"} name={"System"} status={"error"}
-                        startLoading={(correlationId, name) => console.log('start ', correlationId, name)}
-                        stopLoading={(correlationId, name) => console.log('stop ', correlationId, name)}
-                        data={["a", "b"]}/>
-
-            <LogSegment correlationId={"xxx"} name={"System"} status={"running"}
-                        startLoading={(correlationId, name) => console.log('start ', correlationId, name)}
-                        stopLoading={(correlationId, name) => console.log('stop ', correlationId, name)}
-                        data={["a", "b"]}/>
-
-            <LogSegment correlationId={"xxx"} name={"System"} status={undefined}
-                        startLoading={(correlationId, name) => console.log('start ', correlationId, name)}
-                        stopLoading={(correlationId, name) => console.log('stop ', correlationId, name)}
-                        data={["a", "b"]}/>
+            {segments.map((s, index) =>
+                <LogSegmentActivity instanceId={instanceId} segmentId={s.id} correlationId={s.correlationId} name={s.name} status={s.status} key={index}/>)}
         </>
     );
 };

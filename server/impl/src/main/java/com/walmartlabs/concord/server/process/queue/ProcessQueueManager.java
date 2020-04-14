@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.queue;
  */
 
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.EventType;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
@@ -101,9 +102,10 @@ public class ProcessQueueManager {
         Map<String, Object> meta = getMeta(getCfg(payload));
         Imports imports = payload.getHeader(Payload.IMPORTS);
         Map<String, Object> exclusive = PayloadUtils.getExclusive(payload);
+        String runtime = getRuntime(payload);
 
         queueDao.tx(tx -> {
-            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive);
+            queueDao.enqueue(tx, processKey, tags, startAt, requirements, processTimeout, handlers, meta, imports, exclusive, runtime);
             eventManager.insertStatusHistory(tx, processKey, ProcessStatus.ENQUEUED, Collections.emptyMap());
         });
     }
@@ -258,5 +260,13 @@ public class ProcessQueueManager {
         }
 
         throw new IllegalArgumentException("Invalid '" + Constants.Request.PROCESS_TIMEOUT + "' value: expected an ISO-8601 value, got: " + processTimeout);
+    }
+
+    private static String getRuntime(Payload payload) {
+        ProcessDefinition pd = payload.getHeader(Payload.PROJECT_DEFINITION);
+        if (pd == null) {
+            return null;
+        }
+        return pd.runtime();
     }
 }

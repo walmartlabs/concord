@@ -24,14 +24,17 @@ import com.codahale.metrics.Counter;
 import com.walmartlabs.concord.common.LogUtils;
 import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.Listeners;
+import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.List;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
+import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 
 @Named
 @Singleton
@@ -71,6 +74,21 @@ public class ProcessLogManager {
 
     public int log(ProcessKey processKey, byte[] msg) {
         PgIntRange range = logsDao.append(processKey, msg);
+        logBytesAppended.inc(msg.length);
+        listeners.onProcessLogAppend(processKey, msg);
+        return range.getUpper();
+    }
+
+    public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
+        return logsDao.listSegments(processKey, limit, offset);
+    }
+
+    public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {
+        return logsDao.segmentData(processKey, segmentId, start, end);
+    }
+
+    public int log(ProcessKey processKey, long segmentId, byte[] msg) {
+        PgIntRange range = logsDao.append(processKey, segmentId, msg);
         logBytesAppended.inc(msg.length);
         listeners.onProcessLogAppend(processKey, msg);
         return range.getUpper();

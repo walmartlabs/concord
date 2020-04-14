@@ -19,22 +19,20 @@
  */
 
 import * as React from 'react';
+import {useEffect, useState} from 'react';
 
 import './styles.css';
 import {Button, Icon} from "semantic-ui-react";
 import {Link} from "react-router-dom";
-import {useState} from "react";
-import {useEffect} from "react";
-
-export type SegmentStatus = 'ok' | 'error' | 'running' | undefined;
+import {SegmentStatus} from "../../../api/process/log";
 
 interface ExternalProps {
     correlationId: string;
     name: string;
     status: SegmentStatus;
     data: string[];
-    startLoading: (correlationId: string, name: string) => void;
-    stopLoading: (correlationId: string, name: string) => void;
+    startLoading: () => void;
+    stopLoading: () => void;
 }
 
 const LogSegment = ({correlationId, name, status, data, startLoading, stopLoading}: ExternalProps) => {
@@ -43,17 +41,19 @@ const LogSegment = ({correlationId, name, status, data, startLoading, stopLoadin
 
     useEffect(() => {
         if (isOpen) {
-            startLoading(correlationId, name);
+            startLoading();
             setLoading(true);
         } else {
-            stopLoading(correlationId, name);
+            stopLoading();
             setLoading(false);
         }
-    }, [isOpen]);
+    }, [isOpen, correlationId, name, startLoading, stopLoading]);
+
+    console.log("LEN: ", data.length);
 
     return (
         <div className="LogSegment">
-            <Button fluid={true} size={"medium"} className="Segment" onClick={event => setOpen((prevState) => !prevState)}>
+            <Button fluid={true} size={"medium"} className="Segment" onClick={() => setOpen((prevState) => !prevState)}>
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State"/>
                 <StatusIcon status={status}/>
                 <span className="Caption">{name}</span>
@@ -75,12 +75,9 @@ const LogSegment = ({correlationId, name, status, data, startLoading, stopLoadin
                 <div className="ContentContainer">
                     <div className="InnerContentContainer">
                         <div className="Content">
-                            <pre>
-                                {"15:10:37 [INFO ] Copying the repository's data: RepositoryEntry{id=f2c25718-7b23-11ea-9a22-0242ac110002, projectId=ccf96f92-7b20-11ea-b2dc-0242ac110002, name='test-error', url='https://gecgithub01.walmart.com/vn0tj0b/concord-hello-world.git', branch='null', commitId='null', path='null', secretId=null, secretName='null', secretStoreType='null', disabled=false, meta=null}\n"}
-                                {"15:10:40 [INFO ] Using entry point: default\n"}
-                                {"15:10:40 [INFO ] Storing default dependency versions...\n"}
-                                {"15:10:40 [INFO ] Enqueued. Waiting for an agent (requirements=null)...\n"}
-                            </pre>
+                            {data.map((value, index) =>
+                                <pre key={index} dangerouslySetInnerHTML={{ __html: value }}/>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -95,15 +92,15 @@ interface StatusIconProps {
 
 const StatusIcon = ({status} : StatusIconProps) => {
     switch (status) {
-        case 'ok':
+        case SegmentStatus.OK:
             return (
                 <Icon name="check circle" color="green" className="Status"/>
             );
-        case 'error':
+        case SegmentStatus.FAILED:
             return (
                 <Icon name="close" color="red" className="Status"/>
             );
-        case 'running':
+        case SegmentStatus.RUNNING:
             return (
                 <Icon loading={true} name="spinner" color="grey" className="Status"/>
             );

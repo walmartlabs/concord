@@ -112,7 +112,6 @@ public class RepositoryProcessor implements PayloadProcessor {
         return chain.process(newPayload);
     }
 
-    @SuppressWarnings("unchecked")
     private RepositoryEntry getRepositoryEntry(Payload payload) {
         UUID projectId = payload.getHeader(Payload.PROJECT_ID);
         UUID repoId = payload.getHeader(Payload.REPOSITORY_ID);
