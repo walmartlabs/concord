@@ -21,7 +21,7 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.walmartlabs.concord.imports.Imports;
-import com.walmartlabs.concord.runtime.loader.ImportsNormalizer;
+import com.walmartlabs.concord.process.loader.ImportsNormalizer;
 
 public class DummyImportsNormalizer implements ImportsNormalizer {
 

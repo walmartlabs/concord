@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.repository.Repository;
-import com.walmartlabs.concord.runtime.loader.ProjectLoader;
-import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.ProjectLoader;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;

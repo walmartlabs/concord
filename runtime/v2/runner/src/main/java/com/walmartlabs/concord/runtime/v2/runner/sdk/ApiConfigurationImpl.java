@@ -54,11 +54,7 @@ public class ApiConfigurationImpl implements ApiConfiguration {
 
     @Override
     public String getSessionToken(Context ctx) {
-        return runnerCfg.api().sessionToken();
-    }
-
-    @Override
-    public String sessionToken() {
-        return runnerCfg.api().sessionToken();
+        throw new IllegalStateException("This method is deprecated. " +
+                "Use ProcessConfiguration#sessionToken() method to retrieve the session token.");
     }
 }

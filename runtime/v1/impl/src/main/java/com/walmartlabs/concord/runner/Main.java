@@ -38,10 +38,12 @@ import com.walmartlabs.concord.project.NoopImportsNormalizer;
 import com.walmartlabs.concord.project.ProjectLoader;
 import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
+import com.walmartlabs.concord.runner.engine.EventConfiguration;
 import com.walmartlabs.concord.runner.engine.ProcessErrorProcessor;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.sdk.Task;
 import io.takari.bpm.api.*;
 import org.eclipse.sisu.space.BeanScanning;
@@ -114,7 +116,10 @@ public class Main {
             PolicyEngineHolder.INSTANCE.setEngine(new PolicyEngine(objectMapper.convertValue(policy, PolicyEngineRules.class)));
         }
 
-        String sessionToken = getSessionToken(baseDir);
+        // read the process configuration
+        Map<String, Object> processCfg = readRequest(baseDir);
+
+        String sessionToken = getSessionToken(processCfg);
         heartbeat.start(instanceId, sessionToken);
 
         ProcessApiClient processApiClient = new ProcessApiClient(runnerCfg,
@@ -132,23 +137,23 @@ public class Main {
             log.info("Ready to start in {}ms", (t3 - t2));
         }
 
-        executeProcess(instanceId.toString(), checkpointManager, baseDir);
+        executeProcess(instanceId.toString(), checkpointManager, baseDir, processCfg);
     }
 
-    private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir) throws ExecutionException {
-        // read the request data
-        Map<String, Object> req = readRequest(baseDir);
-
+    private void executeProcess(String instanceId, CheckpointManager checkpointManager, Path baseDir, Map<String, Object> processCfg) throws ExecutionException {
         // get active profiles from the request data
-        Collection<String> activeProfiles = getActiveProfiles(req);
+        Collection<String> activeProfiles = getActiveProfiles(processCfg);
 
         // load the project
         ProjectDefinition project = loadProject(baseDir);
 
         // read the list of metadata variables
-        Set<String> metaVariables = getMetaVariables(req);
+        Set<String> metaVariables = getMetaVariables(processCfg);
 
-        Engine engine = engineFactory.create(project, baseDir, activeProfiles, metaVariables);
+        // event recording processCfg
+        EventConfiguration eventCfg = getEventCfg(processCfg);
+
+        Engine engine = engineFactory.create(project, baseDir, activeProfiles, metaVariables, eventCfg);
 
         Map<String, Object> resumeCheckpointReq = null;
         while (true) {
@@ -160,14 +165,14 @@ public class Main {
                 // running fresh
                 // let's check if there are some saved variables (e.g. from the parent process)
                 Variables vars = readSavedVariables(baseDir);
-                resultEvents = start(engine, vars, req, instanceId, baseDir);
+                resultEvents = start(engine, vars, processCfg, instanceId, baseDir);
             } else {
                 if (eventNames.size() > 1) {
                     throw new IllegalStateException("Runtime v1 supports resuming for only one event at the time. Got: " + eventNames);
                 }
 
                 String eventName = eventNames.iterator().next();
-                resultEvents = resume(engine, req, instanceId, baseDir, eventName);
+                resultEvents = resume(engine, processCfg, instanceId, baseDir, eventName);
             }
 
             Event checkpointEvent = resultEvents.stream()
@@ -181,10 +186,10 @@ public class Main {
                 checkpointManager.process(getCheckpointId(checkpointEvent), checkpointEvent.getName(), baseDir);
                 // clear arguments
                 if (resumeCheckpointReq == null) {
-                    resumeCheckpointReq = new HashMap<>(req);
+                    resumeCheckpointReq = new HashMap<>(processCfg);
                     resumeCheckpointReq.remove(Constants.Request.ARGUMENTS_KEY);
                 }
-                req = resumeCheckpointReq;
+                processCfg = resumeCheckpointReq;
             } else {
                 // no checkpoints, stop the execution and wait for an external event
                 return;
@@ -192,15 +197,41 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
+        Path p = baseDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
+
+        try (InputStream in = Files.newInputStream(p)) {
+            return objectMapper.readValue(in, Map.class);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading request data", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> readPolicyRules(Path ws) throws ExecutionException {
+        Path policyFile = ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(Constants.Files.POLICY_FILE_NAME);
+        if (!Files.exists(policyFile)) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            return objectMapper.readValue(policyFile.toFile(), Map.class);
+        } catch (IOException e) {
+            throw new ExecutionException("Error while reading policy rules");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private static UUID getCheckpointId(Event e) {
-        String s = (String) ((Map) e.getPayload()).get("checkpointId");
+        String s = MapUtils.getString((Map<String, Object>) e.getPayload(), "checkpointId");
         if (s == null) {
             return null;
         }
         return UUID.fromString(s);
     }
 
-    private Collection<Event> start(Engine e, Variables vars, Map<String, Object> req, String instanceId, Path baseDir) throws ExecutionException {
+    private static Collection<Event> start(Engine e, Variables vars, Map<String, Object> req, String instanceId, Path baseDir) throws ExecutionException {
         // get the entry point
         String entryPoint = (String) req.get(Constants.Request.ENTRY_POINT_KEY);
         if (entryPoint == null) {
@@ -225,7 +256,7 @@ public class Main {
         return finalizeState(e, instanceId, baseDir);
     }
 
-    private Collection<Event> resume(Engine e, Map<String, Object> req, String instanceId, Path baseDir, String eventName) throws ExecutionException {
+    private static Collection<Event> resume(Engine e, Map<String, Object> req, String instanceId, Path baseDir, String eventName) throws ExecutionException {
         Map<String, Object> args = createArgs(instanceId, baseDir, req);
 
         Object currentUser = req.get(Constants.Request.CURRENT_USER_KEY);
@@ -306,31 +337,6 @@ public class Main {
         return vars;
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> readRequest(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
-
-        try (InputStream in = Files.newInputStream(p)) {
-            return objectMapper.readValue(in, Map.class);
-        } catch (IOException e) {
-            throw new ExecutionException("Error while reading request data", e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> readPolicyRules(Path ws) throws ExecutionException {
-        Path policyFile = ws.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME).resolve(Constants.Files.POLICY_FILE_NAME);
-        if (!Files.exists(policyFile)) {
-            return Collections.emptyMap();
-        }
-
-        try {
-            return objectMapper.readValue(policyFile.toFile(), Map.class);
-        } catch (IOException e) {
-            throw new ExecutionException("Error while reading policy rules");
-        }
-    }
-
     @SuppressWarnings({"unchecked"})
     private static Map<String, Object> createArgs(String instanceId, Path workDir, Map<String, Object> cfg) {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -354,6 +360,18 @@ public class Main {
             m.put(Constants.Context.OUT_EXPRESSIONS_KEY, outExpr);
         }
 
+        // processInfo
+        Map<String, Object> processInfo = (Map<String, Object>) cfg.get(Constants.Request.PROCESS_INFO_KEY);
+        if (processInfo != null) {
+            m.put(Constants.Request.PROCESS_INFO_KEY, processInfo);
+        }
+
+        // projectInfo
+        Map<String, Object> projectInfo = (Map<String, Object>) cfg.get(Constants.Request.PROJECT_INFO_KEY);
+        if (projectInfo != null) {
+            m.put(Constants.Request.PROJECT_INFO_KEY, projectInfo);
+        }
+
         return m;
     }
 
@@ -364,6 +382,12 @@ public class Main {
             return meta.keySet();
         }
         return Collections.emptySet();
+    }
+
+    private EventConfiguration getEventCfg(Map<String, Object> cfg) {
+        Map<String, Object> m = MapUtils.getMap(cfg, "runner", Collections.emptyMap());
+        m = MapUtils.getMap(m, "events", Collections.emptyMap());
+        return objectMapper.convertValue(m, EventConfiguration.class);
     }
 
     private static Collection<Event> finalizeState(Engine engine, String instanceId, Path baseDir) throws ExecutionException {
@@ -492,15 +516,13 @@ public class Main {
         return parseDeps(cfg.dependencies());
     }
 
-    private static String getSessionToken(Path baseDir) throws ExecutionException {
-        Path p = baseDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
-                .resolve(Constants.Files.SESSION_TOKEN_FILE_NAME);
-
-        try {
-            return new String(Files.readAllBytes(p));
-        } catch (IOException e) {
-            throw new ExecutionException("Error while reading sesison token data", e);
+    private static String getSessionToken(Map<String, Object> cfg) {
+        Map<String, Object> processInfo = MapUtils.getMap(cfg, Constants.Request.PROCESS_INFO_KEY, Collections.emptyMap());
+        String s = MapUtils.getString(processInfo, "sessionKey");
+        if (s == null) {
+            throw new IllegalStateException("Can't find 'processInfo.sessionKey' in the process configuration");
         }
+        return s;
     }
 
     private static Throwable unroll(Throwable e) {

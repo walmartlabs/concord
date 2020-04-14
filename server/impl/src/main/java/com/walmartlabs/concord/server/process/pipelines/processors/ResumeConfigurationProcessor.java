@@ -23,9 +23,13 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.org.project.ProjectDao;
+import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
+import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
@@ -34,9 +38,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 @Named
 public class ResumeConfigurationProcessor implements PayloadProcessor {
+
+    private final ProjectDao projectDao;
+
+    @Inject
+    public ResumeConfigurationProcessor(ProjectDao projectDao) {
+        this.projectDao = projectDao;
+    }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
@@ -49,15 +61,35 @@ public class ResumeConfigurationProcessor implements PayloadProcessor {
         // we'll use the arguments only from the request
         workspaceCfg.remove(Constants.Request.ARGUMENTS_KEY);
 
+        // automatically provided variables
+        ProjectEntry projectEntry = getProject(payload);
+        Map<String, Object> providedCfg = ProcessConfigurationUtils.prepareProvidedCfg(payload, projectEntry);
+
+        // TODO overrides from policies
+
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg, providedCfg);
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
         return chain.process(payload);
     }
 
+    private ProjectEntry getProject(Payload payload) {
+        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+        if (projectId == null) {
+            return null;
+        }
+
+        ProjectEntry e = projectDao.get(projectId);
+        if (e == null) {
+            throw new ProcessException(payload.getProcessKey(), "Project not found: " + projectId, Status.BAD_REQUEST);
+        }
+
+        return e;
+    }
+
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getWorkspaceCfg(Payload payload) {
+    private static Map<String, Object> getWorkspaceCfg(Payload payload) {
         Path workspace = payload.getHeader(Payload.WORKSPACE_DIR);
         Path src = workspace.resolve(Constants.Files.CONFIGURATION_FILE_NAME);
         if (!Files.exists(src)) {

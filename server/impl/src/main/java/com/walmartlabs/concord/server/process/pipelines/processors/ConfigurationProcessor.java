@@ -24,17 +24,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
-import com.walmartlabs.concord.runtime.loader.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.loader.model.ProcessDefinitionUtils;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.DefaultProcessConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationDao;
-import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
+import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -52,7 +52,6 @@ import java.util.*;
 public class ConfigurationProcessor implements PayloadProcessor {
 
     public static final AttachmentKey REQUEST_ATTACHMENT_KEY = AttachmentKey.register("request");
-    private static final List<String> DEFAULT_PROFILES = Collections.singletonList("default");
 
     private final ProjectDao projectDao;
     private final OrganizationDao orgDao;
@@ -91,14 +90,14 @@ public class ConfigurationProcessor implements PayloadProcessor {
         Map<String, Object> payloadCfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
 
         // determine the active profile names
-        List<String> activeProfiles = getActiveProfiles(ImmutableList.of(payloadCfg, attachedCfg, workspaceCfg, projectCfg, orgCfg));
+        List<String> activeProfiles = ProcessConfigurationUtils.getActiveProfiles(payloadCfg, attachedCfg, workspaceCfg, projectCfg, orgCfg);
         payload = payload.putHeader(Payload.ACTIVE_PROFILES, activeProfiles);
 
         // merged profile data
         Map<String, Object> profileCfg = getProfileCfg(payload, activeProfiles);
 
         // automatically provided variables
-        Map<String, Object> providedCfg = getProvidedCfg(payload, projectEntry);
+        Map<String, Object> providedCfg = ProcessConfigurationUtils.prepareProvidedCfg(payload, projectEntry);
 
         // configuration from the policy
         Map<String, Object> policyCfg = getPolicyCfg(payload);
@@ -208,108 +207,5 @@ public class ConfigurationProcessor implements PayloadProcessor {
         } catch (IOException e) {
             throw new ProcessException(payload.getProcessKey(), "Invalid request data format", e, Status.BAD_REQUEST);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<String> getActiveProfiles(List<Map<String, Object>> mm) {
-        for (Map<String, Object> m : mm) {
-            Object o = m.get(Constants.Request.ACTIVE_PROFILES_KEY);
-            if (o == null) {
-                continue;
-            }
-
-            if (o instanceof String) {
-                String s = (String) o;
-                String[] as = s.trim().split(",");
-                return Arrays.asList(as);
-            } else if (o instanceof List) {
-                return (List<String>) o;
-            } else {
-                throw new IllegalArgumentException("Invalid '" + Constants.Request.ACTIVE_PROFILES_KEY +
-                        "' value. Expected a JSON array or a comma-delimited list of profiles, got: " + o);
-            }
-        }
-
-        return DEFAULT_PROFILES;
-    }
-
-    /**
-     * Creates a process {@code configuration} object with variables that
-     * are automatically provided by Concord for any process.
-     * <p/>
-     * Created values should be applied last (or before the configuration from a policy)
-     * to avoid users from changing them via request parameters.
-     */
-    public static Map<String, Object> getProvidedCfg(Payload payload, ProjectEntry projectEntry) {
-        Map<String, Object> args = new HashMap<>();
-
-        // TODO verify that all "provided" variables are set here and only here
-
-        UUID parentInstanceId = payload.getHeader(Payload.PARENT_INSTANCE_ID);
-        if (parentInstanceId != null) {
-            args.put(Constants.Request.PARENT_INSTANCE_ID_KEY, parentInstanceId.toString());
-        }
-
-        args.put(Constants.Request.PROCESS_INFO_KEY, createProcessInfo(payload));
-        args.put(Constants.Request.PROJECT_INFO_KEY, createProjectInfo(payload, projectEntry));
-
-        return Collections.singletonMap(Constants.Request.ARGUMENTS_KEY, args);
-    }
-
-    private static Map<String, Object> createProjectInfo(Payload payload, ProjectEntry projectEntry) {
-        if (projectEntry == null) {
-            Map<String, Object> m = new HashMap<>();
-            m.put("orgId", OrganizationManager.DEFAULT_ORG_ID.toString());
-            m.put("orgName", OrganizationManager.DEFAULT_ORG_NAME);
-            return m;
-        }
-
-        Map<String, Object> m = new HashMap<>();
-        m.put("orgId", projectEntry.getOrgId());
-        m.put("orgName", projectEntry.getOrgName());
-        m.put("projectId", projectEntry.getId());
-        m.put("projectName", projectEntry.getName());
-
-        RepositoryProcessor.RepositoryInfo r = payload.getHeader(RepositoryProcessor.REPOSITORY_INFO_KEY);
-        if (r != null) {
-            m.put("repoId", r.getId());
-            m.put("repoName", r.getName());
-            m.put("repoUrl", r.getUrl());
-            m.put("repoBranch", r.getBranch());
-            m.put("repoPath", r.getPath());
-            RepositoryProcessor.CommitInfo ci = r.getCommitInfo();
-            if (ci != null) {
-                m.put("repoCommitId", ci.getId());
-                m.put("repoCommitAuthor", ci.getAuthor());
-                m.put("repoCommitMessage", escapeExpression(ci.getMessage()));
-            }
-        }
-
-        return m;
-    }
-
-    private static Map<String, Object> createProcessInfo(Payload payload) {
-        Map<String, Object> processInfo = new HashMap<>();
-
-        String token = payload.getHeader(Payload.SESSION_TOKEN);
-        if (token != null) {
-            // TODO rename to sessionToken?
-            processInfo.put("sessionKey", token);
-        }
-
-        Collection<String> activeProfiles = payload.getHeader(Payload.ACTIVE_PROFILES);
-        if (activeProfiles == null) {
-            activeProfiles = Collections.emptyList();
-        }
-        processInfo.put("activeProfiles", activeProfiles);
-
-        return processInfo;
-    }
-
-    private static String escapeExpression(String what) {
-        if (what == null) {
-            return null;
-        }
-        return what.replaceAll("\\$\\{", "\\\\\\${");
     }
 }

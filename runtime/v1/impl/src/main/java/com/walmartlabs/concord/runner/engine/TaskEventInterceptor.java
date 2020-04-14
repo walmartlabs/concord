@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runner.ContextUtils;
-import com.walmartlabs.concord.runtime.common.cfg.EventConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
@@ -117,7 +116,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
     }
 
     private List<VariableMapping> getInParams(Context ctx, AbstractElement element) {
-        if (!cfg.recordTaskInVars()) {
+        if (!cfg.isRecordTaskInVars()) {
             return Collections.emptyList();
         }
 
@@ -130,11 +129,11 @@ public class TaskEventInterceptor implements TaskInterceptor {
             return null;
         }
 
-        return convertParams(ctx, t.getIn(), cfg.inVarsBlacklist());
+        return convertParams(ctx, t.getIn(), cfg.getInVarsBlacklist());
     }
 
     private List<VariableMapping> getOutParams(Context ctx, AbstractElement element) {
-        if (!cfg.recordTaskOutVars()) {
+        if (!cfg.isRecordTaskOutVars()) {
             return Collections.emptyList();
         }
 
@@ -147,7 +146,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
             return null;
         }
 
-        return convertParams(ctx, t.getOut(), cfg.outVarsBlacklist());
+        return convertParams(ctx, t.getOut(), cfg.getOutVarsBlacklist());
     }
 
     private static ElementEventProcessor.ElementEvent buildEvent(Context ctx) {

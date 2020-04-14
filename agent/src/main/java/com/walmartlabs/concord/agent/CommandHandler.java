@@ -75,7 +75,12 @@ public class CommandHandler implements Runnable {
     }
 
     private CommandResponse take() throws Exception {
-        return queueClient.<CommandResponse>request(new CommandRequest(agentId)).get();
+        try {
+            return queueClient.<CommandResponse>request(new CommandRequest(agentId)).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
     }
 
     private void execute(CommandResponse cmd) {

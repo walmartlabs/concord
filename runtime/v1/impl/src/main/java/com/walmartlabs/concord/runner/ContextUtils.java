@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runner;
  * =====
  */
 
-import com.walmartlabs.concord.project.InternalConstants;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.Variables;
 
@@ -30,28 +30,30 @@ public final class ContextUtils {
 
     @SuppressWarnings("unchecked")
     public static String getSessionToken(Context ctx) {
-        Map<String, Object> processInfo = (Map<String, Object>) ctx.getVariable(InternalConstants.Request.PROCESS_INFO_KEY);
+        Map<String, Object> processInfo = (Map<String, Object>) ctx.getVariable(Constants.Request.PROCESS_INFO_KEY);
         if (processInfo == null) {
-            throw new IllegalArgumentException("Can't find process metadata in the context: " + ctx.getVariableNames());
+            throw new IllegalArgumentException("Can't find process info in the context: " + ctx.getVariableNames());
         }
 
-        return assertSessionKey(processInfo);
+        return assertSessionToken(processInfo);
     }
 
     @SuppressWarnings("unchecked")
     public static String getSessionToken(Variables variables) {
-        Map<String, Object> processInfo = (Map<String, Object>) variables.getVariable(InternalConstants.Request.PROCESS_INFO_KEY);
+        Map<String, Object> processInfo = (Map<String, Object>) variables.getVariable(Constants.Request.PROCESS_INFO_KEY);
         if (processInfo == null) {
-            throw new IllegalArgumentException("Can't find process metadata in the variables: " + variables.getVariableNames());
+            throw new IllegalArgumentException("Can't find process info in the variables: " + variables.getVariableNames());
         }
-        return assertSessionKey(processInfo);
+
+        return assertSessionToken(processInfo);
     }
 
-    private static String assertSessionKey(Map<String, Object> processInfo) {
-        String result = (String) processInfo.get("sessionKey");
+    private static String assertSessionToken(Map<String, Object> processInfo) {
+        String result = (String) processInfo.get("sessionKey"); // TODO rename to sessionToken?
         if (result == null) {
-            throw new IllegalArgumentException("Session key not found in the process info: " + processInfo);
+            throw new IllegalArgumentException("Can't determine the 'sessionToken' value.");
         }
+
         return result;
     }
 
