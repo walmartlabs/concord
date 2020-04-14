@@ -20,36 +20,18 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.walmartlabs.concord.server.IsoDateParam;
-import com.walmartlabs.concord.server.org.OrganizationEntry;
-import com.walmartlabs.concord.server.org.OrganizationManager;
-import com.walmartlabs.concord.server.org.ResourceAccessLevel;
-import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
-import com.walmartlabs.concord.server.process.queue.MetadataUtils;
-import com.walmartlabs.concord.server.process.queue.ProcessFilter;
-import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
+import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.server.HttpUtils;
+import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
+import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
+import com.walmartlabs.concord.server.process.queue.ProcessKeyCache;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
-import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
-import com.walmartlabs.concord.server.security.Permission;
-import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.security.UserPrincipal;
-import com.walmartlabs.concord.server.user.UserDao;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
-import org.immutables.value.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sonatype.siesta.Resource;
 import org.sonatype.siesta.ValidationErrorsException;
 
@@ -57,12 +39,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
-import java.sql.Timestamp;
-import java.util.*;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.UUID;
+
+import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
+import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 
 @Named
 @Singleton
@@ -70,13 +56,23 @@ import java.util.*;
 @Path("/api/v2/process")
 public class ProcessLogResourceV2 implements Resource {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessLogResourceV2.class);
-
-    private final ProcessLogsDao logsDao;
+    private final ProcessKeyCache processKeyCache;
+    private final ProcessManager processManager;
+    private final ProcessLogManager logManager;
+    private final ProcessLogAccessManager logAccessManager;
+    private final ProcessConfiguration processCfg;
 
     @Inject
-    public ProcessLogResourceV2(ProcessLogsDao logsDao) {
-        this.logsDao = logsDao;
+    public ProcessLogResourceV2(ProcessKeyCache processKeyCache,
+                                ProcessManager processManager,
+                                ProcessLogManager logManager,
+                                ProcessLogAccessManager logAccessManager,
+                                ProcessConfiguration processCfg) {
+        this.processKeyCache = processKeyCache;
+        this.processManager = processManager;
+        this.logManager = logManager;
+        this.logAccessManager = logAccessManager;
+        this.processCfg = processCfg;
     }
 
     /**
@@ -99,27 +95,85 @@ public class ProcessLogResourceV2 implements Resource {
             throw new ValidationErrorsException("'offset' must be a positive number or zero");
         }
 
-        ProcessKey processKey = assertLogAccess(instanceId);
+        ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
 
-        return logsDao.listSegments(instanceId, )
+        return logManager.listSegments(processKey, limit, offset);
     }
 
-    public enum LogSegmentStatus {
-        OK,
-        FAILED,
-        RUNNING
+    /**
+     * Retrieves a log segment' data.
+     */
+    @GET
+    @ApiOperation(value = "Retrieve the log")
+    @Path("/{id}/log/segment/{segmentId}/data")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @WithTimer
+    public Response data(@ApiParam @PathParam("id") UUID instanceId,
+                         @ApiParam @PathParam("segmentId") long segmentId,
+                         @HeaderParam("range") String rangeHeader) {
+
+        ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
+
+        HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
+
+        ProcessLog l = logManager.segmentData(processKey, segmentId, range.start(), range.end());
+        List<ProcessLogChunk> data = l.getChunks();
+        if (data.isEmpty()) {
+            int actualStart = range.start() != null ? range.start() : 0;
+            int actualEnd = range.end() != null ? range.end() : actualStart;
+            return Response.ok()
+                    .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
+                    .build();
+        }
+
+        ProcessLogChunk first = data.get(0);
+        int actualStart = first.getStart();
+
+        ProcessLogChunk last = data.get(data.size() - 1);
+        int actualEnd = last.getStart() + last.getData().length;
+
+        StreamingOutput out = output -> {
+            for (ProcessLogChunk e : data) {
+                output.write(e.getData());
+            }
+        };
+
+        return Response.ok(out)
+                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
+                .build();
     }
 
-    @Value.Immutable
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonSerialize(as = ImmutableLogSegment.class)
-    @JsonDeserialize(as = ImmutableLogSegment.class)
-    interface LogSegment {
+    /**
+     * Appends a process' log.
+     */
+    @POST
+    @Path("{id}/log/segment/{segmentId}/data")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @WithTimer
+    public void append(@ApiParam @PathParam("id") UUID instanceId,
+                       @ApiParam @PathParam("segmentId") long segmentId,
+                       InputStream data) {
+        ProcessKey processKey = assertProcessKey(instanceId);
 
-        UUID correlationId();
+        try {
+            byte[] ab = IOUtils.toByteArray(data);
+            int upper = logManager.log(processKey, segmentId, ab);
 
-        String name();
+            int logSizeLimit = processCfg.getLogSizeLimit();
+            if (upper >= logSizeLimit) {
+                logManager.error(processKey, "Maximum log size reached: {}. Process cancelled.", logSizeLimit);
+                processManager.kill(processKey);
+            }
+        } catch (IOException e) {
+            throw new ConcordApplicationException("Error while appending a log: " + e.getMessage());
+        }
+    }
 
-        LogSegmentStatus status();
+    private ProcessKey assertProcessKey(UUID instanceId) {
+        ProcessKey processKey = processKeyCache.get(instanceId);
+        if (processKey == null) {
+            throw new ConcordApplicationException("Process instance not found: " + instanceId, Response.Status.NOT_FOUND);
+        }
+        return processKey;
     }
 }

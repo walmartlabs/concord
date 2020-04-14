@@ -79,7 +79,7 @@ const split = (s: LogSegment, opts: LogProcessorOptions): LogSegment[] => {
     return result;
 };
 
-const processText = (s: string, { useLocalTime, showDate }: LogProcessorOptions): string => {
+export const processText = (s: string, { useLocalTime, showDate }: LogProcessorOptions): string => {
     s = processDate(s, useLocalTime, showDate);
     s = escapeHtml(s);
     s = processLinks(s);

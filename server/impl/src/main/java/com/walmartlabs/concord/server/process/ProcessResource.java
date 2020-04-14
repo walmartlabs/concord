@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.HttpUtils;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
@@ -38,6 +39,7 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryE
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
+import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
@@ -102,6 +104,7 @@ public class ProcessResource implements Resource {
     private final ProjectAccessManager projectAccessManager;
     private final ProcessConfiguration processCfg;
     private final ProcessLogManager logManager;
+    private final ProcessLogAccessManager logAccessManager;
     private final ProcessEventDao processEventDao;
 
     private final ProcessResourceV2 v2;
@@ -120,7 +123,7 @@ public class ProcessResource implements Resource {
                            ObjectMapper objectMapper,
                            ProcessConfiguration processCfg,
                            ProcessLogManager logManager,
-                           ProcessEventDao processEventDao,
+                           ProcessLogAccessManager logAccessManager, ProcessEventDao processEventDao,
                            ProcessResourceV2 v2) {
 
         this.processManager = processManager;
@@ -136,6 +139,7 @@ public class ProcessResource implements Resource {
         this.objectMapper = objectMapper;
         this.processCfg = processCfg;
         this.logManager = logManager;
+        this.logAccessManager = logAccessManager;
         this.processEventDao = processEventDao;
 
         this.v2 = v2;
@@ -797,40 +801,18 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
-                           @HeaderParam("range") String range) {
+                           @HeaderParam("range") String rangeHeader) {
 
         // check the permissions, logs can contain sensitive data
-        ProcessKey processKey = logManager.assertLogAccess(instanceId);
+        ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
 
-        Integer start = null;
-        Integer end = null;
+        HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
 
-        if (range != null && !range.trim().isEmpty()) {
-            if (!range.startsWith("bytes=")) {
-                throw new ConcordApplicationException("Invalid range header: " + range, Status.BAD_REQUEST);
-            }
-
-            String[] as = range.substring("bytes=".length()).split("-");
-            if (as.length > 0) {
-                try {
-                    start = Integer.parseInt(as[0]);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-
-            if (as.length > 1) {
-                try {
-                    end = Integer.parseInt(as[1]);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-        }
-
-        ProcessLog l = logsDao.get(processKey, start, end);
+        ProcessLog l = logsDao.get(processKey, range.start(), range.end());
         List<ProcessLogChunk> data = l.getChunks();
         if (data.isEmpty()) {
-            int actualStart = start != null ? start : 0;
-            int actualEnd = end != null ? end : actualStart;
+            int actualStart = range.start() != null ? range.start() : 0;
+            int actualEnd = range.end() != null ? range.end() : actualStart;
             return Response.ok()
                     .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                     .build();

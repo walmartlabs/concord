@@ -144,7 +144,8 @@ public class ProcessQueueDao extends AbstractDao {
 
     public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, Instant startAt,
                         Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
-                        Map<String, Object> meta, Imports imports, Map<String, Object> exclusive) {
+                        Map<String, Object> meta, Imports imports, Map<String, Object> exclusive,
+                        String runtime) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
@@ -181,6 +182,8 @@ public class ProcessQueueDao extends AbstractDao {
         if (exclusive != null && !exclusive.isEmpty()) {
             q.set(PROCESS_QUEUE.EXCLUSIVE, objectMapper.toJSONB(exclusive));
         }
+
+        q.set(PROCESS_QUEUE.RUNTIME, runtime);
 
         int i = q
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
