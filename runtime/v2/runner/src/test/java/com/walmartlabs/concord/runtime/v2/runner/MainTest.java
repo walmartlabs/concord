@@ -331,7 +331,8 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        start();
+        byte[] log = start();
+        assertLog(log, ".*this goes into the stdout.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
