@@ -93,6 +93,8 @@ public class Main {
     }
 
     public void execute() throws Exception {
+        log.info("execute -> start..."); // TODO just to test logging
+
         validate(cfg);
 
         Runner runner = new Runner.Builder()

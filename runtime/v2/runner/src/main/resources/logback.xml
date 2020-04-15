@@ -13,6 +13,20 @@
         </encoder>
     </appender>
 
+    <appender name="SEGMENTED_LOG" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator class="com.walmartlabs.concord.runtime.v2.runner.logging.TaskDiscriminator"/>
+        <sift>
+            <appender name="segment-${_concord_segment}" class="ch.qos.logback.core.FileAppender">
+                <file>/tmp/segment-${_concord_segment}.log</file>
+                <append>false</append>
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                    <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
+                    <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}</pattern>
+                </layout>
+            </appender>
+        </sift>
+    </appender>
+
     <logger name="io.takari.bpm.state" level="ERROR"/>
 
     <logger name="processLog" level="INFO" additivity="false">
@@ -22,6 +36,6 @@
     <logger name="com.walmartlabs.concord.plugins.log" level="${logLevel:-INFO}"/>
 
     <root level="INFO">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SEGMENTED_LOG"/>
     </root>
 </configuration>
