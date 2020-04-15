@@ -324,6 +324,16 @@ public class MainTest {
         assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error in <eval> at line number 1 at column number 0.*");
     }
 
+    @Test
+    public void testLogging() throws Exception {
+        deploy("logging");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        start();
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

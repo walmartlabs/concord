@@ -36,6 +36,8 @@ import com.walmartlabs.concord.svm.ThreadId;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Calls the specified task. Responsible for preparing the task's input
@@ -69,12 +71,42 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        Serializable result = ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input)));
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<Serializable> resultRef = new AtomicReference<>();
+
+        ThreadGroup threadGroup = new TaskThreadGroup(call.getName(), call.getName());
+        new Thread(threadGroup, () -> {
+            Serializable out = ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input)));
+            resultRef.set(out);
+            latch.countDown();
+        }).start();
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        Serializable result = resultRef.get();
 
         String out = opts.out();
         if (out != null) {
             GlobalVariables gv = runtime.getService(GlobalVariables.class);
             gv.put(out, result); // TODO a custom result structure
+        }
+    }
+
+    public static final class TaskThreadGroup extends ThreadGroup {
+
+        private final String segmentId;
+
+        public TaskThreadGroup(String name, String segmentId) {
+            super(name);
+            this.segmentId = segmentId;
+        }
+
+        public String getSegmentId() {
+            return segmentId;
         }
     }
 }
