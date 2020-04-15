@@ -36,8 +36,7 @@ import com.walmartlabs.concord.svm.ThreadId;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.*;
 
 /**
  * Calls the specified task. Responsible for preparing the task's input
@@ -71,23 +70,9 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<Serializable> resultRef = new AtomicReference<>();
-
         ThreadGroup threadGroup = new TaskThreadGroup(call.getName(), call.getName());
-        new Thread(threadGroup, () -> {
-            Serializable out = ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input)));
-            resultRef.set(out);
-            latch.countDown();
-        }).start();
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        Serializable result = resultRef.get();
+        Serializable result = executeInThreadGroup(threadGroup, "thread-" + call.getName(),
+                () -> ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input))));
 
         String out = opts.out();
         if (out != null) {
@@ -96,17 +81,42 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         }
     }
 
-    public static final class TaskThreadGroup extends ThreadGroup {
+    /**
+     * Executes the {@link Callable} in the specified {@link ThreadGroup}.
+     * A bit expensive as it is creates a new thread.
+     */
+    private static <V> V executeInThreadGroup(ThreadGroup group, String threadName, Callable<V> callable) {
+        ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadGroupAwareThreadFactory(group, threadName));
+        Future<V> result = executor.submit(callable);
+        try {
+            return result.get();
+        } catch (InterruptedException | ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                if (cause instanceof RuntimeException) {
+                    throw (RuntimeException) cause;
+                } else {
+                    throw new RuntimeException(cause);
+                }
+            }
 
-        private final String segmentId;
+            throw new RuntimeException(e);
+        }
+    }
 
-        public TaskThreadGroup(String name, String segmentId) {
-            super(name);
-            this.segmentId = segmentId;
+    private static final class ThreadGroupAwareThreadFactory implements ThreadFactory {
+
+        private final ThreadGroup group;
+        private final String threadName;
+
+        private ThreadGroupAwareThreadFactory(ThreadGroup group, String threadName) {
+            this.group = group;
+            this.threadName = threadName;
         }
 
-        public String getSegmentId() {
-            return segmentId;
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(group, r, threadName);
         }
     }
 }
