@@ -31,11 +31,14 @@ import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
+import com.walmartlabs.concord.runtime.common.cfg.ImmutableRunnerConfiguration;
+import com.walmartlabs.concord.runtime.common.cfg.LoggingConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
@@ -49,6 +52,8 @@ import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
@@ -58,7 +63,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -75,6 +84,8 @@ public class MainTest {
     private Module testServices;
 
     private byte[] lastLog;
+
+    private Path segmentedLogDir;
 
     @Before
     public void setUp() throws IOException {
@@ -108,6 +119,8 @@ public class MainTest {
                 taskCallListeners.addBinding().to(TaskResultListener.class);
             }
         };
+
+        segmentedLogDir = Files.createTempDirectory("segmentedLog");
     }
 
     @After
@@ -115,6 +128,12 @@ public class MainTest {
         if (workDir != null) {
             IOUtils.deleteRecursively(workDir);
         }
+
+        if (segmentedLogDir != null) {
+            IOUtils.deleteRecursively(segmentedLogDir);
+        }
+
+        LoggingConfigurator.reset();
     }
 
     @Test
@@ -126,7 +145,7 @@ public class MainTest {
                 .putDefaultTaskVariables("testDefaults", Collections.singletonMap("a", "a-value"))
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
         assertLog(log, ".*" + Pattern.quote("defaultsMap:{a=a-value}") + ".*");
         assertLog(log, ".*" + Pattern.quote("defaultsTyped:Defaults{a=a-value}") + ".*");
@@ -140,7 +159,7 @@ public class MainTest {
 
         save(ProcessConfiguration.builder().build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*Before.*");
 
         List<Form> forms = formService.list();
@@ -166,7 +185,7 @@ public class MainTest {
         save(ProcessConfiguration.builder().build());
 
         try {
-            start();
+            run();
             fail("must fail");
         } catch (Exception e) {
             assertTrue(e.getMessage().contains("not found: unknown"));
@@ -181,7 +200,7 @@ public class MainTest {
                 .putArguments("name", "Concord")
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*Hello, Concord!.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
@@ -195,7 +214,7 @@ public class MainTest {
         save(ProcessConfiguration.builder().build());
 
         try {
-            start();
+            run();
             fail("exception expected");
         } catch (Exception e) {
             assertEquals("Found forbidden tasks", e.getMessage());
@@ -211,7 +230,7 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*Hello, " + Pattern.quote("${myFavoriteExpression}") + "!.*");
     }
 
@@ -223,7 +242,7 @@ public class MainTest {
                 .putArguments("myVar", "1")
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*it's clearly non-zero.*");
 
         verify(processStatusCallback, times(1)).onRunning(eq(instanceId));
@@ -237,7 +256,7 @@ public class MainTest {
                 .putArguments("myVar", "red")
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*It's red.*");
     }
 
@@ -249,7 +268,7 @@ public class MainTest {
                 .putArguments("myVar", "red1")
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*I don't know what it is.*");
     }
 
@@ -261,7 +280,7 @@ public class MainTest {
                 .putArguments("myVar", "red1")
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*I don't know what it is.*");
     }
 
@@ -274,7 +293,7 @@ public class MainTest {
                 .putArguments("aKnownValue", "red")
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*Yes, I recognize this red.*");
     }
 
@@ -287,7 +306,7 @@ public class MainTest {
                 .putArguments("aKnownValue", "red")
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*Nope.*");
     }
 
@@ -298,7 +317,7 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*x: 1.*");
     }
 
@@ -309,7 +328,7 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*x: 1.*");
     }
 
@@ -320,19 +339,28 @@ public class MainTest {
         save(ProcessConfiguration.builder()
                 .build());
 
-        byte[] log = start();
+        byte[] log = run();
         assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error in <eval> at line number 1 at column number 0.*");
     }
 
     @Test
-    public void testLogging() throws Exception {
+    public void testSegmentedLogging() throws Exception {
         deploy("logging");
 
         save(ProcessConfiguration.builder()
                 .build());
 
-        byte[] log = start();
-        assertLog(log, ".*this goes into the stdout.*");
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
+                        .build())
+                .build();
+
+        byte[] log = run(runnerCfg);
+        assertLog(log, ".*this goes directly into the stdout.*");
+
+        List<Path> paths = Files.list(segmentedLogDir).collect(Collectors.toList());
+        assertNotEquals(0, paths.size());
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -346,10 +374,6 @@ public class MainTest {
                 .build();
     }
 
-    private byte[] start() throws Exception {
-        return run();
-    }
-
     private byte[] resume(String eventName, ProcessConfiguration cfg) throws Exception {
         StateManager.saveResumeEvent(workDir, eventName); // TODO use interface
         if (cfg != null) {
@@ -359,12 +383,20 @@ public class MainTest {
     }
 
     private byte[] run() throws Exception {
-        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .agentId(UUID.randomUUID().toString())
+        return run(null);
+    }
+
+    private byte[] run(RunnerConfiguration baseCfg) throws Exception {
+        ImmutableRunnerConfiguration.Builder runnerCfg = RunnerConfiguration.builder();
+
+        if (baseCfg != null) {
+            runnerCfg.from(baseCfg);
+        }
+
+        runnerCfg.agentId(UUID.randomUUID().toString())
                 .api(ApiConfiguration.builder()
                         .baseUrl("http://localhost:8001") // TODO make optional?
-                        .build())
-                .build();
+                        .build());
 
         PrintStream oldOut = System.out;
 
@@ -375,7 +407,7 @@ public class MainTest {
         byte[] log;
         try {
             Injector injector = new InjectorFactory(new WorkingDirectory(workDir),
-                    runnerCfg,
+                    runnerCfg.build(),
                     () -> processConfiguration,
                     testServices)
                     .create();
@@ -456,6 +488,34 @@ public class MainTest {
         @Override
         public Serializable execute(TaskContext ctx) throws Exception {
             return new HashMap<>(ctx.input());
+        }
+    }
+
+    @Named("loggingExample")
+    static class LoggingExampleTask implements Task {
+
+        private static final Logger log = LoggerFactory.getLogger(LoggingExampleTask.class);
+
+        @Override
+        public Serializable execute(TaskContext ctx) throws Exception {
+            log.info("Hello, I'm a task!");
+
+            System.out.println("this goes directly into the stdout");
+
+            ExecutorService executor = Executors.newCachedThreadPool();
+
+            for (int i = 0; i < 5; i++) {
+                final int n = i;
+                executor.submit(() -> {
+                    Logger log = LoggerFactory.getLogger("taskThread" + n);
+                    log.info("Hey, I'm a task thread #" + n);
+                });
+            }
+
+            executor.shutdown();
+            executor.awaitTermination(100, TimeUnit.SECONDS);
+
+            return null;
         }
     }
 }
