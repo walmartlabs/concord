@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -226,7 +227,8 @@ public class OrganizationManager {
 
         if (owner.username() != null) {
             UserType t = owner.userType() != null ? owner.userType() : UserPrincipal.assertCurrent().getType();
-            return userManager.getOrCreate(owner.username(), owner.userDomain(), t);
+            return userManager.get(owner.username(), owner.userDomain(), t)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }
 
         return defaultOwner;

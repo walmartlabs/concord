@@ -237,7 +237,8 @@ public class JsonStoreManager {
         }
 
         if (owner.username() != null) {
-            return userManager.getOrCreate(owner.username(), owner.userDomain(), UserType.LDAP);
+            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }
 
         return defaultOwner;

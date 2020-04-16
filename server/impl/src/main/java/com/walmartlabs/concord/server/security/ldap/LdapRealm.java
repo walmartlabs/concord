@@ -24,6 +24,7 @@ import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -117,7 +118,9 @@ public class LdapRealm extends AbstractLdapRealm {
 
         // TODO merge getOrCreate+update operations into a single one (only for this use case)
 
-        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP);
+        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + ldapPrincipal.getUsername()));
+
         if (u.isDisabled()) {
             throw new AuthenticationException("User account '" + u.getName() + "' is disabled");
         }
