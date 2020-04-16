@@ -30,7 +30,6 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ThreadStatus;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,9 +62,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
-
-        configureLogging(runnerCfg);
-
+        
         // create the inject with all dependencies and services available before
         // the actual process' working directory is ready to go
         // it allows us to load all dependencies and have them available
@@ -125,30 +122,6 @@ public class Main {
         } else {
             StateManager.cleanupState(workDir.getValue()); // TODO make it an interface
         }
-    }
-
-    /**
-     * Configures the logger. Must be called as early as possible, before Logback is initialized.
-     */
-    public static void configureLogging(RunnerConfiguration cfg) throws IOException {
-        String segmentedLogDir = cfg.logging().segmentedLogDir();
-        if (segmentedLogDir == null) {
-            return;
-        }
-
-        System.out.println("Using segmented logs: " + segmentedLogDir);
-
-        Path dst = Paths.get(segmentedLogDir);
-        if (!Files.exists(dst)) {
-            try {
-                Files.createDirectories(dst);
-            } catch (IOException e) {
-                throw new IOException("Can't create the destination directory for the segmented log: " + segmentedLogDir, e);
-            }
-        }
-
-        System.setProperty("logback.configurationFile", "segmented_logback.xml");
-        System.setProperty("SEGMENTED_LOG_DIR", dst.toAbsolutePath().toString());
     }
 
     private static void validate(ProcessConfiguration cfg) {
