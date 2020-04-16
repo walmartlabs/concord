@@ -1,8 +1,11 @@
 <configuration>
+    <property name="OUTPUT_PATTERN"
+              value="%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}"/>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
-            <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}</pattern>
+            <pattern>${OUTPUT_PATTERN}</pattern>
         </encoder>
     </appender>
 
@@ -11,20 +14,6 @@
             <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
             <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} %msg%n</pattern>
         </encoder>
-    </appender>
-
-    <appender name="SEGMENTED_LOG" class="ch.qos.logback.classic.sift.SiftingAppender">
-        <discriminator class="com.walmartlabs.concord.runtime.v2.runner.logging.TaskDiscriminator"/>
-        <sift>
-            <appender name="segment-${_concord_segment}" class="ch.qos.logback.core.FileAppender">
-                <file>/tmp/segment-${_concord_segment}.log</file>
-                <append>false</append>
-                <layout class="ch.qos.logback.classic.PatternLayout">
-                    <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->
-                    <pattern>%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}</pattern>
-                </layout>
-            </appender>
-        </sift>
     </appender>
 
     <logger name="io.takari.bpm.state" level="ERROR"/>
@@ -36,6 +25,6 @@
     <logger name="com.walmartlabs.concord.plugins.log" level="${logLevel:-INFO}"/>
 
     <root level="INFO">
-        <appender-ref ref="SEGMENTED_LOG"/>
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

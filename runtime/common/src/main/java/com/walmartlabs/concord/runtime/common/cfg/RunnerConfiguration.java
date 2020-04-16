@@ -55,10 +55,20 @@ public interface RunnerConfiguration {
 
     /**
      * Default logging level.
+     * @deprecated used only in the runtime v1.
      */
     @Value.Default
+    @Deprecated
     default String logLevel() {
         return "INFO";
+    }
+
+    /**
+     * Logging parameters used in the runtime.
+     */
+    @Value.Default
+    default LoggingConfiguration logging() {
+        return LoggingConfiguration.builder().build();
     }
 
     /**

@@ -27,9 +27,9 @@ import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ThreadStatus;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -44,21 +44,27 @@ import java.util.Set;
 
 public class Main {
 
-    private static final Logger log = LoggerFactory.getLogger(Main.class);
-
     private final Injector injector;
-    private final ProcessConfiguration cfg;
+    private final RunnerConfiguration runnerCfg;
+    private final ProcessConfiguration processCfg;
     private final WorkingDirectory workDir;
 
     @Inject
-    public Main(Injector injector, ProcessConfiguration cfg, WorkingDirectory workDir) {
+    public Main(Injector injector,
+                RunnerConfiguration runnerCfg,
+                ProcessConfiguration processCfg,
+                WorkingDirectory workDir) {
+
         this.injector = injector;
-        this.cfg = cfg;
+        this.runnerCfg = runnerCfg;
+        this.processCfg = processCfg;
         this.workDir = workDir;
     }
 
     public static void main(String[] args) throws Exception {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
+
+        configureLogging(runnerCfg);
 
         // create the inject with all dependencies and services available before
         // the actual process' working directory is ready to go
@@ -72,7 +78,7 @@ public class Main {
 
             System.exit(0);
         } catch (Throwable t) {
-            log.error("main -> unhandled exception", t);
+            t.printStackTrace(System.err);
             System.exit(1);
         }
     }
@@ -93,22 +99,25 @@ public class Main {
     }
 
     public void execute() throws Exception {
-        log.info("execute -> start..."); // TODO just to test logging
+        validate(processCfg);
 
-        validate(cfg);
+        String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
+        if (segmentedLogDir != null) {
+            LoggingConfigurator.configure(segmentedLogDir);
+        }
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
                 .build();
 
-        Map<String, Object> processArgs = prepareProcessArgs(cfg);
+        Map<String, Object> processArgs = prepareProcessArgs(processCfg);
 
         ProcessSnapshot snapshot;
         Set<String> events = StateManager.readResumeEvents(workDir.getValue()); // TODO make it an interface
         if (events == null || events.isEmpty()) {
-            snapshot = start(runner, cfg, processArgs);
+            snapshot = start(runner, processCfg, processArgs);
         } else {
-            snapshot = resume(runner, workDir.getValue(), cfg, processArgs, events);
+            snapshot = resume(runner, workDir.getValue(), processCfg, processArgs, events);
         }
 
         if (isSuspended(snapshot)) {
@@ -116,6 +125,30 @@ public class Main {
         } else {
             StateManager.cleanupState(workDir.getValue()); // TODO make it an interface
         }
+    }
+
+    /**
+     * Configures the logger. Must be called as early as possible, before Logback is initialized.
+     */
+    public static void configureLogging(RunnerConfiguration cfg) throws IOException {
+        String segmentedLogDir = cfg.logging().segmentedLogDir();
+        if (segmentedLogDir == null) {
+            return;
+        }
+
+        System.out.println("Using segmented logs: " + segmentedLogDir);
+
+        Path dst = Paths.get(segmentedLogDir);
+        if (!Files.exists(dst)) {
+            try {
+                Files.createDirectories(dst);
+            } catch (IOException e) {
+                throw new IOException("Can't create the destination directory for the segmented log: " + segmentedLogDir, e);
+            }
+        }
+
+        System.setProperty("logback.configurationFile", "segmented_logback.xml");
+        System.setProperty("SEGMENTED_LOG_DIR", dst.toAbsolutePath().toString());
     }
 
     private static void validate(ProcessConfiguration cfg) {
