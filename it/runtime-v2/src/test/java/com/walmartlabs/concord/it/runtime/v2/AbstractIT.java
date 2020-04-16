@@ -23,6 +23,7 @@ package com.walmartlabs.concord.it.runtime.v2;
 import ca.ibodrov.concord.testcontainers.Concord;
 import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.Rule;
+import org.testcontainers.images.PullPolicy;
 
 import java.io.IOException;
 import java.net.URI;
@@ -36,8 +37,12 @@ public abstract class AbstractIT {
             .pathToRunnerV1(null)
             .pathToRunnerV2("target/runner-v2.jar")
             .localMode(Boolean.parseBoolean(System.getProperty("it.local.mode")))
+            .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
+            .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
+            .pullPolicy(PullPolicy.defaultPolicy())
             .streamServerLogs(true)
-            .streamAgentLogs(true);
+            .streamAgentLogs(true)
+            .useLocalMavenRepository(true);
 
     protected byte[] archive(URI uri) throws IOException {
         return ITUtils.archive(uri);

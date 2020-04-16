@@ -93,6 +93,8 @@
         <slf4j.version>1.7.25</slf4j.version>
         <sshd.version>1.6.0</sshd.version>
         <swagger.version>1.5.20</swagger.version>
+        <testcontainers.version>1.13.0</testcontainers.version>
+        <testcontainers.concord.version>0.0.7</testcontainers.concord.version>
         <threetenbp.version>1.3.5</threetenbp.version>
         <wiremock.version>2.26.1</wiremock.version>
     </properties>
@@ -1014,6 +1016,16 @@
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-clients</artifactId>
                 <version>${kafka.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.ibodrov.concord</groupId>
+                <artifactId>testcontainers-concord</artifactId>
+                <version>${testcontainers.concord.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
