@@ -15,8 +15,9 @@
 
     <properties>
         <it.local.mode>false</it.local.mode>
-        <testcontainers.concord.version>0.0.3</testcontainers.concord.version>
         <maxParallelTestThreads>3</maxParallelTestThreads>
+        <server.image>walmartlabs/concord-server</server.image>
+        <agent.image>walmartlabs/concord-agent</agent.image>
         <ryuk.image>quay.io/testcontainers/ryuk:0.2.3</ryuk.image>
     </properties>
 
@@ -51,7 +52,12 @@
         <dependency>
             <groupId>ca.ibodrov.concord</groupId>
             <artifactId>testcontainers-concord</artifactId>
-            <version>${testcontainers.concord.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -99,6 +105,8 @@
                     <skipTests>${skip.it.tests}</skipTests>
                     <systemProperties>
                         <it.local.mode>${it.local.mode}</it.local.mode>
+                        <server.image>${server.image}</server.image>
+                        <agent.image>${agent.image}</agent.image>
                     </systemProperties>
                 </configuration>
             </plugin>
