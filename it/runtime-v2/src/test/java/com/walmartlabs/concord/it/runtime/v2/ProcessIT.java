@@ -29,7 +29,6 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(ParallelRunner.class)
 public class ProcessIT extends AbstractIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

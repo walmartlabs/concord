@@ -20,9 +20,7 @@ package com.walmartlabs.concord.it.runtime.v1;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import com.walmartlabs.concord.it.common.ITUtils;
-import org.junit.ClassRule;
 
 import java.io.IOException;
 import java.net.URI;
@@ -30,10 +28,6 @@ import java.net.URI;
 public abstract class AbstractIT {
 
     protected static final long DEFAULT_TEST_TIMEOUT = 120000;
-
-    @ClassRule
-    public static Concord concord = new Concord()
-            .localMode(true);
 
     protected byte[] archive(URI uri) throws IOException {
         return ITUtils.archive(uri);
