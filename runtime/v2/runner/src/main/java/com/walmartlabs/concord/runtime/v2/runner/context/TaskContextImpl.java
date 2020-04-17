@@ -65,8 +65,8 @@ public class TaskContextImpl implements TaskContext {
     }
 
     @Override
-    public <T> T interpolate(Object v, Class<T> type) {
-        return delegate.interpolate(v, type);
+    public <T> T eval(Object v, Class<T> type) {
+        return delegate.eval(v, type);
     }
 
     @Override

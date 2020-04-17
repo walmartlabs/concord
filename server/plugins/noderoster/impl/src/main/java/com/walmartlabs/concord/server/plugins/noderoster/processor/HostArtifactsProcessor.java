@@ -63,6 +63,7 @@ public class HostArtifactsProcessor implements Processor {
     }
 
     @Override
+    @WithTimer
     public void process(List<AnsibleEvent> events) {
         List<HostArtifactItem> items = new ArrayList<>();
 
@@ -217,11 +218,11 @@ public class HostArtifactsProcessor implements Processor {
             this.partitioner = partitioner;
         }
 
+        @WithTimer
         public void insert(List<HostArtifactItem> items) {
             tx(tx -> insert(tx, items));
         }
 
-        @WithTimer
         private void insert(DSLContext tx, List<HostArtifactItem> items) {
             NodeRosterHostArtifacts h = NODE_ROSTER_HOST_ARTIFACTS.as("ha");
 

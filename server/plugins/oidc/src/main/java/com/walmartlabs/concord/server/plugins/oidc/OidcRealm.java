@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.plugins.oidc;
  * =====
  */
 
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -75,8 +76,10 @@ public class OidcRealm extends AuthorizingRealm {
 
         OidcProfile profile = t.getProfile();
 
-        // TODO replace with a single method?
-        UserEntry u = userManager.getOrCreate(profile.getEmail(), null, UserType.LOCAL);
+        // TODO replace getOrCreate+update with a single method?
+
+        UserEntry u = userManager.getOrCreate(profile.getEmail(), null, UserType.LOCAL)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + profile.getEmail()));
         userManager.update(u.getId(), profile.getDisplayName(), profile.getEmail(), null, false, null);
 
         UserPrincipal userPrincipal = new UserPrincipal(REALM_NAME, u);

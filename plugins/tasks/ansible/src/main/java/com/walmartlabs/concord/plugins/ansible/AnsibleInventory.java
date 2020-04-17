@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,7 @@ public class AnsibleInventory {
     @SuppressWarnings("unchecked")
     private List<Path> writeInventory(Map<String, Object> args) throws IOException {
         // try an "inline" inventory
-        Object v = args.get(TaskParams.INVENTORY_KEY.getKey());
+        Object v = MapUtils.get(args, TaskParams.INVENTORY_KEY.getKey(), null);
 
         // check if there are multiple entries
         if (v instanceof Collection) {
@@ -137,15 +138,20 @@ public class AnsibleInventory {
         p = workDir.resolve(TaskParams.DYNAMIC_INVENTORY_FILE_NAME.getKey());
         if (Files.exists(p)) {
             Utils.updateScriptPermissions(p);
-            log.info("Using a dynamic inventory script uploaded separately: {}", p);
+            log.warn("Using a deprecated inventory source. Please use '{}', '{}' or '{}' parameter",
+                    TaskParams.INVENTORY_KEY.getKey(), TaskParams.INVENTORY_FILE_KEY.getKey(),
+                    TaskParams.DYNAMIC_INVENTORY_FILE_KEY.getKey());
             return Collections.singletonList(p);
         }
 
         // we can't continue without an inventory
-        throw new IOException("Inventory is not defined");
+        throw new IOException("'" + TaskParams.INVENTORY_KEY.getKey() + "', '" + TaskParams.INVENTORY_FILE_KEY.getKey()
+                + "' or '" + TaskParams.DYNAMIC_INVENTORY_FILE_KEY.getKey() + "' parameter is required");
     }
 
     private Path processInventoryObject(Map<String, Object> m) throws IOException {
+        validateInventoryObject(m);
+
         Path p = createInventoryFile(tmpDir, m);
         Utils.updateScriptPermissions(p);
         return p;
@@ -178,5 +184,41 @@ public class AnsibleInventory {
         }
 
         return p;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void validateInventoryObject(Map<String, Object> m) {
+        if (m.isEmpty()) {
+            throw new IllegalArgumentException("'" + TaskParams.INVENTORY_KEY.getKey() + "' object is empty. " +
+                    "Check the task's input parameters.");
+        }
+
+        for (Map.Entry<String, Object> e : m.entrySet()) {
+            String hostGroup = e.getKey();
+
+            Object v = e.getValue();
+            if (v == null) {
+                throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY.getKey() + "' value. " +
+                        "The '" + hostGroup + "' host group is empty. Check the task's input parameters.");
+            }
+
+            if (!(v instanceof Map)) {
+                throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY.getKey() + "' value. " +
+                        "The '" + hostGroup + "' host group must be a valid YAML/JSON object (Java Map instance), got: " + v + ". " +
+                        "Check the task's input parameters.");
+            }
+
+            Map<String, Object> mm = (Map<String, Object>) v;
+            Object vv = mm.get("hosts");
+            if (vv == null) {
+                continue;
+            }
+
+            if (!(vv instanceof List)) {
+                throw new IllegalArgumentException("Invalid '" + TaskParams.INVENTORY_KEY.getKey() + "' value. " +
+                        "The '" + hostGroup + ".hosts' parameter must be a list of strings (host names or IP addresses), got: " + vv + ". " +
+                        "Check the task's input parameters.");
+            }
+        }
     }
 }

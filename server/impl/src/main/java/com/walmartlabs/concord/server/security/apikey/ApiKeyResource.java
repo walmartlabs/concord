@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -158,7 +159,8 @@ public class ApiKeyResource implements Resource {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        return userManager.getOrCreate(username, domain, type).getId();
+        return userManager.getId(username, domain, type)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + username));
     }
 
     private UUID assertUserId(UUID userId) {

@@ -27,12 +27,7 @@ import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -47,9 +42,9 @@ import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.callForm;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GroupGrammar.group;
 import static com.walmartlabs.concord.runtime.v2.parser.ParallelGrammar.parallelBlock;
+import static com.walmartlabs.concord.runtime.v2.parser.ScriptGrammar.script;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskFull;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskShort;
-import static com.walmartlabs.concord.runtime.v2.parser.ScriptGrammar.script;
 import static io.takari.parc.Combinators.*;
 
 public final class GrammarV2 {

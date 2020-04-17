@@ -2007,6 +2007,34 @@ public class YamlErrorParserTest extends AbstractParserTest {
         assertErrorMessage("errors/scripts/003.yml", msg);
     }
 
+    @Test
+    public void test1800() throws Exception {
+        String msg = "(000.yml): Error @ line: 1, col: 11. Invalid value type, expected: RESOURCES, got: NULL. Remove attribute or complete the definition\n" +
+                "\twhile processing steps:\n" +
+                "\t'resources' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/resources/000.yml", msg);
+    }
+
+    @Test
+    public void test1801() throws Exception {
+        String msg = "(001.yml): Error @ line: 3, col: 5. Unknown options: ['trash' [ARRAY] @ line: 3, col: 5], expected: [concord]. Remove invalid options and/or fix indentation\n" +
+                "\twhile processing steps:\n" +
+                "\t'resources' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/resources/001.yml", msg);
+    }
+
+    @Test
+    public void test1802() throws Exception {
+        String msg = "(002.yml): Error @ line: 2, col: 12. Invalid value type, expected: ARRAY_OF_STRING, got: STRING\n" +
+                "\twhile processing steps:\n" +
+                "\t'concord' @ line: 2, col: 3\n" +
+                "\t\t'resources' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/resources/002.yml", msg);
+    }
+
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);

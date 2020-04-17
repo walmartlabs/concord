@@ -25,7 +25,7 @@ import io.takari.parc.Parser;
 import java.util.Set;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.orError;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.stringSetVal;
 
 public class PublicFlowsGrammar {
 

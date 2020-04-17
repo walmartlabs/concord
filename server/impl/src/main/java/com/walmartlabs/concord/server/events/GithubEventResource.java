@@ -35,6 +35,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.process.ProcessManager;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
 import com.walmartlabs.concord.server.security.ldap.LdapPrincipal;
@@ -179,7 +180,8 @@ public class GithubEventResource extends AbstractEventResource implements Resour
                 return super.getOrCreateUserEntry(event);
             }
 
-            return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP);
+            return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

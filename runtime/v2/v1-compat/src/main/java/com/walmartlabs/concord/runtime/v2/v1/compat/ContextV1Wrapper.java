@@ -85,7 +85,7 @@ public class ContextV1Wrapper implements com.walmartlabs.concord.sdk.Context {
 
     @Override
     public Object interpolate(Object v) {
-        return ctx.interpolate(v, Object.class);
+        return ctx.eval(v, Object.class);
     }
 
     @Override

@@ -70,7 +70,8 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        ThreadGroup threadGroup = new TaskThreadGroup(call.getName(), call.getName());
+        String segmentId = ctx.execution().correlationId().toString();
+        ThreadGroup threadGroup = new TaskThreadGroup(call.getName(), segmentId);
         Serializable result = executeInThreadGroup(threadGroup, "thread-" + call.getName(),
                 () -> ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input))));
 

@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
-import com.walmartlabs.concord.runtime.v2.parser.KV;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 import java.util.List;

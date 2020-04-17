@@ -195,7 +195,8 @@ public abstract class AbstractEventResource {
     protected UserEntry getOrCreateUserEntry(Map<String, Object> event) {
         // TODO make sure all event resources perform the user lookup correctly, e.g. using correct input data
         String author = event.getOrDefault("author", "").toString();
-        return userManager.getOrCreate(author, null, UserType.LDAP);
+        return userManager.getOrCreate(author, null, UserType.LDAP)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + author));
     }
 
     private PartialProcessKey startProcess(String eventId,
