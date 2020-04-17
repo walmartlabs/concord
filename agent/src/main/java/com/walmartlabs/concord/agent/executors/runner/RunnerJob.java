@@ -58,7 +58,7 @@ public class RunnerJob {
             }
         }
 
-        RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, cfg);
+        RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, jobRequest, cfg);
         RunnerLog log;
         try {
             log = new RunnerLog(
@@ -159,7 +159,7 @@ public class RunnerJob {
                 '}';
     }
 
-    private static RunnerConfiguration createRunnerConfiguration(RunnerJobExecutorConfiguration execCfg, Map<String, Object> processCfg) {
+    private static RunnerConfiguration createRunnerConfiguration(RunnerJobExecutorConfiguration execCfg, JobRequest jobRequest, Map<String, Object> processCfg) {
         ImmutableRunnerConfiguration.Builder b = RunnerConfiguration.builder();
 
         Object v = processCfg.get(Constants.Request.RUNNER_KEY);
@@ -179,6 +179,10 @@ public class RunnerJob {
                         .build())
                 .dependencyManager(DependencyManagerConfiguration.builder()
                         .cacheDir(execCfg.dependencyCacheDir().toAbsolutePath().toString())
+                        .build())
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogDir(jobRequest.getPayloadDir().resolve(".concord").resolve("logs").toString())
+                        .segmentedLogDir("/tmp/123")
                         .build())
                 .build();
     }

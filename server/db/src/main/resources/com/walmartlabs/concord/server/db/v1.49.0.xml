@@ -35,6 +35,10 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="1490011" author="ybrigo@gmail.com">
+        <addUniqueConstraint tableName="PROCESS_LOG_SEGMENT" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT, SEGMENT_NAME, CORRELATION_ID"/>
+    </changeSet>
+
     <changeSet id="1490020" author="ybrigo@gmail.com">
         <createTable tableName="PROCESS_LOG_DATA">
             <column name="INSTANCE_ID" type="uuid">
@@ -125,6 +129,42 @@
                 end if;
 
                 return int4range(R_START - P_DATA_LEN, R_START);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+
+    <changeSet id="1490060" author="ybrigo@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function NEW_PROCESS_LOG_SEGMENT(P_INSTANCE_ID uuid, P_CREATED_AT timestamp, P_CORRELATION_ID uuid, P_NAME varchar)
+                returns bigint as $$
+            declare
+                O_SEGMENT_ID int;
+            begin
+            loop
+                select SEGMENT_ID
+                into O_SEGMENT_ID
+                from PROCESS_LOG_SEGMENT
+                where
+                    INSTANCE_ID = P_INSTANCE_ID
+                    and INSTANCE_CREATED_AT = P_CREATED_AT
+                    and CORRELATION_ID = P_CORRELATION_ID
+                    and SEGMENT_NAME = P_NAME;
+
+                if FOUND then
+                    return O_SEGMENT_ID;
+                end if;
+
+                insert into process_log_segment (instance_id, instance_created_at, correlation_id, segment_name, segment_ts)
+                values (P_INSTANCE_ID, P_CREATED_AT, P_CORRELATION_ID, P_NAME, current_timestamp)
+                on conflict do nothing
+                returning process_log_segment.segment_id
+                into O_SEGMENT_ID;
+
+                if FOUND then
+                    return O_SEGMENT_ID;
+                end if;
+            end loop;
             end;
             $$ language plpgsql;
         </createProcedure>

@@ -25,13 +25,16 @@ import com.walmartlabs.concord.common.LogUtils;
 import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.process.LogSegment;
+import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.List;
+import java.util.UUID;
 
 import static com.walmartlabs.concord.common.LogUtils.LogLevel;
 import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
@@ -41,6 +44,7 @@ import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.Process
 public class ProcessLogManager {
 
     private final ProcessLogsDao logsDao;
+    private final ProcessQueueDao processDao;
     private final Listeners listeners;
 
     @InjectCounter
@@ -48,10 +52,11 @@ public class ProcessLogManager {
 
     @Inject
     public ProcessLogManager(ProcessLogsDao logsDao,
-                             Listeners listeners,
+                             ProcessQueueDao processDao, Listeners listeners,
                              Counter logBytesAppended) {
 
         this.logsDao = logsDao;
+        this.processDao = processDao;
         this.listeners = listeners;
         this.logBytesAppended = logBytesAppended;
     }
@@ -73,7 +78,17 @@ public class ProcessLogManager {
     }
 
     public int log(ProcessKey processKey, byte[] msg) {
-        PgIntRange range = logsDao.append(processKey, msg);
+        // TODO: move runtime to processKey ?
+        ProcessEntry pe = processDao.get(processKey);
+
+        PgIntRange range;
+        if ("concord-v2".equals(pe.runtime())) {
+            // TODO: constants
+            long segmentId = logsDao.createSegment(processKey, new UUID(0,0), "system");
+            range = logsDao.append(processKey, segmentId, msg);
+        } else {
+            range = logsDao.append(processKey, msg);
+        }
         logBytesAppended.inc(msg.length);
         listeners.onProcessLogAppend(processKey, msg);
         return range.getUpper();
