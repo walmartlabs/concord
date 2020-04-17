@@ -116,6 +116,12 @@
             <artifactId>javax.el</artifactId>
         </dependency>
 
+        <!-- Tasks -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>throw-tasks</artifactId>
+        </dependency>
+        
         <!-- Immutables -->
         <dependency>
             <groupId>org.immutables</groupId>
