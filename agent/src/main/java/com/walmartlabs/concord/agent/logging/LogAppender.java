@@ -25,4 +25,6 @@ import java.util.UUID;
 public interface LogAppender {
 
     void appendLog(UUID instanceId, byte[] ab);
+
+    void appendLog(UUID instanceId, UUID correlationId, String name, byte[] ab);
 }

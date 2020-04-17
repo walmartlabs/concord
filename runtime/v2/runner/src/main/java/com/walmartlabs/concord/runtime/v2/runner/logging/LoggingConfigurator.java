@@ -36,6 +36,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 public class LoggingConfigurator {
 
@@ -47,7 +48,7 @@ public class LoggingConfigurator {
     private static final String PROCESS_LOGGER_NAME = "processLog";
     private static final String DEFAULT_PROCESS_LOG_APPENDER_NAME = "PROCESS_STDOUT";
 
-    public static void configure(String baseDir) {
+    public static void configure(UUID instanceId, String baseDir) {
         log.info("Redirecting logging output into the segment log: {}", baseDir);
 
         Path dst = Paths.get(baseDir);
@@ -63,7 +64,7 @@ public class LoggingConfigurator {
 
         String pattern = gerProperty(loggerContext, PATTERN_PROPERTY_KEY, DEFAULT_PATTERN);
 
-        TaskDiscriminator discriminator = new TaskDiscriminator();
+        TaskDiscriminator discriminator = new TaskDiscriminator(instanceId);
         discriminator.start();
 
         SiftingAppender sa = new SiftingAppender();
@@ -73,8 +74,8 @@ public class LoggingConfigurator {
         sa.setAppenderFactory((context, discriminatingValue) -> {
             FileAppender<ILoggingEvent> fa = new FileAppender<>();
             fa.setContext(context);
-            fa.setAppend(false);
-            fa.setFile(String.format("%s/segment-%s.log", dst.toAbsolutePath(), discriminatingValue));
+            fa.setAppend(true);
+            fa.setFile(String.format("%s/%s.log", dst.toAbsolutePath(), discriminatingValue));
 
             PatternLayoutEncoder encoder = new PatternLayoutEncoder();
             encoder.setContext(context);

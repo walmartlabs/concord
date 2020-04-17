@@ -20,18 +20,22 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class SegmentedProcessLog implements ProcessLog {
 
-    private final Path logDir;
+    private static final Logger log = LoggerFactory.getLogger(SegmentedProcessLog.class);
+
+    private final Path logsDir;
     private final UUID instanceId;
     private final Map<Path, LogSegment> segments;
 
@@ -40,34 +44,42 @@ public class SegmentedProcessLog implements ProcessLog {
 
     private final LocalProcessLog localLog;
 
-    public SegmentedProcessLog(Path baseDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
+    private final byte[] logBuffer = new byte[8192];
+
+    public SegmentedProcessLog(Path logsDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
         this.instanceId = instanceId;
         this.appender = appender;
         this.logSteamMaxDelay = logSteamMaxDelay;
-        this.localLog = new LocalProcessLog(baseDir, instanceId);
+        this.logsDir = logsDir;
+        this.localLog = new LocalProcessLog(logsDir, instanceId);
+        this.segments = new LinkedHashMap<>();
     }
 
     public void run(Supplier<Boolean> stopCondition) throws Exception {
-        while (!Thread.currentThread().isInterrupted()) {
-            Files.walkFileTree(logDir, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    return FileVisitResult.SKIP_SUBTREE;
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                collectSegments();
+
+                int read = processSegments(stopCondition);
+                if (read > 0) {
+                    continue;
                 }
 
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-
+                if (stopCondition.get() && segments.values().stream().allMatch(LogSegment::isClosed)) {
+                    break;
                 }
-            });
+
+                // job is still running, wait for more data
+                try {
+                    Thread.sleep(logSteamMaxDelay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        } finally {
+            cleanup();
         }
-
-        Consumer<Chunk> sink = chunk -> {
-            byte[] ab = new byte[chunk.len];
-            System.arraycopy(chunk.ab, 0, ab, 0, chunk.len);
-            appender.appendLog(instanceId, ab);
-        };
-
-        streamLog(localLog.logFile(), stopCondition, logSteamMaxDelay, sink);
     }
 
     @Override
@@ -95,35 +107,83 @@ public class SegmentedProcessLog implements ProcessLog {
         this.localLog.error(log, args);
     }
 
-    private static void streamLog(Path p, Supplier<Boolean> stopCondition, long maxDelay, Consumer<Chunk> sink) throws IOException {
-        long total = 0;
+    private void collectSegments() throws IOException {
+        Files.walkFileTree(logsDir, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                if (dir.equals(logsDir)) {
+                    return FileVisitResult.CONTINUE;
+                }
+                return FileVisitResult.SKIP_SUBTREE;
+            }
 
-        byte[] ab = new byte[8192];
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (segments.containsKey(file)) {
+                    return FileVisitResult.CONTINUE;
+                }
 
-        try (InputStream in = Files.newInputStream(p, StandardOpenOption.READ)) {
-            while (true) {
-                int read = in.read(ab, 0, ab.length);
+                String segmentFileName = file.getFileName().toString();
+                // TODO: invalid file format
+                UUID correlationId = UUID.fromString(segmentFileName.substring(0, 36));
+                String segmentName = segmentFileName.substring(37, segmentFileName.length() - ".log".length());
+
+                log.info(">>>>>>>>>");
+                log.info("segment: {}, {}, {}", correlationId, segmentName, segmentFileName);
+                log.info(">>>>>>>>>");
+
+                segments.put(file, new LogSegment(correlationId, segmentName, Files.newInputStream(file)));
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private int processSegments(Supplier<Boolean> stopCondition) {
+        int total = 0;
+
+        for (Map.Entry<Path, LogSegment> entry : segments.entrySet()) {
+            LogSegment segment = entry.getValue();
+
+            try {
+                int read = processSegment(segment, chunk -> {
+                    byte[] chunkBuffer = new byte[chunk.len];
+                    System.arraycopy(chunk.ab, 0, chunkBuffer, 0, chunk.len);
+                    appender.appendLog(instanceId, segment.correlationId(), segment.name(), chunkBuffer);
+                });
+
                 if (read > 0) {
-                    sink.accept(new Chunk(ab, read));
                     total += read;
                 }
 
-                if (read < ab.length) {
-                    if (stopCondition.get() && total >= Files.size(p)) {
-                        // the log and the job are finished
-                        break;
-                    }
-
-                    // job is still running, wait for more data
-                    try {
-                        Thread.sleep(maxDelay);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
+                if (stopCondition.get() && segment.totalRead() >= Files.size(entry.getKey())) {
+                    segment.close();
                 }
+            } catch (IOException e) {
+                log.error("processSegment ['{}'] -> error", entry.getKey());
             }
         }
+
+        return total;
+    }
+
+    private int processSegment(LogSegment segment, Consumer<Chunk> sink) throws IOException {
+        int total = 0;
+        while (!Thread.currentThread().isInterrupted()) {
+            int read = segment.read(logBuffer);
+            if (read > 0) {
+                total += read;
+                sink.accept(new Chunk(logBuffer, read));
+            } else {
+                break;
+            }
+        }
+        return total;
+    }
+
+    private void cleanup() {
+        for (Map.Entry<Path, LogSegment> e : segments.entrySet()) {
+            e.getValue().close();
+        }
+        segments.clear();
     }
 
     private static final class Chunk {
@@ -140,17 +200,55 @@ public class SegmentedProcessLog implements ProcessLog {
     class LogSegment {
 
         private final UUID correlationId;
-        private final String segmentName;
-        private final InputStream in;
+        private final String name;
+        private InputStream in;
+        private int totalRead;
 
-        public LogSegment(UUID correlationId, String segmentName, InputStream in) {
+        public LogSegment(UUID correlationId, String name, InputStream in) {
             this.correlationId = correlationId;
-            this.segmentName = segmentName;
+            this.name = name;
             this.in = in;
         }
 
-        public void read() {
+        public int read(byte[] ab) throws IOException {
+            if (in == null) {
+                return 0;
+            }
 
+            int result = in.read(ab, 0, ab.length);
+            if (result > 0) {
+                totalRead += result;
+            }
+            return result;
+        }
+
+        public UUID correlationId() {
+            return correlationId;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public int totalRead() {
+            return totalRead;
+        }
+
+        public void close() {
+            if (in == null) {
+                return;
+            }
+
+            try {
+                in.close();
+                in = null;
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+
+        public boolean isClosed() {
+            return in == null;
         }
     }
 }

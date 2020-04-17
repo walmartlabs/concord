@@ -100,7 +100,7 @@ public class Main {
 
         String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
         if (segmentedLogDir != null) {
-            LoggingConfigurator.configure(segmentedLogDir);
+            LoggingConfigurator.configure(processCfg.instanceId(), segmentedLogDir);
         }
 
         Runner runner = new Runner.Builder()

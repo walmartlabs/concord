@@ -57,4 +57,19 @@ public class RemoteLogAppender implements LogAppender {
             log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
         }
     }
+
+    @Override
+    public void appendLog(UUID instanceId, UUID correlationId, String name, byte[] ab) {
+        String path = "/api/v2/process/" + instanceId + "/log/segment/" + correlationId + "/" + name + "/data";
+
+        try {
+            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY, () -> {
+                ClientUtils.postData(processApi.getApiClient(), path, ab);
+                return null;
+            });
+        } catch (ApiException e) {
+            // TODO handle errors
+            log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
+        }
+    }
 }

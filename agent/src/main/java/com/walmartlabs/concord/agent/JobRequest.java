@@ -24,6 +24,7 @@ import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.ProcessLogFactory;
 import com.walmartlabs.concord.agent.logging.RemoteProcessLog;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.queueclient.message.ProcessResponse;
 
 import java.nio.file.Path;
@@ -131,6 +132,11 @@ public class JobRequest {
 
     public ProcessLog getLog() {
         return log;
+    }
+
+    public Path getLogSegmentsDir() {
+        // TODO: constants
+        return payloadDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME).resolve("logs");
     }
 
     @Override

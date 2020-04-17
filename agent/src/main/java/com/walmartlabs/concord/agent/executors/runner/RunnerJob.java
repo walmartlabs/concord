@@ -62,7 +62,7 @@ public class RunnerJob {
         RunnerLog log;
         try {
             log = new RunnerLog(
-                    processLogFactory.createRedirectedLog(jobRequest.getInstanceId()),
+                    processLogFactory.createSegmentedProcessLog(jobRequest.getLogSegmentsDir(), jobRequest.getInstanceId()),
                     processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
         } catch (IOException e) {
             throw new ExecutionException("Error while creating runner log", e);
@@ -181,8 +181,7 @@ public class RunnerJob {
                         .cacheDir(execCfg.dependencyCacheDir().toAbsolutePath().toString())
                         .build())
                 .logging(LoggingConfiguration.builder()
-                        .segmentedLogDir(jobRequest.getPayloadDir().resolve(".concord").resolve("logs").toString())
-                        .segmentedLogDir("/tmp/123")
+                        .segmentedLogDir(jobRequest.getLogSegmentsDir().toString())
                         .build())
                 .build();
     }

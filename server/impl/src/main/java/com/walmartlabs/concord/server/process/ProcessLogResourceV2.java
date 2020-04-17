@@ -52,7 +52,7 @@ import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.Process
 
 @Named
 @Singleton
-@Api(value = "ProcessV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
+@Api(value = "ProcessLogV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
 @Path("/api/v2/process")
 public class ProcessLogResourceV2 implements Resource {
 
@@ -146,18 +146,42 @@ public class ProcessLogResourceV2 implements Resource {
     /**
      * Appends a process' log.
      */
+//    @POST
+//    @Path("{id}/log/segment/{segmentId}/data")
+//    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+//    @WithTimer
+//    public void append(@ApiParam @PathParam("id") UUID instanceId,
+//                       @ApiParam @PathParam("segmentId") long segmentId,
+//                       InputStream data) {
+//        ProcessKey processKey = assertProcessKey(instanceId);
+//
+//        try {
+//            byte[] ab = IOUtils.toByteArray(data);
+//            int upper = logManager.log(processKey, segmentId, ab);
+//
+//            int logSizeLimit = processCfg.getLogSizeLimit();
+//            if (upper >= logSizeLimit) {
+//                logManager.error(processKey, "Maximum log size reached: {}. Process cancelled.", logSizeLimit);
+//                processManager.kill(processKey);
+//            }
+//        } catch (IOException e) {
+//            throw new ConcordApplicationException("Error while appending a log: " + e.getMessage());
+//        }
+//    }
+
     @POST
-    @Path("{id}/log/segment/{segmentId}/data")
+    @Path("{id}/log/segment/{correlationId}/{name}/data")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public void append(@ApiParam @PathParam("id") UUID instanceId,
-                       @ApiParam @PathParam("segmentId") long segmentId,
+                       @ApiParam @PathParam("correlationId") UUID correlationId,
+                       @ApiParam @PathParam("name") String name,
                        InputStream data) {
         ProcessKey processKey = assertProcessKey(instanceId);
 
         try {
             byte[] ab = IOUtils.toByteArray(data);
-            int upper = logManager.log(processKey, segmentId, ab);
+            int upper = logManager.log(processKey, correlationId, name, ab);
 
             int logSizeLimit = processCfg.getLogSizeLimit();
             if (upper >= logSizeLimit) {

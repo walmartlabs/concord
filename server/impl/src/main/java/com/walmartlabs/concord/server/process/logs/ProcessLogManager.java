@@ -84,8 +84,7 @@ public class ProcessLogManager {
         PgIntRange range;
         if ("concord-v2".equals(pe.runtime())) {
             // TODO: constants
-            long segmentId = logsDao.createSegment(processKey, new UUID(0,0), "system");
-            range = logsDao.append(processKey, segmentId, msg);
+            return log(processKey, processKey.getInstanceId(), "system", msg);
         } else {
             range = logsDao.append(processKey, msg);
         }
@@ -102,7 +101,8 @@ public class ProcessLogManager {
         return logsDao.segmentData(processKey, segmentId, start, end);
     }
 
-    public int log(ProcessKey processKey, long segmentId, byte[] msg) {
+    public int log(ProcessKey processKey, UUID correlationId, String name, byte[] msg) {
+        long segmentId = logsDao.createSegment(processKey, correlationId, name);
         PgIntRange range = logsDao.append(processKey, segmentId, msg);
         logBytesAppended.inc(msg.length);
         listeners.onProcessLogAppend(processKey, msg);
