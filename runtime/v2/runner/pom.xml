@@ -110,6 +110,12 @@
             <artifactId>commons-compress</artifactId>
         </dependency>
 
+        <!-- tasks -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>sleep-tasks</artifactId>
+        </dependency>
+
         <!-- Java EL support -->
         <dependency>
             <groupId>org.glassfish</groupId>
