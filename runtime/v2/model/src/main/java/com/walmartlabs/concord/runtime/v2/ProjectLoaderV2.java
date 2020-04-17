@@ -24,20 +24,17 @@ import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.Resources;
 import com.walmartlabs.concord.runtime.v2.parser.YamlParserV2;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-// TODO rename to ProcessDefinitionLoader?
 public class ProjectLoaderV2 {
 
     private final ImportManager importManager;
@@ -56,18 +53,7 @@ public class ProjectLoaderV2 {
             snapshots = importManager.process(imports, baseDir);
         }
 
-        // TODO load resource definitions
-        // TODO: log file names with process definitions
-
-        // ./concord/**/*.concord.yml
-        PathMatcher pathMatcher = FileSystems.getDefault()
-                .getPathMatcher("glob:" + baseDir.toAbsolutePath() + "/concord/{**/,}{*.,}concord.yml");
-
-        List<Path> files = new ArrayList<>();
-        try(Stream<Path> w = Files.walk(baseDir)) {
-            w.filter(pathMatcher::matches).forEach(files::add);
-        }
-
+        List<Path> files = loadResources(baseDir, root != null ? root.resources() : Resources.builder().build());
         Collections.sort(files);
 
         List<ProcessDefinition> definitions = new ArrayList<>();
@@ -82,8 +68,6 @@ public class ProjectLoaderV2 {
         if (definitions.isEmpty()) {
             throw new IllegalStateException("Can't find any Concord process definition files in '" + baseDir + "'");
         }
-
-        // ./concord/forms/**/index.html
 
         return new Result(snapshots, merge(definitions));
     }
@@ -108,6 +92,42 @@ public class ProjectLoaderV2 {
         return new Result(Collections.emptyList(), parser.parse(path.getParent(), path));
     }
 
+    private List<Path> loadResources(Path baseDir, Resources resources) throws IOException {
+        List<Path> result = new ArrayList<>();
+        for (String pattern : resources.concord()) {
+            PathMatcher pathMatcher = parsePattern(baseDir, pattern);
+            if (pathMatcher != null) {
+                try (Stream<Path> w = Files.walk(baseDir)) {
+                    w.filter(pathMatcher::matches).forEach(result::add);
+                }
+            } else {
+                Path path = Paths.get(concat(baseDir, pattern.trim()));
+                if (Files.exists(path)) {
+                    result.add(path);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static PathMatcher parsePattern(Path baseDir, String pattern) {
+        String normalizedPattern = null;
+
+        pattern = pattern.trim();
+
+        if (pattern.startsWith("glob:")) {
+            normalizedPattern = "glob:" + concat(baseDir, pattern.substring("glob:".length()));
+        } else if (pattern.startsWith("regex:")) {
+            normalizedPattern = "regex:" + concat(baseDir, pattern.substring("regex:".length()));
+        }
+
+        if (normalizedPattern != null) {
+            return FileSystems.getDefault().getPathMatcher(normalizedPattern);
+        }
+
+        return null;
+    }
+
     private static ProcessDefinition merge(List<ProcessDefinition> definitions) {
         if (definitions.isEmpty()) {
             throw new IllegalArgumentException("Definitions is empty");
@@ -120,6 +140,14 @@ public class ProjectLoaderV2 {
             result = ProcessDefinition.merge(result, pd);
         }
         return result;
+    }
+
+    private static String concat(Path path, String str) {
+        String separator = "/";
+        if (str.startsWith("/")) {
+            separator = "";
+        }
+        return path.toAbsolutePath() + separator + str;
     }
 
     public static class Result {

@@ -22,9 +22,6 @@ package com.walmartlabs.concord.runtime.v2.model;
 
 import com.fasterxml.jackson.core.JsonLocation;
 
-import java.io.Serializable;
-import java.util.Collections;
-
 public class ScriptCall extends AbstractStep<ScriptCallOptions> {
 
     private static final long serialVersionUID = 1L;

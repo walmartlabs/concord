@@ -87,6 +87,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Trigger> GENERIC_TRIGGER = type("GENERIC_TRIGGER");
     public static final YamlValueType<IfStep> IF = type("IF");
     public static final YamlValueType<SwitchStep> SWITCH = type("SWITCH");
+    public static final YamlValueType<Resources> RESOURCES = type("RESOURCES");
 
     private final String name;
 
