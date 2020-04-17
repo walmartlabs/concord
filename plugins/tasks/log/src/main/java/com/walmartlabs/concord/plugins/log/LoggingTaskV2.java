@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.v2.runner.tasks;
+package com.walmartlabs.concord.plugins.log;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,28 +22,62 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.Serializable;
+
 import java.util.Map;
 
 @Named("log")
-public class LogTask implements Task {
-
-    private static final Logger log = LoggerFactory.getLogger(LogTask.class);
+public class LoggingTaskV2 implements Task {
 
     @Override
-    public Serializable execute(TaskContext ctx) {
+    public Serializable execute(TaskContext ctx) throws Exception {
         Map<String, Object> input = ctx.input();
         Object msg = input.get("msg");
         if (msg == null) {
-            // TODO check the task's call style
+            // short form - log: "my message"
             msg = input.get("0");
         }
 
-        log.info("{}", msg);
+        LogUtils.info(msg);
+
         return null;
+    }
+
+    public static void info(String s) {
+        LogUtils.info(s);
+    }
+
+    public static void info(Object o) {
+        LogUtils.info(o);
+    }
+
+    public static void debug(String s) {
+        LogUtils.debug(s);
+    }
+
+    public static void debug(Object o) {
+        LogUtils.debug(o);
+    }
+
+    public static void warn(String s) {
+        LogUtils.warn(s);
+    }
+
+    public static void warn(Object o) {
+        LogUtils.warn(o);
+    }
+
+    public static void error(String s) {
+        LogUtils.error(s);
+    }
+
+    public static void error(Object o) {
+        LogUtils.error(o);
+    }
+
+    public void call(String s) {
+        LogUtils.info(s);
     }
 }
