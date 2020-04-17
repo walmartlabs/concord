@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.plugins.noderoster;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.walmartlabs.concord.server.plugins.noderoster.dao.HostsDao;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,6 +50,7 @@ public class HostManager {
                 .build();
     }
 
+    @WithTimer
     public UUID getId(UUID hostId, String host) {
         if (hostId != null) {
             return hostId;
@@ -62,6 +64,7 @@ public class HostManager {
         }
     }
 
+    @WithTimer
     public UUID getOrCreate(String host) {
         try {
             return hostCache.get(host, new GetOrCreateLoader(host))
@@ -72,17 +75,10 @@ public class HostManager {
     }
 
     private Host findHost(String host) {
-        UUID hostId = dao.getId(host);
-        if (hostId != null) {
-            return new Host(hostId, host);
-        }
-
         String normalizedHost = hostNormalizer.normalize(host);
-        if (!normalizedHost.equals(host)) {
-            hostId = dao.getId(normalizedHost);
-            if (hostId != null) {
-                return new Host(hostId, normalizedHost);
-            }
+        UUID hostId = dao.getId(normalizedHost);
+        if (hostId != null) {
+            return new Host(hostId, normalizedHost);
         }
 
         return new Host(null, normalizedHost);
