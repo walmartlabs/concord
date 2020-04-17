@@ -127,10 +127,6 @@ public class SegmentedProcessLog implements ProcessLog {
                 UUID correlationId = UUID.fromString(segmentFileName.substring(0, 36));
                 String segmentName = segmentFileName.substring(37, segmentFileName.length() - ".log".length());
 
-                log.info(">>>>>>>>>");
-                log.info("segment: {}, {}, {}", correlationId, segmentName, segmentFileName);
-                log.info(">>>>>>>>>");
-
                 segments.put(file, new LogSegment(correlationId, segmentName, Files.newInputStream(file)));
                 return FileVisitResult.CONTINUE;
             }
