@@ -114,6 +114,12 @@ public class ProcessLogsDao extends AbstractDao {
         }
     }
 
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name) {
+        // TODO: up for partitioning
+        return txResult(tx -> tx.select(newProcessLogSegment(processKey.getInstanceId(), processKey.getCreatedAt(), correlationId, name))
+                .fetchOne().value1());
+    }
+
     public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
         UUID instanceId = processKey.getInstanceId();
         Timestamp createdAt = processKey.getCreatedAt();
