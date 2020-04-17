@@ -324,6 +324,23 @@ public class MainTest {
         assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error in <eval> at line number 1 at column number 0.*");
     }
 
+    @Test
+    public void testInitiator() throws Exception {
+        deploy("initiator");
+
+        Map<String, Object> initiator = new HashMap<>();
+        initiator.put("username", "test");
+        initiator.put("displayName", "Test User");
+
+        save(ProcessConfiguration.builder()
+                .initiator(initiator)
+                .putArguments("name", "${initiator.displayName}")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*Test User.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
