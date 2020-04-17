@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.sleep;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,34 +20,38 @@ package com.walmartlabs.concord.plugins.sleep;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.sdk.Task;
+import com.walmartlabs.concord.svm.State;
+import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.commands.Suspend;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.Serializable;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 
 @Named("sleep")
-public class SleepTask implements Task {
+public class SleepTaskV2 implements Task {
 
-    private static final Logger log = LoggerFactory.getLogger(SleepTask.class);
+    private static final Logger log = LoggerFactory.getLogger(SleepTaskV2.class);
 
-    private final ApiClientFactory apiClientFactory;
+    private final ApiClient apiClient;
+    private final InstanceId processInstanceId;
 
     @Inject
-    public SleepTask(ApiClientFactory apiClientFactory) {
-        this.apiClientFactory = apiClientFactory;
+    public SleepTaskV2(ApiClient apiClient, InstanceId processInstanceId) {
+        this.apiClient = apiClient;
+        this.processInstanceId = processInstanceId;
     }
 
     public void ms(long t) {
@@ -55,8 +59,8 @@ public class SleepTask implements Task {
     }
 
     @Override
-    public void execute(Context ctx) throws Exception {
-        Map<String, Object> cfg = createCfg(ctx);
+    public Serializable execute(TaskContext ctx) throws Exception {
+        Map<String, Object> cfg = ctx.input();
         Number duration = MapUtils.getNumber(cfg, Constants.DURATION_KEY, null);
         Instant until = getUntil(ctx);
 
@@ -66,8 +70,9 @@ public class SleepTask implements Task {
         if (suspend) {
             Instant sleepUntil = SleepTaskUtils.toSleepUntil(duration, until);
             if (sleepUntil.isBefore(Instant.now())) {
-                log.warn("Skipping the sleep, the specified datetime is in the past: {}", sleepUntil);
-                return;
+                log.warn("Skipping the sleep, the specified datetime is in the " +
+                        "past: {}", sleepUntil);
+                return null;
             }
             log.info("Sleeping until {}...", sleepUntil);
             suspend(sleepUntil, ctx);
@@ -76,39 +81,29 @@ public class SleepTask implements Task {
             if (sleepTime <= 0) {
                 log.warn("Skipping the sleep, the specified datetime is either negative " +
                         "or is in the past: {}", sleepTime);
-                return;
+                return null;
             }
             log.info("Sleeping for {}ms", sleepTime);
             SleepTaskUtils.sleep(sleepTime);
         }
+        return null;
     }
 
-    private void suspend(Instant until, Context ctx) throws ApiException {
-        ProcessApi api = new ProcessApi(apiClientFactory.create(ApiClientConfiguration.builder()
-                .context(ctx)
-                .build()));
+    private void suspend(Instant until, TaskContext ctx) throws ApiException {
+        ProcessApi api = new ProcessApi(apiClient);
 
         ClientUtils.withRetry(Constants.RETRY_COUNT, Constants.RETRY_INTERVAL, () -> {
-            api.setWaitCondition(ContextUtils.getTxId(ctx), SleepTaskUtils.createCondition(until));
+            api.setWaitCondition(processInstanceId.getValue(), SleepTaskUtils.createCondition(until));
             return null;
         });
 
-        ctx.suspend(Constants.RESUME_EVENT_NAME);
+        ThreadId eid = ctx.execution().currentThreadId();
+        State s = ctx.execution().state();
+        s.peekFrame(eid).push(new Suspend(Constants.RESUME_EVENT_NAME));
     }
 
-    private static Map<String, Object> createCfg(Context ctx) {
-        Map<String, Object> m = new HashMap<>();
-        for (String k : Constants.ALL_IN_PARAMS) {
-            Object v = ctx.getVariable(k);
-            if (v != null) {
-                m.put(k, v);
-            }
-        }
-        return m;
-    }
-
-    private static Instant getUntil(Context ctx) {
-        Object value = ctx.getVariable(Constants.UNTIL_KEY);
+    private static Instant getUntil(TaskContext ctx) {
+        Object value = ctx.input().get(Constants.UNTIL_KEY);
         if (value == null) {
             return null;
         }
