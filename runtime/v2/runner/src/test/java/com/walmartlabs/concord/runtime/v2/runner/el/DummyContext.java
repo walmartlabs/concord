@@ -62,7 +62,7 @@ public class DummyContext implements Context {
     }
 
     @Override
-    public <T> T interpolate(Object v, Class<T> type) {
+    public <T> T eval(Object v, Class<T> type) {
         throw new IllegalStateException("Not implemented");
     }
 }

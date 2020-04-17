@@ -46,11 +46,17 @@ public interface ExpressionEvaluator {
      * Same as {@link #eval(Context, Object, Class)}, but allows assigning
      * the result to a generic Map without unchecked casts.
      */
-    <K, V> Map<K, V> evalAsMap(Context ctx, Object value);
+    @SuppressWarnings("unchecked")
+    default <K, V> Map<K, V> evalAsMap(Context ctx, Object value) {
+        return eval(ctx, value, Map.class);
+    }
 
     /**
      * Same as {@link #eval(Context, Object, Class)}, but allows assigning
      * the result to a generic List without unchecked casts.
      */
-    <T> List<T> evalAsList(Context ctx, Object value);
+    @SuppressWarnings("unchecked")
+    default <T> List<T> evalAsList(Context ctx, Object value) {
+        return eval(ctx, value, List.class);
+    }
 }

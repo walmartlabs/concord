@@ -80,4 +80,9 @@ public class GlobalVariablesWithOverrides implements GlobalVariables {
         result.putAll(overrides);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "xxx";
+    }
 }

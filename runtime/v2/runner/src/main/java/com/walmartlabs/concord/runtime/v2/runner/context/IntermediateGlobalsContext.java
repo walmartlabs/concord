@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.el.Interpolator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
@@ -70,9 +69,9 @@ public class IntermediateGlobalsContext implements Context {
     }
 
     @Override
-    public <T> T interpolate(Object v, Class<T> type) {
+    public <T> T eval(Object v, Class<T> type) {
         Runtime rt = delegate.execution().runtime();
         ExpressionEvaluator ee = rt.getService(ExpressionEvaluator.class);
-        return Interpolator.interpolate(ee, this, v, type);
+        return ee.eval(this, v, type);
     }
 }
