@@ -388,6 +388,19 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertMeta(t.getOptions());
     }
 
+    // resources definition
+    @Test
+    public void test015() throws Exception {
+        ProcessDefinition pd = load("015.yml");
+
+        Resources resources = pd.resources();
+        assertEquals(3, resources.concord().size());
+
+        assertEquals("glob:abc", resources.concord().get(0));
+        assertEquals("regex:boo", resources.concord().get(1));
+        assertEquals("concord/myfile.yml", resources.concord().get(2));
+    }
+
     private static void assertMeta(StepOptions o) {
         assertNotNull(o.meta());
         assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());
