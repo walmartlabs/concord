@@ -62,6 +62,7 @@ public class ProcessHostsProcessor implements Processor {
     }
 
     @Override
+    @WithTimer
     public void process(List<AnsibleEvent> events) {
         Set<ProcessHostItem> items = new HashSet<>();
 
@@ -97,11 +98,11 @@ public class ProcessHostsProcessor implements Processor {
             this.partitioner = partitioner;
         }
 
+        @WithTimer
         public void insert(Set<ProcessHostItem> items) {
             tx(tx -> insert(tx, items));
         }
 
-        @WithTimer
         private void insert(DSLContext tx, Set<ProcessHostItem> items) {
             NodeRosterProcessHosts h = NODE_ROSTER_PROCESS_HOSTS.as("ph");
 

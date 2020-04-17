@@ -77,7 +77,6 @@ public class PayloadRestoreProcessor implements PayloadProcessor {
         });
         payload = payload.putAttachments(attachments);
 
-
         return chain.process(payload);
     }
 

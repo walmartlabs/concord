@@ -344,6 +344,23 @@ public class MainTest {
     }
 
     @Test
+    public void testInitiator() throws Exception {
+        deploy("initiator");
+
+        Map<String, Object> initiator = new HashMap<>();
+        initiator.put("username", "test");
+        initiator.put("displayName", "Test User");
+
+        save(ProcessConfiguration.builder()
+                .initiator(initiator)
+                .putArguments("name", "${initiator.displayName}")
+                .build());
+
+        byte[] log = start();
+        assertLog(log, ".*Test User.*");
+    }
+
+    @Test
     public void testSegmentedLogging() throws Exception {
         deploy("logging");
 

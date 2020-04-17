@@ -54,9 +54,22 @@ public class UserManager {
         providers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
     }
 
-    public UserEntry getOrCreate(String username, String userDomain, UserType type) {
-        UserEntry result = get(username, userDomain, type);
-        if (result != null) {
+    public Optional<UserEntry> get(String username, String userDomain, UserType type) {
+        if (type == null) {
+            type = UserPrincipal.assertCurrent().getType();
+        }
+
+        UUID id = userDao.getId(username, userDomain, type);
+        if (id == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(userDao.get(id));
+    }
+
+    public Optional<UserEntry> getOrCreate(String username, String userDomain, UserType type) {
+        Optional<UserEntry> result = get(username, userDomain, type);
+        if (result.isPresent()) {
             return result;
         }
 
@@ -68,12 +81,12 @@ public class UserManager {
         UserInfo info = provider.getInfo(null, username, userDomain);
         if (info != null) {
             result = get(info.username(), info.userDomain(), type);
-            if (result != null) {
+            if (result.isPresent()) {
                 return result;
             }
         }
 
-        return create(username, userDomain, null, null, type, null);
+        return Optional.of(create(username, userDomain, null, null, type, null));
     }
 
     public Optional<UserEntry> get(UUID id) {
@@ -183,28 +196,6 @@ public class UserManager {
                 .field("userId", userId)
                 .changes(describeStatusChange(false), describeStatusChange(true))
                 .log();
-    }
-
-    private UserEntry get(String username, String userDomain, UserType type) {
-        if (type == null) {
-            type = UserPrincipal.assertCurrent().getType();
-        }
-
-        UUID id = userDao.getId(username, userDomain, type);
-        if (id != null) {
-            return userDao.get(id);
-        }
-
-        // TODO: remove me when all users migrated
-        if (userDomain != null) {
-            id = userDao.getId(username, null, type);
-            if (id != null) {
-                userDao.updateDomain(id, userDomain);
-                return userDao.get(id);
-            }
-        }
-
-        return null;
     }
 
     private UserInfoProvider assertProvider(UserType type) {
