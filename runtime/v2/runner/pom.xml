@@ -139,6 +139,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- tasks -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>log-tasks</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
