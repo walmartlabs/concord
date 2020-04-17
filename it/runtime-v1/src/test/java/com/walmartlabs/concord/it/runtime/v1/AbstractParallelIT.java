@@ -24,6 +24,8 @@ import ca.ibodrov.concord.testcontainers.Concord;
 import com.googlecode.junittoolbox.ParallelRunner;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
+import org.testcontainers.images.ImagePullPolicy;
+import org.testcontainers.images.PullPolicy;
 
 @RunWith(ParallelRunner.class)
 public abstract class AbstractParallelIT extends AbstractIT {
@@ -31,7 +33,11 @@ public abstract class AbstractParallelIT extends AbstractIT {
     @ClassRule
     public static Concord concord = new Concord()
             .localMode(Boolean.parseBoolean(System.getProperty("it.local.mode")))
+            .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
+            .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
+            .pullPolicy(PullPolicy.defaultPolicy())
             .streamServerLogs(true)
-            .streamAgentLogs(true);
+            .streamAgentLogs(true)
+            .useLocalMavenRepository(true);
 
 }

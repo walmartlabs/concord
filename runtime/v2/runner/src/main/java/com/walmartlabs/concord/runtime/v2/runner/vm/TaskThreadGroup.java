@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.it.runtime.v1;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
@@ -20,20 +20,16 @@ package com.walmartlabs.concord.it.runtime.v1;
  * =====
  */
 
-import com.walmartlabs.concord.it.common.ITUtils;
+public class TaskThreadGroup extends ThreadGroup {
 
-import java.io.IOException;
-import java.net.URI;
+    private final String segmentId;
 
-public abstract class AbstractIT {
-
-    protected static final long DEFAULT_TEST_TIMEOUT = 120000;
-
-    protected byte[] archive(URI uri) throws IOException {
-        return ITUtils.archive(uri);
+    public TaskThreadGroup(String name, String segmentId) {
+        super(name);
+        this.segmentId = segmentId;
     }
 
-    protected String randomString() {
-        return ITUtils.randomString();
+    public String getSegmentId() {
+        return segmentId;
     }
 }
