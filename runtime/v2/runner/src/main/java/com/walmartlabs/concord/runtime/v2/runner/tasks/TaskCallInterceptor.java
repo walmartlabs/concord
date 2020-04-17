@@ -35,6 +35,9 @@ import javax.inject.Named;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Intercepts task calls and notifies {@link TaskCallListener}s.
+ */
 public class TaskCallInterceptor implements MethodInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(TaskCallInterceptor.class);

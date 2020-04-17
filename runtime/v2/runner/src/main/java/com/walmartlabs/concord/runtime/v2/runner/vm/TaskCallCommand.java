@@ -36,6 +36,7 @@ import com.walmartlabs.concord.svm.ThreadId;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.*;
 
 /**
  * Calls the specified task. Responsible for preparing the task's input
@@ -69,12 +70,53 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        Serializable result = ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input)));
+        ThreadGroup threadGroup = new TaskThreadGroup(call.getName(), call.getName());
+        Serializable result = executeInThreadGroup(threadGroup, "thread-" + call.getName(),
+                () -> ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input))));
 
         String out = opts.out();
         if (out != null) {
             GlobalVariables gv = runtime.getService(GlobalVariables.class);
             gv.put(out, result); // TODO a custom result structure
+        }
+    }
+
+    /**
+     * Executes the {@link Callable} in the specified {@link ThreadGroup}.
+     * A bit expensive as it is creates a new thread.
+     */
+    private static <V> V executeInThreadGroup(ThreadGroup group, String threadName, Callable<V> callable) {
+        ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadGroupAwareThreadFactory(group, threadName));
+        Future<V> result = executor.submit(callable);
+        try {
+            return result.get();
+        } catch (InterruptedException | ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                if (cause instanceof RuntimeException) {
+                    throw (RuntimeException) cause;
+                } else {
+                    throw new RuntimeException(cause);
+                }
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final class ThreadGroupAwareThreadFactory implements ThreadFactory {
+
+        private final ThreadGroup group;
+        private final String threadName;
+
+        private ThreadGroupAwareThreadFactory(ThreadGroup group, String threadName) {
+            this.group = group;
+            this.threadName = threadName;
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(group, r, threadName);
         }
     }
 }

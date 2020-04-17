@@ -15,7 +15,8 @@
 
     <properties>
         <it.local.mode>false</it.local.mode>
-        <testcontainers.concord.version>0.0.3</testcontainers.concord.version>
+        <server.image>walmartlabs/concord-server</server.image>
+        <agent.image>walmartlabs/concord-agent</agent.image>
         <ryuk.image>quay.io/testcontainers/ryuk:0.2.3</ryuk.image>
     </properties>
 
@@ -50,7 +51,12 @@
         <dependency>
             <groupId>ca.ibodrov.concord</groupId>
             <artifactId>testcontainers-concord</artifactId>
-            <version>${testcontainers.concord.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -60,12 +66,6 @@
         <dependency>
             <groupId>com.googlecode.junit-toolbox</groupId>
             <artifactId>junit-toolbox</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.it</groupId>
-            <artifactId>concord-server-it</artifactId>
-            <version>1.47.2-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -101,6 +101,11 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.it.tests}</skipTests>
+                    <systemProperties>
+                        <it.local.mode>${it.local.mode}</it.local.mode>
+                        <server.image>${server.image}</server.image>
+                        <agent.image>${agent.image}</agent.image>
+                    </systemProperties>
                 </configuration>
             </plugin>
         </plugins>
