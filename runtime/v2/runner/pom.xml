@@ -114,12 +114,24 @@
             <artifactId>commons-compress</artifactId>
         </dependency>
 
+        <!-- tasks -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>sleep-tasks</artifactId>
+        </dependency>
+
         <!-- Java EL support -->
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.el</artifactId>
         </dependency>
 
+        <!-- Tasks -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>throw-tasks</artifactId>
+        </dependency>
+        
         <!-- Immutables -->
         <dependency>
             <groupId>org.immutables</groupId>
@@ -135,6 +147,12 @@
             <groupId>com.google.errorprone</groupId>
             <artifactId>error_prone_annotations</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- tasks -->
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>log-tasks</artifactId>
         </dependency>
 
         <dependency>

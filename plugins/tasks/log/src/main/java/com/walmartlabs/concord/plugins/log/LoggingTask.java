@@ -22,22 +22,18 @@ package com.walmartlabs.concord.plugins.log;
 
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 
 @Named("log")
 public class LoggingTask implements Task {
 
-    public static final Logger log = LoggerFactory.getLogger(LoggingTask.class);
-
     public void debug(String s) {
-        log.debug(s);
+        LogUtils.debug(s);
     }
 
     public void info(String s) {
-        log.info(s);
+        LogUtils.info(s);
     }
 
     /**
@@ -45,11 +41,11 @@ public class LoggingTask implements Task {
      */
     @Deprecated
     public void info(String logName, String s) {
-        log.info("{} - {}", logName, s);
+        LogUtils.info(String.format("%s - %s", logName, s));
     }
 
     public void warn(String s) {
-        log.warn(s);
+        LogUtils.warn(s);
     }
 
     /**
@@ -57,25 +53,25 @@ public class LoggingTask implements Task {
      */
     @Deprecated
     public void warn(String logName, String s) {
-        log.warn("{} - {}", logName, s);
+        LogUtils.warn(String.format("%s - %s", logName, s));
     }
 
     public void error(String s) {
-        log.error(s);
+        LogUtils.error(s);
     }
 
     public void error(String logName, String s) {
-        log.error("{} - {}", logName, s);
+        LogUtils.error(String.format("%s - %s", logName, s));
     }
 
     public void call(String s) {
-        log.info(s);
+        LogUtils.info(s);
     }
 
     @Override
     public void execute(Context ctx) {
         String msg = assertString(ctx, "msg");
-        log.info(msg);
+        LogUtils.info(msg);
     }
 
     private static String assertString(Context ctx, String k) {

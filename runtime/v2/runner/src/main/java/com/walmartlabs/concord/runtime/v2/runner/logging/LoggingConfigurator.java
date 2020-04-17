@@ -28,8 +28,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.joran.spi.JoranException;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ThreadLocalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +36,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.UUID;
 
 public class LoggingConfigurator {
 
@@ -77,14 +74,7 @@ public class LoggingConfigurator {
             FileAppender<ILoggingEvent> fa = new FileAppender<>();
             fa.setContext(context);
             fa.setAppend(false);
-            UUID correlationId;
-            Context ctx = ThreadLocalContext.get();
-            if (ctx != null) {
-                correlationId = ctx.execution().correlationId();
-            } else {
-                correlationId = new UUID(0,0);
-            }
-            fa.setFile(String.format("%s/%s-%s.log", dst.toAbsolutePath(), correlationId, discriminatingValue));
+            fa.setFile(String.format("%s/segment-%s.log", dst.toAbsolutePath(), discriminatingValue));
 
             PatternLayoutEncoder encoder = new PatternLayoutEncoder();
             encoder.setContext(context);
