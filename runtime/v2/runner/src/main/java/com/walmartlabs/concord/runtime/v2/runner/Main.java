@@ -27,10 +27,9 @@ import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ThreadStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,22 +43,26 @@ import java.util.Set;
 
 public class Main {
 
-    private static final Logger log = LoggerFactory.getLogger(Main.class);
-
     private final Injector injector;
-    private final ProcessConfiguration cfg;
+    private final RunnerConfiguration runnerCfg;
+    private final ProcessConfiguration processCfg;
     private final WorkingDirectory workDir;
 
     @Inject
-    public Main(Injector injector, ProcessConfiguration cfg, WorkingDirectory workDir) {
+    public Main(Injector injector,
+                RunnerConfiguration runnerCfg,
+                ProcessConfiguration processCfg,
+                WorkingDirectory workDir) {
+
         this.injector = injector;
-        this.cfg = cfg;
+        this.runnerCfg = runnerCfg;
+        this.processCfg = processCfg;
         this.workDir = workDir;
     }
 
     public static void main(String[] args) throws Exception {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
-
+        
         // create the inject with all dependencies and services available before
         // the actual process' working directory is ready to go
         // it allows us to load all dependencies and have them available
@@ -72,7 +75,7 @@ public class Main {
 
             System.exit(0);
         } catch (Throwable t) {
-            log.error("main -> unhandled exception", t);
+            t.printStackTrace(System.err);
             System.exit(1);
         }
     }
@@ -93,20 +96,25 @@ public class Main {
     }
 
     public void execute() throws Exception {
-        validate(cfg);
+        validate(processCfg);
+
+        String segmentedLogDir = runnerCfg.logging().segmentedLogDir();
+        if (segmentedLogDir != null) {
+            LoggingConfigurator.configure(segmentedLogDir);
+        }
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
                 .build();
 
-        Map<String, Object> processArgs = prepareProcessArgs(cfg);
+        Map<String, Object> processArgs = prepareProcessArgs(processCfg);
 
         ProcessSnapshot snapshot;
         Set<String> events = StateManager.readResumeEvents(workDir.getValue()); // TODO make it an interface
         if (events == null || events.isEmpty()) {
-            snapshot = start(runner, cfg, processArgs);
+            snapshot = start(runner, processCfg, processArgs);
         } else {
-            snapshot = resume(runner, workDir.getValue(), cfg, processArgs, events);
+            snapshot = resume(runner, workDir.getValue(), processCfg, processArgs, events);
         }
 
         if (isSuspended(snapshot)) {
