@@ -49,7 +49,8 @@ public final class ProcessDefinitionGrammar {
                                     optional("profiles", profilesVal.map(o::profiles)),
                                     optional("triggers", triggersVal.map(o::triggers)),
                                     optional("forms", FormsGrammar.formsVal.map(o::forms)),
-                                    optional("imports", ImportsGrammar.importsVal.map(o::imports))))
+                                    optional("imports", ImportsGrammar.importsVal.map(o::imports)),
+                                    optional("resources", ResourcesGrammar.resourcesVal.map(o::resources))))
                             .map(ImmutableProcessDefinition.Builder::build));
 
     private ProcessDefinitionGrammar() {

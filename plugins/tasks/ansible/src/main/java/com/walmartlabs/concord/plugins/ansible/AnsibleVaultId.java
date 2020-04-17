@@ -135,6 +135,17 @@ public class AnsibleVaultId {
     }
 
     private Path storePassword(String key, Object o) throws IOException {
+        if (o == null) {
+            throw new IllegalArgumentException("'" + key + "' vault's password is empty. " +
+                    "Check the task's '" + TaskParams.VAULT_PASSWORD_KEY.getKey() + "' parameter.");
+        }
+
+        if (!(o instanceof String)) {
+            throw new IllegalArgumentException("Invalid '" + key + "' vault's password value. " +
+                    "Expected a string, got: " + o + ". " +
+                    "Check the task's '" + TaskParams.VAULT_PASSWORD_KEY.getKey() + "' parameter.");
+        }
+
         Path p = Files.createTempFile(tmpDir, key, ".vault");
         Files.write(p, ((String) o).getBytes(), StandardOpenOption.CREATE);
         return p;

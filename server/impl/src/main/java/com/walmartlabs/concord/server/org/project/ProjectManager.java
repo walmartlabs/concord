@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.policy.EntityAction;
 import com.walmartlabs.concord.server.policy.EntityType;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -233,7 +234,8 @@ public class ProjectManager {
         }
 
         if (owner.username() != null) {
-            return userManager.getOrCreate(owner.username(), owner.userDomain(), UserType.LDAP);
+            return userManager.get(owner.username(), owner.userDomain(), UserType.LDAP)
+                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + owner.username()));
         }
 
         return defaultOwner;
