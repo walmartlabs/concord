@@ -23,6 +23,7 @@ package com.walmartlabs.concord.agent.executors.runner;
 import com.walmartlabs.concord.agent.logging.ProcessLog;
 import com.walmartlabs.concord.agent.logging.RedirectedProcessLog;
 import com.walmartlabs.concord.agent.logging.RemoteProcessLog;
+import com.walmartlabs.concord.agent.logging.SegmentedProcessLog;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,10 +31,10 @@ import java.util.function.Supplier;
 
 public class RunnerLog implements ProcessLog {
 
-    private final RedirectedProcessLog redirectedLog;
+    private final SegmentedProcessLog redirectedLog;
     private final RemoteProcessLog remoteLog;
 
-    public RunnerLog(RedirectedProcessLog redirectedLog, RemoteProcessLog remoteLog) {
+    public RunnerLog(SegmentedProcessLog redirectedLog, RemoteProcessLog remoteLog) {
         this.redirectedLog = redirectedLog;
         this.remoteLog = remoteLog;
     }

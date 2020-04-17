@@ -48,6 +48,10 @@ public class ProcessLogFactory {
         return new RedirectedProcessLog(logDir, instanceId, logAppender, logStreamMaxDelay);
     }
 
+    public SegmentedProcessLog createSegmentedProcessLog(Path logSegmentsDir, UUID instanceId) throws IOException {
+        return new SegmentedProcessLog(logSegmentsDir, instanceId, logAppender, logStreamMaxDelay);
+    }
+
     public RemoteProcessLog createRemoteLog(UUID instanceId) {
         return new RemoteProcessLog(instanceId, logAppender);
     }

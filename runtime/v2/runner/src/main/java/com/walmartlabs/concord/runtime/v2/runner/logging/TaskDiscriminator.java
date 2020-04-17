@@ -24,12 +24,20 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.sift.AbstractDiscriminator;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskThreadGroup;
 
+import java.util.UUID;
+
 public class TaskDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
 
     /**
      * The segment ID lookup's maximum depth (limits nesting of {@link ThreadGroup}s).
      */
     private static final int MAX_DEPTH = 100;
+
+    private final UUID instanceId;
+
+    public TaskDiscriminator(UUID instanceId) {
+        this.instanceId = instanceId;
+    }
 
     @Override
     public String getDiscriminatingValue(ILoggingEvent iLoggingEvent) {
@@ -38,7 +46,8 @@ public class TaskDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
         ThreadGroup g = Thread.currentThread().getThreadGroup();
         while (true) {
             if (g instanceof TaskThreadGroup) {
-                return ((TaskThreadGroup) g).getSegmentId();
+                TaskThreadGroup ttg = (TaskThreadGroup)g;
+                return ttg.getSegmentId() + "-" + ttg.getName();
             }
 
             if (g.getParent() == null) {
@@ -54,7 +63,7 @@ public class TaskDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
             }
         }
 
-        return "system";
+        return instanceId + "-" + "system";
     }
 
     @Override
