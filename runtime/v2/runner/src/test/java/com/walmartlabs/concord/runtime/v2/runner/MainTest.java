@@ -344,6 +344,23 @@ public class MainTest {
     }
 
     @Test
+    public void testInitiator() throws Exception {
+        deploy("initiator");
+
+        Map<String, Object> initiator = new HashMap<>();
+        initiator.put("username", "test");
+        initiator.put("displayName", "Test User");
+
+        save(ProcessConfiguration.builder()
+                .initiator(initiator)
+                .putArguments("name", "${initiator.displayName}")
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Test User.*");
+    }
+
+    @Test
     public void testSegmentedLogging() throws Exception {
         deploy("logging");
 
@@ -357,7 +374,8 @@ public class MainTest {
                 .build();
 
         byte[] log = run(runnerCfg);
-        assertLog(log, ".*this goes directly into the stdout.*");
+        assertLog(log, ".*This goes directly into the stdout.*");
+        assertNoLog(log, ".*This is a processLog entry.*");
 
         List<Path> paths = Files.list(segmentedLogDir).collect(Collectors.toList());
         assertNotEquals(0, paths.size());
@@ -431,18 +449,32 @@ public class MainTest {
             fail("Log is empty");
         }
 
+        if (grep(ab, pattern) != 1) {
+            fail("Expected a single log entry: " + pattern + ", got: \n" + new String(ab));
+        }
+    }
+
+    private static void assertNoLog(byte[] ab, String pattern) throws IOException {
+        if (grep(ab, pattern) > 0) {
+            fail("Expected no log entries like this: " + pattern + ", got: \n" + new String(ab));
+        }
+    }
+
+    private static int grep(byte[] ab, String pattern) throws IOException {
+        int cnt = 0;
+
         try (ByteArrayInputStream bais = new ByteArrayInputStream(ab);
              BufferedReader reader = new BufferedReader(new InputStreamReader(bais))) {
 
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.matches(pattern)) {
-                    return;
+                    cnt++;
                 }
             }
-
-            fail("Expected a log entry: " + pattern + ", got: \n" + new String(ab));
         }
+
+        return cnt;
     }
 
     @Named("testDefaults")
@@ -495,12 +527,13 @@ public class MainTest {
     static class LoggingExampleTask implements Task {
 
         private static final Logger log = LoggerFactory.getLogger(LoggingExampleTask.class);
+        private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
         @Override
         public Serializable execute(TaskContext ctx) throws Exception {
-            log.info("Hello, I'm a task!");
-
-            System.out.println("this goes directly into the stdout");
+            log.info("This goes into a regular log");
+            processLog.info("This is a processLog entry");
+            System.out.println("This goes directly into the stdout");
 
             ExecutorService executor = Executors.newCachedThreadPool();
 

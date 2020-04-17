@@ -55,7 +55,6 @@ public class ProcessDefinitionRefreshListener implements RepositoryRefreshListen
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void onRefresh(DSLContext ctx, RepositoryEntry repo, Path repoPath) throws Exception {
         ProcessDefinition pd = projectLoader.loadProject(repoPath, importsNormalizer.forProject(repo.getProjectId()))
                 .projectDefinition();

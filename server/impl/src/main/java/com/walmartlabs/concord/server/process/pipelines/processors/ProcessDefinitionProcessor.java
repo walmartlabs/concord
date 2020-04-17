@@ -20,10 +20,11 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  * =====
  */
 
-import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.process.ImportsNormalizerFactory;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
@@ -34,9 +35,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
+/**
+ * Loads the process definition using the working directory and configured {@code imports}.
+ */
 @Named
 @Singleton
 public class ProcessDefinitionProcessor implements PayloadProcessor {
@@ -63,9 +68,11 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             return chain.process(payload);
         }
 
+        UUID projectId = payload.getHeader(Payload.PROJECT_ID);
+
         try {
-            UUID projectId = payload.getHeader(Payload.PROJECT_ID);
-            ProjectLoader.Result result = projectLoader.loadProject(workDir, importsNormalizer.forProject(projectId));
+            String runtime = getRuntimeType(payload);
+            ProjectLoader.Result result = projectLoader.loadProject(workDir, runtime, importsNormalizer.forProject(projectId));
 
             List<Snapshot> snapshots = result.snapshots();
             for (Snapshot s : snapshots) {
@@ -74,16 +81,12 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
 
             ProcessDefinition pd = result.projectDefinition();
             payload = payload.putHeader(Payload.PROJECT_DEFINITION, pd);
-
             payload = payload.putHeader(Payload.IMPORTS, pd.imports());
 
-            // configuration from the user request
-            Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
-
             // save the runtime type in the process configuration
-            // makes it easier to select the correct implementation on the agent - no need to
-            // parse the top-level `runtime` field again
-            cfg.put(Constants.Request.RUNTIME_KEY, pd.runtime());
+            Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION, Collections.emptyMap());
+            cfg = new HashMap<>(cfg); // make mutable
+            cfg.put(Constants.Request.RUNTIME_KEY, runtime);
             payload = payload.putHeader(Payload.CONFIGURATION, cfg);
 
             return chain.process(payload);
@@ -103,5 +106,24 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
         result.add(s);
 
         return payload.putHeader(RepositoryProcessor.REPOSITORY_SNAPSHOT, result);
+    }
+
+    /**
+     * Returns the runtime type for the specified payload.
+     * <p/>
+     * The method looks for the process configuration's {@code runtime} key first
+     * and then into the root concord.yml's {@code configuration.runtime} value.
+     */
+    private static String getRuntimeType(Payload payload) throws IOException {
+        Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
+        if (cfg != null) {
+            String s = MapUtils.getString(cfg, Constants.Request.RUNTIME_KEY); // TODO constants
+            if (s != null) {
+                return s;
+            }
+        }
+
+        Path workDir = payload.getHeader(Payload.WORKSPACE_DIR);
+        return ProjectLoader.getRuntimeType(workDir, "concord-v1"); // TODO constants or configuration
     }
 }

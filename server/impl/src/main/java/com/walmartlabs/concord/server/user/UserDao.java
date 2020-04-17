@@ -48,25 +48,23 @@ public class UserDao extends AbstractDao {
     }
 
     public UUID insert(String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
-        return txResult(tx -> insert(tx, username, domain, null, null, type, roles));
-    }
+        return txResult(tx -> {
+            UUID userId = tx.insertInto(USERS)
+                    .columns(USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
+                    .values(username, domain, displayName, email, type.toString())
+                    .onConflict(USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE)
+                    .doUpdate()
+                    .set(USERS.DISPLAY_NAME, displayName)
+                    .set(USERS.USER_EMAIL, email)
+                    .returning(USERS.USER_ID)
+                    .fetchOne().getUserId();
 
-    public UUID insert(DSLContext tx, String username, String domain, String displayName, String email, UserType type, Set<String> roles) {
-        UUID userId = tx.insertInto(USERS)
-                .columns(USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
-                .values(username, domain, displayName, email, type.toString())
-                .onConflict(USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE)
-                .doUpdate()
-                .set(USERS.DISPLAY_NAME, displayName)
-                .set(USERS.USER_EMAIL, email)
-                .returning(USERS.USER_ID)
-                .fetchOne().getUserId();
+            if (roles != null) {
+                updateRoles(tx, userId, roles);
+            }
 
-        if (roles != null) {
-            updateRoles(tx, userId, roles);
-        }
-
-        return userId;
+            return userId;
+        });
     }
 
     public void delete(UUID id) {

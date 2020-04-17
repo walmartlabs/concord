@@ -58,13 +58,11 @@ public interface Context {
     // TODO add "evaluate" method as well?
 
     /**
-     * "Interpolates" the specified value, resolving all variables.
+     * "Evaluates" the specified value, resolving all variables.
      * All expressions are evaluated and replaced with resulting values.
      * Accepts strings (including expressions), lists, sets, arrays and maps.
-     * Interpolation is recursive, all nested values with expressions
-     * will be replaced with their evaluation results.
      */
-    <T> T interpolate(Object v, Class<T> type);
+    <T> T eval(Object v, Class<T> type);
 
     // TODO FormService
 }

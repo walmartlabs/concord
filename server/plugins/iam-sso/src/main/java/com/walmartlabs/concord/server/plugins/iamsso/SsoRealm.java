@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.plugins.iamsso;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
@@ -84,7 +85,8 @@ public class SsoRealm extends AuthorizingRealm {
             throw new AuthenticationException("LDAP data not found: " + t.getUsername() + "@" + t.getDomain());
         }
 
-        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP);
+        UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP)
+                .orElseThrow(() -> new ConcordApplicationException("User not found: " + ldapPrincipal.getUsername()));
 
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(u.getId())

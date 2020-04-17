@@ -66,6 +66,7 @@ public class HostFactsProcessor implements Processor {
     }
 
     @Override
+    @WithTimer
     public void process(List<AnsibleEvent> events) {
         List<HostFactsItem> items = new ArrayList<>();
 
@@ -119,11 +120,11 @@ public class HostFactsProcessor implements Processor {
             this.objectMapper = new ObjectMapper();
         }
 
+        @WithTimer
         public void insert(List<HostFactsItem> items) {
             tx(tx -> insert(tx, items));
         }
 
-        @WithTimer
         private void insert(DSLContext tx, List<HostFactsItem> items) {
             tx.connection(conn -> {
                 int[] updated = update(tx, conn, items);
@@ -145,7 +146,7 @@ public class HostFactsProcessor implements Processor {
         }
 
         @WithTimer
-        private int[] update(DSLContext tx, Connection conn, List<HostFactsItem> items) throws SQLException {
+        protected int[] update(DSLContext tx, Connection conn, List<HostFactsItem> items) throws SQLException {
             NodeRosterHostFacts f = NODE_ROSTER_HOST_FACTS.as("f");
 
             String update = tx.update(f)
@@ -169,7 +170,7 @@ public class HostFactsProcessor implements Processor {
         }
 
         @WithTimer
-        private void insert(DSLContext tx, Connection conn, List<HostFactsItem> items) throws SQLException {
+        protected void insert(DSLContext tx, Connection conn, List<HostFactsItem> items) throws SQLException {
             NodeRosterHostFacts f = NODE_ROSTER_HOST_FACTS.as("f");
 
             String insert = tx.insertInto(f)

@@ -33,7 +33,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.sdk.ContextUtils.*;
+import static com.walmartlabs.concord.sdk.ContextUtils.getMap;
+import static com.walmartlabs.concord.sdk.ContextUtils.getTxId;
 
 public class AnsibleEnv {
 

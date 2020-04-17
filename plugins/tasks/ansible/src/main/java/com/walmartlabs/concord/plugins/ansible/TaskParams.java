@@ -47,6 +47,7 @@ public enum TaskParams implements HasKey {
 
     DYNAMIC_INVENTORY_FILE_KEY("dynamicInventoryFile"),
 
+    @Deprecated
     DYNAMIC_INVENTORY_FILE_NAME("_dynamicInventory"),
 
     ENABLE_POLICY("enablePolicy"),

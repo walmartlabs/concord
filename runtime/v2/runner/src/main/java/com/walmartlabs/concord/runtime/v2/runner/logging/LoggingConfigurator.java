@@ -47,6 +47,8 @@ public class LoggingConfigurator {
     private static final String PATTERN_PROPERTY_KEY = "OUTPUT_PATTERN";
     private static final String DEFAULT_PATTERN = "%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %logger{36} - %msg%n%rEx{full, com.sun, sun}";
     private static final String DEFAULT_ROOT_APPENDER_NAME = "STDOUT";
+    private static final String PROCESS_LOGGER_NAME = "processLog";
+    private static final String DEFAULT_PROCESS_LOG_APPENDER_NAME = "PROCESS_STDOUT";
 
     public static void configure(String baseDir) {
         log.info("Redirecting logging output into the segment log: {}", baseDir);
@@ -97,9 +99,13 @@ public class LoggingConfigurator {
 
         sa.start();
 
-        Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
-        rootLogger.detachAppender(DEFAULT_ROOT_APPENDER_NAME);
-        rootLogger.addAppender(sa);
+        Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.detachAppender(DEFAULT_ROOT_APPENDER_NAME);
+        root.addAppender(sa);
+
+        Logger processLog = loggerContext.getLogger(PROCESS_LOGGER_NAME);
+        processLog.detachAppender(DEFAULT_PROCESS_LOG_APPENDER_NAME);
+        processLog.addAppender(sa);
     }
 
     public static void reset() {

@@ -24,11 +24,7 @@ import com.walmartlabs.concord.imports.Imports;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
@@ -76,6 +72,11 @@ public interface ProcessDefinition extends Serializable {
     @Value.Default
     default Forms forms() {
         return Forms.builder().build();
+    }
+
+    @Value.Default
+    default Resources resources() {
+        return Resources.builder().build();
     }
 
     static ImmutableProcessDefinition.Builder builder() {

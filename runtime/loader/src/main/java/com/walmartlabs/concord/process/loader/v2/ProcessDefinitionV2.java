@@ -24,12 +24,7 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.process.loader.model.*;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 public class ProcessDefinitionV2 implements ProcessDefinition, Serializable {
 
