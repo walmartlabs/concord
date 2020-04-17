@@ -24,10 +24,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
 import com.walmartlabs.concord.process.loader.v1.ProcessDefinitionV1;
 import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
+import com.walmartlabs.concord.repository.Snapshot;
 import com.walmartlabs.concord.sdk.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,12 @@ public class ProjectLoader {
     }
 
     public Result loadProject(Path workDir, ImportsNormalizer importsNormalizer) throws Exception {
-        if (isV2(workDir)) {
+        String runtime = getRuntimeType(workDir, "concord-v1"); // TODO constants
+        return loadProject(workDir, runtime, importsNormalizer);
+    }
+
+    public Result loadProject(Path workDir, String runtime, ImportsNormalizer importsNormalizer) throws Exception {
+        if ("concord-v2".equals(runtime)) { // TODO constants
             return toResult(v2.load(workDir, importsNormalizer::normalize));
         }
 
@@ -137,6 +142,36 @@ public class ProjectLoader {
         }
 
         return false;
+    }
+
+    public static String getRuntimeType(Path workDir, String defaultType) throws IOException {
+        for (String filename : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+            Path src = workDir.resolve(filename);
+            if (Files.exists(src)) {
+                ObjectMapper om = new ObjectMapper(new YAMLFactory());
+                try (InputStream in = Files.newInputStream(src)) {
+                    JsonNode n = om.readTree(in);
+
+                    n = n.get(Constants.Request.CONFIGURATION_KEY);
+                    if (n == null) {
+                        continue;
+                    }
+
+                    n = n.get(Constants.Request.RUNTIME_KEY);
+                    if (n == null) {
+                        continue;
+                    }
+
+                    // TODO constants
+                    String s = n.textValue();
+                    if (s != null) {
+                        return s;
+                    }
+                }
+            }
+        }
+
+        return defaultType;
     }
 
     public interface Result {
