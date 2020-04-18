@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,15 +78,11 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
     @Override
     public void delete() {
         super.delete();
-        segments.keySet().forEach(p -> {
-            if (Files.exists(p)) {
-                try {
-                    Files.delete(p);
-                } catch (IOException e) {
-                    log.warn("delete -> error while removing a log file: {}", p);
-                }
-            }
-        });
+        try {
+            IOUtils.deleteRecursively(logsDir);
+        } catch (IOException e) {
+            log.warn("delete -> error while removing a log directory: {}", logsDir);
+        }
     }
 
     private void collectSegments() throws IOException {
