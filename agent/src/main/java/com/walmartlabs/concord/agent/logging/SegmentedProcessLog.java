@@ -31,30 +31,22 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class SegmentedProcessLog implements ProcessLog {
+public class SegmentedProcessLog extends RedirectedProcessLog {
 
     private static final Logger log = LoggerFactory.getLogger(SegmentedProcessLog.class);
 
     private final Path logsDir;
-    private final UUID instanceId;
     private final Map<Path, LogSegment> segments;
-
-    private final LogAppender appender;
-    private final long logSteamMaxDelay;
-
-    private final LocalProcessLog localLog;
 
     private final byte[] logBuffer = new byte[8192];
 
     public SegmentedProcessLog(Path logsDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
-        this.instanceId = instanceId;
-        this.appender = appender;
-        this.logSteamMaxDelay = logSteamMaxDelay;
+        super(logsDir, instanceId, appender, logSteamMaxDelay);
         this.logsDir = logsDir;
-        this.localLog = new LocalProcessLog(logsDir, instanceId);
         this.segments = new LinkedHashMap<>();
     }
 
+    @Override
     public void run(Supplier<Boolean> stopCondition) throws Exception {
         try {
             while (!Thread.currentThread().isInterrupted()) {
@@ -84,27 +76,16 @@ public class SegmentedProcessLog implements ProcessLog {
 
     @Override
     public void delete() {
-        this.localLog.delete();
-    }
-
-    @Override
-    public void log(InputStream src) throws IOException {
-        this.localLog.log(src);
-    }
-
-    @Override
-    public void info(String log, Object... args) {
-        this.localLog.info(log, args);
-    }
-
-    @Override
-    public void warn(String log, Object... args) {
-        this.localLog.warn(log, args);
-    }
-
-    @Override
-    public void error(String log, Object... args) {
-        this.localLog.error(log, args);
+        super.delete();
+        segments.keySet().forEach(p -> {
+            if (Files.exists(p)) {
+                try {
+                    Files.delete(p);
+                } catch (IOException e) {
+                    log.warn("delete -> error while removing a log file: {}", p);
+                }
+            }
+        });
     }
 
     private void collectSegments() throws IOException {
@@ -141,8 +122,8 @@ public class SegmentedProcessLog implements ProcessLog {
 
             try {
                 int read = processSegment(segment, chunk -> {
-                    byte[] chunkBuffer = new byte[chunk.len];
-                    System.arraycopy(chunk.ab, 0, chunkBuffer, 0, chunk.len);
+                    byte[] chunkBuffer = new byte[chunk.len()];
+                    System.arraycopy(chunk.bytes(), 0, chunkBuffer, 0, chunk.len());
                     appender.appendLog(instanceId, segment.correlationId(), segment.name(), chunkBuffer);
                 });
 
@@ -182,18 +163,7 @@ public class SegmentedProcessLog implements ProcessLog {
         segments.clear();
     }
 
-    private static final class Chunk {
-
-        private final byte[] ab;
-        private final int len;
-
-        private Chunk(byte[] ab, int len) { // NOSONAR
-            this.ab = ab;
-            this.len = len;
-        }
-    }
-
-    class LogSegment {
+    static class LogSegment {
 
         private final UUID correlationId;
         private final String name;

@@ -44,10 +44,6 @@ public class LocalProcessLog extends AbstractProcessLog {
         this.baseDir = baseDir;
         this.instanceId = instanceId;
 
-        if (Files.notExists(baseDir)) {
-            Files.createDirectories(baseDir);
-        }
-
         Files.createFile(logFile());
     }
 

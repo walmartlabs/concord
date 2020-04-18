@@ -35,9 +35,9 @@ import java.util.function.Supplier;
  */
 public class RedirectedProcessLog implements ProcessLog {
 
-    private final UUID instanceId;
-    private final LogAppender appender;
-    private final long logSteamMaxDelay;
+    protected final UUID instanceId;
+    protected final LogAppender appender;
+    protected final long logSteamMaxDelay;
 
     private final LocalProcessLog localLog;
 
@@ -114,14 +114,22 @@ public class RedirectedProcessLog implements ProcessLog {
         }
     }
 
-    private static final class Chunk {
+    protected static final class Chunk {
 
         private final byte[] ab;
         private final int len;
 
-        private Chunk(byte[] ab, int len) { // NOSONAR
+        protected Chunk(byte[] ab, int len) { // NOSONAR
             this.ab = ab;
             this.len = len;
+        }
+
+        public byte[] bytes() {
+            return ab;
+        }
+
+        public int len() {
+            return len;
         }
     }
 }
