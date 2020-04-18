@@ -381,6 +381,19 @@ public class MainTest {
         assertNotEquals(0, paths.size());
     }
 
+    @Test
+    public void testMultipleWithItems() throws Exception {
+        deploy("multipleWithItems");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        for (int i = 1; i < 7; i++) {
+            assertLog(log, ".*item: " + i + ".*");
+        }
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

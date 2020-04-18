@@ -40,22 +40,20 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
 
     @Override
     public <T> T eval(Context ctx, Object value, Class<T> expectedType) {
-        T result = delegate.eval(ctx, value, expectedType);
-
+        Object result = delegate.eval(ctx, value, Object.class);
         return initializeAll(result, expectedType);
     }
 
-    @SuppressWarnings("unchecked")
     private static <T> T initializeAll(Object value, Class<T> expectedType) {
-        if (value instanceof Map) {
-            Map<Object, Object> m = (Map<Object, Object>) value;
+        if (value instanceof LazyEvalMap) {
+            LazyEvalMap m = (LazyEvalMap) value;
             if (m.isEmpty()) {
                 return expectedType.cast(m);
             }
 
             return expectedType.cast(initializeMap(m));
-        } else if (value instanceof List) {
-            List<Object> l = (List<Object>) value;
+        } else if (value instanceof LazyEvalList) {
+            LazyEvalList l = (LazyEvalList) value;
             if (l.isEmpty()) {
                 return expectedType.cast(l);
             }
