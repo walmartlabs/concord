@@ -98,8 +98,11 @@ public class RunnerJobExecutorProvider implements Provider<JobExecutor> {
             @Override
             public JobInstance exec(ConfiguredJobRequest jobRequest) throws Exception {
                 AbstractRunnerConfiguration runnerCfg = runnerV1Cfg;
+
+                boolean segmentedLogs = false;
                 if (isV2(jobRequest)) {
                     runnerCfg = runnerV2Cfg;
+                    segmentedLogs = true;
                 }
 
                 jobRequest.getLog().info("Runtime: {}", runnerCfg.getRuntimeName());
@@ -116,6 +119,8 @@ public class RunnerJobExecutorProvider implements Provider<JobExecutor> {
                         .runnerMainClass(runnerCfg.getMainClass())
                         .extraDockerVolumes(dockerCfg.getExtraVolumes())
                         .maxHeartbeatInterval(serverCfg.getMaxNoHeartbeatInterval())
+                        .segmentedLogs(segmentedLogs)
+                        .logDir(agentCfg.getLogDir())
                         .build();
 
                 JobExecutor delegate = new RunnerJobExecutor(runnerExecutorCfg, dependencyManager, defaultDependencies, postProcessors, processPool, processLogFactory, executor);

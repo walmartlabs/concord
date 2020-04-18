@@ -31,10 +31,10 @@ import java.util.function.Supplier;
 
 public class RunnerLog implements ProcessLog {
 
-    private final SegmentedProcessLog redirectedLog;
+    private final RedirectedProcessLog redirectedLog;
     private final RemoteProcessLog remoteLog;
 
-    public RunnerLog(SegmentedProcessLog redirectedLog, RemoteProcessLog remoteLog) {
+    public RunnerLog(RedirectedProcessLog redirectedLog, RemoteProcessLog remoteLog) {
         this.redirectedLog = redirectedLog;
         this.remoteLog = remoteLog;
     }

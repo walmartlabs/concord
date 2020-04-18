@@ -58,11 +58,11 @@ public class RunnerJob {
             }
         }
 
-        RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, jobRequest, cfg);
+        RunnerConfiguration runnerCfg = createRunnerConfiguration(runnerExecutorCfg, cfg);
         RunnerLog log;
         try {
             log = new RunnerLog(
-                    processLogFactory.createSegmentedProcessLog(jobRequest.getLogSegmentsDir(), jobRequest.getInstanceId()),
+                    processLogFactory.createRedirectedLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs()),
                     processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
         } catch (IOException e) {
             throw new ExecutionException("Error while creating runner log", e);
@@ -159,7 +159,7 @@ public class RunnerJob {
                 '}';
     }
 
-    private static RunnerConfiguration createRunnerConfiguration(RunnerJobExecutorConfiguration execCfg, JobRequest jobRequest, Map<String, Object> processCfg) {
+    private static RunnerConfiguration createRunnerConfiguration(RunnerJobExecutorConfiguration execCfg, Map<String, Object> processCfg) {
         ImmutableRunnerConfiguration.Builder b = RunnerConfiguration.builder();
 
         Object v = processCfg.get(Constants.Request.RUNNER_KEY);
@@ -181,7 +181,7 @@ public class RunnerJob {
                         .cacheDir(execCfg.dependencyCacheDir().toAbsolutePath().toString())
                         .build())
                 .logging(LoggingConfiguration.builder()
-                        .segmentedLogDir(jobRequest.getLogSegmentsDir().toString())
+                        .segmentedLogDir(execCfg.logDir().toString())
                         .build())
                 .build();
     }
