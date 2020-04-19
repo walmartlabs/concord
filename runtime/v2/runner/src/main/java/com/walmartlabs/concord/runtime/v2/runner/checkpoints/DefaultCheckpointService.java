@@ -27,7 +27,7 @@ import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.Runtime;

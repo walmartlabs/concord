@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.sdk;
  */
 
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Context;
 
@@ -31,10 +32,12 @@ import javax.inject.Named;
 public class ApiConfigurationImpl implements ApiConfiguration {
 
     private final RunnerConfiguration runnerCfg;
+    private final ProcessConfiguration processCfg;
 
     @Inject
-    public ApiConfigurationImpl(RunnerConfiguration runnerCfg) {
+    public ApiConfigurationImpl(RunnerConfiguration runnerCfg, ProcessConfiguration processCfg) {
         this.runnerCfg = runnerCfg;
+        this.processCfg = processCfg;
     }
 
     @Override
@@ -54,7 +57,6 @@ public class ApiConfigurationImpl implements ApiConfiguration {
 
     @Override
     public String getSessionToken(Context ctx) {
-        throw new IllegalStateException("This method is deprecated. " +
-                "Use ProcessConfiguration#sessionToken() method to retrieve the session token.");
+        return processCfg.processInfo().sessionToken();
     }
 }
