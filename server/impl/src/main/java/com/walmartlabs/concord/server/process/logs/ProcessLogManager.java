@@ -74,6 +74,7 @@ public class ProcessLogManager {
     }
 
     public int log(ProcessKey processKey, byte[] msg) {
+        // TODO:
         // system segment id = 0
         return log(processKey, 0, msg);
     }

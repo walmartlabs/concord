@@ -36,6 +36,8 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
 
     private static final Logger log = LoggerFactory.getLogger(SegmentedProcessLog.class);
 
+    private static final int MAX_OPEN_SEGMENTS = 100;
+
     private final Path logsDir;
     private final Map<Path, LogSegment> segments;
 
@@ -101,11 +103,10 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
                 }
 
                 String segmentFileName = file.getFileName().toString();
-                // TODO: invalid file format
-                UUID correlationId = UUID.fromString(segmentFileName.substring(0, 36));
-                String segmentName = segmentFileName.substring(37, segmentFileName.length() - ".log".length());
-
-                segments.put(file, new LogSegment(correlationId, segmentName, Files.newInputStream(file)));
+                Long segmentId = createSegment(segmentFileName);
+                if (segmentId != null) {
+                    segments.put(file, new LogSegment(segmentId, Files.newInputStream(file)));
+                }
                 return FileVisitResult.CONTINUE;
             }
         });
@@ -121,7 +122,7 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
                 int read = processSegment(segment, chunk -> {
                     byte[] chunkBuffer = new byte[chunk.len()];
                     System.arraycopy(chunk.bytes(), 0, chunkBuffer, 0, chunk.len());
-                    appender.appendLog(instanceId, segment.correlationId(), segment.name(), chunkBuffer);
+                    appender.appendLog(instanceId, segment.getId(), chunkBuffer);
                 });
 
                 if (read > 0) {
@@ -160,16 +161,68 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
         segments.clear();
     }
 
-    static class LogSegment {
+    private static Segment parse(String segmentFileName) {
+        if (segmentFileName.length() < 36) {
+            log.warn("createSegment ['{}'] -> invalid segment file name: no uuid", segmentFileName);
+            return null;
+        }
+
+        try {
+            UUID correlationId = UUID.fromString(segmentFileName.substring(0, 36));
+
+            if (!segmentFileName.endsWith(".log")) {
+                log.warn("createSegment ['{}'] -> invalid segment file name: invalid extension", segmentFileName);
+                return null;
+            }
+
+            if (segmentFileName.length() - 37 - ".log".length() <= 0) {
+                log.warn("createSegment ['{}'] -> invalid segment file name: no name", segmentFileName);
+                return null;
+            }
+            String segmentName = segmentFileName.substring(37, segmentFileName.length() - ".log".length());
+
+            return new Segment(correlationId, segmentName);
+        } catch (Exception e) {
+            log.warn("createSegment ['{}'] -> error: {}", segmentFileName, e.getMessage());
+        }
+        return null;
+    }
+
+    private Long createSegment(String segmentFileName) {
+        try {
+            return appender.createSegment(instanceId, correlationId, segmentName);
+        } catch (Exception e) {
+            log.warn("createSegment ['{}'] -> error: {}", segmentFileName, e.getMessage());
+        }
+    }
+
+    static class Segment {
 
         private final UUID correlationId;
         private final String name;
+
+        public Segment(UUID correlationId, String name) {
+            this.correlationId = correlationId;
+            this.name = name;
+        }
+
+        public UUID getCorrelationId() {
+            return correlationId;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    static class LogSegment {
+
+        private final long id;
         private InputStream in;
         private int totalRead;
 
-        public LogSegment(UUID correlationId, String name, InputStream in) {
-            this.correlationId = correlationId;
-            this.name = name;
+        public LogSegment(long id, InputStream in) {
+            this.id = id;
             this.in = in;
         }
 
@@ -185,12 +238,8 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
             return result;
         }
 
-        public UUID correlationId() {
-            return correlationId;
-        }
-
-        public String name() {
-            return name;
+        public long getId() {
+            return id;
         }
 
         public int totalRead() {

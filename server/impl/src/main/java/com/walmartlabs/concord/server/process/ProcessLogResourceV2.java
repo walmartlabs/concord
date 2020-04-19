@@ -107,13 +107,15 @@ public class ProcessLogResourceV2 implements Resource {
     @POST
     @ApiOperation(value = "Create process log segment")
     @Path("{id}/log/segment")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
-    public LogSegmentOperationResponse segment(@ApiParam @PathParam("id") UUID instanceId) {
+    public LogSegmentOperationResponse segment(@ApiParam @PathParam("id") UUID instanceId,
+                                               @ApiParam LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
 
-        long segmentId = logManager.createSegment(processKey, correlationId, name);
+        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name());
 
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
@@ -140,6 +142,7 @@ public class ProcessLogResourceV2 implements Resource {
             int actualStart = range.start() != null ? range.start() : 0;
             int actualEnd = range.end() != null ? range.end() : actualStart;
             return Response.ok()
+                    // TODO: add Content-type
                     .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                     .build();
         }
@@ -157,6 +160,7 @@ public class ProcessLogResourceV2 implements Resource {
         };
 
         return Response.ok(out)
+                // TODO: add Content-type
                 .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                 .build();
     }
