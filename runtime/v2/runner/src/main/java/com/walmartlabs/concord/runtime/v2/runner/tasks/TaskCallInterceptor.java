@@ -56,9 +56,8 @@ public class TaskCallInterceptor implements MethodInterceptor {
 
         Context ctx = ThreadLocalContext.get();
         if (ctx == null || ctx.execution() == null || ctx.execution().currentStep() == null) {
-            log.warn("invoke ['{}', {}] -> thread-local context, execution or currentStep is empty. " +
-                    "This is most likely a bug.", taskName, invocation.getMethod());
-
+            // we don't get a ThreadLocalContext when calling tasks using expressions
+            // or when using other non-task step methods
             return invocation.proceed();
         }
 

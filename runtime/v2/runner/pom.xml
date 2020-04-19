@@ -117,6 +117,10 @@
         <!-- tasks -->
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>crypto-tasks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>sleep-tasks</artifactId>
         </dependency>
 
