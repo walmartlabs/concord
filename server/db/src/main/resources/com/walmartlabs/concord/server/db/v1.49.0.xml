@@ -15,10 +15,13 @@
     <changeSet id="1490010" author="ybrigo@gmail.com">
         <createTable tableName="PROCESS_LOG_SEGMENT">
             <column name="INSTANCE_ID" type="uuid">
-                <constraints nullable="false"/>
+                <constraints nullable="false" primaryKey="true"/>
             </column>
             <column name="INSTANCE_CREATED_AT" type="timestamp">
-                <constraints nullable="false" />
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="SEGMENT_ID" type="bigserial">
+                <constraints nullable="false" primaryKey="true"/>
             </column>
             <column name="SEGMENT_NAME" type="varchar(256)">
                 <constraints nullable="false"/>
@@ -28,9 +31,6 @@
             </column>
             <column name="SEGMENT_TS" type="timestamp">
                 <constraints nullable="false"/>
-            </column>
-            <column name="SEGMENT_ID" type="bigserial">
-                <constraints nullable="false" primaryKey="true"/>
             </column>
         </createTable>
     </changeSet>
