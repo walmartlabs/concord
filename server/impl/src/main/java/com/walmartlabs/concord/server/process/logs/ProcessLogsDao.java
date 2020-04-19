@@ -114,6 +114,16 @@ public class ProcessLogsDao extends AbstractDao {
         }
     }
 
+    public Long getSegmentId(ProcessKey processKey, UUID correlationId, String name) {
+        return txResult(tx -> tx.select(PROCESS_LOG_SEGMENT.SEGMENT_ID)
+                .from(PROCESS_LOG_SEGMENT)
+                .where(PROCESS_LOG_SEGMENT.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_LOG_SEGMENT.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
+                        .and(PROCESS_LOG_SEGMENT.CORRELATION_ID.eq(correlationId))
+                        .and(PROCESS_LOG_SEGMENT.SEGMENT_NAME.eq(name)))
+                .fetchOne(PROCESS_LOG_SEGMENT.SEGMENT_ID));
+    }
+
     public long createSegment(ProcessKey processKey, UUID correlationId, String name) {
         // TODO: up for partitioning
         return txResult(tx -> tx.select(newProcessLogSegment(processKey.getInstanceId(), processKey.getCreatedAt(), correlationId, name))
