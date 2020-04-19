@@ -1,17 +1,18 @@
+configuration:
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
 flows:
-  main:
-  - script: groovy
-    body: |
-      import com.walmartlabs.concord.plugins.example.ExampleBean
-      execution.setVariable("x", new ExampleBean("hello"))
+  default:
+    - script: groovy
+      body: |
+        import com.walmartlabs.concord.plugins.example.ExampleBean
+        execution.setVariable("x", new ExampleBean("hello"))
 
-  - form: myForm
+    - form: myForm
 
-  - log: "${myForm.y}"
+    - log: "${myForm.y}"
 
 forms:
   myForm:
-  - y: { type: "string" }
-
-variables:
-  entryPoint: main
+    - y: { type: "string" }

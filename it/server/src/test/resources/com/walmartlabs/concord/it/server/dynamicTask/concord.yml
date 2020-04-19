@@ -1,4 +1,8 @@
+configuration:
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
 flows:
   default:
-  - loadTasks: "tasks"
-  - ${myTask.hey("world")}
+    - loadTasks: "tasks"
+    - ${myTask.hey("world")}

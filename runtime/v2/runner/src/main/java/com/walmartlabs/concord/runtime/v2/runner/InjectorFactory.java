@@ -49,7 +49,7 @@ import java.util.UUID;
 // TODO poor ergonomics
 public class InjectorFactory {
 
-    public static Injector createDefault(RunnerConfiguration runnerCfg) throws IOException {
+    public static Injector createDefault(RunnerConfiguration runnerCfg) {
         Path src = Paths.get(System.getProperty("user.dir"));
 
         Provider<ProcessConfiguration> processCfgProvider = new DefaultProcessConfigurationProvider(src);
