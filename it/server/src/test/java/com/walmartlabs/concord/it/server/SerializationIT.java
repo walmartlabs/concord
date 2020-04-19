@@ -9,9 +9,9 @@ package com.walmartlabs.concord.it.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,8 @@ public class SerializationIT extends AbstractServerIT {
 
         // ---
 
-        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
 
         // ---
 
@@ -63,8 +64,8 @@ public class SerializationIT extends AbstractServerIT {
 
         // ---
 
-        ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
-        byte[] ab = getLog(pir.getLogFileName());
+        pe = waitForCompletion(processApi, spr.getInstanceId());
+        byte[] ab = getLog(pe.getLogFileName());
 
         assertLog(".*hello.*", ab);
     }

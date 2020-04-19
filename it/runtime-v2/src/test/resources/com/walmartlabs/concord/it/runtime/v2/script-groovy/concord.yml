@@ -1,0 +1,14 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2"
+
+flows:
+  default:
+    - script: groovy
+      body: |
+        execution.globalVariables().put("x", 123)
+
+    - script: groovy
+      body: |
+        println "log from script: " + execution.globalVariables().get("x")
