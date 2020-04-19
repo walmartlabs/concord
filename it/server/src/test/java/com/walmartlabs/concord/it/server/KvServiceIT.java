@@ -135,7 +135,7 @@ public class KvServiceIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(KvServiceIT.class.getResource("kvScript").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(KvServiceIT.class.getResource("kvScript").toURI());
 
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);

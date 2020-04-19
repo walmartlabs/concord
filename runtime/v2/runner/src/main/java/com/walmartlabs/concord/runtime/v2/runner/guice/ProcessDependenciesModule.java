@@ -54,6 +54,7 @@ public class ProcessDependenciesModule extends AbstractModule {
     protected void configure() {
         try {
             ClassLoader cl = loadDependencies(workDir, dependencies);
+            Thread.currentThread().setContextClassLoader(cl);
             install(new SpaceModule(new URLClassSpace(cl)));
         } catch (IOException e) {
             addError(e);
