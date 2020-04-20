@@ -19,32 +19,34 @@
  */
 
 import * as React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import './styles.css';
-import {Button, Icon} from 'semantic-ui-react';
+import { Button, Icon } from 'semantic-ui-react';
 import { SegmentStatus } from '../../../api/process/log';
+import {Link} from "react-router-dom";
+import {ConcordId} from "../../../api/common";
 
 interface ExternalProps {
-    correlationId: string;
+    instanceId: ConcordId,
+    segmentId: number;
     name: string;
     status: SegmentStatus;
     data: string[];
-    onStartLoading: () => void;
+    onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
-    onLoadWholeLog: () => void;
-    onLoadTailLog: () => void;
+    onSegmentInfo: () => void;
 }
 
 const LogSegment = ({
-    correlationId,
+    instanceId,
+    segmentId,
     name,
     status,
     data,
     onStartLoading,
     onStopLoading,
-    onLoadWholeLog,
-    onLoadTailLog
+    onSegmentInfo
 }: ExternalProps) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -53,33 +55,36 @@ const LogSegment = ({
     const [isLoadWholeLog, setLoadWholeLog] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
 
+    const wholeLogClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        setLoadWholeLog((prevState) => !prevState);
+    }, []);
+
+    const segmentInfoClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        onSegmentInfo();
+    }, []);
+
+    const autoscrollClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        setAutoScroll((prevState) => !prevState);
+    }, []);
+
     useEffect(() => {
         if (isOpen) {
-            onStartLoading();
+            onStartLoading(isLoadWholeLog);
             setLoading(true);
         } else {
             onStopLoading();
             setLoading(false);
         }
-    }, [isOpen, correlationId, name, onStartLoading, onStopLoading]);
-
-    const wholeLogClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        setLoadWholeLog(prevState => !prevState);
-    }, []);
-
-    const autoscrollClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        setAutoScroll(prevState => !prevState);
-        }, []);
-
-    useEffect(() => {
-        if (isLoadWholeLog) {
-            onLoadWholeLog();
-        } else {
-            onLoadTailLog();
-        }
-    }, [isLoadWholeLog, onLoadWholeLog, onLoadTailLog]);
+    }, [
+        isOpen,
+        isLoadWholeLog,
+        name,
+        onStartLoading,
+        onStopLoading
+    ]);
 
     useEffect(() => {
         if (isAutoScroll && scrollAnchorRef.current !== null) {
@@ -98,30 +103,44 @@ const LogSegment = ({
                 <StatusIcon status={status} />
                 <span className="Caption">{name}</span>
 
-                {/*<Link*/}
-                {/*    to={'#'}*/}
-                {/*    title={'Open Raw Step Output in New Tab'}*/}
-                {/*    className="AdditionalAction">*/}
-                {/*    <Icon name="external alternate" />*/}
-                {/*</Link>*/}
+                <Link
+                    to={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
+                    onClick={event => event.stopPropagation()}
+                    target={'_blank'}
+                    title={'Open Raw Step Output in New Tab'}
+                    className="AdditionalAction Last">
+                        <Icon name="external alternate" />
+                </Link>
 
-                {isOpen &&
-                <>
-                    <div className={'AdditionalAction'}>
-                        <Icon name={isLoadWholeLog ? 'lemon' : 'lemon outline'}
-                              color={isLoadWholeLog ? 'green' : 'grey'}
-                              title={'Show whole log'}
-                              onClick={wholeLogClickHandler}/>
-                    </div>
+                {segmentId !== 0 && <div className={'AdditionalAction'}>
+                    <Icon
+                        name={'info'}
+                        title={'Show info'}
+                        onClick={segmentInfoClickHandler}
+                    />
+                </div>}
 
-                    <div className={'AdditionalAction'}>
-                        <Icon name={isAutoScroll ? 'lightbulb' : 'lightbulb outline'}
-                              color={isAutoScroll ? 'green' : 'grey'}
-                              title={'Auto scroll'}
-                              onClick={autoscrollClickHandler}/>
-                    </div>
-                </>
-                }
+                {isOpen && (
+                    <>
+                        <div className={'AdditionalAction'}>
+                            <Icon
+                                name={isLoadWholeLog ? 'lemon' : 'lemon outline'}
+                                color={isLoadWholeLog ? 'green' : 'grey'}
+                                title={'Show whole log'}
+                                onClick={wholeLogClickHandler}
+                            />
+                        </div>
+
+                        <div className={'AdditionalAction'}>
+                            <Icon
+                                name={isAutoScroll ? 'lightbulb' : 'lightbulb outline'}
+                                color={isAutoScroll ? 'green' : 'grey'}
+                                title={'Auto scroll'}
+                                onClick={autoscrollClickHandler}
+                            />
+                        </div>
+                    </>
+                )}
             </Button>
 
             {isOpen && loading && data.length === 0 && (
@@ -138,7 +157,7 @@ const LogSegment = ({
                                 <pre key={index} dangerouslySetInnerHTML={{ __html: value }} />
                             ))}
                         </div>
-                        <div ref={scrollAnchorRef}/>
+                        <div ref={scrollAnchorRef} />
                     </div>
                 </div>
             )}
