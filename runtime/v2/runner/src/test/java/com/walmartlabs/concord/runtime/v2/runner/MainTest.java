@@ -236,7 +236,7 @@ public class MainTest {
 
     @Test
     public void testIfExpression() throws Exception {
-        deploy("if-expression");
+        deploy("ifExpression");
 
         save(ProcessConfiguration.builder()
                 .putArguments("myVar", "1")
@@ -250,7 +250,7 @@ public class MainTest {
 
     @Test
     public void testSwitchExpressionCaseFound() throws Exception {
-        deploy("switch-expression-full");
+        deploy("switchExpressionFull");
 
         save(ProcessConfiguration.builder()
                 .putArguments("myVar", "red")
@@ -262,7 +262,7 @@ public class MainTest {
 
     @Test
     public void testSwitchExpressionCaseNotFound() throws Exception {
-        deploy("switch-expression-full");
+        deploy("switchExpressionFull");
 
         save(ProcessConfiguration.builder()
                 .putArguments("myVar", "red1")
@@ -274,7 +274,7 @@ public class MainTest {
 
     @Test
     public void testSwitchExpressionDefault() throws Exception {
-        deploy("switch-expression-default");
+        deploy("switchExpressionDefault");
 
         save(ProcessConfiguration.builder()
                 .putArguments("myVar", "red1")
@@ -286,7 +286,7 @@ public class MainTest {
 
     @Test
     public void testSwitchExpressionCaseExpression() throws Exception {
-        deploy("switch-expression-case-expression");
+        deploy("switchExpressionCaseExpression");
 
         save(ProcessConfiguration.builder()
                 .putArguments("myVar", "red")
@@ -299,7 +299,7 @@ public class MainTest {
 
     @Test
     public void testSwitchExpressionCaseExpressionDefault() throws Exception {
-        deploy("switch-expression-case-expression");
+        deploy("switchExpressionCaseExpression");
 
         save(ProcessConfiguration.builder()
                 .putArguments("myVar", "boo")
@@ -312,7 +312,7 @@ public class MainTest {
 
     @Test
     public void testScriptInline() throws Exception {
-        deploy("script-inline");
+        deploy("scriptInline");
 
         save(ProcessConfiguration.builder()
                 .build());
@@ -323,7 +323,7 @@ public class MainTest {
 
     @Test
     public void testScriptAttached() throws Exception {
-        deploy("script-attached");
+        deploy("scriptAttached");
 
         save(ProcessConfiguration.builder()
                 .build());
@@ -334,7 +334,7 @@ public class MainTest {
 
     @Test
     public void testScriptErrorBlock() throws Exception {
-        deploy("script-error");
+        deploy("scriptError");
 
         save(ProcessConfiguration.builder()
                 .build());
@@ -391,6 +391,23 @@ public class MainTest {
         byte[] log = run();
         for (int i = 1; i < 7; i++) {
             assertLog(log, ".*item: " + i + ".*");
+        }
+    }
+
+    @Test
+    public void testUnknownMethod() throws Exception {
+        deploy("unknownMethod");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        try {
+            run();
+            fail("should fail");
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            assertTrue(msg.contains("Can't find 'sayGoodbye' method"));
+            assertTrue(msg.contains("Did you mean: 'sayHello'"));
         }
     }
 
@@ -562,6 +579,14 @@ public class MainTest {
             executor.awaitTermination(100, TimeUnit.SECONDS);
 
             return null;
+        }
+    }
+
+    @Named("unknownMethod")
+    static class UnknownMethodTask implements Task {
+
+        public String sayHello() {
+            return "Hello!";
         }
     }
 }

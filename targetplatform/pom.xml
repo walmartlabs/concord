@@ -28,7 +28,8 @@
         <commons.io.version>2.6</commons.io.version> <!-- necessary for resteasy -->
         <commons.lang.version>3.9</commons.lang.version>
         <commons.pool.version>2.8.0</commons.pool.version>
-        <commons.validator>1.6</commons.validator>
+        <commons.text.version>1.8</commons.text.version>
+        <commons.validator.version>1.6</commons.validator.version>
         <config.version>1.4.0</config.version>
         <cronutils.version>9.0.2</cronutils.version>
         <errorproneannotations.version>2.3.4</errorproneannotations.version>
@@ -611,7 +612,12 @@
             <dependency>
                 <groupId>commons-validator</groupId>
                 <artifactId>commons-validator</artifactId>
-                <version>${commons.validator}</version>
+                <version>${commons.validator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons.text.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
