@@ -22,21 +22,20 @@ package com.walmartlabs.concord.it.runtime.v2;
 
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
-import com.googlecode.junittoolbox.ParallelRunner;
 import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
 public class ProcessIT extends AbstractIT {
 
+    /**
+     * Argument passing.
+     */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testArgs() throws Exception {
-        byte[] archive = archive(ProcessIT.class.getResource("args").toURI());
-
         Payload payload = new Payload()
-                .archive(archive)
+                .archive(ProcessIT.class.getResource("args").toURI())
                 .arg("name", "Concord");
 
         ConcordProcess proc = concord.processes().start(payload);
@@ -50,12 +49,13 @@ public class ProcessIT extends AbstractIT {
         proc.assertLog(".*Hello, Concord!.*");
     }
 
+    /**
+     * Groovy script execution.
+     */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGroovyScripts() throws Exception {
-        byte[] archive = archive(ProcessIT.class.getResource("script-groovy").toURI());
-
         Payload payload = new Payload()
-                .archive(archive)
+                .archive(ProcessIT.class.getResource("scriptGroovy").toURI())
                 .arg("name", "Concord");
 
         ConcordProcess proc = concord.processes().start(payload);

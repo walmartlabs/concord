@@ -115,9 +115,19 @@ public class ProcessLogsDao extends AbstractDao {
     }
 
     public long createSegment(ProcessKey processKey, UUID correlationId, String name) {
-        // TODO: up for partitioning
-        return txResult(tx -> tx.select(newProcessLogSegment(processKey.getInstanceId(), processKey.getCreatedAt(), correlationId, name))
-                .fetchOne().value1());
+        return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENT)
+                .columns(PROCESS_LOG_SEGMENT.INSTANCE_ID, PROCESS_LOG_SEGMENT.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENT.CORRELATION_ID, PROCESS_LOG_SEGMENT.SEGMENT_NAME, PROCESS_LOG_SEGMENT.SEGMENT_TS)
+                .values(value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp())
+                .returning(PROCESS_LOG_SEGMENT.SEGMENT_ID)
+                .fetchOne()
+                .getSegmentId());
+    }
+
+    public void createSegment(long segmentId, ProcessKey processKey, UUID correlationId, String name) {
+        tx(tx -> tx.insertInto(PROCESS_LOG_SEGMENT)
+                .columns(PROCESS_LOG_SEGMENT.SEGMENT_ID, PROCESS_LOG_SEGMENT.INSTANCE_ID, PROCESS_LOG_SEGMENT.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENT.CORRELATION_ID, PROCESS_LOG_SEGMENT.SEGMENT_NAME, PROCESS_LOG_SEGMENT.SEGMENT_TS)
+                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp())
+                .execute());
     }
 
     public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
@@ -153,6 +163,25 @@ public class ProcessLogsDao extends AbstractDao {
                     .orElse(0);
 
             return new ProcessLogsDao.ProcessLog(size, chunks);
+        }
+    }
+
+    public ProcessLog data(ProcessKey processKey, Integer start, Integer end) {
+        UUID instanceId = processKey.getInstanceId();
+        Timestamp createdAt = processKey.getCreatedAt();
+
+        try (DSLContext tx = DSL.using(cfg)) {
+            List<ProcessLogChunk> chunks = getDataChunks(tx, processKey, start, end);
+
+            Field<Integer> upperRange = max(upperRange(PROCESS_LOG_DATA.LOG_RANGE));
+            int size = tx.select(upperRange)
+                    .from(PROCESS_LOG_DATA)
+                    .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
+                            .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt)))
+                    .fetchOptional(upperRange)
+                    .orElse(0);
+
+            return new ProcessLog(size, chunks);
         }
     }
 
@@ -235,6 +264,46 @@ public class ProcessLogsDao extends AbstractDao {
                             .and(PROCESS_LOG_DATA.SEGMENT_ID.eq(segmentId))
                             .and(rangeExpr, instanceId, end))
                     .orderBy(PROCESS_LOG_DATA.SEGMENT_RANGE)
+                    .fetch(ProcessLogsDao::toChunk);
+        }
+    }
+
+    private List<ProcessLogChunk> getDataChunks(DSLContext tx, ProcessKey processKey, Integer start, Integer end) {
+        UUID instanceId = processKey.getInstanceId();
+        Timestamp createdAt = processKey.getCreatedAt();
+
+        String lowerBoundExpr = "lower(" + PROCESS_LOG_DATA.LOG_RANGE + ")";
+
+        if (start == null && end == null) {
+            // entire file
+            return tx.select(field(lowerBoundExpr), PROCESS_LOG_DATA.CHUNK_DATA)
+                    .from(PROCESS_LOG_DATA)
+                    .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
+                            .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt)))
+                    .orderBy(PROCESS_LOG_DATA.LOG_RANGE)
+                    .fetch(ProcessLogsDao::toChunk);
+
+        } else if (start != null) {
+            // ranges && [start, end)
+            String rangeExpr = PROCESS_LOG_DATA.LOG_RANGE.getName() + " && int4range(?, ?)";
+            return tx.select(field(lowerBoundExpr), PROCESS_LOG_DATA.CHUNK_DATA)
+                    .from(PROCESS_LOG_DATA)
+                    .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
+                            .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt))
+                            .and(rangeExpr, start, end))
+                    .orderBy(PROCESS_LOG_DATA.LOG_RANGE)
+                    .fetch(ProcessLogsDao::toChunk);
+
+        } else {
+            // ranges && [upper_bound - end, upper_bound)
+            String rangeExpr = PROCESS_LOG_DATA.LOG_RANGE.getName() + " && (select range from x)";
+            return tx.with("x").as(select(processLogDataLastNBytes(instanceId, createdAt, end).as("range")))
+                    .select(field(lowerBoundExpr), PROCESS_LOG_DATA.CHUNK_DATA)
+                    .from(PROCESS_LOG_DATA)
+                    .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
+                            .and(PROCESS_LOG_DATA.INSTANCE_CREATED_AT.eq(createdAt))
+                            .and(rangeExpr, instanceId, end))
+                    .orderBy(PROCESS_LOG_DATA.LOG_RANGE)
                     .fetch(ProcessLogsDao::toChunk);
         }
     }

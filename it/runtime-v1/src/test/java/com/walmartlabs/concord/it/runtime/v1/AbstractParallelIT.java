@@ -32,7 +32,7 @@ public abstract class AbstractParallelIT extends AbstractIT {
 
     @ClassRule
     public static Concord concord = new Concord()
-            .localMode(Boolean.parseBoolean(System.getProperty("it.local.mode")))
+            .mode(Boolean.parseBoolean(System.getProperty("it.local.mode")) ? Concord.Mode.LOCAL: Concord.Mode.DOCKER)
             .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
             .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
             .pullPolicy(PullPolicy.defaultPolicy())
