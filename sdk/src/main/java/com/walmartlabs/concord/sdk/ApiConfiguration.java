@@ -44,6 +44,8 @@ public interface ApiConfiguration {
     /**
      * @deprecated
      * @return the current session token that can be used to talk to the API.
+     * @apiNote can still be used for compatibility with v1 tasks while running in the runtime v1.
      */
+    @Deprecated
     String getSessionToken(Context ctx);
 }

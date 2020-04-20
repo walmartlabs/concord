@@ -1,0 +1,10 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - log: "String: ${crypto.exportAsString(myOrg, myStringSecret, mySecretPwd)}"
+    - log: "Keypair: ${crypto.exportKeyAsFile(myOrg, myKeypair, mySecretPwd)}"
+    - log: "Credentials: ${crypto.exportCredentials(myOrg, myCredentials, mySecretPwd)}"
+    - log: "File: ${crypto.exportAsFile(myOrg, mySecretFile, mySecretPwd)}"
+    - log: "Encrypted string: ${crypto.decryptString(crypto.encryptString(myRawString))}"

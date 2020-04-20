@@ -25,7 +25,7 @@ import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InjectorUtils;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
-import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.guice.CurrentClasspathModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.DefaultRunnerModule;
@@ -38,7 +38,6 @@ import org.eclipse.sisu.wire.WireModule;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;

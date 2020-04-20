@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.walmartlabs.concord.server.process.Payload;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 
@@ -31,15 +32,19 @@ import javax.inject.Named;
 public class NewQueueEntryProcessor implements PayloadProcessor {
 
     private final ProcessQueueManager queueManager;
+    private final ProcessLogManager processLogManager;
 
     @Inject
-    public NewQueueEntryProcessor(ProcessQueueManager queueManager) {
+    public NewQueueEntryProcessor(ProcessQueueManager queueManager,
+                                  ProcessLogManager processLogManager) {
         this.queueManager = queueManager;
+        this.processLogManager = processLogManager;
     }
 
     @Override
     public Payload process(Chain chain, Payload payload) {
         queueManager.insert(payload, ProcessStatus.NEW);
+        processLogManager.createSystemSegment(payload.getProcessKey());
         return chain.process(payload);
     }
 }

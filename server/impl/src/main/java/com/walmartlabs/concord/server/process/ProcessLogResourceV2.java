@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.process;
 
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.server.HttpUtils;
+import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
@@ -101,6 +102,25 @@ public class ProcessLogResourceV2 implements Resource {
     }
 
     /**
+     * Create process log segment.
+     */
+    @POST
+    @ApiOperation(value = "Create process log segment")
+    @Path("{id}/log/segment")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public LogSegmentOperationResponse segment(@ApiParam @PathParam("id") UUID instanceId,
+                                               @ApiParam LogSegmentRequest request) {
+
+        ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
+
+        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name());
+
+        return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
+    }
+
+    /**
      * Retrieves a log segment' data.
      */
     @GET
@@ -122,6 +142,7 @@ public class ProcessLogResourceV2 implements Resource {
             int actualStart = range.start() != null ? range.start() : 0;
             int actualEnd = range.end() != null ? range.end() : actualStart;
             return Response.ok()
+                    // TODO: add Content-type
                     .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                     .build();
         }
@@ -139,6 +160,7 @@ public class ProcessLogResourceV2 implements Resource {
         };
 
         return Response.ok(out)
+                // TODO: add Content-type
                 .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                 .build();
     }
@@ -146,42 +168,18 @@ public class ProcessLogResourceV2 implements Resource {
     /**
      * Appends a process' log.
      */
-//    @POST
-//    @Path("{id}/log/segment/{segmentId}/data")
-//    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-//    @WithTimer
-//    public void append(@ApiParam @PathParam("id") UUID instanceId,
-//                       @ApiParam @PathParam("segmentId") long segmentId,
-//                       InputStream data) {
-//        ProcessKey processKey = assertProcessKey(instanceId);
-//
-//        try {
-//            byte[] ab = IOUtils.toByteArray(data);
-//            int upper = logManager.log(processKey, segmentId, ab);
-//
-//            int logSizeLimit = processCfg.getLogSizeLimit();
-//            if (upper >= logSizeLimit) {
-//                logManager.error(processKey, "Maximum log size reached: {}. Process cancelled.", logSizeLimit);
-//                processManager.kill(processKey);
-//            }
-//        } catch (IOException e) {
-//            throw new ConcordApplicationException("Error while appending a log: " + e.getMessage());
-//        }
-//    }
-
     @POST
-    @Path("{id}/log/segment/{correlationId}/{name}/data")
+    @Path("{id}/log/segment/{segmentId}/data")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public void append(@ApiParam @PathParam("id") UUID instanceId,
-                       @ApiParam @PathParam("correlationId") UUID correlationId,
-                       @ApiParam @PathParam("name") String name,
+                       @ApiParam @PathParam("segmentId") long segmentId,
                        InputStream data) {
         ProcessKey processKey = assertProcessKey(instanceId);
 
         try {
             byte[] ab = IOUtils.toByteArray(data);
-            int upper = logManager.log(processKey, correlationId, name, ab);
+            int upper = logManager.log(processKey, segmentId, ab);
 
             int logSizeLimit = processCfg.getLogSizeLimit();
             if (upper >= logSizeLimit) {

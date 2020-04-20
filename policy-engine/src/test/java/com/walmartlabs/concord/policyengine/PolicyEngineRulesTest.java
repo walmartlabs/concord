@@ -53,18 +53,9 @@ public class PolicyEngineRulesTest {
         ContainerRule containerRules = new ContainerRule("msg1", "maxRam", 2);
 
         ConcurrentProcessRule concurrent = new ConcurrentProcessRule("msg1", 23, 433);
-        QueueProcessRule process = new QueueProcessRule("msg1");
-        process.addMax("FAILED", 123);
-        process.addMax("OK", 12);
-        QueueProcessRule processPerOrg = new QueueProcessRule("msg1");
-        processPerOrg.addMax("FAILED", 321);
-        processPerOrg.addMax("CANCELLED", 2);
-        QueueProcessRule processPerProject = new QueueProcessRule("msg1");
-        processPerProject.addMax("FAILED", 32);
-        processPerProject.addMax("CANCELLED", 22);
         ForkDepthRule forkDepthRule = new ForkDepthRule("msg1", 12);
         ProcessTimeoutRule processTimeoutRule = new ProcessTimeoutRule("msg1", "13");
-        QueueRule queueRules = new QueueRule(concurrent, process, processPerOrg, processPerProject, forkDepthRule, processTimeoutRule);
+        QueueRule queueRules = new QueueRule(concurrent, forkDepthRule, processTimeoutRule);
 
         ProtectedTasksRule protectedTasksRules = new ProtectedTasksRule(Collections.singleton("task1"));
 

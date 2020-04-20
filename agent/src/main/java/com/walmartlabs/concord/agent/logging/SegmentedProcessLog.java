@@ -38,6 +38,7 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
 
     private final Path logsDir;
     private final Map<Path, LogSegment> segments;
+    private final Set<Path> invalidFiles = new HashSet<>();
 
     private final byte[] logBuffer = new byte[8192];
 
@@ -96,16 +97,21 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
             }
 
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (segments.containsKey(file)) {
+                if (segments.containsKey(file) || invalidFiles.contains(file)) {
                     return FileVisitResult.CONTINUE;
                 }
 
                 String segmentFileName = file.getFileName().toString();
-                // TODO: invalid file format
-                UUID correlationId = UUID.fromString(segmentFileName.substring(0, 36));
-                String segmentName = segmentFileName.substring(37, segmentFileName.length() - ".log".length());
+                Segment segment = parse(segmentFileName);
+                if (segment == null) {
+                    invalidFiles.add(file);
+                    return FileVisitResult.CONTINUE;
+                }
 
-                segments.put(file, new LogSegment(correlationId, segmentName, Files.newInputStream(file)));
+                Long segmentId = createSegment(segment);
+                if (segmentId != null) {
+                    segments.put(file, new LogSegment(segmentId, Files.newInputStream(file)));
+                }
                 return FileVisitResult.CONTINUE;
             }
         });
@@ -121,7 +127,7 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
                 int read = processSegment(segment, chunk -> {
                     byte[] chunkBuffer = new byte[chunk.len()];
                     System.arraycopy(chunk.bytes(), 0, chunkBuffer, 0, chunk.len());
-                    appender.appendLog(instanceId, segment.correlationId(), segment.name(), chunkBuffer);
+                    appender.appendLog(instanceId, segment.getId(), chunkBuffer);
                 });
 
                 if (read > 0) {
@@ -160,16 +166,77 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
         segments.clear();
     }
 
-    static class LogSegment {
+    private static Segment parse(String segmentFileName) {
+        if (segmentFileName.length() < 36) {
+            log.warn("createSegment ['{}'] -> invalid segment file name: no uuid", segmentFileName);
+            return null;
+        }
+
+        try {
+            UUID correlationId = UUID.fromString(segmentFileName.substring(0, 36));
+
+            if (!segmentFileName.endsWith(".log")) {
+                log.warn("createSegment ['{}'] -> invalid segment file name: invalid extension", segmentFileName);
+                return null;
+            }
+
+            if (segmentFileName.length() - 37 - ".log".length() <= 0) {
+                log.warn("createSegment ['{}'] -> invalid segment file name: no name", segmentFileName);
+                return null;
+            }
+            String segmentName = segmentFileName.substring(37, segmentFileName.length() - ".log".length());
+
+            return new Segment(correlationId, segmentName);
+        } catch (Exception e) {
+            log.warn("createSegment ['{}'] -> error: {}", segmentFileName, e.getMessage());
+        }
+        return null;
+    }
+
+    private Long createSegment(Segment segment) {
+        try {
+            return appender.createSegment(instanceId, segment.getCorrelationId(), segment.getName());
+        } catch (Exception e) {
+            log.warn("createSegment ['{}'] -> error: {}", segment, e.getMessage());
+        }
+        return null;
+    }
+
+    static class Segment {
 
         private final UUID correlationId;
         private final String name;
+
+        public Segment(UUID correlationId, String name) {
+            this.correlationId = correlationId;
+            this.name = name;
+        }
+
+        public UUID getCorrelationId() {
+            return correlationId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String toString() {
+            return "Segment{" +
+                    "correlationId=" + correlationId +
+                    ", name='" + name + '\'' +
+                    '}';
+        }
+    }
+
+    static class LogSegment {
+
+        private final long id;
         private InputStream in;
         private int totalRead;
 
-        public LogSegment(UUID correlationId, String name, InputStream in) {
-            this.correlationId = correlationId;
-            this.name = name;
+        public LogSegment(long id, InputStream in) {
+            this.id = id;
             this.in = in;
         }
 
@@ -185,12 +252,8 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
             return result;
         }
 
-        public UUID correlationId() {
-            return correlationId;
-        }
-
-        public String name() {
-            return name;
+        public long getId() {
+            return id;
         }
 
         public int totalRead() {

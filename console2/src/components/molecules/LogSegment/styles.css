@@ -27,6 +27,9 @@
 .LogSegment .Segment {
     text-align: left;
     background-color: rgb(244, 244, 244);
+    position: sticky;
+    top: 57px;
+    border-radius: 0 !important;
 }
 
 .LogSegment .Segment .Caption {
@@ -51,17 +54,22 @@
 .LogSegment .Segment .AdditionalAction {
     margin: 0 !important;
     float: right;
+    padding-right: 10px;
+}
+
+.LogSegment .Segment .AdditionalAction i:hover{
+    color: red !important;
 }
 
 .LogSegment .ContentContainer {
-    max-height: 640px;
-    min-height: 12px;
     padding: 8px 0 0 8px;
     margin-bottom: 8px;
 }
 
 .LogSegment .InnerContentContainer {
     overflow: auto;
+    min-height: 12px;
+    max-height: 640px;
 }
 
 .LogSegment .Loading {

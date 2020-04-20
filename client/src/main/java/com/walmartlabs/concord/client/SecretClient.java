@@ -33,6 +33,7 @@ import com.walmartlabs.concord.sdk.Secret;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -73,7 +74,7 @@ public class SecretClient {
                     () -> ClientUtils.postData(apiClient, path, params, File.class));
 
             if (r.getData() == null) {
-                throw new IllegalArgumentException("Secret not found");
+                throw new IllegalArgumentException("Secret not found: " + orgName + "/" + secretName);
             }
 
             SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(ClientUtils.getHeader(Constants.Headers.SECRET_TYPE, r));
@@ -87,7 +88,7 @@ public class SecretClient {
             return readSecret(actualSecretType, Files.readAllBytes(r.getData().toPath()));
         } catch (ApiException e) {
             if (e.getCode() == 404) {
-                throw new IllegalArgumentException("Secret not found");
+                throw new IllegalArgumentException("Secret not found: " + orgName + "/" + secretName);
             }
             throw e;
         } finally {
@@ -99,12 +100,20 @@ public class SecretClient {
 
     public byte[] decryptString(UUID instanceId, byte[] input) throws Exception {
         String path = "/api/v1/process/" + instanceId + "/decrypt";
-        ApiResponse<byte[]> r = ClientUtils.withRetry(retryCount, retryInterval, () -> {
-            Type returnType = new TypeToken<byte[]>() {
-            }.getType();
-            return ClientUtils.postData(apiClient, path, input, returnType);
-        });
-        return r.getData();
+
+        try {
+            ApiResponse<byte[]> r = ClientUtils.withRetry(retryCount, retryInterval, () -> {
+                Type returnType = new TypeToken<byte[]>() {
+                }.getType();
+                return ClientUtils.postData(apiClient, path, input, returnType);
+            });
+            return r.getData();
+        } catch (ApiException e) {
+            if (e.getCode() == 400) {
+                throw new IllegalArgumentException("Can't decrypt the string: " + Base64.getEncoder().encodeToString(input));
+            }
+            throw e;
+        }
     }
 
     public String encryptString(UUID instanceId, String orgName, String projectName, String input) throws Exception {

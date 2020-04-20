@@ -36,12 +36,13 @@ import static org.junit.Assert.*;
 
 public class FormIT extends AbstractIT {
 
+    /**
+     * A straightforward single form process.
+     */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
-        byte[] archive = archive(FormIT.class.getResource("form").toURI());
-
         Payload payload = new Payload()
-                .archive(archive);
+                .archive(FormIT.class.getResource("form").toURI());
 
         // ---
 

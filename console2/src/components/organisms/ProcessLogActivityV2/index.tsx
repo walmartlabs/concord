@@ -21,15 +21,15 @@
 import * as React from 'react';
 
 import { ConcordId } from '../../../api/common';
-import {isFinal, ProcessStatus} from '../../../api/process';
+import { isFinal, ProcessStatus } from '../../../api/process';
 
 import './styles.css';
-import {useCallback} from "react";
-import {listLogSegments as apiListLogSegments, LogSegmentEntry} from "../../../api/process/log";
-import {useState} from "react";
-import {usePolling} from "../../../api/usePolling";
-import RequestErrorActivity from "../RequestErrorActivity";
-import LogSegmentActivity from "./LogSegmentActivity";
+import { useCallback } from 'react';
+import { listLogSegments as apiListLogSegments, LogSegmentEntry } from '../../../api/process/log';
+import { useState } from 'react';
+import { usePolling } from '../../../api/usePolling';
+import RequestErrorActivity from '../RequestErrorActivity';
+import LogSegmentActivity from './LogSegmentActivity';
 
 const SEGMENT_FETCH_INTERVAL = 5000;
 
@@ -45,20 +45,16 @@ const ProcessLogActivityV2 = ({
     loadingHandler,
     forceRefresh
 }: ExternalProps) => {
-
     const [segments, setSegments] = useState<LogSegmentEntry[]>([]);
 
-    const fetchSegments = useCallback(
-        async () => {
-            // TODO: real limit/offset
-            const limit = 30;
-            const offset = 0;
-            const segments = await apiListLogSegments(instanceId, offset, limit);
-            setSegments(segments.items);
-            return !isFinal(processStatus);
-        },
-        [instanceId, processStatus]
-    );
+    const fetchSegments = useCallback(async () => {
+        // TODO: real limit/offset
+        const limit = 30;
+        const offset = 0;
+        const segments = await apiListLogSegments(instanceId, offset, limit);
+        setSegments(segments.items);
+        return !isFinal(processStatus);
+    }, [instanceId, processStatus]);
 
     const error = usePolling(fetchSegments, SEGMENT_FETCH_INTERVAL, loadingHandler, forceRefresh);
     if (error) {
@@ -67,8 +63,16 @@ const ProcessLogActivityV2 = ({
 
     return (
         <>
-            {segments.map((s, index) =>
-                <LogSegmentActivity instanceId={instanceId} segmentId={s.id} correlationId={s.correlationId} name={s.name} status={s.status} key={index}/>)}
+            {segments.map((s, index) => (
+                <LogSegmentActivity
+                    instanceId={instanceId}
+                    segmentId={s.id}
+                    correlationId={s.correlationId}
+                    name={s.name}
+                    status={s.status}
+                    key={index}
+                />
+            ))}
         </>
     );
 };
