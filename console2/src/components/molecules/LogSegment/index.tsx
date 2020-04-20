@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 
 import './styles.css';
-import {Button, Icon} from "semantic-ui-react";
-import {Link} from "react-router-dom";
-import {SegmentStatus} from "../../../api/process/log";
+import { Button, Icon } from 'semantic-ui-react';
+import { Link } from 'react-router-dom';
+import { SegmentStatus } from '../../../api/process/log';
 
 interface ExternalProps {
     correlationId: string;
@@ -35,7 +35,14 @@ interface ExternalProps {
     stopLoading: () => void;
 }
 
-const LogSegment = ({correlationId, name, status, data, startLoading, stopLoading}: ExternalProps) => {
+const LogSegment = ({
+    correlationId,
+    name,
+    status,
+    data,
+    startLoading,
+    stopLoading
+}: ExternalProps) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [isOpen, setOpen] = useState<boolean>(false);
 
@@ -51,59 +58,58 @@ const LogSegment = ({correlationId, name, status, data, startLoading, stopLoadin
 
     return (
         <div className="LogSegment">
-            <Button fluid={true} size={"medium"} className="Segment" onClick={() => setOpen((prevState) => !prevState)}>
-                <Icon name={isOpen ? 'caret down' : 'caret right'} className="State"/>
-                <StatusIcon status={status}/>
+            <Button
+                fluid={true}
+                size={'medium'}
+                className="Segment"
+                onClick={() => setOpen((prevState) => !prevState)}>
+                <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
+                <StatusIcon status={status} />
                 <span className="Caption">{name}</span>
 
-                <Link to={"#"} title={"Open Raw Step Output in New Tab"} className="AdditionalAction">
-                    <Icon name='external alternate'/>
+                <Link
+                    to={'#'}
+                    title={'Open Raw Step Output in New Tab'}
+                    className="AdditionalAction">
+                    <Icon name="external alternate" />
                 </Link>
             </Button>
 
-            {isOpen && loading && data.length === 0 &&
+            {isOpen && loading && data.length === 0 && (
                 <div className="ContentContainer">
-                    <div className="Loading">
-                        Loading
-                    </div>
+                    <div className="Loading">Loading</div>
                 </div>
-            }
+            )}
 
-            {isOpen && data.length > 0 &&
+            {isOpen && data.length > 0 && (
                 <div className="ContentContainer">
                     <div className="InnerContentContainer">
                         <div className="Content">
-                            {data.map((value, index) =>
-                                <pre key={index} dangerouslySetInnerHTML={{ __html: value }}/>
-                            )}
+                            {data.map((value, index) => (
+                                <pre key={index} dangerouslySetInnerHTML={{ __html: value }} />
+                            ))}
                         </div>
                     </div>
                 </div>
-            }
+            )}
         </div>
-        );
+    );
 };
 
 interface StatusIconProps {
     status: SegmentStatus;
 }
 
-const StatusIcon = ({status} : StatusIconProps) => {
+const StatusIcon = ({ status }: StatusIconProps) => {
     switch (status) {
         case SegmentStatus.OK:
-            return (
-                <Icon name="check circle" color="green" className="Status"/>
-            );
+            return <Icon name="check circle" color="green" className="Status" />;
         case SegmentStatus.FAILED:
-            return (
-                <Icon name="close" color="red" className="Status"/>
-            );
+            return <Icon name="close" color="red" className="Status" />;
         case SegmentStatus.RUNNING:
-            return (
-                <Icon loading={true} name="spinner" color="grey" className="Status"/>
-            );
+            return <Icon loading={true} name="spinner" color="grey" className="Status" />;
         case undefined:
-            return (<span className="EmptyStatus"> </span>);
+            return <span className="EmptyStatus"> </span>;
     }
 };
 
