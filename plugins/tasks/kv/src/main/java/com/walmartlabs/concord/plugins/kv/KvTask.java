@@ -22,8 +22,8 @@ package com.walmartlabs.concord.plugins.kv;
 
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessKvStoreApi;
+import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.*;
 
 import javax.inject.Inject;
@@ -33,13 +33,10 @@ import java.util.UUID;
 @Named("kv")
 public class KvTask implements Task {
 
-    private static final int RETRY_COUNT = 3;
-    private static final long RETRY_INTERVAL = 5000;
-
     private final ApiClientFactory apiClientFactory;
 
     @InjectVariable(Constants.Context.CONTEXT_KEY)
-    Context context;
+    private Context context;
 
     @Inject
     public KvTask(ApiClientFactory apiClientFactory) {
@@ -55,13 +52,9 @@ public class KvTask implements Task {
     }
 
     public void remove(@InjectVariable("context") Context ctx, String key) throws Exception {
-        assertValidKey(key);
-
         ProcessKvStoreApi api = getApi(ctx);
-        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.removeKey(ContextUtils.getTxId(ctx), key);
-            return null;
-        });
+        UUID txId = ContextUtils.getTxId(ctx);
+        KvTaskUtils.remove(api, txId, key);
     }
 
     /**
@@ -73,13 +66,10 @@ public class KvTask implements Task {
     }
 
     public void putString(@InjectVariable("context") Context ctx, String key, String value) throws Exception {
-        assertValidKey(key);
-
         ProcessKvStoreApi api = getApi(ctx);
-        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.putString(ContextUtils.getTxId(ctx), key, value);
-            return null;
-        });
+        UUID txId = ContextUtils.getTxId(ctx);
+        KvTaskUtils.putString(api, txId, key, value);
+
     }
 
     /**
@@ -91,11 +81,9 @@ public class KvTask implements Task {
     }
 
     public String getString(@InjectVariable("context") Context ctx, String key) throws Exception {
-        assertValidKey(key);
-
         ProcessKvStoreApi api = getApi(ctx);
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
-                api.getString(ContextUtils.getTxId(ctx), key));
+        UUID txId = ContextUtils.getTxId(ctx);
+        return KvTaskUtils.getString(api, txId, key);
     }
 
     /**
@@ -107,13 +95,9 @@ public class KvTask implements Task {
     }
 
     public void putLong(@InjectVariable("context") Context ctx, String key, Long value) throws Exception {
-        assertValidKey(key);
-
         ProcessKvStoreApi api = getApi(ctx);
-        ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
-            api.putLong(ContextUtils.getTxId(ctx), key, value);
-            return null;
-        });
+        UUID txId = ContextUtils.getTxId(ctx);
+        KvTaskUtils.putLong(api, txId, key, value);
     }
 
     /**
@@ -125,11 +109,9 @@ public class KvTask implements Task {
     }
 
     public Long getLong(@InjectVariable("context") Context ctx, String key) throws Exception {
-        assertValidKey(key);
-
         ProcessKvStoreApi api = getApi(ctx);
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
-                api.getLong(ContextUtils.getTxId(ctx), key));
+        UUID txId = ContextUtils.getTxId(ctx);
+        return KvTaskUtils.getLong(api, txId, key);
     }
 
     /**
@@ -153,22 +135,14 @@ public class KvTask implements Task {
     }
 
     public long incLong(@InjectVariable("context") Context ctx, String key) throws Exception {
-        assertValidKey(key);
-
         ProcessKvStoreApi api = getApi(ctx);
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () ->
-                api.incLong(ContextUtils.getTxId(ctx), key));
+        UUID txId = ContextUtils.getTxId(ctx);
+        return KvTaskUtils.incLong(api, txId, key);
     }
 
     private ProcessKvStoreApi getApi(Context ctx) {
         return new ProcessKvStoreApi(apiClientFactory.create(ApiClientConfiguration.builder()
                 .context(ctx)
                 .build()));
-    }
-
-    private static void assertValidKey(String s) {
-        if (s == null || s.isEmpty()) {
-            throw new IllegalArgumentException("Keys cannot be empty or null");
-        }
     }
 }

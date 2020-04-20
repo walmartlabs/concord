@@ -135,6 +135,10 @@
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>resource-tasks</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>kv-tasks</artifactId>
+        </dependency>
 
         <!-- Java EL support -->
         <dependency>
