@@ -127,6 +127,14 @@
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>sleep-tasks</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>throw-tasks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>resource-tasks</artifactId>
+        </dependency>
 
         <!-- Java EL support -->
         <dependency>
@@ -134,12 +142,6 @@
             <artifactId>javax.el</artifactId>
         </dependency>
 
-        <!-- Tasks -->
-        <dependency>
-            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-            <artifactId>throw-tasks</artifactId>
-        </dependency>
-        
         <!-- Immutables -->
         <dependency>
             <groupId>org.immutables</groupId>
