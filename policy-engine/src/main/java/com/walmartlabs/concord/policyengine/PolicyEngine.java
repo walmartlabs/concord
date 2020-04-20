@@ -33,7 +33,6 @@ public class PolicyEngine {
     private final TaskPolicy taskPolicy;
     private final WorkspacePolicy workspacePolicy;
     private final ContainerPolicy containerPolicy;
-    private final QueueProcessPolicy queueProcessPolicy;
     private final ConcurrentProcessPolicy concurrentProcessPolicy;
     private final ForkDepthPolicy forkDepthPolicy;
     private final ProcessTimeoutPolicy processTimeoutPolicy;
@@ -62,7 +61,6 @@ public class PolicyEngine {
         this.containerPolicy = new ContainerPolicy(rules.getContainerRules());
 
         QueueRule qr = getQueueRule(rules);
-        this.queueProcessPolicy = new QueueProcessPolicy(qr.getProcess(), qr.getProcessPerOrg(), qr.getProcessPerProject());
         this.concurrentProcessPolicy = new ConcurrentProcessPolicy(qr.getConcurrent());
         this.forkDepthPolicy = new ForkDepthPolicy(qr.getForkDepthRule());
         this.processTimeoutPolicy = new ProcessTimeoutPolicy(qr.getProcessTimeoutRule());
@@ -101,10 +99,6 @@ public class PolicyEngine {
 
     public ContainerPolicy getContainerPolicy() {
         return containerPolicy;
-    }
-
-    public QueueProcessPolicy getQueueProcessPolicy() {
-        return queueProcessPolicy;
     }
 
     public ConcurrentProcessPolicy getConcurrentProcessPolicy() {

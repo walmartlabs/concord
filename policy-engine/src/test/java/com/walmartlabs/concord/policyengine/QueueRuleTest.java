@@ -72,24 +72,5 @@ public class QueueRuleTest {
         assertEquals(4, (int)r.getConcurrent().getMaxPerOrg());
         assertEquals(5, (int)r.getConcurrent().getMaxPerProject());
         assertEquals("Concurrent message", r.getConcurrent().getMsg());
-
-        assertNotNull(r.getProcess());
-        assertNotNull(r.getProcess().getMax());
-        assertEquals(2, r.getProcess().getMax().size());
-        assertEquals(1, (int)r.getProcess().getMax().get("RUNNING"));
-        assertEquals(2, (int)r.getProcess().getMax().get("FAILED"));
-        assertEquals("Process message", r.getProcess().getMsg());
-
-        assertNotNull(r.getProcessPerOrg());
-        assertNotNull(r.getProcessPerOrg().getMax());
-        assertEquals(1, r.getProcessPerOrg().getMax().size());
-        assertEquals(2, (int)r.getProcessPerOrg().getMax().get("RUNNING2"));
-        assertEquals("Process per org message", r.getProcessPerOrg().getMsg());
-
-        assertNotNull(r.getProcessPerProject());
-        assertNotNull(r.getProcessPerProject().getMax());
-        assertEquals(1, r.getProcessPerProject().getMax().size());
-        assertEquals(3, (int)r.getProcessPerProject().getMax().get("RUNNING3"));
-        assertEquals("Process per project message", r.getProcessPerProject().getMsg());
     }
 }
