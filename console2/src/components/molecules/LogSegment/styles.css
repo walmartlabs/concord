@@ -54,14 +54,14 @@
 }
 
 .LogSegment .ContentContainer {
-    max-height: 640px;
-    min-height: 12px;
     padding: 8px 0 0 8px;
     margin-bottom: 8px;
 }
 
 .LogSegment .InnerContentContainer {
     overflow: auto;
+    min-height: 12px;
+    max-height: 640px;
 }
 
 .LogSegment .Loading {

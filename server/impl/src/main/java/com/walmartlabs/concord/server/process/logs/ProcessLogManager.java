@@ -41,6 +41,9 @@ import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.Process
 @Singleton
 public class ProcessLogManager {
 
+    private static final long SYSTEM_SEGMENT_ID = 0;
+    private static final String SYSTEM_SEGMENT_NAME = "system";
+
     private final ProcessLogsDao logsDao;
     private final Listeners listeners;
 
@@ -74,21 +77,35 @@ public class ProcessLogManager {
     }
 
     public int log(ProcessKey processKey, byte[] msg) {
-        // TODO:
-        // system segment id = 0
-        return log(processKey, 0, msg);
+        return log(processKey, SYSTEM_SEGMENT_ID, msg);
     }
 
     public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
         return logsDao.listSegments(processKey, limit, offset);
     }
 
+    public void createSystemSegment(ProcessKey processKey) {
+        logsDao.createSegment(SYSTEM_SEGMENT_ID, processKey, processKey.getInstanceId(), SYSTEM_SEGMENT_NAME);
+    }
+
     public long createSegment(ProcessKey processKey, UUID correlationId, String name) {
+        if (SYSTEM_SEGMENT_NAME.equals(name)) {
+            return SYSTEM_SEGMENT_ID;
+        }
         return logsDao.createSegment(processKey, correlationId, name);
     }
 
     public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {
         return logsDao.segmentData(processKey, segmentId, start, end);
+    }
+
+    public ProcessLog get(ProcessKey processKey, Integer start, Integer end) {
+        ProcessLog logs = logsDao.data(processKey, start, end);
+        if (logs.getSize() != 0) {
+            return logs;
+        }
+        // TODO: remove me when no process in process_logs
+        return logsDao.get(processKey, start, end);
     }
 
     public int log(ProcessKey processKey, long segmentId, byte[] msg) {
