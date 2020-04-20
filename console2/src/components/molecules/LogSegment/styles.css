@@ -27,6 +27,9 @@
 .LogSegment .Segment {
     text-align: left;
     background-color: rgb(244, 244, 244);
+    position: sticky;
+    top: 57px;
+    border-radius: 0 !important;
 }
 
 .LogSegment .Segment .Caption {
@@ -51,6 +54,11 @@
 .LogSegment .Segment .AdditionalAction {
     margin: 0 !important;
     float: right;
+    padding-right: 10px;
+}
+
+.LogSegment .Segment .AdditionalAction i:hover{
+    color: red !important;
 }
 
 .LogSegment .ContentContainer {

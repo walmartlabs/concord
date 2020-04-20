@@ -69,6 +69,7 @@ const LogSegmentActivity = ({
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
+    const [wholeLogLoading, setWholeLogLoading] = useState<boolean>(false);
 
     const fetchData = useCallback(
         async (range: LogRange) => {
@@ -82,7 +83,7 @@ const LogSegmentActivity = ({
                 range: chunk.range
             };
         },
-        [instanceId, opts]
+        [instanceId, segmentId, opts]
     );
 
     const startPollingCallback = useCallback(() => {
@@ -92,6 +93,17 @@ const LogSegmentActivity = ({
     const stopPollingCallback = useCallback(() => {
         setStopPolling(true);
     }, []);
+
+    useEffect(() => {
+        if (wholeLogLoading) {
+            range.current = { low: 0 };
+        } else {
+            range.current = DEFAULT_RANGE;
+        }
+
+        setData([]);
+        setRefresh((prevState) => !prevState);
+    }, [wholeLogLoading, opts]);
 
     const error = usePolling(fetchData, range, setData, refresh, stopPolling);
     if (error) {
@@ -103,8 +115,10 @@ const LogSegmentActivity = ({
             correlationId={correlationId}
             name={name}
             status={status}
-            startLoading={startPollingCallback}
-            stopLoading={stopPollingCallback}
+            onStartLoading={startPollingCallback}
+            onStopLoading={stopPollingCallback}
+            onLoadWholeLog={() => setWholeLogLoading(true)}
+            onLoadTailLog={() => setWholeLogLoading(false)}
             data={data}
         />
     );
