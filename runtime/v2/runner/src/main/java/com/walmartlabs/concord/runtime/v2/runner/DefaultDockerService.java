@@ -24,7 +24,7 @@ import com.walmartlabs.concord.common.DockerProcessBuilder;
 import com.walmartlabs.concord.common.TruncBufferedReader;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.sdk.DockerContainerSpec;
 import org.slf4j.Logger;

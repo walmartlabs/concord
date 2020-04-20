@@ -30,46 +30,25 @@ import java.util.Objects;
 public class QueueRule implements Serializable {
 
     public static QueueRule empty() {
-        return new QueueRule(null, null, null, null, null, null);
+        return new QueueRule(null, null, null);
     }
 
     private final ConcurrentProcessRule concurrent;
-    private final QueueProcessRule process;
-    private final QueueProcessRule processPerOrg;
-    private final QueueProcessRule processPerProject;
     private final ForkDepthRule forkDepthRule;
     private final ProcessTimeoutRule processTimeoutRule;
 
     @JsonCreator
     public QueueRule(@JsonProperty("concurrent") ConcurrentProcessRule concurrent,
-                     @JsonProperty("process") QueueProcessRule process,
-                     @JsonProperty("processPerOrg") QueueProcessRule processPerOrg,
-                     @JsonProperty("processPerProject") QueueProcessRule processPerProject,
                      @JsonProperty("forkDepth") ForkDepthRule forkDepthRule,
                      @JsonProperty("processTimeout")  ProcessTimeoutRule processTimeoutRule) {
 
         this.concurrent = concurrent;
-        this.process = process;
-        this.processPerOrg = processPerOrg;
-        this.processPerProject = processPerProject;
         this.forkDepthRule = forkDepthRule;
         this.processTimeoutRule = processTimeoutRule;
     }
 
     public ConcurrentProcessRule getConcurrent() {
         return concurrent;
-    }
-
-    public QueueProcessRule getProcess() {
-        return process;
-    }
-
-    public QueueProcessRule getProcessPerOrg() {
-        return processPerOrg;
-    }
-
-    public QueueProcessRule getProcessPerProject() {
-        return processPerProject;
     }
 
     public ForkDepthRule getForkDepthRule() {
@@ -86,25 +65,19 @@ public class QueueRule implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         QueueRule queueRule = (QueueRule) o;
         return Objects.equals(concurrent, queueRule.concurrent) &&
-                Objects.equals(process, queueRule.process) &&
-                Objects.equals(processPerOrg, queueRule.processPerOrg) &&
-                Objects.equals(processPerProject, queueRule.processPerProject) &&
                 Objects.equals(forkDepthRule, queueRule.forkDepthRule) &&
                 Objects.equals(processTimeoutRule, queueRule.processTimeoutRule);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(concurrent, process, processPerOrg, processPerProject, forkDepthRule, processTimeoutRule);
+        return Objects.hash(concurrent, forkDepthRule, processTimeoutRule);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
                 .append("concurrent", concurrent)
-                .append("process", process)
-                .append("processPerOrg", processPerOrg)
-                .append("processPerProject", processPerProject)
                 .append("forkDepth", forkDepthRule)
                 .append("processTimeout", processTimeoutRule)
                 .toString();

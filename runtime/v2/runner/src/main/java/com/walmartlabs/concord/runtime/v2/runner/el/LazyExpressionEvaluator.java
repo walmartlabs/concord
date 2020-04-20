@@ -123,11 +123,15 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
     }
 
     private <T> T evalExpr(Context ctx, String expr, Class<T> type) {
-        ELResolver r = createResolver(ctx);
+        ELResolver resolver = createResolver(ctx, expressionFactory);
 
-        StandardELContext sc = new StandardELContext(expressionFactory);
+        StandardELContext sc = new StandardELContext(expressionFactory) {
+            @Override
+            public ELResolver getELResolver() {
+                return resolver;
+            }
+        };
         sc.putContext(ExpressionFactory.class, expressionFactory);
-        sc.addELResolver(r);
 
         // save the context as a variable
         VariableMapper vm = sc.getVariableMapper();
@@ -140,18 +144,28 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             Object v = x.getValue(sc);
             return type.cast(v);
         } catch (PropertyNotFoundException e) {
-            throw new RuntimeException("Can't find a variable in '" + expr + "'. Check if it is defined in the current scope. Details: " + e.getMessage());
+            throw new RuntimeException(String.format("Can't find the specified variable in '%s'. " +
+                    "Check if it is defined in the current scope. Details: %s", expr, e.getMessage()));
         }
     }
 
-    private ELResolver createResolver(Context ctx) {
-        CompositeELResolver composite = new CompositeELResolver();
-        composite.add(new InjectVariableResolver());
-        composite.add(new GlobalVariableResolver(ctx.globalVariables()));
-
-        composite.add(new TaskResolver(taskProviders));
-
-        return composite;
+    /**
+     * Based on the original code from {@link StandardELContext#getELResolver()}.
+     * Creates a {@link ELResolver} instance with "sub-resolvers" in the original order.
+     */
+    private ELResolver createResolver(Context ctx, ExpressionFactory expressionFactory) {
+        CompositeELResolver r = new CompositeELResolver();
+        r.add(new InjectVariableResolver());
+        r.add(new GlobalVariableResolver(ctx.globalVariables()));
+        r.add(new TaskResolver(taskProviders));
+        r.add(expressionFactory.getStreamELResolver());
+        r.add(new StaticFieldELResolver());
+        r.add(new MapELResolver());
+        r.add(new ResourceBundleELResolver());
+        r.add(new ListELResolver());
+        r.add(new ArrayELResolver());
+        r.add(new BeanELResolver());
+        return r;
     }
 
     private static boolean hasExpression(String s) {

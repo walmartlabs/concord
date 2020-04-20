@@ -175,7 +175,6 @@ public class VM {
             if (frame == null) {
                 // no more frames to unwind, looks like there was no exception handler
                 state.setStatus(threadId, ThreadStatus.FAILED);
-                log.error("Unhandled exception in the SVM thread {}: {}", threadId, cause.getMessage());
                 state.setThreadError(threadId, cause);
                 throw cause;
             }

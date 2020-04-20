@@ -25,30 +25,42 @@ import com.walmartlabs.concord.it.common.ITUtils;
 import org.junit.Rule;
 import org.testcontainers.images.PullPolicy;
 
-import java.io.IOException;
-import java.net.URI;
-
 public abstract class AbstractIT {
 
     protected static final long DEFAULT_TEST_TIMEOUT = 120000;
 
     @Rule
-    public Concord concord = new Concord()
-            .pathToRunnerV1(null)
-            .pathToRunnerV2("target/runner-v2.jar")
-            .localMode(Boolean.parseBoolean(System.getProperty("it.local.mode")))
-            .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
-            .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
-            .pullPolicy(PullPolicy.defaultPolicy())
-            .streamServerLogs(true)
-            .streamAgentLogs(true)
-            .useLocalMavenRepository(true);
-
-    protected byte[] archive(URI uri) throws IOException {
-        return ITUtils.archive(uri);
-    }
+    public Concord concord = configure();
 
     protected String randomString() {
         return ITUtils.randomString();
+    }
+
+    protected String randomPwd() {
+        return ITUtils.randomPwd();
+    }
+
+    private static Concord configure() {
+        Concord concord = new Concord()
+                .pathToRunnerV1(null)
+                .pathToRunnerV2("target/runner-v2.jar")
+                .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
+                .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent")).pullPolicy(PullPolicy.defaultPolicy())
+                .streamServerLogs(true)
+                .streamAgentLogs(true)
+                .useLocalMavenRepository(true);
+
+        boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
+        if (localMode) {
+            concord.mode(Concord.Mode.LOCAL);
+        } else {
+            boolean remoteMode = Boolean.parseBoolean(System.getProperty("it.remote.mode"));
+            if (remoteMode) {
+                concord.mode(Concord.Mode.REMOTE);
+                concord.apiToken(System.getProperty("it.remote.token"));
+            }
+        }
+
+        return concord;
     }
 }
