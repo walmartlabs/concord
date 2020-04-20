@@ -70,6 +70,7 @@ const ProcessLogActivityV2 = ({
                     correlationId={s.correlationId}
                     name={s.name}
                     status={s.status}
+                    processStatus={processStatus}
                     key={index}
                 />
             ))}

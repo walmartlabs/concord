@@ -34,6 +34,9 @@ import { MutableRefObject } from 'react';
 import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
 import { useEffect } from 'react';
+import { isFinal, ProcessStatus } from '../../../api/process';
+import {TaskCallDetails} from "../index";
+import {Header, Modal} from "semantic-ui-react";
 
 const DATA_FETCH_INTERVAL = 5000;
 const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
@@ -46,6 +49,7 @@ const DEFAULT_OPTS: LogProcessorOptions = {
 
 interface ExternalProps {
     instanceId: ConcordId;
+    processStatus?: ProcessStatus;
     segmentId: number;
     correlationId: string;
     name: string;
@@ -59,6 +63,7 @@ interface FetchResponse {
 
 const LogSegmentActivity = ({
     instanceId,
+    processStatus,
     segmentId,
     correlationId,
     name,
@@ -69,7 +74,8 @@ const LogSegmentActivity = ({
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
-    const [wholeLogLoading, setWholeLogLoading] = useState<boolean>(false);
+    const [chunkLength, setChunkLength] = useState<number>(0);
+    const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
 
     const fetchData = useCallback(
         async (range: LogRange) => {
@@ -77,6 +83,7 @@ const LogSegmentActivity = ({
 
             const data = chunk && chunk.data.length > 0 ? chunk.data : undefined;
             const processedData = data ? processText(data, opts) : '';
+            setChunkLength(chunk ? chunk.data.length : 0);
 
             return {
                 data: processedData,
@@ -86,24 +93,31 @@ const LogSegmentActivity = ({
         [instanceId, segmentId, opts]
     );
 
-    const startPollingCallback = useCallback(() => {
-        setStopPolling(false);
-    }, []);
-
-    const stopPollingCallback = useCallback(() => {
-        setStopPolling(true);
-    }, []);
-
-    useEffect(() => {
-        if (wholeLogLoading) {
+    const startPollingHandler = useCallback((isLoadWholeLog: boolean) => {
+        if (isLoadWholeLog) {
             range.current = { low: 0 };
         } else {
             range.current = DEFAULT_RANGE;
         }
-
         setData([]);
-        setRefresh((prevState) => !prevState);
-    }, [wholeLogLoading, opts]);
+        setStopPolling(false);
+        setRefresh(prevState => !prevState);
+    }, []);
+
+    const stopPollingHandler = useCallback(() => {
+        setData([]);
+        setStopPolling(true);
+    }, []);
+
+    const segmentInfoHandler = useCallback(() => {
+        setSegmentInfoOpen(true);
+    }, []);
+
+    useEffect(() => {
+        if (isFinal(processStatus)) {
+            setStopPolling(true);
+        }
+    }, [chunkLength, processStatus]);
 
     const error = usePolling(fetchData, range, setData, refresh, stopPolling);
     if (error) {
@@ -111,16 +125,28 @@ const LogSegmentActivity = ({
     }
 
     return (
-        <LogSegment
-            correlationId={correlationId}
-            name={name}
-            status={status}
-            onStartLoading={startPollingCallback}
-            onStopLoading={stopPollingCallback}
-            onLoadWholeLog={() => setWholeLogLoading(true)}
-            onLoadTailLog={() => setWholeLogLoading(false)}
-            data={data}
-        />
+        <>
+            <LogSegment
+                instanceId={instanceId}
+                segmentId={segmentId}
+                name={name}
+                status={status}
+                onStartLoading={startPollingHandler}
+                onStopLoading={stopPollingHandler}
+                onSegmentInfo={segmentInfoHandler}
+                data={data}
+            />
+
+            <Modal
+                open={segmentInfoOpen}
+                onClose={() => setSegmentInfoOpen(false)}
+                size='small'>
+                <Header icon='browser' content={name} />
+                <Modal.Content>
+                    <TaskCallDetails instanceId={instanceId} correlationId={correlationId} />
+                </Modal.Content>
+            </Modal>
+        </>
     );
 };
 
