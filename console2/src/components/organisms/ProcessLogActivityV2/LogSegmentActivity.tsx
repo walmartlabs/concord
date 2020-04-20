@@ -20,24 +20,20 @@
 
 import * as React from 'react';
 
-import {ConcordId, RequestError} from '../../../api/common';
+import { ConcordId, RequestError } from '../../../api/common';
 
 import './styles.css';
-import {LogSegment} from "../../molecules";
-import {useCallback} from "react";
-import {
-    getSegmentLog as apiGetLog,
-    LogRange,
-    SegmentStatus
-} from "../../../api/process/log";
-import {useState} from "react";
-import RequestErrorActivity from "../RequestErrorActivity";
-import {LogProcessorOptions, processText} from "../../../state/data/processes/logs/processors";
-import {useRef} from "react";
-import {MutableRefObject} from "react";
-import {Dispatch} from "react";
-import {SetStateAction} from "react";
-import {useEffect} from "react";
+import { LogSegment } from '../../molecules';
+import { useCallback } from 'react';
+import { getSegmentLog as apiGetLog, LogRange, SegmentStatus } from '../../../api/process/log';
+import { useState } from 'react';
+import RequestErrorActivity from '../RequestErrorActivity';
+import { LogProcessorOptions, processText } from '../../../state/data/processes/logs/processors';
+import { useRef } from 'react';
+import { MutableRefObject } from 'react';
+import { Dispatch } from 'react';
+import { SetStateAction } from 'react';
+import { useEffect } from 'react';
 
 const DATA_FETCH_INTERVAL = 5000;
 const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
@@ -61,13 +57,13 @@ interface FetchResponse {
     range: LogRange;
 }
 
-const LogSegmentActivity = ({   instanceId,
-                                segmentId,
-                                correlationId,
-                                name,
-                                status
+const LogSegmentActivity = ({
+    instanceId,
+    segmentId,
+    correlationId,
+    name,
+    status
 }: ExternalProps) => {
-
     const range = useRef<LogRange>(DEFAULT_RANGE);
     const [opts, setOpts] = useState<LogProcessorOptions>(DEFAULT_OPTS);
     const [refresh, setRefresh] = useState<boolean>(false);
@@ -79,7 +75,7 @@ const LogSegmentActivity = ({   instanceId,
             const chunk = await apiGetLog(instanceId, segmentId, range);
 
             const data = chunk && chunk.data.length > 0 ? chunk.data : undefined;
-            const processedData = data ? processText(data, opts) : "";
+            const processedData = data ? processText(data, opts) : '';
 
             return {
                 data: processedData,
@@ -103,10 +99,14 @@ const LogSegmentActivity = ({   instanceId,
     }
 
     return (
-        <LogSegment correlationId={correlationId} name={name} status={status}
-                    startLoading={startPollingCallback}
-                    stopLoading={stopPollingCallback}
-                    data={data}/>
+        <LogSegment
+            correlationId={correlationId}
+            name={name}
+            status={status}
+            startLoading={startPollingCallback}
+            stopLoading={stopPollingCallback}
+            data={data}
+        />
     );
 };
 

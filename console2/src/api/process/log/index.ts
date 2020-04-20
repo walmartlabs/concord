@@ -18,7 +18,7 @@
  * =====
  */
 
-import {ConcordId, fetchJson, managedFetch, queryParams} from '../../common';
+import { ConcordId, fetchJson, managedFetch, queryParams } from '../../common';
 
 export interface LogRange {
     unit?: string;
@@ -96,8 +96,11 @@ export interface PaginatedLogSegmentEntry {
     next: boolean;
 }
 
-
-export const listLogSegments = async (instanceId: ConcordId, page: number, limit: number): Promise<PaginatedLogSegmentEntry> => {
+export const listLogSegments = async (
+    instanceId: ConcordId,
+    page: number,
+    limit: number
+): Promise<PaginatedLogSegmentEntry> => {
     const offsetParam = page > 0 && limit > 0 ? page * limit : page;
     const limitParam = limit > 0 ? limit + 1 : limit;
 
@@ -120,12 +123,19 @@ export const listLogSegments = async (instanceId: ConcordId, page: number, limit
     };
 };
 
-export const getSegmentLog = async (instanceId: ConcordId, segmentId: number, range: LogRange): Promise<LogChunk> => {
+export const getSegmentLog = async (
+    instanceId: ConcordId,
+    segmentId: number,
+    range: LogRange
+): Promise<LogChunk> => {
     const opts = {
         headers: formatRangeHeader(range)
     };
 
-    const resp = await managedFetch(`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`, opts);
+    const resp = await managedFetch(
+        `/api/v2/process/${instanceId}/log/segment/${segmentId}/data`,
+        opts
+    );
 
     const headers = resp.headers.get('Content-Range');
     if (!headers) {
