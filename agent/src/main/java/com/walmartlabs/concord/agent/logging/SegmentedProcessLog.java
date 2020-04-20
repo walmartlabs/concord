@@ -36,10 +36,9 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
 
     private static final Logger log = LoggerFactory.getLogger(SegmentedProcessLog.class);
 
-    private static final int MAX_OPEN_SEGMENTS = 100;
-
     private final Path logsDir;
     private final Map<Path, LogSegment> segments;
+    private final Set<Path> invalidFiles = new HashSet<>();
 
     private final byte[] logBuffer = new byte[8192];
 
@@ -98,12 +97,18 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
             }
 
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (segments.containsKey(file)) {
+                if (segments.containsKey(file) || invalidFiles.contains(file)) {
                     return FileVisitResult.CONTINUE;
                 }
 
                 String segmentFileName = file.getFileName().toString();
-                Long segmentId = createSegment(segmentFileName);
+                Segment segment = parse(segmentFileName);
+                if (segment == null) {
+                    invalidFiles.add(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                Long segmentId = createSegment(segment);
                 if (segmentId != null) {
                     segments.put(file, new LogSegment(segmentId, Files.newInputStream(file)));
                 }
@@ -188,12 +193,13 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
         return null;
     }
 
-    private Long createSegment(String segmentFileName) {
+    private Long createSegment(Segment segment) {
         try {
-            return appender.createSegment(instanceId, correlationId, segmentName);
+            return appender.createSegment(instanceId, segment.getCorrelationId(), segment.getName());
         } catch (Exception e) {
-            log.warn("createSegment ['{}'] -> error: {}", segmentFileName, e.getMessage());
+            log.warn("createSegment ['{}'] -> error: {}", segment, e.getMessage());
         }
+        return null;
     }
 
     static class Segment {
@@ -212,6 +218,14 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
 
         public String getName() {
             return name;
+        }
+
+        @Override
+        public String toString() {
+            return "Segment{" +
+                    "correlationId=" + correlationId +
+                    ", name='" + name + '\'' +
+                    '}';
         }
     }
 

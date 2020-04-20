@@ -41,7 +41,6 @@ import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.*;
@@ -94,7 +93,6 @@ public class ProcessResource implements Resource {
     private final ProcessManager processManager;
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
-    private final ProcessLogsDao logsDao;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final SecretStoreConfiguration secretStoreCfg;
@@ -113,7 +111,6 @@ public class ProcessResource implements Resource {
     public ProcessResource(ProcessManager processManager,
                            ProcessQueueDao queueDao,
                            ProcessQueueManager processQueueManager,
-                           ProcessLogsDao logsDao,
                            PayloadManager payloadManager,
                            ProcessStateManager stateManager,
                            SecretStoreConfiguration secretStoreCfg,
@@ -129,7 +126,6 @@ public class ProcessResource implements Resource {
         this.processManager = processManager;
         this.queueDao = queueDao;
         this.processQueueManager = processQueueManager;
-        this.logsDao = logsDao;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.secretStoreCfg = secretStoreCfg;
@@ -808,7 +804,7 @@ public class ProcessResource implements Resource {
 
         HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
 
-        ProcessLog l = logsDao.get(processKey, range.start(), range.end());
+        ProcessLog l = logManager.get(processKey, range.start(), range.end());
         List<ProcessLogChunk> data = l.getChunks();
         if (data.isEmpty()) {
             int actualStart = range.start() != null ? range.start() : 0;

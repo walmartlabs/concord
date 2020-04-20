@@ -49,8 +49,6 @@ const LogSegment = ({correlationId, name, status, data, startLoading, stopLoadin
         }
     }, [isOpen, correlationId, name, startLoading, stopLoading]);
 
-    console.log("LEN: ", data.length);
-
     return (
         <div className="LogSegment">
             <Button fluid={true} size={"medium"} className="Segment" onClick={() => setOpen((prevState) => !prevState)}>
