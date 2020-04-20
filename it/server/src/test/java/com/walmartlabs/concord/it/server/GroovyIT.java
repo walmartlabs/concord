@@ -46,7 +46,7 @@ public class GroovyIT extends AbstractServerIT {
 
         // ---
 
-        byte[] payload = archive(ProcessIT.class.getResource("groovy").toURI(), ITConstants.DEPENDENCIES_DIR);
+        byte[] payload = archive(ProcessIT.class.getResource("groovy").toURI());
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         StartProcessResponse spr = start(payload);

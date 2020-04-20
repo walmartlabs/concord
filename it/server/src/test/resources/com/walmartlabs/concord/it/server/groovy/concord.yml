@@ -6,7 +6,5 @@ flows:
   default:
     - script: groovy
       body: |
-        def kv = tasks.get('kv');
-        kv.putString(execution, 'myKey', 'myValue');
-
-    - log: "got myKey: ${kv.getString('myKey')}"
+        def username = initiator.username;
+        println "Hello, ${username}";

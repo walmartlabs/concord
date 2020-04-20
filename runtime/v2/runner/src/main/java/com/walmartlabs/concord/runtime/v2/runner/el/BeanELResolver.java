@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.runtime.common.injector;
+package com.walmartlabs.concord.runtime.v2.runner.el;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,19 @@ package com.walmartlabs.concord.runtime.common.injector;
  * =====
  */
 
-import java.nio.file.Path;
+import javax.el.ELContext;
 
 /**
- * Contains path to the current process' working directory.
- * Can be @Inject-ed into services.
- * @apiNote v2 only
+ * Same as {@link javax.el.BeanELResolver}, but throws more detailed "method is not found" exceptions.
  */
-public class WorkingDirectory {
+public class BeanELResolver extends javax.el.BeanELResolver {
 
-    private final Path value;
-
-    public WorkingDirectory(Path value) {
-        this.value = value;
-    }
-
-    public Path getValue() {
-        return value;
+    @Override
+    public Object invoke(ELContext context, Object base, Object method, Class<?>[] paramTypes, Object[] params) {
+        try {
+            return super.invoke(context, base, method, paramTypes, params);
+        } catch (javax.el.MethodNotFoundException e) {
+            throw new MethodNotFoundException(base, method);
+        }
     }
 }

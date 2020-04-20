@@ -216,9 +216,9 @@ public class ExpressionEvaluatorTest {
         GlobalVariables vars = new GlobalVariablesImpl();
 
         try {
-            Map<Object, Object> output = ee.evalAsMap(new DummyContext(vars), input);
+            ee.evalAsMap(new DummyContext(vars), input);
         } catch (RuntimeException e) {
-            assertTrue(e.getMessage().contains("Can't find a variable in '${y1}'"));
+            assertTrue(e.getMessage().contains("Can't find the specified variable in '${y1}'"));
         }
     }
 

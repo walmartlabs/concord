@@ -23,7 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.policyengine.PolicyEngineRules;
-import com.walmartlabs.concord.runtime.common.injector.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 
 import javax.inject.Inject;

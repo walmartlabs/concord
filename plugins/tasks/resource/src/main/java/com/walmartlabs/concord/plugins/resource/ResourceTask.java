@@ -20,8 +20,6 @@ package com.walmartlabs.concord.plugins.resource;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
@@ -29,8 +27,6 @@ import com.walmartlabs.concord.sdk.Task;
 
 import javax.inject.Named;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,90 +35,56 @@ import java.nio.file.Paths;
 @SuppressWarnings("unused")
 public class ResourceTask implements Task {
 
-    @SuppressWarnings("unused")
     public String asString(String path) throws IOException {
-        byte[] ab = Files.readAllBytes(Paths.get(path));
-        return new String(ab);
+       return ResourceUtils.asString(path);
     }
 
-    @SuppressWarnings("unused")
     public Object asJson(String path) throws IOException {
         return asJson(null, path, false);
     }
 
-    @SuppressWarnings("unused")
     public Object asJson(@InjectVariable("context") Context ctx, String path, boolean eval) throws IOException {
-        try (InputStream in = Files.newInputStream(Paths.get(path))) {
-            Object result = new ObjectMapper().readValue(in, Object.class);
-            if (eval) {
-                return ctx.interpolate(result);
-            } else {
-                return result;
-            }
-        }
+        Object result = ResourceUtils.asJson(path);
+        return eval ? ctx.interpolate(result) : result;
     }
 
-    @SuppressWarnings("unused")
     public Object asYaml(String path) throws IOException {
         return asYaml(null, path, false);
     }
 
-    @SuppressWarnings("unused")
     public Object asYaml(@InjectVariable("context") Context ctx, String path, boolean eval) throws IOException {
-        try (InputStream in = Files.newInputStream(Paths.get(path))) {
-            Object result = new ObjectMapper(new YAMLFactory()).readValue(in, Object.class);
-            if (eval) {
-                return ctx.interpolate(result);
-            } else {
-                return result;
-            }
-        }
+        Object result = ResourceUtils.asYaml(path);
+        return eval ? ctx.interpolate(result) : result;
     }
 
-    @SuppressWarnings("unused")
     public String writeAsJson(Object content, @InjectVariable("workDir") String workDir) throws IOException {
-        return withTempFile(workDir, ".json", p -> {
-            try (OutputStream out = Files.newOutputStream(p)) {
-                new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(out, content);
-            }
-        });
+        Path baseDir = Paths.get(workDir);
+        Path tempFile = createTempFile(baseDir, ResourceUtils.RESOURCE_PREFIX, ResourceUtils.JSON_FILE_SUFFIX);
+        ResourceUtils.writeAsJson(content, tempFile);
+        return baseDir.relativize(tempFile.toAbsolutePath()).toString();
     }
 
-    @SuppressWarnings("unused")
     public String writeAsString(String content, @InjectVariable("workDir") String workDir) throws IOException {
-        return withTempFile(workDir, ".txt", p -> {
-            Files.write(p, content.getBytes());
-        });
+        Path baseDir = Paths.get(workDir);
+        Path tempFile = createTempFile(baseDir, ResourceUtils.RESOURCE_PREFIX, ResourceUtils.TEXT_FILE_SUFFIX);
+        ResourceUtils.writeAsString(content, tempFile);
+        return baseDir.relativize(tempFile.toAbsolutePath()).toString();
     }
 
     public String writeAsYaml(Object content, @InjectVariable("workDir") String workDir) throws IOException {
-        return withTempFile(workDir, ".yaml", p -> {
-            try (OutputStream out = Files.newOutputStream(p)) {
-                new ObjectMapper(new YAMLFactory()).writerWithDefaultPrettyPrinter()
-                        .writeValue(out, content);
-            }
-        });
-    }
-
-    @SuppressWarnings("unused")
-    public String prettyPrintJson(Object json) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        if (json instanceof String) {
-            // To add line feeds
-            json = mapper.readValue((String) json, Object.class);
-        }
-
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
-    }
-
-    private String withTempFile(String workDir, String suffix, PathHander h) throws IOException {
         Path baseDir = Paths.get(workDir);
+        Path tempFile = createTempFile(baseDir, ResourceUtils.RESOURCE_PREFIX, ResourceUtils.YAML_FILE_SUFFIX);
+        ResourceUtils.writeAsYaml(content, tempFile);
+        return baseDir.relativize(tempFile.toAbsolutePath()).toString();
+    }
+
+    public String prettyPrintJson(Object json) throws IOException {
+        return ResourceUtils.prettyPrintJson(json);
+    }
+
+    private Path createTempFile(Path baseDir, String prefix, String suffix) throws IOException {
         Path tempDir = assertTempDir(baseDir);
-
-        Path tmpFile = Files.createTempFile(tempDir, "resource_", suffix);
-        h.handle(tmpFile);
-
-        return baseDir.relativize(tmpFile.toAbsolutePath()).toString();
+        return Files.createTempFile(tempDir, prefix, suffix);
     }
 
     private Path assertTempDir(Path baseDir) throws IOException {
@@ -132,10 +94,5 @@ public class ResourceTask implements Task {
         }
 
         return p;
-    }
-
-    private interface PathHander {
-
-        void handle(Path path) throws IOException;
     }
 }
