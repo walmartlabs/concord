@@ -40,6 +40,12 @@ import java.util.function.Supplier;
 
 public class FileWatcher implements Closeable {
 
+    public static void watch(Path path, Supplier<Boolean> stopCondition, long maxDelay, FileListener listener) throws IOException {
+        try (FileWatcher watcher = new FileWatcher(path, maxDelay, listener)) {
+            watcher.run(stopCondition);
+        }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(FileWatcher.class);
 
     private static final int MAX_OPEN_FILES = 10;
@@ -57,12 +63,6 @@ public class FileWatcher implements Closeable {
         this.watchDir = watchDir;
         this.maxDelay = maxDelay;
         this.listener = listener;
-    }
-
-    public static void watch(Path path, Supplier<Boolean> stopCondition, long maxDelay, FileListener listener) throws IOException {
-        try (FileWatcher watcher = new FileWatcher(path, maxDelay, listener)) {
-            watcher.run(stopCondition);
-        }
     }
 
     @Override

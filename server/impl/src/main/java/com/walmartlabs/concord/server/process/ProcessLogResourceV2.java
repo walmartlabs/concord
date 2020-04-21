@@ -142,7 +142,7 @@ public class ProcessLogResourceV2 implements Resource {
             int actualStart = range.start() != null ? range.start() : 0;
             int actualEnd = range.end() != null ? range.end() : actualStart;
             return Response.ok()
-                    // TODO: add Content-type
+                    .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
                     .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                     .build();
         }
@@ -160,7 +160,6 @@ public class ProcessLogResourceV2 implements Resource {
         };
 
         return Response.ok(out)
-                // TODO: add Content-type
                 .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
                 .build();
     }
