@@ -91,7 +91,8 @@ public class ApiClient {
 
         verifyingSsl = true;
 
-        json = new JSON();
+        json = new JSON()
+            .setOffsetDateTimeFormat(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX"));
 
         // Set default User-Agent.
         setUserAgent("{{#httpUserAgent}}{{{.}}}{{/httpUserAgent}}{{^httpUserAgent}}Swagger-Codegen/{{{artifactVersion}}}/java{{/httpUserAgent}}");
