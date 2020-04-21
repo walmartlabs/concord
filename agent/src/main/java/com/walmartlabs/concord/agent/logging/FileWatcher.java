@@ -105,7 +105,7 @@ public class FileWatcher implements Closeable {
 
                 FileEntry entry = files.get(file);
                 if (entry == null) {
-                    entry = processNewFile(file);
+                    entry = processNewFile(file, attrs);
                     if (entry == null) {
                         return FileVisitResult.CONTINUE;
                     } else {
@@ -122,8 +122,8 @@ public class FileWatcher implements Closeable {
         });
     }
 
-    private FileEntry processNewFile(Path file) {
-        FileListener.Result result = listener.onNewFile(file);
+    private FileEntry processNewFile(Path file, BasicFileAttributes attrs) {
+        FileListener.Result result = listener.onNewFile(file, attrs);
         switch (result) {
             case OK: {
                 return new FileEntry(file, fileReader);
@@ -163,7 +163,7 @@ public class FileWatcher implements Closeable {
             IGNORE
         }
 
-        Result onNewFile(Path file);
+        Result onNewFile(Path file, BasicFileAttributes attrs);
 
         void onNewData(Path file, byte[] data, int len);
     }

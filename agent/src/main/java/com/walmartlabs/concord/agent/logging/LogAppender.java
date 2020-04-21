@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import java.util.Date;
 import java.util.UUID;
 
 public interface LogAppender {
@@ -28,5 +29,5 @@ public interface LogAppender {
 
     void appendLog(UUID instanceId, long segmentId, byte[] ab);
 
-    Long createSegment(UUID instanceId, UUID correlationId, String segmentName);
+    Long createSegment(UUID instanceId, UUID correlationId, String segmentName, Date createdAt);
 }

@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -48,13 +50,13 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
     public void run(Supplier<Boolean> stopCondition) throws Exception {
         FileWatcher.watch(logsDir, stopCondition, logSteamMaxDelay, new FileWatcher.FileListener() {
             @Override
-            public Result onNewFile(Path file) {
+            public Result onNewFile(Path file, BasicFileAttributes attrs) {
                 Segment segment = parse(file.getFileName().toString());
                 if (segment == null) {
                     return Result.IGNORE;
                 }
 
-                Long id = appender.createSegment(instanceId, segment.getCorrelationId(), segment.getName());
+                Long id = appender.createSegment(instanceId, segment.getCorrelationId(), segment.getName(), new Date(attrs.creationTime().toMillis()));
                 if (id == null) {
                     return Result.ERROR;
                 }
