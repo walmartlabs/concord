@@ -69,6 +69,7 @@ public class AuditLogResource implements Resource {
     // array of the allowed keys in "/api/v1/audit?details.[fieldName]=[value]"
     private static final String[] ALLOWED_DETAILS_KEYS = {
             "eventId",
+            "githubEvent",
             "fullRepoName",
             "orgId",
             "orgName",
