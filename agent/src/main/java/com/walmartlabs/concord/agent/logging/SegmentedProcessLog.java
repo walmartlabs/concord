@@ -25,11 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
-import java.util.function.Consumer;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 public class SegmentedProcessLog extends RedirectedProcessLog {
@@ -37,43 +36,41 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
     private static final Logger log = LoggerFactory.getLogger(SegmentedProcessLog.class);
 
     private final Path logsDir;
-    private final Map<Path, LogSegment> segments;
-    private final Set<Path> invalidFiles = new HashSet<>();
-
-    private final byte[] logBuffer = new byte[8192];
+    private final Map<Path, Long> segmentIds;
 
     public SegmentedProcessLog(Path logsDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
         super(logsDir, instanceId, appender, logSteamMaxDelay);
         this.logsDir = logsDir;
-        this.segments = new LinkedHashMap<>();
+        this.segmentIds = new HashMap<>();
     }
 
     @Override
     public void run(Supplier<Boolean> stopCondition) throws Exception {
-        try {
-            while (!Thread.currentThread().isInterrupted()) {
-                collectSegments();
-
-                int read = processSegments(stopCondition);
-                if (read > 0) {
-                    continue;
+        FileWatcher.watch(logsDir, stopCondition, logSteamMaxDelay, new FileWatcher.FileListener() {
+            @Override
+            public Result onNewFile(Path file) {
+                Segment segment = parse(file.getFileName().toString());
+                if (segment == null) {
+                    return Result.IGNORE;
                 }
 
-                if (stopCondition.get() && segments.values().stream().allMatch(LogSegment::isClosed)) {
-                    break;
+                Long id = appender.createSegment(instanceId, segment.getCorrelationId(), segment.getName());
+                if (id == null) {
+                    return Result.ERROR;
                 }
 
-                // job is still running, wait for more data
-                try {
-                    Thread.sleep(logSteamMaxDelay);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
+                segmentIds.put(file, id);
+
+                return Result.OK;
             }
-        } finally {
-            cleanup();
-        }
+
+            @Override
+            public void onNewData(Path file, byte[] data, int len) {
+                byte[] chunkBuffer = new byte[len];
+                System.arraycopy(data, 0, chunkBuffer, 0, len);
+                appender.appendLog(instanceId, segmentIds.get(file), chunkBuffer);
+            }
+        });
     }
 
     @Override
@@ -84,86 +81,6 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
         } catch (IOException e) {
             log.warn("delete -> error while removing a log directory: {}", logsDir);
         }
-    }
-
-    private void collectSegments() throws IOException {
-        Files.walkFileTree(logsDir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (dir.equals(logsDir)) {
-                    return FileVisitResult.CONTINUE;
-                }
-                return FileVisitResult.SKIP_SUBTREE;
-            }
-
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (segments.containsKey(file) || invalidFiles.contains(file)) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                String segmentFileName = file.getFileName().toString();
-                Segment segment = parse(segmentFileName);
-                if (segment == null) {
-                    invalidFiles.add(file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                Long segmentId = createSegment(segment);
-                if (segmentId != null) {
-                    segments.put(file, new LogSegment(segmentId, Files.newInputStream(file)));
-                }
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }
-
-    private int processSegments(Supplier<Boolean> stopCondition) {
-        int total = 0;
-
-        for (Map.Entry<Path, LogSegment> entry : segments.entrySet()) {
-            LogSegment segment = entry.getValue();
-
-            try {
-                int read = processSegment(segment, chunk -> {
-                    byte[] chunkBuffer = new byte[chunk.len()];
-                    System.arraycopy(chunk.bytes(), 0, chunkBuffer, 0, chunk.len());
-                    appender.appendLog(instanceId, segment.getId(), chunkBuffer);
-                });
-
-                if (read > 0) {
-                    total += read;
-                }
-
-                if (stopCondition.get() && segment.totalRead() >= Files.size(entry.getKey())) {
-                    segment.close();
-                }
-            } catch (IOException e) {
-                log.error("processSegment ['{}'] -> error", entry.getKey());
-            }
-        }
-
-        return total;
-    }
-
-    private int processSegment(LogSegment segment, Consumer<Chunk> sink) throws IOException {
-        int total = 0;
-        while (!Thread.currentThread().isInterrupted()) {
-            int read = segment.read(logBuffer);
-            if (read > 0) {
-                total += read;
-                sink.accept(new Chunk(logBuffer, read));
-            } else {
-                break;
-            }
-        }
-        return total;
-    }
-
-    private void cleanup() {
-        for (Map.Entry<Path, LogSegment> e : segments.entrySet()) {
-            e.getValue().close();
-        }
-        segments.clear();
     }
 
     private static Segment parse(String segmentFileName) {
@@ -193,15 +110,6 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
         return null;
     }
 
-    private Long createSegment(Segment segment) {
-        try {
-            return appender.createSegment(instanceId, segment.getCorrelationId(), segment.getName());
-        } catch (Exception e) {
-            log.warn("createSegment ['{}'] -> error: {}", segment, e.getMessage());
-        }
-        return null;
-    }
-
     static class Segment {
 
         private final UUID correlationId;
@@ -226,55 +134,6 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
                     "correlationId=" + correlationId +
                     ", name='" + name + '\'' +
                     '}';
-        }
-    }
-
-    static class LogSegment {
-
-        private final long id;
-        private InputStream in;
-        private int totalRead;
-
-        public LogSegment(long id, InputStream in) {
-            this.id = id;
-            this.in = in;
-        }
-
-        public int read(byte[] ab) throws IOException {
-            if (in == null) {
-                return 0;
-            }
-
-            int result = in.read(ab, 0, ab.length);
-            if (result > 0) {
-                totalRead += result;
-            }
-            return result;
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public int totalRead() {
-            return totalRead;
-        }
-
-        public void close() {
-            if (in == null) {
-                return;
-            }
-
-            try {
-                in.close();
-                in = null;
-            } catch (Exception e) {
-                // ignore
-            }
-        }
-
-        public boolean isClosed() {
-            return in == null;
         }
     }
 }
