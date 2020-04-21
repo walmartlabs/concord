@@ -24,11 +24,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './styles.css';
 import { Button, Icon } from 'semantic-ui-react';
 import { SegmentStatus } from '../../../api/process/log';
-import {Link} from "react-router-dom";
-import {ConcordId} from "../../../api/common";
+import { Link } from 'react-router-dom';
+import { ConcordId } from '../../../api/common';
 
 interface ExternalProps {
-    instanceId: ConcordId,
+    instanceId: ConcordId;
     segmentId: number;
     name: string;
     status: SegmentStatus;
@@ -78,13 +78,7 @@ const LogSegment = ({
             onStopLoading();
             setLoading(false);
         }
-    }, [
-        isOpen,
-        isLoadWholeLog,
-        name,
-        onStartLoading,
-        onStopLoading
-    ]);
+    }, [isOpen, isLoadWholeLog, name, onStartLoading, onStopLoading]);
 
     useEffect(() => {
         if (isAutoScroll && scrollAnchorRef.current !== null) {
@@ -105,20 +99,18 @@ const LogSegment = ({
 
                 <Link
                     to={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
-                    onClick={event => event.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
                     target={'_blank'}
                     title={'Open Raw Step Output in New Tab'}
                     className="AdditionalAction Last">
-                        <Icon name="external alternate" />
+                    <Icon name="external alternate" />
                 </Link>
 
-                {segmentId !== 0 && <div className={'AdditionalAction'}>
-                    <Icon
-                        name={'info'}
-                        title={'Show info'}
-                        onClick={segmentInfoClickHandler}
-                    />
-                </div>}
+                {segmentId !== 0 && (
+                    <div className={'AdditionalAction'}>
+                        <Icon name={'info'} title={'Show info'} onClick={segmentInfoClickHandler} />
+                    </div>
+                )}
 
                 {isOpen && (
                     <>

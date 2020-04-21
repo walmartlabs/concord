@@ -35,8 +35,8 @@ import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
 import { useEffect } from 'react';
 import { isFinal, ProcessStatus } from '../../../api/process';
-import {TaskCallDetails} from "../index";
-import {Header, Modal} from "semantic-ui-react";
+import { TaskCallDetails } from '../index';
+import { Header, Modal } from 'semantic-ui-react';
 
 const DATA_FETCH_INTERVAL = 5000;
 const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
@@ -101,7 +101,7 @@ const LogSegmentActivity = ({
         }
         setData([]);
         setStopPolling(false);
-        setRefresh(prevState => !prevState);
+        setRefresh((prevState) => !prevState);
     }, []);
 
     const stopPollingHandler = useCallback(() => {
@@ -137,11 +137,8 @@ const LogSegmentActivity = ({
                 data={data}
             />
 
-            <Modal
-                open={segmentInfoOpen}
-                onClose={() => setSegmentInfoOpen(false)}
-                size='small'>
-                <Header icon='browser' content={name} />
+            <Modal open={segmentInfoOpen} onClose={() => setSegmentInfoOpen(false)} size="small">
+                <Header icon="browser" content={name} />
                 <Modal.Content>
                     <TaskCallDetails instanceId={instanceId} correlationId={correlationId} />
                 </Modal.Content>
