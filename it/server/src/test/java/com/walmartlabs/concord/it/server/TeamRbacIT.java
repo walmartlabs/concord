@@ -27,8 +27,7 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class TeamRbacIT extends AbstractServerIT {
 
@@ -728,5 +727,129 @@ public class TeamRbacIT extends AbstractServerIT {
 
         GenericOperationResult r = secretResource.delete(orgName, secretName);
         assertEquals(GenericOperationResult.ResultEnum.DELETED, r.getResult());
+    }
+
+    /**
+     * Public organizations must be visible
+     * regardless of whether the user is in the org or not.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testPublicOrgVisibility() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .setVisibility(OrganizationEntry.VisibilityEnum.PUBLIC));
+
+        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+
+        // ---
+
+        String userName = "user_" + randomString();
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
+                .setUsername(userName)
+                .setUserType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
+
+        setApiKey(cakr.getKey());
+
+        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+
+        // ---
+
+        resetApiKey();
+
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .setVisibility(OrganizationEntry.VisibilityEnum.PRIVATE));
+
+        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        assertFalse(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+    }
+
+    /**
+     * Organization owners should see the organization and all resources
+     * regardless of whether they're in the org (team) or not.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOwnersVisibility() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .setVisibility(OrganizationEntry.VisibilityEnum.PRIVATE));
+
+        // ---
+
+        String userName = "user_" + randomString();
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeysApi = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse cakr = apiKeysApi.create(new CreateApiKeyRequest()
+                .setUsername(userName)
+                .setUserType(CreateApiKeyRequest.UserTypeEnum.LOCAL));
+
+        setApiKey(cakr.getKey());
+
+        assertFalse(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+
+        // ---
+
+        resetApiKey();
+
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName)
+                .owner(new EntityOwner()
+                        .setUsername(userName)
+                        .setUserType(EntityOwner.UserTypeEnum.LOCAL)));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+
+        // ---
+
+        resetApiKey();
+
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setVisibility(ProjectEntry.VisibilityEnum.PRIVATE));
+
+        String secretName = "secret_" + randomString();
+        addPlainSecret(orgName, secretName, false, null, "hello!".getBytes());
+
+        String jsonStoreName = "store_" + randomString();
+        JsonStoreApi jsonStoreApi = new JsonStoreApi(getApiClient());
+        jsonStoreApi.createOrUpdate(orgName, new JsonStoreRequest()
+                .setName(jsonStoreName)
+                .setVisibility(JsonStoreRequest.VisibilityEnum.PRIVATE));
+
+        // ---
+
+        setApiKey(cakr.getKey());
+
+        assertTrue(projectsApi.list(orgName).stream().anyMatch(p -> p.getName().equals(projectName)));
+
+        SecretsApi secretsApi = new SecretsApi(getApiClient());
+        assertTrue(secretsApi.list(orgName, null, null, null).stream().anyMatch(s -> s.getName().equals(secretName)));
+
+        assertTrue(jsonStoreApi.list(orgName, null, null, null).stream().anyMatch(p -> p.getName().equals(jsonStoreName)));
     }
 }
