@@ -1,5 +1,55 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- kv-tasks: runtime v2 compatibility;
+- resource-tasks: runtime v2 compatibility;
+- crypto-tasks: runtime v2 compatibility;
+- runtime-v2: optional support for "segmented logs" where each
+task call gets its own log file;
+- log-tasks: runtime v2 compatiblity;
+- throw-tasks: runtime v2 compatibility;
+- runtime-v2: support for `resources`;
+- runtime-v2: support for `script` steps.
+
+### Changed
+
+- concord-server: public organizations are now visible for
+everyone regardless of membership;
+- concord-server: organization owners can now see their
+organizations even if they don't belong to any team in it;
+- concord-server: fixed the even type filter when querying
+repository events;
+- policy-engine, concord-server: remove deprecated and unused
+`queue` policies - `process`, `processPerOrg` and
+`processPerProject`;
+- runtime-v2: improved "method not found" error messages when
+evaluating expressions;
+- runtime-v2, concord-server: improved detection of
+the `runtime` parameter. Now it can be specified in
+the `configuration` section or in the request parameters;
+- runtime-v2: the expression evaluator now correctly supports
+partial evaluation of nested data;
+- concord-server: some endpoints that were previously
+automatically creating users no longer do so. E.g. when
+specifying an owner of a JSON store, the user record must
+exist beforehand;
+- concord-project-loader: allow `runtime` to be specified
+externally, e.g. in process request parameters;
+- ansible: improved validation of `inventory` and
+`vaultPassword` parameters;
+- concord-server: make the "Copying the repository's data"
+message shorter, don't print out the repository's metadata;
+- concord-server, concord-agent, runtime-v1, v2: major
+process/runner configuration refactoring. The process' session
+token is no longer saved as a file in the working directory,
+but passed as a process configuration field;
+- repository: removed delay between `fetch` retries.
+
+
+
 ## [1.47.1] - 2020-04-10
 
 ### Changed
