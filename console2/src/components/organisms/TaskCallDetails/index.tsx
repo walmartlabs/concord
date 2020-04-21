@@ -103,11 +103,13 @@ const renderValueV2 = (v: any) => {
 const renderInputVariablesV2 = (key: string, value: any, index: number) => {
     return (
         <Table.Row key={index}>
-            <Table.Cell collapsing={true}><pre>{key}</pre></Table.Cell>
+            <Table.Cell collapsing={true}>
+                <pre>{key}</pre>
+            </Table.Cell>
             <Table.Cell>{renderValueV2(value)}</Table.Cell>
         </Table.Row>
     );
-}
+};
 
 const renderInputV2 = (data: {}) => (
     <>
@@ -120,7 +122,9 @@ const renderInputV2 = (data: {}) => (
                 </Table.Row>
             </Table.Header>
             <Table.Body>
-                {Object.keys(data).map((key, index) => renderInputVariablesV2(key, data[key], index))}
+                {Object.keys(data).map((key, index) =>
+                    renderInputVariablesV2(key, data[key], index)
+                )}
             </Table.Body>
         </Table>
     </>
@@ -200,7 +204,10 @@ const TaskCallDetails = (props: Props) => {
                 </Grid.Row>
             </Grid>
 
-            {details.in && details.in instanceof Array && details.in.length > 0 && renderInput(details.in)}
+            {details.in &&
+                details.in instanceof Array &&
+                details.in.length > 0 &&
+                renderInput(details.in)}
             {details.in && isObject(details.in) && renderInputV2(details.in)}
         </>
     );
