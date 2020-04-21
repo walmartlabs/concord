@@ -115,7 +115,7 @@ public class ProcessLogResourceV2 implements Resource {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
 
-        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name());
+        long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
 
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
