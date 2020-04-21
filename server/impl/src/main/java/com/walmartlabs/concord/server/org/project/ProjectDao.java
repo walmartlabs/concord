@@ -26,6 +26,7 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.enums.RawPayloadMode;
+import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Projects;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.ProjectsRecord;
@@ -299,24 +300,12 @@ public class ProjectDao extends AbstractDao {
 
     public List<ProjectEntry> list(UUID orgId, UUID currentUserId, Field<?> sortField,
                                    boolean asc, int offset, int limit, String filter) {
-        // TODO simplify
 
         Users u = USERS.as("u");
         Projects p = PROJECTS.as("p");
+        Organizations o = ORGANIZATIONS.as("o");
+
         sortField = p.field(sortField);
-
-        Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
-                .from(ORGANIZATIONS)
-                .where(ORGANIZATIONS.ORG_ID.eq(p.ORG_ID))
-                .asField();
-
-        SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
-                .from(TEAMS)
-                .where(TEAMS.ORG_ID.eq(orgId));
-
-        Condition filterByTeamMember = exists(selectOne().from(V_USER_TEAMS)
-                .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
-                        .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
         try (DSLContext tx = DSL.using(cfg)) {
             SelectOnConditionStep<Record12<UUID, String, String, UUID, String, String, UUID, String, String, String, String, RawPayloadMode>> q = tx.select(
@@ -324,7 +313,7 @@ public class ProjectDao extends AbstractDao {
                     p.PROJECT_NAME,
                     p.DESCRIPTION,
                     p.ORG_ID,
-                    orgNameField,
+                    o.ORG_NAME,
                     p.VISIBILITY,
                     p.OWNER_ID,
                     u.USERNAME,
@@ -333,10 +322,30 @@ public class ProjectDao extends AbstractDao {
                     u.USER_TYPE,
                     p.RAW_PAYLOAD_MODE)
                     .from(p)
-                    .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID));
+                    .leftJoin(u).on(u.USER_ID.eq(p.OWNER_ID))
+                    .leftJoin(o).on(o.ORG_ID.eq(p.ORG_ID));
 
             if (currentUserId != null) {
-                q.where(or(p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString()), filterByTeamMember));
+                // public projects are visible for anyone
+                Condition isPublic = p.VISIBILITY.eq(ProjectVisibility.PUBLIC.toString());
+
+                // check if the user belongs to a team in the org
+                SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
+                        .from(TEAMS)
+                        .where(TEAMS.ORG_ID.eq(orgId));
+
+                Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
+                        .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                                .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
+
+                // check if the user owns projects in the org
+                Condition ownsProjects = p.OWNER_ID.eq(currentUserId);
+
+                // check if the user owns the org
+                Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
+
+                // if any of those conditions true then the project must be visible
+                q.where(or(isPublic, isInATeam, ownsProjects, ownsOrg));
             }
 
             if (orgId != null) {
