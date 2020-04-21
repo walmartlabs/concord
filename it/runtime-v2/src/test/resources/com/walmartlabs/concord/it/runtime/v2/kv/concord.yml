@@ -1,0 +1,11 @@
+flows:
+  default:
+    - "${kv.putString('msg', 'Hello!')}"
+    - log: "msg: ${kv.getString('msg')}"
+    - "${kv.remove('msg')}"
+    - log: "msg (removed): [${kv.getString('msg')}]"
+    - "${kv.putLong('x', 123)}"
+    - log: "x: ${kv.getLong('x')}"
+    - "${kv.incLong('x')}"
+    - log: "x (updated): ${kv.getLong('x')}"
+
