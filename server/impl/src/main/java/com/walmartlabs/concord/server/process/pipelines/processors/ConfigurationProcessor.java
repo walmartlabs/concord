@@ -21,7 +21,6 @@ package com.walmartlabs.concord.server.process.pipelines.processors;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
@@ -43,7 +42,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Responsible for preparing the process' {@code configuration} object.
