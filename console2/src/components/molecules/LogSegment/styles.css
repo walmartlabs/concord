@@ -57,6 +57,10 @@
     padding-right: 10px;
 }
 
+.LogSegment .Segment .AdditionalAction.Last {
+    padding-right: 0;
+}
+
 .LogSegment .Segment .AdditionalAction i:hover{
     color: red !important;
 }

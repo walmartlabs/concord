@@ -41,8 +41,7 @@ import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.Users.USERS;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectDistinct;
+import static org.jooq.impl.DSL.*;
 
 @Named
 public class OrganizationDao extends AbstractDao {
@@ -161,7 +160,7 @@ public class OrganizationDao extends AbstractDao {
         q.execute();
     }
 
-    public List<OrganizationEntry> list(UUID userId, int offset, int limit, String filter) {
+    public List<OrganizationEntry> list(UUID currentUserId, int offset, int limit, String filter) {
         try (DSLContext tx = DSL.using(cfg)) {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
@@ -179,21 +178,28 @@ public class OrganizationDao extends AbstractDao {
                     .from(o)
                     .leftJoin(u).on(u.USER_ID.eq(o.OWNER_ID));
 
-            if (userId != null) {
-                SelectConditionStep<Record1<UUID>> teamIds = selectDistinct(V_USER_TEAMS.TEAM_ID)
-                        .from(V_USER_TEAMS)
-                        .where(V_USER_TEAMS.USER_ID.eq(userId));
+            if (currentUserId != null) {
+                // public orgs are visible for anyone
+                Condition isPublic = o.VISIBILITY.eq(OrganizationVisibility.PUBLIC.toString());
 
-                SelectConditionStep<Record1<UUID>> orgIds = selectDistinct(TEAMS.ORG_ID)
+                // check if the user belongs to a team in an org
+                SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
                         .from(TEAMS)
-                        .where(TEAMS.TEAM_ID.in(teamIds));
+                        .where(TEAMS.ORG_ID.eq(o.ORG_ID));
 
-                q.where(o.ORG_ID.in(orgIds));
+                Condition isInATeam = exists(selectOne().from(V_USER_TEAMS)
+                        .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
+                                .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
+
+                // check if the user owns orgs
+                Condition ownsOrgs = o.OWNER_ID.eq(currentUserId);
+
+                // if any of those conditions true then the org must be visible
+                q.where(or(isPublic, isInATeam, ownsOrgs));
             }
 
             if (filter != null) {
                 q.where(o.ORG_NAME.containsIgnoreCase(filter));
-
             }
 
             if (offset >= 0) {
