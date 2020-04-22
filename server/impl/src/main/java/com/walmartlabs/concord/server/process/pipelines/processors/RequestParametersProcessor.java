@@ -41,16 +41,10 @@ public class RequestParametersProcessor implements PayloadProcessor {
     @Override
     public Payload process(Chain chain, Payload payload) {
         HttpServletRequest request = payload.getHeader(Payload.SERVLET_REQUEST);
-        if (request == null) {
-            return chain.process(payload);
-        }
 
         // configuration values from the servlet request
         // remove the servlet request from the payload as it is not serializable
         Map<String, Object> requestCfg = parseRequest(request);
-        if (requestCfg.isEmpty()) {
-            return chain.process(payload);
-        }
 
         Map<String, Object> cfg = payload.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
@@ -67,8 +61,13 @@ public class RequestParametersProcessor implements PayloadProcessor {
     }
 
     private static Map<String, Object> parseRequest(HttpServletRequest request) {
+        Map<String, String[]> params = Collections.emptyMap();
+        if (request != null) {
+            params = request.getParameterMap();
+        }
+
         Map<String, Object> args = new HashMap<>();
-        for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
+        for (Map.Entry<String, String[]> e : params.entrySet()) {
             String k = e.getKey();
             if (!k.startsWith("arguments.")) {
                 continue;
@@ -90,6 +89,10 @@ public class RequestParametersProcessor implements PayloadProcessor {
     }
 
     private static Map<String, Object> getRequestInfo(HttpServletRequest request) {
+        if (request == null) {
+            return Collections.emptyMap();
+        }
+
         String queryString = request.getQueryString() == null ? "" : "?" + request.getQueryString();
 
         Map<String, Object> m = new HashMap<>();

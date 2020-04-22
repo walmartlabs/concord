@@ -7,12 +7,12 @@
         <artifactId>takari</artifactId>
         <groupId>io.takari</groupId>
         <version>27</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <groupId>com.walmartlabs.concord</groupId>
     <artifactId>concord-targetplatform</artifactId>
-    <version>1.47.2-SNAPSHOT</version>
+    <version>1.48.2-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 

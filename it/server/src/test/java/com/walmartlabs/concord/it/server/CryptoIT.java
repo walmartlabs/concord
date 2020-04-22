@@ -25,6 +25,10 @@ import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
@@ -365,6 +369,68 @@ public class CryptoIT extends AbstractServerIT {
         // ---
 
         test("cryptoPwd", secretName, storePassword, ".*Forbidden:.*" + secretName + ".*");
+    }
+
+    /**
+     * If the organization is not specified the crypto task must pick the current organization.
+     * It works because Concord provides {@code projectInfo} variable that can be used to determine
+     * the current organization.
+     * The test uses a form to verify that "organization auto select" works
+     * for new and resumed processes.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCurrentOrg() throws Exception {
+        String orgName = "org_" + randomString();
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName));
+
+        String projectName = "project_" + randomString();
+        ProjectsApi projectsApi = new ProjectsApi(getApiClient());
+        projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setName(projectName)
+                .setRawPayloadMode(ProjectEntry.RawPayloadModeEnum.OWNERS));
+
+        String secretName = "secret_" + randomString();
+
+        String orgSecretValue = "org value";
+        addPlainSecret(orgName, secretName, false, null, orgSecretValue.getBytes());
+
+        String defaultSecretValue = "default value";
+        addPlainSecret("Default", secretName, false, null, defaultSecretValue.getBytes());
+
+        // ---
+
+        byte[] payload = archive(ProcessIT.class.getResource("currentOrgCrypto").toURI());
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+        input.put("arguments.mySecretName", secretName);
+        input.put("org", orgName);
+        input.put("project", projectName);
+        StartProcessResponse spr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
+        assertEquals(ProcessEntry.StatusEnum.SUSPENDED, pe.getStatus());
+
+        // ---
+
+        ProcessFormsApi processFormsApi = new ProcessFormsApi(getApiClient());
+        List<FormListEntry> forms = processFormsApi.list(pe.getInstanceId());
+        assertEquals(1, forms.size());
+
+        FormListEntry form = forms.get(0);
+        processFormsApi.submit(pe.getInstanceId(), form.getName(), Collections.singletonMap("x", "123"));
+
+        pe = waitForCompletion(processApi, spr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
+
+        // ---
+
+        byte[] ab = getLog(pe.getLogFileName());
+        assertLog(".*Before form: " + orgSecretValue + ".*", ab);
+        assertLog(".*After form: " + orgSecretValue + ".*", ab);
     }
 
     private void test(String project, String secretName, String storePassword, String log) throws Exception {
