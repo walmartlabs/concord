@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -88,11 +89,11 @@ public class ProcessLogManager {
         logsDao.createSegment(SYSTEM_SEGMENT_ID, processKey, processKey.getInstanceId(), SYSTEM_SEGMENT_NAME);
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {
         if (SYSTEM_SEGMENT_NAME.equals(name)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return logsDao.createSegment(processKey, correlationId, name);
+        return logsDao.createSegment(processKey, correlationId, name, createdAt);
     }
 
     public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {

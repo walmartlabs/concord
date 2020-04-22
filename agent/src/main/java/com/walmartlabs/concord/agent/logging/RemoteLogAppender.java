@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.UUID;
 
 @Named
@@ -78,9 +80,10 @@ public class RemoteLogAppender implements LogAppender {
     }
 
     @Override
-    public Long createSegment(UUID instanceId, UUID correlationId, String segmentName) {
+    public Long createSegment(UUID instanceId, UUID correlationId, String segmentName, Date createdAt) {
         LogSegmentRequest request = new LogSegmentRequest()
-                .setCorrelationId(correlationId).setName(segmentName);
+                .setCorrelationId(correlationId).setName(segmentName)
+                .setCreatedAt(createdAt.toInstant().atOffset(ZoneOffset.UTC));
 
         try {
             return ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,

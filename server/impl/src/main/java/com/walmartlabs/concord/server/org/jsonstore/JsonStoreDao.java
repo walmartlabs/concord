@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.org.jsonstore;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,8 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.Utils;
 import com.walmartlabs.concord.server.jooq.Tables;
+import com.walmartlabs.concord.server.jooq.tables.JsonStores;
+import com.walmartlabs.concord.server.jooq.tables.Organizations;
 import com.walmartlabs.concord.server.jooq.tables.Users;
 import com.walmartlabs.concord.server.jooq.tables.records.JsonStoresRecord;
 import com.walmartlabs.concord.server.org.EntityOwner;
@@ -87,24 +89,38 @@ public class JsonStoreDao extends AbstractDao {
     }
 
     public List<JsonStoreEntry> list(UUID orgId, UUID currentUserId, int offset, int limit, String filter) {
-        try (DSLContext tx = DSL.using(cfg)) {
+        Organizations o = ORGANIZATIONS.as("o");
+        JsonStores j = JSON_STORES.as("j");
+        Users u = USERS.as("u");
 
-            SelectJoinStep<Record10<UUID, String, UUID, String, String, UUID, String, String, String, String>> q = buildSelect(tx);
+        try (DSLContext tx = DSL.using(cfg)) {
+            SelectJoinStep<Record10<UUID, String, UUID, String, String, UUID, String, String, String, String>> q = buildSelect(tx, o, j, u);
 
             if (currentUserId != null) {
+                // public stores are visible for anyone
+                Condition isPublic = j.VISIBILITY.eq(JsonStoreVisibility.PUBLIC.toString());
+
+                // check if the user belongs to a team in the org
                 SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)
-                        .from(Tables.TEAMS)
-                        .where(Tables.TEAMS.ORG_ID.eq(orgId));
+                        .from(TEAMS)
+                        .where(TEAMS.ORG_ID.eq(orgId));
 
-                Condition filterByTeamMember = exists(selectOne().from(V_USER_TEAMS)
-                        .where(V_USER_TEAMS.USER_ID.eq(currentUserId)
-                                .and(V_USER_TEAMS.TEAM_ID.in(teamIds))));
+                Condition isInATeam = exists(selectOne().from(Tables.V_USER_TEAMS)
+                        .where(Tables.V_USER_TEAMS.USER_ID.eq(currentUserId)
+                                .and(Tables.V_USER_TEAMS.TEAM_ID.in(teamIds))));
 
-                q.where(or(JSON_STORES.VISIBILITY.eq(JsonStoreVisibility.PUBLIC.toString()), filterByTeamMember));
+                // check if the user owns stores in the org
+                Condition ownsStores = j.OWNER_ID.eq(currentUserId);
+
+                // check if the user owns the org
+                Condition ownsOrg = o.OWNER_ID.eq(currentUserId);
+
+                // if any of those conditions true then the store must be visible
+                q.where(or(isPublic, isInATeam, ownsStores, ownsOrg));
             }
 
             if (filter != null) {
-                q.where(JSON_STORES.JSON_STORE_NAME.containsIgnoreCase(filter));
+                q.where(j.JSON_STORE_NAME.containsIgnoreCase(filter));
             }
 
             if (offset >= 0) {
@@ -115,8 +131,8 @@ public class JsonStoreDao extends AbstractDao {
                 q.limit(limit);
             }
 
-            return q.where(JSON_STORES.ORG_ID.eq(orgId))
-                    .orderBy(JSON_STORES.JSON_STORE_NAME)
+            return q.where(j.ORG_ID.eq(orgId))
+                    .orderBy(j.JSON_STORE_NAME)
                     .fetch(JsonStoreDao::toEntity);
         }
     }
@@ -239,26 +255,27 @@ public class JsonStoreDao extends AbstractDao {
                         .and(JSON_STORE_TEAM_ACCESS.ACCESS_LEVEL.in(Utils.toString(levels)))));
     }
 
-    private SelectJoinStep<Record10<UUID, String, UUID, String, String, UUID, String, String, String, String>> buildSelect(DSLContext tx) {
-        Users u = USERS.as("u");
+    private static SelectJoinStep<Record10<UUID, String, UUID, String, String, UUID, String, String, String, String>> buildSelect(DSLContext tx) {
+        return buildSelect(tx, ORGANIZATIONS, JSON_STORES, USERS);
+    }
 
-        Field<String> orgNameField = select(ORGANIZATIONS.ORG_NAME)
-                .from(ORGANIZATIONS)
-                .where(ORGANIZATIONS.ORG_ID.eq(JSON_STORES.ORG_ID))
-                .asField("orgName");
-
-        return tx.select(JSON_STORES.JSON_STORE_ID,
-                JSON_STORES.JSON_STORE_NAME,
-                JSON_STORES.ORG_ID,
-                orgNameField,
-                JSON_STORES.VISIBILITY,
-                JSON_STORES.OWNER_ID,
-                u.USERNAME,
-                u.DOMAIN,
-                u.DISPLAY_NAME,
-                u.USER_TYPE)
-                .from(JSON_STORES)
-                .leftJoin(u).on(u.USER_ID.eq(JSON_STORES.OWNER_ID));
+    private static SelectJoinStep<Record10<UUID, String, UUID, String, String, UUID, String, String, String, String>> buildSelect(DSLContext tx,
+                                                                                                                                  Organizations orgAlias,
+                                                                                                                                  JsonStores jsonStoreAlias,
+                                                                                                                                  Users userAlias) {
+        return tx.select(jsonStoreAlias.JSON_STORE_ID,
+                jsonStoreAlias.JSON_STORE_NAME,
+                jsonStoreAlias.ORG_ID,
+                orgAlias.ORG_NAME,
+                jsonStoreAlias.VISIBILITY,
+                jsonStoreAlias.OWNER_ID,
+                userAlias.USERNAME,
+                userAlias.DOMAIN,
+                userAlias.DISPLAY_NAME,
+                userAlias.USER_TYPE)
+                .from(jsonStoreAlias)
+                .leftJoin(userAlias).on(userAlias.USER_ID.eq(jsonStoreAlias.OWNER_ID))
+                .leftJoin(orgAlias).on(orgAlias.ORG_ID.eq(jsonStoreAlias.ORG_ID));
     }
 
     private static JsonStoreEntry toEntity(Record r) {
@@ -266,7 +283,7 @@ public class JsonStoreDao extends AbstractDao {
                 .id(r.getValue(JSON_STORES.JSON_STORE_ID))
                 .name(r.getValue(JSON_STORES.JSON_STORE_NAME))
                 .orgId(r.getValue(JSON_STORES.ORG_ID))
-                .orgName(r.getValue(ORGANIZATIONS.ORG_NAME.as("orgName")))
+                .orgName(r.getValue(ORGANIZATIONS.ORG_NAME))
                 .visibility(JsonStoreVisibility.valueOf(r.getValue(JSON_STORES.VISIBILITY)))
                 .owner(toOwner(r.get(JSON_STORES.OWNER_ID), r.get(USERS.USERNAME), r.get(USERS.DOMAIN), r.get(USERS.DISPLAY_NAME), r.get(USERS.USER_TYPE)))
                 .build();

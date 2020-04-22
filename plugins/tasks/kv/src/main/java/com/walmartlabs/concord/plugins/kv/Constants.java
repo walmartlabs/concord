@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.agent.logging;
+package com.walmartlabs.concord.plugins.kv;
 
 /*-
  * *****
@@ -20,14 +20,11 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import java.util.Date;
-import java.util.UUID;
+public final class Constants {
 
-public interface LogAppender {
+    public static final int RETRY_COUNT = 3;
+    public static final long RETRY_INTERVAL = 5000;
 
-    void appendLog(UUID instanceId, byte[] ab);
-
-    void appendLog(UUID instanceId, long segmentId, byte[] ab);
-
-    Long createSegment(UUID instanceId, UUID correlationId, String segmentName, Date createdAt);
+    private Constants() {
+    }
 }

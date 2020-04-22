@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -114,10 +115,10 @@ public class ProcessLogsDao extends AbstractDao {
         }
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {
         return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENT)
                 .columns(PROCESS_LOG_SEGMENT.INSTANCE_ID, PROCESS_LOG_SEGMENT.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENT.CORRELATION_ID, PROCESS_LOG_SEGMENT.SEGMENT_NAME, PROCESS_LOG_SEGMENT.SEGMENT_TS)
-                .values(value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp())
+                .values(value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), createdAt != null ? value(new Timestamp(createdAt.getTime())) : currentTimestamp())
                 .returning(PROCESS_LOG_SEGMENT.SEGMENT_ID)
                 .fetchOne()
                 .getSegmentId());
