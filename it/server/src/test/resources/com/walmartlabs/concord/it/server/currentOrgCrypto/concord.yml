@@ -1,0 +1,7 @@
+flows:
+  default:
+    - log: "Before form: ${crypto.exportAsString(mySecretName, null)}"
+    - form: myForm
+      fields:
+        - x: { type: "string" }
+    - log: "After form: ${crypto.exportAsString(mySecretName, null)}"
