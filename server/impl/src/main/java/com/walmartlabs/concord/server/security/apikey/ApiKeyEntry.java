@@ -38,6 +38,8 @@ public class ApiKeyEntry implements Serializable {
 
     private final UUID id;
 
+    private final UUID userId;
+
     @ConcordKey
     private final String name;
 
@@ -45,16 +47,22 @@ public class ApiKeyEntry implements Serializable {
 
     @JsonCreator
     public ApiKeyEntry(@JsonProperty("id") UUID id,
+                       @JsonProperty("userId") UUID userId,
                        @JsonProperty("name") String name,
                        @JsonProperty("expiredAt") Date expiredAt) {
 
         this.id = id;
+        this.userId = userId;
         this.name = name;
         this.expiredAt = expiredAt;
     }
 
     public UUID getId() {
         return id;
+    }
+
+    public UUID getUserId() {
+        return userId;
     }
 
     public String getName() {
@@ -69,6 +77,7 @@ public class ApiKeyEntry implements Serializable {
     public String toString() {
         return "ApiKeyEntry{" +
                 "id=" + id +
+                ", userId=" + userId +
                 ", name='" + name + '\'' +
                 ", expiredAt=" + expiredAt +
                 '}';
