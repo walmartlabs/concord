@@ -63,6 +63,6 @@ public class UserDaoTest extends AbstractDaoTest {
         // ---
 
         assertNull(userDao.get(userId));
-        assertNull(apiKeyDao.findUserId(apiKey));
+        assertNull(apiKeyDao.find(apiKey));
     }
 }

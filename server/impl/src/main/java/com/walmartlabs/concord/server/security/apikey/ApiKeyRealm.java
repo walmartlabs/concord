@@ -76,6 +76,7 @@ public class ApiKeyRealm extends AuthorizingRealm {
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(u.getId())
                 .field("realm", REALM_NAME)
+                .field("apiKeyId", t.getKeyId())
                 .log();
 
         UserPrincipal p = new UserPrincipal(REALM_NAME, u);

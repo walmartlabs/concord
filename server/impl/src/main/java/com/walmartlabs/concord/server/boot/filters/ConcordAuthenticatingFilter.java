@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
@@ -198,12 +199,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
             validateApiKey(h);
 
-            UUID userId = apiKeyDao.findUserId(h);
-            if (userId == null) {
+            ApiKeyEntry apiKey = apiKeyDao.find(h);
+            if (apiKey == null) {
                 return new UsernamePasswordToken();
             }
 
-            token = new ApiKey(userId, h, rememberMe);
+            token = new ApiKey(apiKey.getId(), apiKey.getUserId(), h, rememberMe);
         }
 
         return token;

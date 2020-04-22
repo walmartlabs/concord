@@ -1,6 +1,18 @@
 # Change log
 
-## [Unreleased]
+## [1.48.1] - 2020-04-22
+
+### Changed
+
+- concord-server: fixed an issue when the `requestInfo` variable
+isn't provided in some cases (regression);
+- concord-server: fixed an issue when the `projectInfo` variable
+is overwritten with an incorrect value when the process is resumed
+(regression).
+
+
+
+## [1.48.0] - 2020-04-21
 
 ### Added
 
