@@ -28,14 +28,20 @@ public class ApiKey implements RememberMeAuthenticationToken {
 
     private static final long serialVersionUID = 1L;
 
+    private final UUID keyId;
     private final UUID userId;
     private final String key;
     private final boolean rememberMe;
 
-    public ApiKey(UUID userId, String key, boolean rememberMe) {
+    public ApiKey(UUID keyId, UUID userId, String key, boolean rememberMe) {
+        this.keyId = keyId;
         this.userId = userId;
         this.key = key;
         this.rememberMe = rememberMe;
+    }
+
+    public UUID getKeyId() {
+        return keyId;
     }
 
     public UUID getUserId() {
@@ -64,8 +70,8 @@ public class ApiKey implements RememberMeAuthenticationToken {
     @Override
     public String toString() {
         return "ApiKey{" +
-                "userId=" + userId +
-                ", key='" + key + '\'' +
+                "keyId=" + keyId +
+                ", userId=" + userId +
                 ", rememberMe=" + rememberMe +
                 '}';
     }
