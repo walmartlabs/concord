@@ -41,12 +41,6 @@ import { Header, Modal } from 'semantic-ui-react';
 const DATA_FETCH_INTERVAL = 5000;
 const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
 
-const DEFAULT_OPTS: LogProcessorOptions = {
-    useLocalTime: true,
-    showDate: false,
-    separateTasks: true
-};
-
 interface ExternalProps {
     instanceId: ConcordId;
     processStatus?: ProcessStatus;
@@ -54,6 +48,7 @@ interface ExternalProps {
     correlationId?: string;
     name: string;
     status: SegmentStatus;
+    opts: LogProcessorOptions;
     forceRefresh: boolean;
 }
 
@@ -69,11 +64,12 @@ const LogSegmentActivity = ({
     correlationId,
     name,
     status,
+    opts,
     forceRefresh
 }: ExternalProps) => {
     const range = useRef<LogRange>(DEFAULT_RANGE);
+    const rangeInit = useRef<LogRange>(DEFAULT_RANGE);
     // TODO: add opts
-    const [opts, setOpts] = useState<LogProcessorOptions>(DEFAULT_OPTS);
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
@@ -97,8 +93,10 @@ const LogSegmentActivity = ({
     const startPollingHandler = useCallback((isLoadWholeLog: boolean) => {
         if (isLoadWholeLog) {
             range.current = { low: 0 };
+            rangeInit.current = { low: 0 };
         } else {
             range.current = DEFAULT_RANGE;
+            rangeInit.current = DEFAULT_RANGE;
         }
         setData([]);
         setStopPolling(false);
@@ -118,6 +116,11 @@ const LogSegmentActivity = ({
         setRefresh((prevState) => !prevState);
     }, [forceRefresh]);
 
+    useEffect(() => {
+        range.current = rangeInit.current;
+        setData([]);
+    }, [opts]);
+
     const error = usePolling(fetchData, range, setData, refresh, stopPolling, processStatus);
     if (error) {
         return <RequestErrorActivity error={error} />;
@@ -136,14 +139,17 @@ const LogSegmentActivity = ({
                 data={data}
             />
 
-            {correlationId &&
-                <Modal open={segmentInfoOpen} onClose={() => setSegmentInfoOpen(false)} size="small">
-                    <Header icon="browser" content={name}/>
+            {correlationId && (
+                <Modal
+                    open={segmentInfoOpen}
+                    onClose={() => setSegmentInfoOpen(false)}
+                    size="small">
+                    <Header icon="browser" content={name} />
                     <Modal.Content>
-                        <TaskCallDetails instanceId={instanceId} correlationId={correlationId}/>
+                        <TaskCallDetails instanceId={instanceId} correlationId={correlationId} />
                     </Modal.Content>
                 </Modal>
-            }
+            )}
         </>
     );
 };
@@ -196,7 +202,7 @@ const usePolling = (
             cancelled = true;
             stopPolling();
         };
-    }, [request, setData, rangeRef, refresh, stopPollingIndicator]);
+    }, [request, setData, rangeRef, refresh, stopPollingIndicator, processStatus]);
 
     const stopPolling = () => {
         if (poll.current) {
