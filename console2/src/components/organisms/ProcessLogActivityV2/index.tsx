@@ -140,7 +140,7 @@ const ProcessLogActivityV2 = ({
                             checked={logOpts.segmentOptions.showDate}
                             onChange={(ev, data) =>
                                 segmentOptsHandler({
-                                    ...logOpts,
+                                    ...logOpts.segmentOptions,
                                     showDate: data.checked as boolean
                                 })
                             }
