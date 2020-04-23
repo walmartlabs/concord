@@ -49,7 +49,7 @@ public class LoggingConfigurator {
     private static final String DEFAULT_PROCESS_LOG_APPENDER_NAME = "PROCESS_STDOUT";
 
     public static void configure(UUID instanceId, String baseDir) {
-        log.info("Redirecting logging output into the segment log: {}", baseDir);
+        log.debug("Redirecting logging output into the segment log: {}", baseDir);
 
         Path dst = Paths.get(baseDir).resolve(instanceId.toString());
         if (!Files.exists(dst)) {

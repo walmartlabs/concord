@@ -48,7 +48,7 @@ public final class HttpUtils {
         }
 
         if (!range.startsWith("bytes=")) {
-            throw new ConcordApplicationException("Invalid range header: " + range, Response.Status.BAD_REQUEST);
+            throw new ConcordApplicationException("Invalid 'range' header: " + range, Response.Status.BAD_REQUEST);
         }
 
         ImmutableRange.Builder builder = Range.builder();

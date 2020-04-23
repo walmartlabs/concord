@@ -110,3 +110,8 @@
     margin: 0;
     white-space: pre-wrap;
 }
+
+.LogSegment .Content a {
+    color: #4183ff;
+    text-decoration: underline;
+}
