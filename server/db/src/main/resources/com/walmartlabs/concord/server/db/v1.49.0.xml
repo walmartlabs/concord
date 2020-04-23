@@ -15,19 +15,19 @@
     <changeSet id="1490010" author="ybrigo@gmail.com">
         <createTable tableName="PROCESS_LOG_SEGMENT">
             <column name="INSTANCE_ID" type="uuid">
-                <constraints nullable="false" primaryKey="true"/>
+                <constraints nullable="false"/>
             </column>
             <column name="INSTANCE_CREATED_AT" type="timestamp">
-                <constraints nullable="false" primaryKey="true"/>
+                <constraints nullable="false"/>
             </column>
             <column name="SEGMENT_ID" type="bigserial">
-                <constraints nullable="false" primaryKey="true"/>
+                <constraints nullable="false"/>
             </column>
             <column name="SEGMENT_NAME" type="text">
                 <constraints nullable="false"/>
             </column>
             <column name="CORRELATION_ID" type="uuid">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="SEGMENT_TS" type="timestamp">
                 <constraints nullable="false"/>
@@ -36,7 +36,10 @@
     </changeSet>
 
     <changeSet id="1490011" author="ybrigo@gmail.com">
-        <addUniqueConstraint tableName="PROCESS_LOG_SEGMENT" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT, SEGMENT_NAME, CORRELATION_ID"/>
+        <createIndex tableName="PROCESS_LOG_SEGMENT" indexName="IDX_PLS_IDS">
+            <column name="INSTANCE_ID"/>
+            <column name="INSTANCE_CREATED_AT"/>
+        </createIndex>
     </changeSet>
 
     <changeSet id="1490020" author="ybrigo@gmail.com">
@@ -60,7 +63,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="LOG_SEQ" type="bigserial">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
