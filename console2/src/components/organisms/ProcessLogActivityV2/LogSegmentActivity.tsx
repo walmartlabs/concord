@@ -73,7 +73,9 @@ const LogSegmentActivity = ({
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
+    const [visibleData, setVisibleData] = useState<string[]>([]);
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const fetchData = useCallback(
         async (range: LogRange) => {
@@ -121,7 +123,13 @@ const LogSegmentActivity = ({
         setData([]);
     }, [opts]);
 
-    const error = usePolling(fetchData, range, setData, refresh, stopPolling, processStatus);
+    useEffect(() => {
+        if (data.length > 0) {
+            setVisibleData(data);
+        }
+    }, [data]);
+
+    const error = usePolling(fetchData, range, setData, setLoading, refresh, stopPolling, processStatus);
     if (error) {
         return <RequestErrorActivity error={error} />;
     }
@@ -136,7 +144,8 @@ const LogSegmentActivity = ({
                 onStartLoading={startPollingHandler}
                 onStopLoading={stopPollingHandler}
                 onSegmentInfo={correlationId ? segmentInfoHandler : undefined}
-                data={data}
+                data={visibleData}
+                loading={loading}
             />
 
             {correlationId && (
@@ -158,6 +167,7 @@ const usePolling = (
     request: (range: LogRange) => Promise<FetchResponse>,
     rangeRef: MutableRefObject<LogRange>,
     setData: Dispatch<SetStateAction<string[]>>,
+    setLoading: Dispatch<SetStateAction<boolean>>,
     refresh: boolean,
     stopPollingIndicator: boolean,
     processStatus?: ProcessStatus
@@ -171,6 +181,7 @@ const usePolling = (
         const fetchData = async (range: LogRange) => {
             let r = range;
             try {
+                setLoading(true);
                 const resp = await request(r);
 
                 r = { low: resp.range.high, high: undefined };
@@ -184,6 +195,8 @@ const usePolling = (
             } catch (e) {
                 setError(e);
             } finally {
+                setLoading(false);
+
                 if (!stopPollingIndicator && !cancelled && !isFinal(processStatus)) {
                     poll.current = setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
                 } else {
@@ -202,7 +215,7 @@ const usePolling = (
             cancelled = true;
             stopPolling();
         };
-    }, [request, setData, rangeRef, refresh, stopPollingIndicator, processStatus]);
+    }, [request, setData, rangeRef, setLoading, refresh, stopPollingIndicator, processStatus]);
 
     const stopPolling = () => {
         if (poll.current) {
