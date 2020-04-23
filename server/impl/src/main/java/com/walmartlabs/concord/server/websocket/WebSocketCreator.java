@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.websocket;
 
 import com.walmartlabs.concord.server.queueclient.QueueClient;
 import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
+import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.slf4j.Logger;
@@ -59,13 +60,13 @@ public class WebSocketCreator implements org.eclipse.jetty.websocket.servlet.Web
         }
 
         if (invalidApiKey(auth)) {
-            sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API token: '" + auth + "'", resp);
+            sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API key: '" + auth + "'", resp);
             return null;
         }
 
-        UUID user = apiKeyDao.findUserId(auth);
-        if (user == null) {
-            sendError(HttpServletResponse.SC_FORBIDDEN, "User with key '" + auth + "' not found", resp);
+        ApiKeyEntry apiKey = apiKeyDao.find(auth);
+        if (apiKey == null) {
+            sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API key or user not found", resp);
             return null;
         }
 

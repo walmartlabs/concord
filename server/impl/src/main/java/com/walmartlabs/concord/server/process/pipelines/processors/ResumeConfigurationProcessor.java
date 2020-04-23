@@ -27,7 +27,6 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.pipelines.processors.cfg.ProcessConfigurationUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -61,14 +60,12 @@ public class ResumeConfigurationProcessor implements PayloadProcessor {
         // we'll use the arguments only from the request
         workspaceCfg.remove(Constants.Request.ARGUMENTS_KEY);
 
-        // automatically provided variables
-        ProjectEntry projectEntry = getProject(payload);
-        Map<String, Object> providedCfg = ProcessConfigurationUtils.prepareProvidedCfg(payload, projectEntry);
+        // TODO automatically provided variables
 
         // TODO overrides from policies
 
         // create the resulting configuration
-        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg, providedCfg);
+        Map<String, Object> m = ConfigurationUtils.deepMerge(workspaceCfg, cfg);
         payload = payload.putHeader(Payload.CONFIGURATION, m);
 
         return chain.process(payload);

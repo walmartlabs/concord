@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.apikey;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record3;
+import org.jooq.Record4;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -76,6 +77,7 @@ public class ApiKeyDao extends AbstractDao {
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(
                     API_KEYS.KEY_ID,
+                    API_KEYS.USER_ID,
                     API_KEYS.KEY_NAME,
                     API_KEYS.EXPIRED_AT)
                     .from(API_KEYS)
@@ -109,14 +111,14 @@ public class ApiKeyDao extends AbstractDao {
         }
     }
 
-    public UUID findUserId(String key) {
+    public ApiKeyEntry find(String key) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(API_KEYS.USER_ID)
+            return tx.select(API_KEYS.KEY_ID, API_KEYS.USER_ID, API_KEYS.KEY_NAME, API_KEYS.EXPIRED_AT)
                     .from(API_KEYS)
                     .where(API_KEYS.API_KEY.eq(hash(key))
                             .and(API_KEYS.EXPIRED_AT.isNull()
                                     .or(API_KEYS.EXPIRED_AT.greaterThan(currentTimestamp()))))
-                    .fetchOne(API_KEYS.USER_ID);
+                    .fetchOne(ApiKeyDao::toEntry);
         }
     }
 
@@ -140,7 +142,7 @@ public class ApiKeyDao extends AbstractDao {
         return Base64.getEncoder().withoutPadding().encodeToString(ab);
     }
 
-    private static ApiKeyEntry toEntry(Record3<UUID, String, Timestamp> r) {
-        return new ApiKeyEntry(r.value1(), r.value2(), r.value3());
+    private static ApiKeyEntry toEntry(Record4<UUID, UUID, String, Timestamp> r) {
+        return new ApiKeyEntry(r.value1(), r.value2(), r.value3(), r.value4());
     }
 }
