@@ -39,7 +39,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENT;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessLogs.PROCESS_LOGS;
@@ -129,8 +129,8 @@ public class ProcessCleaner implements ScheduledTask {
                             .where(PROCESS_LOG_DATA.INSTANCE_ID.in(ids))
                             .execute();
 
-                    logSegmentEntries = tx.deleteFrom(PROCESS_LOG_SEGMENT)
-                            .where(PROCESS_LOG_SEGMENT.INSTANCE_ID.in(ids))
+                    logSegmentEntries = tx.deleteFrom(PROCESS_LOG_SEGMENTS)
+                            .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.in(ids))
                             .execute();
                 }
 

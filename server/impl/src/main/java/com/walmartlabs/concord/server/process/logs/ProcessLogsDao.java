@@ -116,17 +116,17 @@ public class ProcessLogsDao extends AbstractDao {
     }
 
     public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {
-        return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENT)
-                .columns(PROCESS_LOG_SEGMENT.INSTANCE_ID, PROCESS_LOG_SEGMENT.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENT.CORRELATION_ID, PROCESS_LOG_SEGMENT.SEGMENT_NAME, PROCESS_LOG_SEGMENT.SEGMENT_TS)
+        return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
+                .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS)
                 .values(value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), createdAt != null ? value(new Timestamp(createdAt.getTime())) : currentTimestamp())
-                .returning(PROCESS_LOG_SEGMENT.SEGMENT_ID)
+                .returning(PROCESS_LOG_SEGMENTS.SEGMENT_ID)
                 .fetchOne()
                 .getSegmentId());
     }
 
     public void createSegment(long segmentId, ProcessKey processKey, UUID correlationId, String name) {
-        tx(tx -> tx.insertInto(PROCESS_LOG_SEGMENT)
-                .columns(PROCESS_LOG_SEGMENT.SEGMENT_ID, PROCESS_LOG_SEGMENT.INSTANCE_ID, PROCESS_LOG_SEGMENT.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENT.CORRELATION_ID, PROCESS_LOG_SEGMENT.SEGMENT_NAME, PROCESS_LOG_SEGMENT.SEGMENT_TS)
+        tx(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
+                .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS)
                 .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp())
                 .execute());
     }
@@ -136,11 +136,11 @@ public class ProcessLogsDao extends AbstractDao {
         Timestamp createdAt = processKey.getCreatedAt();
 
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_LOG_SEGMENT.SEGMENT_ID, PROCESS_LOG_SEGMENT.CORRELATION_ID, PROCESS_LOG_SEGMENT.SEGMENT_NAME, PROCESS_LOG_SEGMENT.SEGMENT_TS)
-                    .from(PROCESS_LOG_SEGMENT)
-                    .where(PROCESS_LOG_SEGMENT.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_LOG_SEGMENT.INSTANCE_CREATED_AT.eq(createdAt)))
-                    .orderBy(PROCESS_LOG_SEGMENT.SEGMENT_TS)
+            return tx.select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS)
+                    .from(PROCESS_LOG_SEGMENTS)
+                    .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
+                            .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
+                    .orderBy(PROCESS_LOG_SEGMENTS.SEGMENT_TS)
                     .limit(limit)
                     .offset(offset)
                     .fetch(ProcessLogsDao::toSegment);
@@ -315,10 +315,10 @@ public class ProcessLogsDao extends AbstractDao {
 
     private static LogSegment toSegment(Record4<Long, UUID, String, Timestamp> r) {
         return LogSegment.builder()
-                .id(r.get(PROCESS_LOG_SEGMENT.SEGMENT_ID))
-                .correlationId(r.get(PROCESS_LOG_SEGMENT.CORRELATION_ID))
-                .name(r.get(PROCESS_LOG_SEGMENT.SEGMENT_NAME))
-                .createdAt(r.get(PROCESS_LOG_SEGMENT.SEGMENT_TS))
+                .id(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ID))
+                .correlationId(r.get(PROCESS_LOG_SEGMENTS.CORRELATION_ID))
+                .name(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_NAME))
+                .createdAt(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_TS))
                 // TODO:
                 .status(LogSegment.Status.OK)
                 .build();
