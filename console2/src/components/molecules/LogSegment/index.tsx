@@ -60,12 +60,15 @@ const LogSegment = ({
         setLoadWholeLog((prevState) => !prevState);
     }, []);
 
-    const segmentInfoClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        if (onSegmentInfo !== undefined) {
-            onSegmentInfo();
-        }
-    }, [onSegmentInfo]);
+    const segmentInfoClickHandler = useCallback(
+        (event: React.MouseEvent<HTMLButtonElement>) => {
+            event.stopPropagation();
+            if (onSegmentInfo !== undefined) {
+                onSegmentInfo();
+            }
+        },
+        [onSegmentInfo]
+    );
 
     const autoscrollClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();

@@ -171,15 +171,16 @@ const ProcessActivity = (props: ExternalProps) => {
                     />
                 </Route>
                 <Route path={`${baseUrl}/log`} exact={true}>
-                    {(process?.runtime === 'concord-v1' || process?.runtime === undefined) && (
-                        <ProcessLogActivity
-                            instanceId={instanceId}
-                            processStatus={process ? process.status : undefined}
-                            loadingHandler={loadingHandler}
-                            forceRefresh={refresh}
-                        />
-                    )}
-                    {process?.runtime === 'concord-v2' && (
+                    {process &&
+                        (process.runtime === 'concord-v1' || process.runtime === undefined) && (
+                            <ProcessLogActivity
+                                instanceId={instanceId}
+                                processStatus={process ? process.status : undefined}
+                                loadingHandler={loadingHandler}
+                                forceRefresh={refresh}
+                            />
+                        )}
+                    {process && process.runtime === 'concord-v2' && (
                         <ProcessLogActivityV2
                             instanceId={instanceId}
                             processStatus={process ? process.status : undefined}
