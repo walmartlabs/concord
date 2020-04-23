@@ -53,16 +53,16 @@ const LogSegment = ({
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
     const [isOpen, setOpen] = useState<boolean>(false);
-    const [isLoadWholeLog, setLoadWholeLog] = useState<boolean>(false);
+    const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
 
-    const wholeLogClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    const loadAllClickHandler = useCallback((event: React.MouseEvent<any>) => {
         event.stopPropagation();
-        setLoadWholeLog((prevState) => !prevState);
+        setLoadAll((prevState) => !prevState);
     }, []);
 
     const segmentInfoClickHandler = useCallback(
-        (event: React.MouseEvent<HTMLButtonElement>) => {
+        (event: React.MouseEvent<any>) => {
             event.stopPropagation();
             if (onSegmentInfo !== undefined) {
                 onSegmentInfo();
@@ -71,18 +71,18 @@ const LogSegment = ({
         [onSegmentInfo]
     );
 
-    const autoscrollClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    const autoscrollClickHandler = useCallback((event: React.MouseEvent<any>) => {
         event.stopPropagation();
         setAutoScroll((prevState) => !prevState);
     }, []);
 
     useEffect(() => {
         if (isOpen) {
-            onStartLoading(isLoadWholeLog);
+            onStartLoading(isLoadAll);
         } else {
             onStopLoading();
         }
-    }, [isOpen, isLoadWholeLog, name, onStartLoading, onStopLoading]);
+    }, [isOpen, isLoadAll, name, onStartLoading, onStopLoading]);
 
     useEffect(() => {
         if (isAutoScroll && scrollAnchorRef.current !== null) {
@@ -94,8 +94,8 @@ const LogSegment = ({
         <div className="LogSegment">
             <Button
                 fluid={true}
-                size={'medium'}
-                className={'Segment'}
+                size="medium"
+                className="Segment"
                 onClick={() => setOpen((prevState) => !prevState)}>
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
                 <StatusIcon status={status} />
@@ -104,8 +104,8 @@ const LogSegment = ({
                 <Link
                     to={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
                     onClick={(event) => event.stopPropagation()}
-                    target={'_blank'}
-                    title={'Open Raw Step Output in New Tab'}
+                    target="_blank"
+                    title="Pop out"
                     className="AdditionalAction Last">
                     <Icon name="external alternate" />
                 </Link>
@@ -118,28 +118,24 @@ const LogSegment = ({
 
                 {isOpen && (
                     <>
-                        <div className={'AdditionalAction'}>
-                            <Icon
-                                name={isLoadWholeLog ? 'lemon' : 'lemon outline'}
-                                color={isLoadWholeLog ? 'green' : 'grey'}
-                                title={'Show whole log'}
-                                onClick={wholeLogClickHandler}
-                            />
+                        <div className="AdditionalAction">
+                            <div
+                                className={isAutoScroll ? 'on' : 'off'}
+                                onClick={autoscrollClickHandler}>
+                                Auto Scroll
+                            </div>
                         </div>
 
-                        <div className={'AdditionalAction'}>
-                            <Icon
-                                name={isAutoScroll ? 'lightbulb' : 'lightbulb outline'}
-                                color={isAutoScroll ? 'green' : 'grey'}
-                                title={'Auto scroll'}
-                                onClick={autoscrollClickHandler}
-                            />
+                        <div className="AdditionalAction">
+                            <div className={isLoadAll ? 'on' : 'off'} onClick={loadAllClickHandler}>
+                                Load All
+                            </div>
                         </div>
                     </>
                 )}
 
                 {loading && (
-                    <div className={'AdditionalAction'}>
+                    <div className="AdditionalAction">
                         <Icon loading={loading} name="spinner" />
                     </div>
                 )}
