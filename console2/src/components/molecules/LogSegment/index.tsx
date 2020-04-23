@@ -35,7 +35,7 @@ interface ExternalProps {
     data: string[];
     onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
-    onSegmentInfo: () => void;
+    onSegmentInfo?: () => void;
 }
 
 const LogSegment = ({
@@ -62,8 +62,10 @@ const LogSegment = ({
 
     const segmentInfoClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        onSegmentInfo();
-    }, []);
+        if (onSegmentInfo !== undefined) {
+            onSegmentInfo();
+        }
+    }, [onSegmentInfo]);
 
     const autoscrollClickHandler = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
@@ -106,7 +108,7 @@ const LogSegment = ({
                     <Icon name="external alternate" />
                 </Link>
 
-                {segmentId !== 0 && (
+                {onSegmentInfo !== undefined && (
                     <div className={'AdditionalAction'}>
                         <Icon name={'info'} title={'Show info'} onClick={segmentInfoClickHandler} />
                     </div>

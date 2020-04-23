@@ -805,30 +805,7 @@ public class ProcessResource implements Resource {
         HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
 
         ProcessLog l = logManager.get(processKey, range.start(), range.end());
-        List<ProcessLogChunk> data = l.getChunks();
-        if (data.isEmpty()) {
-            int actualStart = range.start() != null ? range.start() : 0;
-            int actualEnd = range.end() != null ? range.end() : actualStart;
-            return Response.ok()
-                    .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                    .build();
-        }
-
-        ProcessLogChunk first = data.get(0);
-        int actualStart = first.getStart();
-
-        ProcessLogChunk last = data.get(data.size() - 1);
-        int actualEnd = last.getStart() + last.getData().length;
-
-        StreamingOutput out = output -> {
-            for (ProcessLogChunk e : data) {
-                output.write(e.getData());
-            }
-        };
-
-        return Response.ok(out)
-                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                .build();
+        return ProcessLogResourceV2.toResponse(l, range);
     }
 
     /**

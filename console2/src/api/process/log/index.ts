@@ -86,7 +86,7 @@ export enum SegmentStatus {
 
 export interface LogSegmentEntry {
     id: number;
-    correlationId: string;
+    correlationId?: string;
     name: string;
     status: SegmentStatus;
 }
