@@ -71,6 +71,7 @@ const ProcessLogActivityV2 = ({
                     name={s.name}
                     status={s.status}
                     processStatus={processStatus}
+                    forceRefresh={forceRefresh}
                     key={index}
                 />
             ))}

@@ -54,6 +54,7 @@ interface ExternalProps {
     correlationId?: string;
     name: string;
     status: SegmentStatus;
+    forceRefresh: boolean;
 }
 
 interface FetchResponse {
@@ -67,7 +68,8 @@ const LogSegmentActivity = ({
     segmentId,
     correlationId,
     name,
-    status
+    status,
+    forceRefresh
 }: ExternalProps) => {
     const range = useRef<LogRange>(DEFAULT_RANGE);
     // TODO: add opts
@@ -75,7 +77,6 @@ const LogSegmentActivity = ({
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
-    const [chunkLength, setChunkLength] = useState<number>(0);
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
 
     const fetchData = useCallback(
@@ -84,7 +85,6 @@ const LogSegmentActivity = ({
 
             const data = chunk && chunk.data.length > 0 ? chunk.data : undefined;
             const processedData = data ? processText(data, opts) : '';
-            setChunkLength(chunk ? chunk.data.length : 0);
 
             return {
                 data: processedData,
@@ -115,12 +115,10 @@ const LogSegmentActivity = ({
     }, []);
 
     useEffect(() => {
-        if (isFinal(processStatus)) {
-            setStopPolling(true);
-        }
-    }, [chunkLength, processStatus]);
+        setRefresh((prevState) => !prevState);
+    }, [forceRefresh]);
 
-    const error = usePolling(fetchData, range, setData, refresh, stopPolling);
+    const error = usePolling(fetchData, range, setData, refresh, stopPolling, processStatus);
     if (error) {
         return <RequestErrorActivity error={error} />;
     }
@@ -155,7 +153,8 @@ const usePolling = (
     rangeRef: MutableRefObject<LogRange>,
     setData: Dispatch<SetStateAction<string[]>>,
     refresh: boolean,
-    stopPollingIndicator: boolean
+    stopPollingIndicator: boolean,
+    processStatus?: ProcessStatus
 ): RequestError | undefined => {
     const poll = useRef<number | undefined>(undefined);
     const [error, setError] = useState<RequestError>();
@@ -169,17 +168,17 @@ const usePolling = (
                 const resp = await request(r);
 
                 r = { low: resp.range.high, high: undefined };
-                rangeRef.current = r;
 
                 setError(undefined);
 
                 if (!cancelled && resp.data.length > 0) {
+                    rangeRef.current = r;
                     setData((prev) => [...prev, resp.data]);
                 }
             } catch (e) {
                 setError(e);
             } finally {
-                if (!stopPollingIndicator && !cancelled) {
+                if (!stopPollingIndicator && !cancelled && !isFinal(processStatus)) {
                     poll.current = setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
                 } else {
                     stopPolling();
