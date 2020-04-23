@@ -61,6 +61,18 @@
     padding-right: 0;
 }
 
+.LogSegment .Segment .AdditionalAction .on {
+    color: #21ba45;
+}
+
+.LogSegment .Segment .AdditionalAction .off {
+    color: #767676;
+}
+
+.LogSegment .Segment .AdditionalAction .off:hover {
+    color: #000000;
+}
+
 .LogSegment .Segment .AdditionalAction i:hover{
     color: red !important;
 }

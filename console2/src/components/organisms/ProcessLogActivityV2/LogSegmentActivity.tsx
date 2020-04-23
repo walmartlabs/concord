@@ -129,7 +129,15 @@ const LogSegmentActivity = ({
         }
     }, [data]);
 
-    const error = usePolling(fetchData, range, setData, setLoading, refresh, stopPolling, processStatus);
+    const error = usePolling(
+        fetchData,
+        range,
+        setData,
+        setLoading,
+        refresh,
+        stopPolling,
+        processStatus
+    );
     if (error) {
         return <RequestErrorActivity error={error} />;
     }
