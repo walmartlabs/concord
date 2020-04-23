@@ -34,7 +34,7 @@
         <dependency>
             <groupId>io.takari.bpm</groupId>
             <artifactId>bpm-engine-impl</artifactId>
-            <version>0.10.0</version>
+            <version>0.58.2</version>
         </dependency>
     </dependencies>
 
