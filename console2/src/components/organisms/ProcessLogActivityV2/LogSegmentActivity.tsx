@@ -51,7 +51,7 @@ interface ExternalProps {
     instanceId: ConcordId;
     processStatus?: ProcessStatus;
     segmentId: number;
-    correlationId: string;
+    correlationId?: string;
     name: string;
     status: SegmentStatus;
 }
@@ -70,6 +70,7 @@ const LogSegmentActivity = ({
     status
 }: ExternalProps) => {
     const range = useRef<LogRange>(DEFAULT_RANGE);
+    // TODO: add opts
     const [opts, setOpts] = useState<LogProcessorOptions>(DEFAULT_OPTS);
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
@@ -133,16 +134,18 @@ const LogSegmentActivity = ({
                 status={status}
                 onStartLoading={startPollingHandler}
                 onStopLoading={stopPollingHandler}
-                onSegmentInfo={segmentInfoHandler}
+                onSegmentInfo={correlationId ? segmentInfoHandler : undefined}
                 data={data}
             />
 
-            <Modal open={segmentInfoOpen} onClose={() => setSegmentInfoOpen(false)} size="small">
-                <Header icon="browser" content={name} />
-                <Modal.Content>
-                    <TaskCallDetails instanceId={instanceId} correlationId={correlationId} />
-                </Modal.Content>
-            </Modal>
+            {correlationId &&
+                <Modal open={segmentInfoOpen} onClose={() => setSegmentInfoOpen(false)} size="small">
+                    <Header icon="browser" content={name}/>
+                    <Modal.Content>
+                        <TaskCallDetails instanceId={instanceId} correlationId={correlationId}/>
+                    </Modal.Content>
+                </Modal>
+            }
         </>
     );
 };
