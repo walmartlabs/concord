@@ -38,6 +38,7 @@ interface Props {
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
     loading: boolean;
+    open: boolean;
 }
 
 const LogSegment = ({
@@ -50,11 +51,12 @@ const LogSegment = ({
     onStartLoading,
     onStopLoading,
     onSegmentInfo,
-    loading
+    loading,
+    open
 }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
-    const [isOpen, setOpen] = useState<boolean>(false);
+    const [isOpen, setOpen] = useState<boolean>(open);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
 
@@ -151,7 +153,7 @@ const LogSegment = ({
                         <div className="Content">
                             {range.low !== 0 && (
                                 <>
-                                    <span>...showing only the last {range.high} bytes... </span>
+                                    <span>...showing only the last few lines... </span>
                                     <a href="#" onClick={loadAllClickHandler}>
                                         Full log
                                     </a>{' '}
