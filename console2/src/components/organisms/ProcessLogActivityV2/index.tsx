@@ -181,11 +181,11 @@ const ProcessLogActivityV2 = ({
 };
 
 const isOpen = (currentIndex: number, allSegments: LogSegmentEntry[]): boolean => {
-    if (allSegments.length == 1) {
+    if (allSegments.length === 1) {
         return true;
     }
 
-    return currentIndex == allSegments.length - 1;
+    return currentIndex === allSegments.length - 1;
 };
 
 const getStoredOpts = (): LogOptions => {

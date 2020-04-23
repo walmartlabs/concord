@@ -154,6 +154,7 @@ const LogSegment = ({
                             {range.low !== 0 && (
                                 <>
                                     <span>...showing only the last few lines... </span>
+                                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                     <a href="#" onClick={loadAllClickHandler}>
                                         Full log
                                     </a>{' '}
