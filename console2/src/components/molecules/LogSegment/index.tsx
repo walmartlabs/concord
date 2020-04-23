@@ -27,7 +27,7 @@ import { SegmentStatus } from '../../../api/process/log';
 import { Link } from 'react-router-dom';
 import { ConcordId } from '../../../api/common';
 
-interface ExternalProps {
+interface Props {
     instanceId: ConcordId;
     segmentId: number;
     name: string;
@@ -36,6 +36,7 @@ interface ExternalProps {
     onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
+    loading: boolean;
 }
 
 const LogSegment = ({
@@ -46,11 +47,11 @@ const LogSegment = ({
     data,
     onStartLoading,
     onStopLoading,
-    onSegmentInfo
-}: ExternalProps) => {
+    onSegmentInfo,
+    loading
+}: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
-    const [loading, setLoading] = useState<boolean>(false);
     const [isOpen, setOpen] = useState<boolean>(false);
     const [isLoadWholeLog, setLoadWholeLog] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
@@ -78,10 +79,8 @@ const LogSegment = ({
     useEffect(() => {
         if (isOpen) {
             onStartLoading(isLoadWholeLog);
-            setLoading(true);
         } else {
             onStopLoading();
-            setLoading(false);
         }
     }, [isOpen, isLoadWholeLog, name, onStartLoading, onStopLoading]);
 
@@ -138,15 +137,15 @@ const LogSegment = ({
                         </div>
                     </>
                 )}
+
+                {loading && (
+                    <div className={'AdditionalAction'}>
+                        <Icon loading={loading} name="spinner" />
+                    </div>
+                )}
             </Button>
 
-            {isOpen && loading && data.length === 0 && (
-                <div className="ContentContainer">
-                    <div className="Loading">Loading</div>
-                </div>
-            )}
-
-            {isOpen && data.length > 0 && (
+            {isOpen && (
                 <div className="ContentContainer">
                     <div className="InnerContentContainer">
                         <div className="Content">
