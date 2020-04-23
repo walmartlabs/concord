@@ -97,6 +97,10 @@ public class ProcessLogsDao extends AbstractDao {
         return PgIntRange.parse(r.getLogRange().toString());
     }
 
+    /**
+     * @deprecated remove after process_logs is no longer in use
+     */
+    @Deprecated
     public ProcessLog get(ProcessKey processKey, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
         Timestamp createdAt = processKey.getCreatedAt();
