@@ -97,7 +97,6 @@ public class ProcessLogResourceV2 implements Resource {
         }
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-
         return logManager.listSegments(processKey, limit, offset);
     }
 
@@ -114,9 +113,7 @@ public class ProcessLogResourceV2 implements Resource {
                                                @ApiParam LogSegmentRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-
         long segmentId = logManager.createSegment(processKey, request.correlationId(), request.name(), request.createdAt());
-
         return new LogSegmentOperationResponse(segmentId, OperationResult.CREATED);
     }
 
@@ -133,9 +130,7 @@ public class ProcessLogResourceV2 implements Resource {
                          @HeaderParam("range") String rangeHeader) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
-
         HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
-
         ProcessLog l = logManager.segmentData(processKey, segmentId, range.start(), range.end());
         return toResponse(l, range);
     }
@@ -150,6 +145,7 @@ public class ProcessLogResourceV2 implements Resource {
     public void append(@ApiParam @PathParam("id") UUID instanceId,
                        @ApiParam @PathParam("segmentId") long segmentId,
                        InputStream data) {
+
         ProcessKey processKey = assertProcessKey(instanceId);
 
         try {

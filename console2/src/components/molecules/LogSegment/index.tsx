@@ -23,7 +23,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import './styles.css';
 import { Button, Icon } from 'semantic-ui-react';
-import { SegmentStatus } from '../../../api/process/log';
+import { LogRange, SegmentStatus } from '../../../api/process/log';
 import { Link } from 'react-router-dom';
 import { ConcordId } from '../../../api/common';
 
@@ -32,6 +32,7 @@ interface Props {
     segmentId: number;
     name: string;
     status: SegmentStatus;
+    range: LogRange;
     data: string[];
     onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
@@ -44,6 +45,7 @@ const LogSegment = ({
     segmentId,
     name,
     status,
+    range,
     data,
     onStartLoading,
     onStopLoading,
@@ -56,8 +58,9 @@ const LogSegment = ({
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
 
-    const loadAllClickHandler = useCallback((event: React.MouseEvent<any>) => {
-        event.stopPropagation();
+    const loadAllClickHandler = useCallback((ev: React.MouseEvent<any>) => {
+        ev.preventDefault();
+        ev.stopPropagation();
         setLoadAll((prevState) => !prevState);
     }, []);
 
@@ -71,8 +74,9 @@ const LogSegment = ({
         [onSegmentInfo]
     );
 
-    const autoscrollClickHandler = useCallback((event: React.MouseEvent<any>) => {
-        event.stopPropagation();
+    const autoscrollClickHandler = useCallback((ev: React.MouseEvent<any>) => {
+        ev.preventDefault();
+        ev.stopPropagation();
         setAutoScroll((prevState) => !prevState);
     }, []);
 
@@ -145,6 +149,14 @@ const LogSegment = ({
                 <div className="ContentContainer">
                     <div className="InnerContentContainer">
                         <div className="Content">
+                            {range.low !== 0 && (
+                                <>
+                                    <span>...showing only the last {range.high} bytes... </span>
+                                    <a href="#" onClick={loadAllClickHandler}>
+                                        Full log
+                                    </a>{' '}
+                                </>
+                            )}
                             {data.map((value, index) => (
                                 <pre key={index} dangerouslySetInnerHTML={{ __html: value }} />
                             ))}

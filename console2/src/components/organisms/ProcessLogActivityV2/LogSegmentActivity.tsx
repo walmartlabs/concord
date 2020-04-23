@@ -148,6 +148,7 @@ const LogSegmentActivity = ({
                 instanceId={instanceId}
                 segmentId={segmentId}
                 name={name}
+                range={rangeInit.current}
                 status={status}
                 onStartLoading={startPollingHandler}
                 onStopLoading={stopPollingHandler}
