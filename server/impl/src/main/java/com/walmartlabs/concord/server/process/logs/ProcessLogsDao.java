@@ -128,11 +128,11 @@ public class ProcessLogsDao extends AbstractDao {
                 .getSegmentId());
     }
 
-    public void createSegment(long segmentId, ProcessKey processKey, UUID correlationId, String name) {
-        tx(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
+    public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name) {
+        tx.insertInto(PROCESS_LOG_SEGMENTS)
                 .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS)
                 .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp())
-                .execute());
+                .execute();
     }
 
     public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {

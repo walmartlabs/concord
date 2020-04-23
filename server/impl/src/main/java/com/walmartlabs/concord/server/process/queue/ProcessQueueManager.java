@@ -28,6 +28,7 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.RequestUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.process.event.ProcessEventManager;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.events.ProcessEvent;
 import org.jooq.DSLContext;
@@ -46,17 +47,20 @@ public class ProcessQueueManager {
     private final ConcordObjectMapper objectMapper;
     private final ProcessKeyCache keyCache;
     private final ProcessEventManager eventManager;
+    private final ProcessLogManager processLogManager;
 
     @Inject
     public ProcessQueueManager(ProcessQueueDao queueDao,
                                ConcordObjectMapper objectMapper,
                                ProcessKeyCache keyCache,
-                               ProcessEventManager eventManager) {
+                               ProcessEventManager eventManager,
+                               ProcessLogManager processLogManager) {
 
         this.queueDao = queueDao;
         this.eventManager = eventManager;
         this.objectMapper = objectMapper;
         this.keyCache = keyCache;
+        this.processLogManager = processLogManager;
     }
 
     /**
@@ -76,6 +80,7 @@ public class ProcessQueueManager {
         queueDao.tx(tx -> {
             queueDao.insert(tx, processKey, status, kind, parentInstanceId, projectId, repoId, initiatorId, meta, triggeredBy);
             eventManager.insertStatusHistory(tx, processKey, status, Collections.emptyMap());
+            processLogManager.createSystemSegment(tx, payload.getProcessKey());
         });
     }
 
