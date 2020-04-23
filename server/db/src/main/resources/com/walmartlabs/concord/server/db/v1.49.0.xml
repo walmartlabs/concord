@@ -13,7 +13,7 @@
     </changeSet>
 
     <changeSet id="1490010" author="ybrigo@gmail.com">
-        <createTable tableName="PROCESS_LOG_SEGMENT">
+        <createTable tableName="PROCESS_LOG_SEGMENTS">
             <column name="INSTANCE_ID" type="uuid">
                 <constraints nullable="false"/>
             </column>
@@ -36,7 +36,7 @@
     </changeSet>
 
     <changeSet id="1490011" author="ybrigo@gmail.com">
-        <createIndex tableName="PROCESS_LOG_SEGMENT" indexName="IDX_PLS_IDS">
+        <createIndex tableName="PROCESS_LOG_SEGMENTS" indexName="IDX_PLS_IDS">
             <column name="INSTANCE_ID"/>
             <column name="INSTANCE_CREATED_AT"/>
         </createIndex>
