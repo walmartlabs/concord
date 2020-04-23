@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.Listeners;
 import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
+import org.jooq.DSLContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -85,8 +86,8 @@ public class ProcessLogManager {
         return logsDao.listSegments(processKey, limit, offset);
     }
 
-    public void createSystemSegment(ProcessKey processKey) {
-        logsDao.createSegment(SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME);
+    public void createSystemSegment(DSLContext tx, ProcessKey processKey) {
+        logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME);
     }
 
     public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {
