@@ -86,7 +86,7 @@ public class ProcessLogManager {
     }
 
     public void createSystemSegment(ProcessKey processKey) {
-        logsDao.createSegment(SYSTEM_SEGMENT_ID, processKey, processKey.getInstanceId(), SYSTEM_SEGMENT_NAME);
+        logsDao.createSegment(SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME);
     }
 
     public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {

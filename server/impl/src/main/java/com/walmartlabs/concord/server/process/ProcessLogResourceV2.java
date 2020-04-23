@@ -137,31 +137,7 @@ public class ProcessLogResourceV2 implements Resource {
         HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
 
         ProcessLog l = logManager.segmentData(processKey, segmentId, range.start(), range.end());
-        List<ProcessLogChunk> data = l.getChunks();
-        if (data.isEmpty()) {
-            int actualStart = range.start() != null ? range.start() : 0;
-            int actualEnd = range.end() != null ? range.end() : actualStart;
-            return Response.ok()
-                    .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
-                    .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                    .build();
-        }
-
-        ProcessLogChunk first = data.get(0);
-        int actualStart = first.getStart();
-
-        ProcessLogChunk last = data.get(data.size() - 1);
-        int actualEnd = last.getStart() + last.getData().length;
-
-        StreamingOutput out = output -> {
-            for (ProcessLogChunk e : data) {
-                output.write(e.getData());
-            }
-        };
-
-        return Response.ok(out)
-                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                .build();
+        return toResponse(l, range);
     }
 
     /**
@@ -188,6 +164,35 @@ public class ProcessLogResourceV2 implements Resource {
         } catch (IOException e) {
             throw new ConcordApplicationException("Error while appending a log: " + e.getMessage());
         }
+    }
+
+    public static Response toResponse(ProcessLog l, HttpUtils.Range range) {
+        List<ProcessLogChunk> data = l.getChunks();
+        if (data.isEmpty()) {
+            int actualStart = range.start() != null ? range.start() : 0;
+            int actualEnd = range.end() != null ? range.end() : actualStart;
+            return Response.ok()
+                    .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
+                    .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
+                    .build();
+        }
+
+        ProcessLogChunk first = data.get(0);
+        int actualStart = first.getStart();
+
+        ProcessLogChunk last = data.get(data.size() - 1);
+        int actualEnd = last.getStart() + last.getData().length;
+
+        StreamingOutput out = output -> {
+            for (ProcessLogChunk e : data) {
+                output.write(e.getData());
+            }
+        };
+
+        return Response.ok(out)
+                .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
+                .build();
     }
 
     private ProcessKey assertProcessKey(UUID instanceId) {
