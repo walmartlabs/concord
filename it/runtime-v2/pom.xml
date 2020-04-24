@@ -18,6 +18,7 @@
         <server.image>walmartlabs/concord-server</server.image>
         <agent.image>walmartlabs/concord-agent</agent.image>
         <ryuk.image>quay.io/testcontainers/ryuk:0.2.3</ryuk.image>
+        <sshd.image>quay.io/testcontainers/sshd:latest</sshd.image>
     </properties>
 
     <dependencies>
@@ -47,6 +48,15 @@
             <artifactId>commons-compress</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>ca.ibodrov.concord</groupId>
@@ -66,6 +76,11 @@
         <dependency>
             <groupId>com.googlecode.junit-toolbox</groupId>
             <artifactId>junit-toolbox</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
             <scope>test</scope>
         </dependency>
 
