@@ -19,24 +19,26 @@
  */
 
 import * as React from 'react';
+import {
+    Dispatch,
+    MutableRefObject,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
+import { Header, Modal } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
-
-import './styles.css';
 import { LogSegment } from '../../molecules';
-import { useCallback } from 'react';
 import { getSegmentLog as apiGetLog, LogRange, SegmentStatus } from '../../../api/process/log';
-import { useState } from 'react';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { LogProcessorOptions, processText } from '../../../state/data/processes/logs/processors';
-import { useRef } from 'react';
-import { MutableRefObject } from 'react';
-import { Dispatch } from 'react';
-import { SetStateAction } from 'react';
-import { useEffect } from 'react';
 import { isFinal, ProcessStatus } from '../../../api/process';
 import { TaskCallDetails } from '../index';
-import { Header, Modal } from 'semantic-ui-react';
+
+import './styles.css';
 
 const DATA_FETCH_INTERVAL = 5000;
 const DEFAULT_RANGE: LogRange = { low: undefined, high: 2048 };
@@ -47,7 +49,7 @@ interface ExternalProps {
     segmentId: number;
     correlationId?: string;
     name: string;
-    open: boolean;
+    open?: boolean;
     status: SegmentStatus;
     opts: LogProcessorOptions;
     forceRefresh: boolean;
@@ -152,7 +154,6 @@ const LogSegmentActivity = ({
                 segmentId={segmentId}
                 name={name}
                 open={open}
-                range={rangeInit.current}
                 status={status}
                 onStartLoading={startPollingHandler}
                 onStopLoading={stopPollingHandler}

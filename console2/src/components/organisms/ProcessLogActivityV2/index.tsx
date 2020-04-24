@@ -168,7 +168,6 @@ const ProcessLogActivityV2 = ({
                         segmentId={s.id}
                         correlationId={s.correlationId}
                         name={s.name}
-                        open={isOpen(index, segments)}
                         status={s.status}
                         processStatus={processStatus}
                         opts={logOpts.segmentOptions}
@@ -178,14 +177,6 @@ const ProcessLogActivityV2 = ({
                 ))}
         </>
     );
-};
-
-const isOpen = (currentIndex: number, allSegments: LogSegmentEntry[]): boolean => {
-    if (allSegments.length === 1) {
-        return true;
-    }
-
-    return currentIndex === allSegments.length - 1;
 };
 
 const getStoredOpts = (): LogOptions => {
