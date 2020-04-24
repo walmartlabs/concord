@@ -73,6 +73,8 @@ public class HttpServer {
         // init http transport
         HttpConfiguration httpCfg = new HttpConfiguration();
         httpCfg.setRequestHeaderSize(cfg.getRequestHeaderSize());
+        httpCfg.addCustomizer(new ForwardedRequestCustomizer());
+
         ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(httpCfg));
         http.setName("http");
         http.setPort(cfg.getPort());
