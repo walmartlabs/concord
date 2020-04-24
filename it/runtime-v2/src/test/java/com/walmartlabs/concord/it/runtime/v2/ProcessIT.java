@@ -20,14 +20,20 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
+import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import com.walmartlabs.concord.client.ProcessEntry;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.assertEquals;
 
-public class ProcessIT extends AbstractIT {
+public class ProcessIT {
+
+    @ClassRule
+    public static final Concord concord = ConcordConfiguration.configure();
 
     /**
      * Argument passing.

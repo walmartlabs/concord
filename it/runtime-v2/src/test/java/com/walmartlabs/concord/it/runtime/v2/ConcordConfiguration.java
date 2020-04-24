@@ -21,31 +21,17 @@ package com.walmartlabs.concord.it.runtime.v2;
  */
 
 import ca.ibodrov.concord.testcontainers.Concord;
-import com.walmartlabs.concord.it.common.ITUtils;
-import org.junit.Rule;
 import org.testcontainers.images.PullPolicy;
 
-public abstract class AbstractIT {
+public final class ConcordConfiguration {
 
-    protected static final long DEFAULT_TEST_TIMEOUT = 120000;
-
-    @Rule
-    public Concord concord = configure();
-
-    protected String randomString() {
-        return ITUtils.randomString();
-    }
-
-    protected String randomPwd() {
-        return ITUtils.randomPwd();
-    }
-
-    private static Concord configure() {
+    public static Concord configure(int ... hostPorts) {
         Concord concord = new Concord()
                 .pathToRunnerV1(null)
                 .pathToRunnerV2("target/runner-v2.jar")
                 .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
-                .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent")).pullPolicy(PullPolicy.defaultPolicy())
+                .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
+                .pullPolicy(PullPolicy.defaultPolicy())
                 .streamServerLogs(true)
                 .streamAgentLogs(true)
                 .useLocalMavenRepository(true);
@@ -62,5 +48,8 @@ public abstract class AbstractIT {
         }
 
         return concord;
+    }
+
+    private ConcordConfiguration() {
     }
 }
