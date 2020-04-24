@@ -20,25 +20,25 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button, Icon } from 'semantic-ui-react';
+
+import { SegmentStatus } from '../../../api/process/log';
+import { ConcordId } from '../../../api/common';
 
 import './styles.css';
-import { Button, Icon } from 'semantic-ui-react';
-import { LogRange, SegmentStatus } from '../../../api/process/log';
-import { Link } from 'react-router-dom';
-import { ConcordId } from '../../../api/common';
 
 interface Props {
     instanceId: ConcordId;
     segmentId: number;
     name: string;
     status: SegmentStatus;
-    range: LogRange;
     data: string[];
     onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
     onSegmentInfo?: () => void;
     loading: boolean;
-    open: boolean;
+    open?: boolean;
 }
 
 const LogSegment = ({
@@ -46,7 +46,6 @@ const LogSegment = ({
     segmentId,
     name,
     status,
-    range,
     data,
     onStartLoading,
     onStopLoading,
@@ -56,7 +55,7 @@ const LogSegment = ({
 }: Props) => {
     const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
-    const [isOpen, setOpen] = useState<boolean>(open);
+    const [isOpen, setOpen] = useState<boolean>(!!open);
     const [isLoadAll, setLoadAll] = useState<boolean>(false);
     const [isAutoScroll, setAutoScroll] = useState<boolean>(false);
 
@@ -151,15 +150,6 @@ const LogSegment = ({
                 <div className="ContentContainer">
                     <div className="InnerContentContainer">
                         <div className="Content">
-                            {range.low !== 0 && (
-                                <>
-                                    <span>...showing only the last few lines... </span>
-                                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                                    <a href="#" onClick={loadAllClickHandler}>
-                                        Full log
-                                    </a>{' '}
-                                </>
-                            )}
                             {data.map((value, index) => (
                                 <pre key={index} dangerouslySetInnerHTML={{ __html: value }} />
                             ))}
