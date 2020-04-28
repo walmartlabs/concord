@@ -25,7 +25,6 @@ import com.typesafe.config.Config;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-
 import java.time.Duration;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getStringOrDefault;
