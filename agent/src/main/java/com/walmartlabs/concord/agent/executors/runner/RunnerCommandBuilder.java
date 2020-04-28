@@ -32,7 +32,7 @@ public class RunnerCommandBuilder {
     private Path runnerCfgPath;
     private String logLevel;
     private Path extraDockerVolumesFile;
-    private List<String> jvmParams;
+    private List<String> extraJvmParams;
     private String mainClass;
 
     public RunnerCommandBuilder() {
@@ -69,7 +69,7 @@ public class RunnerCommandBuilder {
     }
 
     public RunnerCommandBuilder jvmParams(List<String> jvmParams) {
-        this.jvmParams = jvmParams;
+        this.extraJvmParams = jvmParams;
         return this;
     }
 
@@ -83,14 +83,13 @@ public class RunnerCommandBuilder {
 
         l.add(javaCmd);
 
-        // JVM arguments
-        if (jvmParams != null) {
-            l.addAll(jvmParams);
-        } else {
-            l.add("-Xmx128m");
+        // JVM arguments, can be customized
+        if (extraJvmParams != null) {
+            l.addAll(extraJvmParams);
         }
 
-        // default JVM parameters
+        // mandatory JVM parameters
+
         // speeds up the start, we don't care much about all potential optimizations done by HotSpot
         l.add("-client");
         // don't do bytecode verification

@@ -22,17 +22,17 @@ package com.walmartlabs.concord.plugins.log;
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.inject.Named;
 import java.io.Serializable;
-
 import java.util.Map;
 
 @Named("log")
 public class LoggingTaskV2 implements Task {
 
     @Override
-    public Serializable execute(TaskContext ctx) throws Exception {
+    public Serializable execute(TaskContext ctx) {
         Map<String, Object> input = ctx.input();
         Object msg = input.get("msg");
         if (msg == null) {
@@ -40,7 +40,27 @@ public class LoggingTaskV2 implements Task {
             msg = input.get("0");
         }
 
-        LogUtils.info(msg);
+        String logLevel = MapUtils.getString(input, "level", "INFO");
+        switch (logLevel.toUpperCase()) {
+            case "DEBUG": {
+                LogUtils.debug(msg);
+                break;
+            }
+            case "INFO": {
+                LogUtils.info(msg);
+                break;
+            }
+            case "WARN": {
+                LogUtils.warn(msg);
+                break;
+            }
+            case "ERROR": {
+                LogUtils.error(msg);
+                break;
+            }
+            default:
+                LogUtils.info(msg);
+        }
 
         return null;
     }

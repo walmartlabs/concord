@@ -118,7 +118,7 @@
             <artifactId>commons-text</artifactId>
         </dependency>
 
-        <!-- tasks -->
+        <!-- bundled in tasks -->
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>crypto-tasks</artifactId>
@@ -138,6 +138,10 @@
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>kv-tasks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>locale-tasks</artifactId>
         </dependency>
 
         <!-- Java EL support -->

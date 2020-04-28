@@ -32,9 +32,9 @@ import java.util.Map;
 
 public class AnsibleVaultId {
 
-    public static void process(TaskContext ctx, PlaybookScriptBuilder playbook) {
-        Map<String, Path> vaultIds = new AnsibleVaultId(ctx.getWorkDir(), ctx.getTmpDir())
-                .parse(ctx.getArgs())
+    public static void process(AnsibleContext context, PlaybookScriptBuilder playbook) {
+        Map<String, Path> vaultIds = new AnsibleVaultId(context.workDir(), context.tmpDir())
+                .parse(context.args())
                 .getVaultIds();
 
         if (vaultIds != null) {

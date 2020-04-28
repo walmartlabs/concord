@@ -21,12 +21,12 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.sdk.Context;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,21 +34,21 @@ public class OutVarsProcessor {
 
     private Path outVarsFile;
 
-    public void prepare(Map<String, Object> args, Map<String, String> env, Path workDir, Path tmpDir) {
-        String outVars = ArgUtils.getListAsString(args, TaskParams.OUT_VARS_KEY);
+    public void prepare(AnsibleContext context, Map<String, String> env) {
+        String outVars = ArgUtils.getListAsString(context.args(), TaskParams.OUT_VARS_KEY);
         if (outVars == null) {
             return;
         }
         env.put("CONCORD_OUT_VARS", outVars);
 
-        outVarsFile = tmpDir.resolve("out_vars.json");
-        env.put("CONCORD_OUT_VARS_FILE", workDir.relativize(outVarsFile).toString());
+        outVarsFile = context.tmpDir().resolve("out_vars.json");
+        env.put("CONCORD_OUT_VARS_FILE", context.workDir().relativize(outVarsFile).toString());
     }
 
     @SuppressWarnings("unchecked")
-    public void process(Context context) throws IOException {
+    public Map<String, Object> process() throws IOException {
         if (outVarsFile == null || !Files.exists(outVarsFile)) {
-            return;
+            return Collections.emptyMap();
         }
 
         ObjectMapper om = new ObjectMapper();
@@ -56,7 +56,7 @@ public class OutVarsProcessor {
         try (InputStream in = Files.newInputStream(outVarsFile)) {
             m.putAll(om.readValue(in, Map.class));
         }
-        m.forEach(context::setVariable);
+        return m;
     }
 
     public void postProcess() throws IOException {

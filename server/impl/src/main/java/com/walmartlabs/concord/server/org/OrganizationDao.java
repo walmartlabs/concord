@@ -160,7 +160,7 @@ public class OrganizationDao extends AbstractDao {
         q.execute();
     }
 
-    public List<OrganizationEntry> list(UUID currentUserId, int offset, int limit, String filter) {
+    public List<OrganizationEntry> list(UUID currentUserId, boolean onlyCurrent, int offset, int limit, String filter) {
         try (DSLContext tx = DSL.using(cfg)) {
             Organizations o = ORGANIZATIONS.as("o");
             Users u = USERS.as("u");
@@ -180,7 +180,10 @@ public class OrganizationDao extends AbstractDao {
 
             if (currentUserId != null) {
                 // public orgs are visible for anyone
-                Condition isPublic = o.VISIBILITY.eq(OrganizationVisibility.PUBLIC.toString());
+                // but show them only if onlyCurrent == false
+                // i.e. when the user specifically asked to show all available orgs
+                Condition isPublic = value(onlyCurrent).isFalse()
+                        .and(o.VISIBILITY.eq(OrganizationVisibility.PUBLIC.toString()));
 
                 // check if the user belongs to a team in an org
                 SelectConditionStep<Record1<UUID>> teamIds = select(TEAMS.TEAM_ID)

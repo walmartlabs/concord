@@ -20,16 +20,24 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
+import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.NewSecretQuery;
 import ca.ibodrov.concord.testcontainers.Payload;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
+import org.junit.Rule;
 import org.junit.Test;
 
+import static com.walmartlabs.concord.it.common.ITUtils.randomPwd;
+import static com.walmartlabs.concord.it.common.ITUtils.randomString;
+import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.assertEquals;
 
-public class CryptoIT extends AbstractIT {
+public class CryptoIT {
+
+    @Rule
+    public final Concord concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'crypto' plugin.

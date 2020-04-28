@@ -28,8 +28,8 @@ import java.nio.file.Path;
 
 public class AnsibleLibs {
 
-    public static void process(TaskContext ctx, AnsibleEnv env) {
-        new AnsibleLibs(ctx.getWorkDir(), ctx.getTmpDir())
+    public static void process(AnsibleContext context, AnsibleEnv env) {
+        new AnsibleLibs(context.workDir(), context.tmpDir())
                 .enrichEnv(env)
                 .write();
     }

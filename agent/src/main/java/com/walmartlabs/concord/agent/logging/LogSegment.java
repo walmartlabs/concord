@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli.runner;
+package com.walmartlabs.concord.agent.logging;
 
 /*-
  * *****
@@ -20,19 +20,24 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.DockerContainerSpec;
-import com.walmartlabs.concord.sdk.DockerService;
+import org.immutables.value.Value;
 
-public class CliDockerService implements DockerService {
+import javax.annotation.Nullable;
+import java.util.Date;
+import java.util.UUID;
 
-    @Override
-    public Process start(Context ctx, DockerContainerSpec spec) {
-        throw new UnsupportedOperationException("not implemented yet");
-    }
+@Value.Immutable
+public interface LogSegment {
 
-    @Override
-    public int start(Context ctx, DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
-        throw new UnsupportedOperationException("not implemented yet");
+    @Nullable
+    UUID correlationId();
+
+    String name();
+
+    @Nullable
+    Date createdAt();
+
+    static ImmutableLogSegment.Builder builder() {
+        return ImmutableLogSegment.builder();
     }
 }

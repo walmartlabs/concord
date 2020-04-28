@@ -20,40 +20,29 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.SecretService;
+import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
-import static com.walmartlabs.concord.sdk.ContextUtils.getTxId;
 import static com.walmartlabs.concord.sdk.MapUtils.*;
 
-@Named
-@Singleton
 public class AnsibleAuthFactory {
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleAuthFactory.class);
 
-    private final SecretService secretService;
+    private final AnsibleSecretService secretService;
 
-    @Inject
-    public AnsibleAuthFactory(SecretService secretService) {
+    public AnsibleAuthFactory(AnsibleSecretService secretService) {
         this.secretService = secretService;
     }
 
-    public AnsibleAuth create(TaskContext ctx) {
-        Map<String, Object> args = ctx.getArgs();
-
-        Map<String, Map<String, Object>> authParams = getMap(args, TaskParams.AUTH, Collections.emptyMap());
+    public AnsibleAuth create(AnsibleContext context) {
+        Map<String, Map<String, Object>> authParams = getMap(context.args(), TaskParams.AUTH, Collections.emptyMap());
         if (authParams.isEmpty()) {
             return new NopAuth();
         }
@@ -66,22 +55,20 @@ public class AnsibleAuthFactory {
         switch (auth.getKey().toLowerCase()) {
             case "krb5":
                 try {
-                    Map<String, String> cred = parseKerberosAuth(secretService, ctx.getContext(), ctx.getWorkDir(), auth.getValue());
-                    String username = cred.get("user");
-                    String password = cred.get("password");
-                    log.info("Using the kerberos username: {}", username);
-                    return new KerberosAuth(username, password, ctx.getTmpDir(), ctx.isDebug());
+                    SecretService.UsernamePassword cred = parseKerberosAuth(secretService, auth.getValue());
+                    log.info("Using the kerberos username: {}", cred.username());
+                    return new KerberosAuth(cred.username(), cred.password(), context.tmpDir(), context.debug());
                 } catch (Exception e) {
                     log.error("Error while fetching the kerberos credentials: {}", e.getMessage(), e);
                     throw new RuntimeException("Error while fetching the kerberos credentials: " + e.getMessage());
                 }
             case "privatekey":
                 try {
-                    Map<String, Object> cred = parsePrivateKeyAuth(secretService, ctx.getContext(), ctx.getWorkDir(), auth.getValue());
+                    Map<String, Object> cred = parsePrivateKeyAuth(secretService, context.workDir(), auth.getValue());
                     String username = getString(cred, "user");
                     Path privateKeyPath = assertPath(cred, "keyPath");
                     log.info("Using the private key: {}", privateKeyPath);
-                    return new PrivateKeyAuth(ctx.getWorkDir(), username, privateKeyPath);
+                    return new PrivateKeyAuth(context.workDir(), username, privateKeyPath);
                 } catch (Exception e) {
                     log.error("Error while fetching the private key: {}", e.getMessage(), e);
                     throw new RuntimeException("Error while fetching the private key: " + e.getMessage());
@@ -91,33 +78,27 @@ public class AnsibleAuthFactory {
         }
     }
 
-    private static Map<String, String> parseKerberosAuth(SecretService secretService,
-                                                         Context context, Path workDir,
-                                                         Map<String, Object> auth) throws Exception {
+    private static SecretService.UsernamePassword parseKerberosAuth(AnsibleSecretService secretService,
+                                                                    Map<String, Object> auth) throws Exception {
         Map<String, Object> secretParams = getMap(auth, "secret", Collections.emptyMap());
         if (!secretParams.isEmpty()) {
             Secret secret = Secret.from(secretParams);
-            String txId = getTxId(context).toString();
-            return secretService.exportCredentials(context, txId, workDir.toString(), secret.getOrg(), secret.getName(), secret.getPassword());
+            return secretService.exportCredentials(secret.getOrg(), secret.getName(), secret.getPassword());
         }
 
-        Map<String, String> basic = new HashMap<>();
-        basic.put("user", assertString(auth, "user"));
-        basic.put("password", assertString(auth, "password"));
-        return basic;
+        return SecretService.UsernamePassword.of(assertString(auth, "user"), assertString(auth, "password"));
     }
 
-    private static Map<String, Object> parsePrivateKeyAuth(SecretService secretService,
-                                                           Context context, Path workDir,
+    private static Map<String, Object> parsePrivateKeyAuth(AnsibleSecretService secretService,
+                                                           Path workDir,
                                                            Map<String, Object> auth) throws Exception {
 
         Path p;
         Map<String, Object> secretParams = getMap(auth, "secret", Collections.emptyMap());
         if (!secretParams.isEmpty()) {
             Secret secret = Secret.from(secretParams);
-            String txId = getTxId(context).toString();
-            Map<String, String> keyPair = secretService.exportKeyAsFile(context, txId, workDir.toAbsolutePath().toString(), secret.getOrg(), secret.getName(), secret.getPassword());
-            p = Paths.get(keyPair.get("private"));
+            SecretService.KeyPair keyPair = secretService.exportKeyAsFile(secret.getOrg(), secret.getName(), secret.getPassword());
+            p = keyPair.privateKey();
         } else {
             p = ArgUtils.getPath(auth, "path", workDir);
         }

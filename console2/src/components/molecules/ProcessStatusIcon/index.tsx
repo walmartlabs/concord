@@ -22,6 +22,7 @@ import * as React from 'react';
 import { Icon, Popup, SemanticICONS, SemanticCOLORS } from 'semantic-ui-react';
 
 import { ProcessStatus } from '../../../api/process';
+
 type IconSizeProp = 'mini' | 'tiny' | 'small' | 'large' | 'big' | 'huge' | 'massive';
 
 const statusToIcon: {
@@ -47,7 +48,6 @@ interface ProcessStatusIconProps {
 }
 
 export default ({ status, size = 'large', inverted = true }: ProcessStatusIconProps) => {
-    // TODO: Fix status to reference number..? reference number
     let i = statusToIcon[status];
 
     if (!i) {

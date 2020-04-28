@@ -22,10 +22,7 @@ package com.walmartlabs.concord.agent.logging;
 
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.agent.AgentConstants;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.LogSegmentRequest;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessLogV2Api;
+import com.walmartlabs.concord.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +62,7 @@ public class RemoteLogAppender implements LogAppender {
     }
 
     @Override
-    public void appendLog(UUID instanceId, long segmentId, byte[] ab) {
+    public boolean appendLog(UUID instanceId, long segmentId, byte[] ab) {
         String path = "/api/v2/process/" + instanceId + "/log/segment/" + segmentId + "/data";
 
         try {
@@ -73,9 +70,10 @@ public class RemoteLogAppender implements LogAppender {
                 ClientUtils.postData(processApi.getApiClient(), path, ab);
                 return null;
             });
+            return true;
         } catch (ApiException e) {
-            // TODO handle errors
             log.warn("appendLog ['{}'] -> error: {}", instanceId, e.getMessage());
+            return false;
         }
     }
 
@@ -83,14 +81,31 @@ public class RemoteLogAppender implements LogAppender {
     public Long createSegment(UUID instanceId, UUID correlationId, String segmentName, Date createdAt) {
         LogSegmentRequest request = new LogSegmentRequest()
                 .setCorrelationId(correlationId).setName(segmentName)
-                .setCreatedAt(createdAt.toInstant().atOffset(ZoneOffset.UTC));
+                .setCreatedAt(createdAt != null ? createdAt.toInstant().atOffset(ZoneOffset.UTC) : null);
 
         try {
             return ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,
                     () -> processLogV2Api.segment(instanceId, request)).getId();
-        } catch (ApiException e) {
+        } catch (Exception e) {
             log.warn("createSegment ['{}', '{}', '{}'] -> error: {}", instanceId, correlationId, segmentName, e.getMessage());
         }
         return null;
+    }
+
+    @Override
+    public boolean updateSegment(UUID instanceId, long segmentId, LogSegmentStats stats) {
+        LogSegmentUpdateRequest request = new LogSegmentUpdateRequest()
+                .setStatus(stats.status())
+                .setWarnings(stats.warnings())
+                .setErrors(stats.errors());
+
+        try {
+            ClientUtils.withRetry(AgentConstants.API_CALL_MAX_RETRIES, AgentConstants.API_CALL_RETRY_DELAY,
+                    () -> processLogV2Api.updateSegment(instanceId, segmentId, request));
+            return true;
+        } catch (Exception e) {
+            log.warn("updateSegment ['{}', '{}', '{}'] -> error: {}", instanceId, segmentId, stats, e.getMessage());
+        }
+        return false;
     }
 }

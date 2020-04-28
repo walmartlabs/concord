@@ -87,14 +87,18 @@ public class ProcessLogManager {
     }
 
     public void createSystemSegment(DSLContext tx, ProcessKey processKey) {
-        logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME);
+        logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, null);
     }
 
     public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {
         if (SYSTEM_SEGMENT_NAME.equals(name)) {
             return SYSTEM_SEGMENT_ID;
         }
-        return logsDao.createSegment(processKey, correlationId, name, createdAt);
+        return logsDao.createSegment(processKey, correlationId, name, createdAt, LogSegment.Status.RUNNING.name());
+    }
+
+    public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {
+        logsDao.updateSegment(processKey, segmentId, status, warnings, errors);
     }
 
     public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {

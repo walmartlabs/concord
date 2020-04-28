@@ -50,7 +50,9 @@ interface ExternalProps {
     correlationId?: string;
     name: string;
     open?: boolean;
-    status: SegmentStatus;
+    status?: SegmentStatus;
+    warnings?: number;
+    errors?: number;
     opts: LogProcessorOptions;
     forceRefresh: boolean;
 }
@@ -68,6 +70,8 @@ const LogSegmentActivity = ({
     name,
     open,
     status,
+    warnings,
+    errors,
     opts,
     forceRefresh
 }: ExternalProps) => {
@@ -155,6 +159,8 @@ const LogSegmentActivity = ({
                 name={name}
                 open={open}
                 status={status}
+                warnings={warnings}
+                errors={errors}
                 onStartLoading={startPollingHandler}
                 onStopLoading={stopPollingHandler}
                 onSegmentInfo={correlationId ? segmentInfoHandler : undefined}

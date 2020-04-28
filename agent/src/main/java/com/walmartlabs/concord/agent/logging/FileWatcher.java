@@ -20,7 +20,11 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
-import com.google.common.cache.*;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import org.immutables.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +42,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class FileWatcher implements Closeable {
+public final class FileWatcher<T> implements Closeable {
 
-    public static void watch(Path path, Supplier<Boolean> stopCondition, long maxDelay, FileListener listener) throws IOException {
-        try (FileWatcher watcher = new FileWatcher(path, maxDelay, listener)) {
+    public static <T> void watch(Path path, Supplier<Boolean> stopCondition, long maxDelay, FileNameParser<T> fileNameParser, FileListener<T> listener) throws IOException {
+        try (FileWatcher<T> watcher = new FileWatcher<>(path, maxDelay, fileNameParser, listener)) {
             watcher.run(stopCondition);
         }
     }
@@ -52,22 +56,23 @@ public class FileWatcher implements Closeable {
 
     private final Path watchDir;
     private final long maxDelay;
-    private final FileListener listener;
+    private final FileListener<T> listener;
+    private final FileNameParser<T> fileNameParser;
 
-    private final FileReader fileReader = new FileReader();
-    private final Map<Path, FileEntry> files = new HashMap<>();
+    private final FileCache fileCache = new FileCache();
+    private final Map<Path, FileEntry<T>> filePointers = new HashMap<>();
     private final Set<Path> ignoreFiles = new HashSet<>();
-    private final byte[] dataBuffer = new byte[8192];
 
-    public FileWatcher(Path watchDir, long maxDelay, FileListener listener) {
+    private FileWatcher(Path watchDir, long maxDelay, FileNameParser<T> fileNameParser, FileListener<T> listener) {
         this.watchDir = watchDir;
         this.maxDelay = maxDelay;
         this.listener = listener;
+        this.fileNameParser = fileNameParser;
     }
 
     @Override
     public void close() {
-        fileReader.close();
+        fileCache.close();
     }
 
     private void run(Supplier<Boolean> stopCondition) throws IOException {
@@ -103,18 +108,31 @@ public class FileWatcher implements Closeable {
                     return FileVisitResult.CONTINUE;
                 }
 
-                FileEntry entry = files.get(file);
-                if (entry == null) {
-                    entry = processNewFile(file, attrs);
-                    if (entry == null) {
+                FileEntry<T> filePointer = filePointers.get(file);
+                if (filePointer == null) {
+                    T fileName = fileNameParser.parse(file);
+                    if (fileName == null) {
+                        ignoreFiles.add(file);
                         return FileVisitResult.CONTINUE;
-                    } else {
-                        files.put(file, entry);
                     }
+
+                    boolean success = listener.onNewFile(fileName);
+                    if (!success) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                    filePointer = FileEntry.of(fileName, 0L);
+                    filePointers.put(file, filePointer);
                 }
 
-                if (entry.isChanged()) {
-                    processChanged(entry);
+                if (isChanged(file, filePointer.pointer())) {
+                    long newPos = notifyChanged(file, filePointer);
+                    if (newPos == -1) {
+                        deleteFile(file);
+                        filePointers.remove(file);
+                        return FileVisitResult.CONTINUE;
+                    } else if (newPos > 0) {
+                        filePointers.put(file, FileEntry.of(filePointer.name(), newPos));
+                    }
                 }
 
                 return FileVisitResult.CONTINUE;
@@ -122,88 +140,99 @@ public class FileWatcher implements Closeable {
         });
     }
 
-    private FileEntry processNewFile(Path file, BasicFileAttributes attrs) {
-        FileListener.Result result = listener.onNewFile(file, attrs);
-        switch (result) {
-            case OK: {
-                return new FileEntry(file, fileReader);
-            }
-            case IGNORE: {
-                ignoreFiles.add(file);
-                return null;
-            }
-            case ERROR: {
-                return null;
-            }
-            default:
-                throw new IllegalStateException("Unknown result: " + result);
-        }
-    }
-
-    private void processChanged(FileEntry entry) {
+    public boolean isChanged(Path path, long totalRead) {
         try {
-            while (!Thread.currentThread().isInterrupted()) {
-                int read = entry.read(dataBuffer, dataBuffer.length);
-                if (read <= 0) {
-                    break;
-                }
-
-                listener.onNewData(entry.path, dataBuffer, read);
-            }
+            return (Files.size(path) > totalRead);
         } catch (IOException e) {
-            log.error("processChanged ['{}'] -> error: {}", entry, e.getMessage());
+            log.warn("isChanged ['{}'] -> error: {}", path, e.getMessage());
+            return false;
         }
     }
 
-    public interface FileListener {
-
-        enum Result {
-            OK,
-            ERROR,
-            IGNORE
-        }
-
-        Result onNewFile(Path file, BasicFileAttributes attrs);
-
-        void onNewData(Path file, byte[] data, int len);
-    }
-
-    private static class FileEntry {
-
-        private final Path path;
-
-        private final FileReader fileReader;
-
-        private long totalRead = 0;
-
-        public FileEntry(Path path, FileReader fileReader) {
-            this.path = path;
-            this.fileReader = fileReader;
-        }
-
-        public int read(byte[] ab, int len) throws IOException {
-            int result = fileReader.read(path, totalRead, ab, len);
-            if (result > 0) {
-                totalRead += result;
+    private long notifyChanged(Path path, FileEntry<T> fileEntry) {
+        try {
+            RandomAccessFile file = fileCache.get(path);
+            file.seek(fileEntry.pointer());
+            long newPos = listener.onChanged(fileEntry.name(), file);
+            if (newPos == -1) {
+                fileCache.close(path);
             }
+            return newPos;
+        } catch (IOException e) {
+            log.error("processChanged ['{}'] -> error: {}", path, e.getMessage());
+        }
+        return 0L;
+    }
+
+    private static void deleteFile(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            log.warn("deleteFile ['{}'] -> error: {}", path, e.getMessage());
+        }
+    }
+
+    public interface FileListener<T> {
+
+        boolean onNewFile(T fileName);
+
+        /**
+         * @return new file offset or -1 if file no longer tracked (e.g. all file read)
+         */
+        long onChanged(T fileName, RandomAccessFile in) throws IOException;
+    }
+
+    public interface FileNameParser<T> {
+
+        /**
+         * @return null if file should be ignored
+         */
+        T parse(Path path);
+    }
+
+    public interface FileReader {
+
+        /**
+         * @return new file offset
+         */
+        long read(RandomAccessFile in, ChunkConsumer consumer) throws IOException;
+    }
+
+    public static class ByteArrayFileReader implements FileReader {
+
+        private final byte[] dataBuffer = new byte[8192];
+
+        @Override
+        public long read(RandomAccessFile in, ChunkConsumer consumer) throws IOException {
+            long result = in.getFilePointer();
+
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    int read = in.read(dataBuffer, 0, dataBuffer.length);
+                    if (read <= 0) {
+                        break;
+                    }
+
+                    int consumed = consumer.consume(new Chunk(dataBuffer, read));
+                    if (consumed == -1) {
+                        return -1;
+                    }
+                    result += consumed;
+                    in.seek(result);
+                }
+            } catch (IOException e) {
+                log.warn("read error: {}", e.getMessage());
+            }
+
             return result;
         }
-
-        public boolean isChanged() {
-            try {
-                return (Files.size(path) > totalRead);
-            } catch (IOException e) {
-                log.warn("isChanged ['{}'] -> error: {}", path, e.getMessage());
-                return false;
-            }
-        }
     }
 
-    private static class FileReader implements Closeable {
+    private static class FileCache implements Closeable {
 
         private final LoadingCache<Path, RandomAccessFile> cache;
 
-        public FileReader() {
+        public FileCache() {
             this.cache = CacheBuilder.newBuilder()
                     .maximumSize(MAX_OPEN_FILES)
                     .removalListener((RemovalListener<Path, RandomAccessFile>) notification -> {
@@ -223,15 +252,55 @@ public class FileWatcher implements Closeable {
                     });
         }
 
-        public int read(Path file, long from, byte[] ab, int len) throws IOException {
-            RandomAccessFile raf = cache.getUnchecked(file);
-            raf.seek(from);
-            return raf.read(ab, 0, len);
+        public RandomAccessFile get(Path path) {
+            return cache.getUnchecked(path);
+        }
+
+        public void close(Path path) {
+            cache.invalidate(path);
         }
 
         @Override
         public void close() {
             cache.invalidateAll();
+        }
+    }
+
+    public static class Chunk {
+
+        private final byte[] ab;
+        private final int len;
+
+        protected Chunk(byte[] ab, int len) { // NOSONAR
+            this.ab = ab;
+            this.len = len;
+        }
+
+        public byte[] bytes() {
+            return ab;
+        }
+
+        public int len() {
+            return len;
+        }
+    }
+
+    public interface ChunkConsumer {
+
+        int consume(Chunk chunk) throws IOException;
+    }
+
+    @Value.Immutable
+    public interface FileEntry<T> {
+
+        @Value.Parameter
+        T name();
+
+        @Value.Parameter
+        long pointer();
+
+        static <T> FileEntry<T> of(T name, long pointer) {
+            return ImmutableFileEntry.of(name, pointer);
         }
     }
 }

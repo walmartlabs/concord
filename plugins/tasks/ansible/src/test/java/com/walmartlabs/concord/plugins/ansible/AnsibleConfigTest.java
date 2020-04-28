@@ -25,6 +25,7 @@ import org.junit.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class AnsibleConfigTest extends AbstractTest {
 
@@ -34,10 +35,16 @@ public class AnsibleConfigTest extends AbstractTest {
         Path tmpDir = workDir.resolve("tmp");
         Files.createDirectories(tmpDir);
 
-        AnsibleConfig cfg = new AnsibleConfig(workDir, tmpDir, true);
+        AnsibleContext context = AnsibleContext.builder()
+                .instanceId(UUID.randomUUID())
+                .workDir(workDir)
+                .tmpDir(tmpDir)
+                .build();
+
+        AnsibleConfig cfg = new AnsibleConfig(context);
         cfg.parse(new HashMap<>());
 
-        new AnsibleCallbacks(false, workDir, tmpDir).enrich(cfg);
+        new AnsibleCallbacks(workDir, tmpDir, false).enrich(cfg);
         new AnsibleLookup(tmpDir).enrich(cfg);
 
         Path cfgPath = cfg.write();

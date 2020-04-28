@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Icon } from 'semantic-ui-react';
+import { Button, Icon, SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
 
 import { SegmentStatus } from '../../../api/process/log';
 import { ConcordId } from '../../../api/common';
@@ -32,7 +32,9 @@ interface Props {
     instanceId: ConcordId;
     segmentId: number;
     name: string;
-    status: SegmentStatus;
+    status?: SegmentStatus;
+    warnings?: number;
+    errors?: number;
     data: string[];
     onStartLoading: (isLoadWholeLog: boolean) => void;
     onStopLoading: () => void;
@@ -46,6 +48,8 @@ const LogSegment = ({
     segmentId,
     name,
     status,
+    warnings,
+    errors,
     data,
     onStartLoading,
     onStopLoading,
@@ -95,6 +99,9 @@ const LogSegment = ({
         }
     }, [isAutoScroll, data]);
 
+    const hasWarnings = !!(warnings && warnings > 0);
+    const hasErrors = !!(errors && errors > 0);
+
     return (
         <div className="LogSegment">
             <Button
@@ -103,8 +110,17 @@ const LogSegment = ({
                 className="Segment"
                 onClick={() => setOpen((prevState) => !prevState)}>
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
-                <StatusIcon status={status} />
+
+                <StatusIcon status={status} loading={loading} warnings={warnings} errors={errors} />
+
                 <span className="Caption">{name}</span>
+
+                {(hasWarnings || hasErrors) && (
+                    <>
+                        <span className="Counter">warn: {warnings ? warnings : 0}</span>
+                        <span className="Counter">error: {errors ? errors : 0}</span>
+                    </>
+                )}
 
                 <Link
                     to={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}
@@ -138,12 +154,6 @@ const LogSegment = ({
                         </div>
                     </>
                 )}
-
-                {loading && (
-                    <div className="AdditionalAction">
-                        <Icon loading={loading} name="spinner" />
-                    </div>
-                )}
             </Button>
 
             {isOpen && (
@@ -163,20 +173,36 @@ const LogSegment = ({
 };
 
 interface StatusIconProps {
-    status: SegmentStatus;
+    status?: SegmentStatus;
+    loading?: boolean;
+    warnings?: number;
+    errors?: number;
 }
 
-const StatusIcon = ({ status }: StatusIconProps) => {
-    switch (status) {
-        case SegmentStatus.OK:
-            return <Icon name="check circle" color="green" className="Status" />;
-        case SegmentStatus.FAILED:
-            return <Icon name="close" color="red" className="Status" />;
-        case SegmentStatus.RUNNING:
-            return <Icon loading={true} name="spinner" color="grey" className="Status" />;
-        case undefined:
-            return <span className="EmptyStatus"> </span>;
+const StatusIcon = ({ status, loading, warnings = 0, errors = 0 }: StatusIconProps) => {
+    if (!status) {
+        return <span className="EmptyStatus" />;
     }
+
+    let color: SemanticCOLORS = 'green';
+    let icon: SemanticICONS = 'circle';
+    let spinning = false;
+
+    if (status === SegmentStatus.RUNNING || loading) {
+        icon = 'spinner';
+        spinning = true;
+    } else if (status === SegmentStatus.FAILED) {
+        color = 'red';
+        icon = 'close';
+    } else if (warnings > 0) {
+        color = 'orange';
+        icon = 'exclamation circle';
+    } else if (errors > 0) {
+        color = 'red';
+        icon = 'exclamation circle';
+    }
+
+    return <Icon loading={spinning} name={icon} color={color} className="Status" />;
 };
 
 export default LogSegment;

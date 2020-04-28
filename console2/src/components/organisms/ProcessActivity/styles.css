@@ -38,3 +38,7 @@
     font-size: .92857143rem !important;
     padding: .58928571em 1.125em .58928571em !important;
 }
+
+.ProcessMainToolbar .startAt {
+    color: #888888;
+}
