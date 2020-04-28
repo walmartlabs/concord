@@ -55,7 +55,9 @@ public class ProcessLogsDao extends AbstractDao {
     /**
      * Appends a chunk to the process log. Automatically calculates the chunk's range.
      * @return the new chunk range.
+     * @deprecated remove after process_logs is no longer in use
      */
+    @Deprecated
     public PgIntRange append(ProcessKey processKey, byte[] data) {
         UUID instanceId = processKey.getInstanceId();
         Timestamp createdAt = processKey.getCreatedAt();
