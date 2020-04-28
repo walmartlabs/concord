@@ -39,6 +39,6 @@ public class DefaultTaskVariables {
     }
 
     public Map<String, Object> get(String taskName) {
-        return variables.get(taskName);
+        return variables.getOrDefault(taskName, Collections.emptyMap());
     }
 }

@@ -54,9 +54,7 @@ public class DefaultVariableInjector {
                 }
 
                 Map<String, Object> variables = defaultVariables.get(v);
-                if (variables != null) {
-                    inject(task, f, coerce(variables, f.getType()));
-                }
+                inject(task, f, coerce(variables, f.getType()));
             }
 
             clazz = clazz.getSuperclass();

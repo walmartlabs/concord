@@ -27,7 +27,9 @@ public interface LogAppender {
 
     void appendLog(UUID instanceId, byte[] ab);
 
-    void appendLog(UUID instanceId, long segmentId, byte[] ab);
+    boolean appendLog(UUID instanceId, long segmentId, byte[] ab);
 
     Long createSegment(UUID instanceId, UUID correlationId, String segmentName, Date createdAt);
+
+    boolean updateSegment(UUID instanceId, long segmentId, LogSegmentStats stats);
 }

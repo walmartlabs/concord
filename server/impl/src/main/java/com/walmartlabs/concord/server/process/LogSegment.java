@@ -43,10 +43,17 @@ public interface LogSegment {
 
     String name();
 
+    @Nullable
     Status status();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     Date createdAt();
+
+    @Nullable
+    Integer warnings();
+
+    @Nullable
+    Integer errors();
 
     enum Status {
         OK,

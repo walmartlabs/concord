@@ -63,7 +63,7 @@ public class TaskDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
             }
         }
 
-        return instanceId + "-" + "system";
+        return "system";
     }
 
     @Override

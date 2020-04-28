@@ -33,7 +33,7 @@ public interface DockerService {
      * @param errCallback callback for stderr
      * @return exit code of the `docker run` command
      */
-    int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException;
+    int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException; // TODO throw Exception instead?
 
     interface LogCallback {
 

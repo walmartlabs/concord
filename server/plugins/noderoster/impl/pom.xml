@@ -16,13 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>com.walmartlabs.ollie</groupId>
-            <artifactId>ollie</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>ollie-config</artifactId>
         </dependency>
 
         <dependency>

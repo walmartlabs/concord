@@ -29,6 +29,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static com.walmartlabs.concord.agent.logging.FileWatcher.Chunk;
+
 /**
  * Log that uses a local file as a buffer before sending the data into the specified {@link LogAppender}.
  * Typically, {@link #run(Supplier)} method should be executed in a separate thread.
@@ -45,13 +47,13 @@ public class RedirectedProcessLog implements ProcessLog {
         this.instanceId = instanceId;
         this.appender = appender;
         this.logSteamMaxDelay = logSteamMaxDelay;
-        this.localLog = new LocalProcessLog(baseDir, instanceId);
+        this.localLog = new LocalProcessLog(baseDir);
     }
 
     public void run(Supplier<Boolean> stopCondition) throws Exception {
         Consumer<Chunk> sink = chunk -> {
-            byte[] ab = new byte[chunk.len];
-            System.arraycopy(chunk.ab, 0, ab, 0, chunk.len);
+            byte[] ab = new byte[chunk.len()];
+            System.arraycopy(chunk.bytes(), 0, ab, 0, chunk.len());
             appender.appendLog(instanceId, ab);
         };
 
@@ -111,25 +113,6 @@ public class RedirectedProcessLog implements ProcessLog {
                     }
                 }
             }
-        }
-    }
-
-    protected static final class Chunk {
-
-        private final byte[] ab;
-        private final int len;
-
-        protected Chunk(byte[] ab, int len) { // NOSONAR
-            this.ab = ab;
-            this.len = len;
-        }
-
-        public byte[] bytes() {
-            return ab;
-        }
-
-        public int len() {
-            return len;
         }
     }
 }

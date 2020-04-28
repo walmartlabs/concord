@@ -20,14 +20,11 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.SecretService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,25 +37,21 @@ public class GroupVarsProcessor {
 
     private final Logger log = LoggerFactory.getLogger(GroupVarsProcessor.class);
 
-    private final SecretService secretService;
-
-    private final Context context;
+    private final AnsibleSecretService secretService;
 
     private final Collection<Path> exportedFiles = new HashSet<>();
 
-    public GroupVarsProcessor(SecretService secretService, Context context) {
+    public GroupVarsProcessor(AnsibleSecretService secretService) {
         this.secretService = secretService;
-        this.context = context;
     }
 
-    public void process(String instanceId, Map<String, Object> args, Path workDir) throws Exception {
-        Collection<Ref> refs = toRefs(args);
+    public void process(AnsibleContext context, String playbook) throws Exception {
+        Collection<Ref> refs = toRefs(context.args());
         if (refs == null) {
             return;
         }
 
-        String playbook = (String) args.get(TaskParams.PLAYBOOK_KEY.getKey());
-        Path playbookPath = workDir.resolve(playbook);
+        Path playbookPath = context.workDir().resolve(playbook);
 
         Path groupVarsBase = playbookPath.getParent().resolve("group_vars");
         if (Files.notExists(groupVarsBase)) {
@@ -66,7 +59,7 @@ public class GroupVarsProcessor {
         }
 
         for (Ref r : refs) {
-            export(instanceId, workDir, r, groupVarsBase);
+            export(r, groupVarsBase);
         }
     }
 
@@ -77,10 +70,9 @@ public class GroupVarsProcessor {
         }
     }
 
-    private void export(String instanceId, Path workDir, Ref r, Path groupVarsBase) throws Exception {
-        String tmp = secretService.exportAsFile(context, instanceId, workDir.toString(), r.orgName, r.secretName, r.password);
+    private void export(Ref r, Path groupVarsBase) throws Exception {
+        Path src = secretService.exportAsFile(r.orgName, r.secretName, r.password);
 
-        Path src = Paths.get(tmp);
         Path dst = groupVarsBase.resolve(r.groupName + "." + r.type);
         if (Files.exists(dst)) {
             throw new IllegalArgumentException("Can't export a group_vars file, the destination file already exists: " + dst);

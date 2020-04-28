@@ -15,17 +15,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.walmartlabs.ollie</groupId>
-            <artifactId>ollie</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>com.walmartlabs.concord.server</groupId>
             <artifactId>concord-server-sdk</artifactId>
         </dependency>
@@ -68,6 +57,11 @@
         <dependency>
             <groupId>com.walmartlabs.concord</groupId>
             <artifactId>concord-repository</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.walmartlabs.ollie</groupId>
+            <artifactId>ollie-config</artifactId>
         </dependency>
 
         <dependency>

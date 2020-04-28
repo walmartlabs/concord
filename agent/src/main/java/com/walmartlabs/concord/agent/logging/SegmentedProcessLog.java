@@ -20,17 +20,17 @@ package com.walmartlabs.concord.agent.logging;
  * =====
  */
 
+import com.walmartlabs.concord.client.LogSegmentUpdateRequest;
 import com.walmartlabs.concord.common.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class SegmentedProcessLog extends RedirectedProcessLog {
@@ -38,39 +38,54 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
     private static final Logger log = LoggerFactory.getLogger(SegmentedProcessLog.class);
 
     private final Path logsDir;
-    private final Map<Path, Long> segmentIds;
+    private final Map<LogSegment, Long> segmentIds;
 
     public SegmentedProcessLog(Path logsDir, UUID instanceId, LogAppender appender, long logSteamMaxDelay) throws IOException {
         super(logsDir, instanceId, appender, logSteamMaxDelay);
         this.logsDir = logsDir;
-        this.segmentIds = new HashMap<>();
+        this.segmentIds = new ConcurrentHashMap<>();
     }
 
     @Override
     public void run(Supplier<Boolean> stopCondition) throws Exception {
-        FileWatcher.watch(logsDir, stopCondition, logSteamMaxDelay, new FileWatcher.FileListener() {
+        FileWatcher.FileReader fileReader = new FileWatcher.ByteArrayFileReader();
+
+        FileWatcher.watch(logsDir, stopCondition, logSteamMaxDelay, new LogSegmentNameParser(), new FileWatcher.FileListener<LogSegment>() {
+
             @Override
-            public Result onNewFile(Path file, BasicFileAttributes attrs) {
-                Segment segment = parse(file.getFileName().toString());
-                if (segment == null) {
-                    return Result.IGNORE;
+            public boolean onNewFile(LogSegment fileName) {
+                Long id = appender.createSegment(instanceId, fileName.correlationId(), fileName.name(), fileName.createdAt());
+                if (id != null) {
+                    segmentIds.put(fileName, id);
                 }
-
-                Long id = appender.createSegment(instanceId, segment.getCorrelationId(), segment.getName(), new Date(attrs.creationTime().toMillis()));
-                if (id == null) {
-                    return Result.ERROR;
-                }
-
-                segmentIds.put(file, id);
-
-                return Result.OK;
+                return id != null;
             }
 
             @Override
-            public void onNewData(Path file, byte[] data, int len) {
-                byte[] chunkBuffer = new byte[len];
-                System.arraycopy(data, 0, chunkBuffer, 0, len);
-                appender.appendLog(instanceId, segmentIds.get(file), chunkBuffer);
+            public long onChanged(LogSegment fileName, RandomAccessFile in) throws IOException {
+                Long id = segmentIds.get(fileName);
+                if (id == null) {
+                    return -1;
+                }
+
+                return fileReader.read(in, chunk -> {
+                    LogStatsParser.Result result = LogStatsParser.parse(chunk.bytes(), chunk.len());
+                    if (result.chunk() != null) {
+                        boolean success = appender.appendLog(instanceId, id, result.chunk());
+                        if (!success) {
+                            return 0;
+                        }
+                    }
+                    LogSegmentStats stats = result.stats();
+                    if (stats != null) {
+                        appender.updateSegment(instanceId, id, result.stats());
+                        if (isFinal(stats.status())) {
+                            segmentIds.remove(fileName);
+                            return -1;
+                        }
+                    }
+                    return result.readPos();
+                });
             }
         });
     }
@@ -85,57 +100,7 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
         }
     }
 
-    private static Segment parse(String segmentFileName) {
-        if (segmentFileName.length() < 36) {
-            log.warn("createSegment ['{}'] -> invalid segment file name: no uuid", segmentFileName);
-            return null;
-        }
-
-        try {
-            UUID correlationId = UUID.fromString(segmentFileName.substring(0, 36));
-
-            if (!segmentFileName.endsWith(".log")) {
-                log.warn("createSegment ['{}'] -> invalid segment file name: invalid extension", segmentFileName);
-                return null;
-            }
-
-            if (segmentFileName.length() - 37 - ".log".length() <= 0) {
-                log.warn("createSegment ['{}'] -> invalid segment file name: no name", segmentFileName);
-                return null;
-            }
-            String segmentName = segmentFileName.substring(37, segmentFileName.length() - ".log".length());
-
-            return new Segment(correlationId, segmentName);
-        } catch (Exception e) {
-            log.warn("createSegment ['{}'] -> error: {}", segmentFileName, e.getMessage());
-        }
-        return null;
-    }
-
-    static class Segment {
-
-        private final UUID correlationId;
-        private final String name;
-
-        public Segment(UUID correlationId, String name) {
-            this.correlationId = correlationId;
-            this.name = name;
-        }
-
-        public UUID getCorrelationId() {
-            return correlationId;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public String toString() {
-            return "Segment{" +
-                    "correlationId=" + correlationId +
-                    ", name='" + name + '\'' +
-                    '}';
-        }
+    private static boolean isFinal(LogSegmentUpdateRequest.StatusEnum status) {
+        return status != LogSegmentUpdateRequest.StatusEnum.RUNNING;
     }
 }

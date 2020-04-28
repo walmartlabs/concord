@@ -758,7 +758,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(cakr.getKey());
 
-        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+        assertTrue(organizationsApi.list(false).stream().anyMatch(o -> o.getName().equals(orgName)));
 
         // ---
 

@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.ansible;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,219 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.client.ApiClientFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
-import com.walmartlabs.concord.sdk.DockerService;
-import com.walmartlabs.concord.sdk.SecretService;
+import com.walmartlabs.concord.sdk.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
+import java.util.Map;
 
-@Named("ansible")
-public class AnsibleTask extends RunPlaybookTask2 {
+import static com.walmartlabs.concord.plugins.ansible.ArgUtils.getListAsString;
+import static com.walmartlabs.concord.sdk.MapUtils.*;
 
-    @Inject
-    public AnsibleTask(ApiClientFactory apiClientFactory,
-                       ApiConfiguration apiCfg,
-                       SecretService secretService,
-                       AnsibleAuthFactory ansibleAuthFactory,
-                       DockerService dockerService) {
+public class AnsibleTask {
 
-        super(apiClientFactory, apiCfg, secretService, ansibleAuthFactory, dockerService);
+    private static final Logger log = LoggerFactory.getLogger(AnsibleTask.class);
+    private static final Logger processLog = LoggerFactory.getLogger("processLog");
+
+    private static final int SUCCESS_EXIT_CODE = 0;
+
+    private final ApiClient apiClient;
+    private final AnsibleAuthFactory ansibleAuthFactory;
+    private final AnsibleSecretService secretService;
+    private final ApiConfiguration apiCfg;
+
+    public AnsibleTask(ApiClient apiClient, AnsibleAuthFactory ansibleAuthFactory, AnsibleSecretService secretService, ApiConfiguration apiCfg) {
+        this.apiClient = apiClient;
+        this.ansibleAuthFactory = ansibleAuthFactory;
+        this.secretService = secretService;
+        this.apiCfg = apiCfg;
+    }
+
+    public Map<String, Object> run(AnsibleContext context,
+                                   PlaybookProcessRunner playbookProcessRunner) throws Exception {
+
+        String playbook = assertString(context.args(), TaskParams.PLAYBOOK_KEY.getKey());
+        log.info("Using a playbook: {}", playbook);
+
+        AnsibleEnv env = new AnsibleEnv(context, apiCfg)
+                .parse(context.args());
+
+        AnsibleConfig cfg = new AnsibleConfig(context)
+                .parse(context.args())
+                .enrich(env);
+
+        AnsibleCallbacks callbacks = AnsibleCallbacks.process(context, cfg)
+                .startEventSender(context.instanceId(), new ProcessEventsApi(apiClient))
+                .enrich(env);
+
+        AnsibleLibs.process(context, env);
+        AnsibleLookup.process(context, cfg);
+
+        PlaybookScriptBuilder b = new PlaybookScriptBuilder(context, playbook);
+
+        AnsibleInventory.process(context, b);
+
+        AnsibleVaultId.process(context, b);
+
+        AnsibleRoles.process(context, cfg);
+
+        GroupVarsProcessor groupVarsProcessor = new GroupVarsProcessor(secretService);
+        groupVarsProcessor.process(context, playbook);
+
+        OutVarsProcessor outVarsProcessor = new OutVarsProcessor();
+        outVarsProcessor.prepare(context, env.get());
+
+        AnsibleAuth auth = ansibleAuthFactory.create(context)
+                .enrich(env)
+                .enrich(b);
+
+        cfg.write();
+        env.write();
+
+        boolean checkMode = getBoolean(context.args(), TaskParams.CHECK_KEY.getKey(), false);
+        if (checkMode) {
+            log.warn("Running in the check mode. No changes will be made.");
+        }
+
+        boolean syntaxCheck = getBoolean(context.args(), TaskParams.SYNTAX_CHECK_KEY.getKey(), false);
+        if (syntaxCheck) {
+            log.warn("Running in the syntax check mode. No changes will be made.");
+        }
+
+        Virtualenv virtualenv = Virtualenv.create(context);
+
+        try {
+            Path workDir = context.workDir();
+            Path attachmentsPath = workDir.relativize(workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
+
+            b = b.withAttachmentsDir(attachmentsPath.toString())
+                    .withDebug(context.debug())
+                    .withTags(getListAsString(context.args(), TaskParams.TAGS_KEY))
+                    .withSkipTags(getListAsString(context.args(), TaskParams.SKIP_TAGS_KEY))
+                    .withExtraVars(getMap(context.args(), TaskParams.EXTRA_VARS_KEY.getKey(), null))
+                    .withExtraVarsFiles(getList(context.args(), TaskParams.EXTRA_VARS_FILES_KEY.getKey(), null))
+                    .withLimit(getLimit(context.args(), playbook))
+                    .withVerboseLevel(getVerboseLevel(context.args()))
+                    .withCheck(checkMode)
+                    .withSyntaxCheck(syntaxCheck)
+                    .withEnv(env.get())
+                    .withVirtualenv(virtualenv);
+
+            auth.prepare();
+
+            int code = playbookProcessRunner
+                    .withDebug(context.debug())
+                    .run(b.buildArgs(), b.buildEnv(), line -> processLog.info("ANSIBLE: {}", line));
+
+            log.debug("execution -> done, code {}", code);
+
+            updateAnsibleStats(workDir, code);
+            Map<String, Object> result = outVarsProcessor.process();
+
+            if (code != SUCCESS_EXIT_CODE) {
+                saveRetryFile(context.args(), workDir);
+                log.warn("Playbook is finished with code {}", code);
+                throw new IllegalStateException("Process finished with exit code " + code);
+            }
+            return result;
+        } finally {
+            callbacks.stopEventSender();
+
+            auth.postProcess();
+            groupVarsProcessor.postProcess();
+            outVarsProcessor.postProcess();
+
+            virtualenv.destroy();
+        }
+    }
+
+    private static String getLimit(Map<String, Object> args, String playbook) {
+        boolean debug = getBoolean(args, TaskParams.DEBUG_KEY.getKey(), false);
+
+        boolean retry = getBoolean(args, TaskParams.RETRY_KEY.getKey(), false);
+        if (retry) {
+            String s = "@" + getNameWithoutExtension(playbook) + ".retry";
+            if (debug) {
+                log.info("Using a limit file: {}", s);
+            }
+            return s;
+        }
+
+        String limit = getListAsString(args, TaskParams.LIMIT_KEY);
+        if (limit != null) {
+            if (debug) {
+                log.info("Using the limit value: {}", limit);
+            }
+            return limit;
+        }
+
+        return null;
+    }
+
+    private static String getNameWithoutExtension(String fileName) {
+        int i = fileName.lastIndexOf('.');
+        return (i == -1) ? fileName : fileName.substring(0, i);
+    }
+
+    private static int getVerboseLevel(Map<String, Object> args) {
+        return getNumber(args, TaskParams.VERBOSE_LEVEL_KEY.getKey(), 0).intValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void updateAnsibleStats(Path workDir, int code) throws IOException {
+        Path p = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(TaskParams.STATS_FILE_NAME.getKey());
+        if (!Files.exists(p)) {
+            return;
+        }
+
+        ObjectMapper om = new ObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT);
+
+        Map<String, Object> m = new HashMap<>();
+        try (InputStream in = Files.newInputStream(p)) {
+            Map<String, Object> mm = om.readValue(in, Map.class);
+            m.putAll(mm);
+        }
+
+        m.put(TaskParams.EXIT_CODE_KEY.getKey(), code);
+
+        try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            om.writeValue(out, m);
+        }
+    }
+
+    private static void saveRetryFile(Map<String, Object> args, Path workDir) throws IOException {
+        boolean saveRetryFiles = getBoolean(args, TaskParams.SAVE_RETRY_FILE.getKey(), false);
+        if (!saveRetryFiles) {
+            return;
+        }
+
+        String playbookName = getString(args, TaskParams.PLAYBOOK_KEY.getKey());
+        String retryFile = getNameWithoutExtension(playbookName + ".retry");
+
+        Path src = workDir.resolve(retryFile);
+        if (!Files.exists(src)) {
+            log.warn("Retry file not found: {}", src);
+            return;
+        }
+
+        Path dst = workDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME)
+                .resolve(TaskParams.LAST_RETRY_FILE.getKey());
+        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+        log.info("The retry file was saved as: {}", workDir.relativize(dst));
     }
 }

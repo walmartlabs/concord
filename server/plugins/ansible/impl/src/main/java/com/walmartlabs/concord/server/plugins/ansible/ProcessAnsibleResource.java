@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.walmartlabs.concord.db.AbstractDao;
+import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleHosts;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlayStats;
 import com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsiblePlaybookStats;
@@ -211,7 +212,7 @@ public class ProcessAnsibleResource implements Resource {
     public static class AnsibleDao extends AbstractDao {
 
         @Inject
-        protected AnsibleDao(Configuration cfg) {
+        protected AnsibleDao(@MainDB Configuration cfg) {
             super(cfg);
         }
 

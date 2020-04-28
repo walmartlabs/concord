@@ -1,0 +1,21 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:smtp-tasks:PROJECT_VERSION"
+  arguments:
+    smtpParams:
+      host: "SMTP_HOST"
+      port: SMTP_PORT
+
+flows:
+  default:
+    - task: smtp
+      in:
+        mail:
+          from: "me@localhost"
+          to: "you@localhost"
+          subject: "Hello!"
+          message: |
+            Hey! How are you?
+
+    - log: "Done!"

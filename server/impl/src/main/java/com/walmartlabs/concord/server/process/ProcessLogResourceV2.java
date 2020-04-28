@@ -118,6 +118,24 @@ public class ProcessLogResourceV2 implements Resource {
     }
 
     /**
+     * Update process log segment.
+     */
+    @POST
+    @ApiOperation(value = "Update process log segment")
+    @Path("{id}/log/segment/{segmentId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public LogSegmentOperationResponse updateSegment(@ApiParam @PathParam("id") UUID instanceId,
+                                                    @ApiParam @PathParam("segmentId") long segmentId,
+                                                    @ApiParam LogSegmentUpdateRequest request) {
+
+        ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
+        logManager.updateSegment(processKey, segmentId, request.status(), request.warnings(), request.errors());
+        return new LogSegmentOperationResponse(segmentId, OperationResult.UPDATED);
+    }
+
+    /**
      * Retrieves a log segment' data.
      */
     @GET

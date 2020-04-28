@@ -88,7 +88,9 @@ export interface LogSegmentEntry {
     id: number;
     correlationId?: string;
     name: string;
-    status: SegmentStatus;
+    status?: SegmentStatus;
+    warnings?: number;
+    errors?: number;
 }
 
 export interface PaginatedLogSegmentEntry {

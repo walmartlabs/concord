@@ -20,11 +20,13 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
+import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -32,9 +34,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.walmartlabs.concord.it.common.ITUtils.randomString;
+import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.*;
 
-public class FormIT extends AbstractIT {
+public class FormIT {
+
+    @Rule
+    public final Concord concord = ConcordConfiguration.configure();
 
     /**
      * A straightforward single form process.

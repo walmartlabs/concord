@@ -115,3 +115,9 @@
     color: #00B5F0;
     text-decoration: underline;
 }
+
+.LogSegment .Counter {
+    font-weight: normal;
+    color: #888888;
+    margin-left: 10px;
+}

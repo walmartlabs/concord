@@ -50,10 +50,10 @@ public class AnsibleConfig {
 
     private Map<String, Map<String, Object>> cfg = new HashMap<>();
 
-    public AnsibleConfig(Path workDir, Path tmpDir, boolean debug) {
-        this.workDir = workDir;
-        this.tmpDir = tmpDir;
-        this.debug = debug;
+    public AnsibleConfig(AnsibleContext context) {
+        this.workDir = context.workDir();
+        this.tmpDir = context.tmpDir();
+        this.debug = context.debug();
     }
 
     public AnsibleConfig parse(Map<String, Object> args) {

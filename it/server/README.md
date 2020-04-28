@@ -1,4 +1,4 @@
-# Integration Tests for Concord Server
+# Integration Tests for Concord Server/Agent
 
 ## Running
 

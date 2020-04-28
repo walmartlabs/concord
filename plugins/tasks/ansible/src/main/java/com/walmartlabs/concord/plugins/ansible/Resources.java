@@ -20,6 +20,8 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
+import com.walmartlabs.concord.plugins.ansible.v1.RunPlaybookTask2;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;

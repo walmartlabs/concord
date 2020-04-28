@@ -22,7 +22,6 @@ package com.walmartlabs.concord.plugins.ansible;
 
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,37 +32,38 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.sdk.ContextUtils.getMap;
-import static com.walmartlabs.concord.sdk.ContextUtils.getTxId;
-
 public class AnsibleEnv {
 
     private static final Logger log = LoggerFactory.getLogger(AnsibleEnv.class);
 
-    private final String txId;
+    private final UUID instanceId;
+    private final String sessionToken;
+    private final UUID eventCorrelationId;
+    private final String orgName;
+    private final Integer retryCount;
     private final boolean debug;
 
-    private final Context context;
     private final ApiConfiguration apiCfg;
 
     private Map<String, String> env = Collections.emptyMap();
 
-    public AnsibleEnv(Context context, ApiConfiguration apiCfg, boolean debug) {
-        this.txId = getTxId(context).toString();
-        this.context = context;
+    public AnsibleEnv(AnsibleContext context, ApiConfiguration apiCfg) {
+        this.instanceId = context.instanceId();
+        this.sessionToken = context.sessionToken();
+        this.eventCorrelationId = context.eventCorrelationId();
+        this.orgName = context.orgName();
+        this.retryCount = context.retryCount();
+        this.debug = context.debug();
         this.apiCfg = apiCfg;
-        this.debug = debug;
     }
 
     public AnsibleEnv parse(Map<String, Object> args) {
         env = mergeEnv(defaultEnv(), concordEnv(), args);
 
-        UUID eventCorrelationId = context.getEventCorrelationId();
         if (eventCorrelationId != null) {
             env.put("CONCORD_EVENT_CORRELATION_ID", eventCorrelationId.toString());
         }
 
-        Integer retryCount = (Integer) context.getVariable(Constants.Context.CURRENT_RETRY_COUNTER);
         if (retryCount != null) {
             env.put("CONCORD_CURRENT_RETRY_COUNT", Integer.toString(retryCount));
         }
@@ -102,16 +102,15 @@ public class AnsibleEnv {
      */
     private Map<String, String> concordEnv() {
         Map<String, String> env = new HashMap<>();
-        env.put("CONCORD_INSTANCE_ID", txId);
+        env.put("CONCORD_INSTANCE_ID", instanceId.toString());
         env.put("CONCORD_BASE_URL", apiCfg.getBaseUrl());
 
-        String t = apiCfg.getSessionToken(context);
-        env.put("CONCORD_SESSION_TOKEN", t != null ? t : "none");
+        if (sessionToken != null) {
+            env.put("CONCORD_SESSION_TOKEN", sessionToken);
+        }
 
         env.put("CONCORD_POLICY", Paths.get(Constants.Files.CONCORD_SYSTEM_DIR_NAME, Constants.Files.POLICY_FILE_NAME).toString());
 
-        Map<String, Object> projectInfo = getMap(context, Constants.Request.PROJECT_INFO_KEY, null);
-        String orgName = projectInfo != null ? (String) projectInfo.get("orgName") : null;
         if (orgName != null) {
             env.put("CONCORD_CURRENT_ORG_NAME", orgName);
         }

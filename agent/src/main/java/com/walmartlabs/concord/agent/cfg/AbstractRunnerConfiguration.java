@@ -25,6 +25,7 @@ import com.typesafe.config.Config;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
 
 import static com.walmartlabs.concord.agent.cfg.Utils.getDir;
@@ -35,6 +36,7 @@ public abstract class AbstractRunnerConfiguration {
     private final Path path;
     private final Path cfgDir;
     private final String javaCmd;
+    private final List<String> jvmParams;
     private final String mainClass;
     private final boolean securityManagerEnabled;
 
@@ -52,6 +54,7 @@ public abstract class AbstractRunnerConfiguration {
         this.path = Paths.get(path);
         this.cfgDir = getDir(cfg, prefix + ".cfgDir");
         this.javaCmd = cfg.getString(prefix + ".javaCmd");
+        this.jvmParams = cfg.getStringList(prefix + ".jvmParams");
         this.mainClass = cfg.getString(prefix + ".mainClass");
         this.securityManagerEnabled = cfg.getBoolean(prefix + ".securityManagerEnabled");
     }
@@ -66,6 +69,10 @@ public abstract class AbstractRunnerConfiguration {
 
     public String getJavaCmd() {
         return javaCmd;
+    }
+
+    public List<String> getJvmParams() {
+        return jvmParams;
     }
 
     public String getMainClass() {

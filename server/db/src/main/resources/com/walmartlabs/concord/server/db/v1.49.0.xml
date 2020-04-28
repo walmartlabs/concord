@@ -32,6 +32,15 @@
             <column name="SEGMENT_TS" type="timestamp">
                 <constraints nullable="false"/>
             </column>
+            <column name="SEGMENT_STATUS" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="SEGMENT_ERRORS" type="int">
+                <constraints nullable="true"/>
+            </column>
+            <column name="SEGMENT_WARN" type="int">
+                <constraints nullable="true"/>
+            </column>
         </createTable>
     </changeSet>
 
@@ -161,5 +170,4 @@
             $$ language plpgsql;
         </createProcedure>
     </changeSet>
-
 </databaseChangeLog>

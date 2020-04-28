@@ -42,9 +42,9 @@ import static com.walmartlabs.concord.sdk.MapUtils.getString;
 
 public class AnsibleRoles {
 
-    public static void process(TaskContext ctx, AnsibleConfig cfg) throws Exception {
-        new AnsibleRoles(ctx.getWorkDir(), ctx.getTmpDir(), ctx.getDefaults(), ctx.isDebug())
-                .parse(ctx.getArgs())
+    public static void process(AnsibleContext context, AnsibleConfig cfg) throws Exception {
+        new AnsibleRoles(context.workDir(), context.tmpDir(), context.defaults(), context.debug())
+                .parse(context.args())
                 .enrich(cfg)
                 .downloadRoles()
                 .validate();

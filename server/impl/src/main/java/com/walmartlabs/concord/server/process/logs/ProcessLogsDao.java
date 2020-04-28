@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
+import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogsRecord;
 import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.process.ProcessKey;
@@ -119,20 +120,46 @@ public class ProcessLogsDao extends AbstractDao {
         }
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt, String status) {
         return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
-                .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS)
-                .values(value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), createdAt != null ? value(new Timestamp(createdAt.getTime())) : currentTimestamp())
+                .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
+                .values(value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), createdAt != null ? value(new Timestamp(createdAt.getTime())) : currentTimestamp(), value(status))
                 .returning(PROCESS_LOG_SEGMENTS.SEGMENT_ID)
                 .fetchOne()
                 .getSegmentId());
     }
 
-    public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name) {
+    public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name, String status) {
         tx.insertInto(PROCESS_LOG_SEGMENTS)
-                .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS)
-                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp())
+                .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
+                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp(), value(status))
                 .execute();
+    }
+
+    public void updateSegment(ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {
+        tx(tx -> updateSegment(tx, processKey, segmentId, status, warnings, errors));
+    }
+
+    private void updateSegment(DSLContext tx, ProcessKey processKey, long segmentId, LogSegment.Status status, Integer warnings, Integer errors) {
+        UpdateQuery<ProcessLogSegmentsRecord> q = tx.updateQuery(PROCESS_LOG_SEGMENTS);
+
+        if (status != null) {
+            q.addValue(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS, status.name());
+        }
+
+        if (warnings != null) {
+            q.addValue(PROCESS_LOG_SEGMENTS.SEGMENT_WARN, warnings);
+        }
+
+        if (errors != null) {
+            q.addValue(PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS, errors);
+        }
+
+        q.addConditions(
+                PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())
+                                .and(PROCESS_LOG_SEGMENTS.SEGMENT_ID.eq(segmentId))));
+        q.execute();
     }
 
     public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
@@ -140,7 +167,12 @@ public class ProcessLogsDao extends AbstractDao {
         Timestamp createdAt = processKey.getCreatedAt();
 
         try (DSLContext tx = DSL.using(cfg)) {
-            return tx.select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS)
+            return tx.select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID,
+                    PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
+                    PROCESS_LOG_SEGMENTS.SEGMENT_TS,
+                    PROCESS_LOG_SEGMENTS.SEGMENT_STATUS,
+                    PROCESS_LOG_SEGMENTS.SEGMENT_WARN,
+                    PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS)
                     .from(PROCESS_LOG_SEGMENTS)
                     .where(PROCESS_LOG_SEGMENTS.INSTANCE_ID.eq(instanceId)
                             .and(PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT.eq(createdAt)))
@@ -317,14 +349,16 @@ public class ProcessLogsDao extends AbstractDao {
         return new ProcessLogChunk((Integer) r.value1(), r.value2());
     }
 
-    private static LogSegment toSegment(Record4<Long, UUID, String, Timestamp> r) {
+    private static LogSegment toSegment(Record7<Long, UUID, String, Timestamp, String, Integer, Integer> r) {
+        String status = r.get(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS);
         return LogSegment.builder()
                 .id(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ID))
                 .correlationId(r.get(PROCESS_LOG_SEGMENTS.CORRELATION_ID))
                 .name(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_NAME))
                 .createdAt(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_TS))
-                // TODO:
-                .status(LogSegment.Status.OK)
+                .warnings(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_WARN))
+                .errors(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ERRORS))
+                .status(status != null ? LogSegment.Status.valueOf(status) : null)
                 .build();
     }
 

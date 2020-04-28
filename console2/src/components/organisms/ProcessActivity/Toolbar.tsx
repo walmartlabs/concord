@@ -18,6 +18,7 @@
  * =====
  */
 import * as React from 'react';
+import { memo, useCallback, useState } from 'react';
 import {
     canBeCancelled,
     hasState,
@@ -36,13 +37,14 @@ import {
     Sticky
 } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
+import { formatDistanceToNow, parseISO as parseDate } from 'date-fns';
+import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
+
 import { ProcessLastErrorModal, WithCopyToClipboard } from '../../molecules';
+import { CancelProcessPopup, DisableProcessPopup } from '../../organisms';
+import { ConcordId } from '../../../api/common';
 
 import './styles.css';
-import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
-import { CancelProcessPopup, DisableProcessPopup } from '../index';
-import { ConcordId } from '../../../api/common';
-import { memo, useCallback, useState } from 'react';
 
 interface ExternalProps {
     stickyRef: any;
@@ -79,6 +81,8 @@ const ProcessToolbar = memo((props: ExternalProps) => {
                 <MenuItem>{renderBreadcrumbs(instanceId, process)}</MenuItem>
 
                 <MenuItem>{renderProcessStatus(process)}</MenuItem>
+
+                <MenuItem>{renderStartAt(process)}</MenuItem>
 
                 <MenuItem position={'right'}>{renderProcessMainActions(refresh, process)}</MenuItem>
 
@@ -150,6 +154,15 @@ const renderProcessStatus = (process?: ProcessEntry) => {
             )}
         </>
     );
+};
+
+const renderStartAt = (process?: ProcessEntry) => {
+    if (!process || !process.startAt || process.status !== ProcessStatus.ENQUEUED) {
+        return;
+    }
+
+    let startAt = parseDate(process.startAt);
+    return <span className="startAt">starts in {formatDistanceToNow(startAt)}</span>;
 };
 
 const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) => {

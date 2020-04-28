@@ -148,7 +148,7 @@ public class RunnerJobExecutor implements JobExecutor {
     }
 
     protected ProcessEntry buildProcessEntry(RunnerJob job) throws Exception {
-        List<String> jvmParams = getAgentJvmParams(job.getPayloadDir(), job.getProcessCfg());
+        List<String> jvmParams = getJvmParams(job.getPayloadDir(), job.getProcessCfg());
         String[] cmd = createCmd(job, jvmParams);
 
         boolean prefork = canUsePrefork(job);
@@ -309,20 +309,14 @@ public class RunnerJobExecutor implements JobExecutor {
 
     private String[] createCmd(RunnerJob job, List<String> jvmParams) throws IOException {
         Path runnerCfgFile = storeRunnerCfg(cfg.runnerCfgDir(), job.getRunnerCfg());
-
-        RunnerCommandBuilder runner = new RunnerCommandBuilder()
-                .javaCmd(cfg.agentJavaCmd())
+        return new RunnerCommandBuilder()
+                .javaCmd(cfg.javaCmd())
                 .logLevel(getLogLevel(job))
                 .extraDockerVolumesFile(createExtraDockerVolumesFile(job))
                 .runnerPath(cfg.runnerPath().toAbsolutePath())
                 .runnerCfgPath(runnerCfgFile.toAbsolutePath())
-                .mainClass(cfg.runnerMainClass());
-
-        if (jvmParams != null) {
-            runner.jvmParams(jvmParams);
-        }
-
-        return runner.build();
+                .mainClass(cfg.runnerMainClass())
+                .jvmParams(jvmParams).build();
     }
 
     private ProcessEntry fork(RunnerJob job, String[] cmd) throws ExecutionException, IOException {
@@ -430,19 +424,29 @@ public class RunnerJobExecutor implements JobExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private List<String> getAgentJvmParams(Path workDir, Map<String, Object> processCfg) {
+    private List<String> getJvmParams(Path workDir, Map<String, Object> processCfg) {
+        // the _agent.json file takes precedence
         Path p = workDir.resolve(Constants.Agent.AGENT_PARAMS_FILE_NAME);
-        if (!Files.exists(p)) {
-            // get jvm args from the process' configuration
-            return getJvmArgsFromConfig(processCfg);
+        if (Files.exists(p)) {
+            try (InputStream in = Files.newInputStream(p)) {
+                Map<String, Object> m = objectMapper.readValue(in, Map.class);
+                List<String> l = MapUtils.getList(m, Constants.Agent.JVM_ARGS_KEY, null);
+                if (l != null) {
+                    return l;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
-        try (InputStream in = Files.newInputStream(p)) {
-            Map<String, Object> m = objectMapper.readValue(in, Map.class);
-            return (List<String>) m.get(Constants.Agent.JVM_ARGS_KEY);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        // check the `configuration.requirements.jvm` next
+        List<String> l = getJvmArgsFromConfig(processCfg);
+        if (l != null) {
+            return l;
         }
+
+        // fallback to the default parameters
+        return cfg.jvmParams();
     }
 
     private static List<String> getJvmArgsFromConfig(Map<String, Object> processCfg) {
@@ -572,7 +576,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
         String serverApiBaseUrl();
 
-        String agentJavaCmd();
+        String javaCmd();
+
+        List<String> jvmParams();
 
         Path dependencyListDir();
 

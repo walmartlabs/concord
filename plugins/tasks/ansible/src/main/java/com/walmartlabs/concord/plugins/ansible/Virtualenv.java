@@ -37,10 +37,10 @@ public class Virtualenv {
     private static final Logger log = LoggerFactory.getLogger(Virtualenv.class);
 
     @SuppressWarnings("unchecked")
-    public static Virtualenv create(Path tmpDir, Map<String, Object> defaults, Map<String, Object> args) {
-        Virtualenv virtualenv = new Virtualenv(tmpDir.resolve("ve")); // can't be "virtualenv", it breaks initial install
+    public static Virtualenv create(AnsibleContext context) {
+        Virtualenv virtualenv = new Virtualenv(context.tmpDir().resolve("ve")); // can't be "virtualenv", it breaks initial install
 
-        Object v = args.get(TaskParams.VIRTUALENV_KEY.getKey());
+        Object v = context.args().get(TaskParams.VIRTUALENV_KEY.getKey());
         if (v == null) {
             return virtualenv;
         }
@@ -65,7 +65,7 @@ public class Virtualenv {
             l.forEach(p -> addPackage(virtualenv, p));
         }
 
-        virtualenv.indexUrl = Utils.assertArgSafe(getIndexUrl(defaults, m));
+        virtualenv.indexUrl = Utils.assertArgSafe(getIndexUrl(context.defaults(), m));
 
         return virtualenv;
     }
