@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -44,8 +45,16 @@ public class ProcessLogFactory {
         this.logAppender = logAppender;
     }
 
-    public RedirectedProcessLog createRedirectedLog(UUID instanceId) throws IOException {
-        return new RedirectedProcessLog(logDir, instanceId, logAppender, logStreamMaxDelay);
+    public RedirectedProcessLog createRedirectedLog(UUID instanceId, boolean segmented) throws IOException {
+        if (segmented) {
+            Path logSegmentsDir = logDir.resolve(instanceId.toString());
+            if (Files.notExists(logSegmentsDir)) {
+                Files.createDirectories(logSegmentsDir);
+            }
+            return new SegmentedProcessLog(logSegmentsDir, instanceId, logAppender, logStreamMaxDelay);
+        } else {
+            return new RedirectedProcessLog(logDir, instanceId, logAppender, logStreamMaxDelay);
+        }
     }
 
     public RemoteProcessLog createRemoteLog(UUID instanceId) {

@@ -137,6 +137,8 @@ export enum ProcessKind {
     TIMEOUT_HANDLER = 'TIMEOUT_HANDLER'
 }
 
+export type ProcessRuntime = 'concord-v1' | 'concord-v2';
+
 export interface TriggeredByEntry {
     externalEventId?: string;
     trigger: TriggerEntry;
@@ -170,6 +172,7 @@ export interface ProcessEntry {
     disabled: boolean;
     triggeredBy?: TriggeredByEntry;
     timeout?: number;
+    runtime?: ProcessRuntime;
 }
 
 export interface StartProcessResponse {

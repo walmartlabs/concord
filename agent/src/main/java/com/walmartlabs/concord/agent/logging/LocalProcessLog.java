@@ -27,7 +27,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.UUID;
 
 /**
  * Local log file. Typically used as a temporary buffer to store process logs
@@ -38,12 +37,9 @@ public class LocalProcessLog extends AbstractProcessLog {
     private static final Logger log = LoggerFactory.getLogger(LocalProcessLog.class);
 
     private final Path baseDir;
-    private final UUID instanceId;
 
-    public LocalProcessLog(Path baseDir, UUID instanceId) throws IOException {
+    public LocalProcessLog(Path baseDir) throws IOException {
         this.baseDir = baseDir;
-        this.instanceId = instanceId;
-
         Files.createFile(logFile());
     }
 
@@ -86,6 +82,6 @@ public class LocalProcessLog extends AbstractProcessLog {
     }
 
     public Path logFile() {
-        return baseDir.resolve(instanceId + ".log");
+        return baseDir.resolve("system" + ".log");
     }
 }

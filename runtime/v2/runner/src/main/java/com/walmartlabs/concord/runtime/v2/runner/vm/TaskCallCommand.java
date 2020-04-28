@@ -32,11 +32,15 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
+
+import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
 
 /**
  * Calls the specified task. Responsible for preparing the task's input
@@ -71,15 +75,31 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
         String segmentId = ctx.execution().correlationId().toString();
-        ThreadGroup threadGroup = new TaskThreadGroup(call.getName(), segmentId);
-        Serializable result = executeInThreadGroup(threadGroup, "thread-" + call.getName(),
-                () -> ThreadLocalContext.withContext(ctx, () -> t.execute(new TaskContextImpl(ctx, taskName, input))));
+        Serializable result = withLogSegment(call.getName(), segmentId,
+                () -> ThreadLocalContext.withContext(ctx,
+                        () -> t.execute(new TaskContextImpl(ctx, taskName, input))));
 
         String out = opts.out();
         if (out != null) {
             GlobalVariables gv = runtime.getService(GlobalVariables.class);
             gv.put(out, result); // TODO a custom result structure
         }
+    }
+
+    private static final Logger log = LoggerFactory.getLogger(TaskCallCommand.class);
+
+    /**
+     * Runs the specified {@link Callable} in a separate log segment.
+     */
+    private static <V> V withLogSegment(String name, String segmentId, Callable<V> callable) {
+        ThreadGroup threadGroup = new TaskThreadGroup(name, segmentId);
+        return executeInThreadGroup(threadGroup, "thread-" + name, () -> {
+            try {
+                return callable.call();
+            } finally {
+                log.info(FINALIZE_SESSION_MARKER, "The End!");
+            }
+        });
     }
 
     /**

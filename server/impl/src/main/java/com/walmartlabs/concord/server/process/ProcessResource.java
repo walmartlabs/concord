@@ -25,6 +25,7 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.server.HttpUtils;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
@@ -38,8 +39,8 @@ import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryE
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessManager.ProcessResult;
 import com.walmartlabs.concord.server.process.event.ProcessEventDao;
+import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
-import com.walmartlabs.concord.server.process.logs.ProcessLogsDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.*;
@@ -92,7 +93,6 @@ public class ProcessResource implements Resource {
     private final ProcessManager processManager;
     private final ProcessQueueDao queueDao;
     private final ProcessQueueManager processQueueManager;
-    private final ProcessLogsDao logsDao;
     private final PayloadManager payloadManager;
     private final ProcessStateManager stateManager;
     private final SecretStoreConfiguration secretStoreCfg;
@@ -102,6 +102,7 @@ public class ProcessResource implements Resource {
     private final ProjectAccessManager projectAccessManager;
     private final ProcessConfiguration processCfg;
     private final ProcessLogManager logManager;
+    private final ProcessLogAccessManager logAccessManager;
     private final ProcessEventDao processEventDao;
 
     private final ProcessResourceV2 v2;
@@ -110,7 +111,6 @@ public class ProcessResource implements Resource {
     public ProcessResource(ProcessManager processManager,
                            ProcessQueueDao queueDao,
                            ProcessQueueManager processQueueManager,
-                           ProcessLogsDao logsDao,
                            PayloadManager payloadManager,
                            ProcessStateManager stateManager,
                            SecretStoreConfiguration secretStoreCfg,
@@ -120,13 +120,12 @@ public class ProcessResource implements Resource {
                            ObjectMapper objectMapper,
                            ProcessConfiguration processCfg,
                            ProcessLogManager logManager,
-                           ProcessEventDao processEventDao,
+                           ProcessLogAccessManager logAccessManager, ProcessEventDao processEventDao,
                            ProcessResourceV2 v2) {
 
         this.processManager = processManager;
         this.queueDao = queueDao;
         this.processQueueManager = processQueueManager;
-        this.logsDao = logsDao;
         this.payloadManager = payloadManager;
         this.stateManager = stateManager;
         this.secretStoreCfg = secretStoreCfg;
@@ -136,6 +135,7 @@ public class ProcessResource implements Resource {
         this.objectMapper = objectMapper;
         this.processCfg = processCfg;
         this.logManager = logManager;
+        this.logAccessManager = logAccessManager;
         this.processEventDao = processEventDao;
 
         this.v2 = v2;
@@ -797,60 +797,15 @@ public class ProcessResource implements Resource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
     public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
-                           @HeaderParam("range") String range) {
+                           @HeaderParam("range") String rangeHeader) {
 
         // check the permissions, logs can contain sensitive data
-        ProcessKey processKey = assertLogAccess(instanceId);
+        ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
 
-        Integer start = null;
-        Integer end = null;
+        HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
 
-        if (range != null && !range.trim().isEmpty()) {
-            if (!range.startsWith("bytes=")) {
-                throw new ConcordApplicationException("Invalid range header: " + range, Status.BAD_REQUEST);
-            }
-
-            String[] as = range.substring("bytes=".length()).split("-");
-            if (as.length > 0) {
-                try {
-                    start = Integer.parseInt(as[0]);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-
-            if (as.length > 1) {
-                try {
-                    end = Integer.parseInt(as[1]);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-        }
-
-        ProcessLog l = logsDao.get(processKey, start, end);
-        List<ProcessLogChunk> data = l.getChunks();
-        if (data.isEmpty()) {
-            int actualStart = start != null ? start : 0;
-            int actualEnd = end != null ? end : actualStart;
-            return Response.ok()
-                    .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                    .build();
-        }
-
-        ProcessLogChunk first = data.get(0);
-        int actualStart = first.getStart();
-
-        ProcessLogChunk last = data.get(data.size() - 1);
-        int actualEnd = last.getStart() + last.getData().length;
-
-        StreamingOutput out = output -> {
-            for (ProcessLogChunk e : data) {
-                output.write(e.getData());
-            }
-        };
-
-        return Response.ok(out)
-                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                .build();
+        ProcessLog l = logManager.get(processKey, range.start(), range.end());
+        return ProcessLogResourceV2.toResponse(l, range);
     }
 
     /**
@@ -1084,35 +1039,6 @@ public class ProcessResource implements Resource {
             throw new ConcordApplicationException("Process instance not found: " + instanceId, Response.Status.NOT_FOUND);
         }
         return processKey;
-    }
-
-    private ProcessKey assertLogAccess(UUID instanceId) {
-        ProcessEntry pe = processManager.assertProcess(instanceId);
-        ProcessKey pk = ProcessKey.from(pe);
-
-        if (!processCfg.isCheckLogPermissions()) {
-            return pk;
-        }
-
-        if (Roles.isAdmin() || Roles.isGlobalReader()) {
-            return pk;
-        }
-
-        UserPrincipal principal = UserPrincipal.assertCurrent();
-
-        UUID initiatorId = pe.initiatorId();
-        if (principal.getId().equals(initiatorId)) {
-            // process owners should be able to view the process' logs
-            return pk;
-        }
-
-        if (pe.projectId() != null) {
-            projectAccessManager.assertAccess(pe.projectId(), ResourceAccessLevel.WRITER, true);
-            return pk;
-        }
-
-        throw new UnauthorizedException("The current user (" + principal.getUsername() + ") doesn't have " +
-                "the necessary permissions to view the process log: " + instanceId);
     }
 
     private void assertProcessAccess(ProcessEntry pe, String downloadEntity) {

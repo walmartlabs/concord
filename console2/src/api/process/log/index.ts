@@ -18,7 +18,7 @@
  * =====
  */
 
-import { ConcordId, managedFetch } from '../../common';
+import { ConcordId, fetchJson, managedFetch, queryParams } from '../../common';
 
 export interface LogRange {
     unit?: string;
@@ -68,6 +68,76 @@ export const getLog = async (instanceId: ConcordId, range: LogRange): Promise<Lo
     };
 
     const resp = await managedFetch(`/api/v1/process/${instanceId}/log`, opts);
+
+    const headers = resp.headers.get('Content-Range');
+    if (!headers) {
+        return Promise.reject({ error: true, message: `Range header is missing: ${instanceId}` });
+    }
+
+    const data = await resp.text();
+    return toChunk(data, parseRange(headers));
+};
+
+export enum SegmentStatus {
+    OK = 'OK',
+    FAILED = 'FAILED',
+    RUNNING = 'RUNNING'
+}
+
+export interface LogSegmentEntry {
+    id: number;
+    correlationId?: string;
+    name: string;
+    status?: SegmentStatus;
+    warnings?: number;
+    errors?: number;
+}
+
+export interface PaginatedLogSegmentEntry {
+    items: LogSegmentEntry[];
+    next: boolean;
+}
+
+export const listLogSegments = async (
+    instanceId: ConcordId,
+    page: number,
+    limit: number
+): Promise<PaginatedLogSegmentEntry> => {
+    const offsetParam = page > 0 && limit > 0 ? page * limit : page;
+    const limitParam = limit > 0 ? limit + 1 : limit;
+
+    const data: LogSegmentEntry[] = await fetchJson(
+        `/api/v2/process/${instanceId}/log/segment?${queryParams({
+            offset: offsetParam,
+            limit: limitParam
+        })}`
+    );
+
+    const hasMoreElements: boolean = limit > 0 && data.length > limit;
+
+    if (limit > 0 && hasMoreElements) {
+        data.pop();
+    }
+
+    return {
+        items: data,
+        next: hasMoreElements
+    };
+};
+
+export const getSegmentLog = async (
+    instanceId: ConcordId,
+    segmentId: number,
+    range: LogRange
+): Promise<LogChunk> => {
+    const opts = {
+        headers: formatRangeHeader(range)
+    };
+
+    const resp = await managedFetch(
+        `/api/v2/process/${instanceId}/log/segment/${segmentId}/data`,
+        opts
+    );
 
     const headers = resp.headers.get('Content-Range');
     if (!headers) {

@@ -28,7 +28,6 @@ import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessException;
-import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.user.UserManager;
 
 import javax.inject.Inject;
@@ -44,18 +43,15 @@ public class AssertWorkspaceArchiveProcessor implements PayloadProcessor {
 
     private static final Set<String> PROJECT_ROOT_FILE_NAMES = new HashSet<>(Arrays.asList(Constants.Files.PROJECT_ROOT_FILE_NAMES));
 
-    private final ProcessLogManager logManager;
     private final ProjectDao projectDao;
     private final ProjectAccessManager projectAccessManager;
     private final UserManager userManager;
 
     @Inject
-    public AssertWorkspaceArchiveProcessor(ProcessLogManager logManager,
-                                           ProjectDao projectDao,
+    public AssertWorkspaceArchiveProcessor(ProjectDao projectDao,
                                            ProjectAccessManager projectAccessManager,
                                            UserManager userManager) {
 
-        this.logManager = logManager;
         this.projectDao = projectDao;
         this.projectAccessManager = projectAccessManager;
         this.userManager = userManager;

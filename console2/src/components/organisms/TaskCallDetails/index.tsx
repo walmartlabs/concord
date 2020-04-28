@@ -92,6 +92,44 @@ const renderInput = (data: VariableMapping[]) => (
     </>
 );
 
+const renderValueV2 = (v: any) => {
+    if (isObject(v)) {
+        return <ReactJson src={v} name={null} enableClipboard={false} collapsed={true} />;
+    }
+
+    return <pre>{JSON.stringify(v)}</pre>;
+};
+
+const renderInputVariablesV2 = (key: string, value: any, index: number) => {
+    return (
+        <Table.Row key={index}>
+            <Table.Cell collapsing={true}>
+                <pre>{key}</pre>
+            </Table.Cell>
+            <Table.Cell>{renderValueV2(value)}</Table.Cell>
+        </Table.Row>
+    );
+};
+
+const renderInputV2 = (data: {}) => (
+    <>
+        <h4>Input</h4>
+        <Table celled={true} compact={true}>
+            <Table.Header>
+                <Table.Row>
+                    <Table.HeaderCell collapsing={true}>Parameter</Table.HeaderCell>
+                    <Table.HeaderCell>Value</Table.HeaderCell>
+                </Table.Row>
+            </Table.Header>
+            <Table.Body>
+                {Object.keys(data).map((key, index) =>
+                    renderInputVariablesV2(key, data[key], index)
+                )}
+            </Table.Body>
+        </Table>
+    </>
+);
+
 const TaskCallDetails = (props: Props) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<RequestError>();
@@ -166,7 +204,11 @@ const TaskCallDetails = (props: Props) => {
                 </Grid.Row>
             </Grid>
 
-            {details.in && details.in.length > 0 && renderInput(details.in)}
+            {details.in &&
+                details.in instanceof Array &&
+                details.in.length > 0 &&
+                renderInput(details.in)}
+            {details.in && isObject(details.in) && renderInputV2(details.in)}
         </>
     );
 };
