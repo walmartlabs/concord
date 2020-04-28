@@ -38,6 +38,7 @@ export { default as GlobalNavMenu } from './GlobalNavMenu';
 export { default as Highlighter } from './Highlighter';
 export { default as HumanizedDuration } from './HumanizedDuration';
 export { default as LocalTimestamp } from './LocalTimestamp';
+export { default as LogSegment } from './LogSegment';
 export { default as MainToolbar } from './MainToolbar';
 export { default as NewAPITokenForm } from './NewAPITokenForm';
 export { default as NewProjectForm } from './NewProjectForm';

@@ -61,7 +61,6 @@ public class ProjectManager {
     private final EncryptedProjectValueManager encryptedValueManager;
     private final UserManager userManager;
     private final OrganizationManager organizationManager;
-    private final OrganizationDao organizationDao;
 
     @Inject
     public ProjectManager(PolicyManager policyManager,
@@ -74,8 +73,7 @@ public class ProjectManager {
                           AuditLog auditLog,
                           EncryptedProjectValueManager encryptedValueManager,
                           UserManager userManager,
-                          OrganizationManager organizationManager,
-                          OrganizationDao organizationDao) {
+                          OrganizationManager organizationManager) {
 
         this.policyManager = policyManager;
         this.projectDao = projectDao;
@@ -88,7 +86,6 @@ public class ProjectManager {
         this.encryptedValueManager = encryptedValueManager;
         this.userManager = userManager;
         this.organizationManager = organizationManager;
-        this.organizationDao = organizationDao;
     }
 
     public ProjectEntry get(UUID projectId) {

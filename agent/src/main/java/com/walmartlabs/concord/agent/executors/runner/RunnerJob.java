@@ -62,7 +62,7 @@ public class RunnerJob {
         RunnerLog log;
         try {
             log = new RunnerLog(
-                    processLogFactory.createRedirectedLog(jobRequest.getInstanceId()),
+                    processLogFactory.createRedirectedLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs()),
                     processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
         } catch (IOException e) {
             throw new ExecutionException("Error while creating runner log", e);
@@ -179,6 +179,9 @@ public class RunnerJob {
                         .build())
                 .dependencyManager(DependencyManagerConfiguration.builder()
                         .cacheDir(execCfg.dependencyCacheDir().toAbsolutePath().toString())
+                        .build())
+                .logging(LoggingConfiguration.builder()
+                        .segmentedLogDir(execCfg.logDir().toString())
                         .build())
                 .build();
     }

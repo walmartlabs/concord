@@ -18,16 +18,31 @@
  * =====
  */
 import * as React from 'react';
-import {memo, useCallback, useState} from 'react';
-import {canBeCancelled, hasState, isFinal, ProcessEntry, ProcessStatus} from '../../../api/process';
-import {Breadcrumb, Button, Dropdown, Icon, Label, Menu, MenuItem, Sticky} from 'semantic-ui-react';
-import {Link} from 'react-router-dom';
-import {formatDistanceToNow, parseISO as parseDate} from 'date-fns';
-import {SemanticCOLORS} from 'semantic-ui-react/dist/commonjs/generic';
+import { memo, useCallback, useState } from 'react';
+import {
+    canBeCancelled,
+    hasState,
+    isFinal,
+    ProcessEntry,
+    ProcessStatus
+} from '../../../api/process';
+import {
+    Breadcrumb,
+    Button,
+    Dropdown,
+    Icon,
+    Label,
+    Menu,
+    MenuItem,
+    Sticky
+} from 'semantic-ui-react';
+import { Link } from 'react-router-dom';
+import { formatDistanceToNow, parseISO as parseDate } from 'date-fns';
+import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 
-import {ProcessLastErrorModal, WithCopyToClipboard} from '../../molecules';
-import {CancelProcessPopup, DisableProcessPopup} from '../../organisms';
-import {ConcordId} from '../../../api/common';
+import { ProcessLastErrorModal, WithCopyToClipboard } from '../../molecules';
+import { CancelProcessPopup, DisableProcessPopup } from '../../organisms';
+import { ConcordId } from '../../../api/common';
 
 import './styles.css';
 

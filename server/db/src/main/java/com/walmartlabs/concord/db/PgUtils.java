@@ -29,6 +29,7 @@ import org.postgresql.util.PSQLException;
 
 import java.sql.Timestamp;
 
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
 
@@ -56,6 +57,10 @@ public final class PgUtils {
 
     public static Condition jsonbContains(Field<JSONB> field, JSONB value) {
         return DSL.condition("{0} @> {1}", field, DSL.value(value));
+    }
+
+    public static Field<Integer> upperRange(Field<Object> field) {
+        return DSL.field("upper({0})", Integer.class, field);
     }
 
     public static boolean isUniqueViolationError(DataAccessException e) {
