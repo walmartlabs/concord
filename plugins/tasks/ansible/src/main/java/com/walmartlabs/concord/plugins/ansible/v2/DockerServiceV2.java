@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.sdk;
+package com.walmartlabs.concord.plugins.ansible.v2;
 
 /*-
  * *****
@@ -20,23 +20,20 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.plugins.ansible.AnsibleDockerService;
+import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.sdk.DockerContainerSpec;
 
-import java.io.IOException;
+public class DockerServiceV2 implements AnsibleDockerService {
 
-public interface DockerService {
+    private final DockerService delegate;
 
-    /**
-     * Starts a new Docker container using the provided {@code spec}.
-     * @param spec the container's specification
-     * @param outCallback callback for stdout
-     * @param errCallback callback for stderr
-     * @return exit code of the `docker run` command
-     */
-    int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException; // TODO throw Exception instead?
+    public DockerServiceV2(DockerService delegate) {
+        this.delegate = delegate;
+    }
 
-    interface LogCallback {
-
-        void onLog(String line);
+    @Override
+    public int start(DockerContainerSpec spec, DockerService.LogCallback outCallback, DockerService.LogCallback errCallback) throws Exception {
+        return delegate.start(spec, outCallback, errCallback);
     }
 }

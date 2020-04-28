@@ -37,9 +37,9 @@ import java.util.concurrent.TimeoutException;
 
 public class AnsibleCallbacks {
 
-    public static AnsibleCallbacks process(TaskContext ctx, AnsibleConfig config) {
-        return new AnsibleCallbacks(ctx.isDebug(), ctx.getWorkDir(), ctx.getTmpDir())
-                .parse(ctx.getArgs())
+    public static AnsibleCallbacks process(AnsibleContext ctx, AnsibleConfig config) {
+        return new AnsibleCallbacks(ctx.workDir(), ctx.tmpDir(), ctx.debug())
+                .parse(ctx.args())
                 .enrich(config)
                 .write();
     }
@@ -73,7 +73,7 @@ public class AnsibleCallbacks {
     private EventSender eventSender;
     private Future<?> eventSenderFuture;
 
-    public AnsibleCallbacks(boolean debug, Path workDir, Path tmpDir) {
+    public AnsibleCallbacks(Path workDir, Path tmpDir, boolean debug) {
         this.debug = debug;
         this.workDir = workDir;
         this.tmpDir = tmpDir;

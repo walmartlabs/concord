@@ -58,10 +58,10 @@ public class PlaybookScriptBuilder {
     private int verboseLevel = 0;
     private Virtualenv virtualenv;
 
-    public PlaybookScriptBuilder(String playbook, Path workDir, Path tmpDir) {
+    public PlaybookScriptBuilder(AnsibleContext context, String playbook) {
         this.playbook = playbook;
-        this.workDir = workDir;
-        this.tmpDir = tmpDir;
+        this.workDir = context.workDir();
+        this.tmpDir = context.tmpDir();
     }
 
     public PlaybookScriptBuilder withDebug(boolean debug) {

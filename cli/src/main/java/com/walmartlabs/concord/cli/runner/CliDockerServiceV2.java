@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.sdk;
+package com.walmartlabs.concord.cli.runner;
 
 /*-
  * *****
@@ -24,19 +24,10 @@ import com.walmartlabs.concord.sdk.DockerContainerSpec;
 
 import java.io.IOException;
 
-public interface DockerService {
+public class CliDockerServiceV2 implements com.walmartlabs.concord.runtime.v2.sdk.DockerService {
 
-    /**
-     * Starts a new Docker container using the provided {@code spec}.
-     * @param spec the container's specification
-     * @param outCallback callback for stdout
-     * @param errCallback callback for stderr
-     * @return exit code of the `docker run` command
-     */
-    int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws IOException, InterruptedException; // TODO throw Exception instead?
-
-    interface LogCallback {
-
-        void onLog(String line);
+    @Override
+    public int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 }

@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -36,11 +37,11 @@ public class DefaultPlaybookProcessRunner implements PlaybookProcessRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPlaybookProcessRunner.class);
 
-    private final String workDir;
+    private final Path workDir;
 
     private boolean debug;
 
-    public DefaultPlaybookProcessRunner(String workDir) {
+    public DefaultPlaybookProcessRunner(Path workDir) {
         this.workDir = workDir;
     }
 
@@ -51,7 +52,7 @@ public class DefaultPlaybookProcessRunner implements PlaybookProcessRunner {
 
     @Override
     public int run(List<String> args, Map<String, String> extraEnv, LogCallback logCallback) throws IOException, InterruptedException {
-        File pwd = new File(workDir);
+        File pwd = workDir.toFile();
         if (!pwd.exists()) {
             throw new IOException("Working directory not found: " + pwd);
         }

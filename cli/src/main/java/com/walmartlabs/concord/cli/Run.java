@@ -103,7 +103,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies()),
-                new CliServicesModule(secretStoreDir))
+                new CliServicesModule(secretStoreDir, targetDir))
                 .create();
 
         Runner runner = new Runner.Builder()

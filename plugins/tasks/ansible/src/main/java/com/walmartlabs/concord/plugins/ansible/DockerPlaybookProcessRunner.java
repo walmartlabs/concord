@@ -20,19 +20,15 @@ package com.walmartlabs.concord.plugins.ansible;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.DockerContainerSpec;
-import com.walmartlabs.concord.sdk.DockerService;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public class DockerPlaybookProcessRunner implements PlaybookProcessRunner {
 
-    private final DockerService dockerService;
-    private final Context ctx;
+    private final AnsibleDockerService dockerService;
     private final String image;
 
     private Collection<String> hosts;
@@ -41,9 +37,8 @@ public class DockerPlaybookProcessRunner implements PlaybookProcessRunner {
     private int pullRetryCount = 0;
     private long pullRetryInterval = 0;
 
-    public DockerPlaybookProcessRunner(DockerService dockerService, Context ctx, String image) {
+    public DockerPlaybookProcessRunner(AnsibleDockerService dockerService, String image) {
         this.dockerService = dockerService;
-        this.ctx = ctx;
         this.image = image;
     }
 
@@ -74,8 +69,8 @@ public class DockerPlaybookProcessRunner implements PlaybookProcessRunner {
     }
 
     @Override
-    public int run(List<String> args, Map<String, String> extraEnv, LogCallback logCallback) throws IOException, InterruptedException {
-        return dockerService.start(ctx, DockerContainerSpec.builder()
+    public int run(List<String> args, Map<String, String> extraEnv, LogCallback logCallback) throws Exception {
+        return dockerService.start(DockerContainerSpec.builder()
                 .image(image)
                 .args(args)
                 .env(extraEnv)

@@ -28,8 +28,8 @@ import java.nio.file.Path;
 
 public class AnsibleLookup {
 
-    public static void process(TaskContext ctx, AnsibleConfig cfg) {
-        new AnsibleLookup(ctx.getTmpDir())
+    public static void process(AnsibleContext context, AnsibleConfig cfg) {
+        new AnsibleLookup(context.tmpDir())
                 .enrich(cfg)
                 .write();
     }
