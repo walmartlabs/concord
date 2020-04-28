@@ -24,7 +24,6 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.jooq.Record3;
 import org.jooq.Record4;
 import org.jooq.impl.DSL;
 

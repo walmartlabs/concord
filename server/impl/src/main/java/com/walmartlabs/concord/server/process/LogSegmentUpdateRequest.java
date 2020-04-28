@@ -20,15 +20,12 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.Date;
-import java.util.UUID;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)

@@ -42,7 +42,6 @@ import com.walmartlabs.concord.server.process.event.ProcessEventDao;
 import com.walmartlabs.concord.server.process.logs.ProcessLogAccessManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
-import com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -790,12 +789,15 @@ public class ProcessResource implements Resource {
      * @param instanceId
      * @param range
      * @return
+     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
+     * @see ProcessLogResourceV2
      */
     @GET
     @ApiOperation(value = "Retrieve the log")
     @javax.ws.rs.Path("/{id}/log")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
+    @Deprecated
     public Response getLog(@ApiParam @PathParam("id") UUID instanceId,
                            @HeaderParam("range") String rangeHeader) {
 
@@ -813,11 +815,14 @@ public class ProcessResource implements Resource {
      *
      * @param instanceId
      * @param data
+     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
+     * @see ProcessLogResourceV2
      */
     @POST
     @javax.ws.rs.Path("{id}/log")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @WithTimer
+    @Deprecated
     public void appendLog(@PathParam("id") UUID instanceId, InputStream data) {
         ProcessKey processKey = assertProcessKey(instanceId);
 

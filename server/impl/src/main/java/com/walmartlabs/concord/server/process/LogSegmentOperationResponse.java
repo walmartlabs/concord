@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.server.OperationResult;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 public class LogSegmentOperationResponse implements Serializable {
 
