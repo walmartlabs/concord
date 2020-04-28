@@ -100,16 +100,16 @@ public class OrganizationResource implements Resource {
                                         @QueryParam("offset") int offset,
                                         @QueryParam("limit") int limit,
                                         @QueryParam("filter") String filter) {
-        UUID userId = null;
 
-        if (onlyCurrent) {
-            UserPrincipal p = UserPrincipal.assertCurrent();
-            if (!Roles.isAdmin() && !Roles.isGlobalReader() && !Roles.isGlobalWriter()) {
-                userId = p.getId();
-            }
+        UserPrincipal p = UserPrincipal.assertCurrent();
+        UUID userId = p.getId();
+
+        if (Roles.isAdmin() || Roles.isGlobalReader() || Roles.isGlobalWriter()) {
+            // admins and global readers/writers see all orgs regardless of the onlyCurrent value
+            userId = null;
         }
 
-        return orgDao.list(userId, offset, limit, filter);
+        return orgDao.list(userId, onlyCurrent, offset, limit, filter);
     }
 
     @DELETE
