@@ -24,6 +24,7 @@
         <module>console</module>
         <module>runtime-v1</module>
         <module>runtime-v2</module>
+        <module>compat</module>
     </modules>
 
     <properties>
