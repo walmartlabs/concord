@@ -133,6 +133,14 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>misc-tasks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>throw-tasks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>resource-tasks</artifactId>
         </dependency>
         <dependency>
