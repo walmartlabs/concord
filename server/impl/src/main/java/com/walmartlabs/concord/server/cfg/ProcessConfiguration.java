@@ -29,6 +29,8 @@ import javax.inject.Singleton;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Named
@@ -86,9 +88,13 @@ public class ProcessConfiguration implements Serializable {
     @Config("process.checkLogPermissions")
     private boolean checkLogPermissions;
 
+    private Instant newLogsActivationDate;
+
     @Inject
-    public ProcessConfiguration(@Config("process.signingKeyPath") @Nullable String signingKeyPath) {
+    public ProcessConfiguration(@Config("process.signingKeyPath") @Nullable String signingKeyPath,
+                                @Config("process.newLogsActivationDate") @Nullable String newLogsActivationDate) {
         this.signingKeyPath = signingKeyPath != null ? Paths.get(signingKeyPath) : null;
+        this.newLogsActivationDate = newLogsActivationDate != null ? DateTimeFormatter.ISO_DATE_TIME.parse(newLogsActivationDate, Instant::from) : null;
     }
 
     public ProcessConfiguration(long maxStateAge, List<String> secureFiles) {
@@ -146,5 +152,9 @@ public class ProcessConfiguration implements Serializable {
 
     public boolean isCheckLogPermissions() {
         return checkLogPermissions;
+    }
+
+    public Instant getNewLogsActivationDate() {
+        return newLogsActivationDate;
     }
 }
