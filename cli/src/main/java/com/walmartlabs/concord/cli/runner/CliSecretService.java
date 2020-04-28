@@ -20,17 +20,13 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.SecretService;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
-public class CliSecretService implements SecretService {
+public class CliSecretService {
 
     private final Path secretStoreDir;
 
@@ -38,23 +34,7 @@ public class CliSecretService implements SecretService {
         this.secretStoreDir = secretStoreDir;
     }
 
-    @Override
-    public String exportAsString(Context ctx, String instanceId, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public String exportAsString(Context ctx, String instanceId, String orgName, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public Map<String, String> exportKeyAsFile(Context ctx, String instanceId, String workDir, String name, String password) throws Exception {
-        return exportKeyAsFile(ctx, instanceId, workDir, null, name, password);
-    }
-
-    @Override
-    public Map<String, String> exportKeyAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
+    public SecretService.KeyPair exportKeyAsFile(Path workDir, String orgName, String name, String password) throws Exception {
         Path publicKey = secretStoreDir;
         Path privateKey = secretStoreDir;
         if (orgName != null) {
@@ -72,45 +52,15 @@ public class CliSecretService implements SecretService {
             throw new RuntimeException("Prvate key '" + privateKey + "' not found");
         }
 
-        Path dest = Paths.get(workDir).resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
+        Path dest = workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
         Path tmpPublicKey = dest.resolve(name + ".pub");
         Path tmpPrivateKey = dest.resolve(name);
         Files.copy(publicKey, tmpPublicKey);
         Files.copy(privateKey, tmpPrivateKey);
 
-        Map<String, String> m = new HashMap<>();
-        m.put("private", tmpPrivateKey.toString());
-        m.put("public", tmpPublicKey.toString());
-        return m;
-    }
-
-    @Override
-    public Map<String, String> exportCredentials(Context ctx, String instanceId, String workDir, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public Map<String, String> exportCredentials(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public String exportAsFile(Context ctx, String instanceId, String workDir, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public String exportAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public String decryptString(Context ctx, String instanceId, String s) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
-    @Override
-    public String encryptString(Context ctx, String instanceId, String orgName, String projectName, String value) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
+        return SecretService.KeyPair.builder()
+                .privateKey(tmpPrivateKey)
+                .publicKey(tmpPublicKey)
+                .build();
     }
 }

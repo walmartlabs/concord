@@ -35,9 +35,9 @@ import java.util.stream.Collectors;
 
 public class AnsibleInventory {
 
-    public static void process(TaskContext ctx, PlaybookScriptBuilder playbook) throws IOException {
-        List<String> inventories = new AnsibleInventory(ctx.getWorkDir(), ctx.getTmpDir(), ctx.isDebug())
-                .write(ctx.getArgs());
+    public static void process(AnsibleContext context, PlaybookScriptBuilder playbook) throws IOException {
+        List<String> inventories = new AnsibleInventory(context.workDir(), context.tmpDir(), context.debug())
+                .write(context.args());
 
         playbook.withInventories(inventories);
     }

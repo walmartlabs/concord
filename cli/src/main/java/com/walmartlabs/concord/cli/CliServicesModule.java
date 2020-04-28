@@ -21,38 +21,37 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.walmartlabs.concord.cli.runner.CliCheckpointService;
-import com.walmartlabs.concord.cli.runner.CliDockerService;
-import com.walmartlabs.concord.cli.runner.CliSecretService;
+import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultPersistenceService;
-import com.walmartlabs.concord.runtime.v2.runner.DefaultSynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
-import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
-import com.walmartlabs.concord.sdk.DockerService;
-import com.walmartlabs.concord.sdk.SecretService;
 
 import java.nio.file.Path;
 
 public class CliServicesModule extends AbstractModule {
 
     private final Path secretStoreDir;
+    private final Path workDir;
 
-    public CliServicesModule(Path secretStoreDir) {
+    public CliServicesModule(Path secretStoreDir, Path workDir) {
         this.secretStoreDir = secretStoreDir;
+        this.workDir = workDir;
     }
 
     @Override
     protected void configure() {
         install(new BaseRunnerModule());
 
-        bind(SecretService.class).toInstance(new CliSecretService(secretStoreDir));
+        CliSecretService secretService = new CliSecretService(secretStoreDir);
+
+        bind(com.walmartlabs.concord.sdk.SecretService.class).toInstance(new CliSecretServiceV1(secretService));
+        bind(com.walmartlabs.concord.runtime.v2.sdk.SecretService.class).toInstance(new CliSecretServiceV2(secretService, workDir));
+
+        bind(com.walmartlabs.concord.sdk.DockerService.class).to(CliDockerServiceV1.class);
+        bind(com.walmartlabs.concord.runtime.v2.sdk.DockerService.class).to(CliDockerServiceV2.class);
+
         bind(CheckpointService.class).to(CliCheckpointService.class);
-        bind(DockerService.class).to(CliDockerService.class);
         bind(PersistenceService.class).to(DefaultPersistenceService.class);
     }
 }

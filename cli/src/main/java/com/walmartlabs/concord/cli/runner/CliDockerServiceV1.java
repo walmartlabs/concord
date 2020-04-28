@@ -24,7 +24,7 @@ import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.DockerContainerSpec;
 import com.walmartlabs.concord.sdk.DockerService;
 
-public class CliDockerService implements DockerService {
+public class CliDockerServiceV1 implements DockerService {
 
     @Override
     public Process start(Context ctx, DockerContainerSpec spec) {
