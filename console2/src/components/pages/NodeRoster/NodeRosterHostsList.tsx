@@ -59,8 +59,8 @@ const NodeRosterHostsList = ({ forceRefresh }: ExternalProps) => {
         return apiListHosts(paginationFilter.offset, paginationFilter.limit, [], filter);
     }, [paginationFilter, filter]);
 
-    const { data, error } = useApi<PaginatedHostEntry>(fetchData, {
-        fetchOnMount: true,
+    const { data, error, isLoading } = useApi<PaginatedHostEntry>(fetchData, {
+        fetchOnMount: false,
         forceRequest: forceRefresh,
         dispatch: dispatch
     });
@@ -80,8 +80,6 @@ const NodeRosterHostsList = ({ forceRefresh }: ExternalProps) => {
         setSearchEnabled(valid);
     }, [hostFilter, processInstanceIdFilter]);
 
-    const disabled = data === undefined;
-
     return (
         <>
             <Menu secondary={true} style={{ marginTop: 0 }}>
@@ -90,13 +88,13 @@ const NodeRosterHostsList = ({ forceRefresh }: ExternalProps) => {
                         <Form.Group widths="equal" inline={true} style={{ margin: 0 }}>
                             <Form.Input
                                 placeholder="Hostname"
-                                disabled={disabled}
+                                disabled={isLoading}
                                 onChange={(ev, data) => setHostFilter(data.value)}
                             />
 
                             <Form.Input
                                 placeholder="Process ID"
-                                disabled={disabled}
+                                disabled={isLoading}
                                 maxLength={36}
                                 style={{ width: 305 }}
                                 error={processInstanceIdFilterError}
@@ -114,7 +112,7 @@ const NodeRosterHostsList = ({ forceRefresh }: ExternalProps) => {
                                     });
                                     resetOffset(0);
                                 }}
-                                disabled={disabled || !searchEnabled}
+                                disabled={isLoading || !searchEnabled}
                             />
                         </Form.Group>
                     </Form>
@@ -130,14 +128,14 @@ const NodeRosterHostsList = ({ forceRefresh }: ExternalProps) => {
                         disablePrevious={paginationFilter.offset === 0}
                         disableNext={!data?.next}
                         disableFirst={paginationFilter.offset === 0}
-                        disabled={disabled}
+                        disabled={isLoading}
                     />
                 </Menu.Item>
             </Menu>
 
             {error && <RequestErrorActivity error={error} />}
 
-            <Table celled={true} selectable={!disabled} style={disabled ? { opacity: 0.4 } : {}}>
+            <Table celled={true} selectable={!isLoading} style={isLoading ? { opacity: 0.4 } : {}}>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell collapsing={true}>Hostname</Table.HeaderCell>
