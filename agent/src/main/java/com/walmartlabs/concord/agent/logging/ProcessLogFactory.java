@@ -46,14 +46,15 @@ public class ProcessLogFactory {
     }
 
     public RedirectedProcessLog createRedirectedLog(UUID instanceId, boolean segmented) throws IOException {
+        Path dst = logDir.resolve(instanceId.toString());
+        if (Files.notExists(dst)) {
+            Files.createDirectories(dst);
+        }
+
         if (segmented) {
-            Path logSegmentsDir = logDir.resolve(instanceId.toString());
-            if (Files.notExists(logSegmentsDir)) {
-                Files.createDirectories(logSegmentsDir);
-            }
-            return new SegmentedProcessLog(logSegmentsDir, instanceId, logAppender, logStreamMaxDelay);
+            return new SegmentedProcessLog(dst, instanceId, logAppender, logStreamMaxDelay);
         } else {
-            return new RedirectedProcessLog(logDir, instanceId, logAppender, logStreamMaxDelay);
+            return new RedirectedProcessLog(dst, instanceId, logAppender, logStreamMaxDelay);
         }
     }
 

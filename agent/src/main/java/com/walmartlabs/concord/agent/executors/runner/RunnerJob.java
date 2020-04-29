@@ -65,7 +65,7 @@ public class RunnerJob {
                     processLogFactory.createRedirectedLog(jobRequest.getInstanceId(), runnerExecutorCfg.segmentedLogs()),
                     processLogFactory.createRemoteLog(jobRequest.getInstanceId()));
         } catch (IOException e) {
-            throw new ExecutionException("Error while creating runner log", e);
+            throw new ExecutionException("Error while creating the runner's log: " + e.getMessage(), e);
         }
 
         Path policyFile = payloadDir.resolve(Constants.Files.CONCORD_SYSTEM_DIR_NAME)
