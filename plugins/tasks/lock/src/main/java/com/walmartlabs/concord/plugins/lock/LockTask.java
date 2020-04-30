@@ -20,30 +20,19 @@ package com.walmartlabs.concord.plugins.lock;
  * =====
  */
 
-import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientFactory;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.LockResult;
-import com.walmartlabs.concord.client.ProcessLocksApi;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.InjectVariable;
 import com.walmartlabs.concord.sdk.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 
 @Named("lock")
 public class LockTask implements Task {
-
-    private static final Logger log = LoggerFactory.getLogger(LockTask.class);
-
-    private static final int RETRY_COUNT = 3;
-    private static final long RETRY_INTERVAL = 5000;
 
     private final ApiClientFactory apiClientFactory;
 
@@ -56,33 +45,15 @@ public class LockTask implements Task {
     }
 
     public void lock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {
-        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(context));
+        ApiClient apiClient = apiClientFactory.create(context);
 
-        log.info("Locking '{}' with scope '{}'", lockName, scope);
-
-        LockResult lock = withRetry(() -> api.tryLock(UUID.fromString(instanceId), lockName, scope));
-
-        log.info("Locking '{}' with scope '{}' -> {}", lockName, scope, lock.isAcquired());
-
-        if (lock.isAcquired()) {
-            return;
+        if (!LockUtils.lock(UUID.fromString(instanceId), lockName, scope, apiClient)) {
+            context.suspend(lockName);
         }
-
-        context.suspend(lockName);
     }
 
     public void unlock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {
-        ProcessLocksApi api = new ProcessLocksApi(apiClientFactory.create(context));
-
-        log.info("Unlocking '{}' with scope '{}'", lockName, scope);
-        withRetry(() -> {
-            api.unlock(UUID.fromString(instanceId), lockName, scope);
-            return null;
-        });
-        log.info("Unlocking '{}' with scope '{}' -> done", lockName, scope);
-    }
-
-    private static <T> T withRetry(Callable<T> c) throws ApiException {
-        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, c);
+        ApiClient apiClient = apiClientFactory.create(context);
+        LockUtils.unlock(UUID.fromString(instanceId), lockName, scope, apiClient);
     }
 }
