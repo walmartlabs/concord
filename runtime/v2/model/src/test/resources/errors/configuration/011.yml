@@ -1,0 +1,12 @@
+configuration:
+  entryPoint: "main-test"
+  dependencies:
+    - "d1"
+    - "d2"
+  arguments:
+    k: "v"
+  requirements:
+    k: "v"
+  processTimeout: "PT1H"
+  exclusive:
+    mode: "cancel"

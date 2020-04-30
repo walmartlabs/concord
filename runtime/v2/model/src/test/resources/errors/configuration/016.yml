@@ -6,7 +6,7 @@ configuration:
   arguments:
     k: "v"
   requirements:
-    k: "v1"
+    k: "v"
   processTimeout: "PT1H"
   exclusive:
     group: "X"
@@ -14,7 +14,7 @@ configuration:
   events:
     recordTaskInVars: true
     inVarsBlacklist:
-      - "pass"
-    recordTaskOutVars: true
-    outVarsBlacklist:
-      - "bass"
+      - "password"
+      - "apiToken"
+      - "apiKey"
+    recordTaskOutVars: 1

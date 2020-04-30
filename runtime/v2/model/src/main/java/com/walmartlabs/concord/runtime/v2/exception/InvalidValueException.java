@@ -71,7 +71,11 @@ public class InvalidValueException extends YamlProcessingException {
         private JsonLocation location;
 
         public Builder expected(String ... expected) {
-            this.expected = Arrays.asList(expected);
+            return expected(Arrays.asList(expected));
+        }
+
+        public Builder expected(List<String> expected) {
+            this.expected = expected;
             return this;
         }
 

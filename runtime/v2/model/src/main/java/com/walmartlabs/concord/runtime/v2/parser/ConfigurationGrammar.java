@@ -21,19 +21,41 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
-import com.walmartlabs.concord.runtime.v2.model.ImmutableProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 
 /**
  * Grammar for the {@code configuration} section of Concord YAML files.
  */
 public final class ConfigurationGrammar {
+
+    private static final Parser<Atom, ExclusiveModeConfiguration> exclusive =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ImmutableExclusiveModeConfiguration::builder,
+                            o -> options(
+                                    mandatory("group", stringVal.map(o::group)),
+                                    optional("mode", enumVal(ExclusiveModeConfiguration.Mode.class).map(o::mode))))
+                            .map(ImmutableExclusiveModeConfiguration.Builder::build));
+
+    private static final Parser<Atom, ExclusiveModeConfiguration> exclusiveVal =
+        orError(exclusive, YamlValueType.EXCLUSIVE_MODE);
+
+    private static final Parser<Atom, EventConfiguration> events =
+            betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
+                    with(ImmutableEventConfiguration::builder,
+                            o -> options(
+                                    optional("recordTaskInVars", booleanVal.map(o::recordTaskInVars)),
+                                    optional("inVarsBlacklist", stringArrayVal.map(o::inVarsBlacklist)),
+                                    optional("recordTaskOutVars", booleanVal.map(o::recordTaskOutVars)),
+                                    optional("outVarsBlacklist", stringArrayVal.map(o::outVarsBlacklist))))
+                            .map(ImmutableEventConfiguration.Builder::build));
+
+    private static final Parser<Atom, EventConfiguration> eventsVal =
+            orError(events, YamlValueType.EVENTS_CFG);
 
     private static final Parser<Atom, ProcessConfiguration> cfg =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
@@ -42,6 +64,10 @@ public final class ConfigurationGrammar {
                                     optional("runtime", stringVal.map(o::runtime)),
                                     optional("entryPoint", stringVal.map(o::entryPoint)),
                                     optional("dependencies", stringArrayVal.map(o::dependencies)),
+                                    optional("requirements", mapVal.map(o::requirements)),
+                                    optional("processTimeout", durationVal.map(o::processTimeout)),
+                                    optional("exclusive", exclusiveVal.map(o::exclusive)),
+                                    optional("events", eventsVal.map(o::events)),
                                     optional("arguments", mapVal.map(o::arguments))))
                             .map(ImmutableProcessConfiguration.Builder::build));
 

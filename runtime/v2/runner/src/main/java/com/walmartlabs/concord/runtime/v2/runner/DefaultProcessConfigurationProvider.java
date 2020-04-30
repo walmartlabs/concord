@@ -21,6 +21,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -89,6 +91,9 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
 
         // TODO singleton?
         ObjectMapper om = new ObjectMapper();
+        om.registerModule(new Jdk8Module());
+        om.registerModule(new JavaTimeModule());
+
         try (InputStream in = Files.newInputStream(p)) {
             return ProcessConfiguration.builder()
                     .from(om.readValue(in, ProcessConfiguration.class))

@@ -30,6 +30,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +98,17 @@ public interface ProcessConfiguration extends Serializable {
     default Map<String, Map<String, Object>> defaultTaskVariables() {
         return Collections.emptyMap();
     }
+
+    @Value.Default
+    default Map<String, Object> requirements() {
+        return Collections.emptyMap();
+    }
+
+    @Nullable
+    Duration processTimeout();
+
+    @Nullable
+    ExclusiveModeConfiguration exclusive();
 
     static ImmutableProcessConfiguration.Builder builder() {
         return ImmutableProcessConfiguration.builder();

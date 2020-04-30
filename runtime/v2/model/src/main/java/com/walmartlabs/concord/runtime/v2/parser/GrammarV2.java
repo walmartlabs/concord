@@ -21,15 +21,19 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
+import com.walmartlabs.concord.runtime.v2.exception.InvalidValueException;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidValueTypeException;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import io.takari.parc.Parser;
 import io.takari.parc.Seq;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.runtime.v2.parser.CheckpointGrammar.checkpoint;
 import static com.walmartlabs.concord.runtime.v2.parser.ConditionalExpressionsGrammar.ifExpr;
@@ -68,6 +72,25 @@ public final class GrammarV2 {
     });
     public static final Parser<Atom, Integer> maybeInt = _val(JsonToken.VALUE_NUMBER_INT).map(v -> v.getValue(YamlValueType.INT));
     public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
+    public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);
+
+    public static <E extends Enum<E>> Parser<Atom, E> enumVal(Class<E> enumData) {
+        return value.map(vv -> {
+            String v = vv.getValue(YamlValueType.STRING);
+
+            for (Enum<E> enumVal: enumData.getEnumConstants()) {
+                if (enumVal.name().equals(v)) {
+                    return Enum.valueOf(enumData, v);
+                }
+            }
+
+            throw InvalidValueException.builder()
+                    .actual(v)
+                    .expected(Arrays.stream(enumData.getEnumConstants()).map(Enum::name).collect(Collectors.toList()))
+                    .location(vv.getLocation())
+                    .build();
+        });
+    }
 
     public static final Parser.Ref<Atom, List<Step>> stepsVal = Parser.ref();
 
@@ -210,6 +233,25 @@ public final class GrammarV2 {
 
         YamlList list = asList(v, YamlValueType.PATTERN_OR_ARRAY);
         return list.getListValue(GrammarV2::regexpConverter);
+    }
+
+    private static Duration durationConverter(YamlValue v) {
+        if (v.getType() != YamlValueType.STRING) {
+            // will throw exception
+            v.getValue(YamlValueType.DURATION);
+        }
+
+        String maybePattern = v.getValue(YamlValueType.STRING);
+        try {
+            return Duration.parse(maybePattern);
+        } catch (DateTimeParseException e) {
+            throw new InvalidValueTypeException.Builder()
+                    .location(v.getLocation())
+                    .expected(YamlValueType.DURATION)
+                    .actual(v.getType())
+                    .message(e.getMessage())
+                    .build();
+        }
     }
 
     private GrammarV2() {
