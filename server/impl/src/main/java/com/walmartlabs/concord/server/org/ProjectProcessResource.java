@@ -87,6 +87,7 @@ public class ProjectProcessResource implements Resource {
                                   ProcessQueueDao queueDao,
                                   ProcessQueueManager processQueueManager,
                                   FormServiceV1 formService,
+                                  ResponseTemplates responseTemplates,
                                   OrganizationManager orgManager,
                                   ProjectDao projectDao,
                                   RepositoryDao repositoryDao) {
@@ -96,7 +97,7 @@ public class ProjectProcessResource implements Resource {
         this.queueDao = queueDao;
         this.processQueueManager = processQueueManager;
         this.formService = formService;
-        this.responseTemplates = new ResponseTemplates();
+        this.responseTemplates = responseTemplates;
         this.orgManager = orgManager;
         this.projectDao = projectDao;
         this.repositoryDao = repositoryDao;
