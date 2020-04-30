@@ -65,7 +65,13 @@ public class Run implements Callable<Integer> {
     private Path depsCacheDir = Paths.get(System.getProperty("user.dir"));
 
     @Option(names = {"--secret-dir"}, description = "secret store dir")
-    private Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secret");
+    private Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
+
+    @Option(names = {"--vault-dir"}, description = "vault dir")
+    private Path vaultDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("vaults");
+
+    @Option(names = {"--vault-id"}, description = "vault id")
+    private String vaultId = "default";
 
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     private boolean verbose = false;
@@ -79,8 +85,15 @@ public class Run implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }
 
-        ProjectLoaderV2.Result loadResult = new ProjectLoaderV2(new NoopImportManager())
-                .load(targetDir, new NoopImportsNormalizer());
+        ProjectLoaderV2.Result loadResult;
+        try {
+            loadResult = new ProjectLoaderV2(new NoopImportManager())
+                    .load(targetDir, new NoopImportsNormalizer());
+        } catch (Exception e) {
+            System.err.println("Project load error: " + e.getMessage());
+            return -1;
+        }
+
         ProcessDefinition processDefinition = loadResult.getProjectDefinition();
 
         UUID instanceId = UUID.randomUUID();
@@ -103,7 +116,7 @@ public class Run implements Callable<Integer> {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies()),
-                new CliServicesModule(secretStoreDir, targetDir))
+                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId)))
                 .create();
 
         Runner runner = new Runner.Builder()

@@ -37,17 +37,19 @@ public class CliServicesModule extends AbstractModule {
 
     private final Path secretStoreDir;
     private final Path workDir;
+    private final VaultProvider vaultProvider;
 
-    public CliServicesModule(Path secretStoreDir, Path workDir) {
+    public CliServicesModule(Path secretStoreDir, Path workDir, VaultProvider vaultProvider) {
         this.secretStoreDir = secretStoreDir;
         this.workDir = workDir;
+        this.vaultProvider = vaultProvider;
     }
 
     @Override
     protected void configure() {
         install(new BaseRunnerModule());
 
-        CliSecretService secretService = new CliSecretService(secretStoreDir);
+        CliSecretService secretService = new CliSecretService(secretStoreDir, vaultProvider);
 
         bind(com.walmartlabs.concord.sdk.SecretService.class).toInstance(new CliSecretServiceV1(secretService));
         bind(com.walmartlabs.concord.runtime.v2.sdk.SecretService.class).toInstance(new CliSecretServiceV2(secretService, workDir));

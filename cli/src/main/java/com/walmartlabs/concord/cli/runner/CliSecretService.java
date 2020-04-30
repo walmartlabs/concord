@@ -20,6 +20,7 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
+import com.walmartlabs.concord.cli.VaultProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.sdk.Constants;
 
@@ -29,9 +30,11 @@ import java.nio.file.Path;
 public class CliSecretService {
 
     private final Path secretStoreDir;
+    private final VaultProvider vaultProvider;
 
-    public CliSecretService(Path secretStoreDir) {
+    public CliSecretService(Path secretStoreDir, VaultProvider vaultProvider) {
         this.secretStoreDir = secretStoreDir;
+        this.vaultProvider = vaultProvider;
     }
 
     public SecretService.KeyPair exportKeyAsFile(Path workDir, String orgName, String name, String password) throws Exception {
@@ -49,7 +52,7 @@ public class CliSecretService {
         }
 
         if (Files.notExists(privateKey)) {
-            throw new RuntimeException("Prvate key '" + privateKey + "' not found");
+            throw new RuntimeException("Private key '" + privateKey + "' not found");
         }
 
         Path dest = workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
@@ -62,5 +65,9 @@ public class CliSecretService {
                 .privateKey(tmpPrivateKey)
                 .publicKey(tmpPublicKey)
                 .build();
+    }
+
+    public String decryptString(String encryptedString) {
+        return vaultProvider.getValue(encryptedString);
     }
 }
