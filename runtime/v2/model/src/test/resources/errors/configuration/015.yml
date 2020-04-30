@@ -6,15 +6,11 @@ configuration:
   arguments:
     k: "v"
   requirements:
-    k: "v1"
+    k: "v"
   processTimeout: "PT1H"
   exclusive:
     group: "X"
     mode: "cancel"
   events:
     recordTaskInVars: true
-    inVarsBlacklist:
-      - "pass"
-    recordTaskOutVars: true
-    outVarsBlacklist:
-      - "bass"
+    inVarsBlacklist: 1

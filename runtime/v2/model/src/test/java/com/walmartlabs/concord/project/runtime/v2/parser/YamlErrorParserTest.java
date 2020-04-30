@@ -1780,11 +1780,136 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [runtime, entryPoint, dependencies, arguments]. Remove invalid options and/or fix indentation\n" +
+                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [runtime, entryPoint, dependencies, requirements, processTimeout, exclusive, events, arguments]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'configuration' @ line: 1, col: 1";
 
         assertErrorMessage("errors/configuration/006.yml", msg);
+    }
+
+    @Test
+    public void test1308() throws Exception {
+        String msg =
+                "(008.yml): Error @ line: 8, col: 17. Invalid value type, expected: OBJECT, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'requirements' @ line: 8, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/008.yml", msg);
+    }
+
+    @Test
+    public void test1309() throws Exception {
+        String msg =
+                "(009.yml): Error @ line: 10, col: 19. Invalid value type, expected: ISO 8601 DURATION, got: STRING. Error info: Text cannot be parsed to a Duration\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'processTimeout' @ line: 10, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/009.yml", msg);
+    }
+
+    @Test
+    public void test1310() throws Exception {
+        String msg =
+                "(010.yml): Error @ line: 11, col: 14. Invalid value type, expected: EXCLUSIVE_MODE, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'exclusive' @ line: 11, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/010.yml", msg);
+    }
+
+    @Test
+    public void test1311() throws Exception {
+        String msg =
+                "(011.yml): Error @ n/a. Mandatory parameter 'group' not found\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'exclusive' @ line: 11, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/011.yml", msg);
+    }
+
+    @Test
+    public void test1312() throws Exception {
+        String msg =
+                "(012.yml): Error @ line: 13, col: 12. Unknown options: ['mode1' [STRING] @ line: 13, col: 12], expected: [group, mode]. Remove invalid options and/or fix indentation\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'exclusive' @ line: 11, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/012.yml", msg);
+    }
+
+    @Test
+    public void test1313() throws Exception {
+        String msg =
+                "(013.yml): Error @ line: 13, col: 11. Invalid value: canceL, expected: [cancel, wait]\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'mode' @ line: 13, col: 5\n" +
+                        "\t\t'exclusive' @ line: 11, col: 3\n" +
+                        "\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/013.yml", msg);
+    }
+
+    @Test
+    public void test1314() throws Exception {
+        String msg =
+                "(014.yml): Error @ line: 14, col: 11. Invalid value type, expected: EVENTS_CONFIGURATION, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'events' @ line: 14, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/014.yml", msg);
+    }
+
+    @Test
+    public void test1315() throws Exception {
+        String msg =
+                "(015.yml): Error @ line: 16, col: 22. Invalid value type, expected: ARRAY_OF_STRING, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'inVarsBlacklist' @ line: 16, col: 5\n" +
+                        "\t\t'events' @ line: 14, col: 3\n" +
+                        "\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/015.yml", msg);
+    }
+
+    @Test
+    public void test1316() throws Exception {
+        String msg =
+                "(016.yml): Error @ line: 20, col: 24. Invalid value type, expected: BOOLEAN, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'recordTaskOutVars' @ line: 20, col: 5\n" +
+                        "\t\t'events' @ line: 14, col: 3\n" +
+                        "\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/016.yml", msg);
+    }
+
+    @Test
+    public void test1317() throws Exception {
+        String msg =
+                "(017.yml): Error @ line: 21, col: 23. Invalid value type, expected: ARRAY_OF_STRING, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'outVarsBlacklist' @ line: 21, col: 5\n" +
+                        "\t\t'events' @ line: 14, col: 3\n" +
+                        "\t\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/017.yml", msg);
+    }
+
+    @Test
+    public void test1318() throws Exception {
+        String msg =
+                "(018.yml): Error @ line: 23, col: 11. Unknown options: ['trash' [NULL] @ line: 23, col: 11], expected: [recordTaskInVars, inVarsBlacklist, recordTaskOutVars, outVarsBlacklist]. Remove invalid options and/or fix indentation\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'events' @ line: 14, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/018.yml", msg);
     }
 
     @Test

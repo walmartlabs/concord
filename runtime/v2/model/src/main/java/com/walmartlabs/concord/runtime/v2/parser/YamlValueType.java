@@ -25,6 +25,7 @@ import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.runtime.v2.model.*;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,6 +45,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<List<String>> ARRAY_OF_STRING = array("ARRAY_OF_STRING", STRING);
     public static final YamlValueType<Map<String, Serializable>> OBJECT = map("OBJECT");
     public static final YamlValueType<Object> PATTERN_OR_ARRAY = type("PATTERN_OR_ARRAY");
+    public static final YamlValueType<Duration> DURATION = type("ISO 8601 DURATION");
 
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<TaskCall> TASK = type("TASK");
@@ -88,6 +90,8 @@ public final class YamlValueType<T> {
     public static final YamlValueType<IfStep> IF = type("IF");
     public static final YamlValueType<SwitchStep> SWITCH = type("SWITCH");
     public static final YamlValueType<Resources> RESOURCES = type("RESOURCES");
+    public static final YamlValueType<ExclusiveModeConfiguration> EXCLUSIVE_MODE = type("EXCLUSIVE_MODE");
+    public static final YamlValueType<EventConfiguration> EVENTS_CFG = type("EVENTS_CONFIGURATION");
 
     private final String name;
 

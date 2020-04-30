@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.junit.Test;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -283,6 +284,15 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals("main-test", cfg.entryPoint());
         assertEquals(Arrays.asList("d1", "d2"), cfg.dependencies());
         assertEquals(Collections.singletonMap("k", "v"), cfg.arguments());
+        assertEquals(Collections.singletonMap("k", "v1"), cfg.requirements());
+        assertEquals(Duration.parse("PT1H"), cfg.processTimeout());
+        assertEquals(ExclusiveModeConfiguration.of("X", ExclusiveModeConfiguration.Mode.cancel), cfg.exclusive());
+        assertEquals(EventConfiguration.builder()
+                .recordTaskInVars(true)
+                .inVarsBlacklist(Collections.singletonList("pass"))
+                .recordTaskOutVars(true)
+                .outVarsBlacklist(Collections.singletonList("bass"))
+                .build(), cfg.events());
     }
 
     @Test
