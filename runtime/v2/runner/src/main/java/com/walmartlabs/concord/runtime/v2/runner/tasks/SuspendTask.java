@@ -37,11 +37,7 @@ public class SuspendTask implements Task {
     public Serializable execute(TaskContext ctx) {
         Map<String, Object> input = ctx.input();
         String eventRef = (String) input.get("0");
-
-        State s = ctx.execution().state();
-
-        ThreadId eid = ctx.execution().currentThreadId();
-        s.peekFrame(eid).push(new Suspend(eventRef));
+        ctx.suspend(eventRef);
         return null;
     }
 }

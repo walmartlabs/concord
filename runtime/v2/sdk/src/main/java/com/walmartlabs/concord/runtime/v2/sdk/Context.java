@@ -64,5 +64,14 @@ public interface Context {
      */
     <T> T eval(Object v, Class<T> type);
 
+    /**
+     * Suspends the current execution thread.
+     * After the calling this method, the process will be stopped after
+     * the current command's execution is complete.
+     * On resume, the process execution will continue from
+     * the next planned step.
+     */
+    void suspend(String eventName);
+
     // TODO FormService
 }

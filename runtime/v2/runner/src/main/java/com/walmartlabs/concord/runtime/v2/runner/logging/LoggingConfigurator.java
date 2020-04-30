@@ -112,6 +112,8 @@ public class LoggingConfigurator {
 
         sa.start();
 
+        loggerContext.resetTurboFilterList();
+
         Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         root.detachAppender(DEFAULT_ROOT_APPENDER_NAME);
         root.addAppender(sa);

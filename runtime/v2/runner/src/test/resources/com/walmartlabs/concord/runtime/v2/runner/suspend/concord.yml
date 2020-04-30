@@ -1,0 +1,6 @@
+flows:
+  default:
+    - ${log.info("aaaa")}
+    - suspend: ev1
+    - ${log.info("bbbb")}
+    - ${log.info(testValue)}

@@ -74,4 +74,9 @@ public class IntermediateGlobalsContext implements Context {
         ExpressionEvaluator ee = rt.getService(ExpressionEvaluator.class);
         return ee.eval(this, v, type);
     }
+
+    @Override
+    public void suspend(String eventName) {
+        delegate.suspend(eventName);
+    }
 }

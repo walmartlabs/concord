@@ -28,9 +28,6 @@ import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
 import com.walmartlabs.concord.sdk.MapUtils;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.commands.Suspend;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +51,7 @@ public class SleepTaskV2 implements Task {
         this.processInstanceId = processInstanceId;
     }
 
+    @SuppressWarnings("unused")
     public void ms(long t) {
         SleepTaskUtils.sleep(t);
     }
@@ -97,9 +95,7 @@ public class SleepTaskV2 implements Task {
             return null;
         });
 
-        ThreadId eid = ctx.execution().currentThreadId();
-        State s = ctx.execution().state();
-        s.peekFrame(eid).push(new Suspend(Constants.RESUME_EVENT_NAME));
+        ctx.suspend(Constants.RESUME_EVENT_NAME);
     }
 
     private static Instant getUntil(TaskContext ctx) {

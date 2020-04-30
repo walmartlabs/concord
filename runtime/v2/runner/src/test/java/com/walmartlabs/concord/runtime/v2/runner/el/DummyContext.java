@@ -65,4 +65,9 @@ public class DummyContext implements Context {
     public <T> T eval(Object v, Class<T> type) {
         throw new IllegalStateException("Not implemented");
     }
+
+    @Override
+    public void suspend(String eventName) {
+        throw new IllegalStateException("Not implemented");
+    }
 }

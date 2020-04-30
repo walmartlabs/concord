@@ -70,6 +70,11 @@ public class TaskContextImpl implements TaskContext {
     }
 
     @Override
+    public void suspend(String eventName) {
+        delegate.suspend(eventName);
+    }
+
+    @Override
     public String taskName() {
         return taskName;
     }
