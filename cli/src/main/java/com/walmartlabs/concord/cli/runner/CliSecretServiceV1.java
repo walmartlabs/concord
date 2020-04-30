@@ -83,7 +83,7 @@ public class CliSecretServiceV1 implements SecretService {
 
     @Override
     public String decryptString(Context ctx, String instanceId, String s) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
+        return delegate.decryptString(s);
     }
 
     @Override

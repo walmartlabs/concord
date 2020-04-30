@@ -22,8 +22,6 @@ package com.walmartlabs.concord.cli.runner;
 
 import com.walmartlabs.concord.sdk.DockerContainerSpec;
 
-import java.io.IOException;
-
 public class CliDockerServiceV2 implements com.walmartlabs.concord.runtime.v2.sdk.DockerService {
 
     @Override
