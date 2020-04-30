@@ -411,6 +411,21 @@ public class MainTest {
         }
     }
 
+    @Test
+    public void testSuspend() throws Exception {
+        deploy("suspend");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("testValue", "XYZ")
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*aaa.*");
+
+        log = resume("ev1", ProcessConfiguration.builder().build());
+        assertLog(log, ".*XYZ.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

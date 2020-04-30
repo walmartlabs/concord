@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
+import com.walmartlabs.concord.plugins.sleep.Constants;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
@@ -30,6 +31,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.commands.Suspend;
 
 import java.nio.file.Path;
 import java.util.UUID;
@@ -131,5 +133,10 @@ public class ContextImpl implements Context {
     @Override
     public <T> T eval(Object v, Class<T> type) {
         return expressionEvaluator.eval(this, v, type);
+    }
+
+    @Override
+    public void suspend(String eventName) {
+        state.peekFrame(currentThreadId).push(new Suspend(eventName));
     }
 }
