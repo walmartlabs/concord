@@ -183,7 +183,9 @@ public class ProcessQueueDao extends AbstractDao {
             q.set(PROCESS_QUEUE.EXCLUSIVE, objectMapper.toJSONB(exclusive));
         }
 
-        q.set(PROCESS_QUEUE.RUNTIME, runtime);
+        if (runtime != null) {
+            q.set(PROCESS_QUEUE.RUNTIME, runtime);
+        }
 
         int i = q
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))

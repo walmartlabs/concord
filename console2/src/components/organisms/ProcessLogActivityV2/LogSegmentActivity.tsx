@@ -84,6 +84,7 @@ const LogSegmentActivity = ({
     const [visibleData, setVisibleData] = useState<string[]>([]);
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
+    const [continueFetch, setContinueFetch] = useState<boolean>(false);
 
     const fetchData = useCallback(
         async (range: LogRange) => {
@@ -137,6 +138,13 @@ const LogSegmentActivity = ({
         }
     }, [data]);
 
+    useEffect(() => {
+        const isFinalOrSuspended =
+            isFinal(processStatus) || processStatus === ProcessStatus.SUSPENDED;
+        const isFinalSegmentStatus = status !== SegmentStatus.RUNNING;
+        setContinueFetch(!isFinalOrSuspended && !isFinalSegmentStatus);
+    }, [processStatus, status]);
+
     const error = usePolling(
         fetchData,
         range,
@@ -144,7 +152,7 @@ const LogSegmentActivity = ({
         setLoading,
         refresh,
         stopPolling,
-        processStatus
+        continueFetch
     );
 
     if (error) {
@@ -190,7 +198,7 @@ const usePolling = (
     setLoading: Dispatch<SetStateAction<boolean>>,
     refresh: boolean,
     stopPollingIndicator: boolean,
-    processStatus?: ProcessStatus
+    continueFetch?: boolean
 ): RequestError | undefined => {
     const poll = useRef<number | undefined>(undefined);
     const [error, setError] = useState<RequestError>();
@@ -217,7 +225,7 @@ const usePolling = (
             } finally {
                 setLoading(false);
 
-                if (!stopPollingIndicator && !cancelled && !isFinal(processStatus)) {
+                if (!stopPollingIndicator && !cancelled && continueFetch) {
                     poll.current = setTimeout(() => fetchData(r), DATA_FETCH_INTERVAL);
                 } else {
                     stopPolling();
@@ -235,7 +243,7 @@ const usePolling = (
             cancelled = true;
             stopPolling();
         };
-    }, [request, setData, rangeRef, setLoading, refresh, stopPollingIndicator, processStatus]);
+    }, [request, setData, rangeRef, setLoading, refresh, stopPollingIndicator, continueFetch]);
 
     const stopPolling = () => {
         if (poll.current) {
