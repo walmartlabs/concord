@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.runtime.v2.runner;
 
 /*-
  * *****
@@ -20,11 +20,24 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 
-public interface RequestErrorHandler {
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
-    boolean handle(HttpServletRequest request, HttpServletResponse response) throws IOException;
+@Singleton
+public class DefaultTaskVariablesProvider implements Provider<DefaultTaskVariablesService> {
+
+    private final DefaultTaskVariablesService service;
+
+    @Inject
+    public DefaultTaskVariablesProvider(ProcessConfiguration cfg) {
+        this.service = new MapBackedDefaultTaskVariablesService(cfg.defaultTaskVariables());
+    }
+
+    @Override
+    public DefaultTaskVariablesService get() {
+        return service;
+    }
 }

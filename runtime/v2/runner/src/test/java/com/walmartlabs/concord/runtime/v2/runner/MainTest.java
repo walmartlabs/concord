@@ -467,12 +467,20 @@ public class MainTest {
         PrintStream out = new PrintStream(baos);
         System.setOut(out);
 
+        AbstractModule runtimeModule = new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(DefaultTaskVariablesService.class).toProvider(new DefaultTaskVariablesProvider(processConfiguration));
+            }
+        };
+
         byte[] log;
         try {
             Injector injector = new InjectorFactory(new WorkingDirectory(workDir),
                     runnerCfg.build(),
                     () -> processConfiguration,
-                    testServices)
+                    testServices,
+                    runtimeModule)
                     .create();
 
             injector.getInstance(Main.class).execute();

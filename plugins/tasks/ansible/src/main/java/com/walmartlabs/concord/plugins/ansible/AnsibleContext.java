@@ -21,6 +21,7 @@ package com.walmartlabs.concord.plugins.ansible;
  */
 
 import com.walmartlabs.concord.common.AllowNulls;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -41,7 +42,7 @@ public interface AnsibleContext {
     Path tmpDir();
 
     default boolean debug() {
-        return getBoolean(args(), TaskParams.DEBUG_KEY.getKey(), false);
+        return getBoolean(argsWithDefaults(), TaskParams.DEBUG_KEY.getKey(), false);
     }
 
     @AllowNulls
@@ -61,6 +62,10 @@ public interface AnsibleContext {
 
     @Nullable
     Integer retryCount();
+
+    default Map<String, Object> argsWithDefaults() {
+        return ConfigurationUtils.deepMerge(defaults(), args());
+    }
 
     static ImmutableAnsibleContext.Builder builder() {
         return ImmutableAnsibleContext.builder();
