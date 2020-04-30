@@ -45,6 +45,7 @@ public class DefaultRunnerModule extends AbstractModule {
 
         bind(ApiClient.class).toProvider(ApiClientProvider.class);
         bind(CheckpointService.class).to(DefaultCheckpointService.class);
+        bind(DefaultTaskVariablesService.class).toProvider(DefaultTaskVariablesProvider.class);
         bind(DockerService.class).to(DefaultDockerService.class);
         bind(FileService.class).to(DefaultFileService.class);
         bind(PersistenceService.class).to(DefaultPersistenceService.class);

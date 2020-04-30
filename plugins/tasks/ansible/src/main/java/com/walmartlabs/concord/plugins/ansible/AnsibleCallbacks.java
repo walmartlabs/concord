@@ -39,7 +39,7 @@ public class AnsibleCallbacks {
 
     public static AnsibleCallbacks process(AnsibleContext ctx, AnsibleConfig config) {
         return new AnsibleCallbacks(ctx.workDir(), ctx.tmpDir(), ctx.debug())
-                .parse(ctx.args())
+                .parse(ctx.argsWithDefaults())
                 .enrich(config)
                 .write();
     }

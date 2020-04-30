@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot;
+package com.walmartlabs.concord.runtime.v2.runner;
 
 /*-
  * *****
@@ -20,11 +20,19 @@ package com.walmartlabs.concord.server.boot;
  * =====
  */
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 
-public interface RequestErrorHandler {
+public class MapBackedDefaultTaskVariablesService implements DefaultTaskVariablesService {
 
-    boolean handle(HttpServletRequest request, HttpServletResponse response) throws IOException;
+    private final Map<String, Map<String, Object>> variables;
+
+    public MapBackedDefaultTaskVariablesService(Map<String, Map<String, Object>> variables) {
+        this.variables = Collections.unmodifiableMap(variables);
+    }
+
+    @Override
+    public Map<String, Object> get(String taskName) {
+        return variables.getOrDefault(taskName, Collections.emptyMap());
+    }
 }

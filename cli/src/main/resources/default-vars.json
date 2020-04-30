@@ -1,0 +1,5 @@
+{
+  "ansible": {
+    "disableConcordCallbacks": true
+  }
+}

@@ -20,14 +20,18 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultPersistenceService;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
+import com.walmartlabs.concord.runtime.v2.runner.MapBackedDefaultTaskVariablesService;
 import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public class CliServicesModule extends AbstractModule {
 
@@ -53,5 +57,16 @@ public class CliServicesModule extends AbstractModule {
 
         bind(CheckpointService.class).to(CliCheckpointService.class);
         bind(PersistenceService.class).to(DefaultPersistenceService.class);
+
+        bind(DefaultTaskVariablesService.class).toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Map<String, Object>> readDefaultVars() {
+        try {
+            return new ObjectMapper().readValue(CliServicesModule.class.getResourceAsStream("/default-vars.json"), Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }

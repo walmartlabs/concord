@@ -21,7 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariables;
+import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
 import com.walmartlabs.concord.runtime.v2.sdk.DefaultVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
@@ -35,11 +35,11 @@ import java.util.Map;
 @Singleton
 public class DefaultVariableInjector {
 
-    private final DefaultTaskVariables defaultVariables;
+    private final DefaultTaskVariablesService defaultVariables;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public DefaultVariableInjector(DefaultTaskVariables defaultVariables) {
+    public DefaultVariableInjector(DefaultTaskVariablesService defaultVariables) {
         this.defaultVariables = defaultVariables;
         this.objectMapper = new ObjectMapper();
     }
@@ -67,14 +67,6 @@ public class DefaultVariableInjector {
             return variables;
         }
         return objectMapper.convertValue(variables, type);
-    }
-
-    private static String getTaskName(Task task) {
-        Named n = task.getClass().getAnnotation(Named.class);
-        if (n != null) {
-            return n.value();
-        }
-        return null;
     }
 
     private static String getAnnotationValue(Field f, String defaultValue) {

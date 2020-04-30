@@ -20,25 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.Map;
 
-@Named
-// TODO make an interface, extract as a "service"
-public class DefaultTaskVariables {
+public interface DefaultTaskVariablesService {
 
-    private final Map<String, Map<String, Object>> variables;
-
-    @Inject
-    public DefaultTaskVariables(ProcessConfiguration cfg) {
-        this.variables = Collections.unmodifiableMap(cfg.defaultTaskVariables());
-    }
-
-    public Map<String, Object> get(String taskName) {
-        return variables.getOrDefault(taskName, Collections.emptyMap());
+    default Map<String, Object> get(String taskName) {
+        return Collections.emptyMap();
     }
 }
