@@ -54,6 +54,7 @@ public class HttpServer {
 
     @Inject
     public HttpServer(ServerConfiguration cfg,
+                      Set<RequestErrorHandler> requestErrorHandlers,
                       Set<ServletContextListener> contextListeners,
                       Set<HttpServlet> servlets,
                       Set<ServletHolder> servletHolders,
@@ -83,6 +84,9 @@ public class HttpServer {
         // servlets, filters, etc...
         ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         contextHandler.setContextPath("/");
+
+        // custom 404s and other error handlers
+        contextHandler.setErrorHandler(new CustomErrorHandler(requestErrorHandlers));
 
         // session timeout
         SessionHandler sessionHandler = contextHandler.getSessionHandler();

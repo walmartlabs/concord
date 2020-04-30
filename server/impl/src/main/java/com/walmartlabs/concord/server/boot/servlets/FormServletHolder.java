@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.boot.filters;
+package com.walmartlabs.concord.server.boot.servlets;
 
 /*-
  * *****
