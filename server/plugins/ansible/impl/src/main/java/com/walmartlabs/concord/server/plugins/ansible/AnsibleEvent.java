@@ -67,7 +67,7 @@ public class AnsibleEvent extends AbstractAnsibleEvent {
     }
 
     public boolean isSetupTask() {
-        return "gather_facts".equals(getAction());
+        return "gather_facts".equals(getAction()) || "setup".equals(getAction());
     }
 
     public boolean isHandler() {
