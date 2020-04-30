@@ -19,14 +19,13 @@
  */
 
 import * as React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ConcordId } from '../../../api/common';
 import { isFinal, ProcessStatus } from '../../../api/process';
 
 import './styles.css';
-import { useCallback, useEffect } from 'react';
 import { listLogSegments as apiListLogSegments, LogSegmentEntry } from '../../../api/process/log';
-import { useState } from 'react';
 import { usePolling } from '../../../api/usePolling';
 import RequestErrorActivity from '../RequestErrorActivity';
 import LogSegmentActivity from './LogSegmentActivity';
@@ -87,7 +86,7 @@ const ProcessLogActivityV2 = ({
         const offset = 0;
         const segments = await apiListLogSegments(instanceId, offset, limit);
         setSegments(segments.items);
-        return !isFinal(processStatus);
+        return !isFinal(processStatus) && processStatus !== ProcessStatus.SUSPENDED;
     }, [instanceId, processStatus]);
 
     const error = usePolling(fetchSegments, SEGMENT_FETCH_INTERVAL, loadingHandler, forceRefresh);
