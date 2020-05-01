@@ -36,7 +36,6 @@ import org.testcontainers.Testcontainers;
 import javax.mail.internet.MimeMessage;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class SmtpIT {
 

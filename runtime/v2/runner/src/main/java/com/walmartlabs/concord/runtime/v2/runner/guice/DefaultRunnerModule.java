@@ -28,11 +28,13 @@ import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.DefaultCheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.remote.DefaultProcessStatusCallback;
+import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.DockerService;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
+import com.walmartlabs.concord.svm.ExecutionListener;
 
 /**
  * Default set of services.
@@ -54,5 +56,9 @@ public class DefaultRunnerModule extends AbstractModule {
 
         Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
         taskCallListeners.addBinding().to(TaskCallEventRecordingListener.class);
+
+        Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+        executionListeners.addBinding().to(EventRecordingExecutionListener.class);
+        executionListeners.addBinding().to(MetadataProcessor.class);
     }
 }

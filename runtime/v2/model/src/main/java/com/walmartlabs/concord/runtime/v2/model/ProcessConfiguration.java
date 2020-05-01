@@ -71,6 +71,11 @@ public interface ProcessConfiguration extends Serializable {
         return Collections.emptyMap();
     }
 
+    @Value.Default
+    default Map<String, Object> meta() {
+        return Collections.emptyMap();
+    }
+
     // TODO types
     @Nullable
     Map<String, Object> initiator();
