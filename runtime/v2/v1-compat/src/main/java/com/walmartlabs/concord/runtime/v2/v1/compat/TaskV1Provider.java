@@ -22,10 +22,10 @@ package com.walmartlabs.concord.runtime.v2.v1.compat;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.runtime.common.injector.TaskHolder;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import org.eclipse.sisu.Priority;
 
 import javax.inject.Inject;

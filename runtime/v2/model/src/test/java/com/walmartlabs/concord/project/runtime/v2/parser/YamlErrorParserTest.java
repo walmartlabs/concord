@@ -1780,11 +1780,22 @@ public class YamlErrorParserTest extends AbstractParserTest {
     @Test
     public void test1306() throws Exception {
         String msg =
-                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [runtime, entryPoint, dependencies, requirements, processTimeout, exclusive, events, arguments]. Remove invalid options and/or fix indentation\n" +
+                "(006.yml): Error @ line: 8, col: 9. Unknown options: ['trash' [NULL] @ line: 8, col: 9], expected: [runtime, entryPoint, dependencies, meta, requirements, processTimeout, exclusive, events, arguments]. Remove invalid options and/or fix indentation\n" +
                         "\twhile processing steps:\n" +
                         "\t'configuration' @ line: 1, col: 1";
 
         assertErrorMessage("errors/configuration/006.yml", msg);
+    }
+
+    @Test
+    public void test1307() throws Exception {
+        String msg =
+                "(007.yml): Error @ line: 8, col: 9. Invalid value type, expected: OBJECT, got: INT\n" +
+                        "\twhile processing steps:\n" +
+                        "\t'meta' @ line: 8, col: 3\n" +
+                        "\t\t'configuration' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/configuration/007.yml", msg);
     }
 
     @Test

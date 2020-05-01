@@ -1,0 +1,17 @@
+flows:
+  default:
+    - log: "Hello, ${name}!"
+    - form: myForm
+    - log: "Action: ${myForm.action}!"
+
+forms:
+  myForm:
+    - action: {label: "Action", type: "string?", allow: ["Approve", "Reject"]}
+
+configuration:
+  runtime: "concord-v2"
+  arguments:
+    name: "Concord"
+  meta:
+    test: "init-value"
+    myForm.action: "xxx"
