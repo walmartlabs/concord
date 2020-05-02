@@ -73,6 +73,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--vault-id"}, description = "vault id")
     private String vaultId = "default";
 
+    @Option(names = {"--entry-point"}, description = "entry point")
+    private String entryPoint = Constants.Request.DEFAULT_ENTRY_POINT_NAME;
+
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     private boolean verbose = false;
 
@@ -106,9 +109,8 @@ public class Run implements Callable<Integer> {
                 .dependencies(DependencyResolver.resolve(processDefinition, depsCacheDir, verbose))
                 .build();
 
-        ProcessConfiguration cfg = ProcessConfiguration.builder()
-                .arguments(processDefinition.configuration().arguments())
-                .from(processDefinition.configuration())
+        ProcessConfiguration cfg = ProcessConfiguration.builder().from(processDefinition.configuration())
+                .entryPoint(entryPoint)
                 .instanceId(instanceId)
                 .build();
 
