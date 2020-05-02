@@ -2,11 +2,6 @@
     <property name="OUTPUT_PATTERN"
               value="%date{YYYY-MM-dd'T'HH:mm:ss.SSSZ, UTC} [%-5level] %msg%n%rEx{full, com.sun, sun}"/>
 
-    <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
-        <Marker>FINALIZE_SESSION</Marker>
-        <OnMatch>DENY</OnMatch>
-    </turboFilter>
-
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- the UI expects log timestamps in a specific format to be able to convert it to the local time -->

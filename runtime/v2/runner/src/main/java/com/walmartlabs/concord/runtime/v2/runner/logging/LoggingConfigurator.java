@@ -59,6 +59,8 @@ public class LoggingConfigurator {
     public static void configure(UUID instanceId, String baseDir) {
         log.debug("Redirecting logging output into the segment log: {}", baseDir);
 
+        SegmentedLogger.enable();
+
         Path dst = Paths.get(baseDir).resolve(instanceId.toString());
         if (!Files.exists(dst)) {
             try {
