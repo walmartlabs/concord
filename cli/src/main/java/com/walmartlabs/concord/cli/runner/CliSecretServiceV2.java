@@ -36,7 +36,7 @@ public class CliSecretServiceV2 implements SecretService {
 
     @Override
     public String exportAsString(String orgName, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
+        return secretService.exportAsString(orgName, name, password);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class CliSecretServiceV2 implements SecretService {
     }
 
     @Override
-    public String decryptString(String s) throws Exception {
+    public String decryptString(String s) {
         return secretService.decryptString(s);
     }
 
