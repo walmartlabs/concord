@@ -41,7 +41,7 @@ public final class ConfigurationGrammar {
                                     optional("mode", enumVal(ExclusiveModeConfiguration.Mode.class).map(o::mode))))
                             .map(ImmutableExclusiveModeConfiguration.Builder::build));
 
-    private static final Parser<Atom, ExclusiveModeConfiguration> exclusiveVal =
+    public static final Parser<Atom, ExclusiveModeConfiguration> exclusiveVal =
         orError(exclusive, YamlValueType.EXCLUSIVE_MODE);
 
     private static final Parser<Atom, EventConfiguration> events =

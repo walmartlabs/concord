@@ -31,6 +31,7 @@ import io.takari.parc.Seq;
 import java.util.List;
 import java.util.Map;
 
+import static com.walmartlabs.concord.runtime.v2.parser.ConfigurationGrammar.exclusiveVal;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarLookup.lookup;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.*;
@@ -70,7 +71,7 @@ public final class TriggersGrammar {
                             optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                             optional("useEventCommitId", booleanVal.map(v -> o.putConfiguration("useEventCommitId", v))),
                             optional("arguments", mapVal.map(o::arguments)),
-                            optional("exclusive", stringVal.map(v -> o.putConfiguration("exclusive", v))),
+                            optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))),
                             mandatory("conditions", githubTriggerConditionsValV2.map(o::putAllConditions)),
                             mandatory("version", intVal.map(v -> o.putConditions("version", v)))))
                     .map(t -> t.name("github"))

@@ -315,7 +315,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test112() throws Exception {
-        String msg = "(012.yml): Error @ line: 11, col: 18. Invalid value type, expected: STRING, got: INT\n" +
+        String msg = "(012.yml): Error @ line: 11, col: 18. Invalid value type, expected: EXCLUSIVE_MODE, got: INT\n" +
                 "\twhile processing steps:\n" +
                 "\t'exclusive' @ line: 11, col: 7\n" +
                 "\t\t'github' @ line: 2, col: 5\n" +
@@ -326,9 +326,9 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test113() throws Exception {
-        String msg = "(013.yml): Error @ line: 12, col: 18. Invalid value type, expected: OBJECT, got: INT\n" +
+        String msg = "(013.yml): Error @ line: 13, col: 18. Invalid value type, expected: OBJECT, got: INT\n" +
                 "\twhile processing steps:\n" +
-                "\t'arguments' @ line: 12, col: 7\n" +
+                "\t'arguments' @ line: 13, col: 7\n" +
                 "\t\t'github' @ line: 2, col: 5\n" +
                 "\t\t\t'triggers' @ line: 1, col: 1";
 
@@ -337,12 +337,12 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test114() throws Exception {
-        String msg = "(014.yml): Error @ line: 14, col: 20. Invalid value type, expected: PATTERN, got: STRING. Error info: Dangling meta character '*' near index 0\n" +
+        String msg = "(014.yml): Error @ line: 15, col: 20. Invalid value type, expected: PATTERN, got: STRING. Error info: Dangling meta character '*' near index 0\n" +
                 "*\n" +
                 "^\n" +
                 "\twhile processing steps:\n" +
-                "\t'githubOrg' @ line: 14, col: 9\n" +
-                "\t\t'conditions' @ line: 12, col: 7\n" +
+                "\t'githubOrg' @ line: 15, col: 9\n" +
+                "\t\t'conditions' @ line: 13, col: 7\n" +
                 "\t\t\t'github' @ line: 2, col: 5\n" +
                 "\t\t\t\t'triggers' @ line: 1, col: 1";
 

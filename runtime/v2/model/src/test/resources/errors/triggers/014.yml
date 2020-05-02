@@ -6,7 +6,8 @@ triggers:
           - "one"
       useInitiator: true
       useEventCommitId: true
-      exclusive: "red"
+      exclusive:
+        group: "red"
       arguments:
         k: "v"
       conditions:
