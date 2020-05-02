@@ -24,6 +24,7 @@ import com.walmartlabs.concord.cli.VaultProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.sdk.Constants;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -69,5 +70,18 @@ public class CliSecretService {
 
     public String decryptString(String encryptedString) {
         return vaultProvider.getValue(encryptedString);
+    }
+
+    public String exportAsString(String orgName, String name, String password) throws IOException {
+        Path secretPath = secretStoreDir;
+        if (orgName != null) {
+            secretPath = secretStoreDir.resolve(orgName);
+        }
+
+        secretPath = secretPath.resolve(name);
+        if (Files.notExists(secretPath)) {
+            throw new RuntimeException("Secret '" + secretPath + "' not found");
+        }
+        return new String(Files.readAllBytes(secretPath));
     }
 }
