@@ -25,30 +25,32 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class LazyEvalMap implements Map<Object, Object> {
+public class LazyEvalMap implements Map<String, Object> {
 
     private final LazyExpressionEvaluator evaluator;
+    private final EvalContext evalContext;
 
-    private Context context;
-
-    private final LinkedHashSet<Object> orderedKeys;
+    private final LinkedHashSet<String> orderedKeys;
     private final Set<Object> inflightKeys = new HashSet<>();
-    private final Map<Object, Object> originalValues;
-    private final Map<Object, Object> evaluatedValues = new LinkedHashMap<>();
+    private final Map<String, Object> originalValues;
+    private final Map<String, Object> evaluatedValues = new LinkedHashMap<>();
 
-    public LazyEvalMap(LazyExpressionEvaluator evaluator, Map<Object, Object> nonEvaluatedItems) {
-        this(evaluator, null, nonEvaluatedItems);
-    }
-
-    public LazyEvalMap(LazyExpressionEvaluator evaluator, Context context, Map<Object, Object> nonEvaluatedItems) {
+    public LazyEvalMap(LazyExpressionEvaluator evaluator,
+                       EvalContext evalContext,
+                       Map<String, Object> nonEvaluatedItems) {
         this.evaluator = evaluator;
-        this.context = context;
+        this.evalContext = evalContext;
         this.orderedKeys = new LinkedHashSet<>(nonEvaluatedItems.keySet());
         this.originalValues = nonEvaluatedItems;
     }
 
-    public void setContext(Context context) {
-        this.context = context;
+    public LazyEvalMap(LazyExpressionEvaluator evaluator,
+                       Map<String, Object> nonEvaluatedItems,
+                       Context context) {
+        this.evaluator = evaluator;
+        this.evalContext = new EvalContext(context, this);
+        this.orderedKeys = new LinkedHashSet<>(nonEvaluatedItems.keySet());
+        this.originalValues = nonEvaluatedItems;
     }
 
     @Override
@@ -73,11 +75,14 @@ public class LazyEvalMap implements Map<Object, Object> {
 
     @Override
     public Object get(Object key) {
-        return evalValue(key);
+        if (!(key instanceof String)) {
+            return null;
+        }
+        return evalValue((String) key);
     }
 
     @Override
-    public Object put(Object key, Object value) {
+    public Object put(String key, Object value) {
         throw new UnsupportedOperationException();
     }
 
@@ -87,8 +92,8 @@ public class LazyEvalMap implements Map<Object, Object> {
     }
 
     @Override
-    public void putAll(Map<?, ?> m) {
-        for (Map.Entry<?, ?> e : m.entrySet()) {
+    public void putAll(Map<? extends String, ?> m) {
+        for (Map.Entry<? extends String, ?> e : m.entrySet()) {
             put(e.getKey(), e.getValue());
         }
     }
@@ -99,7 +104,7 @@ public class LazyEvalMap implements Map<Object, Object> {
     }
 
     @Override
-    public Set<Object> keySet() {
+    public Set<String> keySet() {
         return orderedKeys;
     }
 
@@ -109,13 +114,13 @@ public class LazyEvalMap implements Map<Object, Object> {
     }
 
     @Override
-    public Set<Entry<Object, Object>> entrySet() {
-        Set<Entry<Object, Object>> result = new LinkedHashSet<>();
+    public Set<Entry<String, Object>> entrySet() {
+        Set<Entry<String, Object>> result = new LinkedHashSet<>();
         orderedKeys.forEach(k -> result.add(new LazyEntry(k)));
         return result;
     }
 
-    private Object evalValue(Object key) {
+    private Object evalValue(String key) {
         if (evaluatedValues.containsKey(key)) {
             return evaluatedValues.get(key);
         }
@@ -131,7 +136,7 @@ public class LazyEvalMap implements Map<Object, Object> {
             }
 
             Object originalValue = originalValues.get(key);
-            Object evaluatedValue = evaluator.evalValue(context, originalValue, Object.class);
+            Object evaluatedValue = evaluator.evalValue(evalContext, originalValue, Object.class);
 
             evaluatedValues.put(key, evaluatedValue);
 
@@ -141,16 +146,16 @@ public class LazyEvalMap implements Map<Object, Object> {
         }
     }
 
-    class LazyEntry implements Entry<Object, Object> {
+    class LazyEntry implements Entry<String, Object> {
 
-        private final Object key;
+        private final String key;
 
-        LazyEntry(Object key) {
+        LazyEntry(String key) {
             this.key = key;
         }
 
         @Override
-        public Object getKey() {
+        public String getKey() {
             return key;
         }
 

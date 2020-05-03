@@ -30,17 +30,6 @@ import javax.el.VariableMapper;
 
 public final class ResolverUtils {
 
-    public static Context getContext(ELContext context) {
-        VariableMapper varMapper = ((EvaluationContext) context).getELContext().getVariableMapper();
-
-        ValueExpression v = varMapper.resolveVariable(Constants.Context.CONTEXT_KEY);
-        if (v != null) {
-            return (Context) v.getValue(context);
-        }
-
-        throw new IllegalStateException("Can't find the Concord context variable in the current ELContext: " + context);
-    }
-
     public static Object getVariable(ELContext context, String name) {
         VariableMapper varMapper = ((EvaluationContext) context).getELContext().getVariableMapper();
 

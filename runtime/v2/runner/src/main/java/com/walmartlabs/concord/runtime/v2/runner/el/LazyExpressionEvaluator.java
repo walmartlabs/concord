@@ -20,62 +20,58 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.context.IntermediateGlobalsContext;
+import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
+import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.sdk.Constants;
 
 import javax.el.*;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Method;
+import java.util.*;
+
+import static com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext.withEvalContext;
 
 /**
  * Evaluates values. Allows partial evaluation of nested data.
  */
 public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
-    // TODO deprecate "execution"? what about scripts - can't use "context" there?
-    private static final String[] CONTEXT_VARIABLE_NAMES = {Constants.Context.CONTEXT_KEY, "execution"};
-
     private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
     private final TaskProviders taskProviders;
+    private final FunctionMapper functionMapper;
 
     public LazyExpressionEvaluator(TaskProviders taskProviders) {
         this.taskProviders = taskProviders;
+        this.functionMapper = createFunctionMapper();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T eval(Context ctx, Object value, Class<T> expectedType) {
+    public <T> T eval(Context context, Object value, Class<T> expectedType) {
         if (value == null) {
             return null;
         }
 
         if (value instanceof Map) {
-            Map<Object, Object> m = (Map<Object, Object>) value;
+            Map<String, Object> m = (Map<String, Object>) value;
             if (m.isEmpty()) {
                 return expectedType.cast(m);
             }
 
-            LazyEvalMap result = new LazyEvalMap(this, m);
-            Context evalContext = new IntermediateGlobalsContext(ctx, new GlobalVariablesWithOverrides(ctx.globalVariables(), (Map) result));
-            result.setContext(evalContext);
-            return expectedType.cast(result);
+            return expectedType.cast(new LazyEvalMap(this, m, context));
         }
 
-        return evalValue(ctx, value, expectedType);
+        return evalValue(new EvalContext(context, null), value, expectedType);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T evalValue(Context ctx, Object value, Class<T> expectedType) {
+    public <T> T evalValue(EvalContext ctx, Object value, Class<T> expectedType) {
         if (value == null) {
             return null;
         }
 
         if (value instanceof Map) {
-            Map<Object, Object> m = (Map<Object, Object>) value;
+            Map<String, Object> m = (Map<String, Object>) value;
             if (m.isEmpty()) {
                 return expectedType.cast(m);
             }
@@ -122,7 +118,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         return expectedType.cast(value);
     }
 
-    private <T> T evalExpr(Context ctx, String expr, Class<T> type) {
+    private <T> T evalExpr(EvalContext ctx, String expr, Class<T> type) {
         ELResolver resolver = createResolver(ctx, expressionFactory);
 
         StandardELContext sc = new StandardELContext(expressionFactory) {
@@ -130,18 +126,17 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             public ELResolver getELResolver() {
                 return resolver;
             }
+
+            @Override
+            public FunctionMapper getFunctionMapper() {
+                return functionMapper;
+            }
         };
         sc.putContext(ExpressionFactory.class, expressionFactory);
 
-        // save the context as a variable
-        VariableMapper vm = sc.getVariableMapper();
-        for (String k : CONTEXT_VARIABLE_NAMES) {
-            vm.setVariable(k, expressionFactory.createValueExpression(ctx, Context.class));
-        }
-
         ValueExpression x = expressionFactory.createValueExpression(sc, expr, type);
         try {
-            Object v = x.getValue(sc);
+            Object v = withEvalContext(ctx, () -> x.getValue(sc));
             return type.cast(v);
         } catch (PropertyNotFoundException e) {
             throw new RuntimeException(String.format("Can't find the specified variable in '%s'. " +
@@ -153,11 +148,15 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
      * Based on the original code from {@link StandardELContext#getELResolver()}.
      * Creates a {@link ELResolver} instance with "sub-resolvers" in the original order.
      */
-    private ELResolver createResolver(Context ctx, ExpressionFactory expressionFactory) {
+    private ELResolver createResolver(EvalContext evalContext,
+                                      ExpressionFactory expressionFactory) {
         CompositeELResolver r = new CompositeELResolver();
         r.add(new InjectVariableResolver());
-        r.add(new GlobalVariableResolver(ctx.globalVariables()));
-        r.add(new TaskResolver(taskProviders));
+        if (evalContext.scopeVariables() != null) {
+            r.add(new VariableResolver(evalContext.scopeVariables()));
+        }
+        r.add(new VariableResolver(evalContext.context().globalVariables().toMap()));
+        r.add(new TaskResolver(evalContext.context(), taskProviders));
         r.add(expressionFactory.getStreamELResolver());
         r.add(new StaticFieldELResolver());
         r.add(new MapELResolver());
@@ -166,6 +165,13 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         r.add(new ArrayELResolver());
         r.add(new BeanELResolver());
         return r;
+    }
+
+    private static FunctionMapper createFunctionMapper() {
+        Map<String, Method> functions = new HashMap<>();
+        functions.put("hasVariable", HasVariableFunction.getMethod());
+        functions.put("allVariables", AllVariablesFunction.getMethod());
+        return new FunctionMapper(functions);
     }
 
     private static boolean hasExpression(String s) {

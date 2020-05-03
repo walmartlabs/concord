@@ -20,17 +20,27 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesImpl;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 public class DummyContext implements Context {
 
     private final GlobalVariables globalVariables;
+
+    public DummyContext() {
+        this(new GlobalVariablesImpl());
+    }
+
+    public DummyContext(Map<String, Object> variables) {
+        this(new GlobalVariablesImpl(variables));
+    }
 
     public DummyContext(GlobalVariables globalVariables) {
         this.globalVariables = globalVariables;

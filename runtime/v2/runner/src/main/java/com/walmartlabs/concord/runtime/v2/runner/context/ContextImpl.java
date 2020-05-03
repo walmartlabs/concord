@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
-import com.walmartlabs.concord.plugins.sleep.Constants;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
