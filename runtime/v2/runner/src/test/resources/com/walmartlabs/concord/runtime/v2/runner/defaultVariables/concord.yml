@@ -1,0 +1,9 @@
+flows:
+  default:
+    - log: "workDir: '${workDir}'"
+    - log: "processInfo: '${processInfo}'"
+    - log: "projectInfo: '${projectInfo}'"
+    - suspend: ev1
+    - log: "workDir: '${workDir}'"
+    - log: "processInfo: '${processInfo}'"
+    - log: "projectInfo: '${projectInfo}'"

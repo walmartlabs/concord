@@ -130,12 +130,14 @@ public class Main {
         }
     }
 
-    private static Map<String, Object> prepareProcessArgs(ProcessConfiguration cfg) {
+    private Map<String, Object> prepareProcessArgs(ProcessConfiguration cfg) {
         // use LinkedHashMap to preserve the order of the keys
         Map<String, Object> m = new LinkedHashMap<>(cfg.arguments());
 
         // save the current process ID as an argument, flows and plugins expect it to be a string value
         m.put(Constants.Context.TX_ID_KEY, cfg.instanceId().toString());
+
+        m.put(Constants.Context.WORK_DIR_KEY, workDir.getValue().toAbsolutePath().toString());
 
         // save processInfo and projectInfo variables
         ObjectMapper objectMapper = new ObjectMapper();
