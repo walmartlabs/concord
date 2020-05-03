@@ -63,9 +63,9 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
         return expectedType.cast(value);
     }
 
-    private static Map<Object, Object> initializeMap(Map<Object, Object> value) {
+    private static Map<Object, Object> initializeMap(Map<String, Object> value) {
         Map<Object, Object> result = new LinkedHashMap<>(value.size());
-        for (Map.Entry<Object, Object> e : value.entrySet()) {
+        for (Map.Entry<String, Object> e : value.entrySet()) {
             Object kk = e.getKey();
             kk = initializeAll(kk, Object.class);
 

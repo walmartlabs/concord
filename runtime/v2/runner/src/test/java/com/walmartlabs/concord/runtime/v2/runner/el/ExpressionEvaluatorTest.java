@@ -238,21 +238,6 @@ public class ExpressionEvaluatorTest {
     }
 
     @Test
-    public void testEval7() {
-        Map<Object, Object> m = new LinkedHashMap<>();
-        m.put("x", "x-value");
-        m.put("y", "${x}");
-        List<Object> input = Arrays.asList("a", m);
-
-        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
-        GlobalVariables vars = new GlobalVariablesImpl();
-
-        List<Object> output = ee.evalAsList(new DummyContext(vars), input);
-
-        assertThat(output, is(Arrays.asList("a", map("x", "x-value", "y", "x-value"))));
-    }
-
-    @Test
     public void testEval8() {
         /**
          * x:
@@ -268,6 +253,38 @@ public class ExpressionEvaluatorTest {
         Map<Object, Object> output = ee.evalAsMap(new DummyContext(vars), input);
 
         assertThat(output, is(map("x", Collections.singletonList("abc"), "y", "abc")));
+    }
+
+    @Test
+    public void testEvalHasVariable() throws Exception {
+        String str = "${hasVariable('x')}";
+
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+
+        // ---
+
+        boolean result = ee.eval(new DummyContext(), str, Boolean.class);
+        assertFalse(result);
+
+        // ---
+        Map<String, Object> vars = Collections.singletonMap("x", "x-value");
+        result = ee.eval(new DummyContext(vars), str, Boolean.class);
+        assertTrue(result);
+    }
+
+    @Test
+    public void testAllVariables() {
+        String str = "${allVariables()}";
+
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+
+        // ---
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("a", Collections.singletonList("b"));
+        vars.put("b", "bb");
+
+        Map<String, Object> result = ee.evalAsMap(new DummyContext(vars), str);
+        assertEquals(vars, result);
     }
 
     private static Map<Object, Object> map(Object ... values) {

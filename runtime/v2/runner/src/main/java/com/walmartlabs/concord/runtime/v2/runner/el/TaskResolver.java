@@ -30,9 +30,11 @@ import java.util.Iterator;
 
 public class TaskResolver extends ELResolver {
 
+    private final Context context;
     private final TaskProviders taskProviders;
 
-    public TaskResolver(TaskProviders taskProviders) {
+    public TaskResolver(Context context, TaskProviders taskProviders) {
+        this.context = context;
         this.taskProviders = taskProviders;
     }
 
@@ -56,8 +58,7 @@ public class TaskResolver extends ELResolver {
         if (base == null) {
             String key = (String) property;
 
-            Context ctx = ResolverUtils.getContext(context);
-            Object o = taskProviders.createTask(ctx, key);
+            Object o = taskProviders.createTask(this.context, key);
             if (o != null) {
                 context.setPropertyResolved(true);
             }

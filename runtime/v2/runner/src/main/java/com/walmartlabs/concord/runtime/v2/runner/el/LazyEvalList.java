@@ -20,19 +20,17 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-
 import java.util.*;
 
 public class LazyEvalList extends AbstractList<Object> {
 
     private final LazyExpressionEvaluator evaluator;
-    private final Context context;
+    private final EvalContext context;
     private final Set<Integer> inflightKeys = new HashSet<>();
     private final List<Object> originalValues;
     private final Map<Integer, Object> evaluatedValues = new HashMap<>();
 
-    public LazyEvalList(LazyExpressionEvaluator evaluator, Context context, List<Object> src) {
+    public LazyEvalList(LazyExpressionEvaluator evaluator, EvalContext context, List<Object> src) {
         this.evaluator = evaluator;
         this.context = context;
         this.originalValues = src;
@@ -61,7 +59,7 @@ public class LazyEvalList extends AbstractList<Object> {
 
             Object originalValue = originalValues.get(index);
 
-            Object result = evaluator.eval(context, originalValue, Object.class);
+            Object result = evaluator.evalValue(context, originalValue, Object.class);
 
             evaluatedValues.put(index, result);
 

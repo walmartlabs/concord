@@ -20,19 +20,18 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
-
 import javax.el.ELContext;
 import javax.el.ELResolver;
 import java.beans.FeatureDescriptor;
 import java.util.Iterator;
+import java.util.Map;
 
-public class GlobalVariableResolver extends ELResolver {
+public class VariableResolver extends ELResolver {
 
-    private final GlobalVariables globalVariables;
+    private final Map<String, Object> variables;
 
-    public GlobalVariableResolver(GlobalVariables globalVariables) {
-        this.globalVariables = globalVariables;
+    public VariableResolver(Map<String, Object> variables) {
+        this.variables = variables;
     }
 
     @Override
@@ -55,9 +54,9 @@ public class GlobalVariableResolver extends ELResolver {
         if (base == null && property instanceof String) {
             String k = (String) property;
 
-            if (globalVariables.containsKey(k)) {
+            if (variables.containsKey(k)) {
                 context.setPropertyResolved(true);
-                return globalVariables.get(k);
+                return variables.get(k);
             }
         }
 
