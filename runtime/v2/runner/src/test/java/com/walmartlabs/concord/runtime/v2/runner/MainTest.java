@@ -422,6 +422,27 @@ public class MainTest {
         assertLog(log, ".*XYZ.*");
     }
 
+    @Test
+    public void testDefaultProcessVariables() throws Exception {
+        deploy("defaultVariables");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*workDir: '.*'.*");
+        assertLog(log, ".*processInfo: '\\{.*\\}'.*");
+        assertLog(log, ".*projectInfo: '\\{\\}'.*");
+
+        log = resume("ev1", ProcessConfiguration.builder()
+                .putArguments("workDir", "1")
+                .putArguments("processInfo", "2")
+                .putArguments("projectInfo", "3")
+                .build());
+        assertLog(log, ".*workDir: '.*'.*");
+        assertLog(log, ".*processInfo: '\\{.*\\}'.*");
+        assertLog(log, ".*projectInfo: '\\{\\}'.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
