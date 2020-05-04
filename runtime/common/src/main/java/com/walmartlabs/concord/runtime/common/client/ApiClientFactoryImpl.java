@@ -43,9 +43,16 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     private final ApiConfiguration cfg;
     private final Path tmpDir;
     private final OkHttpClient httpClient;
+    private final UUID instanceId;
 
+    @Deprecated
     public ApiClientFactoryImpl(ApiConfiguration cfg) throws Exception {
+        this(cfg, null);
+    }
+
+    public ApiClientFactoryImpl(ApiConfiguration cfg, UUID instanceId) throws Exception {
         this.cfg = cfg;
+        this.instanceId = instanceId;
         this.tmpDir = IOUtils.createTempDir("api-client");
 
         OkHttpClient client = new OkHttpClient();
@@ -89,7 +96,11 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
                 .addDefaultHeader("Accept", "*/*")
                 .setTempFolderPath(tmpDir.toString());
 
-        UUID txId = getTxId(overrides);
+        UUID txId = instanceId;
+        if (txId == null) {
+            txId = getTxId(overrides);
+        }
+
         if (txId != null) {
             client = client.setUserAgent("Concord-Runner: txId=" + txId);
         }
@@ -97,6 +108,7 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
         return client;
     }
 
+    @Deprecated
     private static UUID getTxId(ApiClientConfiguration cfg) {
         if (cfg.txId() != null) {
             return cfg.txId();
