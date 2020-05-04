@@ -57,6 +57,7 @@ public interface ApiClientConfiguration {
      * @return
      */
     @Nullable
+    @Deprecated
     Context context();
 
     /**
@@ -64,6 +65,7 @@ public interface ApiClientConfiguration {
      * @return
      */
     @Nullable
+    @Deprecated
     UUID txId();
 
     static ImmutableApiClientConfiguration.Builder builder() {

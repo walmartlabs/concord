@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.sdk;
 
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.runtime.common.client.ApiClientFactoryImpl;
+import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.sdk.ApiConfiguration;
 
 import javax.inject.Inject;
@@ -34,16 +35,18 @@ import javax.inject.Singleton;
 public class ApiClientFactoryProvider implements Provider<ApiClientFactory> {
 
     private final ApiConfiguration cfg;
+    private final InstanceId instanceId;
 
     @Inject
-    public ApiClientFactoryProvider(ApiConfiguration cfg) {
+    public ApiClientFactoryProvider(ApiConfiguration cfg, InstanceId instanceId) {
         this.cfg = cfg;
+        this.instanceId = instanceId;
     }
 
     @Override
     public ApiClientFactory get() {
         try {
-            return new ApiClientFactoryImpl(cfg);
+            return new ApiClientFactoryImpl(cfg, instanceId.getValue());
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
