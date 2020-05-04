@@ -71,7 +71,9 @@ public class SegmentedLogger {
         Future<V> result = executor.submit(callable);
         try {
             return result.get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) { // NOSONAR
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause != null) {
                 if (cause instanceof RuntimeException) {
