@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2;
  * =====
  */
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.repository.Snapshot;
@@ -30,9 +31,7 @@ import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class ProjectLoaderV2 {
@@ -72,6 +71,34 @@ public class ProjectLoaderV2 {
         return new Result(snapshots, merge(definitions));
     }
 
+    public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer) throws Exception {
+        YamlParserV2 parser = new YamlParserV2();
+
+        ProcessDefinition root = loadRoot(parser, baseDir);
+
+        Resources resources = root != null ? root.resources(): Resources.builder().build();
+        boolean hasImports = root != null && root.imports() != null && !root.imports().isEmpty();
+        if (!hasImports) {
+            copyResources(baseDir, resources, destDir);
+            return;
+        }
+
+        Path tmpDir = null;
+        try {
+            tmpDir = IOUtils.createTempDir("concord-export");
+            copyResources(baseDir, resources, tmpDir);
+
+            Imports imports = importsNormalizer.normalize(root.imports());
+            importManager.process(imports, tmpDir);
+
+            copyResources(tmpDir, resources, destDir);
+        } finally {
+            if (tmpDir != null) {
+                IOUtils.deleteRecursively(tmpDir);
+            }
+        }
+    }
+
     private ProcessDefinition loadRoot(YamlParserV2 parser, Path baseDir) throws IOException {
         for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
@@ -92,7 +119,7 @@ public class ProjectLoaderV2 {
         return new Result(Collections.emptyList(), parser.parse(path.getParent(), path));
     }
 
-    private List<Path> loadResources(Path baseDir, Resources resources) throws IOException {
+    private static List<Path> loadResources(Path baseDir, Resources resources) throws IOException {
         List<Path> result = new ArrayList<>();
         for (String pattern : resources.concord()) {
             PathMatcher pathMatcher = parsePattern(baseDir, pattern);
@@ -148,6 +175,31 @@ public class ProjectLoaderV2 {
             separator = "";
         }
         return path.toAbsolutePath() + separator + str;
+    }
+
+    private static void copyResources(Path baseDir, Resources resources, Path destDir) throws IOException {
+        List<Path> files = loadResources(baseDir, resources);
+        for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
+            Path p = baseDir.resolve(fileName);
+            files.add(p);
+        }
+        copy(new HashSet<>(files), baseDir, destDir);
+    }
+
+    private static void copy(Set<Path> files, Path baseDir, Path dest) throws IOException {
+        for (Path f : files) {
+            if (Files.notExists(f)) {
+                continue;
+            }
+
+            Path src = baseDir.relativize(f);
+            Path dst = dest.resolve(src);
+            Path dstParent = dst.getParent();
+            if (dstParent != null && Files.notExists(dstParent)) {
+                Files.createDirectories(dstParent);
+            }
+            Files.copy(f, dst);
+        }
     }
 
     public static class Result {
