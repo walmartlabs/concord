@@ -84,7 +84,7 @@ const LogSegmentActivity = ({
     const [visibleData, setVisibleData] = useState<string[]>([]);
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
-    const [continueFetch, setContinueFetch] = useState<boolean>(false);
+    const [continueFetch, setContinueFetch] = useState<boolean>(true);
 
     const fetchData = useCallback(
         async (range: LogRange) => {
@@ -141,7 +141,7 @@ const LogSegmentActivity = ({
     useEffect(() => {
         const isFinalOrSuspended =
             isFinal(processStatus) || processStatus === ProcessStatus.SUSPENDED;
-        const isFinalSegmentStatus = status !== SegmentStatus.RUNNING;
+        const isFinalSegmentStatus = status !== undefined && status !== SegmentStatus.RUNNING;
         setContinueFetch(!isFinalOrSuspended && !isFinalSegmentStatus);
     }, [processStatus, status]);
 

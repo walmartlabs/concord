@@ -103,7 +103,7 @@
     margin: 0;
     padding: 10px 0 10px 10px;
     display: inline-block;
-    width: 100%;
+    min-width: 100%;
 }
 
 .LogSegment .Content pre {
