@@ -66,7 +66,8 @@ public class Agent {
     private final Map<UUID, Worker> activeWorkers = new ConcurrentHashMap<>();
     private final AtomicBoolean maintenanceMode = new AtomicBoolean(false);
 
-    private volatile Semaphore workersAvailable;
+    // make the reference volatile as we check if for != null in different threads
+    private volatile Semaphore workersAvailable; // NOSONAR
 
     @Inject
     public Agent(AgentConfiguration agentCfg,

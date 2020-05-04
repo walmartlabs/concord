@@ -41,7 +41,7 @@ public class ServerClient {
     /**
      * As defined in server.conf
      */
-    public static final String DEFAULT_API_KEY = getApiKey();
+    public static final String DEFAULT_API_KEY = envApiKey();
 
     private ApiClient client;
 
@@ -294,7 +294,7 @@ public class ServerClient {
         return c;
     }
 
-    private static String getApiKey() {
+    private static String envApiKey() {
         String s = System.getenv("IT_DEFAULT_API_KEY");
         if (s == null) {
             throw new IllegalStateException("The default (admin) API key must be configured via IT_DEFAULT_API_KEY environment variable. " +
