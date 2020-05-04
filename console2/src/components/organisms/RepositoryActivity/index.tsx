@@ -170,7 +170,7 @@ class ProjectActivity extends React.PureComponent<Props> {
                         orgName={p.orgName}
                         projectId={p.id}
                         projectName={p.name}
-                        ownerId={p.owner.id}
+                        ownerId={p.owner?.id}
                     />
 
                     <Header as="h4">Delete project</Header>
