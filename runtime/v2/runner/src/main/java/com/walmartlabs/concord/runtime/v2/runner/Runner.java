@@ -22,11 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
-import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
@@ -53,7 +50,6 @@ public class Runner {
     private static final Logger log = LoggerFactory.getLogger(Runner.class);
 
     private final UUID instanceId;
-    private final Path workDir;
     private final Compiler compiler;
     private final ContextFactory contextFactory;
     private final TaskProviders taskProviders;
@@ -68,7 +64,6 @@ public class Runner {
 
     private Runner(Builder b) {
         this.instanceId = b.instanceId;
-        this.workDir = b.workDir;
         this.compiler = b.compiler;
         this.contextFactory = b.contextFactory;
         this.taskProviders = b.taskProviders;
@@ -82,13 +77,9 @@ public class Runner {
         this.listeners = b.listeners;
     }
 
-    public ProcessSnapshot start(String entryPoint, Map<String, Object> input) throws Exception {
+    public ProcessSnapshot start(ProcessDefinition processDefinition, String entryPoint, Map<String, Object> input) throws Exception {
         statusCallback.onRunning(instanceId);
         log.debug("start ['{}'] -> running...", entryPoint);
-
-        // assume all imports were processed by the agent
-        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer()).getProjectDefinition();
 
         Command cmd = CompilerUtils.compile(compiler, processDefinition, entryPoint);
         State state = new InMemoryState(cmd);

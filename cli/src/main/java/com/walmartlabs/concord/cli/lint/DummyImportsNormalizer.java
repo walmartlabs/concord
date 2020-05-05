@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli;
+package com.walmartlabs.concord.cli.lint;
 
 /*-
  * *****

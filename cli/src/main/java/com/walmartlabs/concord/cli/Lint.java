@@ -20,11 +20,8 @@ package com.walmartlabs.concord.cli;
  * =====
  */
 
-import com.walmartlabs.concord.cli.lint.ExpressionLinter;
-import com.walmartlabs.concord.cli.lint.LintResult;
+import com.walmartlabs.concord.cli.lint.*;
 import com.walmartlabs.concord.cli.lint.LintResult.Type;
-import com.walmartlabs.concord.cli.lint.Linter;
-import com.walmartlabs.concord.cli.lint.TaskCallLinter;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;

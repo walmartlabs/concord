@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.cli;
+package com.walmartlabs.concord.cli.runner;
 
 /*-
  * *****
@@ -22,7 +22,6 @@ package com.walmartlabs.concord.cli;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultPersistenceService;
 import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
 import com.walmartlabs.concord.runtime.v2.runner.MapBackedDefaultTaskVariablesService;

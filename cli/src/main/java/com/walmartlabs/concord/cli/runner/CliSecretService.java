@@ -20,13 +20,13 @@ package com.walmartlabs.concord.cli.runner;
  * =====
  */
 
-import com.walmartlabs.concord.cli.VaultProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.sdk.Constants;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class CliSecretService {
 
@@ -59,8 +59,8 @@ public class CliSecretService {
         Path dest = workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
         Path tmpPublicKey = dest.resolve(name + ".pub");
         Path tmpPrivateKey = dest.resolve(name);
-        Files.copy(publicKey, tmpPublicKey);
-        Files.copy(privateKey, tmpPrivateKey);
+        Files.copy(publicKey, tmpPublicKey, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(privateKey, tmpPrivateKey, StandardCopyOption.REPLACE_EXISTING);
 
         return SecretService.KeyPair.builder()
                 .privateKey(tmpPrivateKey)

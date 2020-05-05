@@ -26,7 +26,6 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -45,10 +44,6 @@ public class DependencyResolver {
     public DependencyResolver(DependencyManager dependencyManager, boolean verbose) {
         this.dependencyManager = dependencyManager;
         this.verbose = verbose;
-    }
-
-    public static Collection<String> resolve(ProcessDefinition processDefinition, Path cacheDir, boolean debug) throws Exception {
-        return new DependencyResolver(new DependencyManager(cacheDir), debug).resolveDeps(processDefinition);
     }
 
     public Collection<String> resolveDeps(ProcessDefinition processDefinition) throws Exception {
