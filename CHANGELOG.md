@@ -1,5 +1,51 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-cli: support for `imports`;
+- concord-cli: allow specifying an `entryPoint`;
+- concord-cli: support for `crypto.exportAsString`;
+- runtime-v2: support for process metadata;
+- concord-cli: initial support for `crypto.decryptString`;
+- lock-tasks: runtime v2 compatibility;
+- concord-cli: initial support for "default variables". The built-in
+variables provide some useful defaults for the Ansible plugin;
+- runtime-v2: support for "processTimeout", "exclusive", "events"
+and "requirements" elements;
+- runtime-v2: allow process suspension via `Context#suspend` method;
+- concord-server: show a custom 404 page when a form is not found;
+- misc-tasks, datetime-tasks: runtime v2 compatibility;
+- concord-server, concord-console, concord-agent, runtime-v2:
+initial implementation of "segmented" process logs. Each task now
+gets a separate segment of the process log and can be shown on
+the UI individually;
+- log-tasks: add `level` parameter to the v2 version of the task;
+- concord-agent: configurable default JVM parameters;
+- concord-console: show `startAt` to the process toolbar;
+- ansible: runtime v2 compatibility;
+- locale-tasks: runtime v2 compatibility;
+- smtp-tasks: runtime v2 compatibility;
+- concord-server: make the embedded Jetty aware of proxy headers
+such as `X-Forwarded-For`;
+- concord-server: API key IDs are not logged in the audit log.
+
+### Changed
+
+- concord-agent: log dependency check results using `WARN` level;
+- runtime-v2: fix github trigger's exclusive attribute definition;
+- ansible: improved detection of the `setup` task type;
+- project: replace ollie dependency with ollie-config;
+- concord-server: fix the "show only user's organizations" toggle;
+- concord-console: don't do the initial search when the Node Roster
+page opens;
+- concord-server, concord-console: fixed the behaviour of
+the "show only user's organizations" toggle on the organizations
+list page.
+
+
+
 ## [1.48.1] - 2020-04-22
 
 ### Changed
