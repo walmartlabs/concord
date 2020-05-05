@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.runtime.v1;
  * =====
  */
 
+import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
@@ -28,15 +29,24 @@ import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 import com.walmartlabs.concord.sdk.Constants;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static com.walmartlabs.concord.it.common.ITUtils.archive;
+import static com.walmartlabs.concord.it.common.ITUtils.randomString;
+import static com.walmartlabs.concord.it.runtime.v1.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.*;
 
-public class ProcessIT extends AbstractParallelIT {
+public class ProcessIT {
+
+    @ClassRule
+    public static final Concord concord = ConcordConfiguration.configure();
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testUploadAndRun() throws Exception {
@@ -175,22 +185,7 @@ public class ProcessIT extends AbstractParallelIT {
         proc.assertLog(".*Hello, Concord.*");
         proc.assertLog(".*Bye!.*");
     }
-/*
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testTaskOut() throws Exception {
-        byte[] archive = archive(ProcessIT.class.getResource("taskOut").toURI());
 
-        ConcordProcess proc = concord.processes().start(new Payload().archive(archive));
-
-        // ---
-
-        proc.expectStatus(StatusEnum.FINISHED);
-
-        // ---
-
-        proc.assertLog(".*I said: Hello!.*");
-    }
-*/
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTags() throws Exception {
         byte[] archive = archive(ProcessIT.class.getResource("example").toURI());
@@ -432,6 +427,34 @@ public class ProcessIT extends AbstractParallelIT {
         proc.assertLog(".*two: 2*");
     }
 
+    /**
+     * Verifies that variables changed in runtime are available in onFailure flows.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOnFailureVariables() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("onFailureVars")));
+
+        proc.expectStatus(StatusEnum.FAILED);
+
+
+        // wait for the onFailure process
+        ConcordProcess onFailureProc;
+        while (true) {
+            List<ProcessEntry> l = proc.subprocesses();
+            if (!l.isEmpty()) {
+                onFailureProc = concord.processes().get(l.get(0).getInstanceId());
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        onFailureProc.expectStatus(StatusEnum.FINISHED);
+        onFailureProc.assertLog(".*I've got xyz.*");
+        onFailureProc.assertLog(".*Last error was:.*Boom!.*");
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);
@@ -446,5 +469,9 @@ public class ProcessIT extends AbstractParallelIT {
         assertNotNull(error);
 
         assertTrue(error.get("message").toString().matches(expected));
+    }
+
+    private static URI resource(String name) throws URISyntaxException {
+        return ProcessIT.class.getResource(name).toURI();
     }
 }

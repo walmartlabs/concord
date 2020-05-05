@@ -1,0 +1,16 @@
+flows:
+  default:
+    - set:
+        myVar: "xyz"
+
+    - log: "The default flow got ${myVar}"
+
+    - throw: "Boom!"
+
+  onFailure:
+    - log: "I've got ${myVar}"
+    - log: "Last error was: ${lastError}"
+
+configuration:
+  arguments:
+    myVar: "abc"
