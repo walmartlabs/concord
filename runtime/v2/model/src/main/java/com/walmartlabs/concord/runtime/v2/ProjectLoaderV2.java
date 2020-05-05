@@ -71,7 +71,7 @@ public class ProjectLoaderV2 {
         return new Result(snapshots, merge(definitions));
     }
 
-    public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer) throws Exception {
+    public void export(Path baseDir, Path destDir, ImportsNormalizer importsNormalizer, CopyOption... options) throws Exception {
         YamlParserV2 parser = new YamlParserV2();
 
         ProcessDefinition root = loadRoot(parser, baseDir);
@@ -79,19 +79,19 @@ public class ProjectLoaderV2 {
         Resources resources = root != null ? root.resources(): Resources.builder().build();
         boolean hasImports = root != null && root.imports() != null && !root.imports().isEmpty();
         if (!hasImports) {
-            copyResources(baseDir, resources, destDir);
+            copyResources(baseDir, resources, destDir, options);
             return;
         }
 
         Path tmpDir = null;
         try {
             tmpDir = IOUtils.createTempDir("concord-export");
-            copyResources(baseDir, resources, tmpDir);
+            copyResources(baseDir, resources, tmpDir, options);
 
             Imports imports = importsNormalizer.normalize(root.imports());
             importManager.process(imports, tmpDir);
 
-            copyResources(tmpDir, resources, destDir);
+            copyResources(tmpDir, resources, destDir, options);
         } finally {
             if (tmpDir != null) {
                 IOUtils.deleteRecursively(tmpDir);
@@ -177,16 +177,16 @@ public class ProjectLoaderV2 {
         return path.toAbsolutePath() + separator + str;
     }
 
-    private static void copyResources(Path baseDir, Resources resources, Path destDir) throws IOException {
+    private static void copyResources(Path baseDir, Resources resources, Path destDir, CopyOption... options) throws IOException {
         List<Path> files = loadResources(baseDir, resources);
         for (String fileName : Constants.Files.PROJECT_ROOT_FILE_NAMES) {
             Path p = baseDir.resolve(fileName);
             files.add(p);
         }
-        copy(new HashSet<>(files), baseDir, destDir);
+        copy(new HashSet<>(files), baseDir, destDir, options);
     }
 
-    private static void copy(Set<Path> files, Path baseDir, Path dest) throws IOException {
+    private static void copy(Set<Path> files, Path baseDir, Path dest, CopyOption... options) throws IOException {
         for (Path f : files) {
             if (Files.notExists(f)) {
                 continue;
@@ -198,7 +198,7 @@ public class ProjectLoaderV2 {
             if (dstParent != null && Files.notExists(dstParent)) {
                 Files.createDirectories(dstParent);
             }
-            Files.copy(f, dst);
+            Files.copy(f, dst, options);
         }
     }
 

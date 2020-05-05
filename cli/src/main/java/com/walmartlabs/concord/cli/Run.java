@@ -21,8 +21,10 @@ package com.walmartlabs.concord.cli;
  */
 
 import com.google.inject.Injector;
-import com.walmartlabs.concord.cli.runner.DependencyResolver;
+import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.imports.ImportManagerFactory;
 import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
@@ -44,6 +46,7 @@ import picocli.CommandLine.Spec;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -61,8 +64,11 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
     private Map<String, String> extraVars = new LinkedHashMap<>();
 
-    @Option(names = {"--deps-cache-dir"}, description = "additional process variables")
-    private Path depsCacheDir = Paths.get(System.getProperty("user.dir"));
+    @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
+    private Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
+
+    @Option(names = {"--repo-cache-dir"}, description = "repository cache dir")
+    private Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("repoCache");
 
     @Option(names = {"--secret-dir"}, description = "secret store dir")
     private Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
@@ -72,6 +78,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"--vault-id"}, description = "vault id")
     private String vaultId = "default";
+
+    @Option(names = {"--imports-source"}, description = "default imports source")
+    private String importsSource = "https://github.com";
 
     @Option(names = {"--entry-point"}, description = "entry point")
     private String entryPoint = Constants.Request.DEFAULT_ENTRY_POINT_NAME;
@@ -88,10 +97,17 @@ public class Run implements Callable<Integer> {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }
 
+        DependencyManager dependencyManager = new DependencyManager(depsCacheDir);
+
         ProjectLoaderV2.Result loadResult;
         try {
+            Path exportDir = targetDir.resolve("target");
+
+            new ProjectLoaderV2(new ImportManagerFactory(dependencyManager, new CliRepositoryExporter(repoCacheDir)).create())
+                    .export(targetDir, exportDir, new CliImportsNormalizer(importsSource, verbose), StandardCopyOption.REPLACE_EXISTING);
+
             loadResult = new ProjectLoaderV2(new NoopImportManager())
-                    .load(targetDir, new NoopImportsNormalizer());
+                    .load(exportDir, new NoopImportsNormalizer());
         } catch (Exception e) {
             System.err.println("Project load error: " + e.getMessage());
             return -1;
@@ -106,7 +122,7 @@ public class Run implements Callable<Integer> {
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(DependencyResolver.resolve(processDefinition, depsCacheDir, verbose))
+                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(processDefinition))
                 .build();
 
         ProcessConfiguration cfg = ProcessConfiguration.builder().from(processDefinition.configuration())
@@ -136,8 +152,9 @@ public class Run implements Callable<Integer> {
         System.out.println("Starting...");
 
         try {
-            runner.start(cfg.entryPoint(), args);
+            runner.start(processDefinition, cfg.entryPoint(), args);
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println("Error: " + e.getMessage());
             return 1;
         } finally {

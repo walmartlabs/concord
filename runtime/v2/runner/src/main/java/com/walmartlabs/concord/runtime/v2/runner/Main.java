@@ -23,9 +23,13 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
@@ -112,7 +116,7 @@ public class Main {
         ProcessSnapshot snapshot;
         Set<String> events = StateManager.readResumeEvents(workDir.getValue()); // TODO make it an interface
         if (events == null || events.isEmpty()) {
-            snapshot = start(runner, processCfg, processArgs);
+            snapshot = start(runner, workDir.getValue(), processCfg, processArgs);
         } else {
             snapshot = resume(runner, workDir.getValue(), processCfg, processArgs, events);
         }
@@ -147,7 +151,11 @@ public class Main {
         return m;
     }
 
-    private static ProcessSnapshot start(Runner runner, ProcessConfiguration cfg, Map<String, Object> args) throws Exception {
+    private static ProcessSnapshot start(Runner runner, Path workDir, ProcessConfiguration cfg, Map<String, Object> args) throws Exception {
+        // assume all imports were processed by the agent
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+        ProcessDefinition processDefinition = loader.load(workDir, new NoopImportsNormalizer()).getProjectDefinition();
+
         Map<String, Object> initiator = cfg.initiator();
         if (initiator != null) {
             // when the process starts the process' initiator and the current user are the same
@@ -155,7 +163,7 @@ public class Main {
             args.put(Constants.Request.CURRENT_USER_KEY, initiator);
         }
 
-        return runner.start(cfg.entryPoint(), args);
+        return runner.start(processDefinition, cfg.entryPoint(), args);
     }
 
     private static ProcessSnapshot resume(Runner runner, Path workDir, ProcessConfiguration cfg, Map<String, Object> args, Set<String> events) throws Exception {
