@@ -1,8 +1,12 @@
 {
   "repositories": [
     {
-      "id": "local",
-      "url": "file:///home/concord/.m2/repository"
+      "id": "host",
+      "url": "file:///host/.m2/repository",
+      "snapshotPolicy": {
+        "enabled": true,
+        "updatePolicy": "always"
+      }
     },
     {
       "id": "central",

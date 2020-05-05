@@ -38,10 +38,13 @@ docker run -d \
 --name server \
 -p 8001:8001 \
 -v "/tmp:/tmp" \
+-v "${HOME}/.m2/repository:/host/.m2/repository:ro" \
+-v "${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro" \
 -v "${CONCORD_CFG_FILE}:${CONCORD_CFG_FILE}:ro" \
 -e "CONCORD_CFG_FILE=${CONCORD_CFG_FILE}" \
 -e 'DB_URL=jdbc:postgresql://db:5432/postgres' \
 -e 'NODEROSTER_DB_URL=jdbc:postgresql://db:5432/postgres' \
+-e 'CONCORD_MAVEN_CFG=/opt/concord/conf/mvn.json' \
 "${DOCKER_PREFIX}/concord-server:${VERSION}"
 
 # wait for the server to start
@@ -64,7 +67,7 @@ docker run -d \
 --link server \
 --link dind \
 -v "/tmp:/tmp" \
--v "${HOME}/.m2/repository:/home/concord/.m2/repository" \
+-v "${HOME}/.m2/repository:/host/.m2/repository:ro" \
 -v "${BASE_DIR}/mvn.json:/opt/concord/conf/mvn.json:ro" \
 -e 'CONCORD_MAVEN_CFG=/opt/concord/conf/mvn.json' \
 -e 'CONCORD_DOCKER_LOCAL_MODE=false' \
