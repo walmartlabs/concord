@@ -33,6 +33,9 @@ such as `X-Forwarded-For`;
 
 ### Changed
 
+- runtime-v1: fixed an issue preventing process variables from being
+passed into an `onFailure` handler if the parent process fails with
+an unhandled exception;
 - concord-agent: log dependency check results using `WARN` level;
 - runtime-v2: fix github trigger's exclusive attribute definition;
 - ansible: improved detection of the `setup` task type;
