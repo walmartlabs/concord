@@ -61,8 +61,8 @@ public class AnsibleTask {
         this.apiCfg = apiCfg;
     }
 
-    public Map<String, Object> run(AnsibleContext context,
-                                   PlaybookProcessRunner playbookProcessRunner) throws Exception {
+    public TaskResult run(AnsibleContext context,
+                          PlaybookProcessRunner playbookProcessRunner) throws Exception {
 
         String playbook = assertString(context.args(), TaskParams.PLAYBOOK_KEY.getKey());
         log.info("Using a playbook: {}", playbook);
@@ -140,14 +140,16 @@ public class AnsibleTask {
             log.debug("execution -> done, code {}", code);
 
             updateAnsibleStats(workDir, code);
+
             Map<String, Object> result = outVarsProcessor.process();
 
-            if (code != SUCCESS_EXIT_CODE) {
+            boolean success = code == SUCCESS_EXIT_CODE;
+            if (!success) {
                 saveRetryFile(context.args(), workDir);
                 log.warn("Playbook is finished with code {}", code);
-                throw new IllegalStateException("Process finished with exit code " + code);
             }
-            return result;
+
+            return new TaskResult(success, result, code);
         } finally {
             callbacks.stopEventSender();
 

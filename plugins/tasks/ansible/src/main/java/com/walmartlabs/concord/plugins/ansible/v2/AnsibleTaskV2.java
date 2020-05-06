@@ -47,7 +47,7 @@ public class AnsibleTaskV2 implements Task {
     private final ProcessConfiguration processConfiguration;
 
     @DefaultVariables
-    private Map<String, Object> defaults;
+    Map<String, Object> defaults;
 
     @Inject
     public AnsibleTaskV2(ApiConfiguration apiConfiguration, ApiClient apiClient,
@@ -90,7 +90,10 @@ public class AnsibleTaskV2 implements Task {
                 .retryCount((Integer) ctx.execution().state().peekFrame(ctx.execution().currentThreadId()).getLocal("__retry_attempNo")) // TODO provide a SDK method for this
                 .build();
 
-        Map<String, Object> result = task.run(context, runner);
-        return new HashMap<>(result);
+        TaskResult result = task.run(context, runner);
+        if (!result.isSuccess()) {
+            throw new IllegalStateException("Process finished with exit code " + result.getExitCode());
+        }
+        return new HashMap<>(result.getResult());
     }
 }

@@ -122,8 +122,11 @@ public class RunPlaybookTask2 implements Task {
         PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(new DockerServiceV1(dockerService, ctx), workDir)
                 .create(args);
 
-        Map<String, Object> result = task.run(context, runner);
-        result.forEach(ctx::setVariable);
+        TaskResult result = task.run(context, runner);
+        result.getResult().forEach(ctx::setVariable);
+        if (!result.isSuccess()) {
+            throw new IllegalStateException("Process finished with exit code " + result.getExitCode());
+        }
     }
 
     private static void addIfPresent(Context src, Map<String, Object> dst, String k) {
