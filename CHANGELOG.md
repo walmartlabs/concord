@@ -1,22 +1,25 @@
 # Change log
 
-## [Unreleased]
+## [1.49.0] - 2020-05-06
 
 ### Added
 
 - concord-cli: support for `imports`;
 - concord-cli: allow specifying an `entryPoint`;
 - concord-cli: support for `crypto.exportAsString`;
-- runtime-v2: support for process metadata;
 - concord-cli: initial support for `crypto.decryptString`;
-- lock-tasks: runtime v2 compatibility;
 - concord-cli: initial support for "default variables". The built-in
 variables provide some useful defaults for the Ansible plugin;
+- runtime-v2: support for process metadata;
 - runtime-v2: support for "processTimeout", "exclusive", "events"
 and "requirements" elements;
 - runtime-v2: allow process suspension via `Context#suspend` method;
 - concord-server: show a custom 404 page when a form is not found;
 - misc-tasks, datetime-tasks: runtime v2 compatibility;
+- lock-tasks: runtime v2 compatibility;
+- ansible: runtime v2 compatibility;
+- locale-tasks: runtime v2 compatibility;
+- smtp-tasks: runtime v2 compatibility;
 - concord-server, concord-console, concord-agent, runtime-v2:
 initial implementation of "segmented" process logs. Each task now
 gets a separate segment of the process log and can be shown on
@@ -24,12 +27,9 @@ the UI individually;
 - log-tasks: add `level` parameter to the v2 version of the task;
 - concord-agent: configurable default JVM parameters;
 - concord-console: show `startAt` to the process toolbar;
-- ansible: runtime v2 compatibility;
-- locale-tasks: runtime v2 compatibility;
-- smtp-tasks: runtime v2 compatibility;
 - concord-server: make the embedded Jetty aware of proxy headers
 such as `X-Forwarded-For`;
-- concord-server: API key IDs are not logged in the audit log.
+- concord-server: audit log now includes API key IDs.
 
 ### Changed
 
