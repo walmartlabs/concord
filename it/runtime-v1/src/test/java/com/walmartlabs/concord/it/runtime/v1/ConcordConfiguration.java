@@ -27,8 +27,8 @@ public final class ConcordConfiguration {
 
     public static Concord configure(int... hostPorts) {
         Concord concord = new Concord()
-                .pathToRunnerV1(null)
-                .pathToRunnerV2("target/runner-v2.jar")
+                .pathToRunnerV1("target/runner-v1.jar")
+                .pathToRunnerV2(null)
                 .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
                 .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
                 .pullPolicy(PullPolicy.defaultPolicy())

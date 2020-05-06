@@ -455,6 +455,30 @@ public class ProcessIT {
         onFailureProc.assertLog(".*Last error was:.*Boom!.*");
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOnFailureVariables2() throws Exception {
+        ConcordProcess proc = concord.processes().start(new Payload()
+                .archive(resource("onFailureVars2")));
+
+        proc.expectStatus(StatusEnum.FAILED);
+        
+        // wait for the onFailure process
+        ConcordProcess onFailureProc;
+        while (true) {
+            List<ProcessEntry> l = proc.subprocesses();
+            if (!l.isEmpty()) {
+                onFailureProc = concord.processes().get(l.get(0).getInstanceId());
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
+
+        onFailureProc.expectStatus(StatusEnum.FINISHED);
+        onFailureProc.assertLog(".*abc: Hello.*");
+        onFailureProc.assertLog(".*Last error was:.*PropertyNotFoundException.*");
+    }
+
     @SuppressWarnings("unchecked")
     private static void assertProcessErrorMessage(ProcessEntry p, String expected) {
         assertNotNull(p);
