@@ -51,6 +51,15 @@ public class VariablesSnapshotListener implements EngineListener {
 
     @Override
     public ProcessInstance onFinalize(ProcessInstance state) {
+        return processState(state);
+    }
+
+    @Override
+    public void onUnhandledException(ProcessInstance state) {
+        processState(state);
+    }
+
+    private ProcessInstance processState(ProcessInstance state) {
         Variables vars = state.getVariables();
 
         // remove some internal variables before saving

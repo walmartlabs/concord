@@ -1,0 +1,12 @@
+flows:
+  default:
+    - set:
+        abc: "Hello!"
+
+    - if: "${xyz.success}" # xyz is undefined
+      then:
+        - log: "shouldn't work anyway"
+
+  onFailure:
+    - log: "abc: ${abc}"
+    - log: "Last error was: ${lastError}"
