@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.tasks;
+package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,21 +20,23 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.model.SetVariablesStep;
+import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.vm.SetVariablesCommand;
+import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
-import java.io.Serializable;
-import java.util.Map;
 
-@Named("suspend")
-public class SuspendTask implements Task {
+@Named
+public class SetVariablesCompiler implements StepCompiler<SetVariablesStep> {
 
     @Override
-    public Serializable execute(TaskContext ctx) {
-        Map<String, Object> input = ctx.input();
-        String eventRef = (String) input.get("0");
-        ctx.suspend(eventRef);
-        return null;
+    public boolean accepts(Step step) {
+        return step instanceof SetVariablesStep;
+    }
+
+    @Override
+    public Command compile(CompilerContext context, SetVariablesStep step) {
+        return new SetVariablesCommand(step);
     }
 }

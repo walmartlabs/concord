@@ -443,6 +443,19 @@ public class MainTest {
         assertLog(log, ".*projectInfo: '\\{\\}'.*");
     }
 
+    @Test
+    public void testSetVariables() throws Exception {
+        deploy("setVariables");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("k1", "XYZ")
+                .putArguments("k2", "init")
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*k1-value, init, k3-value.*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

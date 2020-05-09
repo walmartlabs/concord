@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.tasks;
+package com.walmartlabs.concord.runtime.v2.model;
 
 /*-
  * *****
@@ -20,21 +20,32 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
-import javax.inject.Named;
 import java.io.Serializable;
 import java.util.Map;
 
-@Named("suspend")
-public class SuspendTask implements Task {
+public class SetVariablesStep extends AbstractStep<SimpleOptions> {
+
+    private static final long serialVersionUID = 1L;
+
+    private final Map<String, Serializable> vars;
+
+    public SetVariablesStep(JsonLocation location, Map<String, Serializable> variables, SimpleOptions options) {
+        super(location, options);
+
+        this.vars = variables;
+    }
+
+    public Map<String, Serializable> getVars() {
+        return vars;
+    }
 
     @Override
-    public Serializable execute(TaskContext ctx) {
-        Map<String, Object> input = ctx.input();
-        String eventRef = (String) input.get("0");
-        ctx.suspend(eventRef);
-        return null;
+    public String toString() {
+        return "SetVariablesStep{" +
+                "vars=" + vars +
+                '}';
     }
 }

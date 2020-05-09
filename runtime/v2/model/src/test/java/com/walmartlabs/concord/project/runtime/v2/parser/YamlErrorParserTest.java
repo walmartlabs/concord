@@ -2171,6 +2171,28 @@ public class YamlErrorParserTest extends AbstractParserTest {
         assertErrorMessage("errors/resources/002.yml", msg);
     }
 
+    @Test
+    public void test1900() throws Exception {
+        String msg = "(000.yml): Error @ line: 3, col: 11. Invalid value type, expected: OBJECT, got: NULL. Remove attribute or complete the definition\n" +
+                "\twhile processing steps:\n" +
+                "\t'set' @ line: 3, col: 7\n" +
+                "\t\t'main' @ line: 2, col: 3\n" +
+                "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/setVariables/000.yml", msg);
+    }
+
+    @Test
+    public void test1901() throws Exception {
+        String msg = "(001.yml): Error @ line: 7, col: 9. Unknown options: ['meta1' [OBJECT] @ line: 7, col: 9], expected: [meta]. Remove invalid options and/or fix indentation\n" +
+                "\twhile processing steps:\n" +
+                "\t'set' @ line: 3, col: 7\n" +
+                "\t\t'main' @ line: 2, col: 3\n" +
+                "\t\t\t'flows' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/setVariables/001.yml", msg);
+    }
+
     private void assertErrorMessage(String resource, String expectedError) throws Exception {
         try {
             load(resource);
