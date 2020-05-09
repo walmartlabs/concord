@@ -411,6 +411,24 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals("concord/myfile.yml", resources.concord().get(2));
     }
 
+    // set variables definition
+    @Test
+    public void test016() throws Exception {
+        ProcessDefinition pd = load("016.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof SetVariablesStep);
+        SetVariablesStep t = (SetVariablesStep) main.get(0);
+        assertMeta(t.getOptions());
+
+        Map<String, Serializable> m = new HashMap<>();
+        m.put("k", "v");
+        m.put("x", 2);
+        assertEquals(m, t.getVars());
+    }
+
     private static void assertMeta(StepOptions o) {
         assertNotNull(o.meta());
         assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());

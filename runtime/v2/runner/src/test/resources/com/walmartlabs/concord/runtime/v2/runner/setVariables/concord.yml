@@ -1,0 +1,6 @@
+flows:
+  default:
+    - set:
+        k1: "k1-value"
+        k3: "k3-value"
+    - log: "${k1}, ${k2}, ${k3}"

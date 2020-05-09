@@ -1,0 +1,7 @@
+flows:
+  default:
+    - set:
+        k: "v"
+        x: 2
+      meta:
+        m1: "v1"
