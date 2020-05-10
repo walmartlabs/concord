@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
@@ -66,7 +67,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
         ExpressionOptions opts = step.getOptions();
         String out = opts != null ? opts.out() : null;
 
-        Object v = ThreadLocalContext.withContext(ctx, () -> ee.eval(ctx, expr, Object.class));
+        Object v = ThreadLocalContext.withContext(ctx, () -> ee.eval(EvalContextFactory.global(ctx), expr, Object.class));
         if (out != null) {
             if (v != null && !(v instanceof Serializable)) {
                 log.warn("The expression's ('{}') result is not Serializable, it won't be preserved between process executions: {}", expr, v.getClass());

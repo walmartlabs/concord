@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.el.functions;
+package com.walmartlabs.concord.runtime.v2.runner.el;
 
 /*-
  * *****
@@ -20,22 +20,19 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
+import org.immutables.value.Value;
 
-import java.lang.reflect.Method;
-import java.util.Map;
+import javax.annotation.Nullable;
 
-public final class AllVariablesFunction {
+@Value.Immutable
+public interface LazyEvalContext extends EvalContext {
 
-    public static Method getMethod() {
-        try {
-            return AllVariablesFunction.class.getMethod("allVariables");
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
+    @Nullable
+    LazyEvalMap scope();
 
-    public static Map<String, Object> allVariables() {
-        return ThreadLocalEvalContext.get().variables();
+    static LazyEvalContext of(EvalContext ctx, LazyEvalMap scope) {
+        return ImmutableLazyEvalContext.builder().from(ctx)
+                .scope(scope)
+                .build();
     }
 }

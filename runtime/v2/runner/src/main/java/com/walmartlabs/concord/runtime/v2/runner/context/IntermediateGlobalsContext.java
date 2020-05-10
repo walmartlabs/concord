@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -72,7 +73,7 @@ public class IntermediateGlobalsContext implements Context {
     public <T> T eval(Object v, Class<T> type) {
         Runtime rt = delegate.execution().runtime();
         ExpressionEvaluator ee = rt.getService(ExpressionEvaluator.class);
-        return ee.eval(this, v, type);
+        return ee.eval(EvalContextFactory.global(this), v, type);
     }
 
     @Override

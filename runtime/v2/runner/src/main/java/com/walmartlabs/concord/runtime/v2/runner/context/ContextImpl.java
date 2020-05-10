@@ -22,6 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -131,7 +132,7 @@ public class ContextImpl implements Context {
 
     @Override
     public <T> T eval(Object v, Class<T> type) {
-        return expressionEvaluator.eval(this, v, type);
+        return expressionEvaluator.eval(EvalContextFactory.global(this), v, type);
     }
 
     @Override

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
 import javax.el.*;
 import java.lang.reflect.Method;
@@ -47,12 +46,12 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T eval(Context context, Object value, Class<T> expectedType) {
+    public <T> T eval(EvalContext context, Object value, Class<T> expectedType) {
         if (value == null) {
             return null;
         }
 
-        if (value instanceof Map) {
+        if (context.useIntermediateResults() && value instanceof Map) {
             Map<String, Object> m = (Map<String, Object>) value;
             if (m.isEmpty()) {
                 return expectedType.cast(m);
@@ -61,11 +60,11 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             return expectedType.cast(new LazyEvalMap(this, m, context));
         }
 
-        return evalValue(new EvalContext(context, null), value, expectedType);
+        return evalValue(LazyEvalContext.of(context, null), value, expectedType);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T evalValue(EvalContext ctx, Object value, Class<T> expectedType) {
+    public <T> T evalValue(LazyEvalContext ctx, Object value, Class<T> expectedType) {
         if (value == null) {
             return null;
         }
@@ -118,7 +117,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         return expectedType.cast(value);
     }
 
-    private <T> T evalExpr(EvalContext ctx, String expr, Class<T> type) {
+    private <T> T evalExpr(LazyEvalContext ctx, String expr, Class<T> type) {
         ELResolver resolver = createResolver(ctx, expressionFactory);
 
         StandardELContext sc = new StandardELContext(expressionFactory) {
@@ -139,6 +138,9 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
             Object v = withEvalContext(ctx, () -> x.getValue(sc));
             return type.cast(v);
         } catch (PropertyNotFoundException e) {
+            if (ctx.undefinedVariableAsNull()) {
+                return null;
+            }
             throw new RuntimeException(String.format("Can't find the specified variable in '%s'. " +
                     "Check if it is defined in the current scope. Details: %s", expr, e.getMessage()));
         }
@@ -148,15 +150,17 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
      * Based on the original code from {@link StandardELContext#getELResolver()}.
      * Creates a {@link ELResolver} instance with "sub-resolvers" in the original order.
      */
-    private ELResolver createResolver(EvalContext evalContext,
+    private ELResolver createResolver(LazyEvalContext evalContext,
                                       ExpressionFactory expressionFactory) {
         CompositeELResolver r = new CompositeELResolver();
         r.add(new InjectVariableResolver());
-        if (evalContext.scopeVariables() != null) {
-            r.add(new VariableResolver(evalContext.scopeVariables()));
+        if (evalContext.scope() != null) {
+            r.add(new VariableResolver(evalContext.scope()));
         }
-        r.add(new VariableResolver(evalContext.context().globalVariables().toMap()));
-        r.add(new TaskResolver(evalContext.context(), taskProviders));
+        r.add(new VariableResolver(evalContext.variables()));
+        if (evalContext.context() != null) {
+            r.add(new TaskResolver(evalContext.context(), taskProviders));
+        }
         r.add(expressionFactory.getStreamELResolver());
         r.add(new StaticFieldELResolver());
         r.add(new MapELResolver());

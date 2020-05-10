@@ -25,12 +25,12 @@ import java.util.*;
 public class LazyEvalList extends AbstractList<Object> {
 
     private final LazyExpressionEvaluator evaluator;
-    private final EvalContext context;
+    private final LazyEvalContext context;
     private final Set<Integer> inflightKeys = new HashSet<>();
     private final List<Object> originalValues;
     private final Map<Integer, Object> evaluatedValues = new HashMap<>();
 
-    public LazyEvalList(LazyExpressionEvaluator evaluator, EvalContext context, List<Object> src) {
+    public LazyEvalList(LazyExpressionEvaluator evaluator, LazyEvalContext context, List<Object> src) {
         this.evaluator = evaluator;
         this.context = context;
         this.originalValues = src;

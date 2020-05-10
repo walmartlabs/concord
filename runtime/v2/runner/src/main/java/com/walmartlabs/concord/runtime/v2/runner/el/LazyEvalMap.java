@@ -20,15 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class LazyEvalMap implements Map<String, Object> {
 
     private final LazyExpressionEvaluator evaluator;
-    private final EvalContext evalContext;
+    private final LazyEvalContext evalContext;
 
     private final LinkedHashSet<String> orderedKeys;
     private final Set<Object> inflightKeys = new HashSet<>();
@@ -36,7 +34,7 @@ public class LazyEvalMap implements Map<String, Object> {
     private final Map<String, Object> evaluatedValues = new LinkedHashMap<>();
 
     public LazyEvalMap(LazyExpressionEvaluator evaluator,
-                       EvalContext evalContext,
+                       LazyEvalContext evalContext,
                        Map<String, Object> nonEvaluatedItems) {
         this.evaluator = evaluator;
         this.evalContext = evalContext;
@@ -46,9 +44,9 @@ public class LazyEvalMap implements Map<String, Object> {
 
     public LazyEvalMap(LazyExpressionEvaluator evaluator,
                        Map<String, Object> nonEvaluatedItems,
-                       Context context) {
+                       EvalContext context) {
         this.evaluator = evaluator;
-        this.evalContext = new EvalContext(context, this);
+        this.evalContext = LazyEvalContext.of(context, this);
         this.orderedKeys = new LinkedHashSet<>(nonEvaluatedItems.keySet());
         this.originalValues = nonEvaluatedItems;
     }
