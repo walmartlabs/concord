@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
@@ -135,7 +136,7 @@ public final class VMUtils {
         Map<String, Object> frameOverrides = VMUtils.getTaskInputOverrides(ctx);
         result.putAll(frameOverrides);
 
-        return Collections.unmodifiableMap(ee.evalAsMap(ctx, result));
+        return Collections.unmodifiableMap(ee.evalAsMap(EvalContextFactory.global(ctx), result));
     }
 
     @SuppressWarnings("unchecked")

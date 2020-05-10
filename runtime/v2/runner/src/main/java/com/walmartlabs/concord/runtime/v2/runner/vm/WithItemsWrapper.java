@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
@@ -74,7 +75,7 @@ public class WithItemsWrapper implements Command {
         }
         Context ctx = contextFactory.create(runtime, state, threadId, currentStep);
 
-        value = expressionEvaluator.eval(ctx, value, Serializable.class);
+        value = expressionEvaluator.eval(EvalContextFactory.global(ctx), value, Serializable.class);
 
         // prepare items
         // store items in an ArrayList because it is Serializable

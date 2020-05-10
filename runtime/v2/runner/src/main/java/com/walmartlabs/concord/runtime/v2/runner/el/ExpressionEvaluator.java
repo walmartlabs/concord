@@ -20,8 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-
 import java.util.List;
 import java.util.Map;
 
@@ -40,23 +38,23 @@ public interface ExpressionEvaluator {
      *  eval(ctx, items, List.class);
      * }</pre>
      */
-    <T> T eval(Context ctx, Object value, Class<T> expectedType);
+    <T> T eval(EvalContext ctx, Object value, Class<T> expectedType);
 
     /**
-     * Same as {@link #eval(Context, Object, Class)}, but allows assigning
+     * Same as {@link #eval(EvalContext, Object, Class)}, but allows assigning
      * the result to a generic Map without unchecked casts.
      */
     @SuppressWarnings("unchecked")
-    default <K, V> Map<K, V> evalAsMap(Context ctx, Object value) {
+    default <K, V> Map<K, V> evalAsMap(EvalContext ctx, Object value) {
         return eval(ctx, value, Map.class);
     }
 
     /**
-     * Same as {@link #eval(Context, Object, Class)}, but allows assigning
+     * Same as {@link #eval(EvalContext, Object, Class)}, but allows assigning
      * the result to a generic List without unchecked casts.
      */
     @SuppressWarnings("unchecked")
-    default <T> List<T> evalAsList(Context ctx, Object value) {
+    default <T> List<T> evalAsList(EvalContext ctx, Object value) {
         return eval(ctx, value, List.class);
     }
 }

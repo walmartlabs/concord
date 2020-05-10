@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.ResourceResolver;
 import com.walmartlabs.concord.runtime.v2.runner.ScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
@@ -62,9 +63,11 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         ScriptCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        ThreadLocalContext.withContext(ctx, () -> {
-            scriptEvaluator.eval(ctx, getLanguage(call), getContent(expressionEvaluator, resourceResolver, ctx, call), input);
-        });
+        String language = getLanguage(call);
+        Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call); // TODO close reader?
+
+        ThreadLocalContext.withContext(ctx, () ->
+                scriptEvaluator.eval(ctx, language, content, input));
     }
 
     private static String getLanguage(ScriptCall call) {
@@ -92,7 +95,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
             return new StringReader(Objects.requireNonNull(call.getOptions().body()));
         }
 
-        String ref = expressionEvaluator.eval(ctx, call.getName(), String.class);
+        String ref = expressionEvaluator.eval(EvalContextFactory.global(ctx), call.getName(), String.class);
         try {
             InputStream in = resourceResolver.resolve(ref);
             if (in == null) {

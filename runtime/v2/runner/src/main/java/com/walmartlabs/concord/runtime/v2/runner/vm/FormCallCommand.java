@@ -29,6 +29,8 @@ import com.walmartlabs.concord.runtime.v2.model.FormField;
 import com.walmartlabs.concord.runtime.v2.model.Forms;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
+import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
@@ -67,15 +69,16 @@ public class FormCallCommand extends StepCommand<FormCall> {
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
         Context ctx = contextFactory.create(runtime, state, threadId, getStep());
+        EvalContext evalContext = EvalContextFactory.global(ctx);
 
         FormCall call = getStep();
-        String formName = expressionEvaluator.eval(ctx, call.getName(), String.class);
-        List<FormField> fields = assertFormFields(expressionEvaluator, ctx, formName, call);
+        String formName = expressionEvaluator.eval(evalContext, call.getName(), String.class);
+        List<FormField> fields = assertFormFields(expressionEvaluator, evalContext, formName, call);
         Form form = Form.builder()
                 .name(formName)
                 .eventName(eventRef)
-                .options(buildFormOptions(expressionEvaluator, ctx))
-                .fields(buildFormFields(expressionEvaluator, ctx, fields, call.getOptions().values()))
+                .options(buildFormOptions(expressionEvaluator, evalContext))
+                .fields(buildFormFields(expressionEvaluator, evalContext, fields, call.getOptions().values()))
                 .build();
 
         FormService formService = runtime.getService(FormService.class);
@@ -87,7 +90,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
         log.debug("eval [{}] -> done, eventRef={}", threadId, eventRef); // TODO remove?
     }
 
-    private FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, Context ctx) {
+    private FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, EvalContext ctx) {
         FormCallOptions options = getStep().getOptions();
 
         Map<String, Serializable> runAs = expressionEvaluator.evalAsMap(ctx, options.runAs());
@@ -99,7 +102,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
                 .build();
     }
 
-    private List<com.walmartlabs.concord.forms.FormField> buildFormFields(ExpressionEvaluator expressionEvaluator, Context ctx, List<com.walmartlabs.concord.runtime.v2.model.FormField> fields, Map<String, Serializable> values) {
+    private List<com.walmartlabs.concord.forms.FormField> buildFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, List<com.walmartlabs.concord.runtime.v2.model.FormField> fields, Map<String, Serializable> values) {
         List<com.walmartlabs.concord.forms.FormField> result = new ArrayList<>();
 
         fields.forEach(f -> {
@@ -134,7 +137,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
         return result;
     }
 
-    private List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, Context ctx, String formName, FormCall formCall) {
+    private List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, String formName, FormCall formCall) {
         FormCallOptions options = formCall.getOptions();
         if (!options.fields().isEmpty()) {
             return options.fields();

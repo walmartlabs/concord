@@ -21,25 +21,47 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Map;
 
-public class EvalContext {
+/**
+ * Expression evaluation context.
+ */
+public interface EvalContext {
 
-    private final Context context;
+    /**
+     * Required if expressions call other tasks.
+     */
+    @Nullable
+    Context context();
 
-    private final Map<String, Object> scopeVariables;
-
-    public EvalContext(Context context, Map<String, Object> scopeVariables) {
-        this.context = context;
-        this.scopeVariables = scopeVariables;
+    /**
+     * Variables that will be made available during the evaluation.
+     * @see #useIntermediateResults()
+     */
+    @Value.Default
+    default Map<String, Object> variables() {
+        return Collections.emptyMap();
     }
 
-    public Context context() {
-        return context;
+    /**
+     * If {@code true} then intermediate results will be available during
+     * the evaluation.
+     */
+    @Value.Default
+    default boolean useIntermediateResults() {
+        return false;
     }
 
-    public Map<String, Object> scopeVariables() {
-        return scopeVariables;
+    /**
+     * If {@code true} then undefined variables will be resolved to
+     * {@code null} instead of throwing an exception.
+     */
+    @Value.Default
+    default boolean undefinedVariableAsNull() {
+        return false;
     }
 }

@@ -21,8 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesImpl;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import org.junit.Test;
 
@@ -30,6 +28,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,20 +38,55 @@ import static org.mockito.Mockito.*;
 public class ExpressionEvaluatorTest {
 
     @Test
-    public void testEva() {
+    public void testEvaGlobal() {
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        Map<String, Object> vars = Collections.singletonMap("name", "${Concord}");
 
-        GlobalVariables vars = new GlobalVariablesImpl(Collections.singletonMap("name", "${Concord}"));
-
-        String str = ee.eval(new DummyContext(vars), "Hello ${name}", String.class);
+        // ---
+        String str = ee.eval(global(vars), "Hello ${name}", String.class);
         assertEquals("Hello ${Concord}", str);
     }
 
     @Test
-    public void testEvalMap() {
+    public void testStrict() {
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        Map<String, Object> vars = Collections.singletonMap("name", "Concord");
+        Map<String, Object> strict = Collections.singletonMap("name", "Concord!!!");
+
+        EvalContext ctx = EvalContextFactory.strict(new DummyContext(vars), strict);
+
+        // ---
+        String str = ee.eval(ctx, "Hello ${name}", String.class);
+        assertEquals("Hello Concord!!!", str);
+    }
+
+    @Test
+    public void testStrictUndef() {
+        ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
+        Map<String, Object> vars = Collections.singletonMap("name", "Concord");
+        Map<String, Object> strict = Collections.emptyMap();
+
+        EvalContext ctx = EvalContextFactory.strict(new DummyContext(vars), strict);
+
+        // ---
+        try {
+            ee.eval(ctx, "Hello ${name}", String.class);
+            fail("exception expected");
+        } catch (RuntimeException e) {
+            assertThat(e.getMessage(), containsString("variable in 'Hello ${name}'"));
+        }
+
+        // undef as null
+        // ---
+        String str = ee.eval(undefAsNull(ctx), "Hello ${name}", String.class);
+        assertNull(str);
+    }
+
+    @Test
+    public void testEvalScope() {
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
 
-        GlobalVariables vars = new GlobalVariablesImpl(Collections.singletonMap("name", "${Concord}"));
+        Map<String, Object> vars = Collections.singletonMap("name", "${Concord}");
 
         Map<String, Object> input = new LinkedHashMap<>();
         input.put("msg", "Hello, ${name}");
@@ -62,15 +96,15 @@ public class ExpressionEvaluatorTest {
         expected.put("msg", "Hello, ${Concord}");
         expected.put("text", "Hello, ${Concord}");
 
-        Map<String, Object> output = ee.evalAsMap(new DummyContext(vars), input);
+        Map<String, Object> output = ee.evalAsMap(scope(vars), input);
         assertThat(output, is(expected));
     }
 
     @Test
-    public void testEvalList() {
+    public void testEvalListGlobal() {
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
 
-        GlobalVariables vars = new GlobalVariablesImpl(Collections.singletonMap("name", "${Concord}"));
+        Map<String, Object> vars = Collections.singletonMap("name", "${Concord}");
 
         List<String> input = new ArrayList<>();
         input.add("Hello, ${name}");
@@ -78,7 +112,7 @@ public class ExpressionEvaluatorTest {
         List<String> expected = new ArrayList<>();
         expected.add( "Hello, ${Concord}");
 
-        List<String> output = ee.evalAsList(new DummyContext(vars), input);
+        List<String> output = ee.evalAsList(global(vars), input);
         assertThat(output, is(expected));
     }
 
@@ -99,18 +133,38 @@ public class ExpressionEvaluatorTest {
                 "x", "${y}",
                     "z", "${y.y1}",
                     "y", map(
-                "y1", "task",
+                "y1", "${in}",
                         "y2", "abc",
                         "y3", "${z}"));
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
-        GlobalVariables vars = new GlobalVariablesImpl();
+        Map<String, Object> vars = Collections.singletonMap("in", "task");
 
-        Map<Object, Object> output = ee.evalAsMap(new DummyContext(vars), input);
+        // scope -> ok
+        // ---
+        Map<Object, Object> output = ee.evalAsMap(scope(vars), input);
 
         Map<Object, Object> y = map("y1", "task", "y2", "abc", "y3", "task");
         assertThat(output, is(map("x", y,
                 "z","task",
+                "y", y)));
+
+        // global -> error (y undefined)
+        // ---
+        try {
+            ee.evalAsMap(global(vars), input);
+            fail("exception expected");
+        } catch (RuntimeException e) {
+            assertThat(e.getMessage(), containsString("variable in '${y}'"));
+        }
+
+        // undef -> x = null, z = null, y ...y3 = null
+        // ---
+        output = ee.evalAsMap(undefAsNull(global(vars)), input);
+
+        y.put("y3", null);
+        assertThat(output, is(map("x", null,
+                "z",null,
                 "y", y)));
     }
 
@@ -121,13 +175,24 @@ public class ExpressionEvaluatorTest {
                 "y", "${x}");
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
-        GlobalVariables vars = new GlobalVariablesImpl();
+        Map<String, Object> vars = Collections.emptyMap();
 
+        // global: x -> undefined
+        // ---
         try {
-            ee.evalAsMap(new DummyContext(vars), input);
+            ee.evalAsMap(global(vars), input);
             fail("exception expected");
         } catch (RuntimeException e) {
-            assertEquals("Key 'x' already in evaluation", e.getMessage());
+            assertThat(e.getMessage(), containsString("variable in '${y}'"));
+        }
+
+        // scope
+        // ---
+        try {
+            ee.evalAsMap(scope(vars), input);
+            fail("exception expected");
+        } catch (RuntimeException e) {
+            assertThat(e.getMessage(), containsString("Key 'x' already in evaluation"));
         }
     }
 
@@ -156,9 +221,22 @@ public class ExpressionEvaluatorTest {
         when(providers.createTask(any(), eq("task"))).thenReturn(task);
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(providers);
-        GlobalVariables vars = new GlobalVariablesImpl();
+        Map<String, Object> vars = Collections.emptyMap();
 
-        Map<Object, Object> output = ee.evalAsMap(new DummyContext(vars), input);
+        // global: y -> undefined
+        // ---
+        try {
+            ee.evalAsMap(global(vars), input);
+            fail("exception expected");
+        } catch (Exception e) {
+            assertThat(e.getMessage(), containsString("variable in '${y}'"));
+        }
+
+        verify(task, times(0)).foo(anyString());
+
+        // scope:
+        // ---
+        Map<Object, Object> output = ee.evalAsMap(scope(vars), input);
 
         Map<Object, Object> y = map("y1", "from-task: abc", "y2", "abc", "y3", "from-task: abc");
         assertThat(output, is(map("x", y,
@@ -193,9 +271,11 @@ public class ExpressionEvaluatorTest {
         when(providers.createTask(any(), eq("task"))).thenReturn(task);
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(providers);
-        GlobalVariables vars = new GlobalVariablesImpl();
+        Map<String, Object> vars = Collections.emptyMap();
 
-        Map<Object, Object> output = ee.evalAsMap(new DummyContext(vars), input);
+        // scope:
+        // ---
+        Map<Object, Object> output = ee.evalAsMap(scope(vars), input);
 
         Map<Object, Object> y = map("y1", "${abc}", "y2", "abc", "y3", "${abc}");
         assertThat(output, is(map("x", y,
@@ -213,12 +293,12 @@ public class ExpressionEvaluatorTest {
                         "y2", "${y1}"));
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
-        GlobalVariables vars = new GlobalVariablesImpl();
+        Map<String, Object> vars = Collections.emptyMap();
 
         try {
-            ee.evalAsMap(new DummyContext(vars), input);
+            ee.evalAsMap(scope(vars), input);
         } catch (RuntimeException e) {
-            assertTrue(e.getMessage().contains("Can't find the specified variable in '${y1}'"));
+            assertThat(e.getMessage(), containsString("Can't find the specified variable in '${y1}'"));
         }
     }
 
@@ -229,9 +309,11 @@ public class ExpressionEvaluatorTest {
                         "y", "abc");
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
-        GlobalVariables vars = new GlobalVariablesImpl();
+        Map<String, Object> vars = Collections.emptyMap();
 
-        Map<Object, Object> output = ee.evalAsMap(new DummyContext(vars), input);
+        // scope:
+        // ---
+        Map<Object, Object> output = ee.evalAsMap(scope(vars), input);
 
         assertThat(output, is(map("x", Collections.singletonList("abc"),
                 "y","abc")));
@@ -239,36 +321,38 @@ public class ExpressionEvaluatorTest {
 
     @Test
     public void testEval8() {
-        /**
+        /*
          * x:
          *   - ${y}
          * y: "abc"
          */
-
         Map<Object, Object> input = map("x", Collections.singletonList("${y}"), "y", "abc");
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
-        GlobalVariables vars = new GlobalVariablesImpl();
+        Map<String, Object> vars = Collections.emptyMap();
 
-        Map<Object, Object> output = ee.evalAsMap(new DummyContext(vars), input);
+        // scope:
+        // ---
+        Map<Object, Object> output = ee.evalAsMap(scope(vars), input);
 
         assertThat(output, is(map("x", Collections.singletonList("abc"), "y", "abc")));
     }
 
     @Test
-    public void testEvalHasVariable() throws Exception {
+    public void testEvalHasVariable() {
         String str = "${hasVariable('x')}";
 
         ExpressionEvaluator ee = new DefaultExpressionEvaluator(new TaskProviders());
 
         // ---
 
-        boolean result = ee.eval(new DummyContext(), str, Boolean.class);
+        boolean result = ee.eval(global(Collections.emptyMap()), str, Boolean.class);
         assertFalse(result);
 
         // ---
+
         Map<String, Object> vars = Collections.singletonMap("x", "x-value");
-        result = ee.eval(new DummyContext(vars), str, Boolean.class);
+        result = ee.eval(global(vars), str, Boolean.class);
         assertTrue(result);
     }
 
@@ -283,8 +367,22 @@ public class ExpressionEvaluatorTest {
         vars.put("a", Collections.singletonList("b"));
         vars.put("b", "bb");
 
-        Map<String, Object> result = ee.evalAsMap(new DummyContext(vars), str);
+        Map<String, Object> result = ee.evalAsMap(global(vars), str);
         assertEquals(vars, result);
+    }
+
+    private static EvalContext global(Map<String, Object> vars) {
+        return EvalContextFactory.global(new DummyContext(vars));
+    }
+
+    private static EvalContext scope(Map<String, Object> vars) {
+        return EvalContextFactory.scope(new DummyContext(vars));
+    }
+
+    private static EvalContext undefAsNull(EvalContext ctx) {
+        return DefaultEvalContext.builder().from(ctx)
+                .undefinedVariableAsNull(true)
+                .build();
     }
 
     private static Map<Object, Object> map(Object ... values) {
@@ -299,6 +397,7 @@ public class ExpressionEvaluatorTest {
 
     public static class TestTask implements Task {
 
+        @SuppressWarnings("UnusedReturnValue")
         public Serializable foo(String value) {
             return "from-task: " + value;
         }
@@ -306,6 +405,7 @@ public class ExpressionEvaluatorTest {
 
     public static class TestTask2 implements Task {
 
+        @SuppressWarnings("UnusedReturnValue")
         public Serializable foo(String value) {
             return "${" + value + "}";
         }

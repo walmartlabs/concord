@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  */
 
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -39,7 +38,7 @@ public class DefaultExpressionEvaluator implements ExpressionEvaluator {
     }
 
     @Override
-    public <T> T eval(Context ctx, Object value, Class<T> expectedType) {
+    public <T> T eval(EvalContext ctx, Object value, Class<T> expectedType) {
         Object result = delegate.eval(ctx, value, Object.class);
         return initializeAll(result, expectedType);
     }
