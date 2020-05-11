@@ -89,7 +89,6 @@ public class EntityOwnerPolicyIT extends AbstractServerIT {
             orgApi.createOrUpdate(new OrganizationEntry().setOwner(owner).setName(orgName));
             fail("exception expected");
         } catch (ApiException e) {
-            System.out.println(e.getResponseBody());
             assertTrue(e.getResponseBody().contains("Action forbidden: test-rule"));
         }
     }
