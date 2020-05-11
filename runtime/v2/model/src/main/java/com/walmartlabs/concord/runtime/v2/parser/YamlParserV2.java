@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -32,6 +33,7 @@ import com.google.common.collect.Lists;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidFieldDefinitionException;
 import com.walmartlabs.concord.runtime.v2.exception.YamlParserException;
 import com.walmartlabs.concord.runtime.v2.exception.YamlProcessingException;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.io.IOException;
@@ -60,26 +62,30 @@ public class YamlParserV2 {
     }
 
     public ProcessDefinition parse(Path baseDir, Path file) throws IOException {
+        String fileName = baseDir.relativize(file).toString();
         try {
-            return objectMapper.readValue(file.toFile(), ProcessDefinition.class);
+            return ThreadLocalFileName.withFileName(fileName,
+                    () -> objectMapper.readValue(file.toFile(), ProcessDefinition.class));
         } catch (YamlProcessingException e) {
-            throw new YamlParserException(buildErrorMessage("(" + baseDir.relativize(file) + "): Error", e));
+            throw new YamlParserException(buildErrorMessage(fileName, e));
         } catch (Exception e) {
-            if (e instanceof JsonProcessingException) {
-                JsonProcessingException jpe = (JsonProcessingException) e;
-                throw toErr("(" + baseDir.relativize(file) + "): Error", jpe);
+            if (e.getCause() instanceof JsonProcessingException) {
+                JsonProcessingException jpe = (JsonProcessingException) e.getCause();
+                throw toErr("(" + fileName + "): Error", jpe);
             }
             throw new YamlParserException("Error while loading a project file '" + baseDir.relativize(file) +"', " + e.getMessage());
         }
     }
 
     private static YamlParserException toErr(String msg, JsonProcessingException jpe) {
-        String loc = JsonLocationConverter.toShortString(jpe.getLocation());
+        String loc = toShortString(jpe.getLocation());
         String originalMsg = jpe.getOriginalMessage();
         return new YamlParserException(msg + " @ " + loc + ". " + originalMsg);
     }
 
-    private static String buildErrorMessage(String prefix, YamlProcessingException e) {
+    private static String buildErrorMessage(String fileName, YamlProcessingException e) {
+        String prefix = "(" + fileName + "): Error";
+
         List<YamlProcessingException> errors = Lists.reverse(getYamlProcessingExceptionList(e));
 
         String padding = "\t";
@@ -93,7 +99,7 @@ public class YamlParserV2 {
         for (InvalidFieldDefinitionException err : stepErrors) {
             result.append("\n").append(padding)
                     .append("'").append(err.getFieldName()).append("'")
-                    .append(" @ ").append(JsonLocationConverter.toShortString(err.getLocation()));
+                    .append(" @ ").append(Location.toShortString(err.getLocation()));
             padding += "\t";
         }
         return result.toString();
@@ -114,6 +120,14 @@ public class YamlParserV2 {
     }
 
     private static String toMessage(String prefix, YamlProcessingException e) {
-        return prefix + " @ " + JsonLocationConverter.toShortString(e.getLocation()) + ". " + e.getMessage();
+        return prefix + " @ " + Location.toShortString(e.getLocation()) + ". " + e.getMessage();
     }
+
+    public static String toShortString(JsonLocation location) {
+        if (location == null) {
+            return "n/a";
+        }
+        return "line: " + location.getLineNr() + ", col: " + location.getColumnNr();
+    }
+
 }

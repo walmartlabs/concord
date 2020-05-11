@@ -21,6 +21,7 @@ package com.walmartlabs.concord.process.loader.model;
  */
 
 import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -31,11 +32,11 @@ public interface SourceMap extends Serializable {
 
     long serialVersionUID = 1L;
 
-    static SourceMap from(JsonLocation location) {
+    static SourceMap from(Location location) {
         return SourceMap.builder()
-                .source(location.sourceDescription())
-                .line(location.getLineNr())
-                .column(location.getColumnNr())
+                .source(location.fileName() != null ? location.fileName() : "n/a")
+                .line(location.lineNum())
+                .column(location.column())
                 .build();
     }
 

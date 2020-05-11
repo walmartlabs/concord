@@ -20,9 +20,9 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.exception.YamlProcessingException;
 import com.walmartlabs.concord.runtime.v2.model.IfStep;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
 import io.takari.parc.Parser;
@@ -81,7 +81,7 @@ public final class ConditionalExpressionsGrammar {
             return this;
         }
 
-        public IfStep build(JsonLocation location, String expression) {
+        public IfStep build(Location location, String expression) {
             return new IfStep(location, expression, thenSteps, elseSteps, options);
         }
 
@@ -92,7 +92,7 @@ public final class ConditionalExpressionsGrammar {
 
     static class SwitchStepBuilder {
 
-        private List<Map.Entry<String, List<Step>>> caseSteps = new ArrayList<>();
+        private final List<Map.Entry<String, List<Step>>> caseSteps = new ArrayList<>();
         private List<Step> defaultSteps;
         private SimpleOptions options;
 
@@ -111,7 +111,7 @@ public final class ConditionalExpressionsGrammar {
             return this;
         }
 
-        public SwitchStep build(JsonLocation location, String expression) {
+        public SwitchStep build(Location location, String expression) {
             if (defaultSteps == null && caseSteps.isEmpty()) {
                 throw new YamlProcessingException(location, "No branch labels defined");
             }

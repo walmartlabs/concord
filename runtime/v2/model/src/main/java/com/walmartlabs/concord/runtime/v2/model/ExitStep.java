@@ -20,12 +20,11 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 public class ExitStep extends AbstractStep<SimpleOptions> {
 
-    public ExitStep(JsonLocation location, SimpleOptions options) {
+    public ExitStep(Location location, SimpleOptions options) {
         super(location, options);
     }
 }

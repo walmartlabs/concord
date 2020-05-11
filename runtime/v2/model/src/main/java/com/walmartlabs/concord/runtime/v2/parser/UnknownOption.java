@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
@@ -36,9 +36,9 @@ public interface UnknownOption {
     YamlValueType type();
 
     @Value.Parameter
-    JsonLocation location();
+    Location location();
 
-    static UnknownOption of(String key, YamlValueType type, JsonLocation location) {
+    static UnknownOption of(String key, YamlValueType type, Location location) {
         return ImmutableUnknownOption.of(key, type, location);
     }
 }

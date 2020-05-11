@@ -20,22 +20,22 @@ package com.walmartlabs.concord.runtime.v2.exception;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 public class YamlProcessingException extends RuntimeException {
 
-    private final JsonLocation location;
+    private final Location location;
 
-    public YamlProcessingException(JsonLocation location, String message) {
+    public YamlProcessingException(Location location, String message) {
         super(message);
         this.location = location;
     }
 
-    protected YamlProcessingException(JsonLocation location) {
+    protected YamlProcessingException(Location location) {
         this.location = location;
     }
 
-    public JsonLocation getLocation() {
+    public Location getLocation() {
         return location;
     }
 }

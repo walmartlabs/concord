@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.exception;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -32,7 +32,7 @@ public class InvalidValueException extends YamlProcessingException {
     private final List<String> expected;
     private final Serializable actual;
 
-    private InvalidValueException(List<String> expected, Serializable actual, JsonLocation location) {
+    private InvalidValueException(List<String> expected, Serializable actual, Location location) {
         super(location);
         this.expected = expected;
         this.actual = actual;
@@ -68,7 +68,7 @@ public class InvalidValueException extends YamlProcessingException {
     public static class Builder {
         private List<String> expected;
         private Serializable actual;
-        private JsonLocation location;
+        private Location location;
 
         public Builder expected(String ... expected) {
             return expected(Arrays.asList(expected));
@@ -84,7 +84,7 @@ public class InvalidValueException extends YamlProcessingException {
             return this;
         }
 
-        public Builder location(JsonLocation location) {
+        public Builder location(Location location) {
             this.location = location;
             return this;
         }

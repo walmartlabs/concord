@@ -20,42 +20,47 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.walmartlabs.concord.forms.FormField.Cardinality;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Map;
 
 @Value.Immutable
-public interface FormField extends Serializable {
+@Value.Style(jdkOnly = true)
+public interface Location extends Serializable {
 
     long serialVersionUID = 1L;
 
-    String name();
+    static String toShortString(Location location) {
+        if (location == null || location.fileName() == null) {
+            return "n/a";
+        }
 
-    @Nullable
-    String label();
-
-    String type();
-
-    Cardinality cardinality();
-
-    @Nullable
-    Serializable defaultValue();
-
-    @Nullable
-    Serializable allowedValue();
-
-    @Value.Default
-    default Map<String, Serializable> options() {
-        return Collections.emptyMap();
+        return "line: " + location.lineNum() + ", col: " + location.column();
     }
 
-    Location location();
+    static String toErrorPrefix(Location location) {
+        if (location == null || location.fileName() == null) {
+            return "(n/a): Error.";
+        } else {
+            return "(" + location.fileName() + "): Error @ " + toShortString(location) + ".";
+        }
+    }
 
-    static ImmutableFormField.Builder builder() {
-        return ImmutableFormField.builder();
+    @Value.Default
+    default int lineNum() {
+        return -1;
+    }
+
+    @Value.Default
+    default int column() {
+        return -1;
+    }
+
+    @Nullable
+    String fileName();
+
+    static ImmutableLocation.Builder builder() {
+        return ImmutableLocation.builder();
     }
 }

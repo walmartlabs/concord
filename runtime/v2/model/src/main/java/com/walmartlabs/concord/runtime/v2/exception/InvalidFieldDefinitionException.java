@@ -20,14 +20,14 @@ package com.walmartlabs.concord.runtime.v2.exception;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 public class InvalidFieldDefinitionException extends YamlProcessingException {
 
     private final String fieldName;
     private final YamlProcessingException cause;
 
-    public InvalidFieldDefinitionException(String fieldName, JsonLocation stepLocation, YamlProcessingException cause) {
+    public InvalidFieldDefinitionException(String fieldName, Location stepLocation, YamlProcessingException cause) {
         super(stepLocation);
         this.fieldName = fieldName;
         this.cause = cause;

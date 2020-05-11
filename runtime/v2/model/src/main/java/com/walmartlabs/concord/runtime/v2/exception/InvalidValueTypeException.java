@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.exception;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.parser.YamlValueType;
 
 import java.util.Arrays;
@@ -34,7 +34,7 @@ public class InvalidValueTypeException extends YamlProcessingException {
     private final String valueKey;
     private final String message;
 
-    private InvalidValueTypeException(String valueKey, YamlValueType[] expectedType, YamlValueType actualType, String message, JsonLocation location) {
+    private InvalidValueTypeException(String valueKey, YamlValueType[] expectedType, YamlValueType actualType, String message, Location location) {
         super(location);
         this.expectedType = expectedType;
         this.actualType = actualType;
@@ -92,7 +92,7 @@ public class InvalidValueTypeException extends YamlProcessingException {
         private String valueKey;
         private YamlValueType[] expectedType;
         private YamlValueType actualType;
-        private JsonLocation location;
+        private Location location;
         private String message;
 
         public Builder from(InvalidValueTypeException e) {
@@ -123,7 +123,7 @@ public class InvalidValueTypeException extends YamlProcessingException {
             return this;
         }
 
-        public Builder location(JsonLocation location) {
+        public Builder location(Location location) {
             this.location = location;
             return this;
         }

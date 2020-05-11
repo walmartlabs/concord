@@ -20,14 +20,12 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-
 import java.io.Serializable;
 import java.util.Collections;
 
 public class TaskCall extends AbstractStep<TaskCallOptions> {
 
-    public static TaskCall singleArgCall(JsonLocation location, TaskCallOptions options, String name, Serializable arg) {
+    public static TaskCall singleArgCall(Location location, TaskCallOptions options, String name, Serializable arg) {
         return new TaskCall(location, name, TaskCallOptions.builder().from(options).input(Collections.singletonMap("0", arg)).build());
     }
 
@@ -35,7 +33,7 @@ public class TaskCall extends AbstractStep<TaskCallOptions> {
 
     private final String name;
 
-    public TaskCall(JsonLocation location, String name, TaskCallOptions options) {
+    public TaskCall(Location location, String name, TaskCallOptions options) {
         super(location, options);
 
         this.name = name;

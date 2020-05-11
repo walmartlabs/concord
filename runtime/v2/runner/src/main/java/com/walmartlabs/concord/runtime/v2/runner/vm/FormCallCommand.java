@@ -37,8 +37,6 @@ import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 import com.walmartlabs.concord.svm.ThreadStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -50,8 +48,6 @@ public class FormCallCommand extends StepCommand<FormCall> {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = LoggerFactory.getLogger(FormCallCommand.class);
-
     private final Forms formDefinitions;
 
     public FormCallCommand(FormCall form, Forms formDefinitions) {
@@ -62,7 +58,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
     }
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
         String eventRef = UUID.randomUUID().toString();
 
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
@@ -87,7 +83,6 @@ public class FormCallCommand extends StepCommand<FormCall> {
         state.peekFrame(threadId).pop();
         state.setEventRef(threadId, eventRef);
         state.setStatus(threadId, ThreadStatus.SUSPENDED);
-        log.debug("eval [{}] -> done, eventRef={}", threadId, eventRef); // TODO remove?
     }
 
     private FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, EvalContext ctx) {

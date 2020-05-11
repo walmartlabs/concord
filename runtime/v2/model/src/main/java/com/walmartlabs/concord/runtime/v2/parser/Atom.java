@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -53,15 +54,15 @@ public class Atom implements Serializable {
             default:
                 value = null;
         }
-        return new Atom(p.getTokenLocation(), p.currentToken(), p.getCurrentName(), value);
+        return new Atom(toLocation(p.getTokenLocation()), p.currentToken(), p.getCurrentName(), value);
     }
 
-    public final JsonLocation location;
+    public final Location location;
     public final JsonToken token;
     public final String name;
     public final Object value;
 
-    public Atom(JsonLocation location, JsonToken token, String name, Object value) {
+    public Atom(Location location, JsonToken token, String name, Object value) {
         this.location = location;
         this.token = token;
         this.name = name;
@@ -98,5 +99,17 @@ public class Atom implements Serializable {
                 ", name='" + name + '\'' +
                 ", value=" + value +
                 '}';
+    }
+
+    private static Location toLocation(JsonLocation tokenLocation) {
+        if (tokenLocation == null) {
+            return Location.builder().build();
+        }
+
+        return Location.builder()
+                .lineNum(tokenLocation.getLineNr())
+                .column(tokenLocation.getColumnNr())
+                .fileName(ThreadLocalFileName.get())
+                .build();
     }
 }

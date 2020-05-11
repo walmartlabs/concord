@@ -20,15 +20,13 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-
 public class ScriptCall extends AbstractStep<ScriptCallOptions> {
 
     private static final long serialVersionUID = 1L;
 
     private final String name;
 
-    public ScriptCall(JsonLocation location, String name, ScriptCallOptions options) {
+    public ScriptCall(Location location, String name, ScriptCallOptions options) {
         super(location, options);
 
         this.name = name;

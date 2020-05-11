@@ -41,7 +41,7 @@ public final class GroupGrammar {
                     ))
                     .map(ImmutableGroupOptions.Builder::build);
 
-    private static final Parser<Atom, GroupOfSteps> groupDef(Atom a) {
+    private static Parser<Atom, GroupOfSteps> groupDef(Atom a) {
         return stepsVal.bind(steps -> groupOptions.map(options -> new GroupOfSteps(a.location, steps, options)));
     }
 

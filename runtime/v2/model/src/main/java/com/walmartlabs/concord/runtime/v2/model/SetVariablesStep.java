@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 import java.io.Serializable;
@@ -32,7 +31,7 @@ public class SetVariablesStep extends AbstractStep<SimpleOptions> {
 
     private final Map<String, Serializable> vars;
 
-    public SetVariablesStep(JsonLocation location, Map<String, Serializable> variables, SimpleOptions options) {
+    public SetVariablesStep(Location location, Map<String, Serializable> variables, SimpleOptions options) {
         super(location, options);
 
         this.vars = variables;

@@ -26,10 +26,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.v2.model.Expression;
-import com.walmartlabs.concord.runtime.v2.model.FlowCall;
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.model.TaskCall;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -68,12 +65,12 @@ public class EventRecordingExecutionListener implements ExecutionListener {
             return Result.CONTINUE;
         }
 
-        JsonLocation loc = s.getStep().getLocation();
+        Location loc = s.getStep().getLocation();
 
         Map<String, Object> m = new HashMap<>();
         m.put("processDefinitionId", "default"); // TODO
-        m.put("line", loc.getLineNr());
-        m.put("column", loc.getColumnNr());
+        m.put("line", loc.lineNum());
+        m.put("column", loc.column());
         m.put("description", getDescription(s.getStep())); // TODO
 
         ProcessEventRequest req = new ProcessEventRequest();

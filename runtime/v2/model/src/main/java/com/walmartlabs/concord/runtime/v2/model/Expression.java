@@ -20,11 +20,9 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-
 public class Expression extends AbstractStep<ExpressionOptions> {
 
-    public static Expression shortForm(JsonLocation location, String expr) {
+    public static Expression shortForm(Location location, String expr) {
         return new Expression(location, expr, null);
     }
 
@@ -32,7 +30,7 @@ public class Expression extends AbstractStep<ExpressionOptions> {
 
     private final String expr;
 
-    public Expression(JsonLocation location, String expr, ExpressionOptions options) {
+    public Expression(Location location, String expr, ExpressionOptions options) {
         super(location, options);
         this.expr = expr;
     }

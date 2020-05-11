@@ -20,8 +20,7 @@ package com.walmartlabs.concord.runtime.v2.exception;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.walmartlabs.concord.runtime.v2.parser.JsonLocationConverter;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.parser.UnknownOption;
 
 import java.util.List;
@@ -32,7 +31,7 @@ public class UnknownOptionException extends YamlProcessingException {
     private final List<String> expected;
     private final List<UnknownOption> unknown;
 
-    private UnknownOptionException(List<String> expected, List<UnknownOption> unknown, JsonLocation location) {
+    private UnknownOptionException(List<String> expected, List<UnknownOption> unknown, Location location) {
         super(location);
         this.expected = expected;
         this.unknown = unknown;
@@ -74,7 +73,7 @@ public class UnknownOptionException extends YamlProcessingException {
         if (o.type() != null) {
             type = " [" + o.type() + "]";
         }
-        return "'" + o.key() + "'" + type + " @ " + JsonLocationConverter.toShortString(o.location());
+        return "'" + o.key() + "'" + type + " @ " + Location.toShortString(o.location());
     }
 
     public static Builder builder() {
@@ -84,7 +83,7 @@ public class UnknownOptionException extends YamlProcessingException {
     public static class Builder {
         private List<String> expected;
         private List<UnknownOption> unknown;
-        private JsonLocation location;
+        private Location location;
 
         public Builder from(UnknownOptionException e) {
             this.expected = e.getExpected();
@@ -103,7 +102,7 @@ public class UnknownOptionException extends YamlProcessingException {
             return this;
         }
 
-        public Builder location(JsonLocation location) {
+        public Builder location(Location location) {
             this.location = location;
             return this;
         }

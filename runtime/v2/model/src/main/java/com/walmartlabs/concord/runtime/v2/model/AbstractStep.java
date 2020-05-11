@@ -20,23 +20,22 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 
 public abstract class AbstractStep<O extends StepOptions> implements Step {
 
     private static final long serialVersionUID = 1L;
 
-    private final JsonLocation location;
+    private final Location location;
     private final O options;
 
-    protected AbstractStep(JsonLocation location, O options) {
+    protected AbstractStep(Location location, O options) {
         this.location = location;
         this.options = options;
     }
 
     @Override
-    public JsonLocation getLocation() {
+    public Location getLocation() {
         return location;
     }
 

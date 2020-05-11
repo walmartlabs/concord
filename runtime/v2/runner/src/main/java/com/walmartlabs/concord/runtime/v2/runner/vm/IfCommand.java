@@ -45,7 +45,7 @@ public class IfCommand extends StepCommand<IfStep> {
     }
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
