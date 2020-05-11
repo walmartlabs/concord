@@ -49,7 +49,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
     }
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);

@@ -20,13 +20,22 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.State;
+import com.walmartlabs.concord.svm.ThreadId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Command that was created from a flow {@link Step}.
+ * Subclasses must implement the {@link #execute(Runtime, State, ThreadId)} method.
  */
 public abstract class StepCommand<T extends Step> implements Command {
+
+    private static final Logger log = LoggerFactory.getLogger(StepCommand.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -39,4 +48,20 @@ public abstract class StepCommand<T extends Step> implements Command {
     public T getStep() {
         return step;
     }
+
+    @Override
+    public void eval(Runtime runtime, State state, ThreadId threadId) {
+        try {
+            execute(runtime, state, threadId);
+        } catch (Exception e) {
+            Step step = getStep();
+            if (step.getLocation() == null) {
+                throw e;
+            }
+            log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
+            throw e;
+        }
+    }
+
+    protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 }

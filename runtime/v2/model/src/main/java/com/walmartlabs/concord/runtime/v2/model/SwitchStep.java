@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 import java.util.List;
@@ -34,7 +33,7 @@ public class SwitchStep extends AbstractStep<SimpleOptions> {
     private final List<Map.Entry<String, List<Step>>> caseSteps;
     private final List<Step> defaultSteps;
 
-    public SwitchStep(JsonLocation location, String expression, List<Map.Entry<String, List<Step>>> caseSteps, List<Step> defaultSteps, SimpleOptions options) {
+    public SwitchStep(Location location, String expression, List<Map.Entry<String, List<Step>>> caseSteps, List<Step> defaultSteps, SimpleOptions options) {
         super(location, options);
 
         this.expression = expression;

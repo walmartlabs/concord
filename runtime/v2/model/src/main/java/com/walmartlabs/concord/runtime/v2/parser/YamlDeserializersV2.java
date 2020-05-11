@@ -20,12 +20,12 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.walmartlabs.concord.runtime.v2.exception.YamlProcessingException;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import io.takari.parc.Input;
@@ -98,8 +98,8 @@ public final class YamlDeserializersV2 {
         return l;
     }
 
-    private static JsonParseException toException(Result.Failure<Atom, ?> f, JsonParser p, List<Atom> atoms) {
-        JsonLocation loc = null;
+    private static YamlProcessingException toException(Result.Failure<Atom, ?> f, JsonParser p, List<Atom> atoms) {
+        Location loc = null;
         String got = "n/a";
 
         int pos = f.getPosition();
@@ -109,7 +109,7 @@ public final class YamlDeserializersV2 {
             got = a.name;
         }
 
-        return new JsonParseException(p, "Expected: " + f.getMessage() + ". Got '" + got + "'", loc);
+        return new YamlProcessingException(loc, "Expected: " + f.getMessage() + ". Got '" + got + "'");
     }
 
     private YamlDeserializersV2() {

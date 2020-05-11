@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class ParallelBlock extends AbstractStep<SimpleOptions> {
 
     private final List<Step> steps;
 
-    public ParallelBlock(JsonLocation location, SimpleOptions options, List<Step> steps) {
+    public ParallelBlock(Location location, SimpleOptions options, List<Step> steps) {
         super(location, options);
         this.steps = steps;
     }

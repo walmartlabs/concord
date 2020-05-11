@@ -51,7 +51,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
     }
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
         TaskProviders taskProviders = runtime.getService(TaskProviders.class);

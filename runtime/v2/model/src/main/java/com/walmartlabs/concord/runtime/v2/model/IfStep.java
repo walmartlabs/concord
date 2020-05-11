@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 import java.util.List;
@@ -33,7 +32,7 @@ public class IfStep extends AbstractStep<SimpleOptions> {
     private final List<Step> thenSteps;
     private final List<Step> elseSteps;
 
-    public IfStep(JsonLocation location, String expression, List<Step> thenSteps, List<Step> elseSteps, SimpleOptions options) {
+    public IfStep(Location location, String expression, List<Step> thenSteps, List<Step> elseSteps, SimpleOptions options) {
         super(location, options);
 
         this.expression = expression;

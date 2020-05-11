@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidValueTypeException;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.Serializable;
 
@@ -33,9 +33,9 @@ public class YamlValue implements Serializable {
 
     private final YamlValueType<?> type;
 
-    private final JsonLocation location;
+    private final Location location;
 
-    public <T> YamlValue(T value, YamlValueType<T> type, JsonLocation location) {
+    public <T> YamlValue(T value, YamlValueType<T> type, Location location) {
         this.value = value;
         this.type = type;
         this.location = location;
@@ -55,7 +55,7 @@ public class YamlValue implements Serializable {
         return type;
     }
 
-    public JsonLocation getLocation() {
+    public Location getLocation() {
         return location;
     }
 

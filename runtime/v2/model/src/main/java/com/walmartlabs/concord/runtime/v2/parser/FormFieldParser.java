@@ -20,10 +20,10 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.forms.FormField.Cardinality;
 import com.walmartlabs.concord.runtime.v2.exception.*;
 import com.walmartlabs.concord.runtime.v2.model.FormField;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.Serializable;
 import java.util.*;
@@ -38,11 +38,11 @@ public final class FormFieldParser {
 
     private static final String[] COMMON_ATTRS = new String[] {"label", "value", "allow", "type"};
 
-    public static List<FormField> parse(JsonLocation location, List<Map<String, Map<String, Object>>> rawFields) {
+    public static List<FormField> parse(Location location, List<Map<String, Map<String, Object>>> rawFields) {
         List<FormField> fields = new ArrayList<>();
         for (Map<String, Map<String, Object>> rf : rawFields) {
             if (rf.size() != 1) {
-                throw new RuntimeException("Invalid dynamic form fields definition @ " + JsonLocationConverter.toShortString(location) + ". Expected " + YamlValueType.ARRAY_OF_FORM_FIELD);
+                throw new RuntimeException("Invalid dynamic form fields definition @ " + Location.toShortString(location) + ". Expected " + YamlValueType.ARRAY_OF_FORM_FIELD);
             }
             Map.Entry<String, Map<String, Object>> entry = rf.entrySet().iterator().next();
 
@@ -51,7 +51,7 @@ public final class FormFieldParser {
         return fields;
     }
 
-    public static FormField parse(String name, JsonLocation location, YamlObject options) {
+    public static FormField parse(String name, Location location, YamlObject options) {
         try {
             return parseField(name, location, options);
         } catch (YamlProcessingException e) {
@@ -59,7 +59,7 @@ public final class FormFieldParser {
         }
     }
 
-    private static FormField parseField(String name, JsonLocation location, YamlObject optionsObject) {
+    private static FormField parseField(String name, Location location, YamlObject optionsObject) {
         Map<String, YamlValue> values = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         values.putAll(optionsObject.getValues());
         YamlObject options = new YamlObject(values, optionsObject.getLocation());
@@ -93,7 +93,7 @@ public final class FormFieldParser {
                 .build();
     }
 
-    private static Map<String, Serializable> convertOptions(String type, JsonLocation typeLocation, YamlObject options) {
+    private static Map<String, Serializable> convertOptions(String type, Location typeLocation, YamlObject options) {
         Map<String, Serializable> result = new HashMap<>();
         switch (type) {
             case StringField.TYPE: {

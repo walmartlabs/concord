@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.exception.InvalidValueTypeException;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +32,7 @@ public class YamlList extends YamlValue {
 
     private final List<YamlValue> values;
 
-    public YamlList(List<YamlValue> values, JsonLocation location) {
+    public YamlList(List<YamlValue> values, Location location) {
         super(null, YamlValueType.ARRAY, location);
         this.values = values;
     }

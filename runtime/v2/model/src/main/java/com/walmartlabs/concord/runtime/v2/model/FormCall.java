@@ -20,15 +20,13 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-
 public class FormCall extends AbstractStep<FormCallOptions> {
 
     private static final long serialVersionUID = 1L;
 
     private final String name;
 
-    public FormCall(JsonLocation location, String name, FormCallOptions options) {
+    public FormCall(Location location, String name, FormCallOptions options) {
         super(location, options);
 
         this.name = name;

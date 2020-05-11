@@ -20,15 +20,13 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-
 public class FlowCall extends AbstractStep<FlowCallOptions> {
 
     private static final long serialVersionUID = 1L;
 
     private final String flowName;
 
-    public FlowCall(JsonLocation location, String flowName, FlowCallOptions options) {
+    public FlowCall(Location location, String flowName, FlowCallOptions options) {
         super(location, options);
         this.flowName = flowName;
     }

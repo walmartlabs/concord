@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
@@ -63,8 +62,8 @@ public interface Trigger extends Serializable {
     }
 
     @Value.Default
-    default JsonLocation location() {
-        return JsonLocation.NA;
+    default Location location() {
+        return Location.builder().build();
     }
 
     static ImmutableTrigger.Builder builder() {

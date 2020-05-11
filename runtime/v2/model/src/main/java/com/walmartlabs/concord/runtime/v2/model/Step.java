@@ -20,11 +20,9 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
-
 import java.io.Serializable;
 
 public interface Step extends Serializable {
 
-    JsonLocation getLocation();
+    Location getLocation();
 }

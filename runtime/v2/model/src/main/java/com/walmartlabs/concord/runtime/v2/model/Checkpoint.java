@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
 
 public class Checkpoint extends AbstractStep<SimpleOptions> {
@@ -29,7 +28,7 @@ public class Checkpoint extends AbstractStep<SimpleOptions> {
 
     private final String name;
 
-    public Checkpoint(JsonLocation location, String name, SimpleOptions options) {
+    public Checkpoint(Location location, String name, SimpleOptions options) {
         super(location, options);
 
         this.name = name;

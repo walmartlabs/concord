@@ -20,13 +20,13 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.util.*;
 
 public final class YamlObjectConverter {
 
-    public static YamlObject from(Map<String, Object> value, JsonLocation location) {
+    public static YamlObject from(Map<String, Object> value, Location location) {
         Map<String, YamlValue> values = new HashMap<>();
 
         for (Map.Entry<String, Object> e : value.entrySet()) {
@@ -40,7 +40,7 @@ public final class YamlObjectConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private static YamlValue fromObject(Object value, JsonLocation location) {
+    private static YamlValue fromObject(Object value, Location location) {
         if (value == null) {
             return null;
         }
@@ -66,7 +66,7 @@ public final class YamlObjectConverter {
         return null;
     }
 
-    private static YamlList fromCollection(Collection<Object> rawValues, JsonLocation location) {
+    private static YamlList fromCollection(Collection<Object> rawValues, Location location) {
         List<YamlValue> values = new ArrayList<>();
         for (Object v : rawValues) {
             YamlValue value = fromObject(v, location);

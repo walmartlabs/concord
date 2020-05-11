@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
@@ -39,7 +38,7 @@ public interface Form extends Serializable  {
         return Collections.emptyList();
     }
 
-    JsonLocation location();
+    Location location();
 
     static ImmutableForm.Builder builder() {
         return ImmutableForm.builder();

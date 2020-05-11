@@ -20,16 +20,12 @@ package com.walmartlabs.concord.runtime.v2.runner.remote;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
-import com.walmartlabs.concord.runtime.v2.model.EventConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -83,10 +79,11 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
         Step currentStep = event.currentStep();
         m.put("processDefinitionId", getCurrentFlowName(event.processDefinition(), currentStep));
-        JsonLocation loc = currentStep != null ? currentStep.getLocation() : null;
+        Location loc = currentStep != null ? currentStep.getLocation() : null;
         if (loc != null) {
-            m.put("line", currentStep.getLocation().getLineNr());
-            m.put("column", currentStep.getLocation().getColumnNr());
+            m.put("fileName", currentStep.getLocation().fileName());
+            m.put("line", currentStep.getLocation().lineNum());
+            m.put("column", currentStep.getLocation().column());
         }
 
         String taskName = event.taskName();

@@ -20,7 +20,7 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonLocation;
+import com.walmartlabs.concord.runtime.v2.model.Location;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ public class YamlObject extends YamlValue {
 
     protected final Map<String, YamlValue> values;
 
-    public YamlObject(Map<String, YamlValue> values, JsonLocation location) {
+    public YamlObject(Map<String, YamlValue> values, Location location) {
         super(null, YamlValueType.OBJECT, location);
         this.values = values;
     }
