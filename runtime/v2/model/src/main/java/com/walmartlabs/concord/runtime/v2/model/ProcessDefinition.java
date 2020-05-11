@@ -37,8 +37,6 @@ public interface ProcessDefinition extends Serializable {
         return "concord-v2"; // TODO constants
     }
 
-    // resources
-
     @Value.Default
     default ProcessConfiguration configuration() {
         return ProcessConfiguration.builder().build();
