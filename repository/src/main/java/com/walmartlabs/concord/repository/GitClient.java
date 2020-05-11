@@ -79,6 +79,10 @@ public class GitClient {
     }
 
     public void fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
+        fetch(uri, branch, commitId, true, secret, dest);
+    }
+
+    public void fetch(String uri, String branch, String commitId, boolean detached, Secret secret, Path dest) {
         // can use shallow clone only with branch/tag
         boolean shallow = commitId == null && cfg.shallowClone();
 
@@ -91,14 +95,16 @@ public class GitClient {
         List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
         fetchCommand(uri, refspecs, secret, shallow, dest);
 
-        ObjectId rev;
+        String rev;
         if (commitId != null) {
-            rev = getCommitRevision(commitId, dest);
+            rev = getCommitRevision(commitId, dest).name();
+        } else if (detached) {
+            rev = getBranchRevision(branch, dest).name();
         } else {
-            rev = getBranchRevision(branch, dest);
+            rev = branch;
         }
 
-        checkoutCommand(rev.name(), dest);
+        checkoutCommand(rev, dest);
 
         launchCommand(dest, defaultTimeout, "clean", "-fdx");
 
@@ -147,7 +153,7 @@ public class GitClient {
         String[] modulePaths;
 
         try {
-            modulePaths =launchCommand(dest, defaultTimeout, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
+            modulePaths = launchCommand(dest, defaultTimeout, "config", "--file", ".gitmodules", "--name-only", "--get-regexp", "path")
                     .split("\\r?\\n");
         } catch (RepositoryException e) {
             log.warn("fetchSubmodules ['{}'] -> error while retrieving the list of submodules: {}", dest, e.getMessage());
@@ -188,7 +194,7 @@ public class GitClient {
     }
 
     private String getSubmodulePath(Path dest, String name) {
-        String result = launchCommand(dest, defaultTimeout,"config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
+        String result = launchCommand(dest, defaultTimeout, "config", "-f", ".gitmodules", "--get", "submodule." + name + ".path");
         String s = firstLine(result);
         return s != null ? s.trim() : null;
     }
