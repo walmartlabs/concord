@@ -84,6 +84,9 @@ public interface ProcessConfiguration extends Serializable {
     @Nullable
     Map<String, Object> currentUser();
 
+    @Nullable
+    String template();
+
     @Value.Default
     default ProcessInfo processInfo() {
         return ProcessInfo.builder().build();
@@ -129,6 +132,7 @@ public interface ProcessConfiguration extends Serializable {
                 // TODO entryPoint has default value, it shouldn't override a non-default value
                 .entryPoint(b.entryPoint())
                 .addAllDependencies(b.dependencies())
+                .template(b.template() != null ? b.template() : a.template())
                 .arguments(ConfigurationUtils.deepMerge(a.arguments(), b.arguments()))
                 .initiator(b.initiator() != null ? b.initiator() : a.initiator())
                 .currentUser(b.currentUser() != null ? b.currentUser() : a.currentUser())

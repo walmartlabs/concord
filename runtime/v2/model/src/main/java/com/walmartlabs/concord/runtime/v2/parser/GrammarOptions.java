@@ -60,89 +60,9 @@ public final class GrammarOptions {
         return Option.of(name, true, p);
     }
 
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1) {
-        return options(Collections.singletonList(o1));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2) {
-        return options(Arrays.asList(o1, o2));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3) {
-        return options(Arrays.asList(o1, o2, o3));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3,
-                                                    Option<? extends O> o4) {
-        return options(Arrays.asList(o1, o2, o3, o4));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3,
-                                                    Option<? extends O> o4,
-                                                    Option<? extends O> o5) {
-        return options(Arrays.asList(o1, o2, o3, o4, o5));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3,
-                                                    Option<? extends O> o4,
-                                                    Option<? extends O> o5,
-                                                    Option<? extends O> o6) {
-        return options(Arrays.asList(o1, o2, o3, o4, o5, o6));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3,
-                                                    Option<? extends O> o4,
-                                                    Option<? extends O> o5,
-                                                    Option<? extends O> o6,
-                                                    Option<? extends O> o7) {
-        return options(Arrays.asList(o1, o2, o3, o4, o5, o6, o7));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3,
-                                                    Option<? extends O> o4,
-                                                    Option<? extends O> o5,
-                                                    Option<? extends O> o6,
-                                                    Option<? extends O> o7,
-                                                    Option<? extends O> o8) {
-        return options(Arrays.asList(o1, o2, o3, o4, o5, o6, o7, o8));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3,
-                                                    Option<? extends O> o4,
-                                                    Option<? extends O> o5,
-                                                    Option<? extends O> o6,
-                                                    Option<? extends O> o7,
-                                                    Option<? extends O> o8,
-                                                    Option<? extends O> o9) {
-        return options(Arrays.asList(o1, o2, o3, o4, o5, o6, o7, o8, o9));
-    }
-
-    public static <O> Parser<Atom, List<O>> options(Option<? extends O> o1,
-                                                    Option<? extends O> o2,
-                                                    Option<? extends O> o3,
-                                                    Option<? extends O> o4,
-                                                    Option<? extends O> o5,
-                                                    Option<? extends O> o6,
-                                                    Option<? extends O> o7,
-                                                    Option<? extends O> o8,
-                                                    Option<? extends O> o9,
-                                                    Option<? extends O> o10) {
-        return options(Arrays.asList(o1, o2, o3, o4, o5, o6, o7, o8, o9, o10));
+    @SafeVarargs
+    public static <O> Parser<Atom, List<O>> options(Option<? extends O>... os) {
+        return options(Arrays.asList(os));
     }
 
     public static <O> Parser<Atom, List<O>> options(List<Option<? extends O>> options) {

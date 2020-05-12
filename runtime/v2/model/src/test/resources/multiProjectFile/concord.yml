@@ -3,6 +3,7 @@ flows:
   - log: "hello!"
 
 configuration:
+  template: "mytemplate"
   arguments:
     nested:
       value: "234"

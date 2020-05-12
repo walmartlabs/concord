@@ -70,7 +70,8 @@ public final class ConfigurationGrammar {
                                     optional("exclusive", exclusiveVal.map(o::exclusive)),
                                     optional("events", eventsVal.map(o::events)),
                                     optional("out", stringArrayVal.map(o::addAllOut)),
-                                    optional("arguments", mapVal.map(o::arguments))))
+                                    optional("arguments", mapVal.map(o::arguments)),
+                                    optional("template", stringVal.map(o::template))))
                             .map(ImmutableProcessConfiguration.Builder::build));
 
     public static final Parser<Atom, ProcessConfiguration> processCfgVal =
