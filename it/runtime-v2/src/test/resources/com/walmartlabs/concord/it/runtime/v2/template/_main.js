@@ -1,0 +1,1 @@
+({runtime: "concord-v2", entryPoint: "main", arguments: { greeting: "Hello, " + _input.name }})

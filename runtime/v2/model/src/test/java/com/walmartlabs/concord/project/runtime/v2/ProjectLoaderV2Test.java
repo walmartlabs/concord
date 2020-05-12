@@ -56,5 +56,7 @@ public class ProjectLoaderV2Test {
         assertNotNull(cfg);
         assertEquals("ttt", cfg.arguments().get("abc"));
         assertEquals("234", ((Map<String, Object>) cfg.arguments().get("nested")).get("value"));
+        assertNotNull(cfg.template());
+        assertEquals("mytemplate", cfg.template());
     }
 }
