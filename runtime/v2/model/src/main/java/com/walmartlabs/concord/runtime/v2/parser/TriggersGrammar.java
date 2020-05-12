@@ -88,9 +88,10 @@ public final class TriggersGrammar {
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
                 with(ImmutableTrigger::builder,
                         o -> options(
-                                mandatory("spec", stringVal.map(v -> o.putConfiguration("spec", v))),
+                                mandatory("spec", stringVal.map(v -> o.putConditions("spec", v))),
                                 mandatory("entryPoint", stringVal.map(v -> o.putConfiguration("entryPoint", v))),
                                 optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
+                                optional("timezone", timezoneVal.map(v -> o.putConditions("timezone", v))),
                                 optional("arguments", mapVal.map(o::arguments)),
                                 optional("exclusive", stringVal.map(v -> o.putConfiguration("exclusive", v))))))
                         .map(t -> t.name("cron"))

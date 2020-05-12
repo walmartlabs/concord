@@ -1,0 +1,6 @@
+triggers:
+  - cron:
+      spec: "*"
+      entryPoint: "foo"
+      timezone: "Europe/Moscow"
+      trash: "unknown-attr"

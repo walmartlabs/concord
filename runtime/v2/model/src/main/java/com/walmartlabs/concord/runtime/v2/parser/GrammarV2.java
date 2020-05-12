@@ -74,12 +74,13 @@ public final class GrammarV2 {
     public static final Parser<Atom, Integer> maybeInt = _val(JsonToken.VALUE_NUMBER_INT).map(v -> v.getValue(YamlValueType.INT));
     public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
     public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);
+    public static final Parser<Atom, String> timezoneVal = value.map(GrammarV2::timezoneConverter);
 
     public static <E extends Enum<E>> Parser<Atom, E> enumVal(Class<E> enumData) {
         return value.map(vv -> {
             String v = vv.getValue(YamlValueType.STRING);
 
-            for (Enum<E> enumVal: enumData.getEnumConstants()) {
+            for (Enum<E> enumVal : enumData.getEnumConstants()) {
                 if (enumVal.name().equals(v)) {
                     return Enum.valueOf(enumData, v);
                 }
@@ -253,6 +254,27 @@ public final class GrammarV2 {
                     .message(e.getMessage())
                     .build();
         }
+    }
+
+    private static String timezoneConverter(YamlValue v) {
+        if (v.getType() != YamlValueType.STRING) {
+            // will throw exception
+            v.getValue(YamlValueType.TIMEZONE);
+        }
+
+        String timezone = v.getValue(YamlValueType.STRING);
+
+        boolean valid = Arrays.asList(TimeZone.getAvailableIDs()).contains(timezone);
+        if (valid) {
+            return timezone;
+        }
+
+        throw new InvalidValueTypeException.Builder()
+                .location(v.getLocation())
+                .expected(YamlValueType.TIMEZONE)
+                .actual(v.getType())
+                .message("Unknown timezone: '" + timezone + "'")
+                .build();
     }
 
     private GrammarV2() {

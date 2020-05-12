@@ -508,6 +508,27 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void test130() throws Exception {
+        String msg = "(030.yml): Error @ line: 5, col: 17. Invalid value type, expected: TIMEZONE, got: STRING. Error info: Unknown timezone: 'test'\n" +
+                "\twhile processing steps:\n" +
+                "\t'timezone' @ line: 5, col: 7\n" +
+                "\t\t'cron' @ line: 2, col: 5\n" +
+                "\t\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/030.yml", msg);
+    }
+
+    @Test
+    public void test131() throws Exception {
+        String msg = "(031.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [STRING] @ line: 6, col: 14], expected: [spec, entryPoint, activeProfiles, timezone, arguments, exclusive]. Remove invalid options and/or fix indentation\n" +
+                "\twhile processing steps:\n" +
+                "\t'cron' @ line: 2, col: 5\n" +
+                "\t\t'triggers' @ line: 1, col: 1";
+
+        assertErrorMessage("errors/triggers/031.yml", msg);
+    }
+
+    @Test
     public void test200() throws Exception {
         String msg =
                 "(000.yml): Error @ line: 3, col: 12. Invalid value type, expected: STRING, got: NULL. Remove attribute or complete the definition\n" +
