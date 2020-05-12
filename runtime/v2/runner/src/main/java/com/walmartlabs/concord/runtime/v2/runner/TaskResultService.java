@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.svm.ExecutionListener;
+import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadStatus;
 
@@ -68,7 +69,7 @@ public class TaskResultService implements ExecutionListener {
     }
 
     @Override
-    public void afterProcessEnd(State state) {
+    public void afterProcessEnd(Runtime runtime, State state) {
         boolean isSuspended = state.threadStatus().entrySet().stream()
                 .anyMatch(e -> e.getValue() == ThreadStatus.SUSPENDED);
         if (!isSuspended) {

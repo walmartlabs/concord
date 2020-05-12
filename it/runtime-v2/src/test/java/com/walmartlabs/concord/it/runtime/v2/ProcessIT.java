@@ -126,4 +126,24 @@ public class ProcessIT {
         assertEquals("init-value", pe.getMeta().get("test"));
         assertEquals("Reject", pe.getMeta().get("myForm.action"));
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOutVariables() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("out").toURI())
+                .out("x", "y.some.boolean", "z");
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        // ---
+
+        Map<String, Object> data = proc.getOutVariables();
+        assertNotNull(data);
+
+        assertEquals(123, data.get("x"));
+        assertEquals(true, data.get("y.some.boolean"));
+        assertFalse(data.containsKey("z"));
+    }
 }

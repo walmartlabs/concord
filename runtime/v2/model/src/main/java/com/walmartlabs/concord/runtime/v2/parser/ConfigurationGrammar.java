@@ -69,6 +69,7 @@ public final class ConfigurationGrammar {
                                     optional("processTimeout", durationVal.map(o::processTimeout)),
                                     optional("exclusive", exclusiveVal.map(o::exclusive)),
                                     optional("events", eventsVal.map(o::events)),
+                                    optional("out", stringArrayVal.map(o::addAllOut)),
                                     optional("arguments", mapVal.map(o::arguments))))
                             .map(ImmutableProcessConfiguration.Builder::build));
 

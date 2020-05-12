@@ -70,6 +70,18 @@ public final class EvalContextFactory {
                 .build();
     }
 
+    /**
+     * Includes only the specified variables.
+     * Doesn't allow access to tasks.
+     * Doesn't allow access to intermediate results.
+     */
+    public static EvalContext strict(Map<String, Object> variables) {
+        return DefaultEvalContext.builder()
+                .variables(variables == null ? Collections.emptyMap() : variables)
+                .build();
+    }
+
+
     private EvalContextFactory() {
     }
 }

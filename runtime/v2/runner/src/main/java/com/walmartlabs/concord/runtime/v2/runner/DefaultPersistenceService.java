@@ -22,10 +22,15 @@ package com.walmartlabs.concord.runtime.v2.runner;
 
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.sdk.Constants;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class DefaultPersistenceService implements PersistenceService {
 
@@ -44,5 +49,25 @@ public class DefaultPersistenceService implements PersistenceService {
     @Override
     public void save(String storageName, Serializable object) throws IOException {
         StateManager.persist(workingDirectory.getValue(), storageName, object);
+    }
+
+    @Override
+    public void persistFile(String name, Writer writer) {
+        Path storeDir = workingDirectory.getValue()
+                .resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+
+        try {
+            if (!Files.exists(storeDir)) {
+                Files.createDirectories(storeDir);
+            }
+
+            Path p = storeDir.resolve(name);
+            try (OutputStream out = Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                writer.write(out);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error persisting file '" + name + "': " + e.getMessage());
+        }
+
     }
 }

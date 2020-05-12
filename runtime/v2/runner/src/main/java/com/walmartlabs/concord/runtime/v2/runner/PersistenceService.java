@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 
 public interface PersistenceService {
@@ -28,4 +29,11 @@ public interface PersistenceService {
     <T extends Serializable> T load(String storageName, Class<T> expectedType);
 
     void save(String storageName, Serializable object) throws IOException;
+
+    void persistFile(String name, Writer writer);
+
+    interface Writer {
+
+        void write(OutputStream out) throws IOException;
+    }
 }
