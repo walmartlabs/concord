@@ -37,12 +37,12 @@ public class CliSecretServiceV1 implements SecretService {
 
     @Override
     public String exportAsString(Context ctx, String instanceId, String name, String password) throws Exception {
-        return delegate.exportAsString(null, name, password);
+        return delegate.exportAsString(null, name);
     }
 
     @Override
     public String exportAsString(Context ctx, String instanceId, String orgName, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
+        return delegate.exportAsString(orgName, name);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class CliSecretServiceV1 implements SecretService {
     @Override
     public Map<String, String> exportKeyAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
         com.walmartlabs.concord.runtime.v2.sdk.SecretService.KeyPair kp =
-                delegate.exportKeyAsFile(Paths.get(workDir), orgName, name, password);
+                delegate.exportKeyAsFile(Paths.get(workDir), orgName, name);
 
         Map<String, String> m = new HashMap<>();
         m.put("private", kp.privateKey().toString());
@@ -73,12 +73,12 @@ public class CliSecretServiceV1 implements SecretService {
 
     @Override
     public String exportAsFile(Context ctx, String instanceId, String workDir, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
+        return delegate.exportAsFile(Paths.get(workDir), null, name).toString();
     }
 
     @Override
     public String exportAsFile(Context ctx, String instanceId, String workDir, String orgName, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
+        return delegate.exportAsFile(Paths.get(workDir), orgName, name).toString();
     }
 
     @Override
