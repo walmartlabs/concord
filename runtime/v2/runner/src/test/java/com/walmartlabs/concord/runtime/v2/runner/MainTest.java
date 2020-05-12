@@ -456,6 +456,19 @@ public class MainTest {
         assertLog(log, ".*k1-value, init, k3-value.*");
     }
 
+    @Test
+    public void testCallFlow() throws Exception {
+        deploy("call");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("flowName", "myFlow")
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("Hello, default flow!") + ".*");
+        assertLog(log, ".*" + Pattern.quote("Hello, myFlow flow!") + ".*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
