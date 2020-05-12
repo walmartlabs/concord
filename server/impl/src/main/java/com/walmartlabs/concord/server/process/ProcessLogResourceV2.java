@@ -51,6 +51,9 @@ import java.util.UUID;
 import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLog;
 import static com.walmartlabs.concord.server.process.logs.ProcessLogsDao.ProcessLogChunk;
 
+/**
+ * API to work with segmented process logs.
+ */
 @Named
 @Singleton
 @Api(value = "ProcessLogV2", authorizations = {@Authorization("api_key"), @Authorization("session_key"), @Authorization("ldap")})
@@ -101,7 +104,7 @@ public class ProcessLogResourceV2 implements Resource {
     }
 
     /**
-     * Create process log segment.
+     * Create a new process log segment.
      */
     @POST
     @ApiOperation(value = "Create process log segment")
@@ -118,7 +121,7 @@ public class ProcessLogResourceV2 implements Resource {
     }
 
     /**
-     * Update process log segment.
+     * Update a process log segment.
      */
     @POST
     @ApiOperation(value = "Update process log segment")
@@ -127,8 +130,8 @@ public class ProcessLogResourceV2 implements Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @WithTimer
     public LogSegmentOperationResponse updateSegment(@ApiParam @PathParam("id") UUID instanceId,
-                                                    @ApiParam @PathParam("segmentId") long segmentId,
-                                                    @ApiParam LogSegmentUpdateRequest request) {
+                                                     @ApiParam @PathParam("segmentId") long segmentId,
+                                                     @ApiParam LogSegmentUpdateRequest request) {
 
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
         logManager.updateSegment(processKey, segmentId, request.status(), request.warnings(), request.errors());
@@ -150,7 +153,7 @@ public class ProcessLogResourceV2 implements Resource {
         ProcessKey processKey = logAccessManager.assertLogAccess(instanceId);
         HttpUtils.Range range = HttpUtils.parseRangeHeaderValue(rangeHeader);
         ProcessLog l = logManager.segmentData(processKey, segmentId, range.start(), range.end());
-        return toResponse(l, range);
+        return toResponse(instanceId, l, range);
     }
 
     /**
@@ -180,22 +183,19 @@ public class ProcessLogResourceV2 implements Resource {
         }
     }
 
-    public static Response toResponse(ProcessLog l, HttpUtils.Range range) {
+    public static Response toResponse(UUID instanceId, ProcessLog l, HttpUtils.Range range) {
         List<ProcessLogChunk> data = l.getChunks();
         if (data.isEmpty()) {
             int actualStart = range.start() != null ? range.start() : 0;
             int actualEnd = range.end() != null ? range.end() : actualStart;
-            return Response.ok()
-                    .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
-                    .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                    .build();
+            return downloadableFile(instanceId, null, actualStart, actualEnd, l.getSize());
         }
 
-        ProcessLogChunk first = data.get(0);
-        int actualStart = first.getStart();
+        ProcessLogChunk firstChunk = data.get(0);
+        int actualStart = firstChunk.getStart();
 
-        ProcessLogChunk last = data.get(data.size() - 1);
-        int actualEnd = last.getStart() + last.getData().length;
+        ProcessLogChunk lastChunk = data.get(data.size() - 1);
+        int actualEnd = lastChunk.getStart() + lastChunk.getData().length;
 
         StreamingOutput out = output -> {
             for (ProcessLogChunk e : data) {
@@ -203,10 +203,7 @@ public class ProcessLogResourceV2 implements Resource {
             }
         };
 
-        return Response.ok(out)
-                .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
-                .header("Content-Range", "bytes " + actualStart + "-" + actualEnd + "/" + l.getSize())
-                .build();
+        return downloadableFile(instanceId, out, actualStart, actualEnd, l.getSize());
     }
 
     private ProcessKey assertProcessKey(UUID instanceId) {
@@ -215,5 +212,13 @@ public class ProcessLogResourceV2 implements Resource {
             throw new ConcordApplicationException("Process instance not found: " + instanceId, Response.Status.NOT_FOUND);
         }
         return processKey;
+    }
+
+    private static Response downloadableFile(UUID instanceId, StreamingOutput out, int start, int end, int size) {
+        return (out != null ? Response.ok(out) : Response.ok())
+                .header("Content-Range", "bytes " + start + "-" + end + "/" + size)
+                .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition", "attachment; filename=\"" + instanceId + ".log\"")
+                .build();
     }
 }
