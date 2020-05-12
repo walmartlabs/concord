@@ -1,0 +1,23 @@
+configuration:
+  entryPoint: "main-test"
+  dependencies:
+    - "d1"
+    - "d2"
+  arguments:
+    k: "v"
+  requirements:
+    k: "v"
+  processTimeout: "PT1H"
+  exclusive:
+    group: "X"
+    mode: "cancel"
+  events:
+    recordTaskInVars: true
+    inVarsBlacklist:
+      - "password"
+      - "apiToken"
+      - "apiKey"
+    recordTaskOutVars: true
+    outVarsBlacklist:
+      - "FOO"
+  out: 1

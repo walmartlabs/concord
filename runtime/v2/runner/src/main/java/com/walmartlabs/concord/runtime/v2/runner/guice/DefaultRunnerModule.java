@@ -60,5 +60,6 @@ public class DefaultRunnerModule extends AbstractModule {
         Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
         executionListeners.addBinding().to(EventRecordingExecutionListener.class);
         executionListeners.addBinding().to(MetadataProcessor.class);
+        executionListeners.addBinding().to(OutVariablesProcessor.class);
     }
 }

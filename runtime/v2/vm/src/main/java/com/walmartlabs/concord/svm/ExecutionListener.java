@@ -70,7 +70,7 @@ public interface ExecutionListener {
     /**
      * Called after the process calls the last step.
      */
-    default void afterProcessEnd(State state) {
+    default void afterProcessEnd(Runtime runtime, State state) {
     }
 
     enum Result {

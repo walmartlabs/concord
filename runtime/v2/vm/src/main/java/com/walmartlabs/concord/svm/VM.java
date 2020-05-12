@@ -49,9 +49,10 @@ public class VM {
 
         listeners.fireBeforeProcessStart();
 
-        execute(state);
+        Runtime runtime = runtimeFactory.create(this);
+        execute(runtime, state);
 
-        listeners.fireAfterProcessEnd(state);
+        listeners.fireAfterProcessEnd(runtime, state);
 
         log.debug("start -> done");
     }
@@ -71,9 +72,10 @@ public class VM {
 
         listeners.fireBeforeProcessResume();
 
-        execute(state);
+        Runtime runtime = runtimeFactory.create(this);
+        execute(runtime, state);
 
-        listeners.fireAfterProcessEnd(state);
+        listeners.fireAfterProcessEnd(runtime, state);
 
         log.debug("resume ['{}'] -> done", eventRef);
     }
@@ -144,8 +146,7 @@ public class VM {
         }
     }
 
-    private void execute(State state) throws Exception {
-        Runtime runtime = runtimeFactory.create(this);
+    private void execute(Runtime runtime, State state) throws Exception {
         while (true) {
             // if we're restoring from a previously saved state or we had new threads created
             // on the previous iteration we need to spawn all READY threads

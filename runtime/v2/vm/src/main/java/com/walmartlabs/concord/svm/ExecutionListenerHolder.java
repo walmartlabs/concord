@@ -100,9 +100,9 @@ public class ExecutionListenerHolder {
         }
     }
 
-    public void fireAfterProcessEnd(State state) {
+    public void fireAfterProcessEnd(Runtime runtime, State state) {
         for (ExecutionListener l : listeners) {
-            l.afterProcessEnd(state);
+            l.afterProcessEnd(runtime, state);
         }
     }
 }

@@ -115,6 +115,11 @@ public interface ProcessConfiguration extends Serializable {
     @Nullable
     ExclusiveModeConfiguration exclusive();
 
+    @Value.Default
+    default List<String> out() {
+        return Collections.emptyList();
+    }
+
     static ImmutableProcessConfiguration.Builder builder() {
         return ImmutableProcessConfiguration.builder();
     }
