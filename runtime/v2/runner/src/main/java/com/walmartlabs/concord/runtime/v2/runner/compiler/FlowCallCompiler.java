@@ -40,13 +40,9 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
     public Command compile(CompilerContext context, FlowCall step) {
         ProcessDefinition pd = context.processDefinition();
 
+        Command cmd = new FlowCallCommand(step, pd);
+
         FlowCallOptions options = step.getOptions();
-
-        // the called flow's steps
-        Command cmd = CompilerUtils.compile(context.compiler(), pd, step.getFlowName());
-
-        // wrap into the flow call command. It will take care of processing the arguments
-        cmd = new FlowCallCommand(step, cmd);
 
         // add "retry" if needed
         Retry retry = options != null ? options.retry() : null;
