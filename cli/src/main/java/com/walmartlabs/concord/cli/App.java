@@ -32,7 +32,7 @@ public class App implements Runnable {
     private CommandSpec spec;
 
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "display a help message")
-    private boolean helpRequested = false;
+    private final boolean helpRequested = false;
 
     @Override
     public void run() {

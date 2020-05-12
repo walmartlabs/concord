@@ -36,22 +36,22 @@ public class CliSecretServiceV2 implements SecretService {
 
     @Override
     public String exportAsString(String orgName, String name, String password) throws Exception {
-        return secretService.exportAsString(orgName, name, password);
+        return secretService.exportAsString(orgName, name);
     }
 
     @Override
     public KeyPair exportKeyAsFile(String orgName, String name, String password) throws Exception {
-        return secretService.exportKeyAsFile(workDir, orgName, name, password);
+        return secretService.exportKeyAsFile(workDir, orgName, name);
     }
 
     @Override
-    public UsernamePassword exportCredentials(String orgName, String name, String password) throws Exception {
+    public UsernamePassword exportCredentials(String orgName, String name, String password) {
         throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public Path exportAsFile(String orgName, String name, String password) throws Exception {
-        throw new UnsupportedOperationException("not implemented");
+        return secretService.exportAsFile(workDir, orgName, name);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class CliSecretServiceV2 implements SecretService {
     }
 
     @Override
-    public String encryptString(String orgName, String projectName, String value) throws Exception {
+    public String encryptString(String orgName, String projectName, String value) {
         throw new UnsupportedOperationException("not implemented");
     }
 }

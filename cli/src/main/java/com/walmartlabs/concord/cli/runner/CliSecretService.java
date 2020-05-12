@@ -38,15 +38,9 @@ public class CliSecretService {
         this.vaultProvider = vaultProvider;
     }
 
-    public SecretService.KeyPair exportKeyAsFile(Path workDir, String orgName, String name, String password) throws Exception {
-        Path publicKey = secretStoreDir;
-        Path privateKey = secretStoreDir;
-        if (orgName != null) {
-            publicKey = publicKey.resolve(orgName);
-            privateKey = privateKey.resolve(orgName);
-        }
-        publicKey = publicKey.resolve(name + ".pub");
-        privateKey = privateKey.resolve(name);
+    public SecretService.KeyPair exportKeyAsFile(Path workDir, String orgName, String name) throws Exception {
+        Path publicKey = toSecretPath(orgName, name + ".pub");
+        Path privateKey = toSecretPath(orgName, name);
 
         if (Files.notExists(publicKey)) {
             throw new RuntimeException("Public key '" + publicKey + "' not found");
@@ -56,9 +50,9 @@ public class CliSecretService {
             throw new RuntimeException("Private key '" + privateKey + "' not found");
         }
 
-        Path dest = workDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
-        Path tmpPublicKey = dest.resolve(name + ".pub");
-        Path tmpPrivateKey = dest.resolve(name);
+        Path tmpDir = assertTmpDir(workDir);
+        Path tmpPublicKey = tmpDir.resolve(name + ".pub");
+        Path tmpPrivateKey = tmpDir.resolve(name);
         Files.copy(publicKey, tmpPublicKey, StandardCopyOption.REPLACE_EXISTING);
         Files.copy(privateKey, tmpPrivateKey, StandardCopyOption.REPLACE_EXISTING);
 
@@ -72,16 +66,40 @@ public class CliSecretService {
         return vaultProvider.getValue(encryptedString);
     }
 
-    public String exportAsString(String orgName, String name, String password) throws IOException {
+    public String exportAsString(String orgName, String name) throws IOException {
+        Path secretPath = toSecretPath(orgName, name);
+        if (Files.notExists(secretPath)) {
+            throw new RuntimeException("Secret '" + secretPath + "' not found");
+        }
+        return new String(Files.readAllBytes(secretPath));
+    }
+
+    public Path exportAsFile(Path workDir, String orgName, String name) throws IOException {
+        Path secretPath = toSecretPath(orgName, name);
+        if (Files.notExists(secretPath)) {
+            throw new RuntimeException("Secret '" + secretPath + "' not found");
+        }
+
+        Path tmpDir = assertTmpDir(workDir);
+        Path dest = Files.createTempFile(tmpDir, "file", ".bin");
+        Files.copy(secretPath, dest, StandardCopyOption.REPLACE_EXISTING);
+        return dest;
+    }
+
+    private Path toSecretPath(String orgName, String name) {
         Path secretPath = secretStoreDir;
         if (orgName != null) {
             secretPath = secretStoreDir.resolve(orgName);
         }
 
-        secretPath = secretPath.resolve(name);
-        if (Files.notExists(secretPath)) {
-            throw new RuntimeException("Secret '" + secretPath + "' not found");
+        return secretPath.resolve(name);
+    }
+
+    private static Path assertTmpDir(Path workDir) throws IOException {
+        Path dir = workDir.resolve("target").resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
+        if (Files.notExists(dir)) {
+            Files.createDirectories(dir);
         }
-        return new String(Files.readAllBytes(secretPath));
+        return dir;
     }
 }

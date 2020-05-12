@@ -59,37 +59,37 @@ public class Run implements Callable<Integer> {
     private CommandSpec spec;
 
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "display the command's help message")
-    private boolean helpRequested = false;
+    private final boolean helpRequested = false;
 
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
-    private Map<String, String> extraVars = new LinkedHashMap<>();
+    private final Map<String, String> extraVars = new LinkedHashMap<>();
 
     @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
-    private Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
+    private final Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
 
     @Option(names = {"--repo-cache-dir"}, description = "repository cache dir")
-    private Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("repoCache");
+    private final Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("repoCache");
 
     @Option(names = {"--secret-dir"}, description = "secret store dir")
-    private Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
+    private final Path secretStoreDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("secrets");
 
     @Option(names = {"--vault-dir"}, description = "vault dir")
-    private Path vaultDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("vaults");
+    private final Path vaultDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("vaults");
 
     @Option(names = {"--vault-id"}, description = "vault id")
-    private String vaultId = "default";
+    private final String vaultId = "default";
 
     @Option(names = {"--imports-source"}, description = "default imports source")
-    private String importsSource = "https://github.com";
+    private final String importsSource = "https://github.com";
 
     @Option(names = {"--entry-point"}, description = "entry point")
-    private String entryPoint = Constants.Request.DEFAULT_ENTRY_POINT_NAME;
+    private final String entryPoint = Constants.Request.DEFAULT_ENTRY_POINT_NAME;
 
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
-    private boolean verbose = false;
+    private final boolean verbose = false;
 
     @Parameters(arity = "0..1")
-    private Path targetDir = Paths.get(System.getProperty("user.dir"));
+    private final Path targetDir = Paths.get(System.getProperty("user.dir"));
 
     @Override
     public Integer call() throws Exception {
