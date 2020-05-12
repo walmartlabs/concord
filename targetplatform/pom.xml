@@ -96,7 +96,7 @@
         <sshd.version>1.6.0</sshd.version>
         <swagger.version>1.5.20</swagger.version>
         <testcontainers.version>1.13.0</testcontainers.version>
-        <testcontainers.concord.version>0.0.10</testcontainers.concord.version>
+        <testcontainers.concord.version>0.0.13</testcontainers.concord.version>
         <threetenbp.version>1.3.5</threetenbp.version>
         <wiremock.version>2.26.1</wiremock.version>
     </properties>
