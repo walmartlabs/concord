@@ -43,7 +43,9 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.InjectVariable;
 import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
@@ -469,6 +471,17 @@ public class MainTest {
         assertLog(log, ".*" + Pattern.quote("Hello, myFlow flow!") + ".*");
     }
 
+    @Test
+    public void testV1Compat() throws Exception {
+        deploy("v1Compat");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*execute: p1=ABC.*");
+        assertLog(log, ".*" + Pattern.quote("result: {result=abc}") + ".*");
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);
@@ -523,7 +536,8 @@ public class MainTest {
                     runnerCfg.build(),
                     () -> processConfiguration,
                     testServices,
-                    runtimeModule)
+                    runtimeModule,
+                    new V1CompatModule()) // allow runtime v1 tasks
                     .create();
 
             injector.getInstance(Main.class).execute();
@@ -614,7 +628,7 @@ public class MainTest {
     static class TestTask implements Task {
 
         @Override
-        public Serializable execute(TaskContext ctx) throws Exception {
+        public Serializable execute(TaskContext ctx) {
             return new HashMap<>(ctx.input());
         }
     }
@@ -649,10 +663,38 @@ public class MainTest {
     }
 
     @Named("unknownMethod")
+    @SuppressWarnings("unused")
     static class UnknownMethodTask implements Task {
 
         public String sayHello() {
             return "Hello!";
+        }
+    }
+
+    @Named("v1")
+    @SuppressWarnings("unused")
+    static class V1Task implements com.walmartlabs.concord.sdk.Task {
+
+        @InjectVariable("context")
+        com.walmartlabs.concord.sdk.Context ctx;
+
+        @Override
+        public void execute(com.walmartlabs.concord.sdk.Context ctx) {
+            assertEquals(ctx, this.ctx);
+
+            ctx.setVariable("result", "abc");
+            System.out.println("execute: p1=" + ctx.getVariable("p1"));
+        }
+
+        // can't use in v2
+        public String callWithoutContext() {
+            return "without-context";
+        }
+
+        // can't use in v2
+        public String callWithContext(@InjectVariable("context") com.walmartlabs.concord.sdk.Context ctx) {
+            ctx.setVariable("result2", "xyz");
+            return "with-context";
         }
     }
 }
