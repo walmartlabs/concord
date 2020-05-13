@@ -60,7 +60,7 @@ public class OutVarsProcessor {
     }
 
     public void postProcess() throws IOException {
-        if (outVarsFile != null) {
+        if (outVarsFile != null && Files.exists(outVarsFile)) {
             Files.delete(outVarsFile);
         }
     }

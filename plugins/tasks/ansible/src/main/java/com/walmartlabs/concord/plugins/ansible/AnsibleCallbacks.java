@@ -48,10 +48,16 @@ public class AnsibleCallbacks {
 
     private static final String CALLBACK_LOCATION = "/com/walmartlabs/concord/plugins/ansible/callback";
     private static final String CALLBACK_PLUGINS_DIR = "_callbacks";
-    private static final String[] CALLBACKS = new String[]{
+
+    private static final String[] STATS_CALLBACKS = new String[]{
+            "concord_trace.py"
+    };
+
+    private static final String[] EVENTS_CALLBACKS = new String[]{
             "concord_events.py",
-            "concord_trace.py",
-            "concord_strategy_patch.py",
+            "concord_strategy_patch.py"
+    };
+    private static final String[] OUTVARS_CALLBACKS = new String[]{
             "concord_out_vars.py"
     };
     private static final String[] POLICY_CALLBACKS = new String[]{
@@ -68,6 +74,9 @@ public class AnsibleCallbacks {
     private boolean disabled = false;
     private boolean policyEnabled = false;
     private boolean logFilteringEnabled = false;
+    private boolean eventsEnabled = false;
+    private boolean statsEnabled = false;
+    private boolean outVarsEnabled = false;
 
     private Path eventsFile;
     private EventSender eventSender;
@@ -83,6 +92,11 @@ public class AnsibleCallbacks {
         this.disabled = MapUtils.getBoolean(args, TaskParams.DISABLE_CONCORD_CALLBACKS_KEY, false);
         this.policyEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_POLICY, false);
         this.logFilteringEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_LOG_FILTERING, false);
+
+        this.eventsEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_EVENTS, true);
+        this.statsEnabled = MapUtils.getBoolean(args, TaskParams.ENABLE_STATS, true);
+        this.outVarsEnabled= MapUtils.getBoolean(args, TaskParams.ENABLE_OUT_VARS, true);
+
         return this;
     }
 
@@ -92,14 +106,24 @@ public class AnsibleCallbacks {
         }
 
         try {
-            Resources.copy(CALLBACK_LOCATION, CALLBACKS, getDir());
-
             if (policyEnabled) {
                 Resources.copy(CALLBACK_LOCATION, POLICY_CALLBACKS, getDir());
             }
 
             if (logFilteringEnabled) {
                 Resources.copy(CALLBACK_LOCATION, LOG_FILTERING_CALLBACKS, getDir());
+            }
+
+            if (eventsEnabled) {
+                Resources.copy(CALLBACK_LOCATION, EVENTS_CALLBACKS, getDir());
+            }
+
+            if (statsEnabled) {
+                Resources.copy(CALLBACK_LOCATION, STATS_CALLBACKS, getDir());
+            }
+
+            if (outVarsEnabled) {
+                Resources.copy(CALLBACK_LOCATION, OUTVARS_CALLBACKS, getDir());
             }
         } catch (IOException e) {
             log.error("Error while adding Concord callback plugins: {}", e.getMessage(), e);
@@ -125,7 +149,7 @@ public class AnsibleCallbacks {
     }
 
     public AnsibleCallbacks startEventSender(UUID instanceId, ProcessEventsApi eventsApi) throws IOException {
-        if (disabled) {
+        if (disabled || !eventsEnabled) {
             return this;
         }
 

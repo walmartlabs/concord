@@ -54,6 +54,12 @@ public enum TaskParams implements HasKey {
 
     ENABLE_LOG_FILTERING("enableLogFiltering"),
 
+    ENABLE_EVENTS("enableEvents"),
+
+    ENABLE_STATS("enableStats"),
+
+    ENABLE_OUT_VARS("enableOutsVars"),
+
     EXIT_CODE_KEY("exitCode"),
 
     EXTRA_ENV_KEY("extraEnv"),
