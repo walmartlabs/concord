@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.parser;
+package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,23 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.model.ExitStep;
-import io.takari.parc.Parser;
+import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.svm.commands.Terminate;
 
-import static io.takari.parc.Combinators.satisfy;
+import javax.inject.Named;
 
-public final class ExitGrammar {
+@Named
+public final class ExitCompiler implements StepCompiler<ExitStep> {
 
-    public static final Parser<Atom, ExitStep> exit =
-            satisfy((Atom a) -> a.token == JsonToken.VALUE_STRING && "exit".equals(a.value))
-                    .map(a -> new ExitStep(a.location));
+    @Override
+    public boolean accepts(Step step) {
+        return step instanceof ExitStep;
+    }
 
-    private ExitGrammar() {
+    @Override
+    public Command compile(CompilerContext context, ExitStep step) {
+        return new Terminate();
     }
 }

@@ -1084,17 +1084,6 @@ public class YamlErrorParserTest extends AbstractParserTest {
     }
 
     @Test
-    @Ignore
-    public void test500() throws Exception {
-        String msg =
-                "(005.yml): Error @ line: 6, col: 14. Unknown options: ['trash' [INT] @ line: 6, col: 14], expected: [meta]. Remove invalid options and/or fix indentation\n" +
-                        "\twhile processing steps:\n" +
-                        "\t'checkpoint' @ line: 3, col: 7";
-
-        assertErrorMessage("errors/exit/000.yml", msg);
-    }
-
-    @Test
     public void test600() throws Exception {
         String msg =
                 "(000.yml): Error @ line: 3, col: 12. Invalid value type, expected: EXPRESSION, got: NULL. Remove attribute or complete the definition\n" +

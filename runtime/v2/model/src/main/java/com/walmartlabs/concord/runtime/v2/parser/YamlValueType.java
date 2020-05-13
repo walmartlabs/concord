@@ -56,7 +56,6 @@ public final class YamlValueType<T> {
     public static final YamlValueType<String> EXPRESSION_VAL = type("EXPRESSION");
     public static final YamlValueType<Retry> RETRY = type("RETRY");
     public static final YamlValueType<Checkpoint> CHECKPOINT = type("CHECKPOINT");
-    public static final YamlValueType<ExitStep> EXIT = type("EXIT");
     public static final YamlValueType<Step> STEP = type("STEP");
     public static final YamlValueType<List<Step>> ARRAY_OF_STEP = array("ARRAY_OF_STEP", STEP);
     public static final YamlValueType<GroupOfSteps> TRY = type("TRY");

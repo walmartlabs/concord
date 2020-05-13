@@ -20,11 +20,16 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
+public class ExitStep implements Step {
 
-public class ExitStep extends AbstractStep<SimpleOptions> {
+    private final Location location;
 
-    public ExitStep(Location location, SimpleOptions options) {
-        super(location, options);
+    public ExitStep(Location location) {
+        this.location = location;
+    }
+
+    @Override
+    public Location getLocation() {
+        return location;
     }
 }

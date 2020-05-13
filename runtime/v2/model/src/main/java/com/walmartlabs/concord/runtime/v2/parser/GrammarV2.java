@@ -46,6 +46,7 @@ import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.callForm;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GroupGrammar.group;
 import static com.walmartlabs.concord.runtime.v2.parser.ParallelGrammar.parallelBlock;
+import static com.walmartlabs.concord.runtime.v2.parser.ReturnGrammar.returnStep;
 import static com.walmartlabs.concord.runtime.v2.parser.ScriptGrammar.script;
 import static com.walmartlabs.concord.runtime.v2.parser.SetVariablesGrammar.setVars;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskFull;
@@ -158,7 +159,7 @@ public final class GrammarV2 {
                     choice(choice(parallelBlock, group, exprFull), choice(taskFull, script, callFull, callForm), checkpoint, ifExpr, switchExpr, setVars, taskShort));
 
     // step := exit | exprShort | parallelBlock | stepObject
-    private static final Parser<Atom, Step> step = orError(choice(exit, exprShort, stepObject), YamlValueType.STEP);
+    private static final Parser<Atom, Step> step = orError(choice(exit, returnStep, exprShort, stepObject), YamlValueType.STEP);
 
     // steps := START_ARRAY step+ END_ARRAY
     static {
