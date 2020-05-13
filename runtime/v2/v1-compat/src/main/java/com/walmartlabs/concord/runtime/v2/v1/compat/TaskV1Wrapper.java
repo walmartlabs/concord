@@ -55,6 +55,8 @@ public class TaskV1Wrapper implements Task {
 
         v1Task.execute(v1Context);
 
+        v1Context.removeVariable(Constants.Context.WORK_DIR_KEY);
+
         return (Serializable) result;
     }
 
