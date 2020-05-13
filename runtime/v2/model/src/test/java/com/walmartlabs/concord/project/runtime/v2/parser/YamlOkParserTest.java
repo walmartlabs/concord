@@ -429,6 +429,32 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertEquals(m, t.getVars());
     }
 
+    // exit step
+    @Test
+    public void test017() throws Exception {
+        ProcessDefinition pd = load("017.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof ExitStep);
+        ExitStep t = (ExitStep) main.get(0);
+        assertNotNull(t.getLocation());
+    }
+
+    // return step
+    @Test
+    public void test018() throws Exception {
+        ProcessDefinition pd = load("018.yml");
+
+        List<Step> main = pd.flows().get("default");
+        assertEquals(1, main.size());
+
+        assertTrue(main.get(0) instanceof ReturnStep);
+        ReturnStep t = (ReturnStep) main.get(0);
+        assertNotNull(t.getLocation());
+    }
+
     private static void assertMeta(StepOptions o) {
         assertNotNull(o.meta());
         assertEquals(Collections.singletonMap("m1", (Serializable)"v1"), o.meta());

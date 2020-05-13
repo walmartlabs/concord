@@ -1,3 +1,3 @@
 flows:
-  main:
+  default:
     - exit

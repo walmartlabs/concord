@@ -1,0 +1,5 @@
+flows:
+  default:
+    - log: "before return"
+    - return
+    - log: "after return"

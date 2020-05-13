@@ -21,17 +21,17 @@ package com.walmartlabs.concord.runtime.v2.parser;
  */
 
 import com.fasterxml.jackson.core.JsonToken;
-import com.walmartlabs.concord.runtime.v2.model.ExitStep;
+import com.walmartlabs.concord.runtime.v2.model.ReturnStep;
 import io.takari.parc.Parser;
 
 import static io.takari.parc.Combinators.satisfy;
 
-public final class ExitGrammar {
+public final class ReturnGrammar {
 
-    public static final Parser<Atom, ExitStep> exit =
-            satisfy((Atom a) -> a.token == JsonToken.VALUE_STRING && "exit".equals(a.value))
-                    .map(a -> new ExitStep(a.location));
+    public static final Parser<Atom, ReturnStep> returnStep =
+            satisfy((Atom a) -> a.token == JsonToken.VALUE_STRING && "return".equals(a.value))
+                    .map(a -> new ReturnStep(a.location));
 
-    private ExitGrammar() {
+    private ReturnGrammar() {
     }
 }

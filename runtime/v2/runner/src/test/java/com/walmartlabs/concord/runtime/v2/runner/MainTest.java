@@ -459,6 +459,30 @@ public class MainTest {
     }
 
     @Test
+    public void testReturn() throws Exception {
+        deploy("return");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*before return.*");
+        assertNoLog(log, ".*after return.*");
+    }
+
+    @Test
+    public void testExit() throws Exception {
+        deploy("exit");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*before exit.*");
+        assertNoLog(log, ".*after exit.*");
+    }
+
+    @Test
     public void testCallFlow() throws Exception {
         deploy("call");
 
