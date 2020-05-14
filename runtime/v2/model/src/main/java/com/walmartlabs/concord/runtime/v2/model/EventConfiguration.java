@@ -58,11 +58,42 @@ public interface EventConfiguration extends Serializable {
     }
 
     /**
+     * Enable/disable truncating of IN variables in task call for events.
+     */
+    @Value.Default
+    default boolean truncateInVars() {
+        return true;
+    }
+
+    @Value.Default
+    default int truncateMaxStringLength() {
+        return 1024;
+    }
+
+    @Value.Default
+    default int truncateMaxArrayLength() {
+        return 32;
+    }
+
+    @Value.Default
+    default int truncateMaxDepth() {
+        return 10;
+    }
+
+    /**
      * Enable/disable recording of OUT variables in task calls.
      */
     @Value.Default
     default boolean recordTaskOutVars() {
         return false;
+    }
+
+    /**
+     * Enable/disable truncating of OUT variables in task call for events.
+     */
+    @Value.Default
+    default boolean truncateOutVars() {
+        return true;
     }
 
     /**

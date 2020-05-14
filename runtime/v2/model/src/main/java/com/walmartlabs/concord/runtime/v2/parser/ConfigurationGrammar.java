@@ -49,8 +49,10 @@ public final class ConfigurationGrammar {
                     with(ImmutableEventConfiguration::builder,
                             o -> options(
                                     optional("recordTaskInVars", booleanVal.map(o::recordTaskInVars)),
+                                    optional("truncateInVars", booleanVal.map(o::truncateInVars)),
                                     optional("inVarsBlacklist", stringArrayVal.map(o::inVarsBlacklist)),
                                     optional("recordTaskOutVars", booleanVal.map(o::recordTaskOutVars)),
+                                    optional("truncateOutVars", booleanVal.map(o::truncateOutVars)),
                                     optional("outVarsBlacklist", stringArrayVal.map(o::outVarsBlacklist))))
                             .map(ImmutableEventConfiguration.Builder::build));
 
