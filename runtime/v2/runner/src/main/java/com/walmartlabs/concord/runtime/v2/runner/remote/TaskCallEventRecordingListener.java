@@ -24,6 +24,7 @@ import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
+import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
@@ -60,11 +61,20 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         m.put("phase", event.phase().name().toLowerCase());
 
         if (event.input() != null && eventConfiguration.recordTaskInVars()) {
-            m.put("in", maskVars(convertInput(event.input()), eventConfiguration.inVarsBlacklist()));
+            Map<String, Object> vars = maskVars(convertInput(event.input()), eventConfiguration.inVarsBlacklist());
+            if (eventConfiguration.truncateInVars()) {
+                vars = ObjectTruncater.truncate(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
+            }
+            m.put("in", vars);
         }
 
-        if (event.out() != null && eventConfiguration.recordTaskOutVars()) {
-            m.put("out", maskVars(event.out(), eventConfiguration.outVarsBlacklist()));
+        Map<String, Object> outVars = asMapOrNull(event.out());
+        if (outVars != null && eventConfiguration.recordTaskOutVars()) {
+            Map<String, Object> vars = maskVars(outVars, eventConfiguration.outVarsBlacklist());
+            if (eventConfiguration.truncateOutVars()) {
+                vars = ObjectTruncater.truncate(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
+            }
+            m.put("out", vars);
         }
 
         if (event.duration() != null) {
@@ -122,7 +132,16 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         }
     }
 
-    private static Object maskVars(Map<String, Object> vars, Collection<String> blackList) {
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> asMapOrNull(Object v) {
+        if (!(v instanceof Map)) {
+            return null;
+        }
+
+        return (Map<String, Object>) v;
+    }
+
+    private static Map<String, Object> maskVars(Map<String, Object> vars, Collection<String> blackList) {
         if (blackList.isEmpty()) {
             return vars;
         }
@@ -134,16 +153,6 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             }
         }
         return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Object maskVars(Object vars, Collection<String> blackList) {
-        if (!(vars instanceof Map)) {
-            return vars;
-        }
-
-        Map<String, Object> v = (Map<String, Object>) vars;
-        return maskVars(v, blackList);
     }
 
     private static Map<String, Object> convertInput(Object[] input) {

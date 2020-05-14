@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.TimeUnit;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
