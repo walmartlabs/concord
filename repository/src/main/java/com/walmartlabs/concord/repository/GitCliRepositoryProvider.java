@@ -34,7 +34,6 @@ import java.util.List;
 public class GitCliRepositoryProvider implements RepositoryProvider {
 
     private static final Logger log = LoggerFactory.getLogger(GitCliRepositoryProvider.class);
-
     private static final String GIT_FILES = "^(\\.git|\\.gitmodules|\\.gitignore)$";
 
     public static final String DEFAULT_BRANCH = "master";
@@ -56,7 +55,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public void fetch(String uri, String branchOrNull, String commitId, Secret secret, Path dst) {
+    public String fetch(String uri, String branchOrNull, String commitId, Secret secret, Path dst) {
         String branch = getBranchOrDefault(branchOrNull);
         RepositoryException lastException = null;
 
@@ -67,8 +66,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             }
 
             try {
-                client.fetch(uri, branch, commitId, secret, dst);
-                return;
+                return client.fetch(uri, branch, commitId, secret, dst);
             } catch (RepositoryException e) {
                 lastException = e;
                 try {
