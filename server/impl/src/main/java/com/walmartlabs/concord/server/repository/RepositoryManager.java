@@ -119,8 +119,18 @@ public class RepositoryManager {
     }
 
     public Repository fetch(String url, String branch, String commitId, String path, Secret secret) {
+        String fetchedCommitId = commitId;
+        long start =System.currentTimeMillis();
+
         Path dest = repositoryCache.getPath(url);
-        return providers.fetch(url, branch, commitId, path, secret, dest);
+        try {
+            Repository result = providers.fetch(url, branch, commitId, path, secret, dest);
+            fetchedCommitId = result.fetchedCommitId();
+            return result;
+        } finally {
+            log.info("fetch ['{}', '{}', '{}', '{}'] -> current commitId {}, done in {}ms",
+                    url, branch, commitId, path, fetchedCommitId, (System.currentTimeMillis() - start));
+        }
     }
 
     public Repository fetch(UUID projectId, RepositoryEntry repository) {
@@ -131,7 +141,12 @@ public class RepositoryManager {
     }
 
     public <T> T withLock(String repoUrl, Callable<T> f) {
-        return repositoryCache.withLock(repoUrl, f);
+        long start = System.currentTimeMillis();
+        try {
+            return repositoryCache.withLock(repoUrl, f);
+        } finally {
+            log.info("withLock ['{}'] -> done in {}ms", repoUrl, (System.currentTimeMillis() - start));
+        }
     }
 
     private UUID getOrgId(UUID projectId) {

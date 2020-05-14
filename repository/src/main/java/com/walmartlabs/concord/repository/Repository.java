@@ -19,6 +19,7 @@ package com.walmartlabs.concord.repository;
  * limitations under the License.
  * =====
  */
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -29,14 +30,16 @@ public class Repository {
     private final Path rootPath;
     private final Path repoPath;
     private final String branch;
+    private final String fetchedCommitId;
 
     private final RepositoryProvider provider;
 
-    public Repository(String branch, Path rootPath, Path repoPath, RepositoryProvider provider) {
+    public Repository(String branch, Path rootPath, Path repoPath, String fetchedCommitId, RepositoryProvider provider) {
         this.branch = branch;
         this.rootPath = rootPath;
         this.repoPath = repoPath;
         this.provider = provider;
+        this.fetchedCommitId = fetchedCommitId;
     }
 
     public RepositoryInfo info() {
@@ -57,5 +60,9 @@ public class Repository {
 
     public String branch() {
         return branch;
+    }
+
+    public String fetchedCommitId() {
+        return fetchedCommitId;
     }
 }

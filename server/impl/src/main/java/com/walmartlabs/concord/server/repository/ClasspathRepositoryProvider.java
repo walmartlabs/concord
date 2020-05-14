@@ -53,7 +53,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public void fetch(String repoUrl, String branch, String commitId, Secret secret, Path dst) {
+    public String fetch(String repoUrl, String branch, String commitId, Secret secret, Path dst) {
         URL resUrl = Resources.getResource(normalizeUrl(repoUrl));
 
         try {
@@ -67,6 +67,7 @@ public class ClasspathRepositoryProvider implements RepositoryProvider {
             try (OutputStream out = Files.newOutputStream(dstFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 Resources.copy(resUrl, out);
             }
+            return null;
         } catch (IOException e) {
             throw new RepositoryException("Error while fetching a repository", e);
         }

@@ -36,11 +36,11 @@ public class RepositoryProviders {
 
     public Repository fetch(String url, String branch, String commitId, String path, Secret secret, Path destDir) {
         RepositoryProvider provider = getProvider(url);
-        provider.fetch(url, branch, commitId, secret, destDir);
+        String fetchedCommitId = provider.fetch(url, branch, commitId, secret, destDir);
 
         Path repoPath = repoPath(destDir, path);
 
-        return new Repository(provider.getBranchOrDefault(branch), destDir, repoPath, provider);
+        return new Repository(provider.getBranchOrDefault(branch), destDir, repoPath, fetchedCommitId, provider);
     }
 
     private RepositoryProvider getProvider(String url) {

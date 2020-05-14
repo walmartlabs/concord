@@ -78,11 +78,11 @@ public class GitClient {
         return new RepositoryInfo(id, message.toString(), author);
     }
 
-    public void fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
-        fetch(uri, branch, commitId, true, secret, dest);
+    public String fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
+        return fetch(uri, branch, commitId, true, secret, dest);
     }
 
-    public void fetch(String uri, String branch, String commitId, boolean detached, Secret secret, Path dest) {
+    public String fetch(String uri, String branch, String commitId, boolean detached, Secret secret, Path dest) {
         // can use shallow clone only with branch/tag
         boolean shallow = commitId == null && cfg.shallowClone();
 
@@ -113,6 +113,7 @@ public class GitClient {
 
             launchCommand(dest, defaultTimeout, "submodule", "foreach", "git", "reset", "--hard");
         }
+        return rev;
     }
 
     private void fetchCommand(String url,
