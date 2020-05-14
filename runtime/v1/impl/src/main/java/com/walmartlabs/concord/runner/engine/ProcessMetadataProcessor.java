@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runner.engine;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
+import com.walmartlabs.concord.client.ClientUtils;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.runner.ContextUtils;
@@ -35,6 +36,9 @@ import java.util.*;
 public class ProcessMetadataProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessMetadataProcessor.class);
+
+    private static final int RETRY_COUNT = 3;
+    private static final long RETRY_INTERVAL = 5000;
 
     private static final Set<Class> VARIABLE_TYPES = new HashSet<>(Arrays.asList(
             String.class, Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class));
@@ -62,7 +66,10 @@ public class ProcessMetadataProcessor {
                         .txId(instanceId)
                         .build()));
         try {
-            client.updateMetadata(instanceId, meta);
+            ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL, () -> {
+                client.updateMetadata(instanceId, meta);
+                return null;
+            });
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
