@@ -45,6 +45,10 @@ public class ConcordLdapContextFactory implements LdapContextFactory {
                 if (url != null && url.startsWith("ldaps:")) {
                     env.put("java.naming.ldap.factory.socket", TrustingSslSocketFactory.class.getName());
                 }
+
+                env.put("com.sun.jndi.ldap.read.timeout", Long.toString(cfg.getConnectTimeout().toMillis()));
+                env.put("com.sun.jndi.ldap.connect.timeout", Long.toString(cfg.getReadTimeout().toMillis()));
+
                 return super.createLdapContext(env);
             }
         };
