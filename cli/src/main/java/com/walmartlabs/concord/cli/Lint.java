@@ -48,13 +48,13 @@ public class Lint implements Callable<Integer> {
     private CommandSpec spec;
 
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "display the command's help message")
-    private boolean helpRequested = false;
+    boolean helpRequested = false;
 
     @Option(names = {"-v", "--verbose"}, description = "Verbose output")
-    private boolean verbose = false;
+    boolean verbose = false;
 
     @Parameters(arity = "0..1")
-    private Path targetDir = Paths.get(System.getProperty("user.dir"));
+    Path targetDir = Paths.get(System.getProperty("user.dir"));
 
     @Override
     public Integer call() throws Exception {
