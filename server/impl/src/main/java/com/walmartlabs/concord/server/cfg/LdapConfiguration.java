@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -94,6 +95,14 @@ public class LdapConfiguration implements Serializable {
     @Nullable
     @Config("ldap.cacheDuration")
     private Long cacheDuration;
+
+    @Inject
+    @Config("ldap.connectTimeout")
+    private Duration connectTimeout;
+
+    @Inject
+    @Config("ldap.readTimeout")
+    private Duration readTimeout;
 
     private final Set<String> exposeAttributes;
 
@@ -169,6 +178,14 @@ public class LdapConfiguration implements Serializable {
 
     public Long getCacheDuration() {
         return cacheDuration;
+    }
+
+    public Duration getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public Duration getReadTimeout() {
+        return readTimeout;
     }
 
     private static Set<String> split(String s) {
