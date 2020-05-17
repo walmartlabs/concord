@@ -88,6 +88,9 @@ public class SsoRealm extends AuthorizingRealm {
         UserEntry u = userManager.getOrCreate(ldapPrincipal.getUsername(), ldapPrincipal.getDomain(), UserType.LDAP)
                 .orElseThrow(() -> new ConcordApplicationException("User not found: " + ldapPrincipal.getUsername()));
 
+        // we consider the account active if the authentication was successful
+        userManager.enable(u.getId());
+
         auditLog.add(AuditObject.SYSTEM, AuditAction.ACCESS)
                 .userId(u.getId())
                 .field("username", u.getName())
