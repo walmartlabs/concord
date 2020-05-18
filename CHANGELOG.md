@@ -1,5 +1,41 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: configurable `connectTimeout` and
+`readTimeout` for LDAP calls;
+- concord-server: log duration of GIT operations;
+- runtime-v2: support for return and exit steps;
+- ansible: new parameters to enable or disable various features:
+`enableEvents`, `enableStats`, `enableOutsVars`;
+- runtime-v2: support for expressions in call step;
+- runtime-v2: grammar support for cron trigger's `timezone`;
+- concord-cli: support for `crypto.exportAsFile`;
+- runtime-v2: `template` support;
+- runtime-v2: support for out variables;
+- repository: support for "non detached" checkouts;
+- runtime-v2: support for setting variables using `set`.
+
+### Changed
+
+- iam-sso: re-enable disabled user accounts on successful login;
+- concord-server: fix handling of `Bearer` tokens;
+- runtime-v2: in/out params in task events are now truncated to
+limit the amount of data saved;
+- runtime-v1: process metadata updates are now automatically
+retried in case of errors;
+- runtime-v2: add `concord/concord.yml`to the list of default
+`resources`;
+- runtime-v2: replace Jackson's `JsonLocation` with a custom type;
+- runtime-v2: log step execution errors with the step's location;
+- runtime-v2: the default expression evaluator now implements
+different evaluation rules for process arguments, task inputs and
+`set` steps.
+
+
+
 ## [1.49.0] - 2020-05-06
 
 ### Added
