@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- concord-server: fix the "Unconnected sockets not implemented"
+issue when connection timeout is used for LDAP connections. 
+
+
+
+## [1.50.0] - 2020-05-18
+
 ### Added
 
 - concord-server: configurable `connectTimeout` and
