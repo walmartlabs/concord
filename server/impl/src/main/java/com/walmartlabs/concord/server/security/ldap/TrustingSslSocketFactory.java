@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.security.ldap;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,11 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+/**
+ * A socket factory that creates SSL sockets using {@link DummyTrustManager}.
+ * It implements both connected and unconnected socket creation methods
+ * to support, for example, connection timeout for LDAP connections.
+ */
 public class TrustingSslSocketFactory extends SocketFactory {
 
     private final SSLSocketFactory delegate;
@@ -43,11 +48,16 @@ public class TrustingSslSocketFactory extends SocketFactory {
     public TrustingSslSocketFactory() {
         try {
             SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(null, new TrustManager[]{new DummyTrustmanager()}, new SecureRandom());
+            ctx.init(null, new TrustManager[]{new DummyTrustManager()}, new SecureRandom());
             delegate = ctx.getSocketFactory();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Socket createSocket() throws IOException {
+        return delegate.createSocket();
     }
 
     @Override
@@ -70,7 +80,7 @@ public class TrustingSslSocketFactory extends SocketFactory {
         return delegate.createSocket(inetAddress, i, inetAddress1, i1);
     }
 
-    private static class DummyTrustmanager implements X509TrustManager {
+    private static class DummyTrustManager implements X509TrustManager {
         public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {  // NOSONAR
         }
 
