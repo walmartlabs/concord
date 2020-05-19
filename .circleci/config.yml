@@ -1,0 +1,19 @@
+version: 2
+executorType: machine
+jobs:
+  build:
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: concord-{{ checksum "pom.xml" }}
+
+      - run: ./mvnw -B dependency:go-offline > /dev/null
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: concord-{{ checksum "pom.xml" }}
+
+      # TODO run ITs
+      - run: ./mvnw -B clean install -Pdocker
