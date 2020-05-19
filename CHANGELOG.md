@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.50.1] - 2020-05-19
 
 ### Changed
 
