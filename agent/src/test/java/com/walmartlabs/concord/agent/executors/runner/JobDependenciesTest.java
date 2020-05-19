@@ -54,7 +54,7 @@ public class JobDependenciesTest {
         Map<String, Object> cfg = new HashMap<>();
         cfg.put(Constants.Request.DEPENDENCIES_KEY, Arrays.asList(
                 "file://something.jar",
-                "mvn://org.codehaus.groovy:groovy-all:pom:2.5.2",
+                "mvn://org.codehaus.groovy:groovy-all:pom:2.5.8",
                 "mvn://aaa:aaa:1.0",
                 "mvn://bbb:bbb:latest",
                 "mvn://ccc:ccc:1.0.1-20190214.203609-21",
