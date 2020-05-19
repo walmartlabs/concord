@@ -32,6 +32,7 @@ RUN pip install --upgrade --ignore-installed \
 
 RUN pip install --upgrade --ignore-installed \
     "ansible>=2.6.10,<2.7.0" \
+    "Appium-Python-Client<1.0" \
     boto3 \
     botocore \
     bzt \
