@@ -16,9 +16,7 @@ RUN yum -y install \
     libffi-devel \
     openssh-clients \
     openssl-devel \
-    python \
-    python-devel \
-    python-pip \
+    python2-devel \
     rsync \
     sshpass \
     util-linux \
