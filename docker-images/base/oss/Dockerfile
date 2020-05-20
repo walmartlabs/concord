@@ -11,7 +11,7 @@ RUN yum -y --enablerepo=extras install epel-release && \
     yum clean all
 
 RUN alternatives --set python /usr/bin/python2
-RUN alternatives --set pip /usr/bin/pip2
+RUN alternatives --install /usr/bin/pip pip /usr/bin/pip2 0
 
 RUN pip install --upgrade --ignore-installed pip setuptools && pip install dumb-init
 
