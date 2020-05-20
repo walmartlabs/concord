@@ -1,0 +1,13 @@
+configuration:
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:1.49.0"
+
+flows:
+  default:
+    - task: ansible
+      in:
+        playbook: playbook/hello.yml
+        inventoryFile: inventory.ini
+        groupVars:
+          - my_hosts:
+              secretName: myWindowsKey
