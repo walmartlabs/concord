@@ -4,7 +4,7 @@ package com.walmartlabs.concord.plugins.noderoster;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,51 +20,46 @@ package com.walmartlabs.concord.plugins.noderoster;
  * =====
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.sdk.Context;
-import com.walmartlabs.concord.sdk.ContextUtils;
 import com.walmartlabs.concord.sdk.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import static com.walmartlabs.concord.sdk.ContextUtils.*;
+import static com.walmartlabs.concord.plugins.noderoster.NodeRosterTaskUtils.*;
+import static com.walmartlabs.concord.plugins.noderoster.Result.createResponse;
 
 @Named("nodeRoster")
 public class NodeRosterTask implements Task {
 
-    private static final Logger log = LoggerFactory.getLogger(NodeRosterTask.class);
-    private static final String API_KEY = "apiKey";
+    private final ApiClientFactory apiClientFactory;
 
     @Inject
-    ApiClientFactory apiClientFactory;
+    public NodeRosterTask(ApiClientFactory apiClientFactory) {
+        this.apiClientFactory = apiClientFactory;
+    }
 
     @Override
     public void execute(Context ctx) throws Exception {
-        Action action = getAction(ctx);
-
-        // TODO retries
+        Map<String, Object> paramsCfg = createParamsCfg(ctx);
+        Action action = getAction(paramsCfg);
 
         switch (action) {
             case HOSTSWITHARTIFACTS: {
-                findHostsWithArtifacts(ctx);
+                findHostsWithArtifacts(ctx, paramsCfg);
                 break;
             }
             case FACTS: {
-                findFacts(ctx);
+                findFacts(ctx, paramsCfg);
                 break;
             }
-
             case DEPLOYEDONHOST: {
-                findDeployedArtifacts(ctx);
+                findDeployedArtifacts(ctx, paramsCfg);
                 break;
             }
 
@@ -76,117 +71,52 @@ public class NodeRosterTask implements Task {
     /**
      * Find facts for a given host name or host id
      */
-    public void findFacts(Context ctx) throws Exception {
-        String hostName = getString(ctx, Keys.HOSTNAME_KEY);
-        UUID hostId = getUUID(ctx, Keys.HOSTID_KEY);
+    public void findFacts(Context ctx, Map<String, Object> paramsCfg) throws Exception {
+        ApiClient clientConfig = clientConfig(ctx, paramsCfg);
+        NodeRosterFactsApi api = new NodeRosterFactsApi(clientConfig);
+        Object facts = NodeRosterTaskUtils.findFacts(api, paramsCfg);
 
-        if (hostName != null) {
-            log.info("Finding facts for hostname {}", hostName);
-        } else if (hostId != null) {
-            log.info("Finding facts for host id {}", hostId);
-        } else {
-            throw new IllegalArgumentException("A 'hostName' or 'hostId' value is required");
-        }
-
-        Object facts = withClient(ctx, client -> {
-            NodeRosterFactsApi api = new NodeRosterFactsApi(client);
-            return api.getFacts(hostId, hostName);
-        });
-
-        ctx.setVariable("result", toResult(facts));
+        ctx.setVariable("result", createResponse(facts));
     }
 
     /**
      * Find hosts with a deployed artifact
      */
-    public void findHostsWithArtifacts(Context ctx) throws Exception {
-        String artifactPattern = assertString(ctx, Keys.ARTIFACT_PATTERN_KEY);
-        int limit = getLimit(ctx);
-        int offset = getOffset(ctx);
+    public void findHostsWithArtifacts(Context ctx, Map<String, Object> paramsCfg) throws Exception {
+        ApiClient clientConfig = clientConfig(ctx, paramsCfg);
+        NodeRosterHostsApi api = new NodeRosterHostsApi(clientConfig);
+        List<HostEntry> hosts = NodeRosterTaskUtils.findHostsWithArtifacts(api, paramsCfg);
 
-        log.info("Finding hosts where artifact {} is deployed (limit: {}, offset: {})...", artifactPattern, limit, offset);
-
-        List<HostEntry> hosts = withClient(ctx, client -> {
-            NodeRosterHostsApi api = new NodeRosterHostsApi(client);
-            return api.list(null, artifactPattern, null, null, limit, offset);
-        });
-
-        ctx.setVariable("result", toResult(hosts));
+        ctx.setVariable("result", createResponse(hosts));
     }
 
     /**
      * Find artifacts deployed on a given host
      */
-    public void findDeployedArtifacts(Context ctx) throws Exception {
-        String hostName = getString(ctx, Keys.HOSTNAME_KEY);
-        UUID hostId = getUUID(ctx, Keys.HOSTID_KEY);
-        int limit = getLimit(ctx);
-        int offset = getOffset(ctx);
+    public void findDeployedArtifacts(Context ctx, Map<String, Object> paramsCfg) throws Exception {
+        ApiClient clientConfig = clientConfig(ctx, paramsCfg);
+        NodeRosterArtifactsApi api = new NodeRosterArtifactsApi(clientConfig);
+        List<ArtifactEntry> deployedArtifacts = NodeRosterTaskUtils.findDeployedArtifacts(api, paramsCfg);
 
-        if (hostName == null && hostId == null) {
-            throw new IllegalArgumentException("A 'hostName' or 'hostId' value is required");
-        }
-
-        log.info("Finding artifacts deployed on a host (hostName: {}, hostId: {})...", hostName, hostId);
-
-        List<ArtifactEntry> deployedArtifacts = withClient(ctx, client -> {
-            NodeRosterArtifactsApi api = new NodeRosterArtifactsApi(client);
-            return api.list(hostId, hostName, null, limit, offset);
-        });
-
-        ctx.setVariable("result", toResult(deployedArtifacts));
+        ctx.setVariable("result", createResponse(deployedArtifacts));
     }
 
-    private <T> T withClient(Context ctx, CheckedFunction<ApiClient, T> f) throws Exception {
-        ApiClientConfiguration cfg = ApiClientConfiguration.builder()
-                .baseUrl(getBaseUrl(ctx))
-                .apiKey(getApiKey(ctx))
+    private ApiClient clientConfig(Context ctx, Map<String, Object> paramsCfg) {
+        return apiClientFactory.create(ApiClientConfiguration.builder()
+                .baseUrl(getBaseUrl(paramsCfg))
+                .apiKey(getApiKey(paramsCfg))
                 .context(ctx)
-                .build();
-        return f.apply(apiClientFactory.create(cfg));
+                .build());
     }
 
-    private Object toResult(Object data) {
+    private static Map<String, Object> createParamsCfg(Context ctx) {
         Map<String, Object> m = new HashMap<>();
-        m.put("ok", data != null);
-
-//        if (data != null) {
-//            data = objectMapper.convertValue(data, Object.class);
-//        }
-        m.put("data", data);
-
+        for (String k : Constants.ALL_IN_PARAMS) {
+            Object v = ctx.getVariable(k);
+            if (v != null) {
+                m.put(k, v);
+            }
+        }
         return m;
-    }
-
-    private static String getBaseUrl(Context ctx) {
-        return ContextUtils.getString(ctx, Keys.BASE_URL_KEY);
-    }
-
-    private static String getApiKey(Context ctx) {
-        return (String) ctx.getVariable(API_KEY);
-    }
-
-    private static int getLimit(Context ctx) {
-        return ContextUtils.getInt(ctx, Keys.LIMIT_KEY, 30);
-    }
-
-    private static int getOffset(Context ctx) {
-        return ContextUtils.getInt(ctx, Keys.OFFSET_KEY, 0);
-    }
-
-    private static Action getAction(Context ctx) {
-        String action = assertString(ctx, Keys.ACTION_KEY);
-        return Action.valueOf(action.trim().toUpperCase());
-    }
-
-    private enum Action {
-        HOSTSWITHARTIFACTS,
-        FACTS,
-        DEPLOYEDONHOST
-    }
-
-    @FunctionalInterface
-    protected interface CheckedFunction<T, R> {
-        R apply(T t) throws Exception;
     }
 }

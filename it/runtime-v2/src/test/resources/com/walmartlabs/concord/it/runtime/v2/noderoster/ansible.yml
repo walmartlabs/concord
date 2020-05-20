@@ -1,0 +1,17 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:ansible-tasks:PROJECT_VERSION"
+
+flows:
+  default:
+    - task: ansible
+      in:
+        playbook: "playbook.yml"
+        inventory:
+          myHosts:
+            hosts:
+              - "abc"
+              - "xyz"
+            vars:
+              ansible_connection: "local"
