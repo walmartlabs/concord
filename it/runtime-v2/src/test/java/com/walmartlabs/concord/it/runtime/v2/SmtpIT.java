@@ -24,8 +24,6 @@ import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.Payload;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.walmartlabs.concord.client.ProcessEntry;
@@ -35,6 +33,7 @@ import org.testcontainers.Testcontainers;
 
 import javax.mail.internet.MimeMessage;
 
+import static com.walmartlabs.concord.it.runtime.v2.Utils.resourceToString;
 import static org.junit.Assert.assertEquals;
 
 public class SmtpIT {
@@ -53,7 +52,7 @@ public class SmtpIT {
 
     @Test
     public void test() throws Exception {
-        String concordYml = Resources.toString(ProcessIT.class.getResource("smtp/concord.yml"), Charsets.UTF_8);
+        String concordYml = resourceToString(ProcessIT.class.getResource("smtp/concord.yml"));
 
         // SMTP host and port must be accessible by the process
         // i.e. when running in a container the host must point to the docker host's address

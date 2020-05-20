@@ -9,7 +9,6 @@
 
 ![](console2/public/images/concord.svg)
 
-
 Concord is a workflow server. It is the orchestration engine that connects
 different systems together using scenarios and plugins created by users.
 

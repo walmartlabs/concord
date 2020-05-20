@@ -1,0 +1,30 @@
+configuration:
+  runtime: "concord-v2"
+  dependencies:
+    - "mvn://com.walmartlabs.concord.plugins.basic:noderoster-tasks:PROJECT_VERSION"
+
+flows:
+  default:
+    - task: nodeRoster
+      in:
+        action: "hostsWithArtifacts"
+        artifactPattern: ".*my-app-1.0.0.jar"
+      out: myOut
+
+    - log: "hostsWithArtifacts: ${myOut}" # should be empty
+
+    - task: nodeRoster
+      in:
+        action: "facts"
+        hostName: "xyz"
+      out: myOut
+
+    - log: "facts: ${myOut}"
+
+    - task: nodeRoster
+      in:
+        action: "deployedOnHost"
+        hostName: "myhost.example.com"
+      out: myOut
+
+    - log: "deployedOnHost: ${myOut}"
