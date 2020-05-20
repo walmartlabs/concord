@@ -9,7 +9,9 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
 
 USER root
 
-RUN yum -y install docker-client uuid && yum clean all
+RUN yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
+    yum -y install docker-ce-cli uuid && \
+    yum clean all
 
 COPY --chown=concord:concord target/deps/ /home/concord/.m2/repository
 ADD --chown=concord:concord target/dist/agent.tar.gz /opt/concord/agent/

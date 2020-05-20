@@ -16,6 +16,7 @@ different systems together using scenarios and plugins created by users.
 ## Building
 
 Dependencies:
+- [Git](https://git-scm.com/) 2.18+
 - [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 - [Docker Community Edition](https://www.docker.com/community-edition)
 - (Optional) [NodeJS and NPM](https://nodejs.org/en/download/) (Node 10 or greater)
