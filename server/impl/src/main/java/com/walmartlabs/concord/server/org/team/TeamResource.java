@@ -206,7 +206,7 @@ public class TeamResource implements Resource {
      * @return
      */
     @PUT
-    @ApiOperation("Add users to a team")
+    @ApiOperation("Add LDAP groups to a team")
     @Path("/{orgName}/team/{teamName}/ldapGroups")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

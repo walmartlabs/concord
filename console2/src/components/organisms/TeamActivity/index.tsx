@@ -23,6 +23,7 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import { Divider, Header, Icon, Loader, Menu, Segment } from 'semantic-ui-react';
+
 import { ConcordKey, RequestError } from '../../../api/common';
 import { TeamEntry } from '../../../api/org/team';
 import { actions, selectors, State } from '../../../state/data/teams';
@@ -31,10 +32,10 @@ import { NotFoundPage } from '../../pages';
 import {
     AuditLogActivity,
     TeamDeleteActivity,
-    TeamLdapGroupListActivity,
-    TeamMemberListActivity,
+    TeamMemberList2,
+    TeamLdapGroupList2,
     TeamRenameActivity
-} from '../index';
+} from '../../organisms';
 
 export type TabLink = 'members' | 'ldapGroups' | 'settings' | 'audit' | null;
 
@@ -136,10 +137,10 @@ class TeamActivity extends React.PureComponent<Props> {
                     </Route>
 
                     <Route path={`${baseUrl}/members`} exact={true}>
-                        <TeamMemberListActivity orgName={orgName} teamName={teamName} />
+                        <TeamMemberList2 orgName={orgName} teamName={teamName} />
                     </Route>
                     <Route path={`${baseUrl}/ldapGroups`} exact={true}>
-                        <TeamLdapGroupListActivity orgName={orgName} teamName={teamName} />
+                        <TeamLdapGroupList2 orgName={orgName} teamName={teamName} />
                     </Route>
                     <Route path={`${baseUrl}/settings`} exact={true}>
                         {TeamActivity.renderSetting(data)}

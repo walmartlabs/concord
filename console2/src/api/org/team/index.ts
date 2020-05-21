@@ -105,7 +105,7 @@ export interface TeamUserEntry {
     username: string;
     userDomain?: string;
     displayName?: string;
-    userType: UserType;
+    userType?: UserType;
     role: TeamRole;
 }
 
@@ -115,10 +115,11 @@ export interface TeamLdapGroupEntry {
 }
 
 export interface NewTeamUserEntry {
-    username: string;
+    userId?: ConcordId;
+    username?: string;
     userDomain?: string;
     displayName?: string;
-    userType: UserType;
+    userType?: UserType;
     role: TeamRole;
 }
 
@@ -153,22 +154,6 @@ export const addUsers = (
         `/api/v1/org/${orgName}/team/${teamName}/users?${queryParams({ replace })}`,
         opts
     );
-};
-
-export const deleteUsers = (
-    orgName: ConcordKey,
-    teamName: ConcordKey,
-    users: string[]
-): Promise<{}> => {
-    const opts = {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(users)
-    };
-
-    return fetchJson(`/api/v1/org/${orgName}/team/${teamName}/users`, opts);
 };
 
 export const addLdapGroups = (
