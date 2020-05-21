@@ -133,9 +133,6 @@ public class ContextV1Wrapper implements com.walmartlabs.concord.sdk.Context {
     }
 
     private static Map<String, Object> collectAllVariables(TaskContext ctx) {
-        Map<String, Object> result = new HashMap<>();
-        result.putAll(ctx.globalVariables().toMap());
-        result.putAll(ctx.input());
-        return result;
+        return new HashMap<>(ctx.input());
     }
 }

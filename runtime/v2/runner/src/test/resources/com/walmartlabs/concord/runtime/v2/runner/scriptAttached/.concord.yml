@@ -1,5 +1,5 @@
 flows:
   default:
-  - script: "scripts/myscript.js"
-  - log: "x: ${x.a}"
+    - script: "scripts/myscript.js"
+    - log: "x: ${x.a}"
 

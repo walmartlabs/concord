@@ -1,16 +1,20 @@
 flows:
   default:
-  - call: myFlow
-    withItems:
-    - 1
-    - 2
-    - 3
+    - call: myFlow
+      in:
+        item: "${item}"
+      withItems:
+        - 1
+        - 2
+        - 3
 
-  - call: myFlow
-    withItems:
-    - 4
-    - 5
-    - 6
+    - call: myFlow
+      in:
+        item: "${item}"
+      withItems:
+        - 4
+        - 5
+        - 6
 
   myFlow:
-  - log: "item: ${item}"
+    - log: "item: ${item}"

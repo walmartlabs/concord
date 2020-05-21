@@ -7,8 +7,8 @@ flows:
   default:
     - script: groovy
       body: |
-        execution.globalVariables().put("x", 123)
+        execution.variables().set("x", 123)
 
     - script: groovy
       body: |
-        println "log from script: " + execution.globalVariables().get("x")
+        println "log from script: " + execution.variables().get("x")

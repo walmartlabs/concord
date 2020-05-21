@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.el.functions;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
@@ -20,24 +20,15 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
-
-import java.lang.reflect.Method;
 import java.util.Map;
 
-public final class AllVariablesFunction {
+public interface Variables {
 
-    public static Method getMethod() {
-        try {
-            return AllVariablesFunction.class.getMethod("allVariables");
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
-        }
-    }
+    Object get(String key);
 
-    public static Map<String, Object> allVariables() {
-        return ThreadLocalEvalContext.get()
-                .variables()
-                .toMap();
-    }
+    void set(String key, Object value);
+
+    boolean has(String key);
+
+    Map<String, Object> toMap();
 }

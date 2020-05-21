@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.State;
 import org.immutables.value.Value;
 
@@ -34,8 +33,6 @@ public interface ProcessSnapshot extends Serializable {
     long serialVersionUID = 1L;
 
     State vmState();
-
-    GlobalVariables globalVariables();
 
     ProcessDefinition processDefinition();
 

@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,8 +66,13 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
         FlowCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        Frame inner = new Frame(cmd);
-        VMUtils.putLocalOverrides(inner, input);
+        // the call's frame should be a "root" frame
+        // all local variables will have this frame as their base
+        Frame inner = Frame.builder()
+                .root()
+                .commands(cmd)
+                .locals(input)
+                .build();
 
         state.pushFrame(threadId, inner);
     }

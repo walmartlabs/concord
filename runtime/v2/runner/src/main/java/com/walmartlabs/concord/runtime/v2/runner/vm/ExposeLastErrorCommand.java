@@ -37,6 +37,6 @@ public class ExposeLastErrorCommand implements Command {
         frame.pop();
 
         Exception cause = (Exception) frame.getLocal(Frame.LAST_EXCEPTION_KEY);
-        VMUtils.putLocalOverride(frame, Constants.Context.LAST_ERROR_KEY, cause);
+        frame.setLocal(Constants.Context.LAST_ERROR_KEY, cause);
     }
 }

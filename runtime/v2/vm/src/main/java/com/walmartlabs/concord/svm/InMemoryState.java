@@ -48,8 +48,13 @@ public class InMemoryState implements Serializable, State {
     private long threadIdSeq = 0;
 
     public InMemoryState(Command cmd) {
-        rootThreadId = nextThreadId();
-        pushFrame(rootThreadId, new Frame(cmd));
+        this.rootThreadId = nextThreadId();
+
+        // the initial frame is always a "root" frame
+        pushFrame(rootThreadId, Frame.builder()
+                .root()
+                .commands(cmd)
+                .build());
     }
 
     @Override
@@ -130,7 +135,10 @@ public class InMemoryState implements Serializable, State {
     public void fork(ThreadId parentThreadId, ThreadId threadId, Command cmd) {
         synchronized (this) {
             setStatus(threadId, ThreadStatus.READY);
-            pushFrame(threadId, new Frame(cmd));
+            pushFrame(threadId, Frame.builder()
+                    .nonRoot()
+                    .commands(cmd)
+                    .build());
 
             children.computeIfAbsent(parentThreadId, k -> new HashSet<>())
                     .add(threadId);

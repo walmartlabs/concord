@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,7 +62,10 @@ public class RetryWrapper implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        Frame inner = new Frame(cmd, new NextRetry(cmd));
+        Frame inner = Frame.builder()
+                .nonRoot()
+                .commands(cmd, new NextRetry(cmd))
+                .build();
 
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
@@ -138,7 +141,7 @@ public class RetryWrapper implements Command {
             // override the task's "in" if needed
             if (retry.input() != null) {
                 Map<String, Object> m = Collections.unmodifiableMap(Objects.requireNonNull(retry.input()));
-                VMUtils.setTaskInputOverrides(frame, m);
+                VMUtils.putLocals(frame, m);
             }
 
             frame.push(cmd);

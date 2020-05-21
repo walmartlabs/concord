@@ -33,7 +33,6 @@ public class SetVariablesStep extends AbstractStep<SimpleOptions> {
 
     public SetVariablesStep(Location location, Map<String, Serializable> variables, SimpleOptions options) {
         super(location, options);
-
         this.vars = variables;
     }
 

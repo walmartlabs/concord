@@ -24,7 +24,6 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.ProcessSnapshot;
 import com.walmartlabs.concord.runtime.v2.runner.SynchronizationService;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -46,12 +45,10 @@ public class CheckpointCommand implements Command {
 
         runtime.getService(SynchronizationService.class).point(() -> {
             CheckpointService checkpointService = runtime.getService(CheckpointService.class);
-            GlobalVariables globalVariables = runtime.getService(GlobalVariables.class);
             ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
 
             checkpointService.create(name, runtime, ProcessSnapshot.builder()
-                    .vmState(state)
-                    .globalVariables(globalVariables)
+                    .vmState(state) // TODO call State#gc()?
                     .processDefinition(processDefinition)
                     .build());
         });

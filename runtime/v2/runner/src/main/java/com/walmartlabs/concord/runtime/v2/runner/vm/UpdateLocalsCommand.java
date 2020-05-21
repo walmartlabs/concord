@@ -24,37 +24,22 @@ import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
-import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
 import java.util.Map;
 
 /**
- * Takes {@link #input}, interpolates its keys and values and puts the result
- * into the current {@link GlobalVariables} instance.
- * <p/>
- * This command solves a "chicken-and-egg" problem of setting the initial
- * global variables (when the process starts) and updating them (when the
- * process receives a resume event).
- * <p/>
- * In order to evaluate expressions in the input we need the runtime and
- * we can't build the runtime until we get an instance of {@link GlobalVariables}.
- * So the solution is to create an empty instance of {@link GlobalVariables} and
- * populate it by running this command before all other commands. It is important
- * to run this command before any other commands, especially in cases when
- * the {@code State} contains multiple threads &mdash; all threads must "see"
- * the same {@link GlobalVariables} values simultaneously.
+ * Takes the input, interpolates its values and sets the result
+ * as the current frame's local variables.
  */
-public class UpdateGlobalVariablesCommand implements Command {
+public class UpdateLocalsCommand implements Command {
 
     private static final long serialVersionUID = 1L;
 
     private final Map<String, Object> input;
 
-    public UpdateGlobalVariablesCommand(Map<String, Object> input) {
+    public UpdateLocalsCommand(Map<String, Object> input) {
         this.input = input;
     }
 
@@ -66,7 +51,7 @@ public class UpdateGlobalVariablesCommand implements Command {
         Context ctx = contextFactory.create(runtime, state, threadId, null);
         Map<String, Object> m = expressionEvaluator.evalAsMap(EvalContextFactory.scope(ctx), input);
 
-        GlobalVariables globalVariables = runtime.getService(GlobalVariables.class);
-        globalVariables.putAll(m);
+        Frame frame = state.peekFrame(threadId);
+        VMUtils.putLocals(frame, m);
     }
 }

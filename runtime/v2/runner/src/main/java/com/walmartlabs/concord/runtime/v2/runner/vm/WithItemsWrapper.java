@@ -101,11 +101,13 @@ public class WithItemsWrapper implements Command {
 
         // TODO verify that each item is serializable
 
-        Frame loop = new Frame();
+        Frame loop = Frame.builder()
+                .nonRoot()
+                .build();
 
-        VMUtils.putLocalOverride(loop, CURRENT_ITEMS, items);
-        VMUtils.putLocalOverride(loop, CURRENT_INDEX, 0);
-        VMUtils.putLocalOverride(loop, CURRENT_ITEM, items.get(0));
+        loop.setLocal(CURRENT_ITEMS, items);
+        loop.setLocal(CURRENT_INDEX, 0);
+        loop.setLocal(CURRENT_ITEM, items.get(0));
 
         loop.push(new WithItemsNext(cmd)); // next iteration
         loop.push(cmd); // the wrapped command
@@ -124,17 +126,16 @@ public class WithItemsWrapper implements Command {
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public void eval(Runtime runtime, State state, ThreadId threadId) {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
-            List<Serializable> items = (List<Serializable>) VMUtils.getLocalOverride(frame, CURRENT_ITEMS);
+            List<Serializable> items = VMUtils.getLocal(state, threadId, CURRENT_ITEMS, VMUtils.LookupType.ONLY_CURRENT);
             if (items == null) {
                 // TODO throw new BugException?
                 throw new IllegalStateException("Can't find a frame-local variable containing the 'withItems' items.");
             }
-            int index = (int) VMUtils.getLocalOverride(frame, CURRENT_INDEX);
+            int index = VMUtils.getLocal(state, threadId, CURRENT_INDEX, VMUtils.LookupType.ONLY_CURRENT);
 
             if (index + 1 >= items.size()) {
                 // end of the line, do nothing
@@ -142,8 +143,8 @@ public class WithItemsWrapper implements Command {
             }
 
             int newIndex = index + 1;
-            VMUtils.putLocalOverride(frame, CURRENT_INDEX, newIndex);
-            VMUtils.putLocalOverride(frame, CURRENT_ITEM, items.get(newIndex));
+            frame.setLocal(CURRENT_INDEX, newIndex);
+            frame.setLocal(CURRENT_ITEM, items.get(newIndex));
 
             frame.push(new WithItemsNext(cmd)); // next iteration
             frame.push(cmd); // the wrapped command

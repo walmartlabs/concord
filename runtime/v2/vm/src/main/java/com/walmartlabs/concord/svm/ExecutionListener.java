@@ -69,8 +69,12 @@ public interface ExecutionListener {
 
     /**
      * Called after the process calls the last step.
+     *
+     * @param runtime
+     * @param state
+     * @param lastFrame
      */
-    default void afterProcessEnd(Runtime runtime, State state) {
+    default void afterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
     }
 
     enum Result {

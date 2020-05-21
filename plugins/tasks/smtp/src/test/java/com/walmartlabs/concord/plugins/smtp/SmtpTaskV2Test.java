@@ -22,8 +22,9 @@ package com.walmartlabs.concord.plugins.smtp;
 
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.ServerSetupTest;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,12 +57,9 @@ public class SmtpTaskV2Test {
         mail.put("to", "you@localhost");
         mail.put("message", "Hello!");
 
-        GlobalVariables globals = mock(GlobalVariables.class);
-        when(globals.toMap()).thenReturn(Collections.singletonMap("smtpParams", smtpParams));
-
         TaskContext ctx = mock(TaskContext.class);
         when(ctx.input()).thenReturn(Collections.singletonMap("mail", mail));
-        when(ctx.globalVariables()).thenReturn(globals);
+        when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", smtpParams)));
 
         SmtpTaskV2 t = new SmtpTaskV2(new WorkingDirectory(Paths.get(System.getProperty("user.dir"))));
         t.execute(ctx);

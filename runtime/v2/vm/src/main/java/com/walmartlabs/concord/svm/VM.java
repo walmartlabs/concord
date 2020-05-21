@@ -24,6 +24,7 @@ import com.walmartlabs.concord.svm.commands.PopFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -50,9 +51,9 @@ public class VM {
         listeners.fireBeforeProcessStart();
 
         Runtime runtime = runtimeFactory.create(this);
-        execute(runtime, state);
+        EvalResult result = execute(runtime, state);
 
-        listeners.fireAfterProcessEnd(runtime, state);
+        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
         log.debug("start -> done");
     }
@@ -73,9 +74,9 @@ public class VM {
         listeners.fireBeforeProcessResume();
 
         Runtime runtime = runtimeFactory.create(this);
-        execute(runtime, state);
+        EvalResult result = execute(runtime, state);
 
-        listeners.fireAfterProcessEnd(runtime, state);
+        listeners.fireAfterProcessEnds(runtime, state, result.lastFrame);
 
         log.debug("resume ['{}'] -> done", eventRef);
     }
@@ -95,7 +96,9 @@ public class VM {
         log.debug("run ['{}'] -> done", cmd);
     }
 
-    public void eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
+    public EvalResult eval(Runtime runtime, State state, ThreadId threadId) throws Exception {
+        Frame lastFrame = null;
+
         try {
             while (true) {
                 ThreadStatus status = state.getStatus(threadId);
@@ -114,6 +117,8 @@ public class VM {
                     state.setStatus(threadId, ThreadStatus.DONE);
                     break;
                 }
+
+                lastFrame = frame;
 
                 Command cmd = frame.peek();
                 if (cmd == null) {
@@ -144,9 +149,13 @@ public class VM {
         } finally {
             state.gc();
         }
+
+        return new EvalResult(lastFrame);
     }
 
-    private void execute(Runtime runtime, State state) throws Exception {
+    private EvalResult execute(Runtime runtime, State state) throws Exception {
+        EvalResult result = null;
+
         while (true) {
             // if we're restoring from a previously saved state or we had new threads created
             // on the previous iteration we need to spawn all READY threads
@@ -156,7 +165,7 @@ public class VM {
                 }
             }
 
-            eval(runtime, state, state.getRootThreadId());
+            result = eval(runtime, state, state.getRootThreadId());
 
             if (listeners.fireAfterEval(runtime, state) == BREAK) {
                 break;
@@ -168,6 +177,8 @@ public class VM {
                 break;
             }
         }
+
+        return result;
     }
 
     private void unwind(State state, ThreadId threadId, Exception cause) throws Exception {
@@ -209,6 +220,17 @@ public class VM {
             if (!events.containsKey(e.getKey()) && e.getValue() == ThreadStatus.SUSPENDED) {
                 state.setStatus(e.getKey(), ThreadStatus.READY);
             }
+        }
+    }
+
+    private static class EvalResult implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final Frame lastFrame;
+
+        private EvalResult(Frame lastFrame) {
+            this.lastFrame = lastFrame;
         }
     }
 }

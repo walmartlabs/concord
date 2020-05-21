@@ -24,10 +24,8 @@ import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesWithFrameOverrides;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -54,13 +52,11 @@ public class DefaultContextFactory implements ContextFactory {
 
     @Override
     public Context create(Runtime runtime, State state, ThreadId currentThreadId, Step currentStep, UUID correlationId) {
-        GlobalVariables globalVariables = runtime.getService(GlobalVariables.class);
         ProcessDefinition pd = runtime.getService(ProcessDefinition.class);
 
         Compiler compiler = runtime.getService(Compiler.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
-        Context ctx = new ContextImpl(globalVariables, compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(), processInstanceId.getValue());
-        return new IntermediateGlobalsContext(ctx, new GlobalVariablesWithFrameOverrides(state, currentThreadId, globalVariables));
+        return new ContextImpl(compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(), processInstanceId.getValue());
     }
 }

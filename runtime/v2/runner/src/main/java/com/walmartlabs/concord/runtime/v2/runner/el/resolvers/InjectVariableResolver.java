@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.el;
+package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
 
 /*-
  * *****
@@ -20,12 +20,11 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.sun.el.lang.EvaluationContext;
 import com.walmartlabs.concord.sdk.InjectVariable;
 
 import javax.el.BeanELResolver;
-import javax.el.ELContext;
-import javax.el.ELResolver;
-import javax.el.MethodNotFoundException;
+import javax.el.*;
 import java.beans.FeatureDescriptor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -148,7 +147,7 @@ public class InjectVariableResolver extends ELResolver {
             Parameter mp = methodParams[i];
             String n = getInjectedVariableName(mp);
             if (n != null) {
-                result[i] = ResolverUtils.getVariable(context, n);
+                result[i] = getVariable(context, n);
             } else {
                 if (paramIndex >= originalParamsLength) {
                     return null;
@@ -163,6 +162,17 @@ public class InjectVariableResolver extends ELResolver {
         }
 
         return result;
+    }
+
+    private static Object getVariable(ELContext context, String name) {
+        VariableMapper varMapper = ((EvaluationContext) context).getELContext().getVariableMapper();
+
+        ValueExpression v = varMapper.resolveVariable(name);
+        if (v != null) {
+            return v.getValue(context);
+        }
+
+        return null;
     }
 
     private static String getInjectedVariableName(Parameter p) {

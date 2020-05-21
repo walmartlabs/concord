@@ -25,7 +25,6 @@ import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -55,7 +54,6 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
         SetVariablesStep step = getStep();
 
         Map<String, Object> v = ThreadLocalContext.withContext(ctx, () -> ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars()));
-        GlobalVariables gv = runtime.getService(GlobalVariables.class);
-        gv.putAll(v);
+        VMUtils.putLocals(frame, v);
     }
 }
