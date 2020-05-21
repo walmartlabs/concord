@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
+import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 import org.slf4j.Logger;
@@ -90,9 +90,9 @@ public class MetadataProcessor implements ExecutionListener {
             return Result.CONTINUE;
         }
 
-        GlobalVariables vars = runtime.getService(GlobalVariables.class);
+        Map<String, Object> vars = VMUtils.getLocals(state, threadId);
 
-        Map<String, Object> meta = filter(vars.toMap(), metaVariables);
+        Map<String, Object> meta = filter(vars, metaVariables);
         if (meta.isEmpty() || !changed(currentMeta.get(), meta)) {
             return Result.CONTINUE;
         }

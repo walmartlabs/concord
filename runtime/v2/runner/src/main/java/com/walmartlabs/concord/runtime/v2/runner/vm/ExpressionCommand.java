@@ -26,7 +26,6 @@ import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -70,11 +69,13 @@ public class ExpressionCommand extends StepCommand<Expression> {
         Object v = ThreadLocalContext.withContext(ctx, () -> ee.eval(EvalContextFactory.global(ctx), expr, Object.class));
         if (out != null) {
             if (v != null && !(v instanceof Serializable)) {
-                log.warn("The expression's ('{}') result is not Serializable, it won't be preserved between process executions: {}", expr, v.getClass());
+                String msg = String.format("The expression's (%s) result is not a Serializable value, it cannot be saved as a flow variable: %s", expr, v.getClass());
+                throw new IllegalArgumentException(msg);
             }
 
-            GlobalVariables gv = runtime.getService(GlobalVariables.class);
-            gv.put(out, v);
+            frame.setLocal(out, (Serializable) v);
+
+            // TODO common structure for results
         }
     }
 }

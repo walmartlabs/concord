@@ -30,10 +30,8 @@ import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.runner.vars.GlobalVariablesImpl;
-import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateGlobalVariablesCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
@@ -84,11 +82,9 @@ public class Runner {
         Command cmd = CompilerUtils.compile(compiler, processDefinition, entryPoint);
         State state = new InMemoryState(cmd);
 
-        GlobalVariables globalVariables = new GlobalVariablesImpl();
-
-        VM vm = createVM(processDefinition, globalVariables);
+        VM vm = createVM(processDefinition);
         // update the global variables using the input map by running a special command
-        vm.run(state, new UpdateGlobalVariablesCommand(input));
+        vm.run(state, new UpdateLocalsCommand(input)); // TODO merge with the cfg's arguments
         // start the normal execution
         vm.start(state);
 
@@ -97,7 +93,6 @@ public class Runner {
         return ProcessSnapshot.builder()
                 .vmState(state)
                 .processDefinition(processDefinition)
-                .globalVariables(globalVariables)
                 .build();
     }
 
@@ -106,11 +101,10 @@ public class Runner {
         log.debug("resume ['{}'] -> running...", eventRef);
 
         State state = snapshot.vmState();
-        GlobalVariables globalVariables = new GlobalVariablesImpl(snapshot.globalVariables().toMap());
 
-        VM vm = createVM(snapshot.processDefinition(), globalVariables);
+        VM vm = createVM(snapshot.processDefinition());
         // update the global variables using the input map by running a special command
-        vm.run(state, new UpdateGlobalVariablesCommand(input));
+        vm.run(state, new UpdateLocalsCommand(input));
         // resume normally
         vm.resume(state, eventRef);
 
@@ -122,7 +116,7 @@ public class Runner {
                 .build();
     }
 
-    private RuntimeFactory createRuntimeFactory(ProcessDefinition processDefinition, GlobalVariables globalVariables) {
+    private RuntimeFactory createRuntimeFactory(ProcessDefinition processDefinition) {
         Map<Class<?>, Object> m = new HashMap<>();
 
         // collect all "services" that we might need in runtime
@@ -132,7 +126,6 @@ public class Runner {
         m.put(ExpressionEvaluator.class, expressionEvaluator);
         m.put(CheckpointService.class, checkpointService);
         m.put(ProcessDefinition.class, processDefinition);
-        m.put(GlobalVariables.class, globalVariables);
         m.put(FormService.class, formService);
         m.put(SynchronizationService.class, synchronizationService);
         m.put(ResourceResolver.class, resourceResolver);
@@ -142,11 +135,11 @@ public class Runner {
         return vm -> new DefaultRuntime(vm, services);
     }
 
-    private VM createVM(ProcessDefinition processDefinition, GlobalVariables globalVariables) {
+    private VM createVM(ProcessDefinition processDefinition) {
         Collection<ExecutionListener> listeners = new ArrayList<>();
         listeners.add(new SynchronizationServiceListener(synchronizationService));
         listeners.addAll(this.listeners);
-        return new VM(createRuntimeFactory(processDefinition, globalVariables), listeners);
+        return new VM(createRuntimeFactory(processDefinition), listeners);
     }
 
     public static class Builder {

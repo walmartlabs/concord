@@ -40,11 +40,6 @@ public class TaskContextImpl implements TaskContext {
     }
 
     @Override
-    public GlobalVariables globalVariables() {
-        return delegate.globalVariables();
-    }
-
-    @Override
     public Path workingDirectory() {
         return delegate.workingDirectory();
     }
@@ -52,6 +47,11 @@ public class TaskContextImpl implements TaskContext {
     @Override
     public UUID processInstanceId() {
         return delegate.processInstanceId();
+    }
+
+    @Override
+    public Variables variables() {
+        return delegate.variables();
     }
 
     @Override

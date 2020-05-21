@@ -26,11 +26,6 @@ import java.util.UUID;
 public interface Context {
 
     /**
-     * Provides access to global variables of the current process.
-     */
-    GlobalVariables globalVariables();
-
-    /**
      * Provides process current working directory.
      */
     Path workingDirectory();
@@ -40,17 +35,21 @@ public interface Context {
      */
     UUID processInstanceId();
 
+    Variables variables();
+
     // TODO parentInstanceId?
     // TODO move processInfo/projectInfo here?
 
     /**
      * Provides access to the low-level details of the current process.
+     *
      * @apiNote Beta API, subject to change.
      */
     Execution execution();
 
     /**
      * Provides low-level access to the DSL compiler.
+     *
      * @apiNote Beta API, subject to change.
      */
     Compiler compiler();

@@ -23,131 +23,118 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.svm.Frame;
+import com.walmartlabs.concord.svm.FrameType;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class VMUtils {
 
-    private static final String FRAME_LOCAL_OVERRIDES_KEY = "__frame_local_overrides";
-    private static final String FRAME_TASKINPUT_OVERRIDES_KEY = "__frame_taskInput_overrides";
-
     /**
-     * Puts the specified value into the frame-local overrides of global variables.
-     * Should not be called concurrently from different threads for the same {@code threadId}.
-     * Ideally all frame-local variables should be {@link java.io.Serializable}, but
-     * we are not restricting it here.
-     */
-    public static void putLocalOverride(Frame frame, String key, Object value) {
-        ensureLocalOverrides(frame).put(key, value);
-    }
-
-    /**
-     * Puts the specified values into the frame-local overrides of global variables.
-     *
-     * @see #putLocalOverride(Frame, String, Object)
-     */
-    public static void putLocalOverrides(Frame frame, Map<String, Object> values) {
-        ensureLocalOverrides(frame).putAll(values);
-    }
-
-    /**
-     * Returns a frame-local override.
-     * Should not be called concurrently from different threads for the same {@code threadId}.
-     */
-    @SuppressWarnings("unchecked")
-    public static Object getLocalOverride(Frame frame, String key) {
-        Map<String, Object> m = (Map<String, Object>) frame.getLocal(FRAME_LOCAL_OVERRIDES_KEY);
-        if (m == null) {
-            return null;
-        }
-        return m.get(key);
-    }
-
-    /**
-     * Returns an unmodifiable map of frame-local overrides for the specified frame.
-     * Collects all overrides from all frames in the thread. If the same key is defined in multiple threads
-     * the most recent value is added.
-     * Should not be called concurrently from different threads for the same {@code threadId}.
-     */
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> getLocalOverrides(State state, ThreadId threadId) {
-        Map<String, Object> result = new HashMap<>();
-
-        // collect the values, starting from the "oldest" frame
-        List<Frame> frames = state.getFrames(threadId);
-        for (int i = frames.size() - 1; i >= 0; i--) {
-            Frame f = frames.get(i);
-
-            Map<String, Object> m = (Map<String, Object>) f.getLocal(FRAME_LOCAL_OVERRIDES_KEY);
-            if (m != null) {
-                result.putAll(m);
-            }
-        }
-
-        return Collections.unmodifiableMap(result);
-    }
-
-    public static void setTaskInputOverrides(Frame frame, Map<String, Object> overrides) {
-        // use HashMap because it is Serializable
-        HashMap<String, Object> m = new HashMap<>(overrides);
-        frame.setLocal(FRAME_TASKINPUT_OVERRIDES_KEY, m);
-    }
-
-    public static Map<String, Object> getTaskInputOverrides(Context ctx) {
-        Execution execution = ctx.execution();
-        State state = execution.state();
-        Frame frame = state.peekFrame(execution.currentThreadId());
-        return getTaskInputOverrides(frame);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> getTaskInputOverrides(Frame frame) {
-        Map<String, Object> m = (Map<String, Object>) frame.getLocal(FRAME_TASKINPUT_OVERRIDES_KEY);
-        if (m == null) {
-            return Collections.emptyMap();
-        }
-        return m;
-    }
-
-    /**
-     * Combines the step input and the frame-local task input overrides.
-     * I.e. {@code retry} or a similar mechanism can produce an updated
-     * set of {@code in} variables which should override the original
-     * {@code input}.
+     * Evaluates input using all currently available variables.
      */
     public static Map<String, Object> prepareInput(ExpressionEvaluator ee,
                                                    Context ctx,
                                                    Map<String, Serializable> input) {
 
         if (input == null) {
-            input = Collections.emptyMap();
+            return Collections.emptyMap();
         }
 
-        Map<String, Object> result = new HashMap<>(input);
+        input = ee.evalAsMap(EvalContextFactory.global(ctx), input);
 
-        Map<String, Object> frameOverrides = VMUtils.getTaskInputOverrides(ctx);
-        result.putAll(frameOverrides);
-
-        return Collections.unmodifiableMap(ee.evalAsMap(EvalContextFactory.global(ctx), result));
+        return Collections.unmodifiableMap(input);
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> ensureLocalOverrides(Frame frame) {
-        // use HashMap because it is Serializable
-        HashMap<String, Object> m = (HashMap<String, Object>) frame.getLocal(FRAME_LOCAL_OVERRIDES_KEY);
-        if (m == null) {
-            m = new HashMap<>();
-            frame.setLocal(FRAME_LOCAL_OVERRIDES_KEY, m);
+    public static <T> T getLocal(State state, ThreadId threadId, String key, LookupType lookupType) {
+        switch (lookupType) {
+            case ONLY_CURRENT: {
+                return (T) state.peekFrame(threadId).getLocal(key);
+            }
+            case INCLUDE_ANCESTORS: {
+                List<Frame> frames = state.getFrames(threadId);
+                return (T) mapLocals(frames, key, Function.identity());
+            }
+            default: {
+                throw new IllegalArgumentException("Unsupported lookup type: " + lookupType);
+            }
         }
-        return m;
+    }
+
+    public static Map<String, Object> getLocals(Context ctx) {
+        ThreadId threadId = ctx.execution().currentThreadId();
+        State state = ctx.execution().state();
+        return getLocals(state, threadId);
+    }
+
+    public static Map<String, Object> getLocals(State state, ThreadId threadId) {
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        List<Frame> frames = state.getFrames(threadId);
+        for (int i = frames.size() - 1; i >= 0; i--) {
+            Frame f = frames.get(i);
+            result.putAll(f.getLocals());
+        }
+
+        return Collections.unmodifiableMap(result);
+    }
+
+    public static void putLocal(Frame frame, String key, Object value) {
+        if (value instanceof Serializable) {
+            frame.setLocal(key, (Serializable) value);
+        } else {
+            // TODO add Location info?
+            throw new IllegalStateException("Can't set a non-serializable local variable: " + key + " -> " + value.getClass());
+        }
+    }
+
+    public static void putLocals(Frame frame, Map<String, Object> locals) {
+        if (locals == null || locals.isEmpty()) {
+            return;
+        }
+
+        locals.forEach((k, v) -> putLocal(frame, k, v));
+    }
+
+    /**
+     * Applies {@code fn} to each local variable, starting from the most recent frame.
+     */
+    public static <T> T mapLocals(List<Frame> frames, String key, Function<Object, T> fn) {
+        for (Frame f : frames) {
+            Object v = f.getLocal(key);
+            if (v != null) {
+                return fn.apply(v);
+            }
+
+            if (f.getType() == FrameType.ROOT) {
+                break;
+            }
+        }
+
+        return fn.apply(null);
+    }
+
+    public enum LookupType {
+
+        /**
+         * Check only the current frame.
+         */
+        ONLY_CURRENT,
+
+        /**
+         * Check the current frame and all its ancestors up to the nearest
+         * {@link FrameType#ROOT} frame. If the current is a {@link FrameType#ROOT}
+         * frame then act like it's a {@link #ONLY_CURRENT} lookup.
+         */
+        INCLUDE_ANCESTORS
     }
 
     private VMUtils() {

@@ -35,12 +35,6 @@
             <artifactId>concord-repository</artifactId>
         </dependency>
 
-        <!-- TODO remove -->
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-api</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>

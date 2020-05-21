@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runtime.v2.runner.el.functions;
+package com.walmartlabs.concord.runtime.v2.runner.el.resolvers;
 
 /*-
  * *****
@@ -20,24 +20,21 @@ package com.walmartlabs.concord.runtime.v2.runner.el.functions;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.el.ThreadLocalEvalContext;
+import com.walmartlabs.concord.runtime.v2.runner.el.MethodNotFoundException;
 
-import java.lang.reflect.Method;
-import java.util.Map;
+import javax.el.ELContext;
 
-public final class AllVariablesFunction {
+/**
+ * Same as {@link javax.el.BeanELResolver}, but throws more detailed "method is not found" exceptions.
+ */
+public class BeanELResolver extends javax.el.BeanELResolver {
 
-    public static Method getMethod() {
+    @Override
+    public Object invoke(ELContext context, Object base, Object method, Class<?>[] paramTypes, Object[] params) {
         try {
-            return AllVariablesFunction.class.getMethod("allVariables");
-        } catch (Exception e) {
-            throw new RuntimeException("Method not found");
+            return super.invoke(context, base, method, paramTypes, params);
+        } catch (javax.el.MethodNotFoundException e) {
+            throw new MethodNotFoundException(base, method);
         }
-    }
-
-    public static Map<String, Object> allVariables() {
-        return ThreadLocalEvalContext.get()
-                .variables()
-                .toMap();
     }
 }

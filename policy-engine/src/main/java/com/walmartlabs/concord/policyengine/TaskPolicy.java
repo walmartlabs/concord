@@ -42,19 +42,19 @@ public class TaskPolicy {
             return CheckResult.success();
         }
 
-        for(TaskRule r : rules.getAllow()) {
+        for (TaskRule r : rules.getAllow()) {
             if (matchRule(taskName, methodName, params, taskResults, r)) {
                 return CheckResult.success();
             }
         }
 
-        for(TaskRule r : rules.getDeny()) {
+        for (TaskRule r : rules.getDeny()) {
             if (matchRule(taskName, methodName, params, taskResults, r)) {
                 return CheckResult.error(new CheckResult.Item<>(r, methodName));
             }
         }
 
-        for(TaskRule r : rules.getWarn()) {
+        for (TaskRule r : rules.getWarn()) {
             if (matchRule(taskName, methodName, params, taskResults, r)) {
                 return CheckResult.warn(new CheckResult.Item<>(r, methodName));
             }
@@ -156,7 +156,7 @@ public class TaskPolicy {
             com.walmartlabs.concord.runtime.v2.sdk.Context ctx = (com.walmartlabs.concord.runtime.v2.sdk.Context) param;
             String name = names[nameIndex];
             nameIndex += 1;
-            Object v = ctx.globalVariables().get(name);
+            Object v = ctx.variables().get(name);
             return paramMatches(names, nameIndex, values, v, isProtected);
         } else if (param instanceof String) {
             return Utils.matchAny(values.stream().map(Object::toString).collect(Collectors.toList()), param.toString());

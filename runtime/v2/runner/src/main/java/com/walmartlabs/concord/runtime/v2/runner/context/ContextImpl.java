@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -38,7 +38,6 @@ import java.util.UUID;
 
 public class ContextImpl implements Context {
 
-    private final GlobalVariables globalVariables;
     private final Compiler compiler;
     private final ExpressionEvaluator expressionEvaluator;
     private final ThreadId currentThreadId;
@@ -49,9 +48,9 @@ public class ContextImpl implements Context {
     private final UUID correlationId;
     private final Path workingDir;
     private final UUID processInstanceId;
+    private final Variables variables;
 
-    public ContextImpl(GlobalVariables globalVariables,
-                       Compiler compiler,
+    public ContextImpl(Compiler compiler,
                        ExpressionEvaluator expressionEvaluator,
                        ThreadId currentThreadId,
                        Runtime runtime,
@@ -62,7 +61,6 @@ public class ContextImpl implements Context {
                        Path workingDir,
                        UUID processInstanceId) {
 
-        this.globalVariables = globalVariables;
         this.compiler = compiler;
         this.expressionEvaluator = expressionEvaluator;
         this.currentThreadId = currentThreadId;
@@ -73,11 +71,7 @@ public class ContextImpl implements Context {
         this.correlationId = correlationId;
         this.workingDir = workingDir;
         this.processInstanceId = processInstanceId;
-    }
-
-    @Override
-    public GlobalVariables globalVariables() {
-        return globalVariables;
+        this.variables = new ContextVariables(this);
     }
 
     @Override
@@ -88,6 +82,11 @@ public class ContextImpl implements Context {
     @Override
     public UUID processInstanceId() {
         return processInstanceId;
+    }
+
+    @Override
+    public Variables variables() {
+        return variables;
     }
 
     @Override

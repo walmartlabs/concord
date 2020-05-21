@@ -35,6 +35,8 @@ public final class HasVariableFunction {
     }
 
     public static boolean hasVariable(String name) {
-        return ThreadLocalEvalContext.get().variables().containsKey(name);
+        return ThreadLocalEvalContext.get()
+                .variables()
+                .has(name);
     }
 }

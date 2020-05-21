@@ -53,7 +53,7 @@ public class ExpressionEvaluatorTest {
         Map<String, Object> vars = Collections.singletonMap("name", "Concord");
         Map<String, Object> strict = Collections.singletonMap("name", "Concord!!!");
 
-        EvalContext ctx = EvalContextFactory.strict(new DummyContext(vars), strict);
+        EvalContext ctx = EvalContextFactory.strict(new SingleFrameContext(vars), strict);
 
         // ---
         String str = ee.eval(ctx, "Hello ${name}", String.class);
@@ -66,7 +66,7 @@ public class ExpressionEvaluatorTest {
         Map<String, Object> vars = Collections.singletonMap("name", "Concord");
         Map<String, Object> strict = Collections.emptyMap();
 
-        EvalContext ctx = EvalContextFactory.strict(new DummyContext(vars), strict);
+        EvalContext ctx = EvalContextFactory.strict(new SingleFrameContext(vars), strict);
 
         // ---
         try {
@@ -372,11 +372,11 @@ public class ExpressionEvaluatorTest {
     }
 
     private static EvalContext global(Map<String, Object> vars) {
-        return EvalContextFactory.global(new DummyContext(vars));
+        return EvalContextFactory.global(new SingleFrameContext(vars));
     }
 
     private static EvalContext scope(Map<String, Object> vars) {
-        return EvalContextFactory.scope(new DummyContext(vars));
+        return EvalContextFactory.scope(new SingleFrameContext(vars));
     }
 
     private static EvalContext undefAsNull(EvalContext ctx) {

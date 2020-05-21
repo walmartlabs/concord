@@ -93,6 +93,7 @@ public class MethodNotFoundException extends ELException {
                 .map(s -> "'" + s + "'")
                 .sorted(Comparator.comparingInt(m -> distance.apply(methodName, m)))
                 .limit(MAX_HINTS)
+                .distinct()
                 .collect(Collectors.toList());
 
         if (candidates.isEmpty()) {

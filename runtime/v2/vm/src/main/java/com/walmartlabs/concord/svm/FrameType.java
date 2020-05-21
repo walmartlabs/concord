@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.runtime.v2.sdk;
+package com.walmartlabs.concord.svm;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,24 +20,18 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import java.io.Serializable;
-import java.util.Map;
-
 /**
- * Provides access to global variables of the process.
- * All implementations must be serializable and thread safe.
+ * Type of a {@link Frame}.
  */
-public interface GlobalVariables extends Serializable {
+public enum FrameType {
 
-    Object get(String key);
+    /**
+     * "Root" {@link Frame}. The frame's locals start from a root frame.
+     */
+    ROOT,
 
-    void put(String key, Object value);
-
-    void putAll(Map<String, Object> values);
-
-    Object remove(String key);
-
-    boolean containsKey(String key);
-
-    Map<String, Object> toMap();
+    /**
+     * "Non-root" {@link Frame}. The frame's locals start from the nearest {@link #ROOT} ancestor.
+     */
+    NON_ROOT
 }

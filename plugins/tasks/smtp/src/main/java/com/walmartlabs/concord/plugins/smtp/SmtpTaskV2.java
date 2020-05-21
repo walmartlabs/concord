@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.smtp;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ public class SmtpTaskV2 implements Task {
     }
 
     private static Object getScope(TaskContext ctx, Map<String, Object> mailParams) {
-        Map<String, Object> ctxParams = ctx != null ? ctx.globalVariables().toMap() : Collections.emptyMap();
+        Map<String, Object> ctxParams = ctx != null ? ctx.variables().toMap() : Collections.emptyMap();
         return SmtpTaskUtils.getScope(mailParams, ctxParams);
     }
 
@@ -79,7 +79,7 @@ public class SmtpTaskV2 implements Task {
     private Map<String, Object> getMap(TaskContext ctx, String s) {
         Map<String, Object> m = MapUtils.getMap(ctx.input(), s, null);
         if (m == null) {
-            m = MapUtils.getMap(ctx.globalVariables().toMap(), s, null);
+            m = MapUtils.getMap(ctx.variables().toMap(), s, null);
         }
         return m;
     }

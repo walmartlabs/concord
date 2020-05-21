@@ -21,16 +21,17 @@ package com.walmartlabs.concord.svm;
  */
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Frame or "call frame" represents a scope with a list of commands, local
  * variables and an optional exception handling command.
  */
 public class Frame implements Serializable {
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     /**
      * The last handled exception is stored as a local frame variable using this key.
@@ -39,25 +40,25 @@ public class Frame implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final List<Command> commandStack = new LinkedList<>();
-    private final Map<String, Serializable> locals = new HashMap<>();
+    private final FrameType type;
+    private final List<Command> commandStack;
+    private final Map<String, Serializable> locals;
 
     private Command exceptionHandler;
 
-    public Frame() {
-    }
+    private Frame(Builder b) {
+        this.type = b.type;
 
-    public Frame(Command cmd, Command exceptionHandler) {
-        push(cmd);
-        this.exceptionHandler = exceptionHandler;
-    }
+        this.commandStack = new LinkedList<>();
+        if (b.commands != null) {
+            for (Command cmd : b.commands) {
+                push(cmd);
+            }
+        }
 
-    public Frame(Command cmd) {
-        this(cmd, null);
-    }
+        this.locals = new LinkedHashMap<>(b.locals != null ? b.locals : Collections.emptyMap());
 
-    public void push(Command cmd) {
-        commandStack.add(0, cmd);
+        this.exceptionHandler = b.exceptionHandler;
     }
 
     public Command peek() {
@@ -66,6 +67,14 @@ public class Frame implements Serializable {
         }
 
         return commandStack.get(0);
+    }
+
+    public FrameType getType() {
+        return type;
+    }
+
+    public void push(Command cmd) {
+        commandStack.add(0, cmd);
     }
 
     public void pop() {
@@ -90,5 +99,73 @@ public class Frame implements Serializable {
 
     public Serializable getLocal(String k) {
         return locals.get(k);
+    }
+
+    public Map<String, Serializable> getLocals() {
+        return Collections.unmodifiableMap(locals);
+    }
+
+    public static class Builder {
+
+        private FrameType type = FrameType.ROOT;
+        private Command exceptionHandler;
+        private List<Command> commands;
+        private Map<String, Serializable> locals;
+
+        private Builder() {
+        }
+
+        public Builder root() {
+            this.type = FrameType.ROOT;
+            return this;
+        }
+
+        public Builder nonRoot() {
+            this.type = FrameType.NON_ROOT;
+            return this;
+        }
+
+        public Builder exceptionHandler(Command exceptionHandler) {
+            this.exceptionHandler = exceptionHandler;
+            return this;
+        }
+
+        public Builder locals(Map<String, Object> locals) {
+            if (locals == null || locals.isEmpty()) {
+                return this;
+            }
+
+            if (this.locals == null) {
+                this.locals = new LinkedHashMap<>(); // preserve order of the keys
+            }
+
+            locals.forEach((k, v) -> {
+                if (v instanceof Serializable) {
+                    this.locals.put(k, (Serializable) v);
+                } else {
+                    throw new IllegalStateException("Can't set a non-serializable local variable: " + k + " -> " + v.getClass());
+                }
+            });
+
+            return this;
+        }
+
+        public Builder commands(Command... cmds) {
+            if (cmds == null || cmds.length == 0) {
+                return this;
+            }
+
+            if (this.commands == null) {
+                this.commands = new ArrayList<>();
+            }
+
+            this.commands.addAll(Arrays.asList(cmds));
+
+            return this;
+        }
+
+        public Frame build() {
+            return new Frame(this);
+        }
     }
 }

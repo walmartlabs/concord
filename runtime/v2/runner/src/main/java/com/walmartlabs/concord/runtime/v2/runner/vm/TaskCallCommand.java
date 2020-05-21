@@ -28,8 +28,8 @@ import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -52,7 +52,8 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
     @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        state.peekFrame(threadId).pop();
+        Frame frame = state.peekFrame(threadId);
+        frame.pop();
 
         TaskProviders taskProviders = runtime.getService(TaskProviders.class);
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
@@ -77,8 +78,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         String out = opts.out();
         if (out != null) {
-            GlobalVariables gv = runtime.getService(GlobalVariables.class);
-            gv.put(out, result); // TODO a custom result structure
+            frame.setLocal(out, result); // TODO a custom result structure
         }
     }
 }

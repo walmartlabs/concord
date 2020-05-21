@@ -16,8 +16,6 @@
         </encoder>
     </appender>
 
-    <logger name="io.takari.bpm.state" level="ERROR"/>
-
     <logger name="processLog" level="INFO" additivity="false">
         <appender-ref ref="PROCESS_STDOUT"/>
     </logger>

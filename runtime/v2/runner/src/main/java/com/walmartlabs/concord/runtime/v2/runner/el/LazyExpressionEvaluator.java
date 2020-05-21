@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,10 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.InjectVariableResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.VariableResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 
 import javax.el.*;
@@ -152,6 +156,7 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
      */
     private ELResolver createResolver(LazyEvalContext evalContext,
                                       ExpressionFactory expressionFactory) {
+
         CompositeELResolver r = new CompositeELResolver();
         r.add(new InjectVariableResolver());
         if (evalContext.scope() != null) {

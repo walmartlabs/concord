@@ -26,13 +26,14 @@ import com.walmartlabs.concord.runtime.v2.runner.el.DefaultEvalContext;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.sdk.GlobalVariables;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
+import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,20 +56,22 @@ public class OutVariablesProcessor implements ExecutionListener {
     }
 
     @Override
-    public void afterProcessEnd(Runtime runtime, State state) {
-        if (outVariables.isEmpty()) {
+    public void afterProcessEnds(Runtime runtime, State state, Frame lastFrame) {
+        if (outVariables.isEmpty() || lastFrame == null) {
             return;
         }
 
-        GlobalVariables globalVariables = runtime.getService(GlobalVariables.class);
+        Map<String, Object> vars = Collections.unmodifiableMap(lastFrame.getLocals());
+
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        EvalContext evalContext = DefaultEvalContext.builder().from(EvalContextFactory.strict(globalVariables.toMap()))
+        EvalContext evalContext = DefaultEvalContext.builder()
+                .from(EvalContextFactory.strict(vars))
                 .undefinedVariableAsNull(true)
                 .build();
 
         Map<String, Object> outValues = new HashMap<>();
         for (String out : outVariables) {
-            Object v = ee.eval(evalContext, "${" + out + "}", Object.class);
+            Object v = ee.eval(evalContext, "${" + out + "}", Object.class); // TODO sanitize
 
             if (v == null) {
                 continue;
