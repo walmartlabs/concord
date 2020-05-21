@@ -21,14 +21,7 @@
 import { Action } from 'redux';
 import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
 
-import {
-    NewTeamEntry,
-    NewTeamLdapGroupEntry,
-    NewTeamUserEntry,
-    TeamEntry,
-    TeamLdapGroupEntry,
-    TeamUserEntry
-} from '../../../api/org/team';
+import { NewTeamEntry, TeamEntry, TeamUserEntry } from '../../../api/org/team';
 import { CollectionById, RequestState } from '../common';
 
 export interface GetTeamRequest extends Action {
@@ -71,37 +64,12 @@ export interface ListTeamUsersResponse extends Action {
     items?: TeamUserEntry[];
 }
 
-export interface ListTeamLdapGroupsRequest extends Action {
-    orgName: ConcordKey;
-    teamName: ConcordKey;
-}
-
-export interface ListTeamLdapGroupsResponse extends Action {
-    error?: RequestError;
-    items?: TeamLdapGroupEntry[];
-}
-
-export interface ReplaceTeamUsersRequest extends Action {
-    orgName: ConcordKey;
-    teamName: ConcordKey;
-    users: NewTeamUserEntry[];
-}
-
-export interface ReplaceTeamLdapGroupsRequest extends Action {
-    orgName: ConcordKey;
-    teamName: ConcordKey;
-    groups: NewTeamLdapGroupEntry[];
-}
-
 export type GetTeamState = RequestState<TeamDataResponse>;
 export type ListTeamsState = RequestState<TeamDataResponse>;
 export type CreateOrUpdateTeamState = RequestState<{}>;
 export type RenameTeamState = RequestState<{}>;
 export type DeleteTeamState = RequestState<GenericOperationResult>;
 export type ListTeamUsersState = RequestState<ListTeamUsersResponse>;
-export type ReplaceTeamUsersState = RequestState<{}>;
-export type ListTeamLdapGroupsState = RequestState<ListTeamLdapGroupsResponse>;
-export type ReplaceTeamLdapGroupsState = RequestState<{}>;
 
 export type Teams = CollectionById<TeamEntry>;
 
@@ -115,7 +83,4 @@ export interface State {
     deleteTeam: DeleteTeamState;
 
     listUsers: ListTeamUsersState;
-    listLdapGroups: ListTeamLdapGroupsState;
-    replaceUsers: ReplaceTeamUsersState;
-    replaceLdapGroups: ReplaceTeamLdapGroupsState;
 }

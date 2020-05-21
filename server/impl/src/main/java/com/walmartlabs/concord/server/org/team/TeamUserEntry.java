@@ -50,10 +50,6 @@ public class TeamUserEntry implements Serializable {
 
     private final TeamRole role;
 
-    public TeamUserEntry(String username, TeamRole role) {
-        this(null, username, null, null, null, role);
-    }
-
     @JsonCreator
     public TeamUserEntry(@JsonProperty("userId") UUID userId,
                          @JsonProperty("username") String username,
