@@ -87,6 +87,10 @@ public class LdapGroupDao extends AbstractDao {
         q.execute();
     }
 
+    public void updateLastSyncTimestamp(UUID userId) {
+        tx(tx -> updateLastSyncTimestamp(tx, userId));
+    }
+
     private void updateLastSyncTimestamp(DSLContext tx, UUID userId) {
         tx.update(USERS).set(USERS.LAST_GROUP_SYNC_DT, currentTimestamp())
                 .where(USERS.USER_ID.eq(userId))
