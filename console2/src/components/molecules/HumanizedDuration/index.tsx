@@ -24,17 +24,25 @@ import { formatDuration } from '../../../utils';
 
 interface Props {
     value?: number;
+    hint?: string;
 }
 
 export default class extends React.PureComponent<Props> {
     render() {
-        const { value } = this.props;
+        const { value, hint } = this.props;
 
         const s = formatDuration(value);
         if (!s) {
             return '-';
         }
 
-        return <Popup trigger={<span>{s}</span>} content={`${value}ms`} />;
+        return (
+            <Popup trigger={<span>{s}</span>}>
+                <Popup.Content>
+                    {value}ms
+                    {hint && <div>({hint})</div>}
+                </Popup.Content>
+            </Popup>
+        );
     }
 }

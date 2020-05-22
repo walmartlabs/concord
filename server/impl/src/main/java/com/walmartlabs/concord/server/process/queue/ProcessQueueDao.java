@@ -289,7 +289,7 @@ public class ProcessQueueDao extends AbstractDao {
                     .map(PartialProcessKey::getInstanceId)
                     .collect(Collectors.toList());
 
-            UpdateConditionStep q = tx.update(PROCESS_QUEUE)
+            UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                     .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
                     .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
@@ -731,6 +731,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
                 .startAt(r.get(PROCESS_QUEUE.START_AT))
                 .lastUpdatedAt(r.get(PROCESS_QUEUE.LAST_UPDATED_AT))
+                .lastRunAt(r.get(PROCESS_QUEUE.LAST_RUN_AT))
                 .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
                 .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
                 .lastAgentId(r.get(PROCESS_QUEUE.LAST_AGENT_ID))
