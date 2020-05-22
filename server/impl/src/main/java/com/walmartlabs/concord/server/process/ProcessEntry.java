@@ -98,6 +98,10 @@ public interface ProcessEntry extends Serializable {
     Date lastUpdatedAt();
 
     @Nullable
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    Date lastRunAt();
+
+    @Nullable
     String logFileName();
 
     @Nullable

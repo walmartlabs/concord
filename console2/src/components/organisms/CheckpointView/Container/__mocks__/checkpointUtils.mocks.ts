@@ -22,7 +22,7 @@ import {
     ProcessHistoryEntry,
     ProcessStatus
 } from '../../../../../api/process';
-import { ColumnDefinition } from '../../../../../api/org';
+import { ColumnDefinition, RenderType } from '../../../../../api/org';
 
 export const validProcessCheckpoints: ProcessCheckpointEntry[] = [
     {
@@ -86,7 +86,7 @@ export const hasMetaColumnDefinition: ColumnDefinition = {
 };
 
 export const missingMetaColumnDefinition: ColumnDefinition = {
-    render: 'timestamp',
+    render: RenderType.TIMESTAMP,
     source: 'lastUpdatedAt',
     caption: 'Updated'
 };

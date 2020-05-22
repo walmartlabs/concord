@@ -164,6 +164,7 @@ export interface ProcessEntry {
     createdAt: string;
     startAt?: string;
     lastUpdatedAt: string;
+    lastRunAt?: string;
     handlers?: string[];
     meta?: ProcessMeta;
     tags?: string[];

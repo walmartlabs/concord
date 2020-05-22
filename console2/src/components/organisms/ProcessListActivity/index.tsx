@@ -26,27 +26,28 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import { replace as pushHistory } from 'connected-react-router';
 
 import { queryParams, RequestError } from '../../../api/common';
-import { ProcessEntry } from '../../../api/process';
+import { ProcessEntry, ProcessFilters } from '../../../api/process';
 import { actions, PaginatedProcesses, Pagination, State } from '../../../state/data/processes';
 import { RequestErrorMessage } from '../../molecules';
 import {
-    STATUS_COLUMN,
     CREATED_AT_COLUMN,
+    DURATION_COLUMN,
     INITIATOR_COLUMN,
-    REPO_COLUMN,
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
+    REPO_COLUMN,
+    STATUS_COLUMN,
     UPDATED_AT_COLUMN
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
-import { ProcessFilters } from '../../../api/process';
 
 // list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
 // of the custom column configuration
 const builtInColumns = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
+    DURATION_COLUMN,
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN,
@@ -57,6 +58,7 @@ const builtInColumns = [
 const defaultColumns = [
     STATUS_COLUMN,
     INSTANCE_ID_COLUMN,
+    DURATION_COLUMN,
     PROJECT_COLUMN,
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN
@@ -110,6 +112,7 @@ interface ExternalProps {
 
     columns?: ColumnDefinition[];
 }
+
 type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
 
 export const parseSearchFilter = (s: string): ProcessSearchFilter => {

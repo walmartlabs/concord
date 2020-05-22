@@ -42,6 +42,43 @@ export interface SearchOption {
     text: string;
 }
 
+export enum RenderType {
+    /**
+     * Render a link to the process using the value as the link's caption.
+     */
+    PROCESS_LINK = 'process-link',
+
+    /**
+     * Render a link to the process' project using the value as the link's caption.
+     */
+    PROJECT_LINK = 'project-link',
+
+    /**
+     * Render a link to the process' repository using the value as the link's caption.
+     */
+    REPO_LINK = 'repo-link',
+
+    /**
+     * Render the current process' status.
+     */
+    PROCESS_STATUS = 'process-status',
+
+    /**
+     * Render as a timestamp.
+     */
+    TIMESTAMP = 'timestamp',
+
+    /**
+     * Render as an array of strings.
+     */
+    STRING_ARRAY = 'string-array',
+
+    /**
+     * Render as a duration (current timestamp - value)
+     */
+    DURATION = 'duration'
+}
+
 export interface ColumnDefinition {
     builtin?: string;
     caption: string;
@@ -49,13 +86,7 @@ export interface ColumnDefinition {
     textAlign?: 'center' | 'left' | 'right';
     collapsing?: boolean;
     singleLine?: boolean;
-    render?:
-        | 'process-link'
-        | 'process-status'
-        | 'project-link'
-        | 'timestamp'
-        | 'repo-link'
-        | 'string-array';
+    render?: RenderType;
     searchValueType?: SearchValueType;
     searchType?: SearchType;
     searchOptions?: SearchOption[];

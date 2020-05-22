@@ -21,19 +21,20 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Checkbox, Table } from 'semantic-ui-react';
+
 import { ConcordId } from '../../../api/common';
-import { ColumnDefinition } from '../../../api/org';
-import { canBeCancelled, ProcessEntry, ProcessStatus } from '../../../api/process';
-import { LocalTimestamp, ProcessStatusIcon } from '../../molecules';
+import { ColumnDefinition, RenderType } from '../../../api/org';
+import { canBeCancelled, ProcessEntry, ProcessFilters, ProcessStatus } from '../../../api/process';
+import { HumanizedDuration, LocalTimestamp, ProcessStatusIcon } from '../../molecules';
 import { TableSearchFilter } from '../../atoms';
-import { ProcessFilters } from '../../../api/process';
 
 import './styles.css';
+import { parseISO } from 'date-fns';
 
 export const STATUS_COLUMN: ColumnDefinition = {
     caption: 'Status',
     source: 'status',
-    render: 'process-status',
+    render: RenderType.PROCESS_STATUS,
     textAlign: 'center',
     collapsing: true,
     searchValueType: 'string',
@@ -47,19 +48,19 @@ export const STATUS_COLUMN: ColumnDefinition = {
 export const INSTANCE_ID_COLUMN: ColumnDefinition = {
     caption: 'Instance ID',
     source: 'instanceId',
-    render: 'process-link'
+    render: RenderType.PROCESS_LINK
 };
 
 export const PROJECT_COLUMN: ColumnDefinition = {
     caption: 'Project',
     source: 'projectName',
-    render: 'project-link'
+    render: RenderType.PROJECT_LINK
 };
 
 export const REPO_COLUMN: ColumnDefinition = {
     caption: 'Repository',
     source: 'repoName',
-    render: 'repo-link',
+    render: RenderType.REPO_LINK,
     searchValueType: 'string',
     searchType: 'substring'
 };
@@ -74,19 +75,25 @@ export const INITIATOR_COLUMN: ColumnDefinition = {
 export const CREATED_AT_COLUMN: ColumnDefinition = {
     caption: 'Created',
     source: 'createdAt',
-    render: 'timestamp'
+    render: RenderType.TIMESTAMP
 };
 
 export const UPDATED_AT_COLUMN: ColumnDefinition = {
     caption: 'Updated',
     source: 'lastUpdatedAt',
-    render: 'timestamp'
+    render: RenderType.TIMESTAMP
+};
+
+export const DURATION_COLUMN: ColumnDefinition = {
+    caption: 'Duration',
+    source: 'lastRunAt',
+    render: RenderType.DURATION
 };
 
 export const TAGS_COLUMN: ColumnDefinition = {
     caption: 'Tags',
     source: 'tags',
-    render: 'string-array'
+    render: RenderType.STRING_ARRAY
 };
 
 interface Entry extends ProcessEntry {
@@ -134,26 +141,52 @@ const getValue = (source: string, e: ProcessEntry) => {
 const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
     const v = getValue(c.source, e);
 
-    if (c.render === 'process-link') {
-        const caption = v || e.instanceId;
-        return <Link to={`/process/${e.instanceId}`}>{caption}</Link>;
-    } else if (c.render === 'timestamp') {
-        return v === undefined ? '' : <LocalTimestamp value={v} />;
-    } else if (c.render === 'project-link') {
-        return <Link to={`/org/${e.orgName}/project/${e.projectName}`}>{v}</Link>;
-    } else if (c.render === 'repo-link') {
-        return (
-            <Link to={`/org/${e.orgName}/project/${e.projectName}/repository/${e.repoName}`}>
-                {v}
-            </Link>
-        );
-    } else if (c.render === 'process-status') {
-        return <ProcessStatusIcon status={e.status} />;
-    } else if (c.render === 'string-array') {
-        return v === undefined ? '' : v.join(', ');
-    }
+    switch (c.render) {
+        case RenderType.PROCESS_LINK: {
+            const caption = v || e.instanceId;
+            return <Link to={`/process/${e.instanceId}`}>{caption}</Link>;
+        }
+        case RenderType.TIMESTAMP: {
+            return v === undefined ? '' : <LocalTimestamp value={v} />;
+        }
+        case RenderType.PROJECT_LINK: {
+            return <Link to={`/org/${e.orgName}/project/${e.projectName}`}>{v}</Link>;
+        }
+        case RenderType.REPO_LINK: {
+            return (
+                <Link to={`/org/${e.orgName}/project/${e.projectName}/repository/${e.repoName}`}>
+                    {v}
+                </Link>
+            );
+        }
+        case RenderType.PROCESS_STATUS: {
+            return <ProcessStatusIcon status={e.status} />;
+        }
+        case RenderType.STRING_ARRAY: {
+            return v === undefined ? '' : v.join(', ');
+        }
+        case RenderType.DURATION: {
+            if (!v || !e.lastUpdatedAt) {
+                return '-';
+            }
 
-    return v;
+            try {
+                const start = parseISO(v);
+                const end = parseISO(e.lastUpdatedAt);
+                return (
+                    <HumanizedDuration
+                        value={end.getTime() - start.getTime()}
+                        hint="since last RUNNING status"
+                    />
+                );
+            } catch (e) {
+                return `Invalid value: ${v}`;
+            }
+        }
+        default: {
+            return v;
+        }
+    }
 };
 
 const renderColumn = (idx: number, e: Entry, c: ColumnDefinition) => {
