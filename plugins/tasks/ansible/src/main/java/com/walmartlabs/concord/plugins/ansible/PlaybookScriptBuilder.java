@@ -155,9 +155,9 @@ public class PlaybookScriptBuilder {
 
         for (String i : inventories) {
             l.add("-i");
-            l.add(i);
+            l.add(quote(i));
         }
-        l.add(playbook);
+        l.add(quote(playbook));
 
         if (extraVars != null && !extraVars.isEmpty()) {
             l.add("--extra-vars");
@@ -173,7 +173,7 @@ public class PlaybookScriptBuilder {
 
         if (user != null) {
             l.add("-u");
-            l.add(user);
+            l.add(quote(user));
         }
 
         if (tags != null) {
@@ -188,13 +188,13 @@ public class PlaybookScriptBuilder {
 
         if (privateKey != null) {
             l.add("--private-key");
-            l.add(privateKey);
+            l.add(quote(privateKey));
         }
 
         if (vaultIds != null) {
             for (Map.Entry<String, Path> p : vaultIds.entrySet()) {
                 l.add("--vault-id");
-                l.add(p.getKey() + "@" + p.getValue().toString());
+                l.add(quote(p.getKey() + "@" + p.getValue().toString()));
             }
         }
 
@@ -297,9 +297,12 @@ public class PlaybookScriptBuilder {
 
     /**
      * Puts the specified string into single quotes.
-     * It is necessary to correctly pass multi-value parameters in the Ansible command line.
      */
     private static String quote(String s) {
-        return "'" + s + "'";
+        return "'" + escapeQuote(s) + "'";
+    }
+
+    private static String escapeQuote(String s) {
+        return s.replace("'", "'\\''");
     }
 }

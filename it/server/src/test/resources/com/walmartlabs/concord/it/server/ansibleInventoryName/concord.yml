@@ -1,0 +1,7 @@
+flows:
+  default:
+    - task: ansible
+      in:
+        debug: true
+        playbook: "playbook.yml"
+        inventoryFile: "inventory'$( whoami )'&123.ini"
