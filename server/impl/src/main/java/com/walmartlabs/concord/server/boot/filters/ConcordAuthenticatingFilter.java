@@ -60,7 +60,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final Logger log = LoggerFactory.getLogger(ConcordAuthenticatingFilter.class);
 
-    private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
     private static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
     private static final String BEARER_AUTH_PREFIX = "Bearer ";
@@ -108,7 +107,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         HttpServletRequest req = WebUtils.toHttp(request);
 
-        // run plugins first, they might need to override default behaviour
+        // run plugins first, they might need to override the default behaviour
         // e.g. use their own `Authorization: Bearer` headers
         for (AuthenticationHandler handler : authenticationHandlers) {
             AuthenticationToken token = handler.createToken(request, response);
@@ -123,7 +122,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
 
         // check for a regular API token
-        if (req.getHeader(AUTHORIZATION_HEADER) != null) {
+        if (req.getHeader(HttpHeaders.AUTHORIZATION) != null) {
             return createFromAuthHeader(req);
         }
 
@@ -181,7 +180,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     }
 
     private AuthenticationToken createFromAuthHeader(HttpServletRequest req) {
-        String h = req.getHeader(AUTHORIZATION_HEADER);
+        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
 
         // enable sessions
         req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
@@ -191,7 +190,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
         AuthenticationToken token;
         if (h.startsWith(BASIC_AUTH_PREFIX)) {
-            token = parseBasicAuth(h, req, rememberMe);
+            token = parseBasicAuth(h, rememberMe);
         } else {
             if (h.startsWith(BEARER_AUTH_PREFIX)) {
                 h = h.substring(BEARER_AUTH_PREFIX.length());
@@ -212,14 +211,11 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
         String h = req.getHeader(Constants.Headers.SESSION_TOKEN);
-        return buildSessionToken(req, h);
+        return buildSessionToken(h);
     }
 
-    private AuthenticationToken buildSessionToken(HttpServletRequest req, String key) {
-        AuthenticationToken t = new SessionKey(decryptSessionKey(key));
-        // enable sessions, assume the clients handle the session cookie correctly
-        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
-        return t;
+    private AuthenticationToken buildSessionToken(String key) {
+        return new SessionKey(decryptSessionKey(key));
     }
 
     private UUID decryptSessionKey(String h) {
@@ -278,14 +274,14 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         }
     }
 
-    private AuthenticationToken parseBasicAuth(String s, HttpServletRequest request, boolean rememberMe) {
+    private AuthenticationToken parseBasicAuth(String s, boolean rememberMe) {
         s = s.substring(BASIC_AUTH_PREFIX.length());
         s = new String(Base64.getDecoder().decode(s));
 
         int idx = s.indexOf(":");
         if (idx + 1 == s.length()) {
             // empty password -> try user name as a session token
-            return buildSessionToken(request, s.substring(0, s.length() - 1));
+            return buildSessionToken(s.substring(0, s.length() - 1));
         }
 
         if (idx < 0 || idx + 1 >= s.length()) {
