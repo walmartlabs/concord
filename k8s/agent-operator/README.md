@@ -13,7 +13,8 @@ $ mvn clean install
 Build the agent operator image:
 ```
 $ cd concord/k8s/agent-operator
-$ ../../mvnw clean compile jib:dockerBuild
+$ ../../mvnw clean package
+$ docker build . -t walmartlabs/concord-agent-operator:latest
 ```
 
 ## Running in Dev Mode
