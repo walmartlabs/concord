@@ -24,12 +24,27 @@ import { Checkbox, Table } from 'semantic-ui-react';
 
 import { ConcordId } from '../../../api/common';
 import { ColumnDefinition, RenderType } from '../../../api/org';
-import { canBeCancelled, ProcessEntry, ProcessFilters, ProcessStatus } from '../../../api/process';
+import { canBeCancelled, ProcessEntry, ProcessFilters } from '../../../api/process';
 import { HumanizedDuration, LocalTimestamp, ProcessStatusIcon } from '../../molecules';
 import { TableSearchFilter } from '../../atoms';
 
 import './styles.css';
 import { parseISO } from 'date-fns';
+
+export enum Status {
+    NEW = 'NEW',
+    PREPARING = 'PREPARING',
+    ENQUEUED = 'ENQUEUED',
+    SCHEDULED = 'ENQUEUED (future)',
+    STARTING = 'STARTING',
+    RUNNING = 'RUNNING',
+    SUSPENDED = 'SUSPENDED',
+    RESUMING = 'RESUMING',
+    FINISHED = 'FINISHED',
+    FAILED = 'FAILED',
+    CANCELLED = 'CANCELLED',
+    TIMED_OUT = 'TIMED_OUT'
+}
 
 export const STATUS_COLUMN: ColumnDefinition = {
     caption: 'Status',
@@ -39,9 +54,9 @@ export const STATUS_COLUMN: ColumnDefinition = {
     collapsing: true,
     searchValueType: 'string',
     searchType: 'equals',
-    searchOptions: Object.keys(ProcessStatus).map((k) => ({
+    searchOptions: Object.keys(Status).map((k) => ({
         value: k,
-        text: k
+        text: Status[k]
     }))
 };
 
@@ -160,7 +175,7 @@ const renderColumnContent = (e: Entry, c: ColumnDefinition) => {
             );
         }
         case RenderType.PROCESS_STATUS: {
-            return <ProcessStatusIcon status={e.status} />;
+            return <ProcessStatusIcon process={e} />;
         }
         case RenderType.STRING_ARRAY: {
             return v === undefined ? '' : v.join(', ');

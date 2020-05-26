@@ -26,9 +26,8 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import { replace as pushHistory } from 'connected-react-router';
 
 import { queryParams, RequestError } from '../../../api/common';
-import { ProcessEntry, ProcessFilters } from '../../../api/process';
+import { ProcessEntry, ProcessFilters, ProcessListQuery } from '../../../api/process';
 import { actions, PaginatedProcesses, Pagination, State } from '../../../state/data/processes';
-import { RequestErrorMessage } from '../../molecules';
 import {
     CREATED_AT_COLUMN,
     DURATION_COLUMN,
@@ -36,11 +35,13 @@ import {
     INSTANCE_ID_COLUMN,
     PROJECT_COLUMN,
     REPO_COLUMN,
+    Status,
     STATUS_COLUMN,
     UPDATED_AT_COLUMN
 } from '../../molecules/ProcessList';
 import { ColumnDefinition } from '../../../api/org';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
+import RequestErrorActivity from '../RequestErrorActivity';
 
 // list of "built-in" columns, i.e. columns that can be referenced using "builtin" parameter
 // of the custom column configuration
@@ -176,7 +177,7 @@ class ProcessListActivity extends React.Component<Props> {
         } = this.props;
 
         if (loadError) {
-            return <RequestErrorMessage error={loadError} />;
+            return <RequestErrorActivity error={loadError} />;
         }
 
         if (!processes) {
@@ -190,8 +191,6 @@ class ProcessListActivity extends React.Component<Props> {
         const f = parseSearchFilter(history.location.search);
         return (
             <>
-                {loadError && <RequestErrorMessage error={loadError} />}
-
                 <ProcessListWithSearch
                     paginationFilter={f.pagination}
                     processFilters={f.filters}
@@ -243,8 +242,34 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
             }
             dispatch(pushHistory({ search: queryParams(f) }));
         }
-        dispatch(actions.listProcesses(orgName, projectName, filters, paginationFilters));
+
+        const query = { orgName, projectName, ...paginationFilters } as ProcessListQuery;
+
+        dispatch(actions.listProcesses(filtersToQuery(query, filters)));
     }
 });
+
+export const filtersToQuery = (
+    query: ProcessListQuery,
+    filters?: ProcessFilters
+): ProcessListQuery => {
+    if (!filters) {
+        return query;
+    }
+
+    Object.keys(filters).forEach((key) => {
+        if (key === STATUS_COLUMN.source && filters[key] === 'SCHEDULED') {
+            query[key] = Status.ENQUEUED;
+            query.startAt = { compareType: 'notEq', value: null };
+        } else if (key === STATUS_COLUMN.source && filters[key] === 'ENQUEUED') {
+            query[key] = Status.ENQUEUED;
+            query.startAt = { compareType: 'eq', value: null };
+        } else {
+            query[key] = filters[key];
+        }
+    });
+
+    return query;
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(ProcessListActivity));

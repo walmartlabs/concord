@@ -82,6 +82,9 @@ public interface ProcessFilter {
     List<MetadataFilter> metaFilters();
 
     @Nullable
+    DateFilter startAt();
+
+    @Nullable
     Integer limit();
 
     @Nullable
@@ -89,6 +92,18 @@ public interface ProcessFilter {
 
     static ImmutableProcessFilter.Builder builder() {
         return ImmutableProcessFilter.builder();
+    }
+
+    @Value.Immutable
+    interface DateFilter {
+
+        @Value.Default
+        default ProcessFilter.FilterType type() {
+            return ProcessFilter.FilterType.EQUALS;
+        }
+
+        @Nullable
+        Timestamp value();
     }
 
     @Value.Immutable

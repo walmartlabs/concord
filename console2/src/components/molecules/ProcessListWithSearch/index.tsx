@@ -106,45 +106,58 @@ const toState = (
     };
 };
 
-function hasFilter(processFilters: ProcessFilters, columns: ColumnDefinition[]) {
+const hasFilter = (processFilters: ProcessFilters, columns: ColumnDefinition[]) => {
     return (
         Object.keys(processFilters)
             .filter((k) => processFilters[k] !== '')
             .filter((k) => columns.find((c) => c.source === k) !== undefined).length > 0
     );
-}
+};
 
-function renderFilter(
+const renderFilter = (
     filterValue: string,
     c: ColumnDefinition,
     clearFilter: (source: string) => void
-) {
+) => {
     return (
         <Label key={c.source} as="a" onClick={() => clearFilter(c.source)}>
             {c.caption}:<Label.Detail>{filterValue}</Label.Detail>
             <Icon name="delete" />
         </Label>
     );
-}
+};
 
-function getDefinition(source: string, cols: ColumnDefinition[]) {
+const getDefinition = (source: string, cols: ColumnDefinition[]) => {
     for (const c of cols) {
         if (c.source === source) {
             return c;
         }
     }
     return { source, caption: 'n/a' };
-}
+};
 
-function renderFiltersToolbar(
+const getFilterText = (column: ColumnDefinition, value: string) => {
+    if (column.searchOptions) {
+        const option = column.searchOptions.find((o) => o.value === value);
+        if (option !== undefined) {
+            return option.text;
+        }
+    }
+    return value;
+};
+
+const renderFiltersToolbar = (
     cols: ColumnDefinition[],
     processFilters: ProcessFilters,
     clearFilter: (source: string) => void
-) {
+) => {
     return Object.keys(processFilters)
         .filter((k) => cols.find((c) => c.source === k) !== undefined)
-        .map((k) => renderFilter(processFilters[k], getDefinition(k, cols), clearFilter));
-}
+        .map((k) => {
+            const c = getDefinition(k, cols);
+            return renderFilter(getFilterText(c, processFilters[k]), c, clearFilter);
+        });
+};
 
 class ProcessListWithSearch extends React.Component<Props, State> {
     constructor(props: Props) {

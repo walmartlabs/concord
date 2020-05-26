@@ -27,11 +27,8 @@ import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
-import com.walmartlabs.concord.server.process.queue.MetadataUtils;
-import com.walmartlabs.concord.server.process.queue.ProcessFilter;
+import com.walmartlabs.concord.server.process.queue.*;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueDao;
-import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -278,6 +275,7 @@ public class ProcessResourceV2 implements Resource {
                 .initiator(initiator)
                 .metaFilters(metaFilters)
                 .includes(processData != null ? processData : Collections.emptySet())
+                .startAt(FilterUtils.parseDate("startAt", uriInfo))
                 .limit(limit)
                 .offset(offset)
                 .build();

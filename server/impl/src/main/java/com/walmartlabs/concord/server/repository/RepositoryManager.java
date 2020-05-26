@@ -120,7 +120,7 @@ public class RepositoryManager {
 
     public Repository fetch(String url, String branch, String commitId, String path, Secret secret) {
         String fetchedCommitId = commitId;
-        long start =System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
         Path dest = repositoryCache.getPath(url);
         try {

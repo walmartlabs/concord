@@ -22,7 +22,7 @@ import { Action, combineReducers, Reducer } from 'redux';
 import { all, call, fork, put, takeLatest, throttle } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
-import { list as apiProcessList, ProcessFilters } from '../../../api/process';
+import { list as apiProcessList, ProcessListQuery } from '../../../api/process';
 import {
     get as apiGet,
     start as apiStart,
@@ -31,7 +31,6 @@ import {
 } from '../../../api/process';
 import { restoreProcess as apiRestore } from '../../../api/process/checkpoint';
 import { handleErrors, makeErrorReducer, makeLoadingReducer, makeResponseReducer } from '../common';
-import { reducers as childrenReducers, sagas as childrenSagas } from './children';
 import { reducers as eventsReducers, sagas as eventsSagas } from './events';
 
 import {
@@ -41,7 +40,6 @@ import {
     ListProcessesRequest,
     PaginatedProcessDataResponse,
     PaginatedProcesses,
-    Pagination,
     ProcessDataResponse,
     Processes,
     RestoreProcessRequest,
@@ -82,17 +80,9 @@ export const actions = {
         includes
     }),
 
-    listProcesses: (
-        orgName?: ConcordKey,
-        projectName?: ConcordKey,
-        filters?: ProcessFilters,
-        pagination?: Pagination
-    ): ListProcessesRequest => ({
+    listProcesses: (query: ProcessListQuery): ListProcessesRequest => ({
         type: actionTypes.LIST_PROJECT_PROCESSES_REQUEST,
-        orgName,
-        projectName,
-        filters,
-        pagination
+        query
     }),
 
     startProcess: (
@@ -240,7 +230,6 @@ export const reducers = combineReducers<State>({
     restoreProcess: restoreProcessReducers,
     cancelBulkProcess: cancelBulkProcessReducers,
 
-    children: childrenReducers,
     events: eventsReducers
 });
 
@@ -256,14 +245,9 @@ function* onGetProcess({ instanceId, includes }: GetProcessRequest) {
     }
 }
 
-function* onProcessList({ orgName, projectName, filters, pagination }: ListProcessesRequest) {
+function* onProcessList({ query }: ListProcessesRequest) {
     try {
-        const response = yield call(apiProcessList, {
-            orgName,
-            projectName,
-            ...filters,
-            ...pagination
-        });
+        const response = yield call(apiProcessList, query);
         yield put({
             type: actionTypes.PROCESSES_DATA_RESPONSE,
             items: response.items,
@@ -332,7 +316,6 @@ export const sagas = function*() {
         takeLatest(actionTypes.START_PROCESS_REQUEST, onStartProcess),
         takeLatest(actionTypes.CANCEL_BULK_PROCESS_REQUEST, onCancelBulkProcess),
         takeLatest(actionTypes.RESTORE_PROCESS_REQUEST, onRestoreProcess),
-        fork(childrenSagas),
         fork(eventsSagas)
     ]);
 };
