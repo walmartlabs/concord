@@ -26,11 +26,9 @@ import com.walmartlabs.concord.runtime.v2.runner.vm.RetryWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ScriptCallCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.commands.Block;
 
 import javax.inject.Named;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Named
 public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
@@ -58,16 +56,9 @@ public final class ScriptCallCompiler implements StepCompiler<ScriptCall> {
 
         List<Step> errorSteps = options.errorSteps();
         if (!errorSteps.isEmpty()) {
-            cmd = new ErrorWrapper(cmd, compile(context, errorSteps));
+            cmd = new ErrorWrapper(cmd, CompilerUtils.compile(context, errorSteps));
         }
 
         return cmd;
     }
-
-    private static Command compile(CompilerContext context, List<Step> steps) {
-        return new Block(steps.stream()
-                .map(s -> context.compiler().compile(context.processDefinition(), s))
-                .collect(Collectors.toList()));
-    }
-
 }

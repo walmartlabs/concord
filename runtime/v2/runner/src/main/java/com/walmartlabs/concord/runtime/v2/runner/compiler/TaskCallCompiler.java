@@ -21,12 +21,14 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.*;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.RetryWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskCallCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
+import java.util.List;
 
 @Named
 public final class TaskCallCompiler implements StepCompiler<TaskCall> {
@@ -42,19 +44,20 @@ public final class TaskCallCompiler implements StepCompiler<TaskCall> {
 
         TaskCallOptions options = step.getOptions();
 
-        // add "retry" if needed
-        Retry retry = options != null ? options.retry() : null;
+        Retry retry = options.retry();
         if (retry != null) {
             cmd = new RetryWrapper(cmd, retry);
         }
 
-        // add "withItems" if needed
-        WithItems withItems = options != null ? options.withItems() : null;
+        WithItems withItems = options.withItems();
         if (withItems != null) {
             cmd = new WithItemsWrapper(cmd, withItems);
         }
 
-        // TODO add "error"
+        List<Step> errorSteps = options.errorSteps();
+        if (!errorSteps.isEmpty()) {
+            cmd = new ErrorWrapper(cmd, CompilerUtils.compile(context, errorSteps));
+        }
 
         return cmd;
     }

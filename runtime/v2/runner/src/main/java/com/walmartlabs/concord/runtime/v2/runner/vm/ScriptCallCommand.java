@@ -31,6 +31,8 @@ import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Map;
@@ -41,6 +43,8 @@ import java.util.UUID;
  * Calls the specified script task. Responsible for preparing the script's input.
  */
 public class ScriptCallCommand extends StepCommand<ScriptCall> {
+
+    private static final Logger log = LoggerFactory.getLogger(ScriptCallCommand.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -64,10 +68,19 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
         String language = getLanguage(call);
-        Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call); // TODO close reader?
+        Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call);
 
-        ThreadLocalContext.withContext(ctx, () ->
-                scriptEvaluator.eval(ctx, language, content, input));
+        try {
+            ThreadLocalContext.withContext(ctx, () ->
+                    scriptEvaluator.eval(ctx, language, content, input));
+        } finally {
+            try {
+                content.close();
+            } catch (IOException e) {
+                // we don't have to do anything about it, but we're going to log the error just in case
+                log.warn("Error while closing the script's reader: {}", e.getMessage() + ". This is most likely a bug.");
+            }
+        }
     }
 
     private static String getLanguage(ScriptCall call) {

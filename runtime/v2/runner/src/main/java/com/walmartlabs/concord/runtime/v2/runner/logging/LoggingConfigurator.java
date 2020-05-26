@@ -30,6 +30,7 @@ import ch.qos.logback.core.pattern.PatternLayoutEncoderBase;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -53,7 +54,6 @@ public class LoggingConfigurator {
     private static final String PROCESS_LOGGER_NAME = "processLog";
     private static final String DEFAULT_PROCESS_LOG_APPENDER_NAME = "PROCESS_STDOUT";
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<String, Stats> statsHolder = new ConcurrentHashMap<>();
 
     public static void configure(UUID instanceId, String baseDir) {
@@ -165,8 +165,9 @@ public class LoggingConfigurator {
     }
 
     private static String serializeStats(Stats stats) {
+        ObjectMapper om = ObjectMapperProvider.getInstance();
         try {
-            return "\0<<<CONCORD_STATS:" + objectMapper.writeValueAsString(stats) + ">>>\n";
+            return "\0<<<CONCORD_STATS:" + om.writeValueAsString(stats) + ">>>\n";
         } catch (IOException e) {
             throw new RuntimeException("Error while serializing a log segment's stats: " + e.getMessage(), e);
         }

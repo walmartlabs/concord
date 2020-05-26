@@ -79,7 +79,7 @@ public class WithItemsWrapper implements Command {
 
         // prepare items
         // store items in an ArrayList because it is Serializable
-        ArrayList<Serializable> items;
+        ArrayList<Object> items;
         if (value instanceof Collection) {
             Collection<Serializable> v = (Collection<Serializable>) value;
             if (v.isEmpty()) {
@@ -99,7 +99,14 @@ public class WithItemsWrapper implements Command {
             throw new IllegalArgumentException("'withItems' accepts only Lists of items, Java Maps or arrays of values. Got: " + value.getClass());
         }
 
-        // TODO verify that each item is serializable
+        for (int i = 0; i < items.size(); i++) {
+            Object item = items.get(0);
+            if (item == null || item instanceof Serializable) {
+                continue;
+            }
+
+            throw new IllegalStateException("Can't use non-serializable values in 'withItems': " + item + " (" + item.getClass() + ")");
+        }
 
         Frame loop = Frame.builder()
                 .nonRoot()
@@ -107,7 +114,7 @@ public class WithItemsWrapper implements Command {
 
         loop.setLocal(CURRENT_ITEMS, items);
         loop.setLocal(CURRENT_INDEX, 0);
-        loop.setLocal(CURRENT_ITEM, items.get(0));
+        loop.setLocal(CURRENT_ITEM, (Serializable) items.get(0));
 
         loop.push(new WithItemsNext(cmd)); // next iteration
         loop.push(cmd); // the wrapped command
@@ -132,9 +139,9 @@ public class WithItemsWrapper implements Command {
 
             List<Serializable> items = VMUtils.getLocal(state, threadId, CURRENT_ITEMS, VMUtils.LookupType.ONLY_CURRENT);
             if (items == null) {
-                // TODO throw new BugException?
-                throw new IllegalStateException("Can't find a frame-local variable containing the 'withItems' items.");
+                throw new IllegalStateException("Can't find a frame-local variable containing the 'withItems' items. This is most likely a bug.");
             }
+
             int index = VMUtils.getLocal(state, threadId, CURRENT_INDEX, VMUtils.LookupType.ONLY_CURRENT);
 
             if (index + 1 >= items.size()) {

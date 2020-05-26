@@ -23,10 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.forms.Form;
 import com.walmartlabs.concord.forms.FormOptions;
 import com.walmartlabs.concord.runtime.common.FormService;
-import com.walmartlabs.concord.runtime.v2.model.FormCall;
-import com.walmartlabs.concord.runtime.v2.model.FormCallOptions;
-import com.walmartlabs.concord.runtime.v2.model.FormField;
-import com.walmartlabs.concord.runtime.v2.model.Forms;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
@@ -48,13 +45,8 @@ public class FormCallCommand extends StepCommand<FormCall> {
 
     private static final long serialVersionUID = 1L;
 
-    private final Forms formDefinitions;
-
-    public FormCallCommand(FormCall form, Forms formDefinitions) {
-        super(form);
-
-        // TODO replace with ID, avoid serializing forms multiple times
-        this.formDefinitions = formDefinitions;
+    public FormCallCommand(FormCall formCall) {
+        super(formCall);
     }
 
     @Override
@@ -63,17 +55,18 @@ public class FormCallCommand extends StepCommand<FormCall> {
 
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
+        ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
 
         Context ctx = contextFactory.create(runtime, state, threadId, getStep());
         EvalContext evalContext = EvalContextFactory.global(ctx);
 
         FormCall call = getStep();
         String formName = expressionEvaluator.eval(evalContext, call.getName(), String.class);
-        List<FormField> fields = assertFormFields(expressionEvaluator, evalContext, formName, call);
+        List<FormField> fields = assertFormFields(expressionEvaluator, evalContext, processDefinition, formName, call);
         Form form = Form.builder()
                 .name(formName)
                 .eventName(eventRef)
-                .options(buildFormOptions(expressionEvaluator, evalContext))
+                .options(buildFormOptions(expressionEvaluator, evalContext, call))
                 .fields(buildFormFields(expressionEvaluator, evalContext, fields, call.getOptions().values()))
                 .build();
 
@@ -85,8 +78,8 @@ public class FormCallCommand extends StepCommand<FormCall> {
         state.setStatus(threadId, ThreadStatus.SUSPENDED);
     }
 
-    private FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, EvalContext ctx) {
-        FormCallOptions options = getStep().getOptions();
+    private static FormOptions buildFormOptions(ExpressionEvaluator expressionEvaluator, EvalContext ctx, FormCall formCall) {
+        FormCallOptions options = formCall.getOptions();
 
         Map<String, Serializable> runAs = expressionEvaluator.evalAsMap(ctx, options.runAs());
 
@@ -97,7 +90,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
                 .build();
     }
 
-    private List<com.walmartlabs.concord.forms.FormField> buildFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, List<com.walmartlabs.concord.runtime.v2.model.FormField> fields, Map<String, Serializable> values) {
+    private static List<com.walmartlabs.concord.forms.FormField> buildFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, List<com.walmartlabs.concord.runtime.v2.model.FormField> fields, Map<String, Serializable> values) {
         List<com.walmartlabs.concord.forms.FormField> result = new ArrayList<>();
 
         fields.forEach(f -> {
@@ -132,7 +125,7 @@ public class FormCallCommand extends StepCommand<FormCall> {
         return result;
     }
 
-    private List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, String formName, FormCall formCall) {
+    private static List<FormField> assertFormFields(ExpressionEvaluator expressionEvaluator, EvalContext ctx, ProcessDefinition pd, String formName, FormCall formCall) {
         FormCallOptions options = formCall.getOptions();
         if (!options.fields().isEmpty()) {
             return options.fields();
@@ -143,10 +136,12 @@ public class FormCallCommand extends StepCommand<FormCall> {
             return FormFieldParser.parse(formCall.getLocation(), rawFields);
         }
 
-        com.walmartlabs.concord.runtime.v2.model.Form fd = formDefinitions.get(formName);
+        Forms forms = pd.forms();
+        com.walmartlabs.concord.runtime.v2.model.Form fd = forms.get(formName);
         if (fd != null) {
             return fd.fields();
         }
-        throw new RuntimeException("Can't find '" + formName + "' definition");
+
+        throw new IllegalStateException("Form not found: " + formName);
     }
 }

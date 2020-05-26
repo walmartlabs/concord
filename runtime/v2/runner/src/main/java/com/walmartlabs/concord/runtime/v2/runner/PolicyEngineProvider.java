@@ -36,10 +36,12 @@ import java.nio.file.Path;
 @Singleton
 public class PolicyEngineProvider implements Provider<PolicyEngine> {
 
+    private final ObjectMapper objectMapper;
     private final WorkingDirectory workDir;
 
     @Inject
-    public PolicyEngineProvider(WorkingDirectory workDir) {
+    public PolicyEngineProvider(ObjectMapper objectMapper, WorkingDirectory workDir) {
+        this.objectMapper = objectMapper;
         this.workDir = workDir;
     }
 
@@ -62,7 +64,7 @@ public class PolicyEngineProvider implements Provider<PolicyEngine> {
         }
 
         try {
-            return new ObjectMapper().readValue(policyFile.toFile(), PolicyEngineRules.class);
+            return objectMapper.readValue(policyFile.toFile(), PolicyEngineRules.class);
         } catch (IOException e) {
             throw new RuntimeException("Error while reading policy rules: " + e.getMessage());
         }

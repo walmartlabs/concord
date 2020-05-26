@@ -35,13 +35,13 @@ import java.util.Map;
 @Singleton
 public class DefaultVariableInjector {
 
-    private final DefaultTaskVariablesService defaultVariables;
     private final ObjectMapper objectMapper;
+    private final DefaultTaskVariablesService defaultVariables;
 
     @Inject
-    public DefaultVariableInjector(DefaultTaskVariablesService defaultVariables) {
+    public DefaultVariableInjector(ObjectMapper objectMapper, DefaultTaskVariablesService defaultVariables) {
+        this.objectMapper = objectMapper;
         this.defaultVariables = defaultVariables;
-        this.objectMapper = new ObjectMapper();
     }
 
     public Task inject(String taskName, Task task) {

@@ -30,6 +30,7 @@ import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
@@ -40,10 +41,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Main {
 
@@ -66,7 +64,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
-        
+
         // create the inject with all dependencies and services available before
         // the actual process' working directory is ready to go
         // it allows us to load all dependencies and have them available
@@ -92,8 +90,7 @@ public class Main {
             throw new IllegalArgumentException("Path to the runner configuration file is required");
         }
 
-        //TODO: singleton?
-        ObjectMapper om = new ObjectMapper();
+        ObjectMapper om = ObjectMapperProvider.getInstance();
         try (InputStream in = Files.newInputStream(src)) {
             return om.readValue(in, RunnerConfiguration.class);
         }
@@ -144,9 +141,9 @@ public class Main {
         m.put(Constants.Context.WORK_DIR_KEY, workDir.getValue().toAbsolutePath().toString());
 
         // save processInfo and projectInfo variables
-        ObjectMapper objectMapper = new ObjectMapper();
-        m.put(Constants.Request.PROCESS_INFO_KEY, objectMapper.convertValue(cfg.processInfo(), Map.class));
-        m.put(Constants.Request.PROJECT_INFO_KEY, objectMapper.convertValue(cfg.projectInfo(), Map.class));
+        ObjectMapper om = ObjectMapperProvider.getInstance();
+        m.put(Constants.Request.PROCESS_INFO_KEY, om.convertValue(cfg.processInfo(), Map.class));
+        m.put(Constants.Request.PROJECT_INFO_KEY, om.convertValue(cfg.projectInfo(), Map.class));
 
         return m;
     }
@@ -191,7 +188,13 @@ public class Main {
     }
 
     private static Set<String> getEvents(ProcessSnapshot snapshot) {
-        // TODO validate for uniqueness?
-        return new HashSet<>(snapshot.vmState().getEventRefs().values());
+        Collection<String> eventRefs = snapshot.vmState().getEventRefs().values();
+
+        Set<String> events = new HashSet<>(eventRefs);
+        if (events.size() != eventRefs.size()) {
+            throw new IllegalStateException("Non-unique event refs: " + eventRefs + ". This is most likely a bug.");
+        }
+
+        return events;
     }
 }
