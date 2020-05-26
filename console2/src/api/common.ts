@@ -145,7 +145,7 @@ export const managedFetch = async (input: RequestInfo, init?: RequestInit): Prom
  *
  * @return a query parameter string e.g. "foo=123&bar=abc"
  */
-export const queryParams = (params: any): string => {
+export const queryParams = (params: any, allowEmpty?: boolean): string => {
     const esc = encodeURIComponent;
     const result: string[] = [];
 
@@ -153,7 +153,7 @@ export const queryParams = (params: any): string => {
         .filter((k) => {
             const v = params[k];
 
-            if (v === undefined || v === null || v === '') {
+            if (v === undefined || v === null || (!allowEmpty && v === '')) {
                 return false;
             }
 

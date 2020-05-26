@@ -21,9 +21,15 @@
 import * as React from 'react';
 import { Icon, Popup, SemanticICONS, SemanticCOLORS } from 'semantic-ui-react';
 
-import { ProcessStatus } from '../../../api/process';
+import { ProcessEntry, ProcessStatus } from '../../../api/process';
+import { formatDistanceToNow, parseISO as parseDate } from 'date-fns';
 
-type IconSizeProp = 'mini' | 'tiny' | 'small' | 'large' | 'big' | 'huge' | 'massive';
+enum AdditionalProcessStatus {
+    /**
+     * ENQUEUED + (startAt is not null)
+     */
+    SCHEDULED = 'SCHEDULED'
+}
 
 const statusToIcon: {
     [status: string]: { name: SemanticICONS; color?: SemanticCOLORS; loading?: boolean };
@@ -31,6 +37,7 @@ const statusToIcon: {
     NEW: { name: 'inbox', color: 'grey' },
     PREPARING: { name: 'info', color: 'blue' },
     ENQUEUED: { name: 'block layout', color: 'grey' },
+    SCHEDULED: { name: 'hourglass start', color: 'grey' },
     RESUMING: { name: 'circle notched', color: 'grey', loading: true },
     SUSPENDED: { name: 'wait', color: 'blue' },
     STARTING: { name: 'circle notched', color: 'grey', loading: true },
@@ -41,15 +48,32 @@ const statusToIcon: {
     TIMED_OUT: { name: 'wait', color: 'red' }
 };
 
+type Status = ProcessStatus | AdditionalProcessStatus;
+
 interface ProcessStatusIconProps {
-    status: ProcessStatus;
-    size?: IconSizeProp;
-    inverted?: boolean;
+    process: ProcessEntry;
 }
 
-export default ({ status, size = 'large', inverted = true }: ProcessStatusIconProps) => {
-    let i = statusToIcon[status];
+const getStatus = (process: ProcessEntry): Status => {
+    if (process.status === ProcessStatus.ENQUEUED && process.startAt !== undefined) {
+        return AdditionalProcessStatus.SCHEDULED;
+    }
+    return process.status;
+};
 
+const getLabel = (process: ProcessEntry): string => {
+    if (process.startAt && process.status === ProcessStatus.ENQUEUED) {
+        const startAt = parseDate(process.startAt);
+        return 'starts in ' + formatDistanceToNow(startAt);
+    }
+
+    return process.status;
+};
+
+export default ({ process }: ProcessStatusIconProps) => {
+    const status = getStatus(process);
+
+    let i = statusToIcon[status];
     if (!i) {
         i = { name: 'question' };
     }
@@ -60,13 +84,13 @@ export default ({ status, size = 'large', inverted = true }: ProcessStatusIconPr
                 <Icon
                     name={i.name}
                     color={i.color}
-                    size={size}
+                    size={'large'}
                     loading={i.loading}
                     style={{ margin: 0 }}
                 />
             }
-            content={status}
-            inverted={inverted}
+            content={getLabel(process)}
+            inverted={true}
             position="top center"
         />
     );

@@ -262,6 +262,11 @@ export interface PaginatedProcessEntries {
     prev?: number;
 }
 
+export interface DateParam {
+    value: string | null;
+    compareType: 'eq' | 'notEq';
+}
+
 export interface ProcessListQuery {
     [meta: string]: any;
 
@@ -271,6 +276,7 @@ export interface ProcessListQuery {
     projectName?: ConcordKey;
     afterCreatedAt?: string;
     beforeCreatedAt?: string;
+    startAt?: DateParam;
     tags?: string[];
     status?: ProcessStatus;
     initiator?: string;
@@ -279,6 +285,28 @@ export interface ProcessListQuery {
     limit?: number;
     offset?: number;
 }
+
+const filterToQueryParams = (params: object): string => {
+    let keyValues = {};
+
+    Object.keys(params).forEach((k) => {
+        const v = params[k];
+
+        const dp = v as DateParam;
+        if (dp !== undefined && v.compareType !== undefined) {
+            let value = '';
+            if (v.value !== null && v.value !== undefined) {
+                value = v.value;
+            }
+
+            keyValues[k + '.' + v.compareType] = value;
+        } else {
+            keyValues[k] = v;
+        }
+    });
+
+    return queryParams(keyValues, true);
+};
 
 export const list = async (q: ProcessListQuery): Promise<PaginatedProcessEntries> => {
     let { limit = 50 } = q;
@@ -289,7 +317,7 @@ export const list = async (q: ProcessListQuery): Promise<PaginatedProcessEntries
     const requestLimit = limit + 1;
 
     const filters = { ...q, limit: requestLimit };
-    const qp = filters ? queryParams(filters) : '';
+    const qp = filters ? filterToQueryParams(filters) : '';
 
     const data: ProcessEntry[] = await fetchJson(`/api/v2/process?${qp}`);
 

@@ -24,12 +24,11 @@ import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import {
     ProcessDataInclude,
     ProcessEntry,
-    ProcessFilters,
+    ProcessListQuery,
     RestoreProcessResponse,
     StartProcessResponse
 } from '../../../api/process';
 import { RequestState } from '../common';
-import { State as ChildrenState } from './children/types';
 import { State as EventsState } from './events/types';
 
 export interface GetProcessRequest extends Action {
@@ -43,10 +42,7 @@ export interface Pagination {
 }
 
 export interface ListProcessesRequest extends Action {
-    orgName?: ConcordKey;
-    projectName?: ConcordKey;
-    filters?: ProcessFilters;
-    pagination?: Pagination;
+    query: ProcessListQuery;
 }
 
 export interface PaginatedProcessDataResponse extends Action {
@@ -106,6 +102,5 @@ export interface State {
     cancelBulkProcess: CancelBullkProcessState;
     restoreProcess: RestoreProcessState;
 
-    children: ChildrenState;
     events: EventsState;
 }

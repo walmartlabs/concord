@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.server.process.queue.ProcessFilter.FilterType;
 import com.walmartlabs.concord.server.process.queue.ProcessFilter.MetadataFilter;
 import org.jooq.Field;
 import org.jooq.JSONB;
@@ -35,20 +34,6 @@ import static com.walmartlabs.concord.db.PgUtils.jsonbEq;
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 
 public final class MetadataUtils {
-
-    private static final SuffixMapping[] SUFFIX_MAPPINGS = {
-            new SuffixMapping(".contains", FilterType.CONTAINS),
-            new SuffixMapping(".notContains", FilterType.NOT_CONTAINS),
-
-            new SuffixMapping(".eq", FilterType.EQUALS),
-            new SuffixMapping(".notEq", FilterType.NOT_EQUALS),
-
-            new SuffixMapping(".startsWith", FilterType.STARTS_WITH),
-            new SuffixMapping(".notStartsWith", FilterType.NOT_STARTS_WITH),
-
-            new SuffixMapping(".endsWith", FilterType.ENDS_WITH),
-            new SuffixMapping(".notEndsWith", FilterType.NOT_ENDS_WITH)
-    };
 
     public static List<MetadataFilter> parseMetadataFilters(UriInfo uriInfo) {
         return uriInfo.getQueryParameters().entrySet().stream()
@@ -108,24 +93,13 @@ public final class MetadataUtils {
             return b.key(key).build();
         }
 
-        for (SuffixMapping m : SUFFIX_MAPPINGS) {
-            if (key.endsWith(m.suffix)) {
-                String k = key.substring(0, key.length() - m.suffix.length());
-                return b.key(k).type(m.filterType).build();
+        for (FilterUtils.SuffixMapping m : FilterUtils.SUFFIX_MAPPINGS) {
+            if (key.endsWith(m.suffix())) {
+                String k = key.substring(0, key.length() - m.suffix().length());
+                return b.key(k).type(m.filterType()).build();
             }
         }
 
         throw new IllegalArgumentException("Invalid metadata key: " + key);
-    }
-
-    private static final class SuffixMapping {
-
-        private final String suffix;
-        private final FilterType filterType;
-
-        private SuffixMapping(String suffix, FilterType filterType) {
-            this.suffix = suffix;
-            this.filterType = filterType;
-        }
     }
 }
