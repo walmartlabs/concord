@@ -191,6 +191,16 @@ public class MainTest {
     }
 
     @Test
+    public void testTaskErrorBlock() throws Exception {
+        deploy("faultyTask");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*error occurred:.*boom!.*");
+    }
+
+    @Test
     public void testCheckpoints() throws Exception {
         deploy("checkpoints");
 
@@ -339,6 +349,17 @@ public class MainTest {
 
         byte[] log = run();
         assertLog(log, ".*error occurred: java.lang.RuntimeException: Error: this is an error in <eval> at line number 1 at column number 0.*");
+    }
+
+    @Test
+    public void testNonSerializableLocal() throws Exception {
+        deploy("nonSerializableLocal");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*error occurred:.*Can't set a non-serializable local variable.*");
     }
 
     @Test
@@ -640,6 +661,7 @@ public class MainTest {
     }
 
     @Named("wrapExpression")
+    @SuppressWarnings("unused")
     static class WrapExpressionTask implements Task {
 
         @Override
@@ -649,6 +671,7 @@ public class MainTest {
     }
 
     @Named("testTask")
+    @SuppressWarnings("unused")
     static class TestTask implements Task {
 
         @Override
@@ -658,6 +681,7 @@ public class MainTest {
     }
 
     @Named("loggingExample")
+    @SuppressWarnings("unused")
     static class LoggingExampleTask implements Task {
 
         private static final Logger log = LoggerFactory.getLogger(LoggingExampleTask.class);
@@ -719,6 +743,16 @@ public class MainTest {
         public String callWithContext(@InjectVariable("context") com.walmartlabs.concord.sdk.Context ctx) {
             ctx.setVariable("result2", "xyz");
             return "with-context";
+        }
+    }
+
+    @Named("faultyTask")
+    @SuppressWarnings("unused")
+    static class FaultyTask implements Task {
+
+        @Override
+        public Serializable execute(TaskContext ctx) {
+            throw new RuntimeException("boom!");
         }
     }
 }

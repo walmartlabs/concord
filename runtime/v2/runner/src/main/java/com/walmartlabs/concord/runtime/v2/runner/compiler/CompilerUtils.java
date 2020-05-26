@@ -41,6 +41,12 @@ public final class CompilerUtils {
         return new Block(commands);
     }
 
+    public static Command compile(CompilerContext context, List<Step> steps) {
+        return new Block(steps.stream()
+                .map(s -> context.compiler().compile(context.processDefinition(), s))
+                .collect(Collectors.toList()));
+    }
+
     private CompilerUtils() {
     }
 }

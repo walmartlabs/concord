@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.FormCall;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.vm.FormCallCommand;
 import com.walmartlabs.concord.svm.Command;
@@ -38,7 +37,6 @@ public class FormCallCompiler implements StepCompiler<FormCall> {
 
     @Override
     public Command compile(CompilerContext context, FormCall step) {
-        ProcessDefinition pd = context.processDefinition();
-        return new FormCallCommand(step, pd.forms());
+        return new FormCallCommand(step);
     }
 }

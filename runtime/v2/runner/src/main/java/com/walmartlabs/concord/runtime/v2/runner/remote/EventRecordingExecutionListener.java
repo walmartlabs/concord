@@ -90,6 +90,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         if (step instanceof FlowCall) {
             return "Flow call: " + ((FlowCall) step).getFlowName();
         }
+
         return step.getClass().getName();
     }
 }

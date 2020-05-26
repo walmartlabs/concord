@@ -27,6 +27,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
@@ -49,6 +50,11 @@ public interface TaskCallOptions extends StepOptions {
 
     @Nullable
     Retry retry();
+
+    @Value.Default
+    default List<Step> errorSteps() {
+        return Collections.emptyList();
+    }
 
     static ImmutableTaskCallOptions.Builder builder() {
         return ImmutableTaskCallOptions.builder();

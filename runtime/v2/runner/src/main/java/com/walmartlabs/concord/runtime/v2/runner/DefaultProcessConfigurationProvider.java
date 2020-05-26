@@ -21,13 +21,11 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.sdk.Constants;
 
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -38,7 +36,6 @@ import java.util.UUID;
  * Waits for the process state files to appear in the  working directory and tries to
  * load the process' configuration from it.
  */
-@Singleton
 public class DefaultProcessConfigurationProvider implements Provider<ProcessConfiguration> {
 
     private final Path workDir;
@@ -64,6 +61,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
      * Waits until an instanceId file appears in the specified directory
      * then reads it and parses as UUID.
      */
+    @SuppressWarnings("BusyWait")
     private static UUID waitForInstanceId(Path workDir) throws IOException {
         Path p = workDir.resolve(Constants.Files.INSTANCE_ID_FILE_NAME);
         while (true) {
@@ -72,7 +70,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
                 return UUID.fromString(s.trim());
             }
 
-            // TODO maybe use something more sophisticated, like a file watcher
+            // we are not using WatchService as it has issues when running in Docker
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -89,10 +87,7 @@ public class DefaultProcessConfigurationProvider implements Provider<ProcessConf
                     .build();
         }
 
-        // TODO singleton?
-        ObjectMapper om = new ObjectMapper();
-        om.registerModule(new Jdk8Module());
-        om.registerModule(new JavaTimeModule());
+        ObjectMapper om = ObjectMapperProvider.getInstance();
 
         try (InputStream in = Files.newInputStream(p)) {
             return ProcessConfiguration.builder()

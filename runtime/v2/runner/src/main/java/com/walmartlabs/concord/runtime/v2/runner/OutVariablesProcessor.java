@@ -49,9 +49,9 @@ public class OutVariablesProcessor implements ExecutionListener {
     private final List<String> outVariables;
 
     @Inject
-    public OutVariablesProcessor(PersistenceService persistenceService, ProcessConfiguration processConfiguration) {
+    public OutVariablesProcessor(ObjectMapper objectMapper, PersistenceService persistenceService, ProcessConfiguration processConfiguration) {
+        this.objectMapper = objectMapper;
         this.persistenceService = persistenceService;
-        this.objectMapper = new ObjectMapper();
         this.outVariables = processConfiguration.out();
     }
 

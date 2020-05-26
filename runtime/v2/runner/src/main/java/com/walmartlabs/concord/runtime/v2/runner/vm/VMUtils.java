@@ -90,10 +90,11 @@ public final class VMUtils {
     public static void putLocal(Frame frame, String key, Object value) {
         if (value instanceof Serializable) {
             frame.setLocal(key, (Serializable) value);
-        } else {
-            // TODO add Location info?
-            throw new IllegalStateException("Can't set a non-serializable local variable: " + key + " -> " + value.getClass());
+            return;
         }
+
+        String msg = "Can't set a non-serializable local variable: %s -> %s";
+        throw new IllegalStateException(String.format(msg, key, value.getClass()));
     }
 
     public static void putLocals(Frame frame, Map<String, Object> locals) {

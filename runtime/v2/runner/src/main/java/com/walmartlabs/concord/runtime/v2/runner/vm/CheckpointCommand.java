@@ -47,8 +47,11 @@ public class CheckpointCommand implements Command {
             CheckpointService checkpointService = runtime.getService(CheckpointService.class);
             ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
 
+            // cleanup the internal state to reduce the serialized data size
+            state.gc();
+
             checkpointService.create(name, runtime, ProcessSnapshot.builder()
-                    .vmState(state) // TODO call State#gc()?
+                    .vmState(state)
                     .processDefinition(processDefinition)
                     .build());
         });

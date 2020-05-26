@@ -20,8 +20,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
-import com.walmartlabs.concord.svm.*;
 import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
