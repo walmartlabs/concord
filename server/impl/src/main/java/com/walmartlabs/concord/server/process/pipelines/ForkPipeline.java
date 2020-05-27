@@ -46,6 +46,7 @@ public class ForkPipeline extends Pipeline {
                 SessionTokenProcessor.class,
                 ConfigurationProcessor.class,
                 TagsExtractingProcessor.class,
+                InitiatorUserInfoProcessor.class,
                 OutVariablesSettingProcessor.class,
                 ConfigurationStoringProcessor.class,
                 DependencyVersionsExportProcessor.class,

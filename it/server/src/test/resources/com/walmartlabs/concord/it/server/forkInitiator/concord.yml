@@ -1,0 +1,14 @@
+flows:
+  default:
+  - log: "initiator: ${initiator}"
+  - task: concord
+    in:
+      action: fork
+      apiKey: "{{apiKey}}"
+      entryPoint: fork1
+      sync: true
+
+  - log: "Done! ${jobs} is completed"
+
+  fork1:
+  - log: "initiator: ${initiator}"
