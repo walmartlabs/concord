@@ -610,7 +610,8 @@ public class ProcessQueueDao extends AbstractDao {
 
         filterByTags(query, filter.tags());
 
-        FilterUtils.apply(query, PROCESS_QUEUE.START_AT, filter.startAt());
+        FilterUtils.applyDate(query, PROCESS_QUEUE.START_AT, filter.startAt());
+        FilterUtils.applyJson(query, PROCESS_QUEUE.REQUIREMENTS, filter.requirements());
 
         Set<ProcessDataInclude> includes = filter.includes();
 

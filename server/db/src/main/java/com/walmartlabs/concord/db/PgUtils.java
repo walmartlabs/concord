@@ -28,8 +28,8 @@ import org.jooq.impl.DSL;
 import org.postgresql.util.PSQLException;
 
 import java.sql.Timestamp;
+import java.util.List;
 
-import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
 
@@ -51,6 +51,10 @@ public final class PgUtils {
         return field("{0}::jsonb->>{1}", Object.class, field, inline(name)).cast(String.class);
     }
 
+    public static Field<String> jsonbTextByPath(Field<JSONB> field, List<String> path) {
+        return field("{0}::jsonb #>> {1}", Object.class, field, inline(toPath(path))).cast(String.class);
+    }
+
     public static Condition jsonbEq(Field<JSONB> field, String key, String value) {
         return DSL.condition("{0} @> jsonb_build_object({1}, {2})", field, DSL.val(key), DSL.value(value));
     }
@@ -67,6 +71,10 @@ public final class PgUtils {
         Throwable cause = e.getCause();
         // see https://www.postgresql.org/docs/10/errcodes-appendix.html
         return cause instanceof PSQLException && ((PSQLException) e.getCause()).getSQLState().equals("23505");
+    }
+
+    private static String toPath(List<String> path) {
+        return "{" + String.join(",", path) + "}";
     }
 
     private PgUtils() {

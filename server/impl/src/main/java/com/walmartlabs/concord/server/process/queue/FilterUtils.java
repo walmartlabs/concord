@@ -20,19 +20,20 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
-import com.walmartlabs.concord.server.jooq.tables.records.ProcessQueueRecord;
 import org.immutables.value.Value;
+import org.jooq.Field;
+import org.jooq.JSONB;
 import org.jooq.Record;
 import org.jooq.SelectQuery;
-import org.jooq.TableField;
 
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.DatatypeConverter;
 import java.sql.Timestamp;
 import java.time.format.DateTimeParseException;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.walmartlabs.concord.db.PgUtils.jsonbTextByPath;
 
 public final class FilterUtils {
 
@@ -50,45 +51,117 @@ public final class FilterUtils {
             SuffixMapping.of(".notEndsWith", ProcessFilter.FilterType.NOT_ENDS_WITH)
     };
 
-    public static ProcessFilter.DateFilter parseDate(String paramName, UriInfo uriInfo) {
-        for (Map.Entry<String, List<String>> e : uriInfo.getQueryParameters().entrySet()) {
-            String k = e.getKey();
-            if (k.startsWith(paramName + ".") || k.equals(paramName)) {
-                String value = null;
-                if (e.getValue() != null && !e.getValue().isEmpty()) {
-                    value = e.getValue().get(0);
-                }
-                return parseDateFilter(k, value);
-            }
-        }
+    public static List<ProcessFilter.DateFilter> parseDate(String paramName, UriInfo uriInfo) {
+        return uriInfo.getQueryParameters().entrySet().stream()
+                .filter(e -> isParam(e.getKey(), paramName))
+                .map(e -> {
+                    ImmutableDateFilter.Builder b = ImmutableDateFilter.builder()
+                            .value(parseDateValue(getValue(e)));
 
-        return null;
+                    ProcessFilter.FilterType type = parseFilterType(e.getKey());
+                    if (type != null) {
+                        b.type(type);
+                    }
+                    return b.build();
+                })
+                .collect(Collectors.toList());
     }
 
-    public static void apply(SelectQuery<Record> q, TableField<ProcessQueueRecord, Timestamp> field, ProcessFilter.DateFilter filter) {
-        if (filter == null) {
+    public static List<ProcessFilter.JsonFilter> parseJson(String paramName, UriInfo uriInfo) {
+        return uriInfo.getQueryParameters().entrySet().stream()
+                .filter(e -> isParam(e.getKey(), paramName))
+                .map(e -> {
+                    ImmutableJsonFilter.Builder filter = ProcessFilter.JsonFilter.builder()
+                            .value(getValue(e));
+
+                    // skip paramName
+                    List<String> path = Arrays.stream(e.getKey().split("\\."))
+                            .skip(1)
+                            .collect(Collectors.toList());
+
+                    ProcessFilter.FilterType type = parseFilterType(e.getKey());
+                    if (type != null) {
+                        filter.type(type);
+
+                        path = new ArrayList<>(path);
+                        path.remove(path.size() - 1);
+                    }
+
+                    return filter.path(path)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static void applyDate(SelectQuery<Record> q, Field<Timestamp> field, List<ProcessFilter.DateFilter> filters) {
+        if (filters == null || filters.isEmpty()) {
             return;
         }
 
-        switch (filter.type()) {
-            case EQUALS: {
-                if (filter.value() == null) {
-                    q.addConditions(field.isNull());
-                } else {
-                    q.addConditions(field.eq(filter.value()));
+        for (ProcessFilter.DateFilter filter : filters) {
+            switch (filter.type()) {
+                case EQUALS: {
+                    if (filter.value() == null) {
+                        q.addConditions(field.isNull());
+                    } else {
+                        q.addConditions(field.eq(filter.value()));
+                    }
+                    break;
                 }
-                break;
-            }
-            case NOT_EQUALS: {
-                if (filter.value() == null) {
-                    q.addConditions(field.isNotNull());
-                } else {
-                    q.addConditions(field.notEqual(filter.value()));
+                case NOT_EQUALS: {
+                    if (filter.value() == null) {
+                        q.addConditions(field.isNotNull());
+                    } else {
+                        q.addConditions(field.notEqual(filter.value()));
+                    }
+                    break;
                 }
-                break;
+                default:
+                    throw new IllegalArgumentException("Unsupported filter type: " + filter.type());
             }
-            default:
-                throw new IllegalArgumentException("Unsupported filter type: " + filter.type());
+        }
+    }
+
+    public static void applyJson(SelectQuery<Record> q, Field<JSONB> column, List<ProcessFilter.JsonFilter> filters) {
+        if (filters == null || filters.isEmpty()) {
+            return;
+        }
+
+        for (ProcessFilter.JsonFilter f : filters) {
+            switch (f.type()) {
+                case CONTAINS: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).contains(f.value()));
+                    break;
+                }
+                case NOT_CONTAINS: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).notContains(f.value()));
+                    break;
+                }
+                case EQUALS: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).eq(f.value()));
+                    break;
+                }
+                case NOT_EQUALS: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).notEqual(f.value()));
+                    break;
+                }
+                case STARTS_WITH: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).startsWith(f.value()));
+                    break;
+                }
+                case NOT_STARTS_WITH: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).startsWith(f.value()).not());
+                    break;
+                }
+                case ENDS_WITH: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).endsWith(f.value()));
+                    break;
+                }
+                case NOT_ENDS_WITH: {
+                    q.addConditions(jsonbTextByPath(column, f.path()).endsWith(f.value()).not());
+                    break;
+                }
+            }
         }
     }
 
@@ -106,21 +179,18 @@ public final class FilterUtils {
         }
     }
 
-    private static ProcessFilter.DateFilter parseDateFilter(String key, String value) {
-        ImmutableDateFilter.Builder b = ImmutableDateFilter.builder()
-                .value(parseDateValue(value));
-
+    private static ProcessFilter.FilterType parseFilterType(String key) {
         if (!key.contains(".")) {
-            return b.build();
+            return null;
         }
 
         for (FilterUtils.SuffixMapping m : FilterUtils.SUFFIX_MAPPINGS) {
             if (key.endsWith(m.suffix())) {
-                return b.type(m.filterType()).build();
+                return m.filterType();
             }
         }
 
-        throw new IllegalArgumentException("Invalid data filter key: " + key);
+        return null;
     }
 
     private static Timestamp parseDateValue(String value) {
@@ -134,5 +204,16 @@ public final class FilterUtils {
         } catch (DateTimeParseException e) {
             throw new RuntimeException("Invalid date format, expected an ISO-8601 value, got: " + value);
         }
+    }
+
+    private static boolean isParam(String key, String paramName) {
+        return key.startsWith(paramName + ".") || key.equals(paramName);
+    }
+
+    private static String getValue(Map.Entry<String, List<String>> e) {
+        if (e.getValue() != null && !e.getValue().isEmpty()) {
+            return e.getValue().get(0);
+        }
+        return null;
     }
 }

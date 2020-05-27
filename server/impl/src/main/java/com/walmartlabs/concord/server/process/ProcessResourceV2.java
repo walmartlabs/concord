@@ -274,8 +274,9 @@ public class ProcessResourceV2 implements Resource {
                 .status(processStatus)
                 .initiator(initiator)
                 .metaFilters(metaFilters)
-                .includes(processData != null ? processData : Collections.emptySet())
+                .requirements(FilterUtils.parseJson("requirements", uriInfo))
                 .startAt(FilterUtils.parseDate("startAt", uriInfo))
+                .includes(processData != null ? processData : Collections.emptySet())
                 .limit(limit)
                 .offset(offset)
                 .build();

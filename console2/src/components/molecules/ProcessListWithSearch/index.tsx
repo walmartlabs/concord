@@ -37,8 +37,7 @@ import {
     CREATED_AT_COLUMN,
     INITIATOR_COLUMN,
     INSTANCE_ID_COLUMN,
-    PROJECT_COLUMN,
-    TAGS_COLUMN
+    PROJECT_COLUMN
 } from '../ProcessList';
 import { ProcessFilters } from '../../../api/process';
 
@@ -60,9 +59,6 @@ const withoutProjectColumns = [
     INITIATOR_COLUMN,
     CREATED_AT_COLUMN
 ];
-
-// columns that are available in filters
-const filterColumns = [...defaultColumns, TAGS_COLUMN];
 
 interface Props {
     processes: ProcessEntry[];
@@ -182,7 +178,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
             .filter((k) => k !== column.source)
             .forEach((k) => (newProcessFilters[k] = processFilters[k]));
 
-        if (filterValue !== undefined) {
+        if (filterValue !== undefined && filterValue !== '') {
             newProcessFilters[column.source] = filterValue;
         }
 
@@ -323,9 +319,9 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                                     />
                                 </Table.HeaderCell>
                                 <Table.HeaderCell style={{ borderBottom: 'none' }}>
-                                    {hasFilter(processFilters, filterColumns) &&
+                                    {hasFilter(processFilters, displayColumns) &&
                                         this.renderFilterLabels(
-                                            filterColumns,
+                                            displayColumns,
                                             processFilters,
                                             loading
                                         )}
