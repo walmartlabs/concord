@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.runner;
+package com.walmartlabs.concord.runtime.common;
 
 /*-
  * *****
@@ -21,51 +21,37 @@ package com.walmartlabs.concord.runner;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.client.ApiClientConfiguration;
-import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessHeartbeatApi;
-import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.Date;
 import java.util.UUID;
 
-@Named
-@Singleton
 public class ProcessHeartbeat {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessHeartbeat.class);
 
     private static final long HEARTBEAT_INTERVAL = 10000;
 
-    private final ApiClientFactory apiClientFactory;
+    private final ProcessHeartbeatApi processHeartbeatApi;
+    private final UUID instanceId;
+    private final long maxNoHeartbeatInterval;
     private Thread worker;
-    private final long maxPingInterval;
 
-    @Inject
-    public ProcessHeartbeat(RunnerConfiguration cfg, ApiClientFactory apiClientFactory) {
-        this.apiClientFactory = apiClientFactory;
-        this.maxPingInterval = cfg.api().maxNoHeartbeatInterval();
+    public ProcessHeartbeat(ApiClient client, UUID instanceId, long maxNoHeartbeatInterval) {
+        this.processHeartbeatApi = new ProcessHeartbeatApi(client);
+        this.instanceId = instanceId;
+        this.maxNoHeartbeatInterval = maxNoHeartbeatInterval;
     }
 
-    public synchronized void start(UUID instanceId, String sessionToken) {
+    public synchronized void start() {
         if (worker != null) {
             throw new IllegalArgumentException("Heartbeat worker is already running");
         }
 
         worker = new Thread(() -> {
-            log.debug("start ['{}'] -> running every {}ms, max interval: {}ms", instanceId, HEARTBEAT_INTERVAL, maxPingInterval);
-
-            ApiClient client = apiClientFactory.create(ApiClientConfiguration.builder()
-                    .sessionToken(sessionToken)
-                    .txId(instanceId)
-                    .build());
-
-            ProcessHeartbeatApi processHeartbeatApi = new ProcessHeartbeatApi(client);
+            log.debug("start ['{}'] -> running every {}ms, max interval: {}ms", instanceId, HEARTBEAT_INTERVAL, maxNoHeartbeatInterval);
 
             boolean prevPingFailed = false;
             long lastSuccessPing = System.currentTimeMillis();
@@ -83,7 +69,7 @@ public class ProcessHeartbeat {
 
                     // check if we hadn't had a successful heartbeat request in a while
                     long pingInterval = System.currentTimeMillis() - lastSuccessPing;
-                    if (pingInterval > maxPingInterval) {
+                    if (pingInterval > maxNoHeartbeatInterval) {
                         log.error("No heartbeat for more than {}ms, terminating process...", pingInterval);
                         System.exit(1);
                     }
@@ -100,5 +86,14 @@ public class ProcessHeartbeat {
         }, "process-heartbeat");
 
         worker.start();
+    }
+
+    public synchronized void stop() {
+        if (worker == null) {
+            return;
+        }
+
+        worker.interrupt();
+        worker = null;
     }
 }

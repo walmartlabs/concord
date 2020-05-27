@@ -23,7 +23,9 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.imports.NoopImportManager;
+import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
@@ -103,6 +105,10 @@ public class Main {
         if (segmentedLogDir != null) {
             LoggingConfigurator.configure(processCfg.instanceId(), segmentedLogDir);
         }
+
+        ApiClient apiClient = injector.getInstance(ApiClient.class);
+        ProcessHeartbeat heartbeat = new ProcessHeartbeat(apiClient, processCfg.instanceId(), runnerCfg.api().maxNoHeartbeatInterval());
+        heartbeat.start();
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
