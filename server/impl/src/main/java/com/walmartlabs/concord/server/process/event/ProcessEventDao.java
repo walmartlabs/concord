@@ -36,7 +36,6 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collections;
@@ -169,11 +168,10 @@ public class ProcessEventDao extends AbstractDao {
                 .set(PROCESS_EVENTS.EVENT_TYPE, (String) null)
                 .set(PROCESS_EVENTS.EVENT_DATE, (Timestamp) null)
                 .set(PROCESS_EVENTS.EVENT_DATA, (JSONB) null)
-                .returning(PROCESS_EVENTS.EVENT_SEQ)
                 .getSQL();
 
         tx.connection(conn -> {
-            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (ProcessEvent e : events) {
                     ProcessKey processKey = e.getProcessKey();
                     Timestamp eventDate = e.getEventDate() != null ? Timestamp.from(e.getEventDate().toInstant()) : Timestamp.from(Instant.now());
