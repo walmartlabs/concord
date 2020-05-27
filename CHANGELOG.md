@@ -1,5 +1,41 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: implement process heartbeat;
+- concord-console: custom columns in the process list can now
+use `requirements` as the `source`;
+- runtime-v2: support for `error` blocks in `task` steps;
+- dynamic-tasks: runtime v2 compatibility;
+- concord-console: new "Duration" column in the process list.
+Shows the amount of time spent `RUNNING` a process;
+- noderoster-tasks: runtime v2 compatibility.
+
+### Changed
+
+- concord-console: `ENQUEUED` processes that are scheduled for
+future (using `startAt`) can now be displayed separately from
+regular `ENQUEUED` processes and vice versa;
+- ansible: escape special characters when the command script
+is created;
+- concord-server: fixed an issue preventing the LDAP group
+synchronizer from working correctly if there are previously
+disabled user accounts;
+- concord-console: use IDs when adding users to teams to avoid
+issues with duplicate usernames or the need for `userType`
+parameter. Allow `cron` and other system users to be added to
+teams using the UI.
+
+### Breaking
+
+- runtime-v2: make all variables local. Variables must be
+explictly passed between flows using `in` and `out` parameters;
+- docker: rebase images on top of `centos:8`.
+
+
+
 ## [1.50.1] - 2020-05-19
 
 ### Changed
