@@ -23,9 +23,13 @@ package com.walmartlabs.concord.it.server;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.common.IOUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -239,6 +243,50 @@ public class ProcessIT extends AbstractServerIT {
             } else if (pe.getInstanceId().equals(parentSpr.getInstanceId())) {
                 assertEquals(3, pe.getChildrenIds() != null ? pe.getChildrenIds().size() : 0);
             }
+        }
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testForkInitiatorFromApiKey() throws Exception {
+        // add the user A
+        UsersApi usersApi = new UsersApi(getApiClient());
+
+        String userAName = "userA_" + randomString();
+        usersApi.createOrUpdate(new CreateUserRequest().setUsername(userAName).setType(CreateUserRequest.TypeEnum.LOCAL));
+
+        ApiKeysApi apiKeyResource = new ApiKeysApi(getApiClient());
+        CreateApiKeyResponse apiKeyA = apiKeyResource.create(new CreateApiKeyRequest().setUsername(userAName));
+
+        String yaml = new String(Files.readAllBytes(Paths.get(ProcessIT.class.getResource("forkInitiator").toURI()).resolve("concord.yml")));
+        yaml = yaml.replace("{{apiKey}}", apiKeyA.getKey());
+
+        Path tmp = Files.createTempDirectory("concord-it-fork");
+        Files.write(tmp.resolve("concord.yml"), yaml.getBytes());
+
+        byte[] payload = archive(tmp.toUri());
+        IOUtils.deleteRecursively(tmp);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("archive", payload);
+
+        StartProcessResponse parentSpr = start(input);
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+
+        ProcessEntry processEntry = waitForCompletion(processApi, parentSpr.getInstanceId());
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, processEntry.getStatus());
+        assertEquals(1, processEntry.getChildrenIds().size());
+
+        ProcessEntry child = waitForCompletion(processApi, processEntry.getChildrenIds().get(0));
+        assertEquals(ProcessEntry.StatusEnum.FINISHED, child.getStatus());
+
+        {
+            byte[] ab = getLog(processEntry.getLogFileName());
+            assertLog(".*initiator: .*admin.*", ab);
+        }
+        {
+            byte[] ab = getLog(child.getLogFileName());
+            assertLog(".*initiator: .*" + userAName + ".*", ab);
         }
     }
 }
