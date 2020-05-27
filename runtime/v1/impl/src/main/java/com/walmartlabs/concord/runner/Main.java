@@ -27,6 +27,7 @@ import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ApiClientConfiguration;
 import com.walmartlabs.concord.client.ApiClientFactory;
 import com.walmartlabs.concord.client.ProcessEntry;
@@ -40,6 +41,7 @@ import com.walmartlabs.concord.project.model.ProjectDefinition;
 import com.walmartlabs.concord.runner.engine.EngineFactory;
 import com.walmartlabs.concord.runner.engine.EventConfiguration;
 import com.walmartlabs.concord.runner.engine.ProcessErrorProcessor;
+import com.walmartlabs.concord.runtime.common.ProcessHeartbeat;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.sdk.Constants;
@@ -80,14 +82,12 @@ public class Main {
     private static final String SUSPEND_MARKER = Constants.Files.SUSPEND_MARKER_FILE_NAME;
 
     private final EngineFactory engineFactory;
-    private final ProcessHeartbeat heartbeat;
     private final ApiClientFactory apiClientFactory;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public Main(EngineFactory engineFactory, ProcessHeartbeat heartbeat, ApiClientFactory apiClientFactory) {
+    public Main(EngineFactory engineFactory, ApiClientFactory apiClientFactory) {
         this.engineFactory = engineFactory;
-        this.heartbeat = heartbeat;
         this.apiClientFactory = apiClientFactory;
     }
 
@@ -120,13 +120,15 @@ public class Main {
         Map<String, Object> processCfg = readRequest(baseDir);
 
         String sessionToken = getSessionToken(processCfg);
-        heartbeat.start(instanceId, sessionToken);
+        ApiClient apiClient = apiClientFactory.create(ApiClientConfiguration.builder()
+                .sessionToken(sessionToken)
+                .txId(instanceId)
+                .build());
 
-        ProcessApiClient processApiClient = new ProcessApiClient(runnerCfg,
-                apiClientFactory.create(ApiClientConfiguration.builder()
-                        .sessionToken(sessionToken)
-                        .txId(instanceId)
-                        .build()));
+        ProcessHeartbeat heartbeat = new ProcessHeartbeat(apiClient, instanceId, runnerCfg.api().maxNoHeartbeatInterval());
+        heartbeat.start();
+
+        ProcessApiClient processApiClient = new ProcessApiClient(runnerCfg, apiClient);
 
         processApiClient.updateStatus(instanceId, runnerCfg.agentId(), ProcessEntry.StatusEnum.RUNNING);
 
