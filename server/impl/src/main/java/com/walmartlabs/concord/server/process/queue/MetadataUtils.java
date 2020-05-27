@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.db.PgUtils.jsonbEq;
 import static com.walmartlabs.concord.db.PgUtils.jsonbText;
 
+// TODO: replace with FilterUtils and JsonFilter.
 public final class MetadataUtils {
 
     public static List<MetadataFilter> parseMetadataFilters(UriInfo uriInfo) {

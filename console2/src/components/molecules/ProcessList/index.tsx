@@ -136,11 +136,21 @@ const toState = (data?: ProcessEntry[]): Entry[] => {
     return data ? data.map((e) => ({ ...e, checked: false })) : [];
 };
 
-const getValue = (source: string, e: ProcessEntry) => {
-    if (e === undefined) {
-        return {};
+const getValueByPath = (path: string, e: ProcessEntry) => {
+    const paths = path.split('.');
+    let current = e;
+    for (let i = 0; i < paths.length; ++i) {
+        if (current[paths[i]] === undefined) {
+            return undefined;
+        } else {
+            current = current[paths[i]];
+        }
     }
+    return current;
+};
 
+const getValue = (source: string, e: ProcessEntry) => {
+    // TODO: remove and use getValueByPath...
     if (source.startsWith('meta.')) {
         if (e.meta === undefined) {
             return 'n/a';
@@ -150,7 +160,11 @@ const getValue = (source: string, e: ProcessEntry) => {
         return e.meta[src];
     }
 
-    return e[source];
+    const result = getValueByPath(source, e);
+    if (result !== null && result !== undefined && typeof result === 'object') {
+        return JSON.stringify(result);
+    }
+    return result;
 };
 
 const renderColumnContent = (e: Entry, c: ColumnDefinition) => {

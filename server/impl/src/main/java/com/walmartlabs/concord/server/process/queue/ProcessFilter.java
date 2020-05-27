@@ -82,7 +82,10 @@ public interface ProcessFilter {
     List<MetadataFilter> metaFilters();
 
     @Nullable
-    DateFilter startAt();
+    List<JsonFilter> requirements();
+
+    @Nullable
+    List<DateFilter> startAt();
 
     @Nullable
     Integer limit();
@@ -92,6 +95,24 @@ public interface ProcessFilter {
 
     static ImmutableProcessFilter.Builder builder() {
         return ImmutableProcessFilter.builder();
+    }
+
+    @Value.Immutable
+    interface JsonFilter {
+
+        @Value.Default
+        default FilterType type() {
+            return FilterType.CONTAINS;
+        }
+
+        List<String> path();
+
+        @Nullable
+        String value();
+
+        static ImmutableJsonFilter.Builder builder() {
+            return ImmutableJsonFilter.builder();
+        }
     }
 
     @Value.Immutable

@@ -174,6 +174,7 @@ export interface ProcessEntry {
     triggeredBy?: TriggeredByEntry;
     timeout?: number;
     runtime?: ProcessRuntime;
+    requirements?: {};
 }
 
 export interface StartProcessResponse {
