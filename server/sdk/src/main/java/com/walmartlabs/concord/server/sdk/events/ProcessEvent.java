@@ -33,6 +33,7 @@ public class ProcessEvent implements Serializable {
     private final ProcessKey processKey;
     private final String eventType;
     private final OffsetDateTime eventDate;
+    private final Map<String, Object> data;
 
     public ProcessEvent(ProcessKey processKey, String eventType, OffsetDateTime eventDate, Map<String, Object> data) {
         this.processKey = processKey;
@@ -40,8 +41,6 @@ public class ProcessEvent implements Serializable {
         this.eventDate = eventDate;
         this.data = data;
     }
-
-    private final Map<String, Object> data;
 
     public ProcessKey getProcessKey() {
         return processKey;
