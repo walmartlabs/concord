@@ -36,7 +36,9 @@ public class LogSegmentNameParser implements FileWatcher.FileNameParser<LogSegme
 
         String segmentFileName = path.getFileName().toString();
 
-        if ("system.log".equals(segmentFileName)) {
+        // move agent process logs and process logs into system segment
+        if ("system.log".equals(segmentFileName)
+                || "runner_system.log".equalsIgnoreCase(segmentFileName)) {
             return LogSegment.builder()
                     .name("system")
                     .build();
