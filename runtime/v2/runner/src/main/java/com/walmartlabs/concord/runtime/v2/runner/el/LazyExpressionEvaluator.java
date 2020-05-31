@@ -23,7 +23,6 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.InjectVariableResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskResolver;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.VariableResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -158,7 +157,6 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
                                       ExpressionFactory expressionFactory) {
 
         CompositeELResolver r = new CompositeELResolver();
-        r.add(new InjectVariableResolver());
         if (evalContext.scope() != null) {
             r.add(new VariableResolver(evalContext.scope()));
         }
