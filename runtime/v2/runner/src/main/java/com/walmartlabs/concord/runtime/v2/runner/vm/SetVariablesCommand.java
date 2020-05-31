@@ -53,7 +53,7 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
 
         SetVariablesStep step = getStep();
 
-        Map<String, Object> v = ThreadLocalContext.withContext(ctx, () -> ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars()));
+        Map<String, Object> v = ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars());
         VMUtils.putLocals(frame, v);
     }
 }

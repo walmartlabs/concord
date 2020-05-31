@@ -36,7 +36,6 @@ public interface TaskCallEvent {
 
     ProcessDefinition processDefinition();
 
-    @Nullable
     Step currentStep();
 
     String taskName();

@@ -66,7 +66,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
         ExpressionOptions opts = step.getOptions();
         String out = opts != null ? opts.out() : null;
 
-        Object v = ThreadLocalContext.withContext(ctx, () -> ee.eval(EvalContextFactory.global(ctx), expr, Object.class));
+        Object v = ee.eval(EvalContextFactory.global(ctx), expr, Object.class);
         if (out != null) {
             if (v != null && !(v instanceof Serializable)) {
                 String msg = String.format("The expression's (%s) result is not a Serializable value, it cannot be saved as a flow variable: %s", expr, v.getClass());

@@ -29,6 +29,7 @@ import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vm.UpdateLocalsCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
@@ -59,6 +60,7 @@ public class Runner {
     private final ResourceResolver resourceResolver;
     private final ScriptEvaluator scriptEvaluator;
     private final Collection<ExecutionListener> listeners;
+    private final TaskCallInterceptor taskCallInterceptor;
 
     private Runner(Builder b) {
         this.instanceId = b.instanceId;
@@ -73,6 +75,7 @@ public class Runner {
         this.scriptEvaluator = b.scriptEvaluator;
         this.statusCallback = b.processStatusCallback;
         this.listeners = b.listeners;
+        this.taskCallInterceptor = b.taskCallInterceptor;
     }
 
     public ProcessSnapshot start(ProcessDefinition processDefinition, String entryPoint, Map<String, Object> input) throws Exception {
@@ -130,6 +133,7 @@ public class Runner {
         m.put(SynchronizationService.class, synchronizationService);
         m.put(ResourceResolver.class, resourceResolver);
         m.put(ScriptEvaluator.class, scriptEvaluator);
+        m.put(TaskCallInterceptor.class, taskCallInterceptor);
 
         Map<Class<?>, ?> services = Collections.unmodifiableMap(m);
         return vm -> new DefaultRuntime(vm, services);
@@ -160,6 +164,7 @@ public class Runner {
         private ScriptEvaluator scriptEvaluator;
         private ProcessStatusCallback processStatusCallback;
         private Collection<ExecutionListener> listeners;
+        private TaskCallInterceptor taskCallInterceptor;
 
         public Builder injector(Injector injector) {
             this.injector = injector;
@@ -290,6 +295,10 @@ public class Runner {
 
             if (processStatusCallback == null) {
                 processStatusCallback = inject(ProcessStatusCallback.class, "processStatusCallback");
+            }
+
+            if (taskCallInterceptor == null) {
+                taskCallInterceptor = inject(TaskCallInterceptor.class, "taskCallInterceptor");
             }
 
             if (listeners == null) {

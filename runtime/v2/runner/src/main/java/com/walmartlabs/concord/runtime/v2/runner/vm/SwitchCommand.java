@@ -61,7 +61,7 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         String expr = step.getExpression();
 
         EvalContext evalContext = EvalContextFactory.global(ctx);
-        String switchResult = ThreadLocalContext.withContext(ctx, () -> ee.eval(evalContext, expr, String.class));
+        String switchResult = ee.eval(evalContext, expr, String.class);
         boolean caseFound = false;
         for (Map.Entry<String, Command> kv : caseCommands) {
             String caseLabel = ee.eval(evalContext, kv.getKey(), String.class);
