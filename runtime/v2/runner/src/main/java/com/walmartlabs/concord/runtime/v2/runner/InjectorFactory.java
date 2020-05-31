@@ -29,7 +29,6 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.guice.CurrentClasspathModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.DefaultRunnerModule;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
-import com.walmartlabs.concord.runtime.v2.runner.guice.TaskCallInterceptorModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.V2;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
@@ -83,7 +82,6 @@ public class InjectorFactory {
         List<Module> l = new ArrayList<>();
         l.add(new ConfigurationModule(workDir, runnerCfg, processConfigurationProvider));
         l.add(new CurrentClasspathModule());
-        l.add(new TaskCallInterceptorModule());
 
         Module tasks = new AbstractModule() {
             @Override

@@ -58,7 +58,7 @@ public class IfCommand extends StepCommand<IfStep> {
         String expr = step.getExpression();
 
         EvalContext evalContext = EvalContextFactory.global(ctx);
-        boolean ifResult = ThreadLocalContext.withContext(ctx, () -> ee.eval(evalContext, expr, Boolean.class));
+        boolean ifResult = ee.eval(evalContext, expr, Boolean.class);
         if (ifResult) {
             frame.push(thenCommand);
         } else if (elseCommand != null) {

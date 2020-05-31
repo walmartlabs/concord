@@ -71,8 +71,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call);
 
         try {
-            ThreadLocalContext.withContext(ctx, () ->
-                    scriptEvaluator.eval(ctx, language, content, input));
+            scriptEvaluator.eval(ctx, language, content, input);
         } finally {
             try {
                 content.close();

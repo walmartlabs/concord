@@ -20,72 +20,89 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
-import com.walmartlabs.concord.common.ReflectionUtils;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ThreadLocalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Execution;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.immutables.value.Value;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 
 /**
  * Intercepts task calls and notifies {@link TaskCallListener}s.
  */
-public class TaskCallInterceptor implements MethodInterceptor {
+public class TaskCallInterceptor {
 
-    private static final Logger log = LoggerFactory.getLogger(TaskCallInterceptor.class);
+    private final Set<TaskCallListener> listeners;
 
     @Inject
-    private List<TaskCallListener> listeners;
+    public TaskCallInterceptor(Set<TaskCallListener> listeners) {
+        this.listeners = listeners;
+    }
 
-    @Override
-    public Object invoke(MethodInvocation invocation) throws Throwable {
-        Named n = ReflectionUtils.findAnnotation(invocation.getThis().getClass(), Named.class);
-        if (n == null) {
-            return invocation.proceed();
-        }
-
-        String taskName = n.value();
-
-        Context ctx = ThreadLocalContext.get();
-        if (ctx == null || ctx.execution() == null || ctx.execution().currentStep() == null) {
-            // we don't get a ThreadLocalContext when calling tasks using expressions
-            // or when using other non-task step methods
-            return invocation.proceed();
-        }
-
-        Execution execution = ctx.execution();
-
+    public Serializable invoke(CallContext ctx, Method method, Callable<Serializable> callable) throws Exception {
         long startedAt = System.currentTimeMillis();
-        listeners.forEach(l -> l.onEvent(eventBuilder(Phase.PRE, execution, invocation, taskName)
+        listeners.forEach(l -> l.onEvent(eventBuilder(Phase.PRE, method, ctx)
                 .build()));
 
-        Object result = invocation.proceed();
+        Serializable result = callable.call();
 
         long duration = System.currentTimeMillis() - startedAt;
-        listeners.forEach(l -> l.onEvent(eventBuilder(Phase.POST, execution, invocation, taskName)
+        listeners.forEach(l -> l.onEvent(eventBuilder(Phase.POST, method, ctx)
                 .duration(duration)
-                .result((result instanceof Serializable) ? (Serializable)result : null)
+                .result(result)
                 .build()));
 
         return result;
     }
 
-    private static ImmutableTaskCallEvent.Builder eventBuilder(Phase phase, Execution execution, MethodInvocation invocation, String taskName) {
+    private static ImmutableTaskCallEvent.Builder eventBuilder(Phase phase, Method method, CallContext ctx) {
         return TaskCallEvent.builder()
                 .phase(phase)
-                .correlationId(execution.correlationId())
-                .currentStep(execution.currentStep())
-                .input(invocation.getArguments())
-                .methodName(invocation.getMethod().getName())
-                .processDefinition(execution.processDefinition())
-                .taskName(taskName);
+                .correlationId(ctx.correlationId())
+                .currentStep(ctx.currentStep())
+                .input(method.arguments())
+                .methodName(method.name())
+                .processDefinition(ctx.processDefinition())
+                .taskName(ctx.taskName());
+    }
+
+    @Value.Immutable
+    public interface Method {
+
+        String name();
+
+        @Value.Default
+        default List<Object> arguments() {
+            return Collections.emptyList();
+        }
+
+        static Method of(String name, Object... arguments) {
+            return ImmutableMethod.builder()
+                    .name(name)
+                    .addArguments(arguments)
+                    .build();
+        }
+    }
+
+    @Value.Immutable
+    public interface CallContext {
+
+        String taskName();
+
+        UUID correlationId();
+
+        Step currentStep();
+
+        ProcessDefinition processDefinition();
+
+        static ImmutableCallContext.Builder builder() {
+            return ImmutableCallContext.builder();
+        }
     }
 }
