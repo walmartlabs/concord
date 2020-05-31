@@ -44,6 +44,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.walmartlabs.concord.runtime.v2.runner.logging.TaskDiscriminator.UNSEGMENTED_LOG;
+
 public class LoggingConfigurator {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(LoggingConfigurator.class);
@@ -74,7 +76,7 @@ public class LoggingConfigurator {
 
         String pattern = gerProperty(loggerContext, PATTERN_PROPERTY_KEY, DEFAULT_PATTERN);
 
-        TaskDiscriminator discriminator = new TaskDiscriminator(instanceId);
+        TaskDiscriminator discriminator = new TaskDiscriminator();
         discriminator.start();
 
         SiftingAppender sa = new SiftingAppender();
@@ -82,11 +84,19 @@ public class LoggingConfigurator {
         sa.setName("SEGMENTED_LOG");
         sa.setDiscriminator(discriminator);
         sa.setAppenderFactory((context, discriminatingValue) -> {
+            String logFileName;
+            if (UNSEGMENTED_LOG.equalsIgnoreCase(discriminatingValue)) {
+                // all unsegmented logs (from system.out, scripts, task call from expressions)
+                logFileName = "runner_system";
+            } else {
+                // segmented logs with created timestamp
+                logFileName = String.format("%s_%d", discriminatingValue, System.currentTimeMillis());
+            }
+
             FileAppender<ILoggingEvent> fa = new FileAppender<>();
             fa.setContext(context);
             fa.setAppend(true);
-            fa.setFile(String.format("%s/%s_%d.log",
-                    dst.toAbsolutePath(), discriminatingValue, System.currentTimeMillis()));
+            fa.setFile(String.format("%s/%s.log", dst.toAbsolutePath(), logFileName));
 
             PatternLayoutEncoderBase<ILoggingEvent> encoder = new PatternLayoutEncoderBase<ILoggingEvent>() {
                 @Override
@@ -113,8 +123,6 @@ public class LoggingConfigurator {
         });
 
         sa.start();
-
-        loggerContext.resetTurboFilterList();
 
         Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         root.detachAppender(DEFAULT_ROOT_APPENDER_NAME);
@@ -174,6 +182,7 @@ public class LoggingConfigurator {
     }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @SuppressWarnings("unused")
     private static class Stats {
 
         private String status;

@@ -146,4 +146,17 @@ public class ProcessIT {
         assertEquals(true, data.get("y.some.boolean"));
         assertFalse(data.containsKey("z"));
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testLogsFromExpressions() throws Exception {
+        Payload payload = new Payload()
+                .archive(ProcessIT.class.getResource("logExpression").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*log from expression short.*");
+        proc.assertLog(".*log from expression full form.*");
+    }
 }
