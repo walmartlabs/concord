@@ -26,6 +26,7 @@ import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
@@ -88,7 +89,7 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         Map<String, Object> m = new HashMap<>();
 
         Step currentStep = event.currentStep();
-        m.put("processDefinitionId", getCurrentFlowName(event.processDefinition(), currentStep));
+        m.put("processDefinitionId", ProcessDefinitionUtils.getCurrentFlowName(event.processDefinition(), currentStep));
         Location loc = currentStep != null ? currentStep.getLocation() : null;
         if (loc != null) {
             m.put("fileName", currentStep.getLocation().fileName());
@@ -103,20 +104,6 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         m.put("correlationId", event.correlationId());
 
         return m;
-    }
-
-    private static String getCurrentFlowName(ProcessDefinition processDefinition, Step currentStep) {
-        if (currentStep == null) {
-            return null;
-        }
-
-        for (Map.Entry<String, List<Step>> e : processDefinition.flows().entrySet()) {
-            if (e.getValue().contains(currentStep)) {
-                return e.getKey();
-            }
-        }
-
-        return null;
     }
 
     private void send(Map<String, Object> event) {

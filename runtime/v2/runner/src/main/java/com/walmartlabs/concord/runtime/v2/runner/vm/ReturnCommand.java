@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.runtime.v2.runner.compiler;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,22 +21,19 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ReturnStep;
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.runner.vm.ReturnCommand;
-import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.svm.Runtime;
+import com.walmartlabs.concord.svm.State;
+import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.commands.Return;
 
-import javax.inject.Named;
+public class ReturnCommand extends StepCommand<ReturnStep> {
 
-@Named
-public final class ReturnCompiler implements StepCompiler<ReturnStep> {
-
-    @Override
-    public boolean accepts(Step step) {
-        return step instanceof ReturnStep;
+    public ReturnCommand(ReturnStep step) {
+        super(step);
     }
 
     @Override
-    public Command compile(CompilerContext context, ReturnStep step) {
-        return new ReturnCommand(step);
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
+        new Return().eval(runtime, state, threadId);
     }
 }

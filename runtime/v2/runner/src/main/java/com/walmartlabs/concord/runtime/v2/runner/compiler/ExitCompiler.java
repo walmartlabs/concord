@@ -22,8 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.ExitStep;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ExitCommand;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.commands.Terminate;
 
 import javax.inject.Named;
 
@@ -37,6 +37,6 @@ public final class ExitCompiler implements StepCompiler<ExitStep> {
 
     @Override
     public Command compile(CompilerContext context, ExitStep step) {
-        return new Terminate();
+        return new ExitCommand(step);
     }
 }

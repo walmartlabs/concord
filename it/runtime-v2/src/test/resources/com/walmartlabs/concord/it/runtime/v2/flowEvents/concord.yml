@@ -1,0 +1,41 @@
+configuration:
+  runtime: concord-v2
+  arguments:
+    myVar: "red"
+
+flows:
+  default:
+    # expression
+    - ${log.info('BOO')}
+
+    # task full form
+    - task: log
+      in:
+        msg: "test"
+
+    # script
+    - script: js
+      body: |
+        print("Hello script")
+
+    # if
+    - if: ${1 == 1}
+      then:
+        - log: "It's true!"
+
+    - switch: ${myVar}
+      red:
+        - log: "It's red!"
+
+    - set:
+        k: "v"
+
+    - call: returnFlow
+
+    - call: exitFlow
+
+  returnFlow:
+    - return
+
+  exitFlow:
+    - exit
