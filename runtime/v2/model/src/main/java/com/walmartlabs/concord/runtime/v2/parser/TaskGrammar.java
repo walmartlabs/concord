@@ -59,11 +59,6 @@ public final class TaskGrammar {
                     stringVal.bind(taskName ->
                             taskOptions.map(options -> new TaskCall(a.location, taskName, options))));
 
-    public static final Parser<Atom, TaskCall> taskShort =
-            satisfyToken(JsonToken.FIELD_NAME).bind(a ->
-                    anyVal.bind(arg ->
-                            taskShortOptions.map(options -> TaskCall.singleArgCall(a.location, options, a.name, arg))));
-
     private TaskGrammar() {
     }
 }
