@@ -74,6 +74,11 @@ public class Main {
         Injector injector = InjectorFactory.createDefault(runnerCfg);
 
         try {
+            ProcessConfiguration processCfg = injector.getInstance(ProcessConfiguration.class);
+            ApiClient apiClient = injector.getInstance(ApiClient.class);
+            ProcessHeartbeat heartbeat = new ProcessHeartbeat(apiClient, processCfg.instanceId(), runnerCfg.api().maxNoHeartbeatInterval());
+            heartbeat.start();
+
             Main main = injector.getInstance(Main.class);
             main.execute();
 
@@ -105,10 +110,6 @@ public class Main {
         if (segmentedLogDir != null) {
             LoggingConfigurator.configure(processCfg.instanceId(), segmentedLogDir);
         }
-
-        ApiClient apiClient = injector.getInstance(ApiClient.class);
-        ProcessHeartbeat heartbeat = new ProcessHeartbeat(apiClient, processCfg.instanceId(), runnerCfg.api().maxNoHeartbeatInterval());
-        heartbeat.start();
 
         Runner runner = new Runner.Builder()
                 .injector(injector)
