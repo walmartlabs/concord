@@ -76,27 +76,6 @@ public class YamlOkParserTest extends AbstractParserTest {
         assertMeta(t.getOptions());
     }
 
-    // Short Task Definition Test
-    @Test
-    public void test001() throws Exception {
-        ProcessDefinition pd = load("001.yml");
-
-        List<Step> main = pd.flows().get("main");
-
-        assertEquals(1, main.size());
-
-        assertTrue(main.get(0) instanceof TaskCall);
-        TaskCall t = (TaskCall) main.get(0);
-        assertEquals("myShortTask", t.getName());
-
-        // arg
-        assertNotNull(t.getOptions().input());
-        assertEquals(Collections.singletonMap("0", (Serializable)"boo"), t.getOptions().input());
-
-        // meta
-        assertMeta(t.getOptions());
-    }
-
     // Full Call Flow Definition Test
     @Test
     public void test002() throws Exception {

@@ -51,6 +51,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<TaskCall> TASK = type("TASK");
     public static final YamlValueType<SetVariablesStep> SET_VARS = type("SET_VARIABLES");
+    public static final YamlValueType<SuspendStep> SUSPEND = type("SUSPEND");
     public static final YamlValueType<ScriptCall> SCRIPT = type("SCRIPT");
     public static final YamlValueType<Expression> EXPRESSION = type("EXPRESSION");
     public static final YamlValueType<String> EXPRESSION_VAL = type("EXPRESSION");

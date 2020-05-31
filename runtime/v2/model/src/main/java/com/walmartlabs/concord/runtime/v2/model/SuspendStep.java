@@ -20,26 +20,28 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-public class TaskCall extends AbstractStep<TaskCallOptions> {
+import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
+
+public class SuspendStep extends AbstractStep<SimpleOptions> {
 
     private static final long serialVersionUID = 1L;
 
-    private final String name;
+    private final String event;
 
-    public TaskCall(Location location, String name, TaskCallOptions options) {
+    public SuspendStep(Location location, String event, SimpleOptions options) {
         super(location, options);
 
-        this.name = name;
+        this.event = event;
     }
 
-    public String getName() {
-        return name;
+    public String getEvent() {
+        return event;
     }
 
     @Override
     public String toString() {
-        return "TaskCall{" +
-                "name='" + name + '\'' +
-                "}";
+        return "SuspendStep{" +
+                "event='" + event + '\'' +
+                '}';
     }
 }

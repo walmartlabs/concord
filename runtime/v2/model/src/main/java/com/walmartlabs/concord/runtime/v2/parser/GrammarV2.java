@@ -49,8 +49,9 @@ import static com.walmartlabs.concord.runtime.v2.parser.ParallelGrammar.parallel
 import static com.walmartlabs.concord.runtime.v2.parser.ReturnGrammar.returnStep;
 import static com.walmartlabs.concord.runtime.v2.parser.ScriptGrammar.script;
 import static com.walmartlabs.concord.runtime.v2.parser.SetVariablesGrammar.setVars;
+import static com.walmartlabs.concord.runtime.v2.parser.SuspendGrammar.suspendStep;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskFull;
-import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskShort;
+import static com.walmartlabs.concord.runtime.v2.parser.LogGrammar.logStep;
 import static io.takari.parc.Combinators.*;
 
 public final class GrammarV2 {
@@ -156,7 +157,8 @@ public final class GrammarV2 {
 
     private static final Parser<Atom, Step> stepObject =
             betweenTokens(JsonToken.START_OBJECT, JsonToken.END_OBJECT,
-                    choice(choice(parallelBlock, group, exprFull), choice(taskFull, script, callFull, callForm), checkpoint, ifExpr, switchExpr, setVars, taskShort));
+                    choice(choice(parallelBlock, group, exprFull), choice(taskFull, script, callFull, callForm),
+                            choice(checkpoint, ifExpr, switchExpr), setVars, logStep, suspendStep));
 
     // step := exit | exprShort | parallelBlock | stepObject
     private static final Parser<Atom, Step> step = orError(choice(exit, returnStep, exprShort, stepObject), YamlValueType.STEP);
