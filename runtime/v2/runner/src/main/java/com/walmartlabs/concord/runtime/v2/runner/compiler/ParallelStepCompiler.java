@@ -22,8 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.vm.ParallelCommand;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.commands.Parallel;
 
 import javax.inject.Named;
 import java.util.List;
@@ -43,6 +43,6 @@ public class ParallelStepCompiler implements StepCompiler<ParallelBlock> {
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList());
 
-        return new Parallel(steps);
+        return new ParallelCommand(steps, step);
     }
 }

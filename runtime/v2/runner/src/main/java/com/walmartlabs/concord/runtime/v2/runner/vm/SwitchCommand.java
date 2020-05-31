@@ -75,5 +75,7 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         if (!caseFound && defaultCommand != null) {
             frame.push(defaultCommand);
         }
+
+        // TODO: log case not found?
     }
 }

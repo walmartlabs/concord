@@ -25,6 +25,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessEventRequest;
 import com.walmartlabs.concord.client.ProcessEventsApi;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.svm.Runtime;
@@ -60,17 +61,19 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         }
 
         StepCommand<?> s = (StepCommand<?>) cmd;
-        if ((s.getStep() instanceof TaskCall) || (s.getStep() instanceof Expression)) {
+        if (s.getStep() instanceof TaskCall) {
             return Result.CONTINUE;
         }
 
+        ProcessDefinition pd = runtime.getService(ProcessDefinition.class);
         Location loc = s.getStep().getLocation();
 
         Map<String, Object> m = new HashMap<>();
-        m.put("processDefinitionId", "default"); // TODO
+        m.put("processDefinitionId", ProcessDefinitionUtils.getCurrentFlowName(pd, s.getStep()));
+        m.put("fileName", loc.fileName());
         m.put("line", loc.lineNum());
         m.put("column", loc.column());
-        m.put("description", getDescription(s.getStep())); // TODO
+        m.put("description", getDescription(s.getStep()));
 
         ProcessEventRequest req = new ProcessEventRequest();
         req.setEventType("ELEMENT"); // TODO constants
@@ -87,8 +90,31 @@ public class EventRecordingExecutionListener implements ExecutionListener {
     }
 
     private static String getDescription(Step step) {
+        // TODO: add 'description' into step? so we will not miss description for new steps...
         if (step instanceof FlowCall) {
             return "Flow call: " + ((FlowCall) step).getFlowName();
+        } else if (step instanceof Expression) {
+            return "Expression: " + ((Expression) step).getExpr();
+        } else if (step instanceof ScriptCall) {
+            return "Script: " + ((ScriptCall) step).getName();
+        } else if (step instanceof IfStep) {
+            return "Check: " + ((IfStep) step).getExpression();
+        } else if (step instanceof SwitchStep) {
+            return "Switch: " + ((SwitchStep) step).getExpression();
+        } else if (step instanceof SetVariablesStep) {
+            return "Set variables";
+        } else if (step instanceof Checkpoint) {
+            return "Checkpoint: " + ((Checkpoint) step).getName();
+        } else if (step instanceof FormCall) {
+            return "Form call: " + ((FormCall) step).getName();
+        } else if (step instanceof GroupOfSteps) {
+            return "Group of steps";
+        } else if (step instanceof ParallelBlock) {
+            return "Parallel block";
+        } else if (step instanceof ExitStep) {
+            return "Exit";
+        } else if (step instanceof ReturnStep) {
+            return "Return";
         }
 
         return step.getClass().getName();
