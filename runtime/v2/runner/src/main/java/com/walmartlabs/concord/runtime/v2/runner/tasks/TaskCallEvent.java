@@ -20,12 +20,15 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
+import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Value.Immutable
@@ -42,8 +45,11 @@ public interface TaskCallEvent {
 
     String methodName();
 
-    @Nullable
-    Object[] input();
+    @AllowNulls
+    @Value.Default
+    default List<Object> input() {
+        return Collections.emptyList();
+    }
 
     UUID correlationId();
 

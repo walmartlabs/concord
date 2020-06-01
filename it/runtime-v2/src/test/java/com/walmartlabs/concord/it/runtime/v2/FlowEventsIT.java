@@ -60,16 +60,28 @@ public class FlowEventsIT {
         // expression:
         // - ${log.info('BOO')}
         assertEvent(events, 0, new EventData()
+                .pre()
+                .correlationId()
                 .location(9, 7, "concord.yml")
                 .flow("default")
-                .description("Expression: ${log.info('BOO')}"));
+                .name("log")
+                .description("Task: log"));
+
+        assertEvent(events, 1, new EventData()
+                .post()
+                .duration()
+                .correlationId()
+                .location(9, 7, "concord.yml")
+                .flow("default")
+                .name("log")
+                .description("Task: log"));
 
         // task full form:
         // - task: log
         //   in:
         //     msg: "test"
         // pre
-        assertEvent(events, 1, new EventData()
+        assertEvent(events, 2, new EventData()
                 .pre()
                 .correlationId()
                 .location(12, 7, "concord.yml")
@@ -77,7 +89,7 @@ public class FlowEventsIT {
                 .name("log")
                 .description("Task: log"));
         // post
-        assertEvent(events, 2, new EventData()
+        assertEvent(events, 3, new EventData()
                 .post()
                 .duration()
                 .correlationId()
@@ -88,21 +100,21 @@ public class FlowEventsIT {
 
         // script:
         // - script: js
-        assertEvent(events, 3, new EventData()
+        assertEvent(events, 4, new EventData()
                 .location(17, 7, "concord.yml")
                 .flow("default")
                 .description("Script: js"));
 
         // if
         // - if: ${1 == 1}
-        assertEvent(events, 4, new EventData()
+        assertEvent(events, 5, new EventData()
                 .location(22, 7, "concord.yml")
                 .flow("default")
                 .description("Check: ${1 == 1}"));
 
         // - log: "It's true!"
         // pre
-        assertEvent(events, 5, new EventData()
+        assertEvent(events, 6, new EventData()
                 .pre()
                 .correlationId()
                 .location(24, 11, "concord.yml")
@@ -110,7 +122,7 @@ public class FlowEventsIT {
                 .name("log")
                 .description("Task: log"));
         // post
-        assertEvent(events, 6, new EventData()
+        assertEvent(events, 7, new EventData()
                 .post()
                 .correlationId()
                 .duration()
@@ -120,14 +132,14 @@ public class FlowEventsIT {
                 .description("Task: log"));
 
         // - switch: ${myVar}
-        assertEvent(events, 7, new EventData()
+        assertEvent(events, 8, new EventData()
                 .location(26, 7, "concord.yml")
                 .flow("default")
                 .description("Switch: ${myVar}"));
 
         // - log: "It's red!"
         // pre
-        assertEvent(events, 8, new EventData()
+        assertEvent(events, 9, new EventData()
                 .pre()
                 .correlationId()
                 .location(28, 11, "concord.yml")
@@ -135,7 +147,7 @@ public class FlowEventsIT {
                 .name("log")
                 .description("Task: log"));
         // post
-        assertEvent(events, 9, new EventData()
+        assertEvent(events, 10, new EventData()
                 .post()
                 .correlationId()
                 .duration()
@@ -145,31 +157,31 @@ public class FlowEventsIT {
                 .description("Task: log"));
 
         // set variables
-        assertEvent(events, 10, new EventData()
+        assertEvent(events, 11, new EventData()
                 .location(30, 7, "concord.yml")
                 .flow("default")
                 .description("Set variables"));
 
         // flow call
-        assertEvent(events, 11, new EventData()
+        assertEvent(events, 12, new EventData()
                 .location(33, 7, "concord.yml")
                 .flow("default")
                 .description("Flow call: returnFlow"));
 
         // return
-        assertEvent(events, 12, new EventData()
+        assertEvent(events, 13, new EventData()
                 .location(38, 7, "concord.yml")
                 .flow("returnFlow")
                 .description("Return"));
 
         // flow call
-        assertEvent(events, 13, new EventData()
+        assertEvent(events, 14, new EventData()
                 .location(35, 7, "concord.yml")
                 .flow("default")
                 .description("Flow call: exitFlow"));
 
         // exit
-        assertEvent(events, 14, new EventData()
+        assertEvent(events, 15, new EventData()
                 .location(41, 7, "concord.yml")
                 .flow("exitFlow")
                 .description("Exit"));

@@ -30,8 +30,6 @@ import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -43,8 +41,6 @@ import java.util.UUID;
 public class ExpressionCommand extends StepCommand<Expression> {
 
     private static final long serialVersionUID = 1L;
-
-    private static final Logger log = LoggerFactory.getLogger(ExpressionCommand.class);
 
     public ExpressionCommand(Expression step) {
         super(step);

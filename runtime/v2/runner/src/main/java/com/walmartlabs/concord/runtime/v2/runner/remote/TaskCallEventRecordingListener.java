@@ -41,10 +41,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class TaskCallEventRecordingListener implements TaskCallListener {
 
@@ -148,20 +145,21 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         return result;
     }
 
-    private static Map<String, Object> convertInput(Object[] input) {
-        if (input == null || input.length == 0) {
+    private static Map<String, Object> convertInput(List<Object> input) {
+        if (input.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        if (input.length == 1) {
-            if (input[0] instanceof TaskContext) {
-                return ((TaskContext) input[0]).input();
+
+        if (input.size() == 1) {
+            if (input.get(0) instanceof TaskContext) {
+                return ((TaskContext) input.get(0)).input();
             }
         }
 
         Map<String, Object> result = new HashMap<>();
-        for (int i = 0; i < input.length; i++) {
-            Object arg = input[i];
+        for (int i = 0; i < input.size(); i++) {
+            Object arg = input.get(i);
             if (arg instanceof Context) {
                 arg = "context";
             }

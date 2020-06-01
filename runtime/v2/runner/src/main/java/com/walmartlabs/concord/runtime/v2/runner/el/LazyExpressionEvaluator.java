@@ -22,9 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskResolver;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.VariableResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 
 import javax.el.*;
@@ -170,6 +169,9 @@ public class LazyExpressionEvaluator implements ExpressionEvaluator {
         r.add(new ResourceBundleELResolver());
         r.add(new ListELResolver());
         r.add(new ArrayELResolver());
+        if (evalContext.context() != null) {
+            r.add(new TaskMethodResolver(evalContext.context()));
+        }
         r.add(new BeanELResolver());
         return r;
     }
