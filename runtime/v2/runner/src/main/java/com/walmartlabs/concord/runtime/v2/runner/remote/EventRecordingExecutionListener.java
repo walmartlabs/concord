@@ -61,7 +61,7 @@ public class EventRecordingExecutionListener implements ExecutionListener {
         }
 
         StepCommand<?> s = (StepCommand<?>) cmd;
-        if (s.getStep() instanceof TaskCall) {
+        if (s.getStep() instanceof TaskCall || s.getStep() instanceof Expression) {
             return Result.CONTINUE;
         }
 

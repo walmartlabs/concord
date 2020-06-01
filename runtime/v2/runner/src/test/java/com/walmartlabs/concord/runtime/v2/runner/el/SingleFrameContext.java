@@ -159,7 +159,7 @@ public class SingleFrameContext extends DummyContext {
             @Nullable
             @Override
             public Step currentStep() {
-                throw new IllegalStateException("Not implemented");
+                return null;
             }
 
             @Override

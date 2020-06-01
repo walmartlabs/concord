@@ -51,7 +51,7 @@ public class TaskCallPolicyChecker implements TaskCallListener {
         CheckResult<TaskRule, String> result = policyEngine.getTaskPolicy().check(
                 event.taskName(),
                 event.methodName(),
-                event.input(),
+                event.input().toArray(),
                 taskResultService.getResults());
 
         result.getWarn().forEach(d -> log.warn("Potentially restricted task call '{}' (task policy {})", event.taskName(), d.getRule()));

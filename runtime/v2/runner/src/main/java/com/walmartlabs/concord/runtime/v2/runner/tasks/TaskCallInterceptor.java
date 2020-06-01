@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.tasks;
  * =====
  */
 
+import com.walmartlabs.concord.common.AllowNulls;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent.Phase;
@@ -45,17 +46,17 @@ public class TaskCallInterceptor {
         this.listeners = listeners;
     }
 
-    public Serializable invoke(CallContext ctx, Method method, Callable<Serializable> callable) throws Exception {
+    public <T> T invoke(CallContext ctx, Method method, Callable<T> callable) throws Exception {
         long startedAt = System.currentTimeMillis();
         listeners.forEach(l -> l.onEvent(eventBuilder(Phase.PRE, method, ctx)
                 .build()));
 
-        Serializable result = callable.call();
+        T result = callable.call();
 
         long duration = System.currentTimeMillis() - startedAt;
         listeners.forEach(l -> l.onEvent(eventBuilder(Phase.POST, method, ctx)
                 .duration(duration)
-                .result(result)
+                .result(result instanceof Serializable ? (Serializable)result : null)
                 .build()));
 
         return result;
@@ -73,10 +74,12 @@ public class TaskCallInterceptor {
     }
 
     @Value.Immutable
+    @Value.Style(jdkOnly = true)
     public interface Method {
 
         String name();
 
+        @AllowNulls
         @Value.Default
         default List<Object> arguments() {
             return Collections.emptyList();
