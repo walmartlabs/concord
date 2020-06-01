@@ -47,18 +47,18 @@ import java.util.*;
 
 public class Main {
 
-    private final Injector injector;
+    private final Runner runner;
     private final RunnerConfiguration runnerCfg;
     private final ProcessConfiguration processCfg;
     private final WorkingDirectory workDir;
 
     @Inject
-    public Main(Injector injector,
+    public Main(Runner runner,
                 RunnerConfiguration runnerCfg,
                 ProcessConfiguration processCfg,
                 WorkingDirectory workDir) {
 
-        this.injector = injector;
+        this.runner = runner;
         this.runnerCfg = runnerCfg;
         this.processCfg = processCfg;
         this.workDir = workDir;
@@ -110,10 +110,6 @@ public class Main {
         if (segmentedLogDir != null) {
             LoggingConfigurator.configure(processCfg.instanceId(), segmentedLogDir);
         }
-
-        Runner runner = new Runner.Builder()
-                .injector(injector)
-                .build();
 
         Map<String, Object> processArgs = prepareProcessArgs(processCfg);
 

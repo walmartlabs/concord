@@ -22,12 +22,11 @@ package com.walmartlabs.concord.cli.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
-import com.walmartlabs.concord.runtime.v2.runner.DefaultPersistenceService;
-import com.walmartlabs.concord.runtime.v2.runner.DefaultTaskVariablesService;
-import com.walmartlabs.concord.runtime.v2.runner.MapBackedDefaultTaskVariablesService;
-import com.walmartlabs.concord.runtime.v2.runner.PersistenceService;
+import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.checkpoints.CheckpointService;
 import com.walmartlabs.concord.runtime.v2.runner.guice.BaseRunnerModule;
+import com.walmartlabs.concord.svm.ExecutionListener;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -58,8 +57,11 @@ public class CliServicesModule extends AbstractModule {
 
         bind(CheckpointService.class).to(CliCheckpointService.class);
         bind(PersistenceService.class).to(DefaultPersistenceService.class);
+        bind(ProcessStatusCallback.class).toInstance(instanceId -> {});
 
         bind(DefaultTaskVariablesService.class).toInstance(new MapBackedDefaultTaskVariablesService(readDefaultVars()));
+
+        Multibinder.newSetBinder(binder(), ExecutionListener.class);
     }
 
     @SuppressWarnings("unchecked")
