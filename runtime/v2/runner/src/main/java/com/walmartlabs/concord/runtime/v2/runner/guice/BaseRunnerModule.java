@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.v2.runner.*;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.DefaultCompiler;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
@@ -53,6 +54,7 @@ public class BaseRunnerModule extends AbstractModule {
         bind(ScriptEvaluator.class).to(DefaultScriptEvaluator.class);
         bind(ResourceResolver.class).to(DefaultResourceResolver.class);
         bind(TaskResultService.class);
+        bind(FormService.class).toProvider(FormServiceProvider.class);
 
         Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
         taskProviders.addBinding().to(TaskV2Provider.class);

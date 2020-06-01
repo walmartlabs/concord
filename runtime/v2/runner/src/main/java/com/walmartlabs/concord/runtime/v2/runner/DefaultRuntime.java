@@ -20,24 +20,24 @@ package com.walmartlabs.concord.runtime.v2.runner;
  * =====
  */
 
+import com.google.inject.Injector;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 import com.walmartlabs.concord.svm.VM;
 
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DefaultRuntime implements Runtime {
 
     private final VM vm;
-    private final Map<Class<?>, ?> services;
+    private final Injector injector;
     private final ExecutorService executor;
 
-    public DefaultRuntime(VM vm, Map<Class<?>, ?> services) {
+    public DefaultRuntime(VM vm, Injector injector) {
         this.vm = vm;
-        this.services = services;
+        this.injector = injector;
 
         this.executor = Executors.newCachedThreadPool();
     }
@@ -51,12 +51,7 @@ public class DefaultRuntime implements Runtime {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T getService(Class<T> klass) {
-        T t = (T) services.get(klass);
-        if (t == null) {
-            throw new IllegalStateException(klass + " service is not registered");
-        }
-        return t;
+        return injector.getInstance(klass);
     }
 }

@@ -46,6 +46,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.v1.compat.V1CompatModule;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.InjectVariable;
+import com.walmartlabs.concord.svm.ExecutionListener;
 import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
@@ -115,6 +116,8 @@ public class MainTest {
                 Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
                 taskCallListeners.addBinding().to(TaskCallPolicyChecker.class);
                 taskCallListeners.addBinding().to(TaskResultListener.class);
+
+                Multibinder.newSetBinder(binder(), ExecutionListener.class);
             }
         };
 

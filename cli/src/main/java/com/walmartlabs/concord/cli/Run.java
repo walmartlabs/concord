@@ -137,12 +137,7 @@ public class Run implements Callable<Integer> {
                 new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, vaultId)))
                 .create();
 
-        Runner runner = new Runner.Builder()
-                .injector(injector)
-                .workDir(targetDir)
-                .processStatusCallback(id -> {
-                })
-                .build();
+        Runner runner = injector.getInstance(Runner.class);
 
         Map<String, Object> args = new LinkedHashMap<>(cfg.arguments());
         args.putAll(extraVars);

@@ -78,7 +78,6 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
 
-        String segmentId = ctx.execution().correlationId().toString();
         TaskContext taskContext = new TaskContextImpl(ctx, taskName, input);
         CallContext callContext = CallContext.builder()
                 .taskName(taskName)
@@ -87,6 +86,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .processDefinition(ctx.execution().processDefinition())
                 .build();
 
+        String segmentId = ctx.execution().correlationId().toString();
         Serializable result = SegmentedLogger.withLogSegment(taskName, segmentId,
                 () -> interceptor.invoke(callContext, Method.of("execute", taskContext),
                         () -> t.execute(taskContext)));
