@@ -444,8 +444,8 @@ public class MainTest {
             fail("should fail");
         } catch (Exception e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains("Can't find 'sayGoodbye' method"));
-            assertTrue(msg.contains("Did you mean: 'sayHello'"));
+            assertTrue(msg.contains("Can't find 'sayGoodbye()' method"));
+            assertTrue(msg.contains("Did you mean: sayHello()"));
         }
     }
 
