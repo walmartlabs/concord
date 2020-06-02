@@ -32,20 +32,26 @@ import java.util.stream.Collectors;
 
 public class MethodNotFoundException extends ELException {
 
+    private static final long serialVersionUID = 1L;
+
     private static final int MAX_HINTS = 3;
 
-    public MethodNotFoundException(Object base, Object method) {
-        super(formatMessage(base, method));
+    public MethodNotFoundException(Object base, Object method, Class<?>[] paramTypes) {
+        super(formatMessage(base, method, paramTypes));
     }
 
-    private static String formatMessage(Object base, Object method) {
+    private static String formatMessage(Object base, Object method, Class<?>[] paramTypes) {
         Class<?> baseClass = getBaseClass(base);
 
         String baseName = baseClass != null ? baseClass.getName() : "n/a";
         String methodName = method != null ? method.toString() : "n/a";
+        String params = paramTypes != null ? Arrays.stream(paramTypes)
+                .map(Class::getName)
+                .collect(Collectors.joining(", ")) : "";
 
         StringBuilder b = new StringBuilder();
-        b.append("Can't find '").append(methodName).append("' method in ").append(baseName).append(".\n")
+        b.append("Can't find '").append(methodName).append("(").append(params).append(")")
+                .append("' method in ").append(baseName).append(".\n")
                 .append("Check the task's or type's available methods and their signatures.");
 
         String hint = getMethodHint(baseClass, methodName);
@@ -89,8 +95,7 @@ public class MethodNotFoundException extends ELException {
         LevenshteinDistance distance = LevenshteinDistance.getDefaultInstance();
         List<String> candidates = Arrays.stream(baseClass.getDeclaredMethods())
                 .filter(m -> Modifier.isPublic(m.getModifiers()))
-                .map(Method::getName)
-                .map(s -> "'" + s + "'")
+                .map(MethodNotFoundException::formatMethod)
                 .sorted(Comparator.comparingInt(m -> distance.apply(methodName, m)))
                 .limit(MAX_HINTS)
                 .distinct()
@@ -101,5 +106,13 @@ public class MethodNotFoundException extends ELException {
         }
 
         return "Did you mean: " + String.join(", ", candidates) + "?";
+    }
+
+    private static String formatMethod(Method m) {
+        List<String> params = Arrays.stream(m.getParameterTypes())
+                .map(Class::getName)
+                .collect(Collectors.toList());
+
+        return String.format("%s(%s)", m.getName(), String.join(", ", params));
     }
 }
