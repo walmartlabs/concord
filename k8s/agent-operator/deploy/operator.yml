@@ -26,6 +26,18 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: SCALE_UP_DELAY_MS
+              value: "15000"
+            - name: SCALE_DOWN_DELAY_MS
+              value: "180000"
+            - name: INCREMENT_PERCENTAGE
+              value: "50"
+            - name: DECREMENT_PERCENTAGE
+              value: "10"
+            - name: INCREMENT_THRESHOLD_FACTOR
+              value: "1.5"
+            - name: DECREMENT_THRESHOLD_FACTOR
+              value: "1.0"
             - name: OPERATOR_NAME
               value: "concord-agent-operator"
             - name: CONCORD_BASE_URL

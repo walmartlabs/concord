@@ -48,9 +48,9 @@ public class ProcessQueueClient {
         this.objectMapper = new ObjectMapper();
     }
 
-    public List<ProcessQueueEntry> query() throws IOException {
+    public List<ProcessQueueEntry> query(String processStatus) throws IOException {
         Request req = new Request.Builder()
-                .url(baseUrl + "/api/v2/process?status=ENQUEUED")
+                .url(baseUrl + "/api/v2/process?status=" + processStatus)
                 .header("Authorization", apiToken)
                 .build();
 

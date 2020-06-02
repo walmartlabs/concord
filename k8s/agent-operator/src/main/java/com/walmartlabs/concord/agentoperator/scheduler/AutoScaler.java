@@ -35,57 +35,185 @@ public class AutoScaler {
     private static final Logger log = LoggerFactory.getLogger(AutoScaler.class);
 
     private final Function<String, Integer> podCounter;
-    private final Function<AgentPoolInstance, Boolean> canBeUpdated;
+    private final Function<AgentPoolInstance, Boolean> canBeScaledUp;
+    private final Function<AgentPoolInstance, Boolean> canBeScaledDown;
+    private long scaleUpTimeStamp;
+    private long scaleDownTimeStamp;
 
     public AutoScaler(Function<String, Integer> podCounter) {
         this(podCounter, i -> {
             long t = System.currentTimeMillis();
-            return t - i.getLastUpdateTimestamp() > i.getResource().getSpec().getScalingDelayMs();
+            return t - i.getLastScaleUpTimestamp() > i.getResource().getSpec().getScaleUpDelayMs();
+        }, i -> {
+            long t = System.currentTimeMillis();
+            return t - i.getLastScaleDownTimeStamp() > i.getResource().getSpec().getScaleDownDelayMs();
         });
     }
 
-    public AutoScaler(Function<String, Integer> podCounter, Function<AgentPoolInstance, Boolean> canBeUpdated) {
+    public AutoScaler(Function<String, Integer> podCounter, Function<AgentPoolInstance, Boolean> canBeScaledUp,
+                      Function<AgentPoolInstance, Boolean> canBeScaledDown) {
         this.podCounter = podCounter;
-        this.canBeUpdated = canBeUpdated;
+        this.canBeScaledUp = canBeScaledUp;
+        this.canBeScaledDown = canBeScaledDown;
+        this.scaleUpTimeStamp = System.currentTimeMillis();
+        this.scaleDownTimeStamp = System.currentTimeMillis();
     }
 
+    /**
+     * Scale up or Scale down the number of agent pods depending on various conditions
+     *
+     * If enqueued process count is greater than the threshold defined for incrementing to max
+     * pool size, increase the pool size to the maximum size.
+     * Otherwise, if the enqueued process count is greater than the threshold defined for incrementing
+     * the pool size, increase the pool size by the increment percentage defined
+     *
+     * Decrease the pool size by the decrement percentage defined only if,
+     * - enqueued process count is lesser than the minimum pool size threshold defined
+     * - running process count is lesser than the threshold defined (which depends on current size of the pool
+     *   running the processes, and a constant factor specified - default to 1. Simplified to
+     *   runningCount < podsCount)
+     *
+     * @param i Agent pool on which the scaling activity is to be performed
+     * @param queueEntries List of process entries in ENQUEUED state
+     */
     public AgentPoolInstance apply(AgentPoolInstance i, List<ProcessQueueEntry> queueEntries) {
+
+        scaleUpTimeStamp = i.getLastScaleUpTimestamp();
+        scaleDownTimeStamp = i.getLastScaleDownTimeStamp();
+
         AgentPoolConfiguration cfg = i.getResource().getSpec();
 
-        if (!canBeUpdated.apply(i)) {
+        if (!canBeScaledUp.apply(i) && !canBeScaledDown.apply(i)) {
             // was updated recently, skipping
             return i;
         }
 
+        // count the currently running pods
+        int podsCount = podCounter.apply(i.getName());
+        log.info("['{}']: Current pool size: {}", i.getName(), podsCount);
+
         // the number of processes waiting for an agent in the current pool
-        int enqueuedCount = (int) queueEntries.stream()
+        int enqueuedCount = getProcessCount(cfg, queueEntries);
+        log.info("['{}']: Enqueued process count: {}", i.getName(), enqueuedCount);
+
+        if (podsCount < cfg.getMinSize()) {
+            return AgentPoolInstance.updateTargetSize(i, cfg.getMinSize(), System.currentTimeMillis(), System.currentTimeMillis());
+        }
+
+        // The threshold above which the operator can scale up the agent pods to the defined maximum pool size
+        double maxPoolSizeThreshold = cfg.getMaxSize() * cfg.getIncrementThresholdFactor();
+
+        // The threshold above which the pool size can be increased by the increment percentage defined
+        double incrementThreshold = cfg.getIncrementThresholdFactor() * podsCount;
+
+        // The threshold, combined with threshold for running processes determine if the pool size can be
+        // reduced by the decrement percentage defined
+        double minPoolSizeThreshold = cfg.getDecrementThresholdFactor() * cfg.getMinSize();
+
+        // Initial target size of the agent pool before updation
+        int targetSize = i.getTargetSize();
+
+        // Try scaling up if the time elapsed after last scale up operation
+        // is greater than the scale up delay defined (default: 15s)
+        if (canBeScaledUp.apply(i)) {
+            targetSize = tryScaleUp(cfg, i, podsCount, enqueuedCount, targetSize, maxPoolSizeThreshold, incrementThreshold);
+
+            // Reset scaledown delay counter if enqueued count is greater than min threshold.
+            // Scale down should happen only if enqueued count is less than
+            // min threshold consistently for scaledown delay defined (default: 180s)
+            if (enqueuedCount >= minPoolSizeThreshold) {
+                log.info("['{}']: Resetting scale down delay counter - (enqueued count({}) >= minimum threshold({}))...",
+                        i.getName(), enqueuedCount, minPoolSizeThreshold);
+                scaleDownTimeStamp = System.currentTimeMillis();
+            }
+        }
+
+        // Try scaling down if the time elapsed after last scale down operation
+        // is greater than the scale down delay defined (default: 180s)
+        if (canBeScaledDown.apply(i)) {
+            targetSize = tryScaleDown(cfg, i, podsCount, enqueuedCount, targetSize, minPoolSizeThreshold);
+        }
+
+        if (targetSize == i.getTargetSize()) {
+            log.info("['{}']: Not changing the pool size.", i.getName());
+        } else {
+            log.info("apply ['{}'] -> updated to {}", i.getName(), targetSize);
+        }
+        return AgentPoolInstance.updateTargetSize(i, targetSize, scaleUpTimeStamp, scaleDownTimeStamp);
+    }
+
+    private int tryScaleUp(AgentPoolConfiguration cfg, AgentPoolInstance i, int podsCount, int enqueuedCount, int poolSize,
+                           double maxPoolSizeThreshold, double incrementThreshold) {
+
+        // To prevent scale up before previous scale down action is completed
+        podsCount = Math.min(podsCount, i.getTargetSize());
+
+        // Reset scaleup delay counter for every attempt to scale up
+        scaleUpTimeStamp = System.currentTimeMillis();
+
+        if (podsCount < cfg.getMaxSize()) {
+            if (enqueuedCount >= maxPoolSizeThreshold) {
+                poolSize = cfg.getMaxSize();
+                log.info("['{}']: Incrementing to max size - {}", i.getName(), poolSize);
+            } else if (enqueuedCount >= incrementThreshold) {
+                poolSize = (int) Math.round(podsCount * (1 + cfg.getPercentIncrement() / 100));
+
+                // Limit to maximum pool size if the computed target size is more than the max size
+                if (poolSize > cfg.getMaxSize()) {
+                    log.warn("['{}']: Target pool size exceeds the allowed maximum: {} > {}. Updating to maximum size - {}",
+                            i.getName(), poolSize, cfg.getMaxSize(), cfg.getMaxSize());
+                    poolSize = cfg.getMaxSize();
+                }
+
+                log.info("['{}']: Scaling up to {}...", i.getName(), poolSize);
+            }
+        } else {
+            log.warn("['{}']: Target pool size already the allowed maximum size: {}. Not updating.",
+                    i.getName(), cfg.getMaxSize());
+        }
+
+        return poolSize;
+    }
+
+    private int tryScaleDown(AgentPoolConfiguration cfg, AgentPoolInstance i, int podsCount, int enqueuedCount,
+                             int poolSize, double minPoolSizeThreshold) {
+
+        // To prevent scale down before previous scale up action is completed
+        podsCount = Math.max(podsCount, i.getTargetSize());
+
+        // Reset scaledown delay counter for every attempt to scale down
+        scaleDownTimeStamp = System.currentTimeMillis();
+
+        if (podsCount > cfg.getMinSize()) {
+            if (enqueuedCount < minPoolSizeThreshold) {
+                poolSize = (int) Math.floor(podsCount * (1 - cfg.getPercentDecrement() / 100));
+
+                log.info("['{}']: Scaling down - (enqueued count({}) < minimum threshold({})) for more than {} seconds...",
+                        i.getName(), enqueuedCount, minPoolSizeThreshold,
+                        (i.getResource().getSpec().getScaleDownDelayMs()/1000));
+
+                // Limit to minimum pool size if the computed target size is less than the min size
+                if (poolSize < cfg.getMinSize()) {
+                    log.warn("['{}']: Target pool size lesser than the allowed minimum: {} < {}. Updating to minimum size - {}",
+                            i.getName(), poolSize, cfg.getMinSize(), cfg.getMinSize());
+                    poolSize = cfg.getMinSize();
+                } else {
+                    log.info("['{}']: Scaling down to {}...", i.getName(), poolSize);
+                }
+            }
+        } else {
+            log.warn("['{}']: Target pool size already the allowed minimum size: {}. Not updating.",
+                    i.getName(), cfg.getMinSize());
+        }
+
+        return poolSize;
+    }
+
+    private int getProcessCount(AgentPoolConfiguration cfg, List<ProcessQueueEntry> processQueueEntries) {
+        return (int) processQueueEntries.stream()
                 .map(ProcessQueueEntry::getRequirements)
                 .filter(Objects::nonNull)
                 .filter(a -> MapMatcher.matches(a, cfg.getQueueSelector()))
                 .count();
-
-        // count the currently running pods
-        int podsCount = podCounter.apply(i.getName());
-
-        int increment = 0;
-        if (enqueuedCount >= podsCount) {
-            increment = cfg.getSizeIncrement();
-        } if (enqueuedCount < podsCount) {
-            increment = -cfg.getSizeIncrement();
-        }
-
-        int targetSize = Math.max(cfg.getMinSize(), podsCount + increment);
-        if (i.getTargetSize() == targetSize) {
-            // no changes needed
-            return i;
-        }
-
-        if (targetSize > cfg.getMaxSize()) {
-            log.warn("apply ['{}'] -> target pool size exceeds the allowed maximum: {} > {}", i.getName(), enqueuedCount, cfg.getMaxSize());
-        }
-        targetSize = Math.min(targetSize, cfg.getMaxSize());
-
-        log.info("apply ['{}'] -> updated to {}", i.getName(), targetSize);
-        return AgentPoolInstance.updateTargetSize(i, targetSize);
     }
 }
