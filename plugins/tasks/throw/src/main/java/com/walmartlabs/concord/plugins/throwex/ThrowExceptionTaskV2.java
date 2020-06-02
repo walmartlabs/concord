@@ -33,6 +33,10 @@ public class ThrowExceptionTaskV2 implements Task {
     @Override
     public Serializable execute(TaskContext ctx) throws Exception {
         Object exception = ctx.input().get("0");
+        if (exception == null) {
+            exception = ctx.input().get("exception");
+        }
+
         if (exception instanceof Exception) {
             throw (Exception) exception;
         } else if (exception instanceof String) {

@@ -204,6 +204,22 @@ public class MainTest {
     }
 
     @Test
+    public void testTryErrorBlock() throws Exception {
+        deploy("tryError");
+
+        save(ProcessConfiguration.builder().build());
+
+        try {
+            run();
+            fail("should fail");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("boom!"));
+        }
+
+        assertLog(lastLog, ".*error occurred:.*boom!.*");
+    }
+
+    @Test
     public void testCheckpoints() throws Exception {
         deploy("checkpoints");
 

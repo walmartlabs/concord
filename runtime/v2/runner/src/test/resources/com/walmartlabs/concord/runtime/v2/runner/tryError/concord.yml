@@ -1,0 +1,12 @@
+flows:
+  default:
+    - try:
+        - task: faultyTask
+      error:
+        - call: handleError
+          in:
+            msg: "error occurred: ${lastError}"
+        - throw: "${lastError}"
+
+  handleError:
+    - log: "${msg}"
