@@ -42,7 +42,7 @@ public class SlackChannelTask implements Task {
     @Override
     public void execute(Context ctx) throws Exception {
         Action action = getAction(ctx);
-        log.info("Starting '{}' action...", action);
+        log.debug("Starting '{}' action...", action);
 
         Map<String, Object> args = Utils.collectAgs(ctx);
 
