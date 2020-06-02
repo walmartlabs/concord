@@ -26,6 +26,7 @@ import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.inject.Named;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,15 +34,21 @@ import java.util.Map;
 public class SlackTaskV2 implements Task {
 
     @Override
+    @SuppressWarnings("unchecked")
     public Serializable execute(TaskContext ctx) throws Exception {
         Map<String, Object> m = ctx.input();
 
         SlackConfiguration slackCfg = SlackConfiguration.from(m);
 
         String channelId = MapUtils.assertString(m, TaskParams.CHANNEL_ID.getKey());
-        String text = MapUtils.assertString(m, TaskParams.TEXT.getKey());
+        String text = MapUtils.getString(m, TaskParams.TEXT.getKey());
+        String ts = MapUtils.getString(m, TaskParams.TS.getKey());
+        boolean replyBroadcast = MapUtils.getBoolean(m, TaskParams.REPLY_BROADCAST.getKey(), false);
+        String iconEmoji = MapUtils.getString(m, TaskParams.ICON_EMOJI.getKey());
+        String username = MapUtils.getString(m, TaskParams.USERNAME.getKey());
+        Collection<Object> attachments = (Collection<Object>) m.get(TaskParams.ATTACHMENTS.getKey());
 
-        SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, null, false, text, null, null, null);
+        SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
         return result(r);
     }
 
