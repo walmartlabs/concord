@@ -25,11 +25,11 @@ import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 public class AgentPoolInstance {
 
     public static AgentPoolInstance updateStatus(AgentPoolInstance i, Status status) {
-        return new AgentPoolInstance(i.name, i.resource, status, i.targetSize, System.currentTimeMillis());
+        return new AgentPoolInstance(i.name, i.resource, status, i.targetSize, System.currentTimeMillis(), i.getLastScaleUpTimestamp(), i.lastScaleDownTimeStamp);
     }
 
-    public static AgentPoolInstance updateTargetSize(AgentPoolInstance i, int targetSize) {
-        return new AgentPoolInstance(i.name, i.resource, i.status, targetSize, System.currentTimeMillis());
+    public static AgentPoolInstance updateTargetSize(AgentPoolInstance i, int targetSize, long scaleUptimeStamp, long scaleDownTimeStamp) {
+        return new AgentPoolInstance(i.name, i.resource, i.status, targetSize, System.currentTimeMillis(), scaleUptimeStamp, scaleDownTimeStamp);
     }
 
     private final String name;
@@ -37,13 +37,18 @@ public class AgentPoolInstance {
     private final Status status;
     private final int targetSize;
     private final long lastUpdateTimestamp;
+    private final long lastScaleUpTimestamp;
+    private final long lastScaleDownTimeStamp;
 
-    public AgentPoolInstance(String name, AgentPool resource, Status status, int targetSize, long lastUpdateTimestamp) {
+    public AgentPoolInstance(String name, AgentPool resource, Status status, int targetSize, long lastUpdateTimestamp,
+                             long lastScaleUpTimestamp, long lastScaleDownTimeStamp) {
         this.name = name;
         this.resource = resource;
         this.status = status;
         this.targetSize = targetSize;
         this.lastUpdateTimestamp = lastUpdateTimestamp;
+        this.lastScaleUpTimestamp = lastScaleUpTimestamp;
+        this.lastScaleDownTimeStamp = lastScaleDownTimeStamp;
     }
 
     public String getName() {
@@ -64,6 +69,14 @@ public class AgentPoolInstance {
 
     public long getLastUpdateTimestamp() {
         return lastUpdateTimestamp;
+    }
+
+    public long getLastScaleUpTimestamp() {
+        return lastScaleUpTimestamp;
+    }
+
+    public long getLastScaleDownTimeStamp() {
+        return lastScaleDownTimeStamp;
     }
 
     public enum Status {

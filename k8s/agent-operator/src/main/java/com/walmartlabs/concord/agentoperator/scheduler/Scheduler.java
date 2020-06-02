@@ -131,7 +131,9 @@ public class Scheduler {
     private void onAdd(String resourceName, AgentPool resource) {
         int targetSize = resource.getSpec().getSize();
         synchronized (pools) {
-            pools.put(resourceName, new AgentPoolInstance(resourceName, resource, AgentPoolInstance.Status.ACTIVE, targetSize, System.currentTimeMillis()));
+            long currentTimeStamp = System.currentTimeMillis();
+            pools.put(resourceName, new AgentPoolInstance(resourceName, resource, AgentPoolInstance.Status.ACTIVE,
+                    targetSize, currentTimeStamp, currentTimeStamp, currentTimeStamp));
         }
     }
 
@@ -151,7 +153,7 @@ public class Scheduler {
             return;
         }
 
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query();
+        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED");
 
         AgentPoolConfiguration spec = i.getResource().getSpec();
         if (!spec.isAutoScale()) {
