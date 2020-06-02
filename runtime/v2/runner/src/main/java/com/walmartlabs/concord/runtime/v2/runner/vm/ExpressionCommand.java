@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
@@ -62,7 +63,11 @@ public class ExpressionCommand extends StepCommand<Expression> {
         ExpressionOptions opts = step.getOptions();
         String out = opts != null ? opts.out() : null;
 
-        Object v = ee.eval(EvalContextFactory.global(ctx), expr, Object.class);
+        String segmentId = ctx.execution().correlationId().toString();
+
+        Object v = SegmentedLogger.withLogSegment("expression", segmentId,
+                        () -> ee.eval(EvalContextFactory.global(ctx), expr, Object.class));
+
         if (out != null) {
             if (v != null && !(v instanceof Serializable)) {
                 String msg = String.format("The expression's (%s) result is not a Serializable value, it cannot be saved as a flow variable: %s", expr, v.getClass());
