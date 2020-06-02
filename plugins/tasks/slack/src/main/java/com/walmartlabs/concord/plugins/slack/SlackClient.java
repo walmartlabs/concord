@@ -207,7 +207,7 @@ public class SlackClient implements AutoCloseable {
         } else {
             String s = EntityUtils.toString(response.getEntity());
             r = objectMapper.readValue(s, Response.class);
-            log.info("exec ['{}', '{}'] -> {}", command, json, r);
+            log.debug("exec ['{}', '{}'] -> {}", command, json, r);
         }
 
         return r;
