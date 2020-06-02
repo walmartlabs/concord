@@ -47,11 +47,13 @@ public class InMemoryState implements Serializable, State {
 
     private long threadIdSeq = 0;
 
-    public InMemoryState(Command cmd) {
+    public InMemoryState(Frame rootFrame) {
         this.rootThreadId = nextThreadId();
+        pushFrame(rootThreadId, rootFrame);
+    }
 
-        // the initial frame is always a "root" frame
-        pushFrame(rootThreadId, Frame.builder()
+    public InMemoryState(Command cmd) {
+        this(Frame.builder()
                 .root()
                 .commands(cmd)
                 .build());

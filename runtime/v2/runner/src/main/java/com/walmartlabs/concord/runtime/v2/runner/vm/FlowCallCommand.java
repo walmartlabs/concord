@@ -55,25 +55,65 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         Context ctx = contextFactory.create(runtime, state, threadId, getStep());
         EvalContext evalCtx = EvalContextFactory.global(ctx);
+
         FlowCall call = getStep();
-        String flowName = expressionEvaluator.eval(evalCtx, call.getFlowName(), String.class);
-
-        Compiler compiler = runtime.getService(Compiler.class);
-
-        // the called flow's steps
-        Command cmd = CompilerUtils.compile(compiler, pd, flowName);
 
         FlowCallOptions opts = call.getOptions();
+
+        // the called flow's name
+        String flowName = expressionEvaluator.eval(evalCtx, call.getFlowName(), String.class);
+
+        // the called flow's steps
+        Compiler compiler = runtime.getService(Compiler.class);
+        Command steps = CompilerUtils.compile(compiler, pd, flowName);
+
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base
-        Frame inner = Frame.builder()
+        Frame innerFrame = Frame.builder()
                 .root()
-                .commands(cmd)
+                .commands(steps)
                 .locals(input)
                 .build();
 
-        state.pushFrame(threadId, inner);
+        // an "out" handler
+
+        String outVar = opts.out(); // TODO support for multiple out variables
+        Command processOutVars = new ProcessOutVariablesCommand(outVar, innerFrame);
+
+        // push the out handler first so it executes after the called flow's frame is done
+        state.peekFrame(threadId).push(processOutVars);
+        state.pushFrame(threadId, innerFrame);
+    }
+
+    public static class ProcessOutVariablesCommand implements Command {
+
+        private static final long serialVersionUID = 1L;
+
+        private final String outVar;
+        private final Frame innerFrame;
+
+        public ProcessOutVariablesCommand(String outVar, Frame innerFrame) {
+            this.outVar = outVar;
+            this.innerFrame = innerFrame;
+        }  // TODO refactor
+
+        @Override
+        public void eval(Runtime runtime, State state, ThreadId threadId) {
+            Frame outerFrame = state.peekFrame(threadId);
+            outerFrame.pop();
+
+            if (outVar == null) {
+                return;
+            }
+
+            // grab the out variable from the called flow's frame
+            if (innerFrame.hasLocal(outVar)) {
+                Object v = innerFrame.getLocal(outVar);
+                // and put it into the callee's frame
+                VMUtils.putLocal(outerFrame, outVar, v);
+            }
+        }
     }
 }

@@ -83,7 +83,7 @@ public class VM {
 
     /**
      * Executes a single command using the provided state.
-     * Doesn't firing any {@link #listeners} and doesn't unwind the stack in
+     * Doesn't fire any {@link #listeners} and doesn't unwind the stack in
      * case or errors.
      */
     public void run(State state, Command cmd) {
