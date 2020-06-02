@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {Button, Icon, Popup, Table} from 'semantic-ui-react';
+import { Icon, Popup, Table } from 'semantic-ui-react';
 import { ConcordId } from '../../../api/common';
 import { ProcessStatus } from '../../../api/process';
 import { ProcessElementEvent, ProcessEventEntry } from '../../../api/process/event';
@@ -46,7 +46,7 @@ const renderDefinitionId = (
         return processDefinitionId;
     }
 
-    return (<Popup content={fileName} trigger={<span>{processDefinitionId}</span>} />);
+    return <Popup content={fileName} trigger={<span>{processDefinitionId}</span>} />;
 };
 
 const renderTimestamp = (

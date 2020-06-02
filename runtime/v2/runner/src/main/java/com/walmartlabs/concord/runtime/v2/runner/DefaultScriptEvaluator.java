@@ -23,6 +23,8 @@ package com.walmartlabs.concord.runtime.v2.runner;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.sdk.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.script.Bindings;
@@ -33,6 +35,8 @@ import java.io.Reader;
 import java.util.Map;
 
 public class DefaultScriptEvaluator implements ScriptEvaluator {
+
+    private static final Logger log = LoggerFactory.getLogger(MetadataProcessor.class);
 
     // TODO: deprecate "execution"? what about scripts - can't use "context" there?
     private static final String[] CONTEXT_VARIABLE_NAMES = {Constants.Context.CONTEXT_KEY, "execution"};
@@ -59,6 +63,7 @@ public class DefaultScriptEvaluator implements ScriptEvaluator {
             b.put(ctxVar, context);
         }
         b.put("tasks", new TaskAccessor(taskProviders, context));
+        b.put("log", log);
         b.putAll(variables);
 
         try {
