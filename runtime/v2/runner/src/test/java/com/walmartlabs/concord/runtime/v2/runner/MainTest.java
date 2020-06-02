@@ -530,6 +530,25 @@ public class MainTest {
         assertLog(log, ".*" + Pattern.quote("result: {result=abc}") + ".*");
     }
 
+    @Test
+    public void testVarScoping() throws Exception {
+        deploy("varScoping");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("x", 123)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*1: 123.*");
+        assertLog(log, ".*a: 123.*");
+        assertLog(log, ".*2: false.*");
+        assertLog(log, ".*3: 345.*");
+        assertLog(log, ".*4: 456.*");
+        assertLog(log, ".*c: 456.*");
+        assertLog(log, ".*5: 567.*");
+
+    }
+
     private void deploy(String resource) throws URISyntaxException, IOException {
         Path src = Paths.get(MainTest.class.getResource(resource).toURI());
         IOUtils.copy(src, workDir);

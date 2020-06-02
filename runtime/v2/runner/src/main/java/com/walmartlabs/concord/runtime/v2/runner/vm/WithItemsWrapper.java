@@ -137,13 +137,9 @@ public class WithItemsWrapper implements Command {
             Frame frame = state.peekFrame(threadId);
             frame.pop();
 
-            List<Serializable> items = VMUtils.getLocal(state, threadId, CURRENT_ITEMS, VMUtils.LookupType.ONLY_CURRENT);
-            if (items == null) {
-                throw new IllegalStateException("Can't find a frame-local variable containing the 'withItems' items. This is most likely a bug.");
-            }
+            List<Serializable> items = VMUtils.assertLocal(state, threadId, CURRENT_ITEMS);
 
-            int index = VMUtils.getLocal(state, threadId, CURRENT_INDEX, VMUtils.LookupType.ONLY_CURRENT);
-
+            int index = VMUtils.assertLocal(state, threadId, CURRENT_INDEX);
             if (index + 1 >= items.size()) {
                 // end of the line, do nothing
                 return;

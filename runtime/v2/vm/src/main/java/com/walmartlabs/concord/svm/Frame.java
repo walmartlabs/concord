@@ -93,6 +93,10 @@ public class Frame implements Serializable {
         this.exceptionHandler = null;
     }
 
+    public boolean hasLocal(String k) {
+        return locals.containsKey(k);
+    }
+
     public void setLocal(String k, Serializable v) {
         locals.put(k, v);
     }
@@ -150,6 +154,11 @@ public class Frame implements Serializable {
             return this;
         }
 
+        /**
+         * Add one or more commands to the frame's stack. Commands will be pushed
+         * to the stack in the original order which means that the first command
+         * in the {@code cmds} array will be executed last.
+         */
         public Builder commands(Command... cmds) {
             if (cmds == null || cmds.length == 0) {
                 return this;

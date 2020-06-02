@@ -27,10 +27,7 @@ import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
 
 public class ContextVariables implements Variables {
 
@@ -42,12 +39,16 @@ public class ContextVariables implements Variables {
 
     @Override
     public Object get(String key) {
-        return VMUtils.mapLocals(frames(), key, Function.identity());
+        State state = ctx.execution().state();
+        ThreadId threadId = ctx.execution().currentThreadId();
+        return VMUtils.getCombinedLocal(state, threadId, key);
     }
 
     @Override
     public boolean has(String key) {
-        return VMUtils.mapLocals(frames(), key, Objects::nonNull);
+        State state = ctx.execution().state();
+        ThreadId threadId = ctx.execution().currentThreadId();
+        return VMUtils.hasCombinedLocal(state, threadId, key);
     }
 
     @Override
@@ -60,12 +61,6 @@ public class ContextVariables implements Variables {
 
     @Override
     public Map<String, Object> toMap() {
-        return VMUtils.getLocals(ctx);
-    }
-
-    private List<Frame> frames() {
-        ThreadId threadId = ctx.execution().currentThreadId();
-        State state = ctx.execution().state();
-        return state.getFrames(threadId);
+        return VMUtils.getCombinedLocals(ctx);
     }
 }

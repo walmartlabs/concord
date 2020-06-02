@@ -1,0 +1,33 @@
+flows:
+  default:
+    - log: "1: ${x}"
+    - call: flowA
+    - log: "2: ${hasVariable('y')}"
+    - call: flowB
+      out: y
+    - log: "3: ${y}"
+    - set:
+        z: 456
+    - log: "4: ${z}"
+    - call: flowC
+      out: z
+    - log: "5: ${z}"
+
+  flowA:
+    - log: "a: ${x}"
+    - set:
+        y: 234
+
+  flowB:
+    - set:
+        y: 345
+
+  flowC:
+    - log: "c: ${z}"
+    - call: flowD
+      out: z
+
+  flowD:
+    - set:
+        z: 567
+

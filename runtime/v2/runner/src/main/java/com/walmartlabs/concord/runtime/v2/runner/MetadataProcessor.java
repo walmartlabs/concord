@@ -90,7 +90,7 @@ public class MetadataProcessor implements ExecutionListener {
             return Result.CONTINUE;
         }
 
-        Map<String, Object> vars = VMUtils.getLocals(state, threadId);
+        Map<String, Object> vars = VMUtils.getCombinedLocals(state, threadId);
 
         Map<String, Object> meta = filter(vars, metaVariables);
         if (meta.isEmpty() || !changed(currentMeta.get(), meta)) {

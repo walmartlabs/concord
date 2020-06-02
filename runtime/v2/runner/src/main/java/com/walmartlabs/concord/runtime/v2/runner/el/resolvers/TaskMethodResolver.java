@@ -31,11 +31,10 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.el.ELContext;
 import javax.inject.Named;
-
 import java.util.Arrays;
 
-import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
+import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
 
 public class TaskMethodResolver extends javax.el.BeanELResolver {
 

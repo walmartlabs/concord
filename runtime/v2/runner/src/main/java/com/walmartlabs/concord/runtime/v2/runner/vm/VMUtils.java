@@ -33,12 +33,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public final class VMUtils {
 
     /**
-     * Evaluates input using all currently available variables.
+     * Evaluates a step's {@code in} section using all currently available variables.
      */
     public static Map<String, Object> prepareInput(ExpressionEvaluator ee,
                                                    Context ctx,
@@ -53,29 +52,86 @@ public final class VMUtils {
         return Collections.unmodifiableMap(input);
     }
 
+    /**
+     * Returns a local variable {@code key} or throws an {@link IllegalStateException}
+     * if the variable doesn't exist or {@code null}.
+     * <p/>
+     * Only the current frame is considered.
+     */
+    public static <T> T assertLocal(State state, ThreadId threadId, String key) {
+        T v = getLocal(state, threadId, key);
+        if (v == null) {
+            throw new IllegalStateException("Variable doesn't exist or has a null value: " + key);
+        }
+        return v;
+    }
+
+    /**
+     * Returns a local variable {@code key} or {@code null} if the variable
+     * doesn't exist or {@code null}.
+     * <p/>
+     * Only the current frame is considered.
+     */
     @SuppressWarnings("unchecked")
-    public static <T> T getLocal(State state, ThreadId threadId, String key, LookupType lookupType) {
-        switch (lookupType) {
-            case ONLY_CURRENT: {
-                return (T) state.peekFrame(threadId).getLocal(key);
-            }
-            case INCLUDE_ANCESTORS: {
-                List<Frame> frames = state.getFrames(threadId);
-                return (T) mapLocals(frames, key, Function.identity());
-            }
-            default: {
-                throw new IllegalArgumentException("Unsupported lookup type: " + lookupType);
+    public static <T> T getLocal(State state, ThreadId threadId, String key) {
+        Serializable v = state.peekFrame(threadId).getLocal(key);
+        if (v == null) {
+            return null;
+        }
+
+        return (T) v;
+    }
+
+    /**
+     * Returns a local variable {@code key} or {@code null} if the variable
+     * doesn't exist or {@code null}.
+     * <p/>
+     * The method scans all frames starting from the most recent one and returns
+     * the first found element.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T getCombinedLocal(State state, ThreadId threadId, String key) {
+        List<Frame> frames = state.getFrames(threadId);
+
+        for (Frame f : frames) {
+            if (f.hasLocal(key)) {
+                return (T) f.getLocal(key);
             }
         }
+
+        return null;
     }
 
-    public static Map<String, Object> getLocals(Context ctx) {
+    /**
+     * Returns {@code} true if a local variable {@code key} exists.
+     * <p/>
+     * The method scans all frames starting from the most recent one.
+     */
+    public static boolean hasCombinedLocal(State state, ThreadId threadId, String key) {
+        List<Frame> frames = state.getFrames(threadId);
+
+        for (Frame f : frames) {
+            if (f.hasLocal(key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @see #getCombinedLocals(State, ThreadId)
+     */
+    public static Map<String, Object> getCombinedLocals(Context ctx) {
         ThreadId threadId = ctx.execution().currentThreadId();
         State state = ctx.execution().state();
-        return getLocals(state, threadId);
+        return getCombinedLocals(state, threadId);
     }
 
-    public static Map<String, Object> getLocals(State state, ThreadId threadId) {
+    /**
+     * Returns a map of all variables combined, starting from the bottom of the stack.
+     */
+    public static Map<String, Object> getCombinedLocals(State state, ThreadId threadId) {
         Map<String, Object> result = new LinkedHashMap<>();
 
         List<Frame> frames = state.getFrames(threadId);
@@ -87,6 +143,10 @@ public final class VMUtils {
         return Collections.unmodifiableMap(result);
     }
 
+    /**
+     * Puts a local variable into the specified frame.
+     * Only {@link Serializable} values are allowed.
+     */
     public static void putLocal(Frame frame, String key, Object value) {
         if (value instanceof Serializable) {
             frame.setLocal(key, (Serializable) value);
@@ -97,6 +157,12 @@ public final class VMUtils {
         throw new IllegalStateException(String.format(msg, key, value.getClass()));
     }
 
+    /**
+     * Puts all key-value pairs into the specified frame as locals.
+     * Only {@link Serializable} values are allowed.
+     *
+     * @see #putLocal(Frame, String, Object)
+     */
     public static void putLocals(Frame frame, Map<String, Object> locals) {
         if (locals == null || locals.isEmpty()) {
             return;
@@ -105,37 +171,16 @@ public final class VMUtils {
         locals.forEach((k, v) -> putLocal(frame, k, v));
     }
 
-    /**
-     * Applies {@code fn} to each local variable, starting from the most recent frame.
-     */
-    public static <T> T mapLocals(List<Frame> frames, String key, Function<Object, T> fn) {
-        for (Frame f : frames) {
-            Object v = f.getLocal(key);
-            if (v != null) {
-                return fn.apply(v);
-            }
+    public static Frame assertNearestRoot(State state, ThreadId threadId) {
+        List<Frame> frames = state.getFrames(threadId);
 
+        for (Frame f : frames) {
             if (f.getType() == FrameType.ROOT) {
-                break;
+                return f;
             }
         }
 
-        return fn.apply(null);
-    }
-
-    public enum LookupType {
-
-        /**
-         * Check only the current frame.
-         */
-        ONLY_CURRENT,
-
-        /**
-         * Check the current frame and all its ancestors up to the nearest
-         * {@link FrameType#ROOT} frame. If the current is a {@link FrameType#ROOT}
-         * frame then act like it's a {@link #ONLY_CURRENT} lookup.
-         */
-        INCLUDE_ANCESTORS
+        throw new IllegalStateException("Can't find a nearest ROOT frame. This is most likely a bug.");
     }
 
     private VMUtils() {

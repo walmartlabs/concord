@@ -22,8 +22,10 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
 
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.AllVariablesFunction;
 import com.walmartlabs.concord.runtime.v2.runner.el.functions.HasVariableFunction;
-import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.BeanELResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskMethodResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.TaskResolver;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.VariableResolver;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 
 import javax.el.*;

@@ -43,17 +43,18 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
 
     @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        Frame frame = state.peekFrame(threadId);
-        frame.pop();
+        state.peekFrame(threadId).pop();
 
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
         Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
-
         SetVariablesStep step = getStep();
 
+        // eval the input
         Map<String, Object> v = ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars());
-        VMUtils.putLocals(frame, v);
+
+        Frame root = VMUtils.assertNearestRoot(state, threadId);
+        VMUtils.putLocals(root, v);
     }
 }
