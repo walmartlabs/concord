@@ -26,10 +26,7 @@ import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -348,7 +345,52 @@ public class CrudIT extends AbstractServerIT {
         TeamEntry teamEntry = teamsApi.get(orgName, updatedTeamName);
         assertEquals(teamResponse.getId(), teamEntry.getId());
         assertEquals(updatedTeamName, teamEntry.getName());
+    }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testTeamManagementWithUserIds() throws Exception {
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName));
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+
+        String userAName = "userA_" + randomString();
+        CreateUserResponse curA = usersApi.createOrUpdate(new CreateUserRequest()
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setUsername(userAName));
+
+        String userBName = "userB_" + randomString();
+        CreateUserResponse curB = usersApi.createOrUpdate(new CreateUserRequest()
+                .setType(CreateUserRequest.TypeEnum.LOCAL)
+                .setUsername(userBName));
+
+        TeamsApi teamsApi = new TeamsApi(getApiClient());
+
+        String teamName = "team_" + randomString();
+        teamsApi.createOrUpdate(orgName, new TeamEntry()
+                .setName(teamName));
+
+        // ---
+
+        List<TeamUserEntry> l = teamsApi.listUsers(orgName, teamName);
+        assertEquals(1, l.size());
+        assertEquals("admin", l.get(0).getUsername());
+
+        // ---
+
+        teamsApi.addUsers(orgName, teamName, true, Arrays.asList(
+                new TeamUserEntry().setUserId(curA.getId()),
+                new TeamUserEntry().setUserId(curB.getId())));
+
+        // ---
+
+        l = teamsApi.listUsers(orgName, teamName);
+        assertEquals(2, l.size());
+        assertEquals(userAName, l.get(0).getUsername());
+        assertEquals(userBName, l.get(1).getUsername());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -728,16 +770,16 @@ public class CrudIT extends AbstractServerIT {
 
         // -- move project to second organization by org Name
         ProjectOperationResponse moveResponse = projectsApi.createOrUpdate(orgName, new ProjectEntry()
-        .setName(projectName)
-        .setOrgName(secondOrgName));
+                .setName(projectName)
+                .setOrgName(secondOrgName));
         assertTrue(moveResponse.isOk());
         assertEquals("UPDATED", moveResponse.getResult().getValue());
         assertNotNull(projectsApi.get(secondOrgName, projectName));
 
         // -- move project back to Default organization by org Id
         moveResponse = projectsApi.createOrUpdate(secondOrgName, new ProjectEntry()
-        .setName(projectName)
-        .setOrgId(defaultOrgId));
+                .setName(projectName)
+                .setOrgId(defaultOrgId));
         assertTrue(moveResponse.isOk());
         assertEquals("UPDATED", moveResponse.getResult().getValue());
         assertNotNull(projectsApi.get(orgName, projectName));
