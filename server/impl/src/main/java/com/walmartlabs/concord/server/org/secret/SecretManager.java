@@ -81,7 +81,6 @@ public class SecretManager {
     private final UserDao userDao;
     private final ProjectAccessManager projectAccessManager;
     private final RepositoryDao repositoryDao;
-    private final OrganizationDao organizationDao;
 
     @Inject
     public SecretManager(PolicyManager policyManager,
@@ -93,8 +92,7 @@ public class SecretManager {
                          SecretStoreProvider secretStoreProvider,
                          UserDao userDao,
                          ProjectAccessManager projectAccessManager,
-                         RepositoryDao repositoryDao,
-                         OrganizationDao organizationDao) {
+                         RepositoryDao repositoryDao) {
 
         this.policyManager = policyManager;
         this.processQueueManager = processQueueManager;
@@ -106,7 +104,6 @@ public class SecretManager {
         this.auditLog = auditLog;
         this.projectAccessManager = projectAccessManager;
         this.repositoryDao = repositoryDao;
-        this.organizationDao = organizationDao;
     }
 
     @WithTimer
@@ -199,9 +196,8 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create(publicKey, privateKey);
-        validate(k);
-
         UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
+
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
@@ -628,27 +624,6 @@ public class SecretManager {
                 throw new IllegalArgumentException("Unknown secret type: " + type);
         }
         return deserializer.apply(data);
-    }
-
-    private static void validate(KeyPair k) {
-        byte[] pub = k.getPublicKey();
-        byte[] priv = k.getPrivateKey();
-
-        // with a 1024 bit key, the minimum size of a public RSA key file is 226 bytes
-        if (pub == null || pub.length < 226) {
-            throw new IllegalArgumentException("Invalid public key file size");
-        }
-
-        // 887 bytes is the minimum file size of a 1024 bit RSA private key
-        if (priv == null || priv.length < 800) {
-            throw new IllegalArgumentException("Invalid private key file size");
-        }
-
-        try {
-            KeyPairUtils.validateKeyPair(pub, priv);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid key pair data", e);
-        }
     }
 
     private static SecretEncryptedByType getEncryptedBy(String pwd) {
