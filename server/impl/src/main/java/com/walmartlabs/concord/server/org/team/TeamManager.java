@@ -131,7 +131,7 @@ public class TeamManager {
     public void addUsers(String orgName, String teamName, boolean replace, Collection<TeamUserEntry> users) {
         TeamEntry t = assertTeam(orgName, teamName, TeamRole.MAINTAINER, true, true);
 
-        Map<String, UUID> userIds = new HashMap<>();
+        Map<UUID, TeamRole> effectiveUsers = new HashMap<>();
         for (TeamUserEntry u : users) {
             UserType type = u.getUserType();
             if (type == null) {
@@ -143,7 +143,13 @@ public class TeamManager {
                 id = userManager.getId(u.getUsername(), u.getUserDomain(), type)
                         .orElseThrow(() -> new ConcordApplicationException("User not found: " + u.getUsername()));
             }
-            userIds.put(u.getUsername(), id);
+
+            TeamRole role = u.getRole();
+            if (role == null) {
+                role = TeamRole.MEMBER;
+            }
+
+            effectiveUsers.put(id, role);
         }
 
         teamDao.tx(tx -> {
@@ -151,13 +157,9 @@ public class TeamManager {
                 teamDao.removeUsers(tx, t.getId());
             }
 
-            for (TeamUserEntry u : users) {
-                TeamRole role = u.getRole();
-                if (role == null) {
-                    role = TeamRole.MEMBER;
-                }
-
-                UUID id = userIds.get(u.getUsername());
+            for (Map.Entry<UUID, TeamRole> u : effectiveUsers.entrySet()) {
+                UUID id = u.getKey();
+                TeamRole role = u.getValue();
                 teamDao.upsertUser(tx, t.getId(), id, role);
             }
 
