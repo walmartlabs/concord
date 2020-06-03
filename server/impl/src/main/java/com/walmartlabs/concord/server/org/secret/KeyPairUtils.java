@@ -20,9 +20,9 @@ package com.walmartlabs.concord.server.org.secret;
  * =====
  */
 
-import com.google.common.io.ByteStreams;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.secret.KeyPair;
 
 import java.io.ByteArrayOutputStream;
@@ -55,9 +55,8 @@ public final class KeyPairUtils {
     }
 
     public static KeyPair create(InputStream publicIn, InputStream privateIn) throws IOException {
-        byte[] publicKey = ByteStreams.toByteArray(publicIn);
-        byte[] privateKey = ByteStreams.toByteArray(privateIn);
-
+        byte[] publicKey = IOUtils.toByteArray(publicIn);
+        byte[] privateKey = IOUtils.toByteArray(privateIn);
         return new KeyPair(publicKey, privateKey);
     }
 
@@ -65,11 +64,6 @@ public final class KeyPairUtils {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         c.accept(out);
         return out.toByteArray();
-    }
-
-    public static void validateKeyPair(byte[] pub, byte[] priv) throws Exception {
-        JSch j = new JSch();
-        com.jcraft.jsch.KeyPair.load(j, priv, pub);
     }
 
     private KeyPairUtils() {
