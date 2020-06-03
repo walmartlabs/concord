@@ -20,32 +20,29 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.CreateInventoryQueryResponse;
-import com.walmartlabs.concord.client.InventoriesApi;
-import com.walmartlabs.concord.client.InventoryEntry;
-import com.walmartlabs.concord.client.InventoryQueriesApi;
+import com.squareup.okhttp.Call;
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiResponse;
+import com.walmartlabs.concord.client.*;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class InventoryQueryIT extends AbstractServerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testQueryWithEmptyParams() throws Exception {
-
         InventoryQueriesApi resource = new InventoryQueriesApi(getApiClient());
 
         String orgName = "Default";
         String inventoryName = "inventory" + randomString();
         String queryName = "query" + randomString();
         String text = "SELECT CAST(json_build_object('host', item_data->'host', 'ansible_host', item_data->'ip', " +
-                                "'ooInstanceName', item_data->'ooInstanceName', 'type', item_data->'type', 'profile', " +
-                                "item_data->'profile', 'zone', item_data->'zone', 'clusterInventoryRef', " +
-                                "a.item_data->'clusterInventoryRef') AS varchar) " +
+                "'ooInstanceName', item_data->'ooInstanceName', 'type', item_data->'type', 'profile', " +
+                "item_data->'profile', 'zone', item_data->'zone', 'clusterInventoryRef', " +
+                "a.item_data->'clusterInventoryRef') AS varchar) " +
                 "FROM inventory_data a " +
                 "WHERE item_data @> ?::jsonb";
 
@@ -58,5 +55,42 @@ public class InventoryQueryIT extends AbstractServerIT {
 
         List<Object> resp = resource.exec(orgName, inventoryName, queryName, new HashMap<>());
         assertNotNull(resp);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testDifferentContentTypes() throws Exception {
+        ApiClient client = getApiClient();
+
+        OrganizationsApi organizationsApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        organizationsApi.createOrUpdate(new OrganizationEntry()
+                .setName(orgName));
+
+        InventoriesApi inventoriesApi = new InventoriesApi(getApiClient());
+
+        String inventoryName = "inventory_" + randomString();
+        inventoriesApi.createOrUpdate(orgName, new InventoryEntry()
+                .setName(inventoryName));
+
+        // ---
+
+        assertQuery(client, orgName, inventoryName, "q1_" + randomString(), "text/plain");
+        assertQuery(client, orgName, inventoryName, "q2_" + randomString(), "application/json");
+    }
+
+    private static void assertQuery(ApiClient client, String orgName, String inventoryName, String queryName, String contentType) throws Exception {
+        Set<String> auths = client.getAuthentications().keySet();
+        String[] authNames = auths.toArray(new String[0]);
+
+        String data = "select * from inventory_data";
+        Map<String, String> headerParams = new HashMap<>(Collections.singletonMap("Content-Type", contentType));
+
+        Call call = client.buildCall("/api/v1/org/" + orgName + "/inventory/" + inventoryName + "/query/" + queryName,
+                "POST", new ArrayList<>(), new ArrayList<>(),
+                data, headerParams, new HashMap<>(), authNames, null);
+
+        ApiResponse<Object> response = client.execute(call, CreateInventoryQueryResponse.class);
+        assertEquals(200, response.getStatusCode());
     }
 }

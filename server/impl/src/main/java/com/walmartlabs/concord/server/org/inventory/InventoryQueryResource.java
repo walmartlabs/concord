@@ -93,7 +93,7 @@ public class InventoryQueryResource implements Resource {
      */
     @POST
     @ApiOperation("Create or update inventory query")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{orgName}/inventory/{inventoryName}/query/{queryName}")
     public CreateInventoryQueryResponse createOrUpdate(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
