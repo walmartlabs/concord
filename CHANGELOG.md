@@ -1,5 +1,42 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: `throw` step support;
+- runtime-v2: record pre/post events for task called using
+expressions;
+- runtime-v2, concord-console: show the YAML file name on
+the events tab.
+
+### Changed
+
+- concord-server: fix the adding of team members by user IDs;
+- agent-operator: the autoscaler now scales up more rapidly and
+scaled down more gradually;
+- slack: reduce chattiness in the process log by moving some
+of the log statements to `debug`;
+- runtime-v2: replace custom service injector with Guice-based
+injector;
+- runtime-v2: more details when recording step events;
+- runtime-v2: fix logging for steps without "proper"
+segments - scripts, expressions, etc;
+- runtime-v2: start the heartbeat as soon as possible;
+- runtime-v2: support for the "short form" of task calling
+has been removed;
+- concord-server: re-initialize the process initiator when
+creating a fork. This fixes an issue when a process fork is
+created using an API key that belongs to a user other than
+the parent process' current user.
+
+### Breaking
+
+- runtime-v2: support `@InjectVariable` annotations has been
+removed.
+
+
+
 ## [1.51.0] - 2020-05-27
 
 ### Added
