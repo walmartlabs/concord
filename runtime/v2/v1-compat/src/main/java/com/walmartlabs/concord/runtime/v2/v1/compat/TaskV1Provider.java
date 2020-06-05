@@ -52,7 +52,7 @@ public class TaskV1Provider implements TaskProvider {
         Class<? extends com.walmartlabs.concord.sdk.Task> klassV1 = holder.get(key);
         if (klassV1 != null) {
             com.walmartlabs.concord.sdk.Task v1Task = injector.getInstance(klassV1);
-            return new TaskV1Wrapper(v1Task, workingDirectory.getValue());
+            return new TaskV1Wrapper(ctx, v1Task, workingDirectory.getValue());
         }
 
         return null;

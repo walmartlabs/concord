@@ -36,7 +36,7 @@ import java.nio.file.Paths;
 public class ResourceTask implements Task {
 
     public String asString(String path) throws IOException {
-       return ResourceUtils.asString(path);
+       return ResourceTaskCommon.asString(path);
     }
 
     public Object asJson(String path) throws IOException {
@@ -44,8 +44,7 @@ public class ResourceTask implements Task {
     }
 
     public Object asJson(@InjectVariable("context") Context ctx, String path, boolean eval) throws IOException {
-        Object result = ResourceUtils.asJson(path);
-        return eval ? ctx.interpolate(result) : result;
+        return delegate(ctx).asJson(path, eval);
     }
 
     public Object asYaml(String path) throws IOException {
@@ -53,41 +52,45 @@ public class ResourceTask implements Task {
     }
 
     public Object asYaml(@InjectVariable("context") Context ctx, String path, boolean eval) throws IOException {
-        Object result = ResourceUtils.asYaml(path);
-        return eval ? ctx.interpolate(result) : result;
+        return delegate(ctx).asYaml(path, eval);
     }
 
     public String writeAsJson(Object content, @InjectVariable("workDir") String workDir) throws IOException {
-        Path baseDir = Paths.get(workDir);
-        Path tempFile = createTempFile(baseDir, ResourceUtils.RESOURCE_PREFIX, ResourceUtils.JSON_FILE_SUFFIX);
-        ResourceUtils.writeAsJson(content, tempFile);
-        return baseDir.relativize(tempFile.toAbsolutePath()).toString();
+        return delegate(workDir).writeAsJson(content);
     }
 
     public String writeAsString(String content, @InjectVariable("workDir") String workDir) throws IOException {
-        Path baseDir = Paths.get(workDir);
-        Path tempFile = createTempFile(baseDir, ResourceUtils.RESOURCE_PREFIX, ResourceUtils.TEXT_FILE_SUFFIX);
-        ResourceUtils.writeAsString(content, tempFile);
-        return baseDir.relativize(tempFile.toAbsolutePath()).toString();
+        return delegate(workDir).writeAsString(content);
     }
 
     public String writeAsYaml(Object content, @InjectVariable("workDir") String workDir) throws IOException {
-        Path baseDir = Paths.get(workDir);
-        Path tempFile = createTempFile(baseDir, ResourceUtils.RESOURCE_PREFIX, ResourceUtils.YAML_FILE_SUFFIX);
-        ResourceUtils.writeAsYaml(content, tempFile);
-        return baseDir.relativize(tempFile.toAbsolutePath()).toString();
+        return delegate(workDir).writeAsYaml(content);
     }
 
     public String prettyPrintJson(Object json) throws IOException {
-        return ResourceUtils.prettyPrintJson(json);
+        return ResourceTaskCommon.prettyPrintJson(json);
     }
 
-    private Path createTempFile(Path baseDir, String prefix, String suffix) throws IOException {
+    private static ResourceTaskCommon delegate(Context ctx) {
+        Evaluator evaluator = null;
+        if (ctx != null) {
+            evaluator = ctx::interpolate;
+        }
+        return new ResourceTaskCommon(null, null, evaluator);
+    }
+
+    private static ResourceTaskCommon delegate(String workDirStr) {
+        Path workDir = Paths.get(workDirStr);
+        return new ResourceTaskCommon(workDir,
+                (prefix, suffix) -> createTempFile(workDir, prefix, suffix), null);
+    }
+
+    private static Path createTempFile(Path baseDir, String prefix, String suffix) throws IOException {
         Path tempDir = assertTempDir(baseDir);
         return Files.createTempFile(tempDir, prefix, suffix);
     }
 
-    private Path assertTempDir(Path baseDir) throws IOException {
+    private static Path assertTempDir(Path baseDir) throws IOException {
         Path p = baseDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME);
         if (!p.toFile().exists()) {
             Files.createDirectories(p);

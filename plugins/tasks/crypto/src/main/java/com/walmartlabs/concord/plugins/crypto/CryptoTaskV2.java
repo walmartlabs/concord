@@ -26,7 +26,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.KeyPair;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.UsernamePassword;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 
 import javax.inject.Inject;
@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Named("crypto")
+@SuppressWarnings("unused")
 public class CryptoTaskV2 implements Task {
 
     private final SecretService secretService;
@@ -100,7 +101,7 @@ public class CryptoTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(TaskContext ctx) {
+    public Serializable execute(Variables input) {
         throw new IllegalStateException("The task doesn't support full task syntax yet. " +
                 "Please call the task using expressions.");
     }

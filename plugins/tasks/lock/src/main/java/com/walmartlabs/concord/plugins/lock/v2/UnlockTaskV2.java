@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.lock;
+package com.walmartlabs.concord.plugins.lock.v2;
 
 /*-
  * *****
@@ -21,35 +21,30 @@ package com.walmartlabs.concord.plugins.lock;
  */
 
 import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.plugins.lock.LockTaskCommon;
+import com.walmartlabs.concord.plugins.lock.TaskParams;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
-import java.util.Map;
 
 @Named("unlock")
 public class UnlockTaskV2 implements Task {
 
-    private final ApiClient apiClient;
-    private final InstanceId processInstanceId;
+    private final LockTaskCommon delegate;
 
     @Inject
-    public UnlockTaskV2(ApiClient apiClient, InstanceId processInstanceId) {
-        this.apiClient = apiClient;
-        this.processInstanceId = processInstanceId;
+    public UnlockTaskV2(ApiClient apiClient, Context context) {
+        this.delegate = new LockTaskCommon(apiClient, context.processInstanceId());
     }
 
-    public Serializable execute(TaskContext ctx) throws ApiException {
-        Map<String, Object> input = ctx.input();
-        String lockName = LockUtils.getLockName(input);
-        String scope = MapUtils.getString(input, LockUtils.SCOPE_KEY, LockUtils.PROJECT_SCOPE);
+    public Serializable execute(Variables input) throws Exception {
+        TaskParams params = new TaskParams(input);
 
-        LockUtils.unlock(processInstanceId.getValue(), lockName, scope, apiClient);
+        delegate.unlock(params.lockName(), params.scope());
 
         return null;
     }

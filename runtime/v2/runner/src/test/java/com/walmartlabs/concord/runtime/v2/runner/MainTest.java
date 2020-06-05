@@ -680,7 +680,7 @@ public class MainTest {
         Defaults defaultsTyped;
 
         @Override
-        public Serializable execute(TaskContext ctx) {
+        public Serializable execute(Variables input) {
             System.out.println("defaultsMap:" + defaultsMap);
             System.out.println("defaultsTyped:" + defaultsTyped);
             return null;
@@ -703,8 +703,8 @@ public class MainTest {
     static class WrapExpressionTask implements Task {
 
         @Override
-        public Serializable execute(TaskContext ctx) {
-            return "${" + ctx.input().get("expression") + "}";
+        public Serializable execute(Variables input) {
+            return "${" + input.get("expression") + "}";
         }
     }
 
@@ -713,8 +713,8 @@ public class MainTest {
     static class TestTask implements Task {
 
         @Override
-        public Serializable execute(TaskContext ctx) {
-            return new HashMap<>(ctx.input());
+        public Serializable execute(Variables input) {
+            return new HashMap<>(input.toMap());
         }
     }
 
@@ -726,7 +726,7 @@ public class MainTest {
         private static final Logger processLog = LoggerFactory.getLogger("processLog");
 
         @Override
-        public Serializable execute(TaskContext ctx) throws Exception {
+        public Serializable execute(Variables input) throws Exception {
             log.info("This goes into a regular log");
             processLog.info("This is a processLog entry");
             System.out.println("This goes directly into the stdout");
@@ -789,7 +789,7 @@ public class MainTest {
     static class FaultyTask implements Task {
 
         @Override
-        public Serializable execute(TaskContext ctx) {
+        public Serializable execute(Variables input) {
             throw new RuntimeException("boom!");
         }
     }

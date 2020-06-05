@@ -23,14 +23,13 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.context.TaskContextImpl;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -73,12 +72,8 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
             throw new IllegalStateException("Task not found: " + taskName);
         }
 
-        TaskCallOptions opts = call.getOptions();
-        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
-
         TaskCallInterceptor interceptor = runtime.getService(TaskCallInterceptor.class);
 
-        TaskContext taskContext = new TaskContextImpl(ctx, taskName, input);
         CallContext callContext = CallContext.builder()
                 .taskName(taskName)
                 .correlationId(ctx.execution().correlationId())
@@ -86,10 +81,13 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .processDefinition(ctx.execution().processDefinition())
                 .build();
 
+        TaskCallOptions opts = call.getOptions();
+        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
+
         String segmentId = ctx.execution().correlationId().toString();
         Serializable result = SegmentedLogger.withLogSegment(taskName, segmentId,
-                () -> interceptor.invoke(callContext, Method.of("execute", taskContext),
-                        () -> t.execute(taskContext)));
+                () -> interceptor.invoke(callContext, Method.of("execute", input),
+                        () -> t.execute(new MapBackedVariables(input))));
 
         String out = opts.out();
         if (out != null) {

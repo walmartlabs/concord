@@ -20,6 +20,11 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.HasKey;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public interface Variables {
@@ -31,4 +36,57 @@ public interface Variables {
     boolean has(String key);
 
     Map<String, Object> toMap();
+
+    default String getString(String key, String defaultValue) {
+        return get(key, defaultValue, String.class);
+    }
+
+    default String assertString(String key) {
+        return assertVariable(key, String.class);
+    }
+
+    default Number getNumber(String key, Number defaultValue) {
+        return get(key, defaultValue, Number.class);
+    }
+
+    default boolean getBoolean(String key, boolean defaultValue) {
+        Boolean result = get(key, defaultValue, Boolean.class);
+        if (result == null) {
+            return defaultValue;
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    default  <E> Collection<E> getCollection(String key, List<E> defaultValue) {
+        return get(key, defaultValue, Collection.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    default <K, V> Map<K, V> getMap(String key, Map<K, V> defaultValue) {
+        return get(key, defaultValue, Map.class);
+    }
+
+    default  <T> T assertVariable(String key, Class<T> type) {
+        T result = get(key, null, type);
+
+        if (result != null) {
+            return result;
+        }
+
+        throw new IllegalArgumentException("Mandatory variable '" + key + "' is required");
+    }
+
+    default <T> T get(String key, T defaultValue, Class<T> type) {
+        Object value = get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        if (type.isInstance(value)) {
+            return type.cast(value);
+        }
+
+        throw new IllegalArgumentException("Invalid variable '" + key + "' type, expected: " + type + ", got: " + value.getClass());
+    }
 }

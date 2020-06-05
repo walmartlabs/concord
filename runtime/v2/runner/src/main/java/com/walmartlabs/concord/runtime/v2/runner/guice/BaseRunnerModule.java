@@ -30,11 +30,9 @@ import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.context.DefaultContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallPolicyChecker;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskResultListener;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskV2Provider;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.FileService;
 import com.walmartlabs.concord.runtime.v2.sdk.TaskProvider;
 
@@ -55,6 +53,7 @@ public class BaseRunnerModule extends AbstractModule {
         bind(ResourceResolver.class).to(DefaultResourceResolver.class);
         bind(TaskResultService.class);
         bind(FormService.class).toProvider(FormServiceProvider.class);
+        bind(Context.class).toProvider(ContextProvider.class);
 
         Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
         taskProviders.addBinding().to(TaskV2Provider.class);

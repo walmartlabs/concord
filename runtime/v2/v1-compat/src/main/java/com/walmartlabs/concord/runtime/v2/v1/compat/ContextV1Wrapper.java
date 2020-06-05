@@ -20,22 +20,23 @@ package com.walmartlabs.concord.runtime.v2.v1.compat;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import java.io.Serializable;
 import java.util.*;
 
 public class ContextV1Wrapper implements com.walmartlabs.concord.sdk.Context {
 
-    private final TaskContext ctx;
+    private final Context ctx;
     private final Map<String, Object> allVariables = new HashMap<>();
     private final Map<String, Serializable> result;
 
-    public ContextV1Wrapper(TaskContext ctx, Map<String, Serializable> result) {
+    public ContextV1Wrapper(Context ctx, Variables input, Map<String, Serializable> result) {
         this.ctx = ctx;
         this.result = result;
 
-        this.allVariables.putAll(collectAllVariables(ctx));
+        this.allVariables.putAll(input.toMap());
     }
 
     @Override
@@ -130,9 +131,5 @@ public class ContextV1Wrapper implements com.walmartlabs.concord.sdk.Context {
 
     public Map<String, Object> getAllVariables() {
         return new HashMap<>(allVariables);
-    }
-
-    private static Map<String, Object> collectAllVariables(TaskContext ctx) {
-        return new HashMap<>(ctx.input());
     }
 }

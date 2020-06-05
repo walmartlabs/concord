@@ -21,10 +21,9 @@ package com.walmartlabs.concord.plugins.dynamic;
  */
 
 import com.google.inject.Injector;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
-import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,12 +35,12 @@ import java.nio.file.Path;
 @SuppressWarnings("unused")
 public class LoadTasksTaskV2 implements Task {
 
+    private final Context context;
     private final TaskRegistry taskRegistry;
-    private final WorkingDirectory workDir;
 
     @Inject
     @SuppressWarnings("unchecked")
-    public LoadTasksTaskV2(Injector injector, WorkingDirectory workDir) {
+    public LoadTasksTaskV2(Injector injector, Context context) {
         this.taskRegistry = clazz -> {
             if (Task.class.isAssignableFrom(clazz)) {
                 injector.getBinding(clazz);
@@ -49,16 +48,16 @@ public class LoadTasksTaskV2 implements Task {
                 throw new RuntimeException("Unknown task type: " + clazz);
             }
         };
-        this.workDir = workDir;
+        this.context = context;
     }
 
     @Override
-    public Serializable execute(TaskContext ctx) throws Exception {
-        String path = MapUtils.assertString(ctx.input(), "0");
+    public Serializable execute(Variables input) throws Exception {
+        String path = input.assertString("path");
 
-        Path src = workDir.getValue().resolve(path);
+        Path src = context.workingDirectory().resolve(path);
         if (!Files.exists(src) || !Files.isDirectory(src)) {
-            throw new RuntimeException("Path not found or not a directory: " + workDir.getValue().relativize(src));
+            throw new RuntimeException("Path not found or not a directory: " + context.workingDirectory().relativize(src));
         }
 
         new TaskLoader(taskRegistry).load(src);

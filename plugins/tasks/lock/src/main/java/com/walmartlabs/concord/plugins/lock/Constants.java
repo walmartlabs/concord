@@ -1,17 +1,17 @@
-package com.walmartlabs.concord.runtime.v2.sdk;
+package com.walmartlabs.concord.plugins.lock;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,15 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import java.io.Serializable;
+public final class Constants {
 
-/**
- * Task interface. All implementations should be annotated with {@code @Named}
- * using process-wide unique names.
- */
-public interface Task {
+    public static final int RETRY_COUNT = 3;
+    public static final long RETRY_INTERVAL = 5000;
 
-    /**
-     * This method is called when the task is invoked using the {@code task} syntax.
-     */
-    default Serializable execute(Variables input) throws Exception {
-        throw new IllegalStateException("The task doesn't support full task syntax yet. " +
-                "Please call the task using expressions.");
+    public static final String LOCK_NAME_KEY = "name";
+    public static final String SCOPE_KEY = "scope";
+    public static final String PROJECT_SCOPE = "PROJECT";
+
+    private Constants() {
     }
 }

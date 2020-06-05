@@ -1,0 +1,78 @@
+package com.walmartlabs.concord.plugins.resource.v2;
+
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2020 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+import com.walmartlabs.concord.plugins.resource.ResourceTaskCommon;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.IOException;
+
+@Named("resource")
+@SuppressWarnings("unused")
+public class ResourceTaskV2 implements Task {
+
+    private final ResourceTaskCommon delegate;
+
+    @Inject
+    public ResourceTaskV2(com.walmartlabs.concord.runtime.v2.sdk.FileService fileService,
+                          Context ctx) {
+        this.delegate = new ResourceTaskCommon(ctx.workingDirectory(), fileService::createTempFile, v -> ctx.eval(v, Object.class));
+    }
+
+    public String asString(String path) throws IOException {
+        return delegate.asString(path);
+    }
+
+    public Object asJson(String path) throws IOException {
+        return delegate.asJson(path);
+    }
+
+    public Object asJson(String path, boolean eval) throws IOException {
+        return delegate.asJson(path, eval);
+    }
+
+    public Object asYaml(String path) throws IOException {
+        return delegate.asYaml(path);
+    }
+
+    public Object asYaml(String path, boolean eval) throws IOException {
+        return delegate.asYaml(path, eval);
+    }
+
+    public String writeAsJson(Object content) throws IOException {
+        return delegate.writeAsJson(content);
+    }
+
+    public String writeAsString(String content) throws IOException {
+        return delegate.writeAsString(content);
+    }
+
+    public String writeAsYaml(Object content) throws IOException {
+        return delegate.writeAsYaml(content);
+    }
+
+    public String prettyPrintJson(Object json) throws IOException {
+        return delegate.prettyPrintJson(json);
+    }
+}

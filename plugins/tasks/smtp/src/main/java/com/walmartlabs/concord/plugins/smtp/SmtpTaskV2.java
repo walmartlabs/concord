@@ -20,66 +20,57 @@ package com.walmartlabs.concord.plugins.smtp;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
-import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
 
 @Named("smtp")
 public class SmtpTaskV2 implements Task {
 
-    private final WorkingDirectory workDir;
+    private final Context ctx;
 
     @Inject
-    public SmtpTaskV2(WorkingDirectory workDir) {
-        this.workDir = workDir;
+    public SmtpTaskV2(Context ctx) {
+        this.ctx = ctx;
     }
 
     @Override
-    public Serializable execute(TaskContext ctx) throws Exception {
-        Map<String, Object> smtp = getCfg(ctx, Constants.SMTP_PARAMS_KEY, Constants.SMTP_KEY);
-        Map<String, Object> mail = getCfg(ctx, Constants.MAIL_PARAMS_KEY, Constants.MAIL_KEY);
-        Path baseDir = getWorkDir();
+    public Serializable execute(Variables input) throws Exception {
+        Map<String, Object> smtp = getCfg(ctx, input, Constants.SMTP_PARAMS_KEY, Constants.SMTP_KEY);
+        Map<String, Object> mail = getCfg(ctx, input, Constants.MAIL_PARAMS_KEY, Constants.MAIL_KEY);
+        Path baseDir = ctx.workingDirectory();
         Object scope = getScope(ctx, mail);
-        boolean debug = MapUtils.getBoolean(ctx.input(), Constants.DEBUG_KEY, false);
+        boolean debug = input.getBoolean(Constants.DEBUG_KEY, false);
 
         SmtpTaskUtils.send(smtp, mail, baseDir, scope, debug);
         return null;
     }
 
-    private Path getWorkDir() {
-        if (workDir.getValue() != null) {
-            return workDir.getValue();
-        }
-        return Paths.get(System.getProperty("user.dir"));
-    }
-
-    private static Object getScope(TaskContext ctx, Map<String, Object> mailParams) {
+    private static Object getScope(Context ctx, Map<String, Object> mailParams) {
         Map<String, Object> ctxParams = ctx != null ? ctx.variables().toMap() : Collections.emptyMap();
         return SmtpTaskUtils.getScope(mailParams, ctxParams);
     }
 
-    private Map<String, Object> getCfg(TaskContext ctx, String a, String b) {
-        Map<String, Object> m = getMap(ctx, a);
+    private Map<String, Object> getCfg(Context ctx, Variables input, String a, String b) {
+        Map<String, Object> m = getMap(ctx, input, a);
         if (m == null) {
-            m = getMap(ctx, b);
+            m = getMap(ctx, input, b);
         }
 
         return m;
     }
 
-    private Map<String, Object> getMap(TaskContext ctx, String s) {
-        Map<String, Object> m = MapUtils.getMap(ctx.input(), s, null);
+    private Map<String, Object> getMap(Context ctx, Variables input, String s) {
+        Map<String, Object> m = input.getMap(s, null);
         if (m == null) {
-            m = MapUtils.getMap(ctx.variables().toMap(), s, null);
+            m = ctx.variables().getMap(s, null);
         }
         return m;
     }
