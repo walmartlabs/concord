@@ -15,5 +15,9 @@ jobs:
             - ~/.m2
           key: concord-{{ checksum "pom.xml" }}
 
-      # TODO run ITs
       - run: ./mvnw -B clean install -Pdocker
+
+      # TODO rest of the tests
+      - run: ./mvnw -B -f it/compat clean install -Pdocker -Pit
+      - run: ./mvnw -B -f it/runtime-v1 clean install -Pdocker -Pit
+      - run: ./mvnw -B -f it/runtime-v2 clean install -Pdocker -Pit
