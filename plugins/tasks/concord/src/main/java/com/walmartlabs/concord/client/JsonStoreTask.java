@@ -20,7 +20,6 @@ package com.walmartlabs.concord.client;
  * =====
  */
 
-import com.squareup.okhttp.Request;
 import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.ContextUtils;

@@ -47,13 +47,14 @@ public class LockTask implements Task {
     public void lock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {
         ApiClient apiClient = apiClientFactory.create(context);
 
-        if (!LockUtils.lock(UUID.fromString(instanceId), lockName, scope, apiClient)) {
-            context.suspend(lockName);
-        }
+        new LockTaskCommon(apiClient, UUID.fromString(instanceId))
+                .lock(lockName, scope, context::suspend);
     }
 
     public void unlock(@InjectVariable("txId") String instanceId, String lockName, String scope) throws Exception {
         ApiClient apiClient = apiClientFactory.create(context);
-        LockUtils.unlock(UUID.fromString(instanceId), lockName, scope, apiClient);
+
+        new LockTaskCommon(apiClient, UUID.fromString(instanceId))
+                .unlock(lockName, scope);
     }
 }

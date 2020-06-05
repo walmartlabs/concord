@@ -23,7 +23,7 @@ package com.walmartlabs.concord.plugins.noderoster;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -45,8 +45,8 @@ public class NodeRosterTaskV2 implements Task {
     }
 
     @Override
-    public Serializable execute(TaskContext ctx) throws Exception {
-        Map<String, Object> paramsCfg = ctx.input();
+    public Serializable execute(Variables input) throws Exception {
+        Map<String, Object> paramsCfg = input.toMap();
         NodeRosterTaskUtils.Action action = getAction(paramsCfg);
 
         switch (action) {

@@ -20,8 +20,9 @@ package com.walmartlabs.concord.runtime.v2.v1.compat;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.InjectVariable;
 
@@ -34,18 +35,20 @@ import java.util.Map;
 
 public class TaskV1Wrapper implements Task {
 
+    private final Context ctx;
     private final com.walmartlabs.concord.sdk.Task v1Task;
     private final Path workDir;
 
-    public TaskV1Wrapper(com.walmartlabs.concord.sdk.Task v1Task, Path workDir) {
+    public TaskV1Wrapper(Context ctx, com.walmartlabs.concord.sdk.Task v1Task, Path workDir) {
+        this.ctx = ctx;
         this.v1Task = v1Task;
         this.workDir = workDir;
     }
 
     @Override
-    public Serializable execute(TaskContext ctx) throws Exception {
+    public Serializable execute(Variables input) throws Exception {
         Map<String, Serializable> result = new HashMap<>();
-        ContextV1Wrapper v1Context = new ContextV1Wrapper(ctx, result);
+        ContextV1Wrapper v1Context = new ContextV1Wrapper(ctx, input, result);
         v1Context.setVariable(Constants.Context.WORK_DIR_KEY, workDir.toString());
 
         Map<String, Object> allVars = v1Context.getAllVariables();

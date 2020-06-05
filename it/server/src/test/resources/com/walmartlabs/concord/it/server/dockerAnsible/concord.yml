@@ -2,9 +2,9 @@ flows:
   default:
   - task: ansible
     in:
-      dockerImage: ${image}
+      dockerImage: "${image}"
       forcePull: false
-      playbook: playbook/hello.yml
+      playbook: "playbook/hello.yml"
       debug: true
       verbose: 3
       inventory:
@@ -13,6 +13,5 @@ flows:
           - "127.0.0.1"
           vars:
             ansible_connection: "local"
-            ansible_python_interpreter: "/usr/bin/python2" # to test against older CentOS 7 images
       extraVars:
         msg: "Hello from Docker!"

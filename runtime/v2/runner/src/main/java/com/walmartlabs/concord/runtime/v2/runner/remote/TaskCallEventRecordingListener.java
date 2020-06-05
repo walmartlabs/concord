@@ -34,7 +34,7 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallEvent;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,8 +152,8 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
 
 
         if (input.size() == 1) {
-            if (input.get(0) instanceof TaskContext) {
-                return ((TaskContext) input.get(0)).input();
+            if (input.get(0) instanceof Variables) {
+                return ((Variables) input).toMap();
             }
         }
 

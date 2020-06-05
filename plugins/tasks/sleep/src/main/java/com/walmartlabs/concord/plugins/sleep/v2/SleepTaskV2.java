@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.throwex;
+package com.walmartlabs.concord.plugins.sleep.v2;
 
 /*-
  * *****
@@ -9,9 +9,9 @@ package com.walmartlabs.concord.plugins.throwex;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,27 +20,36 @@ package com.walmartlabs.concord.plugins.throwex;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.plugins.sleep.SleepTaskCommon;
+import com.walmartlabs.concord.plugins.sleep.Suspender;
+import com.walmartlabs.concord.plugins.sleep.TaskParams;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 
-@Named("throw")
-public class ThrowExceptionTaskV2 implements Task {
+@Named("sleep")
+public class SleepTaskV2 implements Task {
+
+    private final SleepTaskCommon delegate;
+
+    @Inject
+    public SleepTaskV2(ApiClient apiClient, Context context) {
+        this.delegate = new SleepTaskCommon(() -> new Suspender(apiClient, context.processInstanceId(), context::suspend));
+    }
+
+    @SuppressWarnings("unused")
+    public void ms(long t) {
+        SleepTaskCommon.sleep(t);
+    }
 
     @Override
     public Serializable execute(Variables input) throws Exception {
-        Object exception = input.get("exception");
-
-        if (exception instanceof Exception) {
-            throw (Exception) exception;
-        } else if (exception instanceof String) {
-            throw new ConcordException(exception.toString());
-        } else if (exception instanceof Serializable) {
-            throw new ConcordException("Process Error", (Serializable) exception);
-        } else {
-            throw new ConcordException(exception != null ? exception.toString() : "n/a");
-        }
+        delegate.execute(new TaskParams(input));
+        return null;
     }
 }

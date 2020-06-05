@@ -38,38 +38,42 @@ import java.util.UUID;
 @Named("ansible")
 public class AnsibleTaskV2 implements Task {
 
+    private final Context context;
     private final ApiConfiguration apiConfiguration;
     private final ApiClient apiClient;
     private final FileService fileService;
     private final AnsibleDockerService dockerService;
     private final AnsibleSecretService secretService;
-    private final WorkingDirectory workDir;
     private final ProcessConfiguration processConfiguration;
 
     @DefaultVariables
     Map<String, Object> defaults;
 
     @Inject
-    public AnsibleTaskV2(ApiConfiguration apiConfiguration, ApiClient apiClient,
+    public AnsibleTaskV2(Context context,
+                         ApiConfiguration apiConfiguration,
+                         ApiClient apiClient,
                          FileService fileService,
                          DockerService dockerService,
                          SecretService secretService,
-                         WorkingDirectory workDir,
                          ProcessConfiguration processConfiguration) {
 
+        this.context = context;
         this.apiConfiguration = apiConfiguration;
         this.apiClient = apiClient;
         this.fileService = fileService;
         this.dockerService = new DockerServiceV2(dockerService);
         this.secretService = new SecretServiceV2(secretService);
-        this.workDir = workDir;
         this.processConfiguration = processConfiguration;
     }
 
     @Override
-    public Serializable execute(TaskContext ctx) throws Exception {
-        PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(dockerService, workDir.getValue())
-                .create(ctx.input());
+    public Serializable execute(Variables input) throws Exception {
+        Map<String, Object> in = input.toMap();
+        Path workDir = context.workingDirectory();
+
+        PlaybookProcessRunner runner = new PlaybookProcessRunnerFactory(dockerService, workDir)
+                .create(in);
 
         AnsibleTask task = new AnsibleTask(apiClient,
                 new AnsibleAuthFactory(secretService),
@@ -78,22 +82,23 @@ public class AnsibleTaskV2 implements Task {
         UUID instanceId = Objects.requireNonNull(processConfiguration.instanceId());
         Path tmpDir = fileService.createTempDirectory("ansible");
 
-        AnsibleContext context = AnsibleContext.builder()
+        AnsibleContext ctx = AnsibleContext.builder()
                 .instanceId(instanceId)
-                .workDir(workDir.getValue())
+                .workDir(workDir)
                 .tmpDir(tmpDir)
                 .defaults(defaults)
-                .args(ctx.input())
+                .args(in)
                 .sessionToken(processConfiguration.processInfo().sessionToken())
-                .eventCorrelationId(ctx.execution().correlationId())
+                .eventCorrelationId(context.execution().correlationId())
                 .orgName(processConfiguration.projectInfo().orgName())
-                .retryCount((Integer) ctx.execution().state().peekFrame(ctx.execution().currentThreadId()).getLocal("__retry_attempNo")) // TODO provide a SDK method for this
+                .retryCount((Integer) context.execution().state().peekFrame(context.execution().currentThreadId()).getLocal("__retry_attempNo")) // TODO provide a SDK method for this
                 .build();
 
-        TaskResult result = task.run(context, runner);
+        TaskResult result = task.run(ctx, runner);
         if (!result.isSuccess()) {
             throw new IllegalStateException("Process finished with exit code " + result.getExitCode());
         }
+
         return new HashMap<>(result.getResult());
     }
 }

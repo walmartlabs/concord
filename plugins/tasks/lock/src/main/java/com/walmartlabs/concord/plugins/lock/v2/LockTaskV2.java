@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.http;
+package com.walmartlabs.concord.plugins.lock.v2;
 
 /*-
  * *****
@@ -20,6 +20,9 @@ package com.walmartlabs.concord.plugins.http;
  * =====
  */
 
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.plugins.lock.LockTaskCommon;
+import com.walmartlabs.concord.plugins.lock.TaskParams;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
@@ -27,27 +30,33 @@ import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
-@Named("http")
-public class HttpTaskV2 implements Task {
+@Named("lock")
+public class LockTaskV2 implements Task {
 
-    private final Path workDir;
+    private final LockTaskCommon delegate;
+    private final Context context;
 
     @Inject
-    public HttpTaskV2(Context context) {
-        this.workDir = context.workingDirectory();
+    public LockTaskV2(ApiClient apiClient, Context context) {
+        this.delegate = new LockTaskCommon(apiClient, context.processInstanceId());
+        this.context = context;
     }
 
     @Override
     public Serializable execute(Variables input) throws Exception {
-        Configuration config = Configuration.custom().build(workDir.toString(), input.toMap());
+        TaskParams params = new TaskParams(input);
 
-        Map<String, Object> response = SimpleHttpClient.create(config).execute().getResponse();
+        delegate.lock(params.lockName(), params.scope(), context::suspend);
 
-        // make it serializable
-        return new HashMap<>(response);
+        return null;
+    }
+
+    public void lock(String lockName, String scope) throws Exception {
+        delegate.lock(lockName, scope, context::suspend);
+    }
+
+    public void unlock(String lockName, String scope) throws Exception {
+        delegate.unlock(lockName, scope);
     }
 }

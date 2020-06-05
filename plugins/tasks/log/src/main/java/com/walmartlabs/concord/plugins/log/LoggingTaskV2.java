@@ -21,26 +21,19 @@ package com.walmartlabs.concord.plugins.log;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Named;
 import java.io.Serializable;
-import java.util.Map;
 
 @Named("log")
 public class LoggingTaskV2 implements Task {
 
     @Override
-    public Serializable execute(TaskContext ctx) {
-        Map<String, Object> input = ctx.input();
-        Object msg = input.get("msg");
-        if (msg == null) {
-            // short form - log: "my message"
-            msg = input.get("0");
-        }
+    public Serializable execute(Variables variables) {
+        Object msg = variables.get("msg");
 
-        String logLevel = MapUtils.getString(input, "level", "INFO");
+        String logLevel = variables.getString("level", "INFO");
         switch (logLevel.toUpperCase()) {
             case "DEBUG": {
                 LogUtils.debug(msg);

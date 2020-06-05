@@ -22,10 +22,8 @@ package com.walmartlabs.concord.plugins.smtp;
 
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.ServerSetupTest;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -57,12 +55,12 @@ public class SmtpTaskV2Test {
         mail.put("to", "you@localhost");
         mail.put("message", "Hello!");
 
-        TaskContext ctx = mock(TaskContext.class);
-        when(ctx.input()).thenReturn(Collections.singletonMap("mail", mail));
+        Context ctx = mock(Context.class);
+        when(ctx.workingDirectory()).thenReturn(Paths.get(System.getProperty("user.dir")));
         when(ctx.variables()).thenReturn(new MapBackedVariables(Collections.singletonMap("smtpParams", smtpParams)));
 
-        SmtpTaskV2 t = new SmtpTaskV2(new WorkingDirectory(Paths.get(System.getProperty("user.dir"))));
-        t.execute(ctx);
+        SmtpTaskV2 t = new SmtpTaskV2(ctx);
+        t.execute(new MapBackedVariables(Collections.singletonMap("mail", mail)));
 
         MimeMessage[] messages = mailServer.getReceivedMessages();
         assertEquals(1, messages.length);

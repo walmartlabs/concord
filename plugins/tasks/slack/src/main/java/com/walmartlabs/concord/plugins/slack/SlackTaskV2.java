@@ -21,32 +21,27 @@ package com.walmartlabs.concord.plugins.slack;
  */
 
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.TaskContext;
-import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Named;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 
 @Named("slack")
 public class SlackTaskV2 implements Task {
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Serializable execute(TaskContext ctx) throws Exception {
-        Map<String, Object> m = ctx.input();
+    public Serializable execute(Variables input) throws Exception {
+        SlackConfiguration slackCfg = SlackConfiguration.from(input.toMap());
 
-        SlackConfiguration slackCfg = SlackConfiguration.from(m);
-
-        String channelId = MapUtils.assertString(m, TaskParams.CHANNEL_ID.getKey());
-        String text = MapUtils.getString(m, TaskParams.TEXT.getKey());
-        String ts = MapUtils.getString(m, TaskParams.TS.getKey());
-        boolean replyBroadcast = MapUtils.getBoolean(m, TaskParams.REPLY_BROADCAST.getKey(), false);
-        String iconEmoji = MapUtils.getString(m, TaskParams.ICON_EMOJI.getKey());
-        String username = MapUtils.getString(m, TaskParams.USERNAME.getKey());
-        Collection<Object> attachments = (Collection<Object>) m.get(TaskParams.ATTACHMENTS.getKey());
+        String channelId = input.assertString(TaskParams.CHANNEL_ID.getKey());
+        String text = input.getString(TaskParams.TEXT.getKey(), null);
+        String ts = input.getString(TaskParams.TS.getKey(), null);
+        boolean replyBroadcast = input.getBoolean(TaskParams.REPLY_BROADCAST.getKey(), false);
+        String iconEmoji = input.getString(TaskParams.ICON_EMOJI.getKey(), null);
+        String username = input.getString(TaskParams.USERNAME.getKey(), null);
+        Collection<Object> attachments = input.getCollection(TaskParams.ATTACHMENTS.getKey(), null);
 
         SlackClient.Response r = Slack.sendMessage(slackCfg, channelId, ts, replyBroadcast, text, iconEmoji, username, attachments);
         return result(r);
