@@ -24,7 +24,6 @@ import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.FlowCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.compiler.CompilerUtils;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
@@ -51,24 +50,22 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
+        Context ctx = runtime.getService(Context.class);
 
-        Context ctx = contextFactory.create(runtime, state, threadId, getStep());
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         EvalContext evalCtx = EvalContextFactory.global(ctx);
 
         FlowCall call = getStep();
-
         FlowCallOptions opts = call.getOptions();
 
         // the called flow's name
-        String flowName = expressionEvaluator.eval(evalCtx, call.getFlowName(), String.class);
+        String flowName = ee.eval(evalCtx, call.getFlowName(), String.class);
 
         // the called flow's steps
         Compiler compiler = runtime.getService(Compiler.class);
         Command steps = CompilerUtils.compile(compiler, pd, flowName);
 
-        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
+        Map<String, Object> input = VMUtils.prepareInput(ee, ctx, opts.input());
 
         // the call's frame should be a "root" frame
         // all local variables will have this frame as their base

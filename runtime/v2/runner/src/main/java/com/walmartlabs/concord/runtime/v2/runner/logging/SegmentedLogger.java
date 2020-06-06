@@ -38,24 +38,23 @@ public class SegmentedLogger {
         ENABLED = true;
     }
 
-    /**
-     * Runs the specified {@link Callable} in a separate log segment.
-     */
-    public static <V> V withLogSegment(String name, String segmentId, Callable<V> callable) {
+    public static void withLogSegment(String name, String segmentId, Runnable runnable) {
         if (!ENABLED) {
             try {
-                return callable.call();
+                runnable.run();
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+
+            return;
         }
 
         ThreadGroup threadGroup = new TaskThreadGroup(name, segmentId);
-        return executeInThreadGroup(threadGroup, "thread-" + name, () -> {
+        executeInThreadGroup(threadGroup, "thread-" + name, () -> {
             try {
-                return callable.call();
+                runnable.run();
             } finally {
                 log.info(FINALIZE_SESSION_MARKER, "The End!");
             }
@@ -66,11 +65,11 @@ public class SegmentedLogger {
      * Executes the {@link Callable} in the specified {@link ThreadGroup}.
      * A bit expensive as it is creates a new thread.
      */
-    private static <V> V executeInThreadGroup(ThreadGroup group, String threadName, Callable<V> callable) {
+    private static void executeInThreadGroup(ThreadGroup group, String threadName, Runnable runnable) {
         ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadGroupAwareThreadFactory(group, threadName));
-        Future<V> result = executor.submit(callable);
+        Future<?> result = executor.submit(runnable);
         try {
-            return result.get();
+            result.get();
         } catch (InterruptedException e) { // NOSONAR
             throw new RuntimeException(e);
         } catch (ExecutionException e) {

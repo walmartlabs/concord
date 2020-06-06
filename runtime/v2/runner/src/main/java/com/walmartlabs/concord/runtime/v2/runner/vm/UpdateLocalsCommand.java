@@ -47,10 +47,12 @@ public class UpdateLocalsCommand implements Command {
     public void eval(Runtime runtime, State state, ThreadId threadId) {
         // don't "pop" the stack, this command is a special case and evaluated separately
 
+        // create the context explicitly as this command is evaluated outside or the regular
+        // loop and doesn't inherit StepCommand
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-
         Context ctx = contextFactory.create(runtime, state, threadId, null);
+
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         Map<String, Object> m = ee.evalAsMap(EvalContextFactory.scope(ctx), input);
 
         Frame root = VMUtils.assertNearestRoot(state, threadId);

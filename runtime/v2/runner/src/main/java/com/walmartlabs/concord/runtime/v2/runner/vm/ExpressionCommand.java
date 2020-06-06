@@ -22,10 +22,8 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.Expression;
 import com.walmartlabs.concord.runtime.v2.model.ExpressionOptions;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
@@ -33,7 +31,6 @@ import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 /**
  * Evaluates the specified {@link Expression} step and (optionally) saves
@@ -52,10 +49,7 @@ public class ExpressionCommand extends StepCommand<Expression> {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-
-        Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
+        Context ctx = runtime.getService(Context.class);
 
         Expression step = getStep();
         String expr = step.getExpr();
@@ -63,10 +57,8 @@ public class ExpressionCommand extends StepCommand<Expression> {
         ExpressionOptions opts = step.getOptions();
         String out = opts != null ? opts.out() : null;
 
-        String segmentId = ctx.execution().correlationId().toString();
-
-        Object v = SegmentedLogger.withLogSegment("expression", segmentId,
-                        () -> ee.eval(EvalContextFactory.global(ctx), expr, Object.class));
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+        Object v = ee.eval(EvalContextFactory.global(ctx), expr, Object.class);
 
         if (out != null) {
             if (v != null && !(v instanceof Serializable)) {
@@ -78,5 +70,10 @@ public class ExpressionCommand extends StepCommand<Expression> {
 
             // TODO common structure for results
         }
+    }
+
+    @Override
+    protected String getSegmentName(Context ctx, Expression step) {
+        return "expression";
     }
 }

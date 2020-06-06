@@ -24,10 +24,8 @@ import com.walmartlabs.concord.runtime.v2.model.ScriptCall;
 import com.walmartlabs.concord.runtime.v2.model.ScriptCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.ResourceResolver;
 import com.walmartlabs.concord.runtime.v2.runner.ScriptEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -38,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Calls the specified script task. Responsible for preparing the script's input.
@@ -57,8 +54,7 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
+        Context ctx = runtime.getService(Context.class);
 
         ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         ScriptEvaluator scriptEvaluator = runtime.getService(ScriptEvaluator.class);
@@ -71,14 +67,8 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
         String language = getLanguage(call);
         Reader content = getContent(expressionEvaluator, resourceResolver, ctx, call);
 
-        String segmentId = ctx.execution().correlationId().toString();
-
         try {
-            SegmentedLogger.withLogSegment("script: " + call.getName(), segmentId,
-                    () -> {
-                        scriptEvaluator.eval(ctx, language, content, input);
-                        return null;
-                    });
+            scriptEvaluator.eval(ctx, language, content, input);
         } finally {
             try {
                 content.close();
@@ -87,6 +77,11 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
                 log.warn("Error while closing the script's reader: {}", e.getMessage() + ". This is most likely a bug.");
             }
         }
+    }
+
+    @Override
+    protected String getSegmentName(Context ctx, ScriptCall step) {
+        return "script: " + step.getName();
     }
 
     private static String getLanguage(ScriptCall call) {

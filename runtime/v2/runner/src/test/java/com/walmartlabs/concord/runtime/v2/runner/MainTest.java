@@ -425,8 +425,10 @@ public class MainTest {
         assertLog(log, ".*This goes directly into the stdout.*");
         assertNoLog(log, ".*This is a processLog entry.*");
 
-        List<Path> paths = Files.list(segmentedLogDir).collect(Collectors.toList());
-        assertNotEquals(0, paths.size());
+        List<Path> paths = Files.walk(segmentedLogDir)
+                .filter(p -> p.getFileName().toString().endsWith(".log"))
+                .collect(Collectors.toList());
+        assertEquals(2, paths.size());
     }
 
     @Test

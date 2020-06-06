@@ -67,20 +67,25 @@ public class WithItemsWrapper implements Command {
             return;
         }
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         Step currentStep = null;
         if (cmd instanceof StepCommand) {
             currentStep = ((StepCommand<?>) cmd).getStep();
         }
+
+        // create the context explicitly
+        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
         Context ctx = contextFactory.create(runtime, state, threadId, currentStep);
 
-        value = expressionEvaluator.eval(EvalContextFactory.global(ctx), value, Serializable.class);
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
+        value = ee.eval(EvalContextFactory.global(ctx), value, Serializable.class);
 
         // prepare items
         // store items in an ArrayList because it is Serializable
         ArrayList<Object> items;
-        if (value instanceof Collection) {
+        if (value == null) {
+            // value is null, not going to run the wrapped command at all
+            return;
+        } else if (value instanceof Collection) {
             Collection<Serializable> v = (Collection<Serializable>) value;
             if (v.isEmpty()) {
                 // no items, nothing to do

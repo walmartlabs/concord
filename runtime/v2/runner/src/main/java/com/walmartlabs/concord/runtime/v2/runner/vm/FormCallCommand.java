@@ -25,7 +25,6 @@ import com.walmartlabs.concord.forms.FormOptions;
 import com.walmartlabs.concord.runtime.common.FormService;
 import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.parser.FormFieldParser;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
@@ -53,15 +52,15 @@ public class FormCallCommand extends StepCommand<FormCall> {
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         String eventRef = UUID.randomUUID().toString();
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
-        ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
+        Context ctx = runtime.getService(Context.class);
 
-        Context ctx = contextFactory.create(runtime, state, threadId, getStep());
+        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
         EvalContext evalContext = EvalContextFactory.global(ctx);
 
         FormCall call = getStep();
         String formName = expressionEvaluator.eval(evalContext, call.getName(), String.class);
+
+        ProcessDefinition processDefinition = runtime.getService(ProcessDefinition.class);
         List<FormField> fields = assertFormFields(expressionEvaluator, evalContext, processDefinition, formName, call);
         Form form = Form.builder()
                 .name(formName)

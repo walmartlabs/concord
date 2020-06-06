@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.SetVariablesStep;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -31,7 +30,6 @@ import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.util.Map;
-import java.util.UUID;
 
 public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
 
@@ -45,13 +43,12 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
         state.peekFrame(threadId).pop();
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-
-        Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
         SetVariablesStep step = getStep();
 
+        Context ctx = runtime.getService(Context.class);
+
         // eval the input
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         Map<String, Object> v = ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars());
 
         Frame root = VMUtils.assertNearestRoot(state, threadId);
