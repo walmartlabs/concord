@@ -536,6 +536,18 @@ public class MainTest {
     }
 
     @Test
+    public void testCallFlowOut() throws Exception {
+        deploy("callOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*" + Pattern.quote("single out a=a-value") + ".*");
+        assertLog(log, ".*" + Pattern.quote("array out a=a-value, b=b-value") + ".*");
+    }
+
+    @Test
     public void testV1Compat() throws Exception {
         deploy("v1Compat");
 

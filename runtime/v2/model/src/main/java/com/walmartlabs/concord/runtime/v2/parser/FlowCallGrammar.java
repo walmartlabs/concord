@@ -39,7 +39,7 @@ public final class FlowCallGrammar {
             with(FlowCallOptions::builder,
                     o -> options(
                             optional("in", mapVal.map(o::input)),
-                            optional("out", stringVal.map(o::out)),
+                            optional("out", stringOrArrayVal.map(o::out)),
                             optional("meta", mapVal.map(o::meta)),
                             optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
                             optional("retry", retryVal.map(o::retry))

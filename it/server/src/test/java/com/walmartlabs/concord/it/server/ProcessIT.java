@@ -48,7 +48,6 @@ public class ProcessIT extends AbstractServerIT {
 
         int count = 100;
         for (int i = 0; i < count; i++) {
-            ProcessApi processApi = new ProcessApi(getApiClient());
             start(payload);
         }
     }

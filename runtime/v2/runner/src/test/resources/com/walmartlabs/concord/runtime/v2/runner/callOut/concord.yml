@@ -1,0 +1,21 @@
+flows:
+  default:
+    # single out
+    - call: myFlow
+      out: a
+
+    - log: "single out a=${a}"
+
+    # array out
+    - call: myFlow
+      out:
+        - a
+        - b
+        - c
+
+    - log: "array out a=${a}, b=${b}"
+
+  myFlow:
+    - set:
+        a: "a-value"
+        b: "b-value"
