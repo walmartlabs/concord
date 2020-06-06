@@ -21,15 +21,17 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
-import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.commands.Parallel;
+import com.walmartlabs.concord.svm.*;
+import com.walmartlabs.concord.svm.commands.Fork;
+import com.walmartlabs.concord.svm.commands.Join;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ParallelCommand extends StepCommand<ParallelBlock> {
+
+    private static final long serialVersionUID = 1L;
 
     private final List<Command> commands;
 
@@ -40,6 +42,19 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
 
     @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        new Parallel(commands).eval(runtime, state, threadId);
+        Frame frame = state.peekFrame(threadId);
+        frame.pop();
+
+        // parallel execution consist of "forks" for each command and a combined "join"
+
+        List<Map.Entry<ThreadId, Command>> forks = commands.stream()
+                .map(e -> new AbstractMap.SimpleEntry<>(state.nextThreadId(), e))
+                .collect(Collectors.toList());
+
+        Collection<ThreadId> forkIds = forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
+        frame.push(new Join(forkIds));
+
+        Collections.reverse(forks);
+        forks.forEach(f -> frame.push(new Fork(f.getKey(), f.getValue())));
     }
 }
