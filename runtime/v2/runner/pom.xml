@@ -156,6 +156,10 @@
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>locale-tasks</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>log-tasks</artifactId>
+        </dependency>
 
         <!-- Java EL support -->
         <dependency>
@@ -180,10 +184,9 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- tasks -->
         <dependency>
-            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
-            <artifactId>log-tasks</artifactId>
+            <groupId>uk.org.lidalia</groupId>
+            <artifactId>sysout-over-slf4j</artifactId>
         </dependency>
 
         <dependency>
