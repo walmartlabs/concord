@@ -40,12 +40,12 @@ import java.util.stream.Collectors;
  */
 public class WithItemsWrapper implements Command {
 
+    private static final long serialVersionUID = 1L;
+
     // TODO move into the actual Constants
     public static final String CURRENT_ITEMS = "items";
     public static final String CURRENT_INDEX = "itemIndex";
     public static final String CURRENT_ITEM = "item";
-
-    private static final long serialVersionUID = 1L;
 
     private final Command cmd;
     private final WithItems withItems;

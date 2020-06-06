@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.sift.AbstractDiscriminator;
-import com.walmartlabs.concord.runtime.v2.runner.vm.TaskThreadGroup;
 
 public class TaskDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
 

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.runner.vm.TaskThreadGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

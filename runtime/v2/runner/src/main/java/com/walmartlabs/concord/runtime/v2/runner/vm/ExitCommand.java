@@ -24,9 +24,10 @@ import com.walmartlabs.concord.runtime.v2.model.ExitStep;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.commands.Terminate;
 
 public class ExitCommand extends StepCommand<ExitStep> {
+
+    private static final long serialVersionUID = 1L;
 
     public ExitCommand(ExitStep step) {
         super(step);
@@ -34,6 +35,6 @@ public class ExitCommand extends StepCommand<ExitStep> {
 
     @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        new Terminate().eval(runtime, state, threadId);
+        state.dropAllFrames();
     }
 }

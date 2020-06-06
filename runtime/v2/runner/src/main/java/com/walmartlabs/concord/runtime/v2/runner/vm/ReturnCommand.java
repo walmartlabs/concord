@@ -24,9 +24,10 @@ import com.walmartlabs.concord.runtime.v2.model.ReturnStep;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.commands.Return;
 
 public class ReturnCommand extends StepCommand<ReturnStep> {
+
+    private static final long serialVersionUID = 1L;
 
     public ReturnCommand(ReturnStep step) {
         super(step);
@@ -34,6 +35,6 @@ public class ReturnCommand extends StepCommand<ReturnStep> {
 
     @Override
     protected void execute(Runtime runtime, State state, ThreadId threadId) {
-        new Return().eval(runtime, state, threadId);
+        state.popFrame(threadId);
     }
 }
