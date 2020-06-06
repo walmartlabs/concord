@@ -43,6 +43,21 @@ public interface LoggingConfiguration {
     @Nullable
     String segmentedLogDir();
 
+    /**
+     * If {@code true} {@code System.out} and {@code System.err} will be
+     * redirected into SLF4J and, subsequently, into correct log segments.
+     * <p/>
+     * Default is {@code true}.
+     * <p/>
+     * Requires {@link #segmentedLogDir()}.
+     * @apiNote only for the runtime v2. Not applicable when using the CLI
+     * version of the runner.
+     */
+    @Value.Default
+    default boolean sendSystemOutAndErrToSLF4J() {
+        return true;
+    }
+
     static ImmutableLoggingConfiguration.Builder builder() {
         return ImmutableLoggingConfiguration.builder();
     }
