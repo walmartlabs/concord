@@ -47,6 +47,7 @@ public final class YamlValueType<T> {
     public static final YamlValueType<Object> PATTERN_OR_ARRAY = type("PATTERN_OR_ARRAY");
     public static final YamlValueType<Duration> DURATION = type("ISO 8601 DURATION");
     public static final YamlValueType<String> TIMEZONE = type("TIMEZONE");
+    public static final YamlValueType<Object> STRING_OR_ARRAY = type("STRING_OR_ARRAY");
 
     public static final YamlValueType<FlowCall> FLOW_CALL = type("FLOW_CALL");
     public static final YamlValueType<TaskCall> TASK = type("TASK");

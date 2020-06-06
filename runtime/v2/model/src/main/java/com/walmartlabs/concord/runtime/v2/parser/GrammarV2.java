@@ -78,6 +78,7 @@ public final class GrammarV2 {
     public static final Parser<Atom, Object> patternOrArrayVal = value.map(GrammarV2::patternOrArrayConverter);
     public static final Parser<Atom, Duration> durationVal = value.map(GrammarV2::durationConverter);
     public static final Parser<Atom, String> timezoneVal = value.map(GrammarV2::timezoneConverter);
+    public static final Parser<Atom, List<String>> stringOrArrayVal = value.map(GrammarV2::stringOrArrayConverter);
 
     public static <E extends Enum<E>> Parser<Atom, E> enumVal(Class<E> enumData) {
         return value.map(vv -> {
@@ -279,6 +280,15 @@ public final class GrammarV2 {
                 .actual(v.getType())
                 .message("Unknown timezone: '" + timezone + "'")
                 .build();
+    }
+
+    private static List<String> stringOrArrayConverter(YamlValue v) {
+        if (v.getType() == YamlValueType.STRING) {
+            return Collections.singletonList(v.getValue());
+        }
+
+        YamlList list = asList(v, YamlValueType.STRING_OR_ARRAY);
+        return list.getListValue(YamlValueType.STRING);
     }
 
     private GrammarV2() {

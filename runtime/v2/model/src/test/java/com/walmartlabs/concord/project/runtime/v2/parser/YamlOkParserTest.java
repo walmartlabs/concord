@@ -91,7 +91,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         // options
         assertNotNull(t.getOptions());
-        assertEquals("result", t.getOptions().out());
+        assertEquals(Collections.singletonList("result"), t.getOptions().out());
 
         // withItems
         assertEquals(1, t.getOptions().withItems().value());

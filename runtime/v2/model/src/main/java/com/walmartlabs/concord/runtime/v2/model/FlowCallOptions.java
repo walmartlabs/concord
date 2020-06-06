@@ -27,6 +27,7 @@ import org.immutables.value.Value;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
@@ -41,8 +42,10 @@ public interface FlowCallOptions extends StepOptions {
         return Collections.emptyMap();
     }
 
-    @Nullable
-    String out();
+    @Value.Default
+    default List<String> out() {
+        return Collections.emptyList();
+    }
 
     @Nullable
     WithItems withItems();
