@@ -204,6 +204,16 @@ public class MainTest {
     }
 
     @Test
+    public void testFlowErrorBlock() throws Exception {
+        deploy("faultyFlow");
+
+        save(ProcessConfiguration.builder().build());
+
+        byte[] log = run();
+        assertLog(log, ".*error occurred:.*BOO.*");
+    }
+
+    @Test
     public void testTryErrorBlock() throws Exception {
         deploy("tryError");
 

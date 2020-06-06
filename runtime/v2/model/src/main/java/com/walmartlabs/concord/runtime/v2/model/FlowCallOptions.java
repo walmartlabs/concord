@@ -53,6 +53,11 @@ public interface FlowCallOptions extends StepOptions {
     @Nullable
     Retry retry();
 
+    @Value.Default
+    default List<Step> errorSteps() {
+        return Collections.emptyList();
+    }
+
     static ImmutableFlowCallOptions.Builder builder() {
         return ImmutableFlowCallOptions.builder();
     }
