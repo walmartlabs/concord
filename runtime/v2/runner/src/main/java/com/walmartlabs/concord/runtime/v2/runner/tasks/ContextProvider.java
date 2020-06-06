@@ -29,7 +29,7 @@ public class ContextProvider implements Provider<Context> {
 
     private static final ThreadLocal<Context> value = new ThreadLocal<>();
 
-    public static <T, C extends Context> T withContext(C ctx, Callable<T> callable) throws RuntimeException {
+    public static <T, C extends Context> T withContext(C ctx, Callable<T> callable) {
         set(ctx);
         try {
             return callable.call();
@@ -42,6 +42,14 @@ public class ContextProvider implements Provider<Context> {
         }
     }
 
+    public static <C extends Context> void withContext(C ctx, Runnable runnable) {
+        set(ctx);
+        try {
+            runnable.run();
+        } finally {
+            clear();
+        }
+    }
 
     @Override
     public Context get() {

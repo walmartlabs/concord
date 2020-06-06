@@ -22,9 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -37,7 +35,6 @@ import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -59,11 +56,10 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        TaskProviders taskProviders = runtime.getService(TaskProviders.class);
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
+        Context ctx = runtime.getService(Context.class);
 
-        Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
+        TaskProviders taskProviders = runtime.getService(TaskProviders.class);
+        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
 
         TaskCall call = getStep();
         String taskName = call.getName();
@@ -84,14 +80,24 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
         TaskCallOptions opts = call.getOptions();
         Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
 
-        String segmentId = ctx.execution().correlationId().toString();
-        Serializable result = SegmentedLogger.withLogSegment(taskName, segmentId,
-                () -> interceptor.invoke(callContext, Method.of("execute", input),
-                        () -> t.execute(new MapBackedVariables(input))));
+        Serializable result;
+        try {
+            result = interceptor.invoke(callContext, Method.of("execute", input),
+                    () -> t.execute(new MapBackedVariables(input)));
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         String out = opts.out();
         if (out != null) {
             frame.setLocal(out, result); // TODO a custom result structure
         }
+    }
+
+    @Override
+    public String getSegmentName(Context ctx, TaskCall step) {
+        return step.getName();
     }
 }

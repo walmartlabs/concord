@@ -67,19 +67,20 @@ public class RetryWrapper implements Command {
                 .commands(cmd, new NextRetry(cmd))
                 .build();
 
+        // create the context explicitly
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator expressionEvaluator = runtime.getService(ExpressionEvaluator.class);
+        Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
+
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
         int times = retry.times();
         if (retry.timesExpression() != null) {
-            Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
-            times = expressionEvaluator.eval(EvalContextFactory.global(ctx), retry.timesExpression(), Integer.class);
+            times = ee.eval(EvalContextFactory.global(ctx), retry.timesExpression(), Integer.class);
         }
 
         long delay = retry.delay();
         if (retry.delayExpression() != null) {
-            Context ctx = contextFactory.create(runtime, state, threadId, getCurrentStep());
-            delay = expressionEvaluator.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class);
+            delay = ee.eval(EvalContextFactory.global(ctx), retry.delayExpression(), Long.class);
         }
 
         inner.setLocal(RETRY_CFG, Retry.builder().from(retry)

@@ -22,6 +22,10 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.ContextProvider;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -29,9 +33,15 @@ import com.walmartlabs.concord.svm.ThreadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 /**
- * Command that was created from a flow {@link Step}.
+ * Base class for commands that were created from a flow {@link Step}.
+ * <p/>
  * Subclasses must implement the {@link #execute(Runtime, State, ThreadId)} method.
+ * <p/>
+ * Subclasses can optionally implement {@link #getSegmentName(Context, Step)} to
+ * enable "segmented logging" for the duration of their execution.
  */
 public abstract class StepCommand<T extends Step> implements Command {
 
@@ -51,17 +61,40 @@ public abstract class StepCommand<T extends Step> implements Command {
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
-        try {
-            execute(runtime, state, threadId);
-        } catch (Exception e) {
-            Step step = getStep();
-            if (step.getLocation() == null) {
-                throw e;
-            }
-            log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
-            throw e;
+        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
+
+        T step = getStep();
+        UUID segmentId = UUID.randomUUID();
+        Context ctx = contextFactory.create(runtime, state, threadId, step, segmentId);
+
+        String segmentName = getSegmentName(ctx, step);
+
+        if (segmentName == null) {
+            executeWithContext(ctx, runtime, state, threadId);
+        } else {
+            SegmentedLogger.withLogSegment(segmentName, segmentId.toString(),
+                    () -> executeWithContext(ctx, runtime, state, threadId));
         }
     }
 
+    private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {
+        ContextProvider.withContext(ctx, () -> {
+            try {
+                execute(runtime, state, threadId);
+            } catch (Exception e) {
+                if (step.getLocation() == null) {
+                    throw e;
+                }
+
+                log.error("{} {}", Location.toErrorPrefix(step.getLocation()), e.getMessage());
+                throw e;
+            }
+        });
+    }
+
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
+
+    protected String getSegmentName(Context ctx, T step) {
+        return null;
+    }
 }

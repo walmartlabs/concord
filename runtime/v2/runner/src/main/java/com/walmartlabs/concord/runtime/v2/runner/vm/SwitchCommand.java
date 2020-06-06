@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
-import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContext;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
@@ -32,7 +31,6 @@ import com.walmartlabs.concord.svm.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 public class SwitchCommand extends StepCommand<SwitchStep> {
 
@@ -52,15 +50,13 @@ public class SwitchCommand extends StepCommand<SwitchStep> {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-
-        Context ctx = contextFactory.create(runtime, state, threadId, getStep(), UUID.randomUUID());
-
         SwitchStep step = getStep();
         String expr = step.getExpression();
 
+        Context ctx = runtime.getService(Context.class);
         EvalContext evalContext = EvalContextFactory.global(ctx);
+
+        ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
         String switchResult = ee.eval(evalContext, expr, String.class);
         boolean caseFound = false;
         for (Map.Entry<String, Command> kv : caseCommands) {
