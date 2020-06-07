@@ -30,6 +30,7 @@ import { LoadingState } from '../../../App';
 import { NotFoundPage } from '../index';
 import RepositoryEventsActivity from './RepositoryEventsActivity';
 import EditRepositoryActivity from './RepositorySettingsActivity';
+import RepositoryTriggersActivity from './RepositoryTriggersActivity';
 
 interface RouteProps {
     orgName: ConcordKey;
@@ -37,13 +38,15 @@ interface RouteProps {
     repoName: ConcordKey;
 }
 
-type TabLink = 'settings' | 'events' | null;
+type TabLink = 'settings' | 'events' | 'triggers' | null;
 
 const pathToTab = (s: string): TabLink => {
     if (s.endsWith('/settings')) {
         return 'settings';
     } else if (s.endsWith('/events')) {
         return 'events';
+    } else if (s.endsWith('/triggers')) {
+        return 'triggers';
     }
 
     return null;
@@ -81,6 +84,10 @@ const RepositoryPage = (props: RouteComponentProps<RouteProps>) => {
                     <Icon name="search" />
                     <Link to={`${baseUrl}/events`}>Events</Link>
                 </Menu.Item>
+                <Menu.Item active={activeTab === 'triggers'}>
+                    <Icon name="lightning" />
+                    <Link to={`${baseUrl}/triggers`}>Triggers</Link>
+                </Menu.Item>
             </Menu>
 
             <Switch>
@@ -103,7 +110,13 @@ const RepositoryPage = (props: RouteComponentProps<RouteProps>) => {
                         forceRefresh={refresh}
                     />
                 </Route>
-
+                <Route path={`${baseUrl}/triggers`} exact={true}>
+                    <RepositoryTriggersActivity
+                        orgName={orgName}
+                        projectName={projectName}
+                        repoName={repoName}
+                    />
+                </Route>
                 <Route component={NotFoundPage} />
             </Switch>
         </div>

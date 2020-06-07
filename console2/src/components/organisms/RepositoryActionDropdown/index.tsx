@@ -32,7 +32,6 @@ import {
 import {
     DeleteRepositoryPopup,
     RefreshRepositoryPopup,
-    RepositoryTriggersPopup,
     StartRepositoryPopup,
     ValidateRepositoryPopup
 } from '../../organisms';
@@ -195,18 +194,6 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
                         <Dropdown.Item onClick={onClick}>
                             <Icon name="check" />
                             <span className="text">Validate</span>
-                        </Dropdown.Item>
-                    )}
-                />
-
-                <RepositoryTriggersPopup
-                    orgName={orgName}
-                    projectName={projectName}
-                    repoName={repoName}
-                    trigger={(onClick: any) => (
-                        <Dropdown.Item onClick={onClick}>
-                            <Icon name="lightning" />
-                            <span className="text">Triggers</span>
                         </Dropdown.Item>
                     )}
                 />

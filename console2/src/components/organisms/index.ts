@@ -73,7 +73,6 @@ export { default as PublicKeyPopup } from './PublicKeyPopup';
 export { default as RedirectButton } from './RedirectButton';
 export { default as RefreshRepositoryPopup } from './RefreshRepositoryPopup';
 export { default as RepositoryActionDropdown } from './RepositoryActionDropdown';
-export { default as RepositoryTriggersPopup } from './RepositoryTriggersPopup';
 export { default as RequestErrorActivity } from './RequestErrorActivity';
 export { default as SecretActivity } from './SecretActivity';
 export { default as SecretDeleteActivity } from './SecretDeleteActivity';
