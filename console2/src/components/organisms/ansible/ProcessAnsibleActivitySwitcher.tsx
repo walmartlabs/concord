@@ -19,8 +19,7 @@
  */
 import * as React from 'react';
 
-import ProcessAnsibleActivityOld from './ProcessAnsibleActivityOld';
-import ProcessAnsibleActivity from './ProcessAnsibleActivity';
+import { ProcessAnsibleActivity, ProcessAnsibleActivityOld } from '../../organisms';
 import { useCallback } from 'react';
 import { useState } from 'react';
 import { ConcordId } from '../../../api/common';

@@ -19,15 +19,13 @@
  */
 
 import * as React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Input, List, Loader, Menu } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 
 import { ConcordKey } from '../../../api/common';
 import { CreateNewEntityButton, PaginationToolBar } from '../../molecules';
 import { Organizations } from '../../../state/data/orgs';
-import { State as SessionState } from '../../../state/session';
-import { connect } from 'react-redux';
 import {
     list as apiList,
     PaginatedStorageEntries,
@@ -37,18 +35,13 @@ import {
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 import { useApi } from '../../../hooks/useApi';
 import RequestErrorActivity from '../../organisms/RequestErrorActivity';
+import { UserSessionContext } from '../../../session';
 
-interface ExternalProps {
+interface Props {
     orgName: ConcordKey;
 }
 
-interface UserProps {
-    userOrgs: Organizations;
-}
-
-type Props = ExternalProps & UserProps;
-
-const StoreListActivity = ({ orgName, userOrgs }: Props) => {
+export default ({ orgName }: Props) => {
     const [entries, setEntries] = useState<StorageEntry[]>([]);
     const [filter, setFilter] = useState<string>();
     const [next, setNext] = useState<boolean>(false);
@@ -68,6 +61,8 @@ const StoreListActivity = ({ orgName, userOrgs }: Props) => {
     const { data, error, isLoading } = useApi<PaginatedStorageEntries>(fetchData, {
         fetchOnMount: true
     });
+
+    const { userInfo } = useContext(UserSessionContext);
 
     useEffect(() => {
         if (!data) {
@@ -95,7 +90,7 @@ const StoreListActivity = ({ orgName, userOrgs }: Props) => {
                             entity="jsonstore"
                             title="New store"
                             orgName={orgName}
-                            userInOrg={isUserOrgMember(orgName, userOrgs)}
+                            userInOrg={isUserOrgMember(orgName, userInfo!.orgs)}
                             enabledInPolicy={true}
                         />
                     </Menu.Item>
@@ -147,9 +142,3 @@ const isUserOrgMember = (orgName: string, userOrgs: Organizations) => {
             .filter((org) => org.name === orgName).length > 0
     );
 };
-
-const mapStateToProps = ({ session }: { session: SessionState }): UserProps => ({
-    userOrgs: session.user.orgs ? session.user.orgs : {}
-});
-
-export default connect(mapStateToProps)(StoreListActivity);

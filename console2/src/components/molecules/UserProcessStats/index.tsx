@@ -22,8 +22,8 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { getStatusSemanticColor, ProcessStatus } from '../../../api/process';
 import { queryParams } from '../../../api/common';
-import { State as SessionState } from '../../../state/session';
-import { connect } from 'react-redux';
+import { useContext } from 'react';
+import { UserSessionContext } from '../../../session';
 
 export interface StatusCount {
     status: ProcessStatus;
@@ -32,10 +32,6 @@ export interface StatusCount {
 
 interface Props {
     items: StatusCount[];
-}
-
-interface StateProps {
-    userName: string;
 }
 
 const renderItem = (initiator: string, status: ProcessStatus, count: number) => {
@@ -53,20 +49,12 @@ const renderItem = (initiator: string, status: ProcessStatus, count: number) => 
     );
 };
 
-class UserProcessStats extends React.PureComponent<Props & StateProps> {
-    render() {
-        const { items, userName } = this.props;
+export default ({ items }: Props) => {
+    const { userInfo } = useContext(UserSessionContext);
 
-        return (
-            <div className="ui small statistics five column row">
-                {items.map((v) => renderItem(userName, v.status, v.count))}
-            </div>
-        );
-    }
-}
-
-const mapStateToProps = ({ session }: { session: SessionState }): StateProps => ({
-    userName: session.user.username!
-});
-
-export default connect(mapStateToProps)(UserProcessStats);
+    return (
+        <div className="ui small statistics five column row">
+            {items.map((v) => renderItem(userInfo!.username, v.status, v.count))}
+        </div>
+    );
+};

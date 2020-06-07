@@ -229,7 +229,7 @@ const renderProcessSecondaryActions = (refresh: () => void, process?: ProcessEnt
         );
     };
 
-    const { extraProcessMenuLinks } = window.concord;
+    const extraProcessMenuLinks = window.concord?.extraProcessMenuLinks;
 
     const getIcon = ({ props }: { props: any }) => <Icon color={props.color} name={props.icon} />;
 
