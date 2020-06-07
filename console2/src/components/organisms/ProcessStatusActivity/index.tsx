@@ -28,7 +28,7 @@ import { FormListEntry, list as apiListForms } from '../../../api/process/form';
 
 import { usePolling } from '../../../api/usePolling';
 import { ProcessActionList, ProcessStatusTable } from '../../molecules';
-import ProcessCheckpointActivity from '../ProcessCheckpointActivity';
+import { ProcessCheckpointActivity } from '../../organisms';
 import RequestErrorActivity from '../RequestErrorActivity';
 
 import './styles.css';

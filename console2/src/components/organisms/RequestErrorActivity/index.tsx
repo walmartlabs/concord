@@ -19,39 +19,30 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
+import { useContext, useEffect } from 'react';
 import { Redirect } from 'react-router';
 
 import { RequestError } from '../../../api/common';
-import { actions } from '../../../state/session';
 import { RequestErrorMessage } from '../../molecules';
+import { logout, UserSessionContext } from '../../../session';
 
-interface ExternalProps {
+interface Props {
     error: RequestError;
 }
 
-interface DispatchProps {
-    logOut: () => void;
-}
+export default ({ error }: Props) => {
+    const session = useContext(UserSessionContext);
 
-type Props = DispatchProps & ExternalProps;
+    useEffect(() => {
+        const doIt = async () => {
+            if (error && error.status === 401) {
+                await logout(session, false);
+                return <Redirect to={'/unauthorized'} />;
+            }
+        };
 
-class RequestErrorActivity extends React.Component<Props> {
-    render() {
-        const { error, logOut } = this.props;
+        doIt();
+    }, [error, session]);
 
-        if (error && error.status === 401) {
-            logOut();
-            return <Redirect to={'/unauthorized'} />;
-        }
-
-        return <RequestErrorMessage error={error} />;
-    }
-}
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    logOut: () => dispatch(actions.setCurrent({}))
-});
-
-export default connect(null, mapDispatchToProps)(RequestErrorActivity);
+    return <RequestErrorMessage error={error} />;
+};

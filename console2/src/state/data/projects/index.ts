@@ -24,7 +24,6 @@ import { all, call, put, takeLatest } from 'redux-saga/effects';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
-import { reducers as sessionReducers } from '../../../state/session';
 import {
     changeOwner as apiChangeOwner,
     createOrUpdate as apiCreateOrUpdate,
@@ -469,7 +468,6 @@ const updateTeamAccessReducers = combineReducers<UpdateProjectTeamAccessState>({
 
 export const reducers = combineReducers<State>({
     projectById, // TODO use makeEntityByIdReducer
-    session: sessionReducers,
 
     loading,
     error: errorMsg,

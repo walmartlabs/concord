@@ -24,9 +24,10 @@ import { applyMiddleware, createStore } from 'redux';
 import { createLogger } from 'redux-logger';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import createSagaMiddleware from 'redux-saga';
+import { History } from 'history';
+
 import reducers from '../reducers';
 import sagas from '../sagas';
-import { History } from 'history';
 
 const history: History = createHashHistory();
 const sagaMiddleware = createSagaMiddleware();

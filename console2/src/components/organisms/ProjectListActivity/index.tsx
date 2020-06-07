@@ -20,13 +20,10 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Icon, Input, List, Loader, Menu } from 'semantic-ui-react';
 
 import { ConcordKey, EntityType, RequestError } from '../../../api/common';
-import { State as SessionState } from '../../../state/session';
-import { Organizations } from '../../../state/data/orgs';
 import { checkResult as apiCheckResult } from '../../../../src/api/org';
 import {
     list as getPaginatedProjectList,
@@ -36,17 +33,11 @@ import {
 import { CreateNewEntityButton, PaginationToolBar, RequestErrorMessage } from '../../molecules';
 import { usePagination } from '../../molecules/PaginationToolBar/usePagination';
 
-interface ExternalProps {
+interface Props {
     orgName: ConcordKey;
 }
 
-interface UserProps {
-    orgs: Organizations;
-}
-
-type Props = ExternalProps & UserProps;
-
-const ProjectListActivity = ({ orgName, orgs }: Props) => {
+export default ({ orgName }: Props) => {
     const [data, setData] = useState<ProjectEntry[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<RequestError>();
@@ -169,9 +160,3 @@ const ProjectListActivity = ({ orgName, orgs }: Props) => {
         </>
     );
 };
-
-const mapStateToProps = ({ session }: { session: SessionState }): UserProps => ({
-    orgs: session.user.orgs ? session.user.orgs : {}
-});
-
-export default connect(mapStateToProps)(ProjectListActivity);

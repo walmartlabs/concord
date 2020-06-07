@@ -22,7 +22,6 @@ import { Action } from 'redux';
 
 import { ConcordId, ConcordKey, GenericOperationResult, RequestError } from '../../../api/common';
 import { ResourceAccessEntry } from '../../../api/org';
-import { State as SessionState } from '../../../state/session';
 import {
     NewProjectEntry,
     ProjectEntry,
@@ -156,7 +155,6 @@ export type UpdateProjectTeamAccessState = RequestState<ProjectTeamAccessRespons
 
 export interface State {
     projectById: PaginatedProjects;
-    session: SessionState;
 
     // TODO move into a RequestState field
     loading: boolean;

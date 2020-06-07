@@ -23,10 +23,10 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { push as pushHistory } from 'connected-react-router';
-import { CustomResources, LinkMeta } from '../../../../cfg';
 
-import { actions, State as SessionState } from '../../../state/session';
+import { CustomResources, LinkMeta } from '../../../../cfg';
 import { GlobalNavMenu, GlobalNavTab } from '../../molecules';
+import { logout, UserSession, UserSessionContext } from '../../../session';
 
 const pathToTab = (s: string): GlobalNavTab => {
     if (s.startsWith('/activity')) {
@@ -43,65 +43,63 @@ const pathToTab = (s: string): GlobalNavTab => {
 };
 
 const getExtraSystemLinks = (): LinkMeta[] => {
-    const { topBar } = window.concord;
+    const topBar = window.concord?.topBar;
+
     if (topBar && topBar.systemLinks) {
         return topBar.systemLinks;
     }
+
     return [];
 };
 
 const getCustomResources = (): CustomResources => {
-    const { customResources } = window.concord;
+    const customResources = window.concord?.customResources;
     return customResources || {};
 };
-
-interface StateProps {
-    userDisplayName?: string;
-}
 
 interface DispatchProps {
     openUrl: (url: string) => void;
     openAbout: () => void;
     openProfile: () => void;
     openCustomResource: (name: string) => void;
-    logOut: () => void;
 }
 
-export type TopBarProps = StateProps & DispatchProps & RouteComponentProps<{}>;
+export type TopBarProps = DispatchProps & RouteComponentProps<{}>;
 
 class TopBar extends React.PureComponent<TopBarProps> {
-    getLogout() {
-        const { logoutUrl } = window.concord;
+    getLogout(userSession: UserSession) {
+        const logoutUrl = window.concord?.logoutUrl;
         if (logoutUrl) {
             return () => (window.location.href = logoutUrl);
         }
-        return () => this.props.logOut();
+
+        return () => logout(userSession);
     }
 
     render() {
         const activeTab = pathToTab(this.props.location.pathname);
         return (
-            <GlobalNavMenu
-                activeTab={activeTab}
-                extraSystemLinks={getExtraSystemLinks()}
-                customResources={getCustomResources()}
-                {...this.props}
-                logOut={this.getLogout()}
-            />
+            <UserSessionContext.Consumer>
+                {(value) => (
+                    <GlobalNavMenu
+                        activeTab={activeTab}
+                        extraSystemLinks={getExtraSystemLinks()}
+                        customResources={getCustomResources()}
+                        userDisplayName={value.userInfo?.displayName}
+                        {...this.props}
+                        logOut={this.getLogout(value)}
+                    />
+                )}
+            </UserSessionContext.Consumer>
         );
     }
 }
-
-const mapStateToProps = ({ session }: { session: SessionState }): StateProps => ({
-    userDisplayName: session.user.displayName
-});
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
     openUrl: (url: string) => window.open(url, '_blank'),
     openAbout: () => dispatch(pushHistory('/about')),
     openProfile: () => dispatch(pushHistory('/profile')),
-    openCustomResource: (name: string) => dispatch(pushHistory(`/custom/${name}`)),
-    logOut: () => dispatch(actions.logout())
+    openCustomResource: (name: string) => dispatch(pushHistory(`/custom/${name}`))
 });
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(TopBar));
+export default withRouter(connect(null, mapDispatchToProps)(TopBar));

@@ -24,25 +24,31 @@ import { RedirectButton } from '../../organisms';
 
 import './styles.css';
 import { Card, CardContent, CardHeader, Divider, Image } from 'semantic-ui-react';
+import { useContext, useEffect } from 'react';
+import { UserSessionContext } from '../../../session';
 
-export default class extends React.PureComponent {
-    render() {
-        return (
-            <div className="flexbox-container">
-                <Card centered={true}>
-                    <CardContent textAlign={'center'}>
-                        <Image id="concord-logo" src="/images/concord.svg" size="medium" />
+export default () => {
+    const session = useContext(UserSessionContext);
 
-                        <CardHeader>You are not authorized.</CardHeader>
+    useEffect(() => {
+        session.setUserInfo(undefined);
+    }, [session]);
 
-                        <Divider />
+    return (
+        <div className="flexbox-container">
+            <Card centered={true}>
+                <CardContent textAlign={'center'}>
+                    <Image id="concord-logo" src="/images/concord.svg" size="medium" />
 
-                        <RedirectButton primary={true} fluid={true} location={'/'}>
-                            Login
-                        </RedirectButton>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-}
+                    <CardHeader>You are not authorized.</CardHeader>
+
+                    <Divider />
+
+                    <RedirectButton primary={true} fluid={true} location={'/'}>
+                        Login
+                    </RedirectButton>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
