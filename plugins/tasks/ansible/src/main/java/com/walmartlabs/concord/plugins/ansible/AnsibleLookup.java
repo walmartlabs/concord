@@ -37,8 +37,11 @@ public class AnsibleLookup {
     private static final Logger log = LoggerFactory.getLogger(AnsibleLookup.class);
 
     private static final String LOOKUP_LOCATION = "/com/walmartlabs/concord/plugins/ansible/lookup";
-    private static final String[] LOOKUPS = new String[]{"concord_data_secret.py",
-            "concord_inventory.py", "concord_public_key_secret.py", "concord_secret.py"};
+    private static final String[] LOOKUPS = new String[]{
+            "concord_data_secret.py",
+            "concord_inventory.py",
+            "concord_public_key_secret.py",
+            "concord_secret.py" };
 
     private static final String LOOKUP_PLUGINS_DIR = "_lookups";
 
