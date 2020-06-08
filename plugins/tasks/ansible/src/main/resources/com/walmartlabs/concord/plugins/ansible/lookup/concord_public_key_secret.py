@@ -34,9 +34,28 @@ class LookupModule(LookupBase):
         r = requests.get(url, headers=headers)
 
         if r.status_code != requests.codes.ok:
-            raise AnsibleError('Invalid server response: ' + str(r.status_code))
+            resp = self.get_json(r)
 
-        data = r.json();
+            msg = 'Error accessing public key ' + orgName + '/' + secretName + ': '
+            if resp:
+                try:
+                    raise AnsibleError(msg + resp[0]['message'])
+                except (IndexError, KeyError, TypeError):
+                    pass
+
+            if r.text:
+                raise AnsibleError(msg + r.text)
+
+            raise AnsibleError(msg + 'Invalid server response: ' + str(r.status_code))
+
+        data = r.json()
         ret.append(str(data['publicKey']))
 
         return ret
+
+    def get_json(self, r):
+        try:
+            return r.json()
+        except ValueError:
+            # no JSON returned
+            return

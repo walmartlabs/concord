@@ -209,8 +209,13 @@ public class SecretResource implements Resource {
                                           @ApiParam @PathParam("secretName") @ConcordKey String secretName) {
 
         OrganizationEntry org = orgManager.assertAccess(orgName, false);
-        DecryptedKeyPair k = secretManager.getKeyPair(SecretManager.AccessScope.internal(), org.getId(), secretName);
-        return new PublicKeyResponse(k.getId(), null, null, new String(k.getData()));
+        try {
+            DecryptedKeyPair k = secretManager.getKeyPair(SecretManager.AccessScope.internal(), org.getId(), secretName);
+            return new PublicKeyResponse(k.getId(), null, null, new String(k.getData()));
+        } catch (SecurityException | IllegalArgumentException e) {
+            log.warn("getPublicKey -> error: {}", e.getMessage());
+            throw new SecretException("Error while fetching a secret '" + secretName + "': " + e.getMessage());
+        }
     }
 
     @GET

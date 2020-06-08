@@ -58,6 +58,9 @@ public final class SecretUtils {
             return IOUtils.toByteArray(out);
         } catch (IOException e) {
             Throwable t = e.getCause() == null ? e : e.getCause();
+            if (t instanceof BadPaddingException) {
+                throw new SecurityException("Error decrypting a secret: " + t.getMessage() + ". Invalid input data and/or a password.");
+            }
             throw new SecurityException("Error decrypting a secret: " + e.getMessage(), t);
         }
     }

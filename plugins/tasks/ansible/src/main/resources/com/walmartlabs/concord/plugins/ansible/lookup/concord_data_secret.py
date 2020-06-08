@@ -42,9 +42,31 @@ class LookupModule(LookupBase):
 
         r = requests.post(url, headers=headers, files=multipartInputDict)
 
+        if r.status_code == requests.codes.not_found:
+            raise AnsibleError('Secret ' + orgName + '/' + secretName + ' not found')
+
         if r.status_code != requests.codes.ok:
-            raise AnsibleError('Invalid server response: ' + str(r.status_code))
+            resp = self.get_json(r)
+
+            msg = 'Error accessing secret ' + orgName + '/' + secretName + ': '
+            if resp:
+                try:
+                    raise AnsibleError(msg + resp[0]['message'])
+                except (IndexError, KeyError, TypeError):
+                    pass
+
+            if r.text:
+                raise AnsibleError(msg + r.text)
+
+            raise AnsibleError(msg + 'Invalid server response: ' + str(r.status_code))
 
         ret.append(str(r.text))
 
         return ret
+
+    def get_json(self, r):
+        try:
+            return r.json()
+        except ValueError:
+            # no JSON returned
+            return
