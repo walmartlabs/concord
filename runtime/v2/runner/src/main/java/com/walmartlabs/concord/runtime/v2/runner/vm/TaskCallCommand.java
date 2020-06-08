@@ -28,13 +28,13 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.CallContext;
 import static com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor.Method;
@@ -78,12 +78,12 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
                 .build();
 
         TaskCallOptions opts = call.getOptions();
-        Map<String, Object> input = VMUtils.prepareInput(expressionEvaluator, ctx, opts.input());
+        Variables input = new MapBackedVariables(VMUtils.prepareInput(expressionEvaluator, ctx, opts.input()));
 
         Serializable result;
         try {
             result = interceptor.invoke(callContext, Method.of("execute", input),
-                    () -> t.execute(new MapBackedVariables(input)));
+                    () -> t.execute(input));
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

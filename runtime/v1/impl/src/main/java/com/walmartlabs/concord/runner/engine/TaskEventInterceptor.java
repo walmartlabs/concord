@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.runner.ContextUtils;
+import com.walmartlabs.concord.runtime.common.ObjectTruncater;
 import com.walmartlabs.concord.sdk.Context;
 import io.takari.bpm.api.ExecutionContext;
 import io.takari.bpm.api.ExecutionException;
@@ -129,7 +130,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
             return null;
         }
 
-        return convertParams(ctx, t.getIn(), cfg.getInVarsBlacklist());
+        return convertParams(ctx, t.getIn(), cfg.getInVarsBlacklist(), cfg.isTruncateInVars(), cfg.getTruncateMaxStringLength(), cfg.getTruncateMaxArrayLength(), cfg.getTruncateMaxDepth());
     }
 
     private List<VariableMapping> getOutParams(Context ctx, AbstractElement element) {
@@ -146,7 +147,7 @@ public class TaskEventInterceptor implements TaskInterceptor {
             return null;
         }
 
-        return convertParams(ctx, t.getOut(), cfg.getOutVarsBlacklist());
+        return convertParams(ctx, t.getOut(), cfg.getOutVarsBlacklist(), cfg.isTruncateOutVars(), cfg.getTruncateMaxStringLength(), cfg.getTruncateMaxArrayLength(), cfg.getTruncateMaxDepth());
     }
 
     private static ElementEventProcessor.ElementEvent buildEvent(Context ctx) {
@@ -156,25 +157,39 @@ public class TaskEventInterceptor implements TaskInterceptor {
                 ctx.getProcessDefinitionId(), ctx.getElementId(), ContextUtils.getSessionToken(ctx));
     }
 
-    private static List<VariableMapping> convertParams(Context ctx, Collection<io.takari.bpm.model.VariableMapping> m, Collection<String> blacklist) {
+    private static List<VariableMapping> convertParams(Context ctx,
+                                                       Collection<io.takari.bpm.model.VariableMapping> m,
+                                                       Collection<String> blacklist,
+                                                       boolean truncate,
+                                                       int maxStringLength, int maxArrayLength, int maxDepth) {
         if (m == null) {
             return null;
         }
 
         return m.stream()
-                .map(v -> toMapping(ctx, v, blacklist.contains(v.getTarget())))
+                .map(v -> toMapping(ctx, v, blacklist.contains(v.getTarget()), truncate, maxStringLength, maxArrayLength, maxDepth))
                 .collect(Collectors.toList());
     }
 
-    private static VariableMapping toMapping(Context ctx, io.takari.bpm.model.VariableMapping v, boolean blacklisted) {
+    private static VariableMapping toMapping(Context ctx,
+                                             io.takari.bpm.model.VariableMapping v,
+                                             boolean blacklisted,
+                                             boolean truncate,
+                                             int maxStringLength, int maxArrayLength, int maxDepth) {
         Serializable resolved = "n/a";
 
         Object o = ctx.getVariable(v.getTarget());
         if (!blacklisted && o instanceof Serializable) {
             resolved = (Serializable) o;
+
+            if (truncate) {
+                resolved = (Serializable)ObjectTruncater.truncate(resolved, maxStringLength, maxArrayLength, maxDepth);
+            }
         }
 
-        return new VariableMapping(v.getSource(), v.getSourceExpression(), v.getSourceValue(), v.getTarget(), resolved);
+        Object sourceValue = ObjectTruncater.truncate(v.getSourceValue(), maxStringLength, maxArrayLength, maxDepth);
+
+        return new VariableMapping(v.getSource(), v.getSourceExpression(), sourceValue, v.getTarget(), resolved);
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

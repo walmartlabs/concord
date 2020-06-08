@@ -77,18 +77,20 @@ const renderInputVariable = (v: VariableMapping, idx: number) => (
 const renderInput = (data: VariableMapping[]) => (
     <>
         <h4>Input</h4>
-        <Table celled={true} compact={true}>
-            <Table.Header>
-                <Table.Row>
-                    <Table.HeaderCell collapsing={true}>Parameter</Table.HeaderCell>
-                    <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
-                    <Table.HeaderCell>Value</Table.HeaderCell>
-                </Table.Row>
-            </Table.Header>
-            <Table.Body>
-                {data.sort(comparators.byProperty((i) => i.target)).map(renderInputVariable)}
-            </Table.Body>
-        </Table>
+        <div style={{ overflowX: 'auto' }}>
+            <Table celled={true} compact={true}>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell collapsing={true}>Parameter</Table.HeaderCell>
+                        <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
+                        <Table.HeaderCell>Value</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {data.sort(comparators.byProperty((i) => i.target)).map(renderInputVariable)}
+                </Table.Body>
+            </Table>
+        </div>
     </>
 );
 
@@ -114,19 +116,21 @@ const renderInputVariablesV2 = (key: string, value: any, index: number) => {
 const renderInputV2 = (data: {}) => (
     <>
         <h4>Input</h4>
-        <Table celled={true} compact={true}>
-            <Table.Header>
-                <Table.Row>
-                    <Table.HeaderCell collapsing={true}>Parameter</Table.HeaderCell>
-                    <Table.HeaderCell>Value</Table.HeaderCell>
-                </Table.Row>
-            </Table.Header>
-            <Table.Body>
-                {Object.keys(data).map((key, index) =>
-                    renderInputVariablesV2(key, data[key], index)
-                )}
-            </Table.Body>
-        </Table>
+        <div style={{ overflowX: 'auto' }}>
+            <Table celled={true} compact={true}>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell collapsing={true}>Parameter</Table.HeaderCell>
+                        <Table.HeaderCell>Value</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {Object.keys(data).map((key, index) =>
+                        renderInputVariablesV2(key, data[key], index)
+                    )}
+                </Table.Body>
+            </Table>
+        </div>
     </>
 );
 
@@ -174,7 +178,6 @@ const TaskCallDetails = (props: Props) => {
     }
 
     const details = data[0].data as ProcessElementEvent;
-
     return (
         <>
             <Grid columns={2}>
@@ -208,7 +211,10 @@ const TaskCallDetails = (props: Props) => {
                 details.in instanceof Array &&
                 details.in.length > 0 &&
                 renderInput(details.in)}
-            {details.in && isObject(details.in) && renderInputV2(details.in)}
+            {details.in &&
+                !(details.in instanceof Array) &&
+                isObject(details.in) &&
+                renderInputV2(details.in)}
         </>
     );
 };

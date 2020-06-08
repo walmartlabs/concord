@@ -33,10 +33,15 @@ public class EventConfiguration {
             "privateKey",
             "vaultPassword");
 
+    private boolean truncateInVars = true;
     private boolean recordTaskInVars = false;
     private boolean recordTaskOutVars = false;
+    private boolean truncateOutVars = true;
     private Collection<String> inVarsBlacklist = DEFAULT_IN_VARS_BLACKLIST;
     private Collection<String> outVarsBlacklist = Collections.emptyList();
+    private int truncateMaxStringLength = 1024;
+    private int truncateMaxArrayLength = 32;
+    private int truncateMaxDepth = 32;
 
     public boolean isRecordTaskInVars() {
         return recordTaskInVars;
@@ -68,5 +73,45 @@ public class EventConfiguration {
 
     public void setOutVarsBlacklist(Collection<String> outVarsBlacklist) {
         this.outVarsBlacklist = outVarsBlacklist;
+    }
+
+    public boolean isTruncateInVars() {
+        return truncateInVars;
+    }
+
+    public boolean isTruncateOutVars() {
+        return truncateOutVars;
+    }
+
+    public int getTruncateMaxStringLength() {
+        return truncateMaxStringLength;
+    }
+
+    public int getTruncateMaxArrayLength() {
+        return truncateMaxArrayLength;
+    }
+
+    public int getTruncateMaxDepth() {
+        return truncateMaxDepth;
+    }
+
+    public void setTruncateInVars(boolean truncateInVars) {
+        this.truncateInVars = truncateInVars;
+    }
+
+    public void setTruncateOutVars(boolean truncateOutVars) {
+        this.truncateOutVars = truncateOutVars;
+    }
+
+    public void setTruncateMaxStringLength(int truncateMaxStringLength) {
+        this.truncateMaxStringLength = truncateMaxStringLength;
+    }
+
+    public void setTruncateMaxArrayLength(int truncateMaxArrayLength) {
+        this.truncateMaxArrayLength = truncateMaxArrayLength;
+    }
+
+    public void setTruncateMaxDepth(int truncateMaxDepth) {
+        this.truncateMaxDepth = truncateMaxDepth;
     }
 }
