@@ -22,21 +22,14 @@ package com.walmartlabs.concord.server.boot.filters;
 
 import com.codahale.metrics.Meter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
-import com.walmartlabs.concord.server.org.secret.SecretUtils;
 import com.walmartlabs.concord.server.sdk.metrics.InjectMeter;
 import com.walmartlabs.concord.server.security.apikey.ApiKey;
-import com.walmartlabs.concord.server.security.apikey.ApiKeyDao;
-import com.walmartlabs.concord.server.security.apikey.ApiKeyEntry;
-import com.walmartlabs.concord.server.security.sessionkey.SessionKey;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
-import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
@@ -52,17 +45,15 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 @Named
 @Singleton
 public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final Logger log = LoggerFactory.getLogger(ConcordAuthenticatingFilter.class);
-
-    private static final String REMEMBER_ME_HEADER = "X-Concord-RememberMe";
-    private static final String BASIC_AUTH_PREFIX = "Basic ";
-    private static final String BEARER_AUTH_PREFIX = "Bearer ";
 
     /**
      * List of URLs on which 'WWW-Authenticate: Basic' is not returned.
@@ -71,8 +62,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             "/api/service/console/whoami"
     };
 
-    private final ApiKeyDao apiKeyDao;
-    private final SecretStoreConfiguration secretCfg;
     private final Set<AuthenticationHandler> authenticationHandlers;
 
     @InjectMeter
@@ -82,14 +71,10 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
     private final Meter failedAuths;
 
     @Inject
-    public ConcordAuthenticatingFilter(ApiKeyDao apiKeyDao,
-                                       SecretStoreConfiguration secretCfg,
-                                       Set<AuthenticationHandler> authenticationHandlers,
+    public ConcordAuthenticatingFilter(Set<AuthenticationHandler> authenticationHandlers,
                                        Meter successAuths,
                                        Meter failedAuths) {
 
-        this.apiKeyDao = apiKeyDao;
-        this.secretCfg = secretCfg;
         this.authenticationHandlers = authenticationHandlers;
         this.successAuths = successAuths;
         this.failedAuths = failedAuths;
@@ -105,8 +90,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             }
         }
 
-        HttpServletRequest req = WebUtils.toHttp(request);
-
         // run plugins first, they might need to override the default behaviour
         // e.g. use their own `Authorization: Bearer` headers
         for (AuthenticationHandler handler : authenticationHandlers) {
@@ -114,16 +97,6 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             if (token != null) {
                 return token;
             }
-        }
-
-        // check for a session token next
-        if (req.getHeader(Constants.Headers.SESSION_TOKEN) != null) {
-            return createFromSessionHeader(req);
-        }
-
-        // check for a regular API token
-        if (req.getHeader(HttpHeaders.AUTHORIZATION) != null) {
-            return createFromAuthHeader(req);
         }
 
         // no dice
@@ -155,7 +128,7 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             return loggedIn;
         } catch (Exception e) {
             HttpServletResponse resp = WebUtils.toHttp(response);
-            writeError(resp, e, HttpServletResponse.SC_UNAUTHORIZED);
+            sendUnauthorized(resp, e);
             return false;
         }
     }
@@ -179,67 +152,12 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
         return super.onLoginFailure(token, e, request, response);
     }
 
-    private AuthenticationToken createFromAuthHeader(HttpServletRequest req) {
-        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
-
-        // enable sessions
-        req.setAttribute(DefaultSubjectContext.SESSION_CREATION_ENABLED, Boolean.TRUE);
-
-        // check the 'remember me' status
-        boolean rememberMe = Boolean.parseBoolean(req.getHeader(REMEMBER_ME_HEADER));
-
-        AuthenticationToken token;
-        if (h.startsWith(BASIC_AUTH_PREFIX)) {
-            token = parseBasicAuth(h, rememberMe);
-        } else {
-            if (h.startsWith(BEARER_AUTH_PREFIX)) {
-                h = h.substring(BEARER_AUTH_PREFIX.length());
-            }
-
-            validateApiKey(h);
-
-            ApiKeyEntry apiKey = apiKeyDao.find(h);
-            if (apiKey == null) {
-                return new UsernamePasswordToken();
-            }
-
-            token = new ApiKey(apiKey.getId(), apiKey.getUserId(), h, rememberMe);
-        }
-
-        return token;
-    }
-
-    private AuthenticationToken createFromSessionHeader(HttpServletRequest req) {
-        String h = req.getHeader(Constants.Headers.SESSION_TOKEN);
-        return buildSessionToken(h);
-    }
-
-    private AuthenticationToken buildSessionToken(String key) {
-        return new SessionKey(decryptSessionKey(key));
-    }
-
-    private UUID decryptSessionKey(String h) {
-        byte[] salt = secretCfg.getSecretStoreSalt();
-        byte[] pwd = secretCfg.getServerPwd();
-
-        byte[] ab = SecretUtils.decrypt(Base64.getDecoder().decode(h), pwd, salt);
-        return UUID.fromString(new String(ab));
-    }
-
-    private static void writeError(HttpServletResponse resp, Throwable t, int code) throws IOException {
+    private static void sendUnauthorized(HttpServletResponse resp, Throwable t) throws IOException {
         resp.setContentType(MediaType.APPLICATION_JSON);
-        resp.setStatus(code);
+        resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
         Map<String, String> error = Collections.singletonMap("message", t.getMessage());
         resp.getWriter().write(new ObjectMapper().writeValueAsString(error));
-    }
-
-    private static void validateApiKey(String s) {
-        try {
-            Base64.getDecoder().decode(s);
-        } catch (IllegalArgumentException e) {
-            throw new AuthenticationException("Invalid API token: " + e.getMessage());
-        }
     }
 
     private static AuthenticationToken getFirstToken(Subject subject) {
@@ -272,25 +190,5 @@ public class ConcordAuthenticatingFilter extends AuthenticatingFilter {
             resp.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic");
             resp.addHeader(HttpHeaders.WWW_AUTHENTICATE, "ConcordApiToken");
         }
-    }
-
-    private AuthenticationToken parseBasicAuth(String s, boolean rememberMe) {
-        s = s.substring(BASIC_AUTH_PREFIX.length());
-        s = new String(Base64.getDecoder().decode(s));
-
-        int idx = s.indexOf(":");
-        if (idx + 1 == s.length()) {
-            // empty password -> try user name as a session token
-            return buildSessionToken(s.substring(0, s.length() - 1));
-        }
-
-        if (idx < 0 || idx + 1 >= s.length()) {
-            throw new IllegalArgumentException("Invalid basic auth header");
-        }
-
-        String username = s.substring(0, idx).trim();
-        String password = s.substring(idx + 1);
-
-        return new UsernamePasswordToken(username, password, rememberMe);
     }
 }

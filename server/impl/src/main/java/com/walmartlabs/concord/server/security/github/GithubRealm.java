@@ -24,7 +24,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.PrincipalUtils;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -46,7 +45,7 @@ public class GithubRealm extends AuthorizingRealm {
     private static final Logger log = LoggerFactory.getLogger(GithubRealm.class);
 
     private static final String REALM_NAME = "github";
-    private static final String USER = "github";
+    private static final UUID USER_ID = UUID.fromString("acc17a02-b471-46af-9914-48cba3dd31ab"); // as in v0.47.0.xml
 
     private final UserManager userManager;
 
@@ -65,12 +64,7 @@ public class GithubRealm extends AuthorizingRealm {
         GithubKey t = (GithubKey) token;
 
         try {
-            UUID userId = userManager.getId(USER, null, UserType.LOCAL).orElse(null);
-            if (userId == null) {
-                return null;
-            }
-
-            return userManager.get(userId)
+            return userManager.get(USER_ID)
                     .map(u -> {
                         UserPrincipal p = new UserPrincipal(REALM_NAME, u);
                         return new SimpleAccount(Arrays.asList(p, t), t.getCredentials(), getName());
