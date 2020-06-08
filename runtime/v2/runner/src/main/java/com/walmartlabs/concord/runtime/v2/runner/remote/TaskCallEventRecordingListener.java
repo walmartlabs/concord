@@ -67,18 +67,22 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
         if (event.input() != null && eventConfiguration.recordTaskInVars()) {
             Map<String, Object> vars = maskVars(convertInput(event.input()), eventConfiguration.inVarsBlacklist());
             if (eventConfiguration.truncateInVars()) {
-                vars = ObjectTruncater.truncate(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
+                vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
-            m.put("in", vars);
+            if (vars != null && !vars.isEmpty()) {
+                m.put("in", vars);
+            }
         }
 
         Map<String, Object> outVars = asMapOrNull(event.out());
         if (outVars != null && eventConfiguration.recordTaskOutVars()) {
             Map<String, Object> vars = maskVars(outVars, eventConfiguration.outVarsBlacklist());
             if (eventConfiguration.truncateOutVars()) {
-                vars = ObjectTruncater.truncate(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
+                vars = ObjectTruncater.truncateMap(vars, eventConfiguration.truncateMaxStringLength(), eventConfiguration.truncateMaxArrayLength(), eventConfiguration.truncateMaxDepth());
             }
-            m.put("out", vars);
+            if (vars != null && !vars.isEmpty()) {
+                m.put("out", vars);
+            }
         }
 
         if (event.duration() != null) {
@@ -150,10 +154,9 @@ public class TaskCallEventRecordingListener implements TaskCallListener {
             return Collections.emptyMap();
         }
 
-
         if (input.size() == 1) {
             if (input.get(0) instanceof Variables) {
-                return ((Variables) input).toMap();
+                return ((Variables) input.get(0)).toMap();
             }
         }
 
