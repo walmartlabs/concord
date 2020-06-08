@@ -30,5 +30,7 @@ public interface AuthenticationHandler {
 
     AuthenticationToken createToken(ServletRequest request, ServletResponse response);
 
-    boolean onAccessDenied(ServletRequest request, ServletResponse response) throws IOException;
+    default boolean onAccessDenied(ServletRequest request, ServletResponse response) throws IOException {
+        return false;
+    }
 }
