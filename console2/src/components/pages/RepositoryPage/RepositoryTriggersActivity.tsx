@@ -25,9 +25,8 @@ import { AnyAction, Dispatch } from 'redux';
 import { Dimmer, Loader, Table } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
-import { refreshRepository, TriggerEntry } from '../../../api/org/project/repository';
-import { actions } from '../../../state/data/triggers';
-import { ListTriggersResponse, State } from '../../../state/data/triggers';
+import { TriggerEntry } from '../../../api/org/project/repository';
+import { actions, ListTriggersResponse, State } from '../../../state/data/triggers';
 import { comparators } from '../../../utils';
 import { RequestErrorMessage } from '../../molecules';
 
@@ -68,8 +67,6 @@ class RepositoryTriggersActivity extends React.Component<Props, OwnState> {
 
         try {
             this.setState({ loading: true });
-
-            await refreshRepository(orgName, projectName, repoName, true);
             load(orgName, projectName, repoName);
         } catch (e) {
             this.setState({ err: e });
