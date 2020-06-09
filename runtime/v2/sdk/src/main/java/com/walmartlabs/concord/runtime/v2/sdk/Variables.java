@@ -20,10 +20,7 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
-import com.walmartlabs.concord.sdk.HasKey;
-
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +52,14 @@ public interface Variables {
             return defaultValue;
         }
         return result;
+    }
+
+    default int getInt(String key, int defaultValue) {
+        return getNumber(key, defaultValue).intValue();
+    }
+
+    default long getLong(String key, long defaultValue) {
+        return getNumber(key, defaultValue).longValue();
     }
 
     @SuppressWarnings("unchecked")

@@ -101,6 +101,6 @@ public class SegmentedProcessLog extends RedirectedProcessLog {
     }
 
     private static boolean isFinal(LogSegmentUpdateRequest.StatusEnum status) {
-        return status != LogSegmentUpdateRequest.StatusEnum.RUNNING;
+        return status != null && status != LogSegmentUpdateRequest.StatusEnum.RUNNING;
     }
 }

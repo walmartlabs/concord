@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.lock;
+package com.walmartlabs.concord.plugins.docker;
 
 /*-
  * *****
@@ -20,23 +20,10 @@ package com.walmartlabs.concord.plugins.lock;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import java.io.IOException;
+import java.nio.file.Path;
 
-import static com.walmartlabs.concord.plugins.lock.Constants.*;
+public interface FileService {
 
-public class TaskParams {
-
-    private final Variables input;
-
-    public TaskParams(Variables input) {
-        this.input = input;
-    }
-
-    public String lockName() {
-        return input.assertString(LOCK_NAME_KEY);
-    }
-
-    public String scope() {
-        return input.getString(SCOPE_KEY, PROJECT_SCOPE);
-    }
+    Path createTempFile(String prefix, String suffix) throws IOException;
 }

@@ -158,6 +158,10 @@
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>docker-tasks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
             <artifactId>log-tasks</artifactId>
         </dependency>
 

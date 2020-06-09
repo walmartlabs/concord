@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.lock;
+package com.walmartlabs.concord.plugins.docker;
 
 /*-
  * *****
@@ -20,23 +20,21 @@ package com.walmartlabs.concord.plugins.lock;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+public class Result {
 
-import static com.walmartlabs.concord.plugins.lock.Constants.*;
+    private final String stdOut;
+    private final String stdErr;
 
-public class TaskParams {
-
-    private final Variables input;
-
-    public TaskParams(Variables input) {
-        this.input = input;
+    public Result(String stdOut, String stdErr) {
+        this.stdOut = stdOut;
+        this.stdErr = stdErr;
     }
 
-    public String lockName() {
-        return input.assertString(LOCK_NAME_KEY);
+    public String getStdOut() {
+        return stdOut;
     }
 
-    public String scope() {
-        return input.getString(SCOPE_KEY, PROJECT_SCOPE);
+    public String getStdErr() {
+        return stdErr;
     }
 }
