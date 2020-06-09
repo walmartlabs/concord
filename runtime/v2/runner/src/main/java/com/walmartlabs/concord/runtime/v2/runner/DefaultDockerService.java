@@ -101,11 +101,10 @@ public class DefaultDockerService implements DockerService {
         DockerProcessBuilder b = DockerProcessBuilder.from(instanceId.getValue(), spec);
 
         b.env(createEffectiveEnv(spec.env()));
-
         // add the default volume - mount the process' workDir as /workspace
         b.volume(workingDirectory.getValue().toString(), WORKSPACE_TARGET_DIR);
         // add extra volumes from the runner's arguments
-        b.volumes(extraVolumes);
+        extraVolumes.forEach(volume ->  b.volume(volume));
 
         return b.build();
     }

@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.plugins.lock;
+package com.walmartlabs.concord.plugins.docker;
 
 /*-
  * *****
@@ -20,23 +20,14 @@ package com.walmartlabs.concord.plugins.lock;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.sdk.DockerContainerSpec;
 
-import static com.walmartlabs.concord.plugins.lock.Constants.*;
+public interface DockerService {
 
-public class TaskParams {
+    int start(DockerContainerSpec spec, LogCallback outCallback, LogCallback errCallback) throws Exception;
 
-    private final Variables input;
+    interface LogCallback {
 
-    public TaskParams(Variables input) {
-        this.input = input;
-    }
-
-    public String lockName() {
-        return input.assertString(LOCK_NAME_KEY);
-    }
-
-    public String scope() {
-        return input.getString(SCOPE_KEY, PROJECT_SCOPE);
+        void onLog(String line);
     }
 }
