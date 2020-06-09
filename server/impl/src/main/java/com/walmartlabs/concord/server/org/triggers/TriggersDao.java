@@ -100,12 +100,6 @@ public class TriggersDao extends AbstractDao {
                 .fetch(this::toEntity);
     }
 
-    public List<TriggerEntry> list(String eventSource) {
-        try (DSLContext tx = DSL.using(cfg)) {
-            return list(tx, null, eventSource, null, null);
-        }
-    }
-
     public List<TriggerEntry> list(String eventSource, Integer version) {
         try (DSLContext tx = DSL.using(cfg)) {
             return list(tx, null, eventSource, version, null);

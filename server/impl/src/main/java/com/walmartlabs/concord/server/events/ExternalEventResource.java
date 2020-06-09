@@ -20,14 +20,8 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
-import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.events.externalevent.ExternalEventTriggerProcessor;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
-import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.user.UserManager;
 import io.swagger.annotations.Api;
@@ -49,6 +43,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
+import static com.walmartlabs.concord.common.MemoSupplier.memo;
+
 /**
  * Handles generic external events.
  * Receives arbitrary JSON bodies and matches them with whatever is configured
@@ -58,23 +54,24 @@ import java.util.*;
 @Singleton
 @Api(value = "External Events", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/events")
-public class ExternalEventResource extends AbstractEventResource implements Resource {
+public class ExternalEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(ExternalEventResource.class);
 
+    private final TriggerProcessExecutor executor;
+    private final UserManager userManager;
+    private final TriggerEventInitiatorResolver initiatorResolver;
     private final List<ExternalEventTriggerProcessor> processors;
 
     @Inject
-    public ExternalEventResource(ExternalEventsConfiguration cfg,
-                                 ProcessManager processManager,
-                                 ProjectDao projectDao,
-                                 RepositoryDao repositoryDao,
-                                 TriggersConfiguration triggersCfg,
+    public ExternalEventResource(TriggerProcessExecutor executor,
                                  UserManager userManager,
-                                 ProcessSecurityContext processSecurityContext,
+                                 TriggerEventInitiatorResolver initiatorResolver,
                                  List<ExternalEventTriggerProcessor> processors) {
 
-        super(cfg, processManager, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
+        this.executor = executor;
+        this.userManager = userManager;
+        this.initiatorResolver = initiatorResolver;
         this.processors = processors;
     }
 
@@ -86,7 +83,7 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
     public Response event(@ApiParam @PathParam("eventName") String eventName,
                           @ApiParam Map<String, Object> data) {
 
-        if (isDisabled(eventName)) {
+        if (executor.isDisabled(eventName)) {
             log.warn("event ['{}'] disabled", eventName);
             return Response.ok().build();
         }
@@ -99,8 +96,14 @@ public class ExternalEventResource extends AbstractEventResource implements Reso
         processors.forEach(p -> p.process(eventName, event, results));
 
         for (ExternalEventTriggerProcessor.Result r : results) {
-            List<PartialProcessKey> processKeys =
-                    process(eventId, eventName, r.event(), r.triggers(), null);
+            Event e = Event.builder()
+                    .id(eventId)
+                    .name(eventName)
+                    .attributes(r.event())
+                    .initiator(memo(new EventInitiatorSupplier("author", userManager, r.event())))
+                    .build();
+
+            List<PartialProcessKey> processKeys = executor.execute(e, initiatorResolver, r.triggers());
             log.info("event ['{}', '{}', '{}'] -> done, {} processes started", eventId, eventName, event, processKeys.size());
         }
 
