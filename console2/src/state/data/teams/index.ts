@@ -27,7 +27,6 @@ import {
     createOrUpdate as apiCreateOrUpdate,
     deleteTeam as apiDeleteTeam,
     get as apiGet,
-    list as apiList,
     listUsers as apiListUsers,
     NewTeamEntry,
     rename as apiRename
@@ -46,8 +45,6 @@ import {
     DeleteTeamState,
     GetTeamRequest,
     GetTeamState,
-    ListTeamsRequest,
-    ListTeamsState,
     ListTeamUsersRequest,
     ListTeamUsersState,
     RenameTeamRequest,
@@ -62,7 +59,6 @@ const NAMESPACE = 'teams';
 
 const actionTypes = {
     GET_TEAM_REQUEST: `${NAMESPACE}/get/request`,
-    LIST_TEAMS_REQUEST: `${NAMESPACE}/list/request`,
     TEAM_DATA_RESPONSE: `${NAMESPACE}/data/response`,
 
     CREATE_TEAM_REQUEST: `${NAMESPACE}/create/request`,
@@ -96,11 +92,6 @@ export const actions = {
         teamName
     }),
 
-    listTeams: (orgName: ConcordKey): ListTeamsRequest => ({
-        type: actionTypes.LIST_TEAMS_REQUEST,
-        orgName
-    }),
-
     createTeam: (orgName: ConcordKey, entry: NewTeamEntry): CreateTeamRequest => ({
         type: actionTypes.CREATE_TEAM_REQUEST,
         orgName,
@@ -132,12 +123,6 @@ export const actions = {
 const getReducers = combineReducers<GetTeamState>({
     running: makeLoadingReducer([actionTypes.GET_TEAM_REQUEST], [actionTypes.TEAM_DATA_RESPONSE]),
     error: makeErrorReducer([actionTypes.GET_TEAM_REQUEST], [actionTypes.TEAM_DATA_RESPONSE]),
-    response: makeResponseReducer(actionTypes.TEAM_DATA_RESPONSE, actionTypes.RESET_TEAMS)
-});
-
-const listReducers = combineReducers<ListTeamsState>({
-    running: makeLoadingReducer([actionTypes.LIST_TEAMS_REQUEST], [actionTypes.TEAM_DATA_RESPONSE]),
-    error: makeErrorReducer([actionTypes.LIST_TEAMS_REQUEST], [actionTypes.TEAM_DATA_RESPONSE]),
     response: makeResponseReducer(actionTypes.TEAM_DATA_RESPONSE, actionTypes.RESET_TEAMS)
 });
 
@@ -190,7 +175,6 @@ export const reducers = combineReducers<State>({
     teamById: makeEntityByIdReducer(actionTypes.TEAM_DATA_RESPONSE), // TODO append LIST_TEAM_USERS_RESPONSE data?
 
     get: getReducers,
-    list: listReducers,
     create: createReducers,
     rename: renameReducers,
     deleteTeam: deleteTeamReducers,
@@ -217,18 +201,6 @@ function* onGet({ orgName, teamName }: GetTeamRequest) {
         yield put({
             type: actionTypes.TEAM_DATA_RESPONSE,
             items: [response]
-        });
-    } catch (e) {
-        yield handleErrors(actionTypes.TEAM_DATA_RESPONSE, e);
-    }
-}
-
-function* onList({ orgName }: ListTeamsRequest) {
-    try {
-        const response = yield call(apiList, orgName);
-        yield put({
-            type: actionTypes.TEAM_DATA_RESPONSE,
-            items: response
         });
     } catch (e) {
         yield handleErrors(actionTypes.TEAM_DATA_RESPONSE, e);
@@ -289,7 +261,6 @@ function* onListUsers({ orgName, teamName }: ListTeamUsersRequest) {
 export const sagas = function*() {
     yield all([
         takeLatest(actionTypes.GET_TEAM_REQUEST, onGet),
-        takeLatest(actionTypes.LIST_TEAMS_REQUEST, onList),
         takeLatest(actionTypes.CREATE_TEAM_REQUEST, onCreate),
         takeLatest(actionTypes.RENAME_TEAM_REQUEST, onRename),
         takeLatest(actionTypes.DELETE_TEAM_REQUEST, onDelete),

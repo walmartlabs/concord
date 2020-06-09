@@ -29,10 +29,6 @@ export interface GetTeamRequest extends Action {
     teamName: ConcordKey;
 }
 
-export interface ListTeamsRequest extends Action {
-    orgName: ConcordKey;
-}
-
 export interface CreateTeamRequest extends Action {
     orgName: ConcordKey;
     entry: NewTeamEntry;
@@ -65,7 +61,6 @@ export interface ListTeamUsersResponse extends Action {
 }
 
 export type GetTeamState = RequestState<TeamDataResponse>;
-export type ListTeamsState = RequestState<TeamDataResponse>;
 export type CreateOrUpdateTeamState = RequestState<{}>;
 export type RenameTeamState = RequestState<{}>;
 export type DeleteTeamState = RequestState<GenericOperationResult>;
@@ -77,7 +72,6 @@ export interface State {
     teamById: Teams;
 
     get: GetTeamState;
-    list: ListTeamsState;
     create: CreateOrUpdateTeamState;
     rename: RenameTeamState;
     deleteTeam: DeleteTeamState;

@@ -19,86 +19,73 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { DropdownItemProps, Dropdown, DropdownProps } from 'semantic-ui-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Dropdown, DropdownItemProps } from 'semantic-ui-react';
 
-import { ConcordKey } from '../../../api/common';
-import { State, actions } from '../../../state/data/teams';
-import { Teams } from '../../../state/data/teams';
+import { ConcordKey, RequestError } from '../../../api/common';
 import { comparators } from '../../../utils';
-import { TeamEntry } from '../../../api/org/team';
+import { list as apiList, TeamEntry } from '../../../api/org/team';
 
-interface ExternalProps {
-    onSelect: (value: TeamEntry) => void;
+interface Props {
+    onSelect: (item: TeamEntry) => void;
     orgName: ConcordKey;
     name: string;
 }
 
-interface StateProps {
-    loading: boolean;
-    options: DropdownItemProps[];
-}
-
-interface DispatchProps {
-    load: () => void;
-}
-
-class FindTeamDropdown extends React.PureComponent<ExternalProps & StateProps & DispatchProps> {
-    componentDidMount() {
-        this.props.load();
-    }
-
-    handleChange(ev: DropdownItemProps, { value }: DropdownProps) {
-        const i = {
-            id: value as string,
-            orgId: '',
-            orgName: '',
-            name: ev.target.textContent
-        };
-
-        const { onSelect } = this.props;
-        onSelect(i);
-    }
-
-    render() {
-        const { orgName, name, load, ...rest } = this.props;
-
-        return (
-            <Dropdown
-                placeholder="Select team"
-                selection={true}
-                search={true}
-                {...rest}
-                onChange={(ev, data) => this.handleChange(ev, data)}
-            />
-        );
-    }
-}
-
-const makeOptions = (data: Teams): DropdownItemProps[] => {
-    if (!data) {
+const makeOptions = (data: TeamEntry[]): DropdownItemProps[] => {
+    if (!data || data.length === 0) {
         return [];
     }
-    return Object.keys(data)
-        .map((k) => data[k])
-        .sort(comparators.byName)
-        .map(({ name, id }) => ({
-            value: id,
-            text: name
-        }));
+
+    return data.sort(comparators.byName).map(({ name, id }) => ({
+        value: id,
+        text: name
+    }));
 };
 
-const mapStateToProps = ({ teams }: { teams: State }): StateProps => ({
-    loading: teams.list.running,
-    options: makeOptions(teams.teamById)
-});
+export default ({ orgName, name, onSelect, ...rest }: Props) => {
+    const [items, setItems] = useState<TeamEntry[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<RequestError | undefined>();
 
-const mapDispatchToProps = (
-    dispatch: Dispatch<AnyAction>,
-    { orgName }: ExternalProps
-): DispatchProps => ({
-    load: () => dispatch(actions.listTeams(orgName))
-});
+    const handleChange = useCallback(
+        (id: ConcordKey) => {
+            const item = items.find((i) => i.id === id);
+            if (!item) {
+                return;
+            }
 
-export default connect(mapStateToProps, mapDispatchToProps)(FindTeamDropdown);
+            onSelect(item);
+        },
+        [items, onSelect]
+    );
+
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true);
+            setError(undefined);
+            try {
+                setItems(await apiList(orgName));
+            } catch (e) {
+                setError(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        load();
+    }, [orgName]);
+
+    return (
+        <Dropdown
+            placeholder="Select team"
+            loading={loading}
+            error={!!error}
+            selection={true}
+            search={true}
+            options={makeOptions(items)}
+            {...rest}
+            onChange={(ev, { value }) => handleChange(value as ConcordKey)}
+        />
+    );
+};
