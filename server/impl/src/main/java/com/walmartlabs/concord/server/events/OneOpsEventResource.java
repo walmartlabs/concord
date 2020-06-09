@@ -21,14 +21,8 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
-import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.events.oneops.OneOpsTriggerProcessor;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
-import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -53,6 +47,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.walmartlabs.concord.common.MemoSupplier.memo;
+
 /**
  * Handles external OneOps events.
  * At the moment supports only VM replacement events. Other event types might
@@ -62,29 +58,28 @@ import java.util.Map;
 @Singleton
 @Api(value = "Events", authorizations = {@Authorization("api_key"), @Authorization("ldap")})
 @Path("/api/v1/events")
-public class OneOpsEventResource extends AbstractEventResource implements Resource {
+public class OneOpsEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(OneOpsEventResource.class);
 
     private static final String EVENT_SOURCE = "oneops";
 
     private final ObjectMapper objectMapper;
+    private final TriggerProcessExecutor executor;
+    private final UserManager userManager;
+    private final TriggerEventInitiatorResolver initiatorResolver;
     private final List<OneOpsTriggerProcessor> processors;
 
     @Inject
-    public OneOpsEventResource(ExternalEventsConfiguration cfg,
-                               ProcessManager processManager,
-                               ProjectDao projectDao,
-                               RepositoryDao repositoryDao,
-                               TriggersConfiguration triggersCfg,
+    public OneOpsEventResource(ObjectMapper objectMapper,
+                               TriggerProcessExecutor executor,
                                UserManager userManager,
-                               ProcessSecurityContext processSecurityContext,
-                               ObjectMapper objectMapper,
+                               TriggerEventInitiatorResolver initiatorResolver,
                                List<OneOpsTriggerProcessor> processors) {
-
-        super(cfg, processManager, projectDao, repositoryDao, triggersCfg, userManager, processSecurityContext);
-
         this.objectMapper = objectMapper;
+        this.executor = executor;
+        this.userManager = userManager;
+        this.initiatorResolver = initiatorResolver;
         this.processors = processors;
     }
 
@@ -93,7 +88,7 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTimer
     public Response event(Map<String, Object> event) {
-        if (isDisabled(EVENT_SOURCE)) {
+        if (executor.isDisabled(EVENT_SOURCE)) {
             log.warn("event ['{}'] disabled", EVENT_SOURCE);
             return Response.ok().build();
         }
@@ -106,9 +101,17 @@ public class OneOpsEventResource extends AbstractEventResource implements Resour
         processors.forEach(p -> p.process(event, results));
 
         for (OneOpsTriggerProcessor.Result result : results) {
-            String eventId = String.valueOf(event.get("cmsId"));
-            List<PartialProcessKey> processKeys = process(eventId, EVENT_SOURCE, result.event(), result.triggers(), null);
-            log.info("event ['{}'] -> done, {} processes started", eventId, processKeys.size());
+            Event e = Event.builder()
+                    .id(String.valueOf(event.get("cmsId")))
+                    .name(EVENT_SOURCE)
+                    .attributes(result.event())
+                    // "author" property is set by OneOpsTriggerProcessor
+                    // TODO replace with a custom Supplier<UserEntry> that directly looks at the event's "createdBy"
+                    .initiator(memo(new EventInitiatorSupplier("author", userManager, result.event())))
+                    .build();
+
+            List<PartialProcessKey> processKeys = executor.execute(e, initiatorResolver, result.triggers());
+            log.info("event ['{}'] -> done, {} processes started", e.id(), processKeys.size());
         }
 
         return Response.ok().build();

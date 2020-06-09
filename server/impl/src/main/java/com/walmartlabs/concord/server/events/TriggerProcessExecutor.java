@@ -4,14 +4,14 @@ package com.walmartlabs.concord.server.events;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.inject.Inject;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
@@ -31,131 +32,84 @@ import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
-import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
-import com.walmartlabs.concord.server.user.UserManager;
-import com.walmartlabs.concord.server.user.UserType;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
 import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public abstract class AbstractEventResource {
+@Named
+public class TriggerProcessExecutor {
 
-    private final Logger log;
-    private final ExecutorService executor;
+    public interface ProcessConfigurationEnricher {
 
-    private final ExternalEventsConfiguration eventsCfg;
-    private final ProcessManager processManager;
-    private final ProjectDao projectDao;
-    private final RepositoryDao repositoryDao;
-    private final TriggersConfiguration triggersCfg;
-    private final UserManager userManager;
-    private final ProcessSecurityContext processSecurityContext;
-
-    public AbstractEventResource(ExternalEventsConfiguration eventsCfg,
-                                 ProcessManager processManager,
-                                 ProjectDao projectDao,
-                                 RepositoryDao repositoryDao,
-                                 TriggersConfiguration triggersCfg,
-                                 UserManager userManager,
-                                 ProcessSecurityContext processSecurityContext) {
-
-        this.eventsCfg = eventsCfg;
-        this.processManager = processManager;
-        this.projectDao = projectDao;
-        this.repositoryDao = repositoryDao;
-        this.processSecurityContext = processSecurityContext;
-        this.triggersCfg = triggersCfg;
-        this.userManager = userManager;
-
-        this.log = LoggerFactory.getLogger(this.getClass());
-        this.executor = createExecutor(eventsCfg.getWorkerThreads());
-
+        Map<String, Object> enrich(TriggerEntry t, Map<String, Object> cfg);
     }
 
-    protected List<PartialProcessKey> process(String eventId,
-                                              String eventName,
-                                              Map<String, Object> event,
-                                              List<TriggerEntry> triggers,
-                                              ProcessConfigurationEnricher cfgEnricher) {
-        if (isDisabled(eventName)) {
-            log.warn("process ['{}'] event '{}' disabled", eventId, eventName);
+    private static final Logger log = LoggerFactory.getLogger(TriggerProcessExecutor.class);
+
+    private final ExternalEventsConfiguration eventsCfg;
+    private final TriggersConfiguration triggersCfg;
+    private final ProcessManager processManager;
+    private final RepositoryDao repositoryDao;
+    private final ProjectDao projectDao;
+    private final ProcessSecurityContext processSecurityContext;
+    private final ExecutorService executor;
+
+    @Inject
+    public TriggerProcessExecutor(ExternalEventsConfiguration eventsCfg,
+                                  TriggersConfiguration triggersCfg,
+                                  ProcessManager processManager,
+                                  RepositoryDao repositoryDao,
+                                  ProjectDao projectDao,
+                                  ProcessSecurityContext processSecurityContext) {
+
+        this.eventsCfg = eventsCfg;
+        this.triggersCfg = triggersCfg;
+        this.processManager = processManager;
+        this.repositoryDao = repositoryDao;
+        this.projectDao = projectDao;
+        this.processSecurityContext = processSecurityContext;
+        this.executor = createExecutor(eventsCfg.getWorkerThreads());
+    }
+
+    public boolean isDisabled(String eventName) {
+        return triggersCfg.isDisableAll() || triggersCfg.getDisabled().contains(eventName);
+    }
+
+    public List<PartialProcessKey> execute(Event event,
+                                           TriggerEventInitiatorResolver initiatorResolver,
+                                           List<TriggerEntry> triggers) {
+
+        return execute(event, triggers, initiatorResolver, null);
+    }
+
+    public List<PartialProcessKey> execute(Event event,
+                                           List<TriggerEntry> triggers,
+                                           TriggerEventInitiatorResolver initiatorResolver,
+                                           ProcessConfigurationEnricher cfgEnricher) {
+
+        if (isDisabled(event.name())) {
+            log.warn("process ['{}'] event '{}' disabled", event.id(), event.name());
             return Collections.emptyList();
         }
 
-        assertRoles(eventName);
+        assertRoles(event.name());
 
         return triggers.stream()
                 .filter(t -> !isRepositoryDisabled(t))
-                .map(t -> process(eventId, eventName, t, event, cfgEnricher))
+                .map(t -> submitProcess(event, t, initiatorResolver, cfgEnricher))
                 .collect(Collectors.toList()) // collect all "futures"
                 .stream()
-                .map(AbstractEventResource::resolve)
+                .map(TriggerProcessExecutor::resolve)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-    }
-
-    private Future<PartialProcessKey> process(String eventId,
-                                              String eventName,
-                                              TriggerEntry t,
-                                              Map<String, Object> event,
-                                              ProcessConfigurationEnricher cfgEnricher) {
-
-        UserEntry initiator;
-        try {
-            initiator = getInitiator(t, event);
-        } catch (Exception e) {
-            log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
-            SettableFuture<PartialProcessKey> f = SettableFuture.create();
-            f.set(null);
-            return f;
-        }
-
-        return executor.submit(() -> {
-            Map<String, Object> args = new HashMap<>();
-            if (t.getArguments() != null) {
-                args.putAll(t.getArguments());
-            }
-            args.put("event", ExpressionUtils.escapeMap(event));
-
-            Map<String, Object> cfg = new HashMap<>();
-            cfg.put(Constants.Request.ARGUMENTS_KEY, args);
-
-            if (TriggerUtils.getEntryPoint(t) != null) {
-                cfg.put(Constants.Request.ENTRY_POINT_KEY, TriggerUtils.getEntryPoint(t));
-            }
-
-            if (t.getActiveProfiles() != null) {
-                cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
-            }
-
-            cfg.put(Constants.Request.EXCLUSIVE, TriggerUtils.getExclusive(t));
-
-            if (cfgEnricher != null) {
-                cfg = cfgEnricher.enrich(t, cfg);
-            }
-
-            try {
-                UUID orgId = projectDao.getOrgId(t.getProjectId());
-
-                PartialProcessKey pk = startProcess(eventId, orgId, t, cfg, initiator);
-                log.info("process ['{}'] -> new process ('{}') triggered by {}", eventId, pk, t);
-                return pk;
-            } catch (Exception e) {
-                log.error("process ['{}', '{}', '{}'] -> error", eventId, eventName, t.getId(), e);
-                return null;
-            }
-        });
-    }
-
-    private boolean isRepositoryDisabled(TriggerEntry t) {
-        return repositoryDao.get(t.getRepositoryId()).isDisabled();
     }
 
     private void assertRoles(String eventName) {
@@ -178,25 +132,60 @@ public abstract class AbstractEventResource {
         });
     }
 
-    protected boolean isDisabled(String eventName) {
-        return triggersCfg.isDisableAll() || triggersCfg.getDisabled().contains(eventName);
+    private boolean isRepositoryDisabled(TriggerEntry t) {
+        return repositoryDao.get(t.getRepositoryId()).isDisabled();
     }
 
-    private UserEntry getInitiator(TriggerEntry trigger, Map<String, Object> event) {
-        boolean isUseInitiator = TriggerUtils.isUseInitiator(trigger);
-        if (!isUseInitiator) {
-            UserPrincipal initiator = UserPrincipal.assertCurrent();
-            return initiator.getUser();
+    private Future<PartialProcessKey> submitProcess(Event event,
+                                                    TriggerEntry t,
+                                                    TriggerEventInitiatorResolver initiatorResolver,
+                                                    ProcessConfigurationEnricher cfgEnricher) {
+
+        UserEntry initiator;
+        try {
+            initiator = initiatorResolver.resolve(t, event);
+        } catch (Exception e) {
+            log.error("process ['{}', '{}', '{}'] -> error", event.id(), event.name(), t.getId(), e);
+            SettableFuture<PartialProcessKey> f = SettableFuture.create();
+            f.set(null);
+            return f;
         }
 
-        return getOrCreateUserEntry(event);
-    }
+        return executor.submit(() -> {
+            Map<String, Object> args = new HashMap<>();
+            if (t.getArguments() != null) {
+                args.putAll(t.getArguments());
+            }
+            args.put("event", ExpressionUtils.escapeMap(event.attributes()));
 
-    protected UserEntry getOrCreateUserEntry(Map<String, Object> event) {
-        // TODO make sure all event resources perform the user lookup correctly, e.g. using correct input data
-        String author = event.getOrDefault("author", "").toString();
-        return userManager.getOrCreate(author, null, UserType.LDAP)
-                .orElseThrow(() -> new ConcordApplicationException("User not found: " + author));
+            Map<String, Object> cfg = new HashMap<>();
+            cfg.put(Constants.Request.ARGUMENTS_KEY, args);
+
+            if (TriggerUtils.getEntryPoint(t) != null) {
+                cfg.put(Constants.Request.ENTRY_POINT_KEY, TriggerUtils.getEntryPoint(t));
+            }
+
+            if (t.getActiveProfiles() != null) {
+                cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
+            }
+
+            cfg.put(Constants.Request.EXCLUSIVE, TriggerUtils.getExclusive(t));
+
+            if (cfgEnricher != null) {
+                cfg = cfgEnricher.enrich(t, cfg);
+            }
+
+            try {
+                UUID orgId = projectDao.getOrgId(t.getProjectId());
+
+                PartialProcessKey pk = startProcess(event.id(), orgId, t, cfg, initiator);
+                log.info("process ['{}'] -> new process ('{}') triggered by {}", event.id(), pk, t);
+                return pk;
+            } catch (Exception e) {
+                log.error("process ['{}', '{}', '{}'] -> error", event.id(), event.name(), t.getId(), e);
+                return null;
+            }
+        });
     }
 
     private PartialProcessKey startProcess(String eventId,
@@ -239,9 +228,5 @@ public abstract class AbstractEventResource {
         ThreadPoolExecutor p = new ThreadPoolExecutor(1, poolSize, 30, TimeUnit.SECONDS, new SynchronousQueue<>());
         p.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return p;
-    }
-
-    public interface ProcessConfigurationEnricher {
-        Map<String, Object> enrich(TriggerEntry t, Map<String, Object> cfg);
     }
 }

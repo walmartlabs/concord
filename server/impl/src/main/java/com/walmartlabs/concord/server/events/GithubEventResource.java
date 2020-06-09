@@ -20,21 +20,16 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.audit.AuditAction;
 import com.walmartlabs.concord.server.audit.AuditLog;
 import com.walmartlabs.concord.server.audit.AuditObject;
-import com.walmartlabs.concord.server.cfg.ExternalEventsConfiguration;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
-import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
 import com.walmartlabs.concord.server.events.github.Payload;
-import com.walmartlabs.concord.server.org.project.ProjectDao;
-import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
-import com.walmartlabs.concord.server.process.ProcessManager;
-import com.walmartlabs.concord.server.process.ProcessSecurityContext;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
@@ -59,7 +54,9 @@ import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import static com.walmartlabs.concord.common.MemoSupplier.memo;
 import static com.walmartlabs.concord.server.events.github.Constants.COMMIT_ID_KEY;
 import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURCE;
 
@@ -67,43 +64,40 @@ import static com.walmartlabs.concord.server.events.github.Constants.EVENT_SOURC
  * Handles external GitHub events.
  * Uses a custom authentication mechanism,
  * see {@link com.walmartlabs.concord.server.security.GithubAuthenticatingFilter}.
- *
+ * <p>
  * See also https://developer.github.com/webhooks/
  */
 @Named
 @Singleton
 @Api(value = "GitHub Events", authorizations = {})
 @Path("/events/github")
-public class GithubEventResource extends AbstractEventResource implements Resource {
+public class GithubEventResource implements Resource {
 
     private static final Logger log = LoggerFactory.getLogger(GithubEventResource.class);
 
     private final GithubConfiguration githubCfg;
-    private final LdapManager ldapManager;
-    private final UserManager userManager;
+    private final TriggerProcessExecutor executor;
     private final AuditLog auditLog;
     private final List<GithubTriggerProcessor> processors;
+    private final UserManager userManager;
+    private final LdapManager ldapManager;
+    private final TriggerEventInitiatorResolver initiatorResolver;
 
     @Inject
-    public GithubEventResource(ExternalEventsConfiguration cfg,
-                               ProjectDao projectDao,
-                               RepositoryDao repositoryDao,
-                               ProcessManager processManager,
-                               TriggersConfiguration triggersConfiguration,
-                               GithubConfiguration githubCfg,
-                               LdapManager ldapManager,
+    public GithubEventResource(GithubConfiguration githubCfg,
+                               TriggerProcessExecutor executor, AuditLog auditLog,
+                               List<GithubTriggerProcessor> processors,
                                UserManager userManager,
-                               ProcessSecurityContext processSecurityContext,
-                               AuditLog auditLog,
-                               List<GithubTriggerProcessor> processors) {
-
-        super(cfg, processManager, projectDao, repositoryDao, triggersConfiguration, userManager, processSecurityContext);
+                               LdapManager ldapManager,
+                               TriggerEventInitiatorResolver initiatorResolver) {
 
         this.githubCfg = githubCfg;
-        this.ldapManager = ldapManager;
-        this.userManager = userManager;
+        this.executor = executor;
         this.auditLog = auditLog;
         this.processors = processors;
+        this.userManager = userManager;
+        this.ldapManager = ldapManager;
+        this.initiatorResolver = initiatorResolver;
     }
 
     @POST
@@ -123,7 +117,7 @@ public class GithubEventResource extends AbstractEventResource implements Resour
             return "ok";
         }
 
-        if (isDisabled(eventName)) {
+        if (executor.isDisabled(eventName)) {
             log.warn("event ['{}', '{}'] -> disabled", deliveryId, eventName);
             return "ok";
         }
@@ -147,7 +141,14 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         processors.forEach(p -> p.process(eventName, payload, uriInfo, results));
 
         for (GithubTriggerProcessor.Result r : results) {
-            process(deliveryId, EVENT_SOURCE, r.event(), r.triggers(), (t, cfg) -> {
+            Event e = Event.builder()
+                    .id(deliveryId)
+                    .name(EVENT_SOURCE)
+                    .attributes(r.event())
+                    .initiator(memo(new GithubEventInitiatorSupplier(userManager, ldapManager, r.event())))
+                    .build();
+
+            executor.execute(e, r.triggers(), initiatorResolver, (t, cfg) -> {
                 // if `useEventCommitId` is true then the process is forced to use the specified commit ID
                 String commitId = MapUtils.getString(r.event(), COMMIT_ID_KEY);
                 if (commitId != null && TriggerUtils.isUseEventCommitId(t)) {
@@ -160,45 +161,53 @@ public class GithubEventResource extends AbstractEventResource implements Resour
         return "ok";
     }
 
-    @Override
-    protected UserEntry getOrCreateUserEntry(Map<String, Object> event) {
-        if (!githubCfg.isUseSenderLdapDn()) {
-            return super.getOrCreateUserEntry(event);
+    private class GithubEventInitiatorSupplier implements Supplier<UserEntry> {
+
+        private final UserManager userManager;
+        private final LdapManager ldapManager;
+        private final Map<String, Object> eventAttributes;
+        private final EventInitiatorSupplier fallback;
+
+        public GithubEventInitiatorSupplier(UserManager userManager, LdapManager ldapManager, Map<String, Object> eventAttributes) {
+            this.userManager = userManager;
+            this.ldapManager = ldapManager;
+            this.eventAttributes = eventAttributes;
+            this.fallback = new EventInitiatorSupplier("author", userManager, eventAttributes);
         }
 
-        String ldapDn = getSenderLdapDn(event);
-        if (ldapDn == null) {
-            log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", event);
-            return super.getOrCreateUserEntry(event);
-        }
-
-        // only LDAP users are supported in GitHub triggers
-        try {
-            LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
-            if (p == null) {
-                log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", event, ldapDn);
-                return super.getOrCreateUserEntry(event);
+        @Override
+        public UserEntry get() {
+            if (!githubCfg.isUseSenderLdapDn()) {
+                return fallback.get();
             }
 
-            return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
-                    .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+            String ldapDn = getSenderLdapDn(eventAttributes);
+            if (ldapDn == null) {
+                log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", eventAttributes);
+                return fallback.get();
+            }
 
-    @SuppressWarnings("unchecked")
-    private static String getSenderLdapDn(Map<String, Object> event) {
-        Map<String, Object> payload = (Map<String, Object>) event.get("payload");
-        if (payload == null) {
+            // only LDAP users are supported in GitHub triggers
+            try {
+                LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
+                if (p == null) {
+                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", eventAttributes, ldapDn);
+                    return fallback.get();
+                }
+
+                return userManager.getOrCreate(p.getUsername(), p.getDomain(), UserType.LDAP)
+                        .orElseThrow(() -> new ConcordApplicationException("User not found: " + p.getUsername()));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private String getSenderLdapDn(Map<String, Object> event) {
+            Object result = ConfigurationUtils.get(event, "payload.sender.ldap_dn");
+            if (result instanceof String) {
+                return (String) result;
+            }
             return null;
         }
-
-        Map<String, Object> sender = (Map<String, Object>) payload.get("sender");
-        if (sender == null) {
-            return null;
-        }
-
-        return (String) sender.get("ldap_dn");
     }
 }
