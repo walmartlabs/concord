@@ -54,6 +54,7 @@ interface Props {
     reset?: () => void;
     onConfirm: () => void;
     onDone?: () => void;
+    onOpen?: () => void;
 
     onDoneElements?: () => React.ReactNode;
 
@@ -178,13 +179,13 @@ class SingleOperationPopup extends React.Component<Props, State> {
     }
 
     render() {
-        const { trigger, title, icon, iconColor, customStyle = {} } = this.props;
+        const { onOpen, trigger, title, icon, iconColor, customStyle = {} } = this.props;
 
         return (
             <Modal
                 onClick={this.stopPropagation}
-                onOpen={this.handleOpen}
                 onClose={this.stopPropagation}
+                onOpen={onOpen}
                 style={customStyle}
                 open={this.state.open}
                 dimmer="inverted"

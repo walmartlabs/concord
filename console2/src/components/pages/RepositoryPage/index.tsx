@@ -80,13 +80,13 @@ const RepositoryPage = (props: RouteComponentProps<RouteProps>) => {
                     <Icon name="setting" />
                     <Link to={`${baseUrl}/settings`}>Settings</Link>
                 </Menu.Item>
-                <Menu.Item active={activeTab === 'events'}>
-                    <Icon name="search" />
-                    <Link to={`${baseUrl}/events`}>Events</Link>
-                </Menu.Item>
                 <Menu.Item active={activeTab === 'triggers'}>
                     <Icon name="lightning" />
                     <Link to={`${baseUrl}/triggers`}>Triggers</Link>
+                </Menu.Item>
+                <Menu.Item active={activeTab === 'events'}>
+                    <Icon name="search" />
+                    <Link to={`${baseUrl}/events`}>Events</Link>
                 </Menu.Item>
             </Menu>
 
@@ -102,19 +102,19 @@ const RepositoryPage = (props: RouteComponentProps<RouteProps>) => {
                         repoName={repoName}
                     />
                 </Route>
+                <Route path={`${baseUrl}/triggers`} exact={true}>
+                    <RepositoryTriggersActivity
+                        orgName={orgName}
+                        projectName={projectName}
+                        repoName={repoName}
+                    />
+                </Route>
                 <Route path={`${baseUrl}/events`} exact={true}>
                     <RepositoryEventsActivity
                         orgName={orgName}
                         projectName={projectName}
                         repoName={repoName}
                         forceRefresh={refresh}
-                    />
-                </Route>
-                <Route path={`${baseUrl}/triggers`} exact={true}>
-                    <RepositoryTriggersActivity
-                        orgName={orgName}
-                        projectName={projectName}
-                        repoName={repoName}
                     />
                 </Route>
                 <Route component={NotFoundPage} />

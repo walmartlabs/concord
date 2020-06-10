@@ -31,6 +31,7 @@ interface ExternalProps {
     projectName: ConcordKey;
     repoName: ConcordKey;
     trigger: (onClick: () => void) => React.ReactNode;
+    onDone?: () => void;
 }
 
 interface DispatchProps {
@@ -48,7 +49,7 @@ type Props = DispatchProps & ExternalProps & StateProps;
 
 class RefreshRepositoryPopup extends React.Component<Props> {
     render() {
-        const { trigger, refreshing, success, error, reset, onConfirm } = this.props;
+        const { trigger, refreshing, success, error, reset, onConfirm, onDone } = this.props;
 
         return (
             <SingleOperationPopup
@@ -66,6 +67,7 @@ class RefreshRepositoryPopup extends React.Component<Props> {
                 error={error}
                 reset={reset}
                 onConfirm={onConfirm}
+                onDone={onDone}
             />
         );
     }
