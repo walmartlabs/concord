@@ -65,9 +65,7 @@ const renderTableRow = (orgName: ConcordKey, projectName: ConcordKey, row: Repos
             <Table.Cell>{getSource(row)}</Table.Cell>
             <Table.Cell>{row.path || '/'}</Table.Cell>
             <Table.Cell>{row.secretName}</Table.Cell>
-            <Table.Cell>
-                <RepositoryActionDropdown orgName={orgName} projectName={projectName} repo={row} />
-            </Table.Cell>
+            <RepositoryActionDropdown orgName={orgName} projectName={projectName} repo={row} />
         </Table.Row>
     );
 };
@@ -89,8 +87,15 @@ class RepositoryList extends React.PureComponent<Props> {
                         <Table.HeaderCell>Repository URL</Table.HeaderCell>
                         <Table.HeaderCell collapsing={true}>Branch/Commit ID</Table.HeaderCell>
                         <Table.HeaderCell singleLine={true}>Path</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true}>Secret</Table.HeaderCell>
-                        <Table.HeaderCell collapsing={true} />
+                        <Table.HeaderCell collapsing={true} style={{ width: '8%' }}>
+                            Secret
+                        </Table.HeaderCell>
+                        <Table.HeaderCell
+                            collapsing={true}
+                            colSpan={2}
+                            style={{ width: '1%', textAlign: 'center' }}>
+                            Execute
+                        </Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>{data.map((r) => renderTableRow(orgName, projectName, r))}</Table.Body>

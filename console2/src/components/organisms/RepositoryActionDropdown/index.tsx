@@ -20,13 +20,12 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Dropdown, Icon } from 'semantic-ui-react';
+import { Button, Dropdown, Icon, Table } from 'semantic-ui-react';
 
 import { ConcordKey, RequestError } from '../../../api/common';
 import {
     listTriggersV2 as apiListTriggers,
     RepositoryEntry,
-    RepositoryMeta,
     TriggerEntry
 } from '../../../api/org/project/repository';
 import {
@@ -41,20 +40,6 @@ interface ExternalProps {
     projectName: ConcordKey;
     repo: RepositoryEntry;
 }
-
-const getProfiles = (meta?: RepositoryMeta): string[] => {
-    if (!meta) {
-        return [];
-    }
-    return meta.profiles || [];
-};
-
-const getEntryPoints = (meta?: RepositoryMeta): string[] => {
-    if (!meta) {
-        return [];
-    }
-    return meta.entryPoints || [];
-};
 
 const renderManualTrigger = ({
     trigger,
@@ -137,7 +122,7 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
         branch: repoBranch,
         commitId: repoCommitId,
         path: repoPath,
-        meta: repoMeta
+        disabled: repoDisabled
     } = repo;
 
     // show the commit ID if defined, otherwise show the branch name or fallback to 'master'
@@ -145,84 +130,123 @@ const RepositoryActionDropdown = (props: ExternalProps) => {
     const repoPathOrDefault = repoPath ? repoPath : '/';
 
     return (
-        <Dropdown
-            icon="ellipsis vertical"
-            pointing={'top right'}
-            loading={loading}
-            error={error != null}>
-            <Dropdown.Menu>
-                <StartRepositoryPopup
-                    orgName={orgName}
-                    projectName={projectName}
-                    repoName={repoName}
-                    repoURL={repoURL}
-                    repoBranchOrCommitId={repoBranchOrCommitId}
-                    repoPath={repoPathOrDefault}
-                    repoProfiles={getProfiles(repoMeta)}
-                    repoEntryPoints={getEntryPoints(repoMeta)}
-                    allowEntryPoint={true}
-                    allowProfile={true}
-                    trigger={(onClick: any) => (
-                        <Dropdown.Item onClick={onClick} disabled={repo.disabled} loading={true}>
-                            <Icon name="play" color="blue" />
-                            <span className="text">Run</span>
-                        </Dropdown.Item>
-                    )}
-                />
+        <>
+            <Table.Cell style={{ paddingRight: '0px' }}>
+                {manualTriggers && manualTriggers.length > 0 ? (
+                    <Dropdown
+                        icon="play green"
+                        pointing={'top right'}
+                        style={{ paddingLeft: '25%' }}
+                        loading={loading}
+                        error={error != null}>
+                        <Dropdown.Menu>
+                            <StartRepositoryPopup
+                                orgName={orgName}
+                                projectName={projectName}
+                                repoName={repoName}
+                                repoURL={repoURL}
+                                repoBranchOrCommitId={repoBranchOrCommitId}
+                                repoPath={repoPathOrDefault}
+                                allowEntryPoint={true}
+                                allowProfile={true}
+                                trigger={(onClick: any) => (
+                                    <Dropdown.Item onClick={onClick} disabled={repoDisabled}>
+                                        <Icon name="play" color="blue" />
+                                        <span className="text">Run</span>
+                                    </Dropdown.Item>
+                                )}
+                            />
+                            <Dropdown.Divider />
+                            {manualTriggers.map((t) =>
+                                renderManualTrigger({
+                                    trigger: t,
+                                    orgName,
+                                    projectName,
+                                    repoName,
+                                    repoURL,
+                                    repoBranchOrCommitId,
+                                    repoPathOrDefault,
+                                    repoDisabled: repo.disabled
+                                })
+                            )}
+                        </Dropdown.Menu>
+                    </Dropdown>
+                ) : (
+                    <StartRepositoryPopup
+                        orgName={orgName}
+                        projectName={projectName}
+                        repoName={repoName}
+                        repoURL={repoURL}
+                        repoBranchOrCommitId={repoBranchOrCommitId}
+                        repoPath={repoPathOrDefault}
+                        allowEntryPoint={true}
+                        allowProfile={true}
+                        trigger={(onClick: any) => (
+                            <Button
+                                onClick={onClick}
+                                style={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0)',
+                                    paddingLeft: '25%'
+                                }}
+                                size="medium"
+                                icon={true}
+                                disabled={repoDisabled}
+                                compact={true}>
+                                <div data-toggle="tooltip" data-placement="bottom" title="Run">
+                                    <Icon name="play" color="blue" />
+                                </div>
+                            </Button>
+                        )}
+                    />
+                )}
+            </Table.Cell>
+            <Table.Cell style={{ paddingLeft: '0px' }}>
+                <Dropdown
+                    icon="bars"
+                    pointing={'top right'}
+                    style={{ paddingTop: '25%', paddingBottom: '25%' }}
+                    loading={loading}
+                    error={error != null}>
+                    <Dropdown.Menu>
+                        <ValidateRepositoryPopup
+                            orgName={orgName}
+                            projectName={projectName}
+                            repoName={repoName}
+                            trigger={(onClick: any) => (
+                                <Dropdown.Item onClick={onClick}>
+                                    <Icon name="check" />
+                                    <span className="text">Validate</span>
+                                </Dropdown.Item>
+                            )}
+                        />
 
-                {manualTriggers &&
-                    manualTriggers.map((t) =>
-                        renderManualTrigger({
-                            trigger: t,
-                            orgName,
-                            projectName,
-                            repoName,
-                            repoURL,
-                            repoBranchOrCommitId,
-                            repoPathOrDefault,
-                            repoDisabled: repo.disabled
-                        })
-                    )}
+                        <RefreshRepositoryPopup
+                            orgName={orgName}
+                            projectName={projectName}
+                            repoName={repoName}
+                            trigger={(onClick: any) => (
+                                <Dropdown.Item onClick={onClick}>
+                                    <Icon name="refresh" />
+                                    <span className="text">Refresh</span>
+                                </Dropdown.Item>
+                            )}
+                        />
 
-                <Dropdown.Divider />
-
-                <ValidateRepositoryPopup
-                    orgName={orgName}
-                    projectName={projectName}
-                    repoName={repoName}
-                    trigger={(onClick: any) => (
-                        <Dropdown.Item onClick={onClick}>
-                            <Icon name="check" />
-                            <span className="text">Validate</span>
-                        </Dropdown.Item>
-                    )}
-                />
-
-                <RefreshRepositoryPopup
-                    orgName={orgName}
-                    projectName={projectName}
-                    repoName={repoName}
-                    trigger={(onClick: any) => (
-                        <Dropdown.Item onClick={onClick}>
-                            <Icon name="refresh" />
-                            <span className="text">Refresh</span>
-                        </Dropdown.Item>
-                    )}
-                />
-
-                <DeleteRepositoryPopup
-                    orgName={orgName}
-                    projectName={projectName}
-                    repoName={repoName}
-                    trigger={(onClick: any) => (
-                        <Dropdown.Item onClick={onClick}>
-                            <Icon name="delete" color="red" />
-                            <span className="text">Delete</span>
-                        </Dropdown.Item>
-                    )}
-                />
-            </Dropdown.Menu>
-        </Dropdown>
+                        <DeleteRepositoryPopup
+                            orgName={orgName}
+                            projectName={projectName}
+                            repoName={repoName}
+                            trigger={(onClick: any) => (
+                                <Dropdown.Item onClick={onClick}>
+                                    <Icon name="delete" color="red" />
+                                    <span className="text">Delete</span>
+                                </Dropdown.Item>
+                            )}
+                        />
+                    </Dropdown.Menu>
+                </Dropdown>
+            </Table.Cell>
+        </>
     );
 };
 

@@ -23,12 +23,16 @@ import { connect } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { push as pushHistory } from 'connected-react-router';
 import ReactJson from 'react-json-view';
-import { Button, Dropdown, DropdownItemProps, Table } from 'semantic-ui-react';
+import { Button, Dropdown, DropdownItemProps, Message, Table } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
 import { StartProcessResponse } from '../../../api/process';
 import { actions, State as ProcessState } from '../../../state/data/processes';
-import { GitHubLink, SingleOperationPopup } from '../../molecules';
+import { GitHubLink, RequestErrorMessage, SingleOperationPopup } from '../../molecules';
+import { get as getRepo, RepositoryMeta } from '../../../api/org/project/repository';
+import { RefreshRepositoryPopup } from '../../organisms';
+
+import './styles.css';
 
 interface ExternalProps {
     orgName: ConcordKey;
@@ -37,8 +41,6 @@ interface ExternalProps {
     repoURL: string;
     repoBranchOrCommitId: string;
     repoPath: string;
-    repoProfiles?: string[];
-    repoEntryPoints?: string[];
     title?: string;
     allowEntryPoint?: boolean;
     entryPoint?: string;
@@ -67,18 +69,33 @@ type Props = DispatchProps & ExternalProps & StateProps;
 interface OwnState {
     entryPoints: string[];
     selectedEntryPoint?: string;
-
     profiles: string[];
     selectedProfiles?: string[];
     arguments?: object;
+    loading: boolean;
+    disableStart: boolean;
+    apiError: RequestError;
 }
 
 const makeOptions = (data?: string[]): DropdownItemProps[] => {
     if (!data) {
         return [];
     }
-
     return data.map((name) => ({ text: name, value: name }));
+};
+
+const getProfiles = (meta?: RepositoryMeta): string[] => {
+    if (!meta) {
+        return [];
+    }
+    return meta.profiles || [];
+};
+
+const getEntryPoints = (meta?: RepositoryMeta): string[] => {
+    if (!meta) {
+        return [];
+    }
+    return meta.entryPoints || [];
 };
 
 interface SimpleDropdownProps {
@@ -87,6 +104,7 @@ interface SimpleDropdownProps {
     disabled: boolean;
     onAdd: (value: string) => void;
     onChange: (value: string) => void;
+    loading: boolean;
 }
 
 interface MultiSelectDropdownProps {
@@ -95,19 +113,28 @@ interface MultiSelectDropdownProps {
     disabled: boolean;
     onAdd: (value: string) => void;
     onChange: (value: string[]) => void;
+    loading: boolean;
 }
 
-const SimpleDropdown = ({ data, defaultValue, disabled, onAdd, onChange }: SimpleDropdownProps) => (
+const SimpleDropdown = ({
+    data,
+    defaultValue,
+    disabled,
+    onAdd,
+    onChange,
+    loading
+}: SimpleDropdownProps) => (
     <Dropdown
         clearable={true}
         selection={true}
-        allowAdditions={true}
+        allowAdditions={false}
         search={true}
         defaultValue={defaultValue}
         disabled={disabled}
         options={makeOptions(data)}
         onAddItem={(e, data) => onAdd(data.value as string)}
         onChange={(e, data) => onChange(data.value as string)}
+        loading={loading}
     />
 );
 
@@ -116,19 +143,21 @@ const MultiSelectDropdown = ({
     defaultValue,
     disabled,
     onAdd,
-    onChange
+    onChange,
+    loading
 }: MultiSelectDropdownProps) => (
     <Dropdown
         clearable={true}
         selection={true}
         multiple={true}
-        allowAdditions={true}
+        allowAdditions={false}
         search={true}
         defaultValue={defaultValue}
         disabled={disabled}
         options={makeOptions(data)}
         onAddItem={(e, data) => onAdd(data.value as string)}
         onChange={(e, data) => onChange(data.value as string[])}
+        loading={loading}
     />
 );
 
@@ -137,16 +166,62 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
         super(props);
 
         this.state = {
-            entryPoints: [...(props.repoEntryPoints || [])],
+            entryPoints: [],
             selectedEntryPoint: props.entryPoint,
             selectedProfiles: props.profiles,
-            profiles: [...(props.repoProfiles || [])],
-            arguments: props.args
+            profiles: [],
+            arguments: props.args,
+            loading: false,
+            disableStart: false,
+            apiError: null
         };
+    }
+
+    async loadRepo() {
+        const { orgName, projectName, repoName, allowEntryPoint } = this.props;
+
+        if (allowEntryPoint) {
+            try {
+                this.setState({ loading: true });
+
+                const repo = await getRepo(orgName, projectName, repoName);
+
+                this.setState({
+                    entryPoints: getEntryPoints(repo.meta),
+                    profiles: getProfiles(repo.meta)
+                });
+            } catch (e) {
+                this.setState({ disableStart: true, apiError: e });
+            } finally {
+                this.setState({ loading: false });
+            }
+        }
+    }
+
+    renderRefreshWarning(orgName: ConcordKey, projectName: ConcordKey, repoName: ConcordKey) {
+        return (
+            <Message warning={true} size={'small'}>
+                If your flows or profiles are not visible, please{' '}
+                <RefreshRepositoryPopup
+                    orgName={orgName}
+                    projectName={projectName}
+                    repoName={repoName}
+                    trigger={(onClick: any) => (
+                        <span className="asLink" onClick={onClick}>
+                            refresh
+                        </span>
+                    )}
+                    onDone={() => this.loadRepo()}
+                />{' '}
+                the repository before starting this process.
+            </Message>
+        );
     }
 
     render() {
         const {
+            orgName,
+            projectName,
             repoName,
             repoURL,
             repoBranchOrCommitId,
@@ -180,94 +255,106 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
             />
         ) : null;
 
+        if (this.state.apiError) {
+            return <RequestErrorMessage error={this.state.apiError} />;
+        }
+
         const instanceId = response ? response.instanceId : undefined;
 
         return (
             <SingleOperationPopup
                 customStyle={{ maxWidth: '800px' }}
                 trigger={trigger}
+                onOpen={() => this.loadRepo()}
                 title={title || `Start repository: ${repoName}`}
                 icon="triangle right"
                 iconColor="blue"
                 introMsg={
-                    <Table definition={true}>
-                        <Table.Body>
-                            <Table.Row>
-                                <Table.Cell textAlign={'right'}>Repository URL</Table.Cell>
-                                <Table.Cell>
-                                    <GitHubLink url={repoURL} text={repoURL} />
-                                </Table.Cell>
-                            </Table.Row>
-                            <Table.Row>
-                                <Table.Cell textAlign={'right'}>Branch</Table.Cell>
-                                <Table.Cell>{repoBranchOrCommitId}</Table.Cell>
-                            </Table.Row>
-                            <Table.Row>
-                                <Table.Cell textAlign={'right'}>Path</Table.Cell>
-                                <Table.Cell>{repoPath}</Table.Cell>
-                            </Table.Row>
-                            <Table.Row>
-                                <Table.Cell textAlign={'right'}>Flow</Table.Cell>
-                                <Table.Cell>
-                                    {allowEntryPoint ? (
-                                        <SimpleDropdown
-                                            data={this.state.entryPoints}
-                                            defaultValue={entryPoint}
-                                            disabled={entryPoint !== undefined}
-                                            onAdd={(v) =>
-                                                this.setState({
-                                                    selectedEntryPoint: v,
-                                                    entryPoints: [v, ...this.state.entryPoints]
-                                                })
-                                            }
-                                            onChange={(v) =>
-                                                this.setState({ selectedEntryPoint: v })
-                                            }
-                                        />
-                                    ) : (
-                                        entryPoint
-                                    )}
-                                </Table.Cell>
-                            </Table.Row>
-                            <Table.Row>
-                                <Table.Cell textAlign={'right'}>Profile(s)</Table.Cell>
-                                <Table.Cell>
-                                    {allowProfile ? (
-                                        <MultiSelectDropdown
-                                            data={this.state.profiles}
-                                            defaultValue={profiles ? profiles[0] : undefined}
-                                            disabled={profiles !== undefined}
-                                            onAdd={(v) =>
-                                                this.setState({
-                                                    selectedProfiles: [v],
-                                                    profiles: [v, ...this.state.profiles]
-                                                })
-                                            }
-                                            onChange={(v) => this.setState({ selectedProfiles: v })}
-                                        />
-                                    ) : profiles !== undefined ? (
-                                        profiles.join(',')
-                                    ) : (
-                                        ''
-                                    )}
-                                </Table.Cell>
-                            </Table.Row>
-                            {showArgs ? (
+                    <div>
+                        <Table definition={true}>
+                            <Table.Body>
                                 <Table.Row>
-                                    <Table.Cell textAlign={'right'}>Arguments</Table.Cell>
+                                    <Table.Cell textAlign={'right'}>Repository URL</Table.Cell>
                                     <Table.Cell>
-                                        <ReactJson
-                                            src={args != null ? args : {}}
-                                            collapsed={false}
-                                            name={null}
-                                        />
+                                        <GitHubLink url={repoURL} text={repoURL} />
                                     </Table.Cell>
                                 </Table.Row>
-                            ) : (
-                                ''
-                            )}
-                        </Table.Body>
-                    </Table>
+                                <Table.Row>
+                                    <Table.Cell textAlign={'right'}>Branch</Table.Cell>
+                                    <Table.Cell>{repoBranchOrCommitId}</Table.Cell>
+                                </Table.Row>
+                                <Table.Row>
+                                    <Table.Cell textAlign={'right'}>Path</Table.Cell>
+                                    <Table.Cell>{repoPath}</Table.Cell>
+                                </Table.Row>
+                                <Table.Row>
+                                    <Table.Cell textAlign={'right'}>Flow*</Table.Cell>
+                                    <Table.Cell>
+                                        {allowEntryPoint ? (
+                                            <SimpleDropdown
+                                                data={this.state.entryPoints}
+                                                defaultValue={entryPoint}
+                                                disabled={entryPoint !== undefined}
+                                                onAdd={(v) =>
+                                                    this.setState({
+                                                        selectedEntryPoint: v,
+                                                        entryPoints: [v, ...this.state.entryPoints]
+                                                    })
+                                                }
+                                                onChange={(v) =>
+                                                    this.setState({ selectedEntryPoint: v })
+                                                }
+                                                loading={this.state.loading}
+                                            />
+                                        ) : (
+                                            entryPoint
+                                        )}
+                                    </Table.Cell>
+                                </Table.Row>
+                                <Table.Row>
+                                    <Table.Cell textAlign={'right'}>Profile(s)*</Table.Cell>
+                                    <Table.Cell>
+                                        {allowProfile ? (
+                                            <MultiSelectDropdown
+                                                data={this.state.profiles}
+                                                defaultValue={profiles ? profiles[0] : undefined}
+                                                disabled={profiles !== undefined}
+                                                onAdd={(v) =>
+                                                    this.setState({
+                                                        selectedProfiles: [v],
+                                                        profiles: [v, ...this.state.profiles]
+                                                    })
+                                                }
+                                                onChange={(v) =>
+                                                    this.setState({ selectedProfiles: v })
+                                                }
+                                                loading={this.state.loading}
+                                            />
+                                        ) : profiles !== undefined ? (
+                                            profiles.join(',')
+                                        ) : (
+                                            ''
+                                        )}
+                                    </Table.Cell>
+                                </Table.Row>
+                                {showArgs ? (
+                                    <Table.Row>
+                                        <Table.Cell textAlign={'right'}>Arguments</Table.Cell>
+                                        <Table.Cell>
+                                            <ReactJson
+                                                src={args != null ? args : {}}
+                                                collapsed={false}
+                                                name={null}
+                                            />
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ) : (
+                                    ''
+                                )}
+                            </Table.Body>
+                        </Table>
+                        {this.renderRefreshWarning(orgName, projectName, repoName)}
+                    </div>
                 }
                 running={starting}
                 runningMsg={<p>Starting the process...</p>}
@@ -287,6 +374,7 @@ class StartRepositoryPopup extends React.Component<Props, OwnState> {
                 )}
                 customYes="Start"
                 customNo="Cancel"
+                disableYes={this.state.loading || this.state.disableStart}
             />
         );
     }
