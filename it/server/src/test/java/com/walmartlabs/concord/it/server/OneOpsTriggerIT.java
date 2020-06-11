@@ -51,7 +51,6 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
         repoName = "repo_" + randomString();
         initProjectAndRepo(orgName, projectName, repoName, null, repo);
         refreshRepo(orgName, projectName, repoName);
-
     }
 
     @After
@@ -61,9 +60,9 @@ public class OneOpsTriggerIT extends AbstractOneOpsTriggerIT {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testOneOpsTriggerv1() throws Exception {
-        sendOneOpsEvent("oneopsTests/events/oneops_deployment_complete.json");
-
         waitForTriggers(orgName, projectName, repoName, 2);
+
+        sendOneOpsEvent("oneopsTests/events/oneops_deployment_complete.json");
 
         Map<ProcessEntry.StatusEnum, ProcessEntry> ps = waitProcesses(orgName, projectName, ProcessEntry.StatusEnum.FINISHED);
         assertProcessLog(ps.get(ProcessEntry.StatusEnum.FINISHED), ".*Oneops has completed a deployment trigger version 1*");

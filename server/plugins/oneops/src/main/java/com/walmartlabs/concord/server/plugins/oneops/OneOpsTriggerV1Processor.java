@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.events.oneops;
+package com.walmartlabs.concord.server.plugins.oneops;
 
 /*-
  * *****
@@ -27,17 +27,18 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
- * Prepares trigger conditions for OneOps v2 triggers.
- * The actual implementation is the same as for v1 (see {@link OneOpsTriggerV1Processor}.
+ * Prepares trigger conditions for OneOps v1 triggers.
+ * The actual implementation is the same as for v2 (see {@link OneOpsTriggerV2Processor}.
  * The only reason it is split into two different @Named classes is to keep
  * the resource's code as close to GitHub's as possible.
  */
 @Named
 @Singleton
-public class OneOpsTriggerV2Processor extends OneOpsTriggerProcessor {
+@Deprecated
+public class OneOpsTriggerV1Processor extends OneOpsTriggerProcessor {
 
     @Inject
-    public OneOpsTriggerV2Processor(TriggersDao triggersDao) {
-        super(triggersDao, 2);
+    public OneOpsTriggerV1Processor(TriggersDao triggersDao) {
+        super(triggersDao, 1);
     }
 }
