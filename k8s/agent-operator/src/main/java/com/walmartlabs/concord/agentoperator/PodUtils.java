@@ -20,7 +20,9 @@ package com.walmartlabs.concord.agentoperator;
  * =====
  */
 
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import okhttp3.Response;
@@ -28,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 public final class PodUtils {
@@ -53,6 +56,29 @@ public final class PodUtils {
         }
 
         return new Output(stdout.toString(), stderr.toString());
+    }
+
+    public static void applyTag(KubernetesClient client, String podName, String tagName, String tagValue) {
+        Pod pod = client.pods().withName(podName).get();
+        if (pod == null) {
+            log.warn("['{}']: apply tag ['{}': '{}'] -> pod doesn't exist, nothing to do", podName, tagName, tagValue);
+            return;
+        }
+
+        Map<String, String> labels = pod.getMetadata().getLabels();
+        if (labels.containsKey(tagName)) {
+            return;
+        }
+
+        try {
+            labels.put(tagName, tagValue);
+            client.pods().withName(podName).patch(pod);
+            log.info("['{}']: apply tag ['{}': '{}'] -> done", podName, tagName, tagValue);
+        } catch (KubernetesClientException e) {
+            if (e.getCode() == 404) {
+                log.warn("['{}']: apply tag ['{}': '{}'] -> pod doesn't exist, nothing to do", podName, tagName, tagValue);
+            }
+        }
     }
 
     public static class Output {

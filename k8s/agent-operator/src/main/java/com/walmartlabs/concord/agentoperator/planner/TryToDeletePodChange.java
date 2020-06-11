@@ -20,13 +20,14 @@ package com.walmartlabs.concord.agentoperator.planner;
  * =====
  */
 
+import com.walmartlabs.concord.agentoperator.PodUtils;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.Map;
 
 public class TryToDeletePodChange implements Change {
 
@@ -38,30 +39,44 @@ public class TryToDeletePodChange implements Change {
         this.podName = podName;
     }
 
+    /**
+     * When the agent pod is being deleted, Kubernetes calls the prestop hook configured.
+     * The prestop hook script configured for agent container enables maintenance mode on the agent,
+     * and waits for the number of workers in use to go to 0, before the pod gets terminated.
+     *
+     * Whenever the scheduler calls this `apply` method, the following conditions are checked, and
+     * corresponding actions are executed.
+     *
+     * - If the pod has a label `preStopHookTermination: true`, do nothing and exit, as the pod is being
+     *   terminated, waiting for the prestop hook script to complete (that is, last running process on the agent
+     *   container to complete).
+     *
+     * - Otherwise if the pod is in `RUNNING` phase, call the kubernetes client `delete` method on the agent pod,
+     *   which will put the pod in `Terminating` state and start executing the prestop hook script on the
+     *   agent container. Add the label `preStopHookTermination: true` (this will be checked on
+     *   subsequent executions).
+     *
+     * @param client instance of Kubernetes client
+     */
     @Override
     public void apply(KubernetesClient client) {
         Pod pod = client.pods().withName(podName).get();
+
         if (pod == null) {
             log.warn("apply ['{}'] -> pod doesn't exist, nothing to do", podName);
             return;
         }
 
-        AgentPod.MaintenanceMode mmode = null;
+        Map<String, String> labels = pod.getMetadata().getLabels();
 
-        String phase = pod.getStatus().getPhase();
-        if ("running".equalsIgnoreCase(phase)) {
-            try {
-                mmode = AgentPod.enableMaintenanceMode(client, podName);
-                log.info("apply ['{}'] -> mmode enabled: {}", podName, mmode);
-            } catch (IOException e) {
-                log.warn("apply ['{}'] -> can't enable the maintenance mode, removing the pod immediately...", podName, e);
-                // TODO retries?
-            }
+        if ("true".equals(labels.getOrDefault(AgentPod.PRE_STOP_HOOK_TERMINATION_LABEL, "false"))) {
+            log.warn("['{}'] -> has been marked for termination. Waiting for running process to complete ...", podName);
+            return;
         }
 
-        if (mmode == null || (mmode.isMaintenanceMode() && mmode.getWorkersAlive() <= 0)) {
-            client.pods().withName(podName).delete();
-            log.info("apply ['{}'] -> removed (former phase: {})", podName, phase);
-        }
+        // try to delete the pod regardless of its current phase
+        client.pods().withName(podName).delete();
+        PodUtils.applyTag(client, podName, AgentPod.PRE_STOP_HOOK_TERMINATION_LABEL, "true");
+        log.info("apply ['{}'] -> Marked for termination (former phase: {})", podName, pod.getStatus().getPhase());
     }
 }

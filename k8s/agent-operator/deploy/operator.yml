@@ -41,6 +41,6 @@ spec:
             - name: OPERATOR_NAME
               value: "concord-agent-operator"
             - name: CONCORD_BASE_URL
-              value: "http://192.168.0.157:8001" # replace with local IP
+              value: "http://host.minikube.internal:8001" # replace with local IP
             - name: CONCORD_API_TOKEN
-              value: "...token..."
+              value: "...API token..." # replace with an actual Concord API token

@@ -20,18 +20,11 @@ package com.walmartlabs.concord.agentoperator.planner;
  * =====
  */
 
+import com.walmartlabs.concord.agentoperator.PodUtils;
 import com.walmartlabs.concord.agentoperator.resources.AgentPod;
-import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class TagForRemovalChange implements Change {
-
-    private static final Logger log = LoggerFactory.getLogger(TagForRemovalChange.class);
 
     private final String podName;
 
@@ -45,25 +38,6 @@ public class TagForRemovalChange implements Change {
     }
 
     public static void apply(KubernetesClient client, String podName) {
-        Pod pod = client.pods().withName(podName).get();
-        if (pod == null) {
-            log.warn("apply ['{}'] -> pod doesn't exist, nothing to do", podName);
-            return;
-        }
-
-        Map<String, String> labels = pod.getMetadata().getLabels();
-        if (labels.containsKey(AgentPod.TAGGED_FOR_REMOVAL_LABEL)) {
-            return;
-        }
-
-        try {
-            labels.put(AgentPod.TAGGED_FOR_REMOVAL_LABEL, "true");
-            client.pods().withName(podName).patch(pod);
-            log.info("apply ['{}'] -> done", podName);
-        } catch (KubernetesClientException e) {
-            if (e.getCode() == 404) {
-                log.warn("apply ['{}'] -> pod doesn't exist, nothing to do", podName);
-            }
-        }
+        PodUtils.applyTag(client, podName, AgentPod.TAGGED_FOR_REMOVAL_LABEL, "true");
     }
 }

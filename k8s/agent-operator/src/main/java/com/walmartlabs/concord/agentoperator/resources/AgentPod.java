@@ -20,11 +20,7 @@ package com.walmartlabs.concord.agentoperator.resources;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.agentoperator.PodUtils;
-import com.walmartlabs.concord.agentoperator.PodUtils.Output;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolCRD;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
 import com.walmartlabs.concord.agentoperator.scheduler.AgentPoolInstance;
@@ -38,11 +34,9 @@ import java.util.List;
 public final class AgentPod {
 
     public static final String TAGGED_FOR_REMOVAL_LABEL = "concordTaggedForRemoval";
+    public static final String PRE_STOP_HOOK_TERMINATION_LABEL = "preStopHookTermination";
     public static final String POOL_NAME_LABEL = "poolName";
     public static final String CONFIG_HASH_LABEL = "concordCfgHash";
-
-    private static final String AGENT_CONTAINER_NAME = "agent";
-    private static final String[] MAINTENANCE_MODE_CMD = {"curl", "-X", "POST", "http://127.0.0.1:8010/maintenance-mode"};
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -76,45 +70,6 @@ public final class AgentPod {
                 .withLabel(POOL_NAME_LABEL, resourceName)
                 .list()
                 .getItems();
-    }
-
-    public static MaintenanceMode enableMaintenanceMode(KubernetesClient client, String podName) throws IOException {
-        Output out = PodUtils.exec(client, podName, AGENT_CONTAINER_NAME, MAINTENANCE_MODE_CMD);
-        try {
-            return objectMapper.readValue(out.getStdout(), MaintenanceMode.class);
-        } catch (IOException e) {
-            throw new IOException("Error while enabling the maintenance mode on " + podName + ": " + out.getStderr(), e);
-        }
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class MaintenanceMode {
-
-        private final boolean maintenanceMode;
-        private final long workersAlive;
-
-        public MaintenanceMode(@JsonProperty("maintenanceMode") boolean maintenanceMode,
-                               @JsonProperty("workersAlive") long workersAlive) {
-
-            this.maintenanceMode = maintenanceMode;
-            this.workersAlive = workersAlive;
-        }
-
-        public boolean isMaintenanceMode() {
-            return maintenanceMode;
-        }
-
-        public long getWorkersAlive() {
-            return workersAlive;
-        }
-
-        @Override
-        public String toString() {
-            return "MaintenanceMode{" +
-                    "maintenanceMode=" + maintenanceMode +
-                    ", workersAlive=" + workersAlive +
-                    '}';
-        }
     }
 
     private AgentPod() {

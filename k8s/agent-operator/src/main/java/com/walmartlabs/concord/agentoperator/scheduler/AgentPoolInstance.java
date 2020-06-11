@@ -25,7 +25,7 @@ import com.walmartlabs.concord.agentoperator.crd.AgentPool;
 public class AgentPoolInstance {
 
     public static AgentPoolInstance updateStatus(AgentPoolInstance i, Status status) {
-        return new AgentPoolInstance(i.name, i.resource, status, i.targetSize, System.currentTimeMillis(), i.getLastScaleUpTimestamp(), i.lastScaleDownTimeStamp);
+        return new AgentPoolInstance(i.name, i.resource, status, i.targetSize, System.currentTimeMillis(), i.getLastScaleUpTimestamp(), i.getLastScaleDownTimeStamp());
     }
 
     public static AgentPoolInstance updateTargetSize(AgentPoolInstance i, int targetSize, long scaleUptimeStamp, long scaleDownTimeStamp) {

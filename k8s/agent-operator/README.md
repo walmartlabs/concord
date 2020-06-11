@@ -5,7 +5,8 @@ Agents based on the current Process Queue usage.
 
 ## Prerequisites
 
-Build the parent Concord repo to install the latest artifacts:
+Build the parent Concord repo to install the latest artifacts and Docker
+images:
 ```
 $ cd concord/
 $ ./mvnw clean install -DskipTests
@@ -13,13 +14,13 @@ $ ./mvnw clean install -DskipTests
 
 ## Running in Dev Mode
 
-Below are the steps to deploy the concord agent operator to the `default` namespace
-in any local/dev k8s cluster (in this case minikube).
+Below are the steps to deploy the concord agent operator to the `default`
+namespace in any local/dev k8s cluster (in this case minikube).
 
 Before deploying the operator's resources, please ensure the 
-Concord Server URL fields in the yaml specs are correctly pointing 
-to a running instance on your dev or local machine. 
-Make sure that the API token used in the `operator.yml` is valid and working.
+Concord Server URL and API token fields in the specs files are correctly
+pointing  to a running instance on your dev or local machine. 
+Make sure the API token used in the `operator.yml` is valid and working.
 
 1. Start the cluster:
   ```
@@ -31,21 +32,36 @@ Make sure that the API token used in the `operator.yml` is valid and working.
   $ cd concord/k8s/agent-operator
   $ docker build . -t walmartlabs/concord-agent-operator:latest
   ```
-3. Deploy the necessary resources:
+3. Build the app's images (might take a while, depending on cached layers
+present in your minikube instance):
+  ```
+  $ eval $(minikube docker-env)
+  $ cd concord
+  $ ./mvnw -f docker-images clean install -Pdocker
+  ```
+4. Deploy the necessary resources:
   ```
   $ minikube kubectl -- create -f deploy/cluster_role.yml -n default
   $ minikube kubectl -- create -f deploy/service_account.yml -n default
   $ minikube kubectl -- create -f deploy/cluster_role_binding.yml -n default
-  ```
-4. Start the operator:
-  ```
-  $ minikube kubectl -- create -f deploy/operator.yml -n default
   ```
 5. Create the custom resource:
   ```
   $ minikube kubectl -- create -f deploy/crds/crd.yml -n default
   $ minikube kubectl -- create -f deploy/crds/cr.yml -n default
   ```
+6. Start the operator:
+  ```
+  $ minikube kubectl -- create -f deploy/operator.yml -n default
+  ```
+
+If everything is correct you should see this line in the operator's pod log:
+```
+[INFO ] c.w.concord.agentoperator.Operator - main -> my watch begins... (namespace=default)
+[INFO ] c.w.c.a.p.CreateConfigMapChange - apply -> created a configmap example-agentpool-cfg
+[INFO ] c.w.c.a.planner.CreatePodChange - apply -> created a pod example-agentpool/example-agentpool-00000
+```
+There should be no other errors or warnings.
 
 #### How to Verify
 
