@@ -63,7 +63,7 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
         return cmd;
     }
 
-    private static Command compile(CompilerContext context, List<Step> steps) {
+    private static Block compile(CompilerContext context, List<Step> steps) {
         if (steps == null) {
             return null;
         }

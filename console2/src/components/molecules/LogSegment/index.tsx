@@ -26,11 +26,13 @@ import { SegmentStatus } from '../../../api/process/log';
 import { ConcordId } from '../../../api/common';
 
 import './styles.css';
+import { formatDistance, parseISO } from 'date-fns';
 
 interface Props {
     instanceId: ConcordId;
     segmentId: number;
     name: string;
+    createdAt: string;
     status?: SegmentStatus;
     warnings?: number;
     errors?: number;
@@ -46,6 +48,7 @@ const LogSegment = ({
     instanceId,
     segmentId,
     name,
+    createdAt,
     status,
     warnings,
     errors,
@@ -101,6 +104,12 @@ const LogSegment = ({
     const hasWarnings = !!(warnings && warnings > 0);
     const hasErrors = !!(errors && errors > 0);
 
+    const createdAtDate = parseISO(createdAt);
+    let beenRunningFor;
+    if (status === SegmentStatus.RUNNING) {
+        beenRunningFor = formatDistance(new Date(), createdAtDate);
+    }
+
     return (
         <div className="LogSegment">
             <Button
@@ -120,6 +129,8 @@ const LogSegment = ({
                         <span className="Counter">error: {errors ? errors : 0}</span>
                     </>
                 )}
+
+                {beenRunningFor && <span className="RunningFor">running for {beenRunningFor}</span>}
 
                 <a
                     href={`/api/v2/process/${instanceId}/log/segment/${segmentId}/data`}

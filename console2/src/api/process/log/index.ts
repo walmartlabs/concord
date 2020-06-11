@@ -88,6 +88,7 @@ export interface LogSegmentEntry {
     id: number;
     correlationId?: string;
     name: string;
+    createdAt: string;
     status?: SegmentStatus;
     warnings?: number;
     errors?: number;
