@@ -20,5 +20,6 @@
         <module>kafka-event-sink</module>
         <module>noderoster</module>
         <module>oidc</module>
+        <module>oneops</module>
     </modules>
 </project>

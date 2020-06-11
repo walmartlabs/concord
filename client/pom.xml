@@ -172,6 +172,10 @@
                             <item>
                                 <code>java.method.addedToInterface</code>
                             </item>
+                            <item>
+                                <code>java.class.removed</code>
+                                <old>class com.walmartlabs.concord.client.EventsApi</old>
+                            </item>
                         </revapi.ignore>
                         <revapi.filter>
                             <elements>

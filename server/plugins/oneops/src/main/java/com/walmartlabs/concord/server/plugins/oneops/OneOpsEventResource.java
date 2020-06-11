@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.server.events;
+package com.walmartlabs.concord.server.plugins.oneops;
 
 /*-
  * *****
@@ -21,7 +21,10 @@ package com.walmartlabs.concord.server.events;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.walmartlabs.concord.server.events.oneops.OneOpsTriggerProcessor;
+import com.walmartlabs.concord.server.events.Event;
+import com.walmartlabs.concord.server.events.EventInitiatorSupplier;
+import com.walmartlabs.concord.server.events.TriggerEventInitiatorResolver;
+import com.walmartlabs.concord.server.events.TriggerProcessExecutor;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;

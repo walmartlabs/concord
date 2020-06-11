@@ -25,6 +25,10 @@
             <artifactId>concord-ansible-plugin</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.walmartlabs.concord.server.plugins</groupId>
+            <artifactId>concord-oneops-plugin</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.walmartlabs.concord.server.plugins.noderoster</groupId>
             <artifactId>concord-noderoster-plugin</artifactId>
         </dependency>

@@ -301,6 +301,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.walmartlabs.concord.server.plugins</groupId>
+                <artifactId>concord-oneops-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.walmartlabs.concord.server.plugins.ansible</groupId>
                 <artifactId>concord-ansible-plugin-client</artifactId>
                 <version>${project.version}</version>
