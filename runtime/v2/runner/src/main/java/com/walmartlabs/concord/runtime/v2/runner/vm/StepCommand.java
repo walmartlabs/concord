@@ -9,9 +9,9 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
@@ -64,15 +65,15 @@ public abstract class StepCommand<T extends Step> implements Command {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
 
         T step = getStep();
-        UUID segmentId = UUID.randomUUID();
-        Context ctx = contextFactory.create(runtime, state, threadId, step, segmentId);
+        UUID correlationId = UUID.randomUUID();
+        Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
         String segmentName = getSegmentName(ctx, step);
 
         if (segmentName == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
-            SegmentedLogger.withLogSegment(segmentName, segmentId.toString(),
+            SegmentedLogger.withLogSegment(segmentName, correlationId.toString(),
                     () -> executeWithContext(ctx, runtime, state, threadId));
         }
     }
@@ -95,6 +96,10 @@ public abstract class StepCommand<T extends Step> implements Command {
     protected abstract void execute(Runtime runtime, State state, ThreadId threadId);
 
     protected String getSegmentName(Context ctx, T step) {
+        if (step instanceof AbstractStep) {
+            return SegmentedLogger.getSegmentName((AbstractStep<?>) step);
+        }
+
         return null;
     }
 }

@@ -45,13 +45,13 @@ import static com.walmartlabs.concord.runtime.v2.parser.FlowCallGrammar.callFull
 import static com.walmartlabs.concord.runtime.v2.parser.FormsGrammar.callForm;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
 import static com.walmartlabs.concord.runtime.v2.parser.GroupGrammar.group;
+import static com.walmartlabs.concord.runtime.v2.parser.LogGrammar.logStep;
 import static com.walmartlabs.concord.runtime.v2.parser.ParallelGrammar.parallelBlock;
 import static com.walmartlabs.concord.runtime.v2.parser.ReturnGrammar.returnStep;
 import static com.walmartlabs.concord.runtime.v2.parser.ScriptGrammar.script;
 import static com.walmartlabs.concord.runtime.v2.parser.SetVariablesGrammar.setVars;
 import static com.walmartlabs.concord.runtime.v2.parser.SuspendGrammar.suspendStep;
 import static com.walmartlabs.concord.runtime.v2.parser.TaskGrammar.taskFull;
-import static com.walmartlabs.concord.runtime.v2.parser.LogGrammar.logStep;
 import static com.walmartlabs.concord.runtime.v2.parser.ThrowGrammar.throwStep;
 import static io.takari.parc.Combinators.*;
 

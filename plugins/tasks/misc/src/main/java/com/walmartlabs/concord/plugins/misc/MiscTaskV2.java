@@ -25,9 +25,23 @@ import com.walmartlabs.concord.runtime.v2.sdk.Task;
 import javax.inject.Named;
 
 @Named("misc")
+@SuppressWarnings("unused")
 public class MiscTaskV2 implements Task {
 
     public void throwRuntimeException(String message) {
         throw new RuntimeException(message);
+    }
+
+    public String trim(String s, int length) {
+        if (s == null) {
+            return s;
+        }
+
+        if (s.length() <= length) {
+            return s;
+        }
+
+        int newLength = length - 3;
+        return s.substring(0, newLength) + "...";
     }
 }

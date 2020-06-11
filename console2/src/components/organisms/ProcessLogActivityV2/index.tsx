@@ -27,7 +27,7 @@ import { isFinal, ProcessStatus } from '../../../api/process';
 import './styles.css';
 import { listLogSegments as apiListLogSegments, LogSegmentEntry } from '../../../api/process/log';
 import { usePolling } from '../../../api/usePolling';
-import RequestErrorActivity from '../RequestErrorActivity';
+import { RequestErrorActivity } from '../../organisms';
 import LogSegmentActivity from './LogSegmentActivity';
 import { ProcessToolbar } from '../../molecules';
 import { Button, Divider, Popup, Radio } from 'semantic-ui-react';
@@ -167,6 +167,7 @@ const ProcessLogActivityV2 = ({
                         segmentId={s.id}
                         correlationId={s.correlationId}
                         name={s.name}
+                        createdAt={s.createdAt}
                         status={s.status}
                         warnings={s.warnings}
                         errors={s.errors}

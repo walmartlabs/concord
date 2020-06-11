@@ -37,6 +37,7 @@ import com.walmartlabs.concord.runtime.v2.runner.logging.LoggingConfigurator;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ThreadStatus;
+import uk.org.lidalia.sysoutslf4j.context.LogLevel;
 import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 import java.io.IOException;
@@ -69,7 +70,7 @@ public class Main {
         RunnerConfiguration runnerCfg = readRunnerConfiguration(args);
 
         if (runnerCfg.logging().sendSystemOutAndErrToSLF4J()) {
-            SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
+            SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.WARN);
         }
 
         // create the inject with all dependencies and services available before

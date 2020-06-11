@@ -32,7 +32,11 @@ import { Header, Modal } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { LogSegment } from '../../molecules';
-import { getSegmentLog as apiGetLog, LogRange, SegmentStatus } from '../../../api/process/log';
+import {
+    getSegmentLog as apiGetLog,
+    LogRange,
+    SegmentStatus
+} from '../../../api/process/log';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { LogProcessorOptions, processText } from '../../../state/data/processes/logs/processors';
 import { isFinal, ProcessStatus } from '../../../api/process';
@@ -49,6 +53,7 @@ interface ExternalProps {
     segmentId: number;
     correlationId?: string;
     name: string;
+    createdAt: string;
     open?: boolean;
     status?: SegmentStatus;
     warnings?: number;
@@ -68,6 +73,7 @@ const LogSegmentActivity = ({
     segmentId,
     correlationId,
     name,
+    createdAt,
     open,
     status,
     warnings,
@@ -166,6 +172,7 @@ const LogSegmentActivity = ({
                 segmentId={segmentId}
                 name={name}
                 open={open}
+                createdAt={createdAt}
                 status={status}
                 warnings={warnings}
                 errors={errors}

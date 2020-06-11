@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallInterceptor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
@@ -98,6 +99,14 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
     @Override
     public String getSegmentName(Context ctx, TaskCall step) {
-        return step.getName();
+        String segmentName = SegmentedLogger.getSegmentName(step);
+
+        if (segmentName != null) {
+            segmentName = ctx.eval(segmentName, String.class);
+        } else {
+            segmentName = "task: " + step.getName();
+        }
+
+        return segmentName;
     }
 }

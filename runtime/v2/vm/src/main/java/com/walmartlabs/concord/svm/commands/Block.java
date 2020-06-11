@@ -28,6 +28,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Adds specified {@link #commands} to the stack.
+ */
 public class Block implements Command {
 
     private static final long serialVersionUID = 1L;

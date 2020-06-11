@@ -20,9 +20,13 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
+import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.concurrent.*;
 
 import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
@@ -46,7 +50,6 @@ public class SegmentedLogger {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
             return;
         }
 
@@ -58,6 +61,21 @@ public class SegmentedLogger {
                 log.info(FINALIZE_SESSION_MARKER, "The End!");
             }
         });
+    }
+
+    public static String getSegmentName(AbstractStep<?> step) {
+        StepOptions opts = step.getOptions();
+        if (opts == null) {
+            return null;
+        }
+
+        Map<String, Serializable> meta = opts.meta();
+        if (meta == null) {
+            return null;
+        }
+
+        // TODO constants
+        return (String) meta.get("segmentName");
     }
 
     /**

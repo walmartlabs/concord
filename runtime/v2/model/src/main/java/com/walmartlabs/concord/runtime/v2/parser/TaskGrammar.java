@@ -20,7 +20,6 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
-import com.fasterxml.jackson.core.JsonToken;
 import com.walmartlabs.concord.runtime.v2.model.ImmutableTaskCallOptions;
 import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.model.TaskCallOptions;
@@ -28,7 +27,8 @@ import com.walmartlabs.concord.runtime.v2.model.WithItems;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.CommonGrammar.retryVal;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.*;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
@@ -44,13 +44,6 @@ public final class TaskGrammar {
                             optional("withItems", nonNullVal.map(v -> o.withItems(WithItems.of(v)))),
                             optional("retry", retryVal.map(o::retry)),
                             optional("error", stepsVal.map(o::errorSteps))
-                    ))
-                    .map(ImmutableTaskCallOptions.Builder::build);
-
-    private static final Parser<Atom, TaskCallOptions> taskShortOptions =
-            with(TaskCallOptions::builder,
-                    o -> options(
-                            optional("meta", mapVal.map(o::meta))
                     ))
                     .map(ImmutableTaskCallOptions.Builder::build);
 

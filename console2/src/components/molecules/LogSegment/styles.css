@@ -34,6 +34,8 @@
 
 .LogSegment .Segment .Caption {
     padding-left: 10px;
+    font-family: monospace;
+    font-weight: normal;
 }
 
 .LogSegment .Segment .State {
@@ -117,6 +119,12 @@
 }
 
 .LogSegment .Counter {
+    font-weight: normal;
+    color: #888888;
+    margin-left: 10px;
+}
+
+.LogSegment .RunningFor {
     font-weight: normal;
     color: #888888;
     margin-left: 10px;

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.runtime.v2.runner.ResourceResolver;
 import com.walmartlabs.concord.runtime.v2.runner.ScriptEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.logging.SegmentedLogger;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -81,7 +82,15 @@ public class ScriptCallCommand extends StepCommand<ScriptCall> {
 
     @Override
     protected String getSegmentName(Context ctx, ScriptCall step) {
-        return "script: " + step.getName();
+        String segmentName = SegmentedLogger.getSegmentName(step);
+
+        if (segmentName != null) {
+            segmentName = ctx.eval(segmentName, String.class);
+        } else {
+            segmentName = "script: " + step.getName();
+        }
+
+        return segmentName;
     }
 
     private static String getLanguage(ScriptCall call) {
