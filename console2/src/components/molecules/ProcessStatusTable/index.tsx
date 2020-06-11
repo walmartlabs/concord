@@ -19,9 +19,8 @@
  */
 
 import * as React from 'react';
-import ReactJson from 'react-json-view';
 import { Link } from 'react-router-dom';
-import { Button, Grid, Header, Modal, Popup, Table } from 'semantic-ui-react';
+import { Grid, Popup, Table } from 'semantic-ui-react';
 
 import {
     getStatusSemanticColor,
@@ -31,6 +30,7 @@ import {
 } from '../../../api/process';
 import { formatDuration } from '../../../utils';
 import { GitHubLink, LocalTimestamp, ProcessLastErrorModal } from '../../molecules';
+import { TriggeredByPopup } from '../../organisms';
 
 interface Props {
     process?: ProcessEntry;
@@ -119,39 +119,7 @@ class ProcessStatusTable extends React.PureComponent<Props> {
             return ' - ';
         }
 
-        const triggeredBy = process.triggeredBy;
-        if (!triggeredBy || !triggeredBy.trigger) {
-            return ' - ';
-        }
-
-        const type = triggeredBy.trigger.eventSource;
-        let icon;
-        switch (type) {
-            case 'github':
-                icon = 'github';
-                break;
-            case 'cron':
-                icon = 'clock outline';
-                break;
-            default:
-                icon = 'question';
-        }
-        const title = type === 'github' ? 'GitHub' : type;
-
-        return (
-            <Modal dimmer="inverted" trigger={<Button icon={icon} basic={true} content={title} />}>
-                <Header icon={icon} content={`${title} Trigger`} />
-                <Modal.Content>
-                    <ReactJson
-                        src={triggeredBy}
-                        collapsed={false}
-                        name={null}
-                        enableClipboard={false}
-                        displayDataTypes={false}
-                    />
-                </Modal.Content>
-            </Modal>
-        );
+        return <TriggeredByPopup entry={process} />;
     }
 
     static renderParentInstanceId(process?: ProcessEntry) {

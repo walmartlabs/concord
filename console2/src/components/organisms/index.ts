@@ -96,5 +96,6 @@ export { default as TeamListActivity } from './TeamListActivity';
 export { default as TeamMemberList2 } from './TeamMemberList2';
 export { default as TeamRenameActivity } from './TeamRenameActivity';
 export { default as TopBar } from './TopBar';
+export { default as TriggeredByPopup } from './TriggeredByPopup';
 export { default as UserProcessActivity } from './UserProcessActivity';
 export { default as ValidateRepositoryPopup } from './ValidateRepositoryPopup';
