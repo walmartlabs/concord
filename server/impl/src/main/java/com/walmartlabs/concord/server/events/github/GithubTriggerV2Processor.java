@@ -59,6 +59,11 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
 
         List<TriggerEntry> triggers = listTriggers(projectId, payload.getOrg(), payload.getRepo());
         for (TriggerEntry t : triggers) {
+            // skip empty push events if the trigger's configuration says so
+            if (GithubUtils.ignoreEmptyPush(t) && GithubUtils.isEmptyPush(eventName, payload)) {
+                continue;
+            }
+
             Map<String, Object> event = buildEvent(eventName, payload);
             enrichEventConditions(payload, t, event);
 

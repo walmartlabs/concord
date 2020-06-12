@@ -272,6 +272,12 @@ public class Constants {
         public static final String USE_EVENT_COMMIT_ID = "useEventCommitId";
 
         /**
+         * Ignore empty {@code push} notifications
+         * (events with "after" and "before" pointing to the same commit ID).
+         */
+        public static final String IGNORE_EMPTY_PUSH = "ignoreEmptyPush";
+
+        /**
          * Used to match on the registered repositories in GitHub triggers.
          */
         public static final String REPOSITORY_INFO = "repositoryInfo";

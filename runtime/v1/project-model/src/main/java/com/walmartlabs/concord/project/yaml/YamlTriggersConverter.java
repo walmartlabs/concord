@@ -75,8 +75,9 @@ public final class YamlTriggersConverter {
         protected static final String[] TRIGGER_CONFIG_KEYS = {
                 Constants.Trigger.USE_INITIATOR,
                 Constants.Trigger.USE_EVENT_COMMIT_ID,
+                Constants.Trigger.IGNORE_EMPTY_PUSH,
                 Constants.Request.ENTRY_POINT_KEY,
-                Constants.Request.EXCLUSIVE
+                Constants.Request.EXCLUSIVE,
         };
 
         public DefaultTriggerConverter() {

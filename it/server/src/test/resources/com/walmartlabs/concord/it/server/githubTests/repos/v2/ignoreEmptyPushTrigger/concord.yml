@@ -1,0 +1,21 @@
+flows:
+  onRegular:
+    - log: "onRegular: ${event}"
+
+  onEmpty:
+    - log: "onEmpty: ${event}"
+
+triggers:
+  - github:
+      version: 2
+      entryPoint: "onRegular"
+      ignoreEmptyPush: true
+      conditions:
+        type: "push"
+
+  - github:
+      version: 2
+      entryPoint: "onEmpty"
+      ignoreEmptyPush: false
+      conditions:
+        type: "push"

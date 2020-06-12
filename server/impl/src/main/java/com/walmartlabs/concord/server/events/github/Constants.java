@@ -28,6 +28,7 @@ public final class Constants {
 
     public static final String AUTHOR_KEY = "author";
     public static final String COMMIT_ID_KEY = "commitId";
+    public static final String IGNORE_EMPTY_PUSH_KEY = "ignoreEmptyPush";
     public static final String ORG_NAME_KEY = "org";
     public static final String ORGANIZATION_KEY = "organization";
     public static final String PAYLOAD_KEY = "payload";

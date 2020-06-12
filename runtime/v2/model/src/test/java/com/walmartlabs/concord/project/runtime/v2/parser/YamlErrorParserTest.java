@@ -351,7 +351,7 @@ public class YamlErrorParserTest extends AbstractParserTest {
 
     @Test
     public void test115() throws Exception {
-        String msg = "(015.yml): Error @ n/a. Version 1 of github trigger not supported\n" +
+        String msg = "(015.yml): Error @ n/a. Version 1 of GitHub triggers is not supported\n" +
                 "\twhile processing steps:\n" +
                 "\t'github' @ line: 2, col: 5\n" +
                 "\t\t'triggers' @ line: 1, col: 1";

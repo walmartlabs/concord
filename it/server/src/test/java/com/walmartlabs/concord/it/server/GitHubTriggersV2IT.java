@@ -22,11 +22,15 @@ package com.walmartlabs.concord.it.server;
 
 import com.walmartlabs.concord.client.OrganizationEntry;
 import com.walmartlabs.concord.client.OrganizationsApi;
+import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.After;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
@@ -205,5 +209,46 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         // ---
 
         deleteOrg(orgXName);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testIgnoreEmptyPush() throws Exception {
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        Path projectRepo = initProjectAndRepo(orgName, projectName, repoName, null, initRepo("githubTests/repos/v2/ignoreEmptyPushTrigger"));
+        refreshRepo(orgName, projectName, repoName);
+
+        // ---
+
+        sendEvent("githubTests/events/empty_push.json", "push",
+                "_FULL_REPO_NAME", toRepoName(projectRepo),
+                "_REF", "refs/heads/master");
+
+        ProcessEntry pe = waitForAProcess(orgName, projectName, "github", null);
+        assertLog(pe, ".*onEmpty: .*");
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        List<ProcessEntry> list = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+        assertEquals(1, list.size());
+
+        // ---
+
+        sendEvent("githubTests/events/direct_branch_push.json", "push",
+                "_FULL_REPO_NAME", toRepoName(projectRepo),
+                "_REF", "refs/heads/master");
+
+        while (true) {
+            list = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
+            if (list.size() == 3) {
+                break;
+            }
+
+            Thread.sleep(1000);
+        }
     }
 }
