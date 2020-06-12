@@ -170,10 +170,6 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
         }
     }
 
-    protected void expectNoProcesses(String orgName) throws Exception {
-        expectNoProceses(orgName, null, null);
-    }
-
     protected void expectNoProceses(String orgName, String projectName, ProcessEntry after) throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
         String afterCreatedAt = after != null ? after.getCreatedAt().format(DATE_TIME_FORMATTER) : null;
@@ -182,7 +178,7 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
     }
 
     protected void sendEvent(String resource, String event, String... params) throws Exception {
-        String payload = resourceToString("githubTests/events/direct_branch_push.json");
+        String payload = resourceToString(resource);
         if (params != null) {
             for (int i = 0; i < params.length; i += 2) {
                 String k = params[i];

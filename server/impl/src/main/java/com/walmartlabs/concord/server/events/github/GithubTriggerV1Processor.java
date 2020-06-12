@@ -99,6 +99,8 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
             Map<String, Object> triggerEvent = buildTriggerEvent(payload, r.id, r.project, conditions);
 
             List<TriggerEntry> triggers = listTriggers(hookProjectId).stream()
+                    // skip empty push events if the trigger's configuration says so
+                    .filter(t -> !(GithubUtils.ignoreEmptyPush(t) && GithubUtils.isEmptyPush(eventName, payload)))
                     .map(triggerDefinitionEnricher::enrich)
                     .filter(t -> DefaultEventFilter.filter(triggerConditions, t))
                     .collect(Collectors.toList());

@@ -3,6 +3,7 @@ triggers:
       version: 2
       useInitiator: true
       entryPoint: onPush
+      ignoreEmptyPush: false
       conditions:
         type: push
 

@@ -21,6 +21,10 @@ package com.walmartlabs.concord.server.events.github;
  */
 
 
+import com.walmartlabs.concord.sdk.MapUtils;
+import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
+
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -83,6 +87,25 @@ public final class GithubUtils {
                 .owner(owner(u[0]))
                 .name(name(u[1]))
                 .build();
+    }
+
+    /**
+     * Returns true if the specified event and its payload is an "empty" {@code push} event.
+     */
+    public static boolean isEmptyPush(String eventName, Payload payload) {
+        if (!Constants.PUSH_EVENT.equals(eventName)) {
+            return false;
+        }
+
+        return Objects.equals(payload.raw().get("after"), payload.raw().get("before"));
+    }
+
+    /**
+     * Returns the value of the trigger's {@code ignoreEmptyPush} parameter
+     * or {@code true} if it is not defined.
+     */
+    public static boolean ignoreEmptyPush(TriggerEntry triggerEntry) {
+        return MapUtils.getBoolean(triggerEntry.getCfg(), Constants.IGNORE_EMPTY_PUSH_KEY, true);
     }
 
     private static String getRepoPath(String repoUrl) {

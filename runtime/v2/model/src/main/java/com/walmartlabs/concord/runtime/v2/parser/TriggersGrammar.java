@@ -60,7 +60,7 @@ public final class TriggersGrammar {
             orError(githubTriggerConditionsV2, YamlValueType.GITHUB_TRIGGER_CONDITIONS);
 
     private static final Parser<Atom, Trigger> githubTriggerV1 = in -> {
-        throw new UnsupportedException("Version 1 of github trigger not supported");
+        throw new UnsupportedException("Version 1 of GitHub triggers is not supported");
     };
 
     private static final Parser<Atom, Trigger> githubTriggerV2 =
@@ -70,6 +70,7 @@ public final class TriggersGrammar {
                             mandatory("entryPoint", stringVal.map(v -> o.putConfiguration("entryPoint", v))),
                             optional("activeProfiles", stringArrayVal.map(o::activeProfiles)),
                             optional("useEventCommitId", booleanVal.map(v -> o.putConfiguration("useEventCommitId", v))),
+                            optional("ignoreEmptyPush", booleanVal.map(v -> o.putConfiguration("ignoreEmptyPush", v))),
                             optional("arguments", mapVal.map(o::arguments)),
                             optional("exclusive", exclusiveVal.map(v -> o.putConfiguration("exclusive", v))),
                             mandatory("conditions", githubTriggerConditionsValV2.map(o::putAllConditions)),

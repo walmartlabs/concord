@@ -285,6 +285,7 @@ public class YamlOkParserTest extends AbstractParserTest {
 
         Trigger t = triggers.get(0);
         assertEquals("github", t.name());
+        assertFalse((Boolean) t.configuration().get("ignoreEmptyPush"));
 
         t = triggers.get(1);
         assertEquals("github", t.name());
