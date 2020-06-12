@@ -93,7 +93,11 @@ public class RepositoryProcessor implements PayloadProcessor {
 
         Payload newPayload = repositoryManager.withLock(repo.getUrl(), () -> {
             try {
-                Repository repository = repositoryManager.fetch(projectId, repo);
+                Repository repository = payload.getHeader(Payload.REPOSITORY);
+                if (repository == null) {
+                    repository = repositoryManager.fetch(projectId, repo);
+                }
+
                 Snapshot snapshot = repository.export(dst);
                 com.walmartlabs.concord.repository.RepositoryInfo info = repository.info();
                 String branch = repository.branch();
@@ -104,7 +108,9 @@ public class RepositoryProcessor implements PayloadProcessor {
                 }
 
                 RepositoryInfo i = new RepositoryInfo(repo.getId(), repo.getName(), repo.getUrl(), repo.getPath(), branch, repo.getCommitId(), ci);
-                return payload.putHeader(REPOSITORY_INFO_KEY, i)
+                return payload
+                        .putHeader(REPOSITORY_INFO_KEY, i)
+                        .putHeader(Payload.REPOSITORY, repository)
                         .putHeader(REPOSITORY_SNAPSHOT, Collections.singletonList(snapshot));
             } catch (Exception e) {
                 log.error("process -> repository error", e);

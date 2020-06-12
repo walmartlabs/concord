@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.PeriodicTask;
@@ -31,6 +32,7 @@ import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.pipelines.EnqueueProcessPipeline;
 import com.walmartlabs.concord.server.process.pipelines.processors.Pipeline;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.jooq.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +47,11 @@ import java.util.stream.Collectors;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static org.jooq.impl.DSL.value;
 
-@Named
 public class EnqueuedTask extends PeriodicTask {
 
     private static final Logger log = LoggerFactory.getLogger(EnqueuedTask.class);
 
-    private static long ERROR_RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(5);
+    private static final long ERROR_RETRY_INTERVAL = TimeUnit.SECONDS.toMillis(5);
 
     private final EnqueueWorkersConfiguration cfg;
 
@@ -62,8 +63,9 @@ public class EnqueuedTask extends PeriodicTask {
     private final AtomicInteger freeWorkersCount;
 
     @Inject
-    public EnqueuedTask(EnqueueWorkersConfiguration cfg, Dao dao, EnqueueProcessPipeline pipeline) {
+    public EnqueuedTask(EnqueueWorkersConfiguration cfg, Dao dao, EnqueueProcessPipeline pipeline, MetricRegistry metricRegistry) {
         super(cfg.getInterval(), ERROR_RETRY_INTERVAL);
+
         this.cfg = cfg;
         this.dao = dao;
         this.queue = new ArrayBlockingQueue<>(cfg.getWorkersCount());
@@ -73,6 +75,8 @@ public class EnqueuedTask extends PeriodicTask {
         for (int i = 0; i < cfg.getWorkersCount(); i++) {
             executor.submit(new Worker(pipeline, queue));
         }
+
+        metricRegistry.gauge("enqueued-workers-available", () -> freeWorkersCount::get);
     }
 
     @Override
@@ -82,6 +86,7 @@ public class EnqueuedTask extends PeriodicTask {
     }
 
     @Override
+    @WithTimer
     protected boolean performTask() {
         if (freeWorkersCount.get() == 0) {
             return false;
@@ -94,7 +99,7 @@ public class EnqueuedTask extends PeriodicTask {
             return false;
         }
 
-        for(int i = 0; i< keys.size(); i++) {
+        for (int i = 0; i < keys.size(); i++) {
             freeWorkersCount.decrementAndGet();
         }
 
