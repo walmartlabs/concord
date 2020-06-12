@@ -35,6 +35,14 @@ public class EnqueueWorkersConfiguration {
     private int workersCount;
 
     @Inject
+    @Config("queue.enqueueBatchSize")
+    private int batchSize;
+
+    @Inject
+    @Config("queue.enqueueBatchEnabled")
+    private boolean batchEnabled;
+
+    @Inject
     @Config("queue.enqueuePollInterval")
     private long interval;
 
@@ -44,5 +52,13 @@ public class EnqueueWorkersConfiguration {
 
     public long getInterval() {
         return interval;
+    }
+
+    public boolean isBatchEnabled() {
+        return batchEnabled;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
     }
 }

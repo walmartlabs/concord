@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.process;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.process.loader.model.ProcessDefinition;
+import com.walmartlabs.concord.repository.Repository;
 import com.walmartlabs.concord.server.process.keys.AttachmentKey;
 import com.walmartlabs.concord.server.process.keys.HeaderKey;
 
@@ -41,6 +42,7 @@ public class Payload {
     public static final HeaderKey<PolicyEngine> POLICY = HeaderKey.register("_policy", PolicyEngine.class);
     public static final HeaderKey<ProcessDefinition> PROJECT_DEFINITION = HeaderKey.register("_projectDef", ProcessDefinition.class);
     public static final HeaderKey<ProcessKind> PROCESS_KIND = HeaderKey.register("_processKind", ProcessKind.class);
+    public static final HeaderKey<Repository> REPOSITORY = HeaderKey.register("_repository", Repository.class);
     public static final HeaderKey<Set<String>> OUT_EXPRESSIONS = HeaderKey.registerSet("_outExpr");
     public static final HeaderKey<Set<String>> PROCESS_HANDLERS = HeaderKey.registerSet("_processHandlers");
     public static final HeaderKey<Set<String>> PROCESS_TAGS = HeaderKey.registerSet("_processTags");
