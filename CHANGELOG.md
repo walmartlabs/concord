@@ -1,5 +1,54 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server: option to ignore "empty" `push` notifications
+from GitHub;
+- concord-server: optional batching mechanism for the `NEW` to
+`ENQUEUED` transition;
+- runtime-v2, concord-console: show `meta.segmentName` as the log
+segment's name;
+- concord-console: show GitHub event details in the "triggered by"
+popup;
+- docker-tasks: runtime v2 compatibility;
+- runtime-v2: option to redirect `System.out` and `err` to segmented
+logs;
+- runtime-v2: support for `error` blocks in `call` steps;
+- runtime-v2: `Context` can now be injected into tasks.
+
+### Changed
+
+- agent-operator: use `preStop` hooks instead of directly removing
+pods;
+- concord-server: OneOps specific endpoints extracted as a server
+plugin;
+- concord-console: re-load repository data when the process start
+popup opens;
+- ansible: improved error messages in lookup plugins for Concord
+secrets;
+- concord-console: the team list page and the "find a team" dropdown
+were rewritten to use React Hooks instead of `react-redux`;
+- runtime-v1: trim data when recording in/out variables;
+- concord-console: the trigger list moved to the repository page
+into a separate tab;
+- concord-console: the login form was rewritten to use React Hooks
+instead of `react-redux`;
+- runtime-v2: `call` can now have multiple `out` variables;
+- concord-server: the endpoint for creation of Inventory queries now
+supports both `text/plain` and `application/json` content types;
+- concord-server: disable key validation when uploading existing
+SSH key pairs. The library (JSch) used to validate keys doesn't
+support keys larger than 2048 bits.
+
+### Breaking
+
+- runtime-v2: the `Task` interface now accepts input `Variables`
+instead of the context.
+
+
+
 ## [1.52.0] - 2020-06-03
 
 ### Added
