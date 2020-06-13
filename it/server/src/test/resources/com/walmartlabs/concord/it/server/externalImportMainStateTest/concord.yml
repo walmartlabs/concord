@@ -1,0 +1,15 @@
+imports:
+  - git:
+      url: "{{gitUrl}}"
+      version: "master"
+      path: "dir"
+      dest: "./import_data"
+
+flows:
+  default:
+    - log: "Hello, ${name}!"
+    - call: flowFromTemplate
+
+configuration:
+  arguments:
+    name: "Concord"

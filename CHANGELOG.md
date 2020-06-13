@@ -20,8 +20,10 @@ logs;
 
 ### Changed
 
-- agent-operator: use `preStop` hooks instead of directly removing
-pods;
+- concord-repository: fixed an issue preventing `imports` from 
+being excluded from the process state;
+- agent-operator: use `preStop` hooks instead of directly
+removing pods;
 - concord-server: OneOps specific endpoints extracted as a server
 plugin;
 - concord-console: re-load repository data when the process start
@@ -29,7 +31,7 @@ popup opens;
 - ansible: improved error messages in lookup plugins for Concord
 secrets;
 - concord-console: the team list page and the "find a team" dropdown
-were rewritten to use React Hooks instead of `react-redux`;
+are rewritten to use React Hooks instead of `react-redux`;
 - runtime-v1: trim data when recording in/out variables;
 - concord-console: the trigger list moved to the repository page
 into a separate tab;
