@@ -36,17 +36,17 @@ public class LastModifiedSnapshot implements Snapshot, FileVisitor {
 
     @Override
     public void visit(Path src, Path dst) throws IOException {
-        files.put(dst, Files.getLastModifiedTime(dst));
+        files.put(dst.normalize(), Files.getLastModifiedTime(dst));
     }
 
     @Override
     public boolean contains(Path path) {
-        return files.get(path) != null;
+        return files.get(path.normalize()) != null;
     }
 
     @Override
     public boolean isModified(Path path, BasicFileAttributes attrs) {
-        FileTime prev = files.get(path);
+        FileTime prev = files.get(path.normalize());
         if (prev == null) {
             return true;
         }

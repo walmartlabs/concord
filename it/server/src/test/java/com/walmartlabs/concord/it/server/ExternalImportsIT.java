@@ -20,6 +20,7 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
+import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.*;
 import com.walmartlabs.concord.common.IOUtils;
 import org.eclipse.jgit.api.Git;
@@ -456,6 +457,31 @@ public class ExternalImportsIT extends AbstractServerIT {
 
         assertLog(".*Hello from Groovy!.*", ab);
         assertLog(".*Hello from Python!.*", ab);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testExternalImportState() throws Exception {
+        String repoUrl = initRepo("externalImportWithDir");
+
+        // prepare the payload
+        Path payloadDir = createPayload("externalImportMainStateTest", repoUrl);
+        byte[] payload = archive(payloadDir.toUri());
+
+        // start the process
+
+        ProcessApi processApi = new ProcessApi(getApiClient());
+        StartProcessResponse spr = start(payload);
+        assertNotNull(spr.getInstanceId());
+        waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.ENQUEUED);
+
+        try {
+            processApi.downloadStateFile(spr.getInstanceId(), "import_data/concord.yml");
+            fail("exception expected");
+        } catch (ApiException e) {
+            assertEquals(404, e.getCode());
+        }
+
+        processApi.kill(spr.getInstanceId());
     }
 
     private static String initRepo(String resourceName) throws Exception {
