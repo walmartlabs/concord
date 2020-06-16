@@ -143,6 +143,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
         // send an event for the master branch
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // the default branch push must trigger the project A
@@ -156,6 +157,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
         // send a project B event for the project's branch
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/" + branch);
 
         // there should be a project B's process
@@ -218,6 +220,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // A's and C's triggers should be activated
@@ -296,6 +299,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // A's and D's triggers should be activated
@@ -310,6 +314,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
         // send a project B event for the project's branch
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/" + repoBBranch);
 
         // B's and D's triggers should be activated
@@ -389,6 +394,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // A's triggers should be activated
@@ -401,6 +407,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
         // send a project B event for the master branch
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // no project B processes should be triggered
@@ -417,6 +424,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
         // send a project B event for the project's branch
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/" + repoBBranch);
 
         // there should be a project B's process
@@ -431,6 +439,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
         // send an unknown repo event
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", "/unknown/repo",
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // E's trigger should be activated
@@ -508,6 +517,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // A's and F's triggers should be activated
@@ -520,6 +530,7 @@ public class GitHubTriggersIT extends AbstractGitHubTriggersIT {
         // send a project B event for the project's branch
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/" + repoBBranch);
 
         // there should be a project B's and F's processes

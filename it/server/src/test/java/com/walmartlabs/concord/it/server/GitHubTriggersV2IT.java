@@ -20,17 +20,17 @@ package com.walmartlabs.concord.it.server;
  * =====
  */
 
-import com.walmartlabs.concord.client.OrganizationEntry;
-import com.walmartlabs.concord.client.OrganizationsApi;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
+import com.walmartlabs.concord.client.*;
 import org.junit.After;
 import org.junit.Test;
 
+import javax.naming.NameAlreadyBoundException;
+import javax.naming.directory.*;
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
@@ -86,7 +86,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
                 "_REF", "refs/heads/master",
-                "_USER_NAME", "aknowndude");
+                "_USER_NAME", "aknowndude",
+                "_USER_LDAP_DN", "");
 
         // A's triggers should be activated
         ProcessEntry procA = waitForAProcess(orgXName, projectAName, "github", null);
@@ -97,7 +98,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
                 "_REF", "refs/heads/master",
-                "_USER_NAME", "somecooldude");
+                "_USER_NAME", "somecooldude",
+                "_USER_LDAP_DN", "");
 
         // G's triggers should be activated
         waitForAProcess(orgXName, projectGName, "github", null);
@@ -138,6 +140,7 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
+                "_USER_LDAP_DN", "",
                 "_REF", "refs/heads/master");
 
         // A's trigger should be activated
@@ -167,7 +170,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", "devtools/concord",
                 "_REF", "refs/heads/master",
-                "_USER_NAME", "vasia");
+                "_USER_NAME", "vasia",
+                "_USER_LDAP_DN", "");
 
         // A's trigger should be activated
         waitForAProcess(orgXName, projectAName, "github", null);
@@ -199,7 +203,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
-                "_REF", "refs/heads/master");
+                "_REF", "refs/heads/master",
+                "_USER_LDAP_DN", "");
 
         // A's trigger should be activated
         ProcessEntry pe = waitForAProcess(orgXName, projectAName, "github", null);
@@ -227,7 +232,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/empty_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectRepo),
-                "_REF", "refs/heads/master");
+                "_REF", "refs/heads/master",
+                "_USER_LDAP_DN", "");
 
         ProcessEntry pe = waitForAProcess(orgName, projectName, "github", null);
         assertLog(pe, ".*onEmpty: .*");
@@ -240,7 +246,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         sendEvent("githubTests/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectRepo),
-                "_REF", "refs/heads/master");
+                "_REF", "refs/heads/master",
+                "_USER_LDAP_DN", "");
 
         while (true) {
             list = processApi.list(orgName, projectName, null, null, null, null, null, null, null, null, null);
@@ -249,6 +256,95 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
             }
 
             Thread.sleep(1000);
+        }
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testUseInitiatorFromSender() throws Exception {
+        String username = createUser();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        Path projectRepo = initProjectAndRepo(orgName, projectName, repoName, null, initRepo("githubTests/repos/v2/useInitiatorTrigger"));
+        refreshRepo(orgName, projectName, repoName);
+
+        // ---
+
+        sendEvent("githubTests/events/direct_branch_push.json", "push",
+                "_USER_LDAP_DN", "",
+                "_USER_NAME", username,
+                "_FULL_REPO_NAME", toRepoName(projectRepo),
+                "_REF", "refs/heads/master");
+
+        ProcessEntry pe = waitForAProcess(orgName, projectName, username, null);
+        assertEquals(username, pe.getInitiator());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testUseInitiatorFromSenderLdapDn() throws Exception {
+        String username = createUser();
+
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+
+        String orgName = "org_" + randomString();
+        orgApi.createOrUpdate(new OrganizationEntry().setName(orgName));
+
+        String projectName = "project_" + randomString();
+        String repoName = "repo_" + randomString();
+        Path projectRepo = initProjectAndRepo(orgName, projectName, repoName, null, initRepo("githubTests/repos/v2/useInitiatorTrigger"));
+        refreshRepo(orgName, projectName, repoName);
+
+        // ---
+
+        sendEvent("githubTests/events/direct_branch_push.json", "push",
+                "_USER_LDAP_DN", "cn=" + username + ",dc=example,dc=org",
+                "_FULL_REPO_NAME", toRepoName(projectRepo),
+                "_REF", "refs/heads/master");
+
+        ProcessEntry pe = waitForAProcess(orgName, projectName, username, null);
+        assertEquals(username, pe.getInitiator());
+    }
+
+    private String createUser() throws Exception {
+        assertNotNull(System.getenv("IT_LDAP_URL"));
+
+        String username = "user_" + randomString();
+
+        DirContext ldapCtx = LdapIT.createContext();
+        createLdapUser(ldapCtx, username);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LDAP));
+        return username;
+    }
+
+    private static void createLdapUser(DirContext ldapCtx, String username) throws Exception {
+        String dn = "cn=" + username + ",dc=example,dc=org";
+        Attributes attributes = new BasicAttributes();
+
+        Attribute cn = new BasicAttribute("cn", username);
+        Attribute sn = new BasicAttribute("sn", username);
+
+        Attribute objectClass = new BasicAttribute("objectClass");
+        objectClass.add("top");
+        objectClass.add("organizationalPerson");
+
+        attributes.put(cn);
+        attributes.put(sn);
+        attributes.put(objectClass);
+
+        try {
+            ldapCtx.createSubcontext(dn, attributes);
+        } catch (NameAlreadyBoundException e) {
+            System.err.println("createLdapUser -> " + e.getMessage());
+            // already exists, ignore
         }
     }
 }

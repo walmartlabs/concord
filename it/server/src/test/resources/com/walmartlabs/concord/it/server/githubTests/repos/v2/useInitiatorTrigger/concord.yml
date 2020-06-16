@@ -1,0 +1,11 @@
+flows:
+  onPush:
+    - log: "onPush: ${event}"
+
+triggers:
+  - github:
+      entryPoint: "onPush"
+      version: 2
+      useInitiator: true
+      conditions:
+        type: "push"

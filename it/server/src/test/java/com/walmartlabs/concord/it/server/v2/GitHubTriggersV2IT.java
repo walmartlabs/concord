@@ -83,7 +83,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         sendEvent("v2/triggers/github/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
                 "_REF", "refs/heads/master",
-                "_USER_NAME", "aknowndude");
+                "_USER_NAME", "aknowndude",
+                "_USER_LDAP_DN", "");
 
         // A's triggers should be activated
         ProcessEntry procA = waitForAProcess(orgXName, projectAName, "github", null);
@@ -94,7 +95,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         sendEvent("v2/triggers/github/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectBRepo),
                 "_REF", "refs/heads/master",
-                "_USER_NAME", "somecooldude");
+                "_USER_NAME", "somecooldude",
+                "_USER_LDAP_DN", "");
 
         // G's triggers should be activated
         waitForAProcess(orgXName, projectGName, "github", null);
@@ -135,7 +137,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
 
         sendEvent("v2/triggers/github/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", toRepoName(projectARepo),
-                "_REF", "refs/heads/master");
+                "_REF", "refs/heads/master",
+                "_USER_LDAP_DN", "");
 
         // A's trigger should be activated
         waitForAProcess(orgXName, projectAName, "github", null);
@@ -164,7 +167,8 @@ public class GitHubTriggersV2IT extends AbstractGitHubTriggersIT {
         sendEvent("v2/triggers/github/events/direct_branch_push.json", "push",
                 "_FULL_REPO_NAME", "devtools/concord",
                 "_REF", "refs/heads/master",
-                "_USER_NAME", "vasia");
+                "_USER_NAME", "vasia",
+                "_USER_LDAP_DN", "");
 
         // A's trigger should be activated
         waitForAProcess(orgXName, projectAName, "github", null);

@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -140,12 +139,14 @@ public class GithubEventResource implements Resource {
         List<GithubTriggerProcessor.Result> results = new ArrayList<>();
         processors.forEach(p -> p.process(eventName, payload, uriInfo, results));
 
+        Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(userManager, ldapManager, payload));
+
         for (GithubTriggerProcessor.Result r : results) {
             Event e = Event.builder()
                     .id(deliveryId)
                     .name(EVENT_SOURCE)
                     .attributes(r.event())
-                    .initiator(memo(new GithubEventInitiatorSupplier(userManager, ldapManager, r.event())))
+                    .initiator(initiatorSupplier)
                     .build();
 
             executor.execute(e, r.triggers(), initiatorResolver, (t, cfg) -> {
@@ -165,14 +166,22 @@ public class GithubEventResource implements Resource {
 
         private final UserManager userManager;
         private final LdapManager ldapManager;
-        private final Map<String, Object> eventAttributes;
-        private final EventInitiatorSupplier fallback;
+        private final Payload payload;
+        private final Supplier<UserEntry> fallback;
 
-        public GithubEventInitiatorSupplier(UserManager userManager, LdapManager ldapManager, Map<String, Object> eventAttributes) {
+        public GithubEventInitiatorSupplier(UserManager userManager, LdapManager ldapManager, Payload payload) {
             this.userManager = userManager;
             this.ldapManager = ldapManager;
-            this.eventAttributes = eventAttributes;
-            this.fallback = new EventInitiatorSupplier("author", userManager, eventAttributes);
+            this.payload = payload;
+            this.fallback = () -> {
+                String initiator = payload.getSender();
+                if (initiator == null || initiator.trim().isEmpty()) {
+                    throw new ConcordApplicationException("Can't determine initiator: " + payload);
+                }
+
+                return userManager.getOrCreate(initiator, null, UserType.LDAP)
+                        .orElseThrow(() -> new ConcordApplicationException("User not found: " + initiator));
+            };
         }
 
         @Override
@@ -181,9 +190,9 @@ public class GithubEventResource implements Resource {
                 return fallback.get();
             }
 
-            String ldapDn = getSenderLdapDn(eventAttributes);
-            if (ldapDn == null) {
-                log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", eventAttributes);
+            String ldapDn = payload.getSenderLdapDn();
+            if (ldapDn == null || ldapDn.trim().isEmpty()) {
+                log.warn("getOrCreateUserEntry ['{}'] -> can't determine the sender's 'ldap_dn', falling back to 'login'", payload);
                 return fallback.get();
             }
 
@@ -191,7 +200,7 @@ public class GithubEventResource implements Resource {
             try {
                 LdapPrincipal p = ldapManager.getPrincipalByDn(ldapDn);
                 if (p == null) {
-                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", eventAttributes, ldapDn);
+                    log.warn("getOrCreateUserEntry ['{}'] -> can't find user by ldap DN ({})", payload, ldapDn);
                     return fallback.get();
                 }
 
@@ -200,14 +209,6 @@ public class GithubEventResource implements Resource {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        private String getSenderLdapDn(Map<String, Object> event) {
-            Object result = ConfigurationUtils.get(event, "payload.sender.ldap_dn");
-            if (result instanceof String) {
-                return (String) result;
-            }
-            return null;
         }
     }
 }

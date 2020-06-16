@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.events.github;
  * =====
  */
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import java.net.URI;
@@ -148,6 +149,14 @@ public class Payload {
         return MapUtils.getString(sender, "login");
     }
 
+    public String getSenderLdapDn() {
+        Object result = ConfigurationUtils.get(data, "sender", "ldap_dn");
+        if (result instanceof String) {
+            return (String) result;
+        }
+        return null;
+    }
+
     public String getAction() {
         return getString("action");
     }
@@ -177,5 +186,16 @@ public class Payload {
 
     private static Set<String> asSet(String... as) {
         return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(as)));
+    }
+
+    @Override
+    public String toString() {
+        return "Payload{" +
+                "eventName='" + eventName + '\'' +
+                ", data=" + data +
+                ", fullRepoName='" + fullRepoName + '\'' +
+                ", org='" + org + '\'' +
+                ", repo='" + repo + '\'' +
+                '}';
     }
 }

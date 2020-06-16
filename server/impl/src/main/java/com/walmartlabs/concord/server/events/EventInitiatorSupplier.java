@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.user.UserEntry;
 import com.walmartlabs.concord.server.user.UserManager;
@@ -43,7 +42,7 @@ public class EventInitiatorSupplier implements Supplier<UserEntry> {
 
     @Override
     public UserEntry get() {
-        Object author = ConfigurationUtils.get(eventAttributes, initiatorAttr);
+        Object author = eventAttributes.get(initiatorAttr);
         if (author == null) {
             return null;
         }

@@ -1,5 +1,14 @@
 # Change log
 
+## [Unreleased]
+
+### Changed
+
+- concord-server: fixed an issue preventing `useInitiator` from
+being correctly handled by GitHub triggers.
+
+
+
 ## [1.53.0] - 2020-06-13
 
 ### Added

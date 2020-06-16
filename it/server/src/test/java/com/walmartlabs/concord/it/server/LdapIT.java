@@ -92,7 +92,7 @@ public class LdapIT extends AbstractServerIT {
 
     }
 
-    private static DirContext createContext() throws Exception {
+    public static DirContext createContext() throws Exception {
         String url = System.getenv("IT_LDAP_URL");
         String connectionType = "simple";
         String dn = "cn=admin,dc=example,dc=org";
