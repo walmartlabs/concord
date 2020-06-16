@@ -133,7 +133,7 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
 
     protected ProcessEntry waitForAProcess(String orgName, String projectName, String initiator, ProcessEntry after) throws Exception {
         ProcessV2Api processApi = new ProcessV2Api(getApiClient());
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             String afterCreatedAt = after != null ? after.getCreatedAt().format(DATE_TIME_FORMATTER) : null;
             List<ProcessEntry> l = processApi.list(null, orgName, null, projectName, null, null, afterCreatedAt, null, null, null, initiator, null, null, null, null);
             if (l.size() == 1 && isFinished(l.get(0).getStatus())) {
@@ -142,6 +142,8 @@ public class AbstractGitHubTriggersIT extends AbstractServerIT {
 
             Thread.sleep(1000);
         }
+
+        throw new RuntimeException("Process wait interrupted");
     }
 
     protected int waitForProcessesToFinish() throws Exception {
