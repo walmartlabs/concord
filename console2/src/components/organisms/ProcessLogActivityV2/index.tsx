@@ -161,7 +161,7 @@ const ProcessLogActivityV2 = ({
                     (value) =>
                         logOpts.showSystemSegment || (!logOpts.showSystemSegment && value.id !== 0)
                 )
-                .map((s, index) => (
+                .map((s) => (
                     <LogSegmentActivity
                         instanceId={instanceId}
                         segmentId={s.id}
@@ -174,7 +174,7 @@ const ProcessLogActivityV2 = ({
                         processStatus={processStatus}
                         opts={logOpts.segmentOptions}
                         forceRefresh={forceRefresh}
-                        key={index}
+                        key={s.id}
                     />
                 ))}
         </>
