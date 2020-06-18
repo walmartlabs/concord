@@ -51,7 +51,7 @@ public class UserDao extends AbstractDao {
         return txResult(tx -> {
             UUID userId = tx.insertInto(USERS)
                     .columns(USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_EMAIL, USERS.USER_TYPE)
-                    .values(username, domain, displayName, email, type.toString())
+                    .values(username.toLowerCase(), domain.toLowerCase(), displayName, email, type.toString())
                     .onConflict(USERS.USERNAME, USERS.DOMAIN, USERS.USER_TYPE)
                     .doUpdate()
                     .set(USERS.DISPLAY_NAME, displayName)
@@ -97,7 +97,7 @@ public class UserDao extends AbstractDao {
             }
 
             if (displayName != null) {
-                q.set(USERS.DISPLAY_NAME, displayName);
+                q.set(USERS.DISPLAY_NAME, displayName.toLowerCase());
             }
 
             if (email != null) {

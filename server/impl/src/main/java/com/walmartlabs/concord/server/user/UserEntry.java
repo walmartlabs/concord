@@ -75,8 +75,8 @@ public class UserEntry implements Serializable {
                      @JsonProperty("disabled") boolean disabled) {
 
         this.id = id;
-        this.name = name;
-        this.domain = domain;
+        this.name = name.toLowerCase();
+        this.domain = domain.toLowerCase();
         this.displayName = displayName;
         this.orgs = orgs;
         this.type = type;

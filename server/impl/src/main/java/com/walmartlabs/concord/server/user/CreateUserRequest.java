@@ -60,8 +60,8 @@ public class CreateUserRequest implements Serializable {
                              @JsonProperty("disabled") boolean disabled,
                              @JsonProperty("roles") Set<String> roles) {
 
-        this.username = username;
-        this.userDomain = userDomain;
+        this.username = username.toLowerCase();;
+        this.userDomain = userDomain.toLowerCase();
         this.displayName = displayName;
         this.email = email;
         this.type = type;
