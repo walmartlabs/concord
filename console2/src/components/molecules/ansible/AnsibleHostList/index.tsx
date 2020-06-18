@@ -214,7 +214,6 @@ class AnsibleHostList extends React.Component<Props, State> {
                     </Grid.Column>
                     <Grid.Column textAlign={'right'}>
                         <PaginationToolBar
-                            filterProps={{}}
                             handleNext={this.handleNext}
                             handlePrev={this.handlePrev}
                             handleFirst={this.handleFirst}

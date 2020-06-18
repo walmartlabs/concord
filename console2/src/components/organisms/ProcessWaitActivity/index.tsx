@@ -80,7 +80,7 @@ const ProcessWaitActivity = ({
                 <Menu.Menu position={'right'}>
                     <Menu.Item>
                         <PaginationToolBar
-                            filterProps={paginationFilter}
+                            limit={paginationFilter.limit}
                             handleLimitChange={(limit) => handleLimitChange(limit)}
                             handleNext={handleNext}
                             handlePrev={handlePrev}

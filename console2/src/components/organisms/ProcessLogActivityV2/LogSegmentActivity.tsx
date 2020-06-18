@@ -32,11 +32,7 @@ import { Header, Modal } from 'semantic-ui-react';
 
 import { ConcordId, RequestError } from '../../../api/common';
 import { LogSegment } from '../../molecules';
-import {
-    getSegmentLog as apiGetLog,
-    LogRange,
-    SegmentStatus
-} from '../../../api/process/log';
+import { getSegmentLog as apiGetLog, LogRange, SegmentStatus } from '../../../api/process/log';
 import RequestErrorActivity from '../RequestErrorActivity';
 import { LogProcessorOptions, processText } from '../../../state/data/processes/logs/processors';
 import { isFinal, ProcessStatus } from '../../../api/process';

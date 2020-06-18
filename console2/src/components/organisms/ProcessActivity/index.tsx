@@ -205,7 +205,12 @@ const ProcessActivity = (props: ExternalProps) => {
                     />
                 </Route>
                 <Route path={`${baseUrl}/children`} exact={true}>
-                    <ProcessChildrenActivity instanceId={instanceId} />
+                    <ProcessChildrenActivity
+                        instanceId={instanceId}
+                        processStatus={process ? process.status : undefined}
+                        loadingHandler={loadingHandler}
+                        forceRefresh={refresh}
+                    />
                 </Route>
                 <Route path={`${baseUrl}/attachments`} exact={true}>
                     <ProcessAttachmentsActivity
