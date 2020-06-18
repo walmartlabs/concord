@@ -96,7 +96,7 @@
         <sshd.version>1.6.0</sshd.version>
         <swagger.version>1.5.20</swagger.version>
         <sysoutslf4j.version>1.0.2</sysoutslf4j.version>
-        <testcontainers.concord.version>0.0.17</testcontainers.concord.version>
+        <testcontainers.concord.version>0.0.21</testcontainers.concord.version>
         <testcontainers.version>1.13.0</testcontainers.version>
         <threetenbp.version>1.3.5</threetenbp.version>
         <wiremock.version>2.26.1</wiremock.version>
@@ -1043,7 +1043,12 @@
             </dependency>
             <dependency>
                 <groupId>ca.ibodrov.concord</groupId>
-                <artifactId>testcontainers-concord</artifactId>
+                <artifactId>testcontainers-concord-core</artifactId>
+                <version>${testcontainers.concord.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.ibodrov.concord</groupId>
+                <artifactId>testcontainers-concord-junit4</artifactId>
                 <version>${testcontainers.concord.version}</version>
             </dependency>
             <dependency>

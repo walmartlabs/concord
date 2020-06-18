@@ -20,22 +20,20 @@ package com.walmartlabs.concord.it.compat;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.images.PullPolicy;
-
-import static org.junit.Assert.assertEquals;
 
 public class CompatIT {
 
     private static final long DEFAULT_TEST_TIMEOUT = 120000;
 
     @Rule
-    public final Concord concord = new Concord()
+    public final ConcordRule concord = new ConcordRule()
             .serverImage(System.getProperty("server.image", "walmartlabs/concord-server"))
             .agentImage(System.getProperty("agent.image", "walmartlabs/concord-agent"))
             .pullPolicy(PullPolicy.defaultPolicy())

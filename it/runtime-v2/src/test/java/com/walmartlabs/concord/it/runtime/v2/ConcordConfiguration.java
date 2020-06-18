@@ -20,13 +20,13 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import org.testcontainers.images.PullPolicy;
 
 public final class ConcordConfiguration {
 
-    public static Concord configure(int ... hostPorts) {
-        Concord concord = new Concord()
+    public static ConcordRule configure() {
+        ConcordRule concord = new ConcordRule()
                 .pathToRunnerV1(null)
                 .pathToRunnerV2("target/runner-v2.jar")
                 .dbImage(System.getProperty("db.image", "library/postgres:10"))
@@ -39,11 +39,11 @@ public final class ConcordConfiguration {
 
         boolean localMode = Boolean.parseBoolean(System.getProperty("it.local.mode"));
         if (localMode) {
-            concord.mode(Concord.Mode.LOCAL);
+            concord.mode(ConcordRule.Mode.LOCAL);
         } else {
             boolean remoteMode = Boolean.parseBoolean(System.getProperty("it.remote.mode"));
             if (remoteMode) {
-                concord.mode(Concord.Mode.REMOTE);
+                concord.mode(ConcordRule.Mode.REMOTE);
                 concord.apiToken(System.getProperty("it.remote.token"));
             }
         }

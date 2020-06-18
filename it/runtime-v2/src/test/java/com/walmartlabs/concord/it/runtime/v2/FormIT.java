@@ -20,9 +20,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
@@ -41,7 +41,7 @@ import static org.junit.Assert.*;
 public class FormIT {
 
     @Rule
-    public final Concord concord = ConcordConfiguration.configure();
+    public final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * A straightforward single form process.
