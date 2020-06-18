@@ -89,7 +89,11 @@ public class DependencyManager {
     private final RepositorySystem maven = newMavenRepositorySystem();
 
     public DependencyManager(Path cacheDir) throws IOException {
-        this(cacheDir, readCfg());
+        this(cacheDir, getRepositories());
+    }
+
+    public DependencyManager(Path cacheDir, Path cfgFile) throws IOException {
+        this(cacheDir, readCfg(cfgFile));
     }
 
     public DependencyManager(Path cacheDir, List<MavenRepository> repositories) throws IOException {
@@ -227,6 +231,22 @@ public class DependencyManager {
 
             return dst;
         }
+    }
+
+    private static Path getConfigFileLocation() {
+        String s = System.getenv(CFG_FILE_KEY);
+        if (s == null || s.trim().isEmpty()) {
+            return null;
+        }
+        return Paths.get(s);
+    }
+
+    private static List<MavenRepository> getRepositories() {
+        Path src = getConfigFileLocation();
+        if (src == null) {
+            return DEFAULT_REPOS;
+        }
+        return readCfg(src);
     }
 
     private static String hash(String s) {
@@ -408,24 +428,20 @@ public class DependencyManager {
         return m;
     }
 
-    private static List<MavenRepository> readCfg() {
-        String s = System.getenv(CFG_FILE_KEY);
-        if (s == null || s.trim().isEmpty()) {
-            return DEFAULT_REPOS;
-        }
+    private static List<MavenRepository> readCfg(Path src) {
+        src = src.toAbsolutePath().normalize();
 
-        Path p = Paths.get(s);
-        if (!Files.exists(p)) {
-            log.warn("readCfg -> file not found: {}, using the default repos", s);
+        if (!Files.exists(src)) {
+            log.warn("readCfg -> file not found: {}, using the default repos", src);
             return DEFAULT_REPOS;
         }
 
         ObjectMapper om = new ObjectMapper();
-        try (InputStream in = Files.newInputStream(p)) {
+        try (InputStream in = Files.newInputStream(src)) {
             MavenRepositoryConfiguration cfg = om.readValue(in, MavenRepositoryConfiguration.class);
             return cfg.repositories();
         } catch (IOException e) {
-            throw new RuntimeException("Error while reading the Maven configuration file: " + s, e);
+            throw new RuntimeException("Error while reading the Maven configuration file: " + src, e);
         }
     }
 
