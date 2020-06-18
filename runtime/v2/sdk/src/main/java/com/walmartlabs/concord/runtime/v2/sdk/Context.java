@@ -20,6 +20,9 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.ProjectInfo;
+
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -37,8 +40,11 @@ public interface Context {
 
     Variables variables();
 
+    @Nullable
+    ProjectInfo projectInfo();
+
     // TODO parentInstanceId?
-    // TODO move processInfo/projectInfo here?
+    // TODO move processInfo?
 
     /**
      * Provides access to the low-level details of the current process.

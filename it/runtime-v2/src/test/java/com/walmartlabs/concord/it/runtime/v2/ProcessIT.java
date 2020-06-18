@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.walmartlabs.concord.it.common.ITUtils.randomString;
 import static com.walmartlabs.concord.it.runtime.v2.ITConstants.DEFAULT_TEST_TIMEOUT;
 import static org.junit.Assert.*;
 
@@ -158,5 +159,26 @@ public class ProcessIT {
 
         proc.assertLog(".*log from expression short.*");
         proc.assertLog(".*log from expression full form.*");
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testProjectInfo() throws Exception {
+        String orgName = "org_" + randomString();
+        concord.organizations().create(orgName);
+
+        String projectName = "project_" + randomString();
+        concord.projects().create(orgName, projectName);
+
+        Payload payload = new Payload()
+                .org(orgName)
+                .project(projectName)
+                .archive(ProcessIT.class.getResource("projectInfo").toURI());
+
+        ConcordProcess proc = concord.processes().start(payload);
+
+        proc.expectStatus(ProcessEntry.StatusEnum.FINISHED);
+
+        proc.assertLog(".*orgName=" + orgName + ".*");
+        proc.assertLog(".*name=" + projectName + ".*");
     }
 }

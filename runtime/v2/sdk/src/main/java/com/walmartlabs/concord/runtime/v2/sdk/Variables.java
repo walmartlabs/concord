@@ -21,8 +21,8 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  */
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public interface Variables {
 
@@ -34,12 +34,20 @@ public interface Variables {
 
     Map<String, Object> toMap();
 
+    default String getString(String key) {
+        return getString(key, null);
+    }
+
     default String getString(String key, String defaultValue) {
         return get(key, defaultValue, String.class);
     }
 
     default String assertString(String key) {
         return assertVariable(key, String.class);
+    }
+
+    default String assertString(String message, String key) {
+        return assertVariable(message, key, String.class);
     }
 
     default Number getNumber(String key, Number defaultValue) {
@@ -62,8 +70,33 @@ public interface Variables {
         return getNumber(key, defaultValue).longValue();
     }
 
+    default UUID getUUID(String key) {
+        Object o = get(key);
+        if (o == null) {
+            return null;
+        }
+
+        if (o instanceof String) {
+            return UUID.fromString((String) o);
+        }
+
+        if (o instanceof UUID) {
+            return (UUID) o;
+        }
+
+        throw new IllegalArgumentException("Invalid variable '" + key + "' type, expected: string/uuid, got: " + o.getClass());
+    }
+
+    default UUID assertUUID(String key) {
+        UUID result = getUUID(key);
+        if (result != null) {
+            return result;
+        }
+        throw new IllegalArgumentException("Mandatory variable '" + key + "' is required");
+    }
+
     @SuppressWarnings("unchecked")
-    default  <E> Collection<E> getCollection(String key, List<E> defaultValue) {
+    default  <E> Collection<E> getCollection(String key, Collection<E> defaultValue) {
         return get(key, defaultValue, Collection.class);
     }
 
@@ -73,13 +106,17 @@ public interface Variables {
     }
 
     default  <T> T assertVariable(String key, Class<T> type) {
+        return assertVariable(null, key, type);
+    }
+
+    default  <T> T assertVariable(String message, String key, Class<T> type) {
         T result = get(key, null, type);
 
         if (result != null) {
             return result;
         }
 
-        throw new IllegalArgumentException("Mandatory variable '" + key + "' is required");
+        throw new IllegalArgumentException(message != null ? message : "Mandatory variable '" + key + "' is required");
     }
 
     default <T> T get(String key, T defaultValue, Class<T> type) {
