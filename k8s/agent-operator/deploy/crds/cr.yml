@@ -65,7 +65,7 @@ spec:
         while [ "$workers" != "0" ] && [ "$num_retries" -lt "$MAX_RETRIES" ]
         do
           echo "[$HOSTNAME]: Agent is still executing a process.. enabling maintenance mode and checking the number of workers"
-          mmode_response=`curl -X POST http://127.0.0.1:8010/maintenance-mode`
+          mmode_response=`wget -qO - --post-data="" http://127.0.0.1:8010/maintenance-mode`
 
           mmode_enabled=`echo $mmode_response | sed -n 's/^.*\"maintenanceMode\":\([a-z]*\).*$/\1/p'`
           if [ "$mmode_enabled" == "true" ]; then
@@ -116,8 +116,17 @@ spec:
           volumeMounts:
             - name: "process-tmp"
               mountPath: "/tmp"
+            - mountPath: "/hooks/preStopHook.sh"
+              name: cfg
+              subPath: preStopHook.sh
           securityContext:
             privileged: true
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "sh"
+                  - "/hooks/preStopHook.sh"
 
         - name: agent
           image: "walmartlabs/concord-agent:latest"
