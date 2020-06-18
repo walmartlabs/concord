@@ -20,9 +20,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.*;
 import org.junit.Rule;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 public class KvTaskIT {
 
     @Rule
-    public final Concord concord = ConcordConfiguration.configure();
+    public final ConcordRule concord = ConcordConfiguration.configure();
 
     /**
      * Tests various methods of the 'kv' plugin.

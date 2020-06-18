@@ -20,9 +20,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEventEntry;
 import com.walmartlabs.concord.client.ProcessEventsApi;
@@ -38,7 +38,7 @@ import static org.junit.Assert.*;
 public class FlowEventsIT {
 
     @ClassRule
-    public static final Concord concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test() throws Exception {
