@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  */
 
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
@@ -38,11 +39,13 @@ public class DefaultContextFactory implements ContextFactory {
 
     private final WorkingDirectory workingDirectory;
     private final InstanceId processInstanceId;
+    private final ProcessConfiguration processConfiguration;
 
     @Inject
-    public DefaultContextFactory(WorkingDirectory workingDirectory, InstanceId processInstanceId) {
+    public DefaultContextFactory(WorkingDirectory workingDirectory, InstanceId processInstanceId, ProcessConfiguration processConfiguration) {
         this.workingDirectory = workingDirectory;
         this.processInstanceId = processInstanceId;
+        this.processConfiguration = processConfiguration;
     }
 
     @Override
@@ -57,6 +60,6 @@ public class DefaultContextFactory implements ContextFactory {
         Compiler compiler = runtime.getService(Compiler.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
-        return new ContextImpl(compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(), processInstanceId.getValue());
+        return new ContextImpl(compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(), processInstanceId.getValue(), processConfiguration.projectInfo());
     }
 }

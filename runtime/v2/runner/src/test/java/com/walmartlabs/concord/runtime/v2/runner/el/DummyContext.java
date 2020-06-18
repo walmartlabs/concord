@@ -24,6 +24,7 @@ import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.sdk.ProjectInfo;
 
 import java.nio.file.Path;
 import java.util.UUID;
@@ -42,6 +43,11 @@ public class DummyContext implements Context {
 
     @Override
     public Variables variables() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public ProjectInfo projectInfo() {
         throw new IllegalStateException("Not implemented");
     }
 
