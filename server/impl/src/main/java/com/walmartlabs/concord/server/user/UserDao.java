@@ -97,7 +97,7 @@ public class UserDao extends AbstractDao {
             }
 
             if (displayName != null) {
-                q.set(USERS.DISPLAY_NAME, displayName.toLowerCase());
+                q.set(USERS.DISPLAY_NAME, displayName);
             }
 
             if (email != null) {
@@ -267,7 +267,7 @@ public class UserDao extends AbstractDao {
     public void updateDomain(UUID id, String userDomain) {
         tx(tx -> {
             tx.update(USERS)
-                    .set(USERS.DOMAIN, value(userDomain))
+                    .set(USERS.DOMAIN, value(userDomain.toLowerCase()))
                     .where(USERS.USER_ID.eq(id))
                     .execute();
         });
