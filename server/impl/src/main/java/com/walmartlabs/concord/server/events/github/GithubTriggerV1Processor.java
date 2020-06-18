@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.events.github;
  * =====
  */
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -27,6 +29,7 @@ import com.walmartlabs.concord.server.org.project.ProjectEntry;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.GithubAuthenticatingFilter;
 import com.walmartlabs.concord.server.security.github.GithubKey;
 
@@ -59,22 +62,30 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
     private final TriggersDao triggersDao;
     private final GithubConfiguration githubCfg;
     private final GithubTriggerDefinitionEnricher triggerDefinitionEnricher;
+    private final Histogram reposPerEvent;
+    private final Histogram triggersPerEvent;
+    private final Histogram filteredTriggersPerEvent;
 
     @Inject
     public GithubTriggerV1Processor(RepositoryDao repositoryDao,
                                     ProjectDao projectDao,
                                     TriggersDao triggersDao,
                                     GithubConfiguration githubCfg,
-                                    GithubTriggerDefinitionEnricher triggerDefinitionEnricher) {
+                                    GithubTriggerDefinitionEnricher triggerDefinitionEnricher,
+                                    MetricRegistry metricRegistry) {
 
         this.repositoryDao = repositoryDao;
         this.projectDao = projectDao;
         this.triggersDao = triggersDao;
         this.githubCfg = githubCfg;
         this.triggerDefinitionEnricher = triggerDefinitionEnricher;
+        this.reposPerEvent = metricRegistry.histogram("repositories-count-per-github-event-v1-processor");
+        this.triggersPerEvent = metricRegistry.histogram("triggers-count-per-github-event-v1-processor");
+        this.filteredTriggersPerEvent = metricRegistry.histogram("filtered-triggers-count-per-github-event-v1-processor");
     }
 
     @Override
+    @WithTimer
     public void process(String eventName, Payload payload, UriInfo uriInfo, List<Result> result) {
         if (payload.getFullRepoName() == null) {
             return;
@@ -86,6 +97,9 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
 
         String eventBranch = payload.getBranch();
         List<RepositoryItem> repos = findRepos(payload.getFullRepoName(), eventBranch, hookProjectId);
+
+        reposPerEvent.update(repos.size());
+
         boolean unknownRepo = repos.isEmpty();
         if (unknownRepo) {
             repos = Collections.singletonList(UNKNOWN_REPO);
@@ -98,12 +112,17 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
             Map<String, Object> triggerConditions = conditions;
             Map<String, Object> triggerEvent = buildTriggerEvent(payload, r.id, r.project, conditions);
 
-            List<TriggerEntry> triggers = listTriggers(hookProjectId).stream()
+            List<TriggerEntry> allTriggers = listTriggers(hookProjectId);
+            triggersPerEvent.update(allTriggers.size());
+
+            List<TriggerEntry> triggers = allTriggers.stream()
                     // skip empty push events if the trigger's configuration says so
                     .filter(t -> !(GithubUtils.ignoreEmptyPush(t) && GithubUtils.isEmptyPush(eventName, payload)))
                     .map(triggerDefinitionEnricher::enrich)
                     .filter(t -> DefaultEventFilter.filter(triggerConditions, t))
                     .collect(Collectors.toList());
+
+            filteredTriggersPerEvent.update(triggers.size());
 
             if (!triggers.isEmpty()) {
                 result.add(Result.from(triggerEvent, triggers));
@@ -111,11 +130,13 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
         }
     }
 
-    private List<TriggerEntry> listTriggers(UUID projectId) {
+    @WithTimer
+    List<TriggerEntry> listTriggers(UUID projectId) {
         return triggersDao.list(projectId, EVENT_SOURCE, VERSION_ID, null);
     }
 
-    private List<RepositoryItem> findRepos(String repoName, String branch, UUID hookProjectId) {
+    @WithTimer
+    List<RepositoryItem> findRepos(String repoName, String branch, UUID hookProjectId) {
         return repositoryDao.find(hookProjectId, repoName).stream()
                 .filter(r -> GithubUtils.isRepositoryUrl(repoName, r.getUrl(), githubCfg.getGithubDomain()))
                 .filter(r -> isBranchEq(r.getBranch(), branch))

@@ -27,6 +27,7 @@ import com.walmartlabs.concord.server.org.project.RepositoryDao;
 import com.walmartlabs.concord.server.org.project.RepositoryEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggersDao;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.github.GithubKey;
 
 import javax.inject.Inject;
@@ -53,6 +54,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
     }
 
     @Override
+    @WithTimer
     public void process(String eventName, Payload payload, UriInfo uriInfo, List<Result> result) {
         GithubKey githubKey = GithubKey.getCurrent();
         UUID projectId = githubKey.getProjectId();
@@ -79,7 +81,8 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         }
     }
 
-    private List<TriggerEntry> listTriggers(UUID projectId, String org, String repo) {
+    @WithTimer
+    List<TriggerEntry> listTriggers(UUID projectId, String org, String repo) {
         Map<String, String> conditions = new HashMap<>();
 
         if (org != null) {
@@ -149,6 +152,7 @@ public class GithubTriggerV2Processor implements GithubTriggerProcessor {
         }
 
         @Override
+        @WithTimer
         public void enrich(Payload payload, TriggerEntry trigger, Map<String, Object> result) {
             Object projectInfoConditions = trigger.getConditions().get(com.walmartlabs.concord.sdk.Constants.Trigger.REPOSITORY_INFO);
             if (projectInfoConditions == null || payload.getFullRepoName() == null) {
