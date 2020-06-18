@@ -119,7 +119,7 @@ const LogSegment = ({
                 onClick={() => setOpen((prevState) => !prevState)}>
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
-                <StatusIcon status={status} loading={loading} warnings={warnings} errors={errors} />
+                <StatusIcon status={status} warnings={warnings} errors={errors} />
 
                 <span className="Caption">{name}</span>
 
@@ -165,6 +165,7 @@ const LogSegment = ({
                         </div>
                     </>
                 )}
+                {loading && <div className="Loader" />}
             </Button>
 
             {isOpen && (
@@ -190,7 +191,7 @@ interface StatusIconProps {
     errors?: number;
 }
 
-const StatusIcon = ({ status, loading, warnings = 0, errors = 0 }: StatusIconProps) => {
+const StatusIcon = ({ status, warnings = 0, errors = 0 }: StatusIconProps) => {
     if (!status) {
         return <span className="EmptyStatus" />;
     }
@@ -199,7 +200,7 @@ const StatusIcon = ({ status, loading, warnings = 0, errors = 0 }: StatusIconPro
     let icon: SemanticICONS = 'circle';
     let spinning = false;
 
-    if (status === SegmentStatus.RUNNING || loading) {
+    if (status === SegmentStatus.RUNNING) {
         icon = 'spinner';
         spinning = true;
     } else if (status === SegmentStatus.FAILED) {
