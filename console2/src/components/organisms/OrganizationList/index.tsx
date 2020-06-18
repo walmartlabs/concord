@@ -102,7 +102,7 @@ const OrganizationList = () => {
                 </Menu.Item>
 
                 <PaginationToolBar
-                    filterProps={paginationFilter}
+                    limit={paginationFilter.limit}
                     handleLimitChange={(limit) => handleLimitChange(limit)}
                     handleNext={handleNext}
                     handlePrev={handlePrev}

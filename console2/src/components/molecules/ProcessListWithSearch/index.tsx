@@ -21,15 +21,10 @@
 import * as React from 'react';
 import { Button, Icon, Label, Popup, Table } from 'semantic-ui-react';
 
-import { RequestError, ConcordId } from '../../../api/common';
+import { ConcordId } from '../../../api/common';
 import { ProcessEntry } from '../../../api/process';
 import { Pagination } from '../../../state/data/processes';
-import {
-    ProcessList,
-    RequestErrorMessage,
-    BulkProcessActionDropdown,
-    PaginationToolBar
-} from '../../molecules';
+import { ProcessList, BulkProcessActionDropdown, PaginationToolBar } from '../../molecules';
 import { ColumnDefinition } from '../../../api/org';
 
 import {
@@ -61,7 +56,7 @@ const withoutProjectColumns = [
 ];
 
 interface Props {
-    processes: ProcessEntry[];
+    processes?: ProcessEntry[];
 
     orgName?: string;
     projectName?: string;
@@ -74,7 +69,6 @@ interface Props {
     columns: ColumnDefinition[];
 
     loading: boolean;
-    loadError: RequestError;
 
     next?: number;
     prev?: number;
@@ -82,21 +76,17 @@ interface Props {
     usePagination?: boolean;
 
     refresh: (processFilters?: ProcessFilters, paginationFilters?: Pagination) => void;
+
+    showRefreshButton?: boolean;
 }
 
 interface State {
     processFilters: ProcessFilters;
-    paginationFilter: Pagination;
     selectedProcessIds: ConcordId[];
 }
 
-const toState = (
-    selectedProcessIds: ConcordId[],
-    processFilters?: ProcessFilters,
-    paginationFilter?: Pagination
-): State => {
+const toState = (selectedProcessIds: ConcordId[], processFilters?: ProcessFilters): State => {
     return {
-        paginationFilter: paginationFilter || {},
         processFilters: processFilters || {},
         selectedProcessIds
     };
@@ -158,7 +148,7 @@ const renderFiltersToolbar = (
 class ProcessListWithSearch extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = toState([], this.props.processFilters, this.props.paginationFilter);
+        this.state = toState([], this.props.processFilters);
         this.onSelectProcess = this.onSelectProcess.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
@@ -170,8 +160,8 @@ class ProcessListWithSearch extends React.Component<Props, State> {
     }
 
     onFilterChange(column: ColumnDefinition, filterValue?: string) {
-        const { processFilters, paginationFilter } = this.state;
-        const { refresh } = this.props;
+        const { processFilters } = this.state;
+        const { refresh, paginationFilter } = this.props;
 
         const newProcessFilters = {};
         Object.keys(processFilters)
@@ -187,16 +177,15 @@ class ProcessListWithSearch extends React.Component<Props, State> {
     }
 
     onFiltersClear() {
-        const { paginationFilter } = this.state;
-        const { refresh } = this.props;
+        const { refresh, paginationFilter } = this.props;
         const processFilters = {};
         this.setState({ processFilters });
         refresh(processFilters, paginationFilter);
     }
 
     onFilterClear(source: string) {
-        const { paginationFilter, processFilters } = this.state;
-        const { refresh } = this.props;
+        const { processFilters } = this.state;
+        const { refresh, paginationFilter } = this.props;
         const newProcessFilters = {};
         Object.keys(processFilters)
             .filter((k) => k !== source)
@@ -206,12 +195,9 @@ class ProcessListWithSearch extends React.Component<Props, State> {
     }
 
     handleLimitChange(limit: any) {
-        const { paginationFilter, processFilters } = this.state;
-        const { refresh } = this.props;
-        if (paginationFilter.limit !== limit) {
-            this.setState({
-                paginationFilter: { limit }
-            });
+        const { processFilters } = this.state;
+        const { paginationFilter, refresh } = this.props;
+        if (!paginationFilter || paginationFilter.limit !== limit) {
             refresh(processFilters, { limit });
         }
     }
@@ -229,10 +215,10 @@ class ProcessListWithSearch extends React.Component<Props, State> {
     }
 
     handleNavigation(offset?: number) {
-        const { paginationFilter, processFilters } = this.state;
-        const { refresh } = this.props;
+        const { processFilters } = this.state;
+        const { refresh, paginationFilter } = this.props;
 
-        refresh(processFilters, { offset, limit: paginationFilter.limit });
+        refresh(processFilters, { offset, limit: paginationFilter && paginationFilter.limit });
     }
 
     onSelectProcess(processIds: ConcordId[]) {
@@ -240,8 +226,8 @@ class ProcessListWithSearch extends React.Component<Props, State> {
     }
 
     onRefresh() {
-        const { refresh } = this.props;
-        const { processFilters, paginationFilter } = this.state;
+        const { refresh, paginationFilter } = this.props;
+        const { processFilters } = this.state;
         refresh(processFilters, paginationFilter);
     }
 
@@ -269,24 +255,17 @@ class ProcessListWithSearch extends React.Component<Props, State> {
     render() {
         const {
             processes,
+            paginationFilter,
             usePagination = false,
             columns,
             projectName,
-            loadError,
             loading,
             prev,
-            next
+            next,
+            showRefreshButton = true
         } = this.props;
 
-        const { processFilters, paginationFilter } = this.state;
-
-        if (loadError) {
-            return <RequestErrorMessage error={loadError} />;
-        }
-
-        if (!processes) {
-            return <p>No processes found.</p>;
-        }
+        const { processFilters } = this.state;
 
         const showProjectColumn = !projectName;
         const displayColumns =
@@ -294,22 +273,22 @@ class ProcessListWithSearch extends React.Component<Props, State> {
 
         return (
             <>
-                {loadError && <RequestErrorMessage error={loadError} />}
-
                 <div className={'container'}>
                     <Table attached="top" basic={true} style={{ borderBottom: 'none' }}>
                         <Table.Header>
                             <Table.Row>
-                                <Table.HeaderCell
-                                    collapsing={true}
-                                    style={{ borderBottom: 'none' }}>
-                                    <Button
-                                        basic={true}
-                                        icon="refresh"
-                                        loading={loading}
-                                        onClick={this.onRefresh}
-                                    />
-                                </Table.HeaderCell>
+                                {showRefreshButton && (
+                                    <Table.HeaderCell
+                                        collapsing={true}
+                                        style={{ borderBottom: 'none' }}>
+                                        <Button
+                                            basic={true}
+                                            icon="refresh"
+                                            loading={loading}
+                                            onClick={this.onRefresh}
+                                        />
+                                    </Table.HeaderCell>
+                                )}
                                 <Table.HeaderCell
                                     collapsing={true}
                                     style={{ borderBottom: 'none' }}>
@@ -331,7 +310,7 @@ class ProcessListWithSearch extends React.Component<Props, State> {
                                     style={{ fontWeight: 'normal', borderBottom: 'none' }}>
                                     {usePagination && (
                                         <PaginationToolBar
-                                            filterProps={paginationFilter}
+                                            limit={paginationFilter?.limit}
                                             handleLimitChange={(limit) =>
                                                 this.handleLimitChange(limit)
                                             }

@@ -148,7 +148,7 @@ class SecretList extends React.Component<Props, PaginationState> {
                                 collapsing={true}
                                 style={{ fontWeight: 'normal' }}>
                                 <PaginationToolBar
-                                    filterProps={paginationFilter}
+                                    limit={paginationFilter.limit}
                                     handleLimitChange={(limit) => this.handleLimitChange(limit)}
                                     handleNext={this.handleNext}
                                     handlePrev={this.handlePrev}

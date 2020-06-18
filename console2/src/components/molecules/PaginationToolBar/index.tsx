@@ -21,13 +21,11 @@
 import * as React from 'react';
 import { Button, Dropdown } from 'semantic-ui-react';
 
-import { Pagination } from '../../../state/data/processes';
-
 // TODO make customizable
 const defaultDropDownValues = [50, 100, 500];
 
 interface Props {
-    filterProps?: Pagination;
+    limit?: number;
     handleLimitChange?: (limit: any) => void;
     handleNext: () => void;
     handlePrev: () => void;
@@ -40,22 +38,10 @@ interface Props {
     disabled?: boolean;
 }
 
-interface State {
-    filterState: Pagination;
-}
-
-const toState = (data?: Pagination): State => {
-    return { filterState: data || {} };
-};
-
-class PaginationToolBar extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = toState(this.props.filterProps);
-    }
-
+class PaginationToolBar extends React.PureComponent<Props> {
     render() {
         const {
+            limit,
             handleLimitChange,
             dropDownValues = defaultDropDownValues,
             maxValue,
@@ -72,7 +58,7 @@ class PaginationToolBar extends React.Component<Props, State> {
                             value,
                             disabled: maxValue ? value >= maxValue : false
                         }))}
-                        defaultValue={this.state.filterState.limit || dropDownValues[0]}
+                        value={limit || dropDownValues[0]}
                         selection={true}
                         basic={true}
                         fluid={false}

@@ -73,7 +73,7 @@ const HostProcesses = ({ hostId, forceRefresh }: ExternalProps) => {
             <Menu secondary={true}>
                 <Menu.Item style={{ padding: 0 }} position={'right'}>
                     <PaginationToolBar
-                        filterProps={paginationFilter}
+                        limit={paginationFilter.limit}
                         handleLimitChange={(limit) => handleLimitChange(limit)}
                         handleNext={handleNext}
                         handlePrev={handlePrev}

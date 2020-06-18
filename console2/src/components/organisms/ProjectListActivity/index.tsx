@@ -123,7 +123,7 @@ export default ({ orgName }: Props) => {
                     </Menu.Item>
                     <Menu.Item style={{ padding: 0 }}>
                         <PaginationToolBar
-                            filterProps={paginationFilter}
+                            limit={paginationFilter.limit}
                             handleLimitChange={(limit) => handleLimitChange(limit)}
                             handleNext={handleNext}
                             handlePrev={handlePrev}

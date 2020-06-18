@@ -63,7 +63,7 @@ const ActionBar: FunctionComponent = () => {
             </Item>
             <Item>
                 <PaginationToolBar
-                    filterProps={{}}
+                    limit={limitPerPage}
                     handleLimitChange={(limit) => {
                         setPageLimit(limit);
                         loadData({
