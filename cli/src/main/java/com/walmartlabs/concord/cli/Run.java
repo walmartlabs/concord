@@ -43,6 +43,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,16 +89,28 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     boolean verbose = false;
 
-    @Parameters(arity = "0..1")
+    @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
     Path targetDir = Paths.get(System.getProperty("user.dir"));
 
     @Override
     public Integer call() throws Exception {
+        targetDir = targetDir.normalize();
+
+        if (Files.isRegularFile(targetDir)) {
+            Path src = targetDir.toAbsolutePath();
+            System.out.println("Running a single Concord file: " + src);
+
+            Path dst = Files.createTempDirectory("payload");
+            Files.copy(src, dst.resolve("concord.yml"));
+
+            targetDir = dst;
+        }
+
         if (!Files.isDirectory(targetDir)) {
             throw new IllegalArgumentException("Not a directory: " + targetDir);
         }
 
-        DependencyManager dependencyManager = new DependencyManager(depsCacheDir);
+        DependencyManager dependencyManager = initDependencyManager();
 
         ProjectLoaderV2.Result loadResult;
         try {
@@ -109,7 +122,8 @@ public class Run implements Callable<Integer> {
             loadResult = new ProjectLoaderV2(new NoopImportManager())
                     .load(exportDir, new NoopImportsNormalizer());
         } catch (Exception e) {
-            System.err.println("Project load error: " + e.getMessage());
+            System.err.println("Error while loading " + targetDir);
+            e.printStackTrace();
             return -1;
         }
 
@@ -161,5 +175,13 @@ public class Run implements Callable<Integer> {
         System.out.println("...done!");
 
         return 0;
+    }
+
+    private DependencyManager initDependencyManager() throws IOException {
+        Path cfgFile = Paths.get(System.getProperty("user.home"), ".concord", "mvn.json");
+        if (!Files.exists(cfgFile)) {
+            return new DependencyManager(depsCacheDir);
+        }
+        return new DependencyManager(depsCacheDir, cfgFile);
     }
 }
