@@ -20,6 +20,8 @@ package com.walmartlabs.concord.server.events;
  * =====
  */
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.server.audit.AuditAction;
@@ -29,6 +31,7 @@ import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.github.GithubTriggerProcessor;
 import com.walmartlabs.concord.server.events.github.Payload;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
+import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.ldap.LdapManager;
@@ -81,6 +84,7 @@ public class GithubEventResource implements Resource {
     private final UserManager userManager;
     private final LdapManager ldapManager;
     private final TriggerEventInitiatorResolver initiatorResolver;
+    private final Histogram startedProcessesPerEvent;
 
     @Inject
     public GithubEventResource(GithubConfiguration githubCfg,
@@ -88,7 +92,8 @@ public class GithubEventResource implements Resource {
                                List<GithubTriggerProcessor> processors,
                                UserManager userManager,
                                LdapManager ldapManager,
-                               TriggerEventInitiatorResolver initiatorResolver) {
+                               TriggerEventInitiatorResolver initiatorResolver,
+                               MetricRegistry metricRegistry) {
 
         this.githubCfg = githubCfg;
         this.executor = executor;
@@ -97,6 +102,7 @@ public class GithubEventResource implements Resource {
         this.userManager = userManager;
         this.ldapManager = ldapManager;
         this.initiatorResolver = initiatorResolver;
+        this.startedProcessesPerEvent = metricRegistry.histogram("started-processes-per-github-event");
     }
 
     @POST
@@ -141,6 +147,7 @@ public class GithubEventResource implements Resource {
 
         Supplier<UserEntry> initiatorSupplier = memo(new GithubEventInitiatorSupplier(userManager, ldapManager, payload));
 
+        int startedProcesses = 0;
         for (GithubTriggerProcessor.Result r : results) {
             Event e = Event.builder()
                     .id(deliveryId)
@@ -149,7 +156,7 @@ public class GithubEventResource implements Resource {
                     .initiator(initiatorSupplier)
                     .build();
 
-            executor.execute(e, r.triggers(), initiatorResolver, (t, cfg) -> {
+            List<PartialProcessKey> processes = executor.execute(e, r.triggers(), initiatorResolver, (t, cfg) -> {
                 // if `useEventCommitId` is true then the process is forced to use the specified commit ID
                 String commitId = MapUtils.getString(r.event(), COMMIT_ID_KEY);
                 if (commitId != null && TriggerUtils.isUseEventCommitId(t)) {
@@ -157,7 +164,9 @@ public class GithubEventResource implements Resource {
                 }
                 return cfg;
             });
+            startedProcesses += processes.size();
         }
+        startedProcessesPerEvent.update(startedProcesses);
 
         return "ok";
     }
