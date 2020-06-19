@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { useCallback } from 'react';
-import { Divider, Header, Menu, Segment } from 'semantic-ui-react';
+import { Divider, Header, Icon, Menu, Progress, Segment } from 'semantic-ui-react';
 
 import { ConcordId, ConcordKey } from '../../../api/common';
 import {
@@ -73,12 +73,14 @@ const StoreSettings = ({ orgName, storeName, forceRefresh }: ExternalProps) => {
                         <EntityId id={data?.id} />
                     </Header>
                 </Menu.Item>
-                <Menu.Item position={'right'}>
-                    <Header as="h5" disabled={true}>
-                        <Capacity current={data?.size} max={data?.maxSize} />
-                    </Header>
-                </Menu.Item>
             </Menu>
+
+            <Segment>
+                <Header as="h4" disabled={disabled}>
+                    Capacity
+                </Header>
+                <Capacity current={data?.size} max={data?.maxSize} />
+            </Segment>
 
             <Segment>
                 <Header as="h4" disabled={disabled}>
@@ -133,13 +135,28 @@ interface CapacityProps {
 
 const Capacity = ({ current, max }: CapacityProps) => {
     if (current === undefined || max === undefined) {
-        return <></>;
+        return (
+            <div>
+                <em>No capacity limits configured</em>
+            </div>
+        );
     }
 
     return (
-        <span>
-            Used {formatFileSize(current)} of {formatFileSize(max)}
-        </span>
+        <>
+            <div>
+                <Progress
+                    percent={(current / max) * 100}
+                    size={'tiny'}
+                    color={'red'}
+                    style={{ width: '30%' }}
+                />
+            </div>
+            <Header size="tiny" style={{ marginTop: '0px', color: 'rgba(0, 0, 0, 0.5)' }}>
+                <Icon name={'database'} color={'blue'} />
+                Used {formatFileSize(current)} of {formatFileSize(max)}
+            </Header>
+        </>
     );
 };
 
