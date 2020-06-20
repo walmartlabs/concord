@@ -114,12 +114,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
             return false;
         }
 
-        for (int i = 0; i < keys.size(); i++) {
-            freeWorkersCount.decrementAndGet();
-        }
-
         Collection<Batch> batches = toBatches(keys);
-
         for (Batch b : batches) {
             if (b.repoId() != null) {
                 List<ProcessKey> k = dao.poll(b.repoId(), cfg.getBatchSize());
@@ -129,9 +124,13 @@ public class EnqueuedBatchTask extends PeriodicTask {
             batchHistogram.update(b.keys().size());
         }
 
+        for (int i = 0; i < batches.size(); i++) {
+            freeWorkersCount.decrementAndGet();
+        }
+
         queue.addAll(batches);
 
-        return keys.size() >= limit;
+        return batches.size() >= limit;
     }
 
     private static Collection<Batch> toBatches(List<ProcessItem> keys) {
