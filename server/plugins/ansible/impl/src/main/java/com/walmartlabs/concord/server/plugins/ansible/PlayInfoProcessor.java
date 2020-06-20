@@ -77,9 +77,15 @@ public class PlayInfoProcessor implements EventProcessor {
                         .build();
                 Long finishedCount = finishedTasks.remove(key);
 
+                String playName = play.getName();
+                if (playName == null) {
+                    // ignore invalid data (i.e. data produced by old ansible-task versions)
+                    continue;
+                }
+
                 plays.add(ImmutablePlayInfoItem.builder()
                         .key(key)
-                        .playName(play.getName())
+                        .playName(playName)
                         .playOrder(i)
                         .hostCount(play.getHostCount())
                         .taskCount(play.getTaskCount())

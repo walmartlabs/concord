@@ -95,7 +95,7 @@ public class PlaybookInfoEvent extends AbstractAnsibleEvent {
         }
 
         public String getName() {
-            return MapUtils.assertString(params, "play");
+            return MapUtils.getString(params, "play");
         }
 
         public long getHostCount() {
