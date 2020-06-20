@@ -51,7 +51,6 @@ export default ({ orgName, orgId, projectName }: Props) => {
     const [changing, setChanging] = useState<boolean>(false);
     const [success, setSuccess] = useState<boolean>(false);
     const [redirect, setRedirect] = useState<boolean>(false);
-    const [reset, setReset] = useState<boolean>(false);
 
     const onSelect = (o: OrganizationEntry) => {
         setState(o);
@@ -85,16 +84,8 @@ export default ({ orgName, orgId, projectName }: Props) => {
         setRedirect((prevState) => !prevState);
     }, []);
 
-    const resetHandler = useCallback(() => {
-        setReset((prevState) => !prevState);
-    }, []);
-
     if (redirect) {
         return <Redirect to={`/org/${state.name}/project/${projectName}`} />;
-    }
-
-    if (reset) {
-        return <Redirect to={`/org/${orgName}/project/${projectName}`} />;
     }
 
     return (
@@ -174,7 +165,6 @@ export default ({ orgName, orgId, projectName }: Props) => {
                             </p>
                         }
                         error={error}
-                        reset={resetHandler}
                         onConfirm={confirmHandler}
                         onDone={redirectHandler}
                         disableYes={confirmation !== projectName}

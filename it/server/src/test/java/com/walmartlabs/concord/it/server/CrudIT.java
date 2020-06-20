@@ -80,7 +80,7 @@ public class CrudIT extends AbstractServerIT {
         ProjectOperationResponse updateResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setId(createResp.getId())
                 .setName(updateProjectName));
-        assertEquals(updateResp.getResult(), ProjectOperationResponse.ResultEnum.UPDATED);
+        assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, updateResp.getResult());
         assertEquals(createResp.getId(), updateResp.getId());
 
         // --- get
@@ -100,6 +100,54 @@ public class CrudIT extends AbstractServerIT {
         List<ProjectEntry> projectList = projectsApi.list(orgName);
         projectEntry = findProject(projectList, projectName);
         assertNotNull(projectEntry);
+
+        // --- update project's organization id
+
+        String newOrgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        CreateOrganizationResponse createOrganizationResponse =
+                orgApi.createOrUpdate(new OrganizationEntry().setName(newOrgName));
+        assertTrue(createOrganizationResponse.isOk());
+        assertNotNull(createOrganizationResponse.getId());
+
+        ProjectOperationResponse moveResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setId(createResp.getId())
+                .setOrgId(createOrganizationResponse.getId())
+        );
+        assertTrue(moveResp.isOk());
+        assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, moveResp.getResult());
+
+        // --- error - empty name
+
+        try {
+            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                    .setName("")
+            );
+            fail("Project name should not be empty string");
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("must match"));
+        }
+
+        // --- error - null name and id
+
+        try {
+            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                    .setName(null)
+                    .setId(null)
+            );
+            fail("Project name should not be empty string");
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("'name' is required"));
+        }
+
+        // --- update project's organization name
+
+        moveResp = projectsApi.createOrUpdate(newOrgName, new ProjectEntry()
+                .setName(projectName)
+                .setOrgName(orgName)
+        );
+        assertTrue(moveResp.isOk());
+        assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, moveResp.getResult());
 
         // --- delete
 

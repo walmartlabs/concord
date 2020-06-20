@@ -92,16 +92,17 @@ public class ProjectResource implements Resource {
 
         UUID projectId = entry.getId();
         if (projectId == null) {
+            assertName(entry);
             projectId = projectDao.getId(org.getId(), entry.getName());
         }
 
-        if (projectId != null) {
+        if (projectId == null) {
+            projectId = projectManager.insert(org.getId(), org.getName(), entry);
+            return new ProjectOperationResponse(projectId, OperationResult.CREATED);
+        } else {
             projectManager.update(projectId, entry);
             return new ProjectOperationResponse(projectId, OperationResult.UPDATED);
         }
-
-        projectId = projectManager.insert(org.getId(), org.getName(), entry);
-        return new ProjectOperationResponse(projectId, OperationResult.CREATED);
     }
 
     @GET
@@ -404,5 +405,14 @@ public class ProjectResource implements Resource {
         }
 
         return e;
+    }
+
+    private String assertName(ProjectEntry p) {
+        String s = p.getName();
+        if (s == null || s.trim().isEmpty()) {
+            throw new ValidationErrorsException("'name' is required");
+        }
+
+        return s;
     }
 }
