@@ -36,6 +36,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import static com.walmartlabs.concord.server.org.secret.SecretDao.InsertMode.INSERT;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -53,7 +54,7 @@ public class SecretDaoTest extends AbstractDaoTest {
 
         String secretName = "secret#" + System.currentTimeMillis();
         SecretDao secretDao = new SecretDao(getConfiguration());
-        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC);
+        UUID secretId = secretDao.insert(orgId, null, secretName, null, SecretType.KEY_PAIR, SecretEncryptedByType.SERVER_KEY, "concord", SecretVisibility.PUBLIC, INSERT);
         secretDao.updateData(secretId, new byte[]{0, 1, 2});
 
         String repoName = "repo#" + System.currentTimeMillis();

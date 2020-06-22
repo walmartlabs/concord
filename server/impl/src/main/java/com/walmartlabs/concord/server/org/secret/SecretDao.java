@@ -55,6 +55,11 @@ import static org.jooq.impl.DSL.*;
 @Named
 public class SecretDao extends AbstractDao {
 
+    public enum InsertMode {
+        INSERT,
+        UPSERT
+    }
+
     @Inject
     public SecretDao(@MainDB Configuration cfg) {
         super(cfg);
@@ -95,16 +100,16 @@ public class SecretDao extends AbstractDao {
 
     public UUID insert(UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
-                       SecretVisibility visibility) {
+                       SecretVisibility visibility, InsertMode insertMode) {
 
-        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility));
+        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility, insertMode));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
-                       SecretVisibility visibility) {
+                       SecretVisibility visibility, InsertMode insertMode) {
 
-        return tx.insertInto(SECRETS)
+        InsertOnDuplicateStep<SecretsRecord> builder = tx.insertInto(SECRETS)
                 .columns(SECRETS.SECRET_NAME,
                         SECRETS.SECRET_TYPE,
                         SECRETS.ORG_ID,
@@ -113,7 +118,9 @@ public class SecretDao extends AbstractDao {
                         SECRETS.ENCRYPTED_BY,
                         SECRETS.STORE_TYPE,
                         SECRETS.VISIBILITY)
-                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString())
+                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString());
+        InsertReturningStep<SecretsRecord> returningStep = (insertMode == InsertMode.UPSERT) ? builder.onDuplicateKeyIgnore() : builder;
+        return builder
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
                 .getSecretId();
