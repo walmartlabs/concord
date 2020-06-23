@@ -39,7 +39,6 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.immutables.value.Value;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.jooq.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +52,6 @@ import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.REPOSITORIES;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
-import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.value;
 
 public class EnqueuedBatchTask extends PeriodicTask {
@@ -68,7 +66,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
 
     private final ExecutorService executor;
     private final BlockingQueue<Batch> queue;
-
+    private final List<String> inflightRepoUrls;
     private final AtomicInteger freeWorkersCount;
 
     @Inject
@@ -86,6 +84,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
 
         this.queue = new ArrayBlockingQueue<>(cfg.getWorkersCount());
         this.freeWorkersCount = new AtomicInteger(cfg.getWorkersCount());
+        this.inflightRepoUrls = Collections.synchronizedList(new ArrayList<>(cfg.getWorkersCount()));
 
         this.executor = Executors.newFixedThreadPool(cfg.getWorkersCount());
         for (int i = 0; i < cfg.getWorkersCount(); i++) {
@@ -93,6 +92,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         metricRegistry.gauge("enqueued-workers-available", () -> freeWorkersCount::get);
+        metricRegistry.gauge("enqueued-inflight-urls", () -> inflightRepoUrls::size);
     }
 
     @Override
@@ -109,12 +109,20 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         int limit = Math.min(freeWorkersCount.get(), cfg.getWorkersCount());
-        List<ProcessItem> keys = dao.poll(limit);
+
+        List<String> ignoreRepoUrls;
+        synchronized (inflightRepoUrls) {
+            ignoreRepoUrls = new ArrayList<>(inflightRepoUrls);
+        }
+
+        List<ProcessItem> keys = dao.poll(ignoreRepoUrls, limit);
         if (keys.isEmpty()) {
             return false;
         }
 
         Collection<Batch> batches = toBatches(keys);
+        batches = removeDuplicateUrls(batches);
+
         for (Batch b : batches) {
             if (b.repoId() != null) {
                 List<ProcessKey> k = dao.poll(b.repoId(), cfg.getBatchSize());
@@ -128,9 +136,15 @@ public class EnqueuedBatchTask extends PeriodicTask {
             freeWorkersCount.decrementAndGet();
         }
 
+        for (Batch b : batches) {
+            if (b.repoUrl() != null) {
+                inflightRepoUrls.add(b.repoUrl());
+            }
+        }
+
         queue.addAll(batches);
 
-        return batches.size() >= limit;
+        return freeWorkersCount.get() > 0;
     }
 
     private static Collection<Batch> toBatches(List<ProcessItem> keys) {
@@ -151,8 +165,25 @@ public class EnqueuedBatchTask extends PeriodicTask {
         return result;
     }
 
-    private void onWorkerFree() {
+    private Collection<Batch> removeDuplicateUrls(Collection<Batch> batches) {
+        List<Batch> result = new ArrayList<>();
+        Set<String> repoUrls = new HashSet<>();
+        for (Batch b : batches) {
+            if (b.repoUrl() == null) {
+                result.add(b);
+            } else if (!repoUrls.contains(b.repoUrl())){
+                result.add(b);
+                repoUrls.add(b.repoUrl());
+            }
+        }
+        return result;
+    }
+
+    private void onWorkerFree(String repoUrl) {
         freeWorkersCount.incrementAndGet();
+        if (repoUrl != null) {
+            inflightRepoUrls.remove(repoUrl);
+        }
     }
 
     private class Worker implements Runnable {
@@ -170,14 +201,16 @@ public class EnqueuedBatchTask extends PeriodicTask {
         @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
+                String repoUrl = null;
                 try {
                     Batch keys = queue.take();
+                    repoUrl = keys.repoUrl();
                     startProcessBatch(keys);
                 } catch (Exception e) {
                     log.error("run -> error", e);
                     sleep(ERROR_RETRY_INTERVAL);
                 } finally {
-                    onWorkerFree();
+                    onWorkerFree(repoUrl);
                 }
             }
         }
@@ -272,23 +305,23 @@ public class EnqueuedBatchTask extends PeriodicTask {
     }
 
     @Named
-    private static class Dao extends AbstractDao {
+    static class Dao extends AbstractDao {
 
         @Inject
         public Dao(@MainDB Configuration cfg) {
             super(cfg);
         }
 
-        public List<ProcessItem> poll(int limit) {
+        @WithTimer
+        public List<ProcessItem> poll(List<String> ignoreRepoUrls, int limit) {
             return txResult(tx -> {
-                Field<String> repoUrlField = select(REPOSITORIES.REPO_URL).from(REPOSITORIES).where(REPOSITORIES.REPO_ID.eq(PROCESS_QUEUE.REPO_ID)).asField();
-
-                List<ProcessItem> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REPO_ID, repoUrlField)
-                        .from(PROCESS_QUEUE)
-                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name()))
+                List<ProcessItem> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REPO_ID, REPOSITORIES.REPO_URL)
+                        .from(PROCESS_QUEUE).leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(PROCESS_QUEUE.REPO_ID))
+                        .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
+                                .and(REPOSITORIES.REPO_URL.isNull().or(REPOSITORIES.REPO_URL.notIn(ignoreRepoUrls))))
                         .orderBy(PROCESS_QUEUE.CREATED_AT)
                         .limit(limit)
-                        .forUpdate()
+                        .forUpdate().of(PROCESS_QUEUE)
                         .skipLocked()
                         .fetch(r -> ProcessItem.of(new ProcessKey(r.value1(), r.value2()), r.value3(), r.value4()));
 
@@ -304,6 +337,7 @@ public class EnqueuedBatchTask extends PeriodicTask {
             });
         }
 
+        @WithTimer
         public List<ProcessKey> poll(UUID repoId, int limit) {
             return txResult(tx -> {
                 List<ProcessKey> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT)
