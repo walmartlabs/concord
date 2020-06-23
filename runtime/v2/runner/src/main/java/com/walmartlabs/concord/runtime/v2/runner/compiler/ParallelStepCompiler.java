@@ -43,6 +43,6 @@ public class ParallelStepCompiler implements StepCompiler<ParallelBlock> {
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList());
 
-        return new ParallelCommand(steps, step);
+        return new ParallelCommand(step, steps);
     }
 }

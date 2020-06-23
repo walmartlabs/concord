@@ -25,6 +25,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
@@ -33,7 +34,6 @@ import com.walmartlabs.concord.sdk.ImmutableProjectInfo;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.commands.Suspend;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -156,6 +156,6 @@ public class ContextImpl implements Context {
 
     @Override
     public void suspend(String eventName) {
-        state.peekFrame(currentThreadId).push(new Suspend(eventName));
+        state.peekFrame(currentThreadId).push(new SuspendCommand(eventName));
     }
 }

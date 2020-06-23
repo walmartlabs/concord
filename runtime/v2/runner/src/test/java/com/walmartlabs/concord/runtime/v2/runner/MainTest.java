@@ -586,7 +586,35 @@ public class MainTest {
         assertLog(log, ".*4: 456.*");
         assertLog(log, ".*c: 456.*");
         assertLog(log, ".*5: 567.*");
+    }
 
+    @Test
+    public void testParallelIn() throws Exception {
+        deploy("parallelIn");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("x", 123)
+                .putArguments("y", 234)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*thread A, x: 123.*");
+        assertLog(log, ".*thread B, y: 234.*");
+        assertLog(log, ".*thread C, x: 999.*");
+        assertLog(log, ".*main, x: 123.*");
+        assertLog(log, ".*main, y: 234.*");
+    }
+
+    @Test
+    public void testParallelOut() throws Exception {
+        deploy("parallelOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x: 123.*");
+        assertLog(log, ".*y: 234.*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {

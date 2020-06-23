@@ -76,7 +76,6 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
                 .build();
 
         // an "out" handler
-
         Command processOutVars = new ProcessOutVariablesCommand(opts.out(), innerFrame);
 
         // push the out handler first so it executes after the called flow's frame is done

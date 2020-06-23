@@ -24,7 +24,7 @@ import com.walmartlabs.concord.runtime.v2.model.IfStep;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.vm.IfCommand;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.commands.Block;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 
 import javax.inject.Named;
 import java.util.List;
@@ -50,7 +50,7 @@ public class IfCompiler implements StepCompiler<IfStep> {
             return null;
         }
 
-        return new Block(steps.stream()
+        return new BlockCommand(steps.stream()
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList()));
     }

@@ -144,6 +144,15 @@ public final class VMUtils {
     }
 
     /**
+     * Puts a local variable into the nearest root frame of the specified thread.
+     * Only {@link Serializable} values are allowed.
+     */
+    public static void putLocal(State state, ThreadId threadId, String key, Object value) {
+        Frame root = assertNearestRoot(state, threadId);
+        putLocal(root, key, value);
+    }
+
+    /**
      * Puts a local variable into the specified frame.
      * Only {@link Serializable} values are allowed.
      */

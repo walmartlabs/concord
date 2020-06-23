@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.svm.commands;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
@@ -31,17 +31,17 @@ import java.util.List;
 /**
  * Adds specified {@link #commands} to the stack.
  */
-public class Block implements Command {
+public class BlockCommand implements Command {
 
     private static final long serialVersionUID = 1L;
 
     private final List<Command> commands;
 
-    public Block(Command... commands) {
+    public BlockCommand(Command... commands) {
         this(Arrays.asList(commands));
     }
 
-    public Block(List<Command> commands) {
+    public BlockCommand(List<Command> commands) {
         this.commands = commands;
     }
 

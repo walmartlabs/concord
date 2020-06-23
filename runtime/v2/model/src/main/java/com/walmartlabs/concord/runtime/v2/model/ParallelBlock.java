@@ -20,17 +20,15 @@ package com.walmartlabs.concord.runtime.v2.model;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.parser.SimpleOptions;
-
 import java.util.List;
 
-public class ParallelBlock extends AbstractStep<SimpleOptions> {
+public class ParallelBlock extends AbstractStep<ParallelBlockOptions> {
 
     private static final long serialVersionUID = 1L;
 
     private final List<Step> steps;
 
-    public ParallelBlock(Location location, SimpleOptions options, List<Step> steps) {
+    public ParallelBlock(Location location, List<Step> steps, ParallelBlockOptions options) {
         super(location, options);
         this.steps = steps;
     }

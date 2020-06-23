@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.svm.commands;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
@@ -20,27 +20,37 @@ package com.walmartlabs.concord.svm.commands;
  * =====
  */
 
-import com.walmartlabs.concord.svm.Command;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.*;
 
-public class Fork implements Command {
+import java.util.Map;
+
+public class ForkCommand implements Command {
 
     private static final long serialVersionUID = 1L;
 
     private final ThreadId childThreadId;
-    private final Command cmd;
+    private final Command[] cmds;
 
-    public Fork(ThreadId childThreadId, Command cmd) {
+    public ForkCommand(ThreadId childThreadId, Command... cmds) {
         this.childThreadId = childThreadId;
-        this.cmd = cmd;
+        this.cmds = cmds;
     }
 
     @Override
     public void eval(Runtime runtime, State state, ThreadId threadId) {
-        state.peekFrame(threadId).pop();
-        state.fork(threadId, childThreadId, cmd);
+        Frame frame = state.peekFrame(threadId);
+        frame.pop();
+
+        // create a new root frame
+        state.fork(threadId, childThreadId, cmds);
+
+        // copy all "in" variables
+        Frame targetFrame = state.peekFrame(childThreadId);
+        Map<String, Object> locals = VMUtils.getCombinedLocals(state, threadId);
+        VMUtils.putLocals(targetFrame, locals);
+
+        // run the new thread
         runtime.spawn(state, childThreadId);
     }
 }

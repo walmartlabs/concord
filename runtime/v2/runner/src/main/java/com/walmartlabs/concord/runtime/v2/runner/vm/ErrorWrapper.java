@@ -22,7 +22,6 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
-import com.walmartlabs.concord.svm.commands.Block;
 
 /**
  * Wraps the specified command into a new frame with an exception handler
@@ -49,7 +48,7 @@ public class ErrorWrapper implements Command {
         //  block:
         //    - ExposeLastErrorCommand
         //    - ...compiled steps from the "error" block...
-        Block exceptionHandler = new Block(new ExposeLastErrorCommand(), errorSteps);
+        BlockCommand exceptionHandler = new BlockCommand(new ExposeLastErrorCommand(), errorSteps);
 
         Frame inner = Frame.builder()
                 .nonRoot()

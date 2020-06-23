@@ -134,12 +134,12 @@ public class InMemoryState implements Serializable, State {
     }
 
     @Override
-    public void fork(ThreadId parentThreadId, ThreadId threadId, Command cmd) {
+    public void fork(ThreadId parentThreadId, ThreadId threadId, Command... cmds) {
         synchronized (this) {
             setStatus(threadId, ThreadStatus.READY);
             pushFrame(threadId, Frame.builder()
-                    .nonRoot()
-                    .commands(cmd)
+                    .root()
+                    .commands(cmds)
                     .build());
 
             children.computeIfAbsent(parentThreadId, k -> new HashSet<>())

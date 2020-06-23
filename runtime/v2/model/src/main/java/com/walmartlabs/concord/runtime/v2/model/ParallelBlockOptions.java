@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.svm.commands;
+package com.walmartlabs.concord.runtime.v2.model;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,22 @@ package com.walmartlabs.concord.svm.commands;
  * =====
  */
 
-import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
+import org.immutables.value.Value;
 
-public class PopFrame implements Command {
+import java.util.Collections;
+import java.util.List;
 
-    private static final long serialVersionUID = 1L;
+@Value.Immutable
+@Value.Style(jdkOnly = true)
+public interface ParallelBlockOptions extends StepOptions {
 
-    @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
-        state.popFrame(threadId);
+    @Value.Default
+    default List<String> out() {
+        return Collections.emptyList();
+    }
+
+    static ImmutableParallelBlockOptions.Builder builder() {
+        return ImmutableParallelBlockOptions.builder();
     }
 }

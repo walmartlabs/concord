@@ -74,7 +74,7 @@ public interface State extends Serializable {
     /**
      * Creates new "logical" thread using the provided parent thread ID and an initial command.
      */
-    void fork(ThreadId parentThreadId, ThreadId threadId, Command cmd);
+    void fork(ThreadId parentThreadId, ThreadId threadId, Command... cmds);
 
     /**
      * Returns a snapshot of the current thread statuses.
