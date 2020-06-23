@@ -34,6 +34,7 @@ interface Props {
     name: string;
     createdAt: string;
     status?: SegmentStatus;
+    lowRange?: number;
     warnings?: number;
     errors?: number;
     data: string[];
@@ -50,6 +51,7 @@ const LogSegment = ({
     name,
     createdAt,
     status,
+    lowRange,
     warnings,
     errors,
     data,
@@ -172,6 +174,16 @@ const LogSegment = ({
                 <div className="ContentContainer">
                     <div className="InnerContentContainer">
                         <div className="Content">
+                            {lowRange !== undefined && lowRange !== 0 && (
+                                <>
+                                    <span>...showing only the last few lines. </span>
+                                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                                    <a href="#" onClick={loadAllClickHandler}>
+                                        Full log
+                                    </a>{' '}
+                                </>
+                            )}
+
                             {data.map((value, index) => (
                                 <pre key={index} dangerouslySetInnerHTML={{ __html: value }} />
                             ))}
