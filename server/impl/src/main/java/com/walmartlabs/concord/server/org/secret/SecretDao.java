@@ -41,6 +41,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
@@ -119,7 +120,16 @@ public class SecretDao extends AbstractDao {
                         SECRETS.STORE_TYPE,
                         SECRETS.VISIBILITY)
                 .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString());
-        InsertReturningStep<SecretsRecord> returningStep = (insertMode == InsertMode.UPSERT) ? builder.onDuplicateKeyIgnore() : builder;
+        if (insertMode == InsertMode.UPSERT) {
+            Optional<SecretsRecord> secretsRecord = builder.onDuplicateKeyIgnore()
+                    .returning(SECRETS.SECRET_ID)
+                    .fetchOptional();
+            return secretsRecord.map(SecretsRecord::getSecretId).orElseGet(() -> tx.select(SECRETS.SECRET_ID)
+                    .from(SECRETS)
+                    .where(SECRETS.SECRET_NAME.eq(name).and(SECRETS.ORG_ID.eq(orgId)))
+                    .fetchOne()
+                    .value1());
+        }
         return builder
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
