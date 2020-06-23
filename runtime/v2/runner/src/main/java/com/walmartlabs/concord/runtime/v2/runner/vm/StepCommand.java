@@ -65,7 +65,7 @@ public abstract class StepCommand<T extends Step> implements Command {
         ContextFactory contextFactory = runtime.getService(ContextFactory.class);
 
         T step = getStep();
-        UUID correlationId = UUID.randomUUID();
+        UUID correlationId = getCorrelationId();
         Context ctx = contextFactory.create(runtime, state, threadId, step, correlationId);
 
         String segmentName = getSegmentName(ctx, step);
@@ -76,6 +76,10 @@ public abstract class StepCommand<T extends Step> implements Command {
             SegmentedLogger.withLogSegment(segmentName, correlationId.toString(),
                     () -> executeWithContext(ctx, runtime, state, threadId));
         }
+    }
+
+    protected UUID getCorrelationId() {
+        return UUID.randomUUID();
     }
 
     private void executeWithContext(Context ctx, Runtime runtime, State state, ThreadId threadId) {

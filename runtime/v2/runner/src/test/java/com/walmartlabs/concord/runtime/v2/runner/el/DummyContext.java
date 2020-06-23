@@ -26,7 +26,9 @@ import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 import com.walmartlabs.concord.sdk.ProjectInfo;
 
+import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 public class DummyContext implements Context {
@@ -68,6 +70,11 @@ public class DummyContext implements Context {
 
     @Override
     public void suspend(String eventName) {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public String suspendResume(Map<String, Serializable> payload) {
         throw new IllegalStateException("Not implemented");
     }
 }
