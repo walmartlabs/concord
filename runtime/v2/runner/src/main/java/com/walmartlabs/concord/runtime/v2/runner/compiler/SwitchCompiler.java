@@ -22,9 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SwitchCommand;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 
 import javax.inject.Named;
 import java.util.AbstractMap;

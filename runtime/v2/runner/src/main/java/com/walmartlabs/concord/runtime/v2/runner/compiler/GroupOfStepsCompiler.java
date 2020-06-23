@@ -24,10 +24,10 @@ import com.walmartlabs.concord.runtime.v2.model.GroupOfSteps;
 import com.walmartlabs.concord.runtime.v2.model.GroupOptions;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 
 import javax.inject.Named;
 import java.util.List;
