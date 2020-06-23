@@ -105,7 +105,7 @@ public class SingleFrameContext extends DummyContext {
                     }
 
                     @Override
-                    public void fork(ThreadId parentThreadId, ThreadId threadId, Command cmd) {
+                    public void fork(ThreadId parentThreadId, ThreadId threadId, Command... cmds) {
                         throw new IllegalStateException("Not implemented");
                     }
 

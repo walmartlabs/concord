@@ -20,18 +20,30 @@ package com.walmartlabs.concord.runtime.v2.parser;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.ImmutableParallelBlockOptions;
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
+import com.walmartlabs.concord.runtime.v2.model.ParallelBlockOptions;
 import io.takari.parc.Parser;
 
 import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.satisfyField;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.simpleOptions;
-import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.stepsVal;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarMisc.with;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.optional;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarOptions.options;
+import static com.walmartlabs.concord.runtime.v2.parser.GrammarV2.*;
 
 public final class ParallelGrammar {
 
+    private static final Parser<Atom, ParallelBlockOptions> parallelOptions =
+            with(ParallelBlockOptions::builder,
+                    o -> options(
+                            optional("out", stringOrArrayVal.map(o::out)),
+                            optional("meta", mapVal.map(o::meta))
+                    ))
+                    .map(ImmutableParallelBlockOptions.Builder::build);
+
     public static final Parser<Atom, ParallelBlock> parallelBlock =
             satisfyField("parallel", YamlValueType.PARALLEL, a ->
-                    stepsVal.bind(steps -> simpleOptions.map(options -> new ParallelBlock(a.location, options, steps))));
+                    stepsVal.bind(steps -> parallelOptions.map(options -> new ParallelBlock(a.location, steps, options))));
 
     private ParallelGrammar() {
     }

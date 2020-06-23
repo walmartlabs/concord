@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.svm.commands;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
@@ -29,14 +29,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Join implements Command {
+public class JoinCommand implements Command {
 
-    private static final Logger log = LoggerFactory.getLogger(Join.class);
+    private static final Logger log = LoggerFactory.getLogger(JoinCommand.class);
     private static final long serialVersionUID = 1L;
 
     private final Collection<ThreadId> ids;
 
-    public Join(Collection<ThreadId> ids) {
+    public JoinCommand(Collection<ThreadId> ids) {
         this.ids = ids;
     }
 
