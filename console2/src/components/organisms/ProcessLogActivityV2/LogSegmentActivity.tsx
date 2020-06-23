@@ -79,10 +79,11 @@ const LogSegmentActivity = ({
 }: ExternalProps) => {
     const range = useRef<LogRange>(DEFAULT_RANGE);
     const rangeInit = useRef<LogRange>(DEFAULT_RANGE);
-    // TODO: add opts
+
     const [refresh, setRefresh] = useState<boolean>(false);
     const [stopPolling, setStopPolling] = useState<boolean>(true);
     const [data, setData] = useState<string[]>([]);
+    const [loadedRange, setLoadedRange] = useState<LogRange>({});
     const [visibleData, setVisibleData] = useState<string[]>([]);
     const [segmentInfoOpen, setSegmentInfoOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -111,6 +112,7 @@ const LogSegmentActivity = ({
             range.current = DEFAULT_RANGE;
             rangeInit.current = DEFAULT_RANGE;
         }
+
         setData([]);
         setStopPolling(false);
         setRefresh((prevState) => !prevState);
@@ -151,6 +153,7 @@ const LogSegmentActivity = ({
         fetchData,
         range,
         setData,
+        setLoadedRange,
         setLoading,
         refresh,
         stopPolling,
@@ -176,6 +179,7 @@ const LogSegmentActivity = ({
                 onStopLoading={stopPollingHandler}
                 onSegmentInfo={correlationId ? segmentInfoHandler : undefined}
                 data={visibleData}
+                lowRange={loadedRange.low}
                 loading={loading}
             />
 
@@ -198,6 +202,7 @@ const usePolling = (
     request: (range: LogRange) => Promise<FetchResponse>,
     rangeRef: MutableRefObject<LogRange>,
     setData: Dispatch<SetStateAction<string[]>>,
+    setRange: Dispatch<SetStateAction<LogRange>>,
     setLoading: Dispatch<SetStateAction<boolean>>,
     refresh: boolean,
     stopPollingIndicator: boolean,
@@ -222,6 +227,18 @@ const usePolling = (
                 if (!cancelled && resp.data.length > 0) {
                     rangeRef.current = r;
                     setData((prev) => [...prev, resp.data]);
+                    setRange((prev) => {
+                        // was a full load or a first tail load
+                        if (range.low === 0 || range.high !== undefined) {
+                            return {
+                                low: resp.range.low,
+                                high: resp.range.high,
+                                length: resp.range.length
+                            };
+                        }
+
+                        return prev;
+                    });
                 }
             } catch (e) {
                 setError(e);
@@ -246,7 +263,16 @@ const usePolling = (
             cancelled = true;
             stopPolling();
         };
-    }, [request, setData, rangeRef, setLoading, refresh, stopPollingIndicator, continueFetch]);
+    }, [
+        request,
+        setData,
+        setRange,
+        rangeRef,
+        setLoading,
+        refresh,
+        stopPollingIndicator,
+        continueFetch
+    ]);
 
     const stopPolling = () => {
         if (poll.current) {
