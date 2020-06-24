@@ -44,7 +44,7 @@ public abstract class JobFileUploadPostProcessor implements JobPostProcessor {
     }
 
     @Override
-    public void process(UUID instanceId, Path payloadDir) throws ExecutionException {
+    public void process(UUID instanceId, Path payloadDir) throws JobPostProcessorException {
         Path attachmentsDir = payloadDir.resolve(sourcePath);
         if (!Files.exists(attachmentsDir)) {
             return;
@@ -57,7 +57,7 @@ public abstract class JobFileUploadPostProcessor implements JobPostProcessor {
 
             uploader.upload(instanceId, tmp.path());
         } catch (IOException | ApiException e) {
-            throw new ExecutionException("Error while processing " + name + ": " + instanceId, e);
+            throw new JobPostProcessorException("Error while processing " + name + ": " + e.getMessage());
         }
     }
 

@@ -32,6 +32,7 @@ public class PolicyEngine {
     private final FilePolicy filePolicy;
     private final TaskPolicy taskPolicy;
     private final WorkspacePolicy workspacePolicy;
+    private final AttachmentsPolicy attachmentsPolicy;
     private final ContainerPolicy containerPolicy;
     private final ConcurrentProcessPolicy concurrentProcessPolicy;
     private final ForkDepthPolicy forkDepthPolicy;
@@ -58,6 +59,7 @@ public class PolicyEngine {
         this.filePolicy = new FilePolicy(rules.getFileRules());
         this.taskPolicy = new TaskPolicy(rules.getTaskRules());
         this.workspacePolicy = new WorkspacePolicy(rules.getWorkspaceRule());
+        this.attachmentsPolicy = new AttachmentsPolicy(rules.getAttachmentsRule());
         this.containerPolicy = new ContainerPolicy(rules.getContainerRules());
 
         QueueRule qr = getQueueRule(rules);
@@ -95,6 +97,10 @@ public class PolicyEngine {
 
     public WorkspacePolicy getWorkspacePolicy() {
         return workspacePolicy;
+    }
+
+    public AttachmentsPolicy getAttachmentsPolicy() {
+        return attachmentsPolicy;
     }
 
     public ContainerPolicy getContainerPolicy() {
