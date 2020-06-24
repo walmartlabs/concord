@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.DockerProcessBuilder.CONCORD_DOCKER_LOCAL_MODE_KEY;
-
+import static com.walmartlabs.concord.agent.postprocessing.JobPostProcessor.*;
 /**
  * Executes jobs using concord-runner runtime.
  */
@@ -136,15 +136,49 @@ public class RunnerJobExecutor implements JobExecutor {
         Future<?> f = executor.submit(() -> {
             try {
                 exec(_job, pe);
-            } catch (Exception e) {
+                executePostProcessors(_job.getInstanceId(), pe);
+            } catch (JobPostProcessorException e) {
                 throw new RuntimeException(e);
+            } catch (Throwable t) {
+                try {
+                    executePostProcessors(_job.getInstanceId(), pe);
+                } catch (JobPostProcessorException e) {
+                    // ignore
+                }
+
+                throw new RuntimeException(t);
             } finally {
+                cleanup(_job.getInstanceId(), pe);
                 cleanup(_job);
             }
         });
 
         // return a handle that can be used to cancel the process or wait for its completion
         return new JobInstanceImpl(f, pe.getProcess());
+    }
+
+    private void executePostProcessors(UUID instanceId, ProcessEntry pe) throws JobPostProcessorException {
+        Path payloadDir = pe.getProcDir().resolve(Constants.Files.PAYLOAD_DIR_NAME);
+
+        // run all job post processors, e.g. the attachment uploader
+        try {
+            for (JobPostProcessor p : postProcessors) {
+                p.process(instanceId, payloadDir);
+            }
+        } catch (Throwable e) {
+            log.error("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
+            throw new JobPostProcessorException("Postprocessing error: " + e.getMessage());
+        }
+    }
+
+    private void cleanup(UUID instanceId, ProcessEntry pe) {
+        Path procDir = pe.getProcDir();
+        try {
+            log.info("exec ['{}'] -> removing the working directory: {}", instanceId, procDir);
+            IOUtils.deleteRecursively(procDir);
+        } catch (IOException e) {
+            log.warn("exec ['{}'] -> can't remove the working directory: {}", instanceId, e.getMessage());
+        }
     }
 
     protected ProcessEntry buildProcessEntry(RunnerJob job) throws Exception {
@@ -164,7 +198,6 @@ public class RunnerJobExecutor implements JobExecutor {
     private void exec(RunnerJob job, ProcessEntry pe) throws Exception {
         // the actual OS process
         Process proc = pe.getProcess();
-        Path procDir = pe.getProcDir();
 
         UUID instanceId = job.getInstanceId();
         ProcessLog processLog = job.getLog();
@@ -202,25 +235,6 @@ public class RunnerJobExecutor implements JobExecutor {
         } finally {
             // wait for the log to finish
             logStream.waitForCompletion();
-
-            Path payloadDir = procDir.resolve(Constants.Files.PAYLOAD_DIR_NAME);
-
-            // run all job post processors, e.g. the attachment uploader
-            try {
-                for (JobPostProcessor p : postProcessors) {
-                    p.process(instanceId, payloadDir);
-                }
-            } catch (ExecutionException e) {
-                log.warn("exec ['{}'] -> postprocessing error: {}", instanceId, e.getMessage());
-                job.getLog().error(e.getMessage());
-            }
-
-            try {
-                log.info("exec ['{}'] -> removing the working directory: {}", instanceId, procDir);
-                IOUtils.deleteRecursively(procDir);
-            } catch (IOException e) {
-                log.warn("exec ['{}'] -> can't remove the working directory: {}", instanceId, e.getMessage());
-            }
         }
     }
 

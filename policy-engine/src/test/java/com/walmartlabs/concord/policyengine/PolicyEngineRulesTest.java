@@ -76,9 +76,12 @@ public class PolicyEngineRulesTest {
         List<DependencyVersionsPolicy.Dependency> dependencies = new ArrayList<>();
         dependencies.add(new DependencyVersionsPolicy.Dependency("foo", "v1"));
 
+        AttachmentsRule attachmentsRule = new AttachmentsRule("msg", 12345L);
+
+
         PolicyEngineRules r = new PolicyEngineRules(dependencyRules, fileRules, taskRules, workspaceRule,
                 containerRules, queueRules, protectedTasksRules, entityRules, processCfg, new JsonStoreRule(storageRule, storageDataRule),
-                defaultProcessCfg, dependencies);
+                defaultProcessCfg, dependencies, attachmentsRule);
 
         r.addCustomRule("ansible", Collections.singletonMap("k", "v"));
 

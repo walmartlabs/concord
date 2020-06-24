@@ -5,23 +5,22 @@
 ### Added
 
 - concord-console: an indicator for partially loaded log segments;
-- runtime-v2: initial support for reentrant tasks;
 - runtime-v2: initial support for parallel block's in/out;
 - runtime-v2: initial support for in/out variables in `parallel`
 blocks;
-- runtime-v2: initial support for "reentrant tasks" (tasks that
-can be suspended and resumed);
+- runtime-v2: initial support for "reentrant tasks" (tasks that can
+be suspended and resumed);
 - agent-operator: add the preStop script to the `dind` container;
-- concord-server: additional metrics for github events - the
-number of processes started/triggers fetched/etc per event; 
+- concord-server: additional metrics for github events - the number
+of processes started/triggers fetched/etc per event;
 - concord-console: new loading indicator for log segments;
 - runtime-v2: add `projectInfo` to `context`;
 - concord-cli: option to run individual Concord YAML files.
 
 ### Changed
 
-- concord-server: when updating/moving a project assert name when
-no ID given;
+- concord-server: when updating/moving a project assert name when no
+ID given;
 - concord-server: fixed the calculation of
 the `enqueued-workers-available` metric;
 - concord-console: updated Json Store capacity indicator;
