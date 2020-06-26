@@ -48,21 +48,21 @@ public class ProcessQueueClient {
         this.objectMapper = new ObjectMapper();
     }
 
-    public List<ProcessQueueEntry> query(String processStatus) throws IOException {
+    public List<ProcessQueueEntry> query(String processStatus, int limit) throws IOException {
         Request req = new Request.Builder()
-                .url(baseUrl + "/api/v2/process?status=" + processStatus)
+                .url(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit)
                 .header("Authorization", apiToken)
                 .build();
 
         Call call = client.newCall(req);
         try (Response resp = call.execute()) {
             if (!resp.isSuccessful()) {
-                throw new IOException("Error while fething the process queue data: " + resp.code());
+                throw new IOException("Error while fetching the process queue data: " + resp.code());
             }
 
             ResponseBody body = resp.body();
             if (body == null) {
-                throw new IOException("Error while fething the process queue data: empty response");
+                throw new IOException("Error while fetching the process queue data: empty response");
             }
 
             return objectMapper.readValue(body.byteStream(), LIST_OF_PROCESS_QUEUE_ENTRIES);
