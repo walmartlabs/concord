@@ -22,8 +22,8 @@ package com.walmartlabs.concord.server.security.sessionkey;
 
 import com.google.common.collect.ImmutableSet;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
-import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessSecurityContext;
+import com.walmartlabs.concord.server.process.queue.ProcessInitiatorEntry;
 import com.walmartlabs.concord.server.process.queue.ProcessQueueManager;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
@@ -79,7 +79,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
         PartialProcessKey processKey = PartialProcessKey.from(t.getInstanceId());
 
         try {
-            ProcessEntry p = processQueueManager.get(processKey);
+            ProcessInitiatorEntry p = processQueueManager.getInitiator(processKey);
             if (p == null) {
                 log.warn("doGetAuthenticationInfo -> process not found: {}", t.getInstanceId());
                 return null;
@@ -127,7 +127,7 @@ public class SessionKeyRealm extends AuthorizingRealm {
         return new SimpleAuthorizationInfo();
     }
 
-    private boolean isFinished(ProcessEntry process) {
+    private boolean isFinished(ProcessInitiatorEntry process) {
         return FINISHED_STATUSES.contains(process.status());
     }
 }

@@ -393,6 +393,20 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public ProcessInitiatorEntry getInitiator(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS, PROCESS_QUEUE.INITIATOR_ID)
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(r -> ProcessInitiatorEntry.builder()
+                            .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
+                            .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
+                            .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
+                            .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
+                            .build());
+        }
+    }
+
     public UUID getOrgId(UUID instanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
             Field<UUID> orgId = select(PROJECTS.ORG_ID)
