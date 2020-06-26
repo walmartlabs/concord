@@ -20,9 +20,12 @@ package com.walmartlabs.concord.agentoperator.crd;
  * =====
  */
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class AgentPoolConfiguration {
+public class AgentPoolConfiguration implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final long DEFAULT_SCALE_UP_DELAY_MS = 30000;
     private static final long DEFAULT_SCALE_DOWN_DELAY_MS = 180000;
@@ -42,10 +45,14 @@ public class AgentPoolConfiguration {
     private static final double DEFAULT_INCREMENT_PERCENTAGE = 50;
     private static final double DEFAULT_DECREMENT_PERCENTAGE = 10;
 
+    private static final int DEFAULT_QUEUE_QUERY_LIMIT = 300;
+
     private boolean autoScale = true;
     private int maxSize = DEFAULT_MAX_SIZE;
     private int minSize = DEFAULT_MIN_SIZE;
     private int size = DEFAULT_SIZE;
+
+    private int queueQueryLimit = DEFAULT_QUEUE_QUERY_LIMIT;
 
     /**
      * Minimum time that should elapse between one scale up operation to the next
@@ -168,6 +175,14 @@ public class AgentPoolConfiguration {
 
     public void setDecrementThresholdFactor(double decrementThresholdFactor) {
         this.decrementThresholdFactor = decrementThresholdFactor;
+    }
+
+    public int getQueueQueryLimit() {
+        return queueQueryLimit;
+    }
+
+    public void setQueueQueryLimit(int queueQueryLimit) {
+        this.queueQueryLimit = queueQueryLimit;
     }
 
     public Map<String, Object> getConfigMap() {

@@ -153,7 +153,8 @@ public class Scheduler {
             return;
         }
 
-        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED");
+        int queueQueryLimit = i.getResource().getSpec().getQueueQueryLimit();
+        List<ProcessQueueEntry> queueEntries = processQueueClient.query("ENQUEUED", queueQueryLimit);
 
         AgentPoolConfiguration spec = i.getResource().getSpec();
         if (!spec.isAutoScale()) {
