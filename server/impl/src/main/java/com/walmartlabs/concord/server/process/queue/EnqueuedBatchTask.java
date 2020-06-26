@@ -115,13 +115,10 @@ public class EnqueuedBatchTask extends PeriodicTask {
             ignoreRepoUrls = new ArrayList<>(inflightRepoUrls);
         }
 
-        List<ProcessItem> keys = dao.poll(ignoreRepoUrls, limit);
-        if (keys.isEmpty()) {
+        Collection<Batch> batches = dao.poll(ignoreRepoUrls, limit);
+        if (batches.isEmpty()) {
             return false;
         }
-
-        Collection<Batch> batches = toBatches(keys);
-        batches = removeDuplicateUrls(batches);
 
         for (Batch b : batches) {
             if (b.repoId() != null) {
@@ -145,38 +142,6 @@ public class EnqueuedBatchTask extends PeriodicTask {
         queue.addAll(batches);
 
         return freeWorkersCount.get() > 0;
-    }
-
-    private static Collection<Batch> toBatches(List<ProcessItem> keys) {
-        List<Batch> result = new ArrayList<>();
-
-        Map<UUID, Batch> batchByUrl = new HashMap<>();
-        for (ProcessItem item : keys) {
-            if (item.repoId() == null) {
-                result.add(Batch.key(item.key()));
-            } else {
-                batchByUrl.computeIfAbsent(item.repoId(), k -> new Batch(item.repoId(), item.repoUrl()))
-                        .keys().add(item.key());
-            }
-        }
-
-        result.addAll(batchByUrl.values());
-
-        return result;
-    }
-
-    private Collection<Batch> removeDuplicateUrls(Collection<Batch> batches) {
-        List<Batch> result = new ArrayList<>();
-        Set<String> repoUrls = new HashSet<>();
-        for (Batch b : batches) {
-            if (b.repoUrl() == null) {
-                result.add(b);
-            } else if (!repoUrls.contains(b.repoUrl())){
-                result.add(b);
-                repoUrls.add(b.repoUrl());
-            }
-        }
-        return result;
     }
 
     private void onWorkerFree(String repoUrl) {
@@ -313,9 +278,9 @@ public class EnqueuedBatchTask extends PeriodicTask {
         }
 
         @WithTimer
-        public List<ProcessItem> poll(List<String> ignoreRepoUrls, int limit) {
+        public Collection<Batch> poll(List<String> ignoreRepoUrls, int limit) {
             return txResult(tx -> {
-                List<ProcessItem> result = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REPO_ID, REPOSITORIES.REPO_URL)
+                List<ProcessItem> items = tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REPO_ID, REPOSITORIES.REPO_URL)
                         .from(PROCESS_QUEUE).leftJoin(REPOSITORIES).on(REPOSITORIES.REPO_ID.eq(PROCESS_QUEUE.REPO_ID))
                         .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.NEW.name())
                                 .and(REPOSITORIES.REPO_URL.isNull().or(REPOSITORIES.REPO_URL.notIn(ignoreRepoUrls))))
@@ -325,15 +290,20 @@ public class EnqueuedBatchTask extends PeriodicTask {
                         .skipLocked()
                         .fetch(r -> ProcessItem.of(new ProcessKey(r.value1(), r.value2()), r.value3(), r.value4()));
 
-                if (result.isEmpty()) {
-                    return result;
+                if (items.isEmpty()) {
+                    return Collections.emptyList();
                 }
 
-                toPreparing(tx, result.stream()
-                        .map(processItem -> processItem.key().getInstanceId())
+                Collection<Batch> batches = toBatches(items);
+                batches = removeDuplicateUrls(batches);
+
+                toPreparing(tx, batches.stream()
+                        .map(Batch::keys)
+                        .flatMap(Collection::stream)
+                        .map(PartialProcessKey::getInstanceId)
                         .collect(Collectors.toList()));
 
-                return result;
+                return batches;
             });
         }
 
@@ -360,6 +330,38 @@ public class EnqueuedBatchTask extends PeriodicTask {
 
                 return result;
             });
+        }
+
+        private static Collection<Batch> toBatches(List<ProcessItem> keys) {
+            List<Batch> result = new ArrayList<>();
+
+            Map<UUID, Batch> batchByUrl = new HashMap<>();
+            for (ProcessItem item : keys) {
+                if (item.repoId() == null) {
+                    result.add(Batch.key(item.key()));
+                } else {
+                    batchByUrl.computeIfAbsent(item.repoId(), k -> new Batch(item.repoId(), item.repoUrl()))
+                            .keys().add(item.key());
+                }
+            }
+
+            result.addAll(batchByUrl.values());
+
+            return result;
+        }
+
+        private static Collection<Batch> removeDuplicateUrls(Collection<Batch> batches) {
+            List<Batch> result = new ArrayList<>();
+            Set<String> repoUrls = new HashSet<>();
+            for (Batch b : batches) {
+                if (b.repoUrl() == null) {
+                    result.add(b);
+                } else if (!repoUrls.contains(b.repoUrl())){
+                    result.add(b);
+                    repoUrls.add(b.repoUrl());
+                }
+            }
+            return result;
         }
 
         private void toPreparing(DSLContext tx, List<UUID> processes) {
