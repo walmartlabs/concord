@@ -24,29 +24,31 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Map;
 import java.util.UUID;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonSerialize(as = ImmutableProcessRequirementsEntry.class)
-@JsonDeserialize(as = ImmutableProcessRequirementsEntry.class)
-public interface ProcessRequirementsEntry extends Serializable {
+@JsonSerialize(as = ImmutableProcessInitiatorEntry.class)
+@JsonDeserialize(as = ImmutableProcessInitiatorEntry.class)
+public interface ProcessInitiatorEntry extends Serializable {
 
     UUID instanceId();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     Date createdAt();
 
-    @Nullable
-    Map<String, Object> requirements();
+    ProcessStatus status();
 
-    static ImmutableProcessRequirementsEntry.Builder builder() {
-        return ImmutableProcessRequirementsEntry.builder();
+    @Nullable
+    UUID initiatorId();
+
+    static ImmutableProcessInitiatorEntry.Builder builder() {
+        return ImmutableProcessInitiatorEntry.builder();
     }
 }
