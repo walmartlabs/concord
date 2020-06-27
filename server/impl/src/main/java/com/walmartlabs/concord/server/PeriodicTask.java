@@ -56,6 +56,7 @@ public abstract class PeriodicTask implements BackgroundTask {
             worker.interrupt();
             worker = null;
         }
+
         log.info("stop -> done: {}", taskName());
     }
 
@@ -87,3 +88,4 @@ public abstract class PeriodicTask implements BackgroundTask {
         }
     }
 }
+

@@ -98,7 +98,14 @@ public class EnqueuedBatchTask extends PeriodicTask {
     @Override
     public void stop() {
         super.stop();
-        executor.shutdown();
+        
+        executor.shutdownNow();
+
+        try {
+            executor.awaitTermination(5, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -171,6 +178,9 @@ public class EnqueuedBatchTask extends PeriodicTask {
                     Batch keys = queue.take();
                     repoUrl = keys.repoUrl();
                     startProcessBatch(keys);
+                } catch (InterruptedException e) {
+                    log.warn("run -> interrupted");
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     log.error("run -> error", e);
                     sleep(ERROR_RETRY_INTERVAL);
