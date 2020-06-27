@@ -233,7 +233,7 @@ public class ProcessManager {
 
         queueManager.updateStatus(processKey, ProcessStatus.SUSPENDED, Collections.singletonMap("checkpointId", checkpointId));
 
-        logManager.info(processKey,"Restoring from checkpoint '{}'", checkpointInfo.name());
+        logManager.info(processKey, "Restoring from checkpoint '{}'", checkpointInfo.name());
 
         resume(payload);
     }
@@ -279,12 +279,11 @@ public class ProcessManager {
     }
 
     private boolean isFinished(PartialProcessKey processKey) {
-        UUID instanceId = processKey.getInstanceId();
-
-        ProcessStatus status = queueDao.getStatus(instanceId);
+        ProcessStatus status = queueDao.getStatus(processKey);
         if (status == null) {
             return true;
         }
+
         return TERMINATED_PROCESS_STATUSES.contains(status);
     }
 

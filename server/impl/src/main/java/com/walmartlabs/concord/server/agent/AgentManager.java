@@ -73,12 +73,7 @@ public class AgentManager {
     }
 
     public void killProcess(ProcessKey processKey) {
-        ProcessEntry e = queueDao.get(processKey);
-        if (e == null) {
-            throw new IllegalArgumentException("Process not found: " + processKey);
-        }
-
-        String agentId = e.lastAgentId();
+        String agentId = queueDao.getLastAgentId(processKey);
         if (agentId == null) {
             log.warn("killProcess ['{}'] -> trying to kill a process w/o an agent", processKey);
             queueManager.updateStatus(processKey, ProcessStatus.CANCELLED);
@@ -89,7 +84,7 @@ public class AgentManager {
     }
 
     public void killProcess(List<ProcessKey> processKeys) {
-        // TODO replace with a more specific method
+        // TODO replace with a more appropriate method
         List<ProcessEntry> l = queueDao.get(processKeys.stream()
                 .map(k -> PartialProcessKey.from(k.getInstanceId()))
                 .collect(Collectors.toList()));

@@ -90,7 +90,7 @@ public class ProcessQueueManager {
     public void enqueue(Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        ProcessStatus s = queueDao.getStatus(processKey.getInstanceId());
+        ProcessStatus s = queueDao.getStatus(processKey);
         if (s == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey);
         }
