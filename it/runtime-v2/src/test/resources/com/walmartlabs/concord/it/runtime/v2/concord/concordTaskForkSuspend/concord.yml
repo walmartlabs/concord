@@ -1,0 +1,27 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - task: concord
+      in:
+        action: fork
+        forks:
+          - entryPoint: onFork
+            arguments:
+              msg: "Hello"
+          - entryPoint: onFork
+            arguments:
+              msg: "Bye"
+        sync: true
+        suspend: true
+        outVars:
+          - varFromFork
+      out: jobOut
+
+    - log: "${jobOut}"
+
+  onFork:
+    - log: "Running in a fork"
+    - set:
+        varFromFork: "${msg}, ${name}"

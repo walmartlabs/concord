@@ -1,0 +1,7 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - set:
+        xyz: "Hello, ${name}!. From: ${initiator}"
