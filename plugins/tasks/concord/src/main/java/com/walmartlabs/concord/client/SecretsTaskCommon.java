@@ -1,0 +1,333 @@
+package com.walmartlabs.concord.client;
+
+/*-
+ * *****
+ * Concord
+ * -----
+ * Copyright (C) 2017 - 2018 Walmart Inc.
+ * -----
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =====
+ */
+
+import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.ApiException;
+import com.walmartlabs.concord.ApiResponse;
+import com.walmartlabs.concord.sdk.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.walmartlabs.concord.client.SecretsTaskParams.*;
+
+public class SecretsTaskCommon {
+
+    private static final Logger log = LoggerFactory.getLogger(SecretsTaskCommon.class);
+
+    private static final int RETRY_COUNT = 3;
+    private static final long RETRY_INTERVAL = 5000;
+
+    private final ApiClient apiClient;
+    private final String defaultOrg;
+
+    public SecretsTaskCommon(ApiClient apiClient, String defaultOrg) {
+        this.apiClient = apiClient;
+        this.defaultOrg = defaultOrg;
+    }
+
+    public Map<String, Object> execute(SecretsTaskParams in) throws Exception {
+        Action action = in.action();
+
+        Result result;
+        switch (action) {
+            case GETASSTRING: {
+                result = getAsString((AsStringParams)in);
+                break;
+            }
+            case CREATE: {
+                result = create((CreateParams)in);
+                break;
+            }
+            case UPDATE: {
+                result = update((UpdateParams)in);
+                break;
+            }
+            case DELETE: {
+                result = delete(in);
+                break;
+            }
+            default: {
+                throw new IllegalArgumentException("Unsupported action type: " + action);
+            }
+        }
+
+        return result.toMap();
+    }
+
+    private Result getAsString(AsStringParams in) {
+        String orgName = in.orgName(defaultOrg);
+        String secretName = in.secretName();
+
+        // TODO allow empty multipart requests?
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.Multipart.NAME, secretName);
+
+        addIfPresent(params, Constants.Multipart.STORE_PASSWORD, in.storePassword());
+
+        try {
+            ApiResponse<String> r = postWithRetry( "/api/v1/org/" + orgName + "/secret/" + secretName + "/data", params);
+
+            String data = r.getData();
+            if (data == null) {
+                return Result.ok();
+            }
+
+            return Result.ok(r.getData());
+        } catch (ApiException e) {
+            return handleErrors(in, secretName, e);
+        }
+    }
+
+    private Map<String, Object> makeCreateParams(CreateParams in) {
+        Map<String, Object> m = new HashMap<>();
+
+        String orgName = in.orgName(defaultOrg);
+        m.put(Constants.Multipart.ORG_NAME, orgName);
+
+        String secretName = in.secretName();
+        m.put(Constants.Multipart.NAME, secretName);
+
+        SecretEntry.TypeEnum secretType = in.secretType();
+        m.put(Constants.Multipart.TYPE, secretType.toString());
+
+        switch (secretType) {
+            case DATA:
+                m.put(Constants.Multipart.DATA, in.data());
+                break;
+            case KEY_PAIR:
+                m.put(Constants.Multipart.PUBLIC, in.publicKey());
+                m.put(Constants.Multipart.PRIVATE, in.privateKey());
+                break;
+            case USERNAME_PASSWORD:
+                m.put(Constants.Multipart.USERNAME, in.userName());
+                m.put(Constants.Multipart.PASSWORD, in.password());
+                break;
+        }
+
+        addIfPresent(m, Constants.Multipart.STORE_PASSWORD, in.storePassword());
+        addIfPresent(m, Constants.Multipart.GENERATE_PASSWORD, in.generatePassword());
+        addIfPresent(m, Constants.Multipart.VISIBILITY, in.visibility());
+        addIfPresent(m, Constants.Multipart.PROJECT_NAME, in.projectName());
+
+        return m;
+    }
+
+    private Result create(CreateParams in) throws Exception {
+        Map<String, Object> params = makeCreateParams(in);
+        return create(in, params);
+    }
+
+    private Result create(CreateParams in, Map<String, Object> params) throws Exception {
+        String orgName = in.orgName(defaultOrg);
+        String secretName = in.secretName();
+
+        ApiResponse<SecretOperationResponse> r = post( "/api/v1/org/" + orgName + "/secret", params, SecretOperationResponse.class);
+        if (r.getStatusCode() >= 400) {
+            return handleErrors(in, secretName, r.getStatusCode(), r.getData().toString());
+        }
+
+        log.info("New secret was successfully created: {}", params.get(Constants.Multipart.NAME));
+        return Result.ok();
+    }
+
+    private Result update(UpdateParams in) throws Exception {
+
+        String newData = null;
+        Object data = in.data();
+
+        if (data != null) {
+            if (data instanceof String) {
+                String s = data.toString();
+                newData = Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
+            } else if (data instanceof byte[]) {
+                byte[] ab = (byte[]) data;
+                newData = Base64.getEncoder().encodeToString(ab);
+            } else {
+                throw new RuntimeException("Unsupported '" + Constants.Multipart.DATA + "' type: " + data.getClass() + ". " +
+                        "Only string values and byte arrays are allowed.");
+            }
+        }
+
+        String storePassword = in.storePassword();
+        String newStorePassword = in.newStorePassword();
+
+        if (newData == null && newStorePassword == null) {
+            log.warn("Not updating anything since nothing has changed.");
+            return Result.ok();
+        }
+
+        String orgName = in.orgName(defaultOrg);
+        String secretName = in.secretName();
+
+        try {
+            SecretsApi api = new SecretsApi(apiClient);
+            api.update(orgName, secretName, new SecretUpdateRequest()
+                    .setData(newData)
+                    .setStorePassword(storePassword)
+                    .setNewStorePassword(newStorePassword));
+
+            log.info("The secret was successfully updated: {}", secretName);
+            return Result.ok();
+        } catch (ApiException e) {
+            if (e.getCode() == 404) {
+                boolean createIfMissing = in.createIfMissing();
+                if (createIfMissing) {
+                    return create(in);
+                }
+            }
+
+            return handleErrors(in, secretName, e.getCode(), e.getResponseBody());
+        }
+    }
+
+    private Result delete(SecretsTaskParams in) {
+        String secretName = in.secretName();
+
+        try {
+            SecretsApi api = new SecretsApi(apiClient);
+            GenericOperationResult result = api.delete(in.orgName(defaultOrg), secretName);
+            switch (result.getResult()) {
+                case DELETED: {
+                    log.info("The secret was successfully deleted: {}", secretName);
+                    return Result.ok();
+                }
+                case NOT_FOUND: {
+                    log.warn("Secret not found: {}", secretName);
+                    return Result.notFound();
+                }
+                default: {
+                    return Result.invalidRequest();
+                }
+            }
+        } catch (ApiException e) {
+            return handleErrors(in, secretName, e.getCode(), e.getResponseBody());
+        }
+    }
+
+    private <T> ApiResponse<T> post(String path, Map<String, Object> params, Class<T> type) throws ApiException {
+        return ClientUtils.postData(apiClient, path, params, type);
+    }
+
+    private ApiResponse<String> postWithRetry(String path, Map<String, Object> params) throws ApiException {
+        return ClientUtils.withRetry(RETRY_COUNT, RETRY_INTERVAL,
+                () -> ClientUtils.postData(apiClient, path, params, String.class));
+    }
+
+    private static void addIfPresent(Map<String, Object> m, String key, Object value) {
+        if (value != null) {
+            m.put(key, value);
+        }
+    }
+
+    private static Result handleErrors(SecretsTaskParams in, String secretName, ApiException e) {
+        return handleErrors(in, secretName, e.getCode(), e.getResponseBody());
+    }
+
+    private static Result handleErrors(SecretsTaskParams in, String secretName, int code, String responseBody) {
+        boolean ignoreErrors = in.ignoreErrors();
+
+        if (code == 401) {
+            if (ignoreErrors) {
+                log.warn("Access denied to secret '{}' ", secretName);
+                return Result.accessDenied();
+            }
+            throw new RuntimeException("Access denied: " + secretName);
+        } else if (code == 404) {
+            if (ignoreErrors) {
+                log.warn("Secret '{}' not found", secretName);
+                return Result.notFound();
+            }
+            throw new RuntimeException("Secret not found: " + secretName);
+        } else if (code >= 400 && code < 500 && ignoreErrors) {
+            log.warn("Invalid request for secret '{}': {}", secretName, code);
+            return Result.invalidRequest();
+        }
+
+        throw new RuntimeException("Error while requesting the secret '" + secretName + "': (code=" + code + "): " + responseBody);
+    }
+
+    public enum Status {
+        OK,
+        NOT_FOUND,
+        INVALID_REQUEST,
+        ACCESS_DENIED
+    }
+
+    static class Result implements Serializable {
+
+        private static Result ok() {
+            return new Result(true, Status.OK, null);
+        }
+
+        private static Result ok(String data) {
+            return new Result(true, Status.OK, data);
+        }
+
+        private static Result notFound() {
+            return new Result(false, Status.NOT_FOUND, null);
+        }
+
+        private static Result invalidRequest() {
+            return new Result(false, Status.INVALID_REQUEST, null);
+        }
+
+        private static Result accessDenied() {
+            return new Result(false, Status.ACCESS_DENIED, null);
+        }
+
+        private final boolean ok;
+        private final Status status;
+        private final String data;
+
+        private Result(boolean ok, Status status, String data) {
+            this.ok = ok;
+            this.status = status;
+            this.data = data;
+        }
+
+        public boolean isOk() {
+            return ok;
+        }
+
+        public Status getStatus() {
+            return status;
+        }
+
+        public String getData() {
+            return data;
+        }
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> m = new HashMap<>();
+            m.put("ok", this.ok);
+            m.put("status", this.status.toString());
+            m.put("data", this.data);
+            return m;
+        }
+    }
+}

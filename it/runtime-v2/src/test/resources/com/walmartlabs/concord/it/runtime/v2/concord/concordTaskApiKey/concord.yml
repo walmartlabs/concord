@@ -1,0 +1,18 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - task: concord
+      in:
+        apiKey: "${myApiKey}"
+        action: startExternal
+        payload: "payload"
+        sync: true
+        arguments:
+          name: "Concord"
+        outVars:
+          - xyz
+      out: jobOut
+
+    - log: "${jobOut.xyz}"
