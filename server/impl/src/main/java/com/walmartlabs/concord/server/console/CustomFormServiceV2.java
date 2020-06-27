@@ -29,7 +29,6 @@ import com.walmartlabs.concord.forms.ValidationError;
 import com.walmartlabs.concord.server.MultipartUtils;
 import com.walmartlabs.concord.server.cfg.CustomFormConfiguration;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
-import com.walmartlabs.concord.server.process.ProcessEntry;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.form.ExternalFileFormValidatorLocaleV2;
 import com.walmartlabs.concord.server.process.form.FormServiceV1;
@@ -210,8 +209,7 @@ public class CustomFormServiceV2 {
                         writeData(formDir, success(form, m, processKey.getInstanceId()));
                     } else {
                         while (true) {
-                            ProcessEntry entry = queueDao.get(processKey);
-                            ProcessStatus s = entry.status();
+                            ProcessStatus s = queueDao.getStatus(processKey);
 
                             if (s == ProcessStatus.SUSPENDED) {
                                 String nextFormId = formService.nextFormId(processKey);
