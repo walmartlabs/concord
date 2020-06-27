@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -113,15 +114,23 @@ public class RepositoryCache {
 
         List<RepositoryAccessJournal.RepositoryJournalItem> oldItems = accessJournal.listOld(maxCacheAge);
         for (RepositoryAccessJournal.RepositoryJournalItem i : oldItems) {
-            withLock(lockTimeout, i.repoUrl(), () -> {
+            Path repoPath = withLock(lockTimeout, i.repoUrl(), () -> {
                 try {
-                    IOUtils.deleteRecursively(i.repoPath());
+                    Path tmpDir = i.repoPath().getParent().resolve(i.repoPath().getFileName() + ".tmp");
+                    Files.move(i.repoPath(), tmpDir);
                     accessJournal.removeRecord(i.repoUrl());
+                    return tmpDir;
                 } catch (IOException e) {
-                    log.warn("cleanup ['{}'] -> error", i.repoPath(), e);
+                    log.warn("cleanup ['{}'] -> move error", i.repoPath(), e);
                 }
                 return null;
             });
+
+            try {
+                IOUtils.deleteRecursively(repoPath);
+            } catch (IOException e) {
+                log.warn("cleanup ['{}'] -> delete error", i.repoPath(), e);
+            }
         }
 
         nextCleanup += maxCacheAge;
