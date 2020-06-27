@@ -22,6 +22,9 @@ package com.walmartlabs.concord.server.events.github;
 
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.walmartlabs.concord.server.cfg.GithubConfiguration;
 import com.walmartlabs.concord.server.events.DefaultEventFilter;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
@@ -39,6 +42,7 @@ import javax.inject.Singleton;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.repository.GitCliRepositoryProvider.DEFAULT_BRANCH;
@@ -58,10 +62,10 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
     private static final int VERSION_ID = 1;
 
     private final RepositoryDao repositoryDao;
-    private final ProjectDao projectDao;
     private final TriggersDao triggersDao;
     private final GithubConfiguration githubCfg;
     private final GithubTriggerDefinitionEnricher triggerDefinitionEnricher;
+    private final LoadingCache<UUID, ProjectEntry> projectCache;
     private final Histogram reposPerEvent;
     private final Histogram triggersPerEvent;
     private final Histogram filteredTriggersPerEvent;
@@ -75,10 +79,19 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
                                     MetricRegistry metricRegistry) {
 
         this.repositoryDao = repositoryDao;
-        this.projectDao = projectDao;
         this.triggersDao = triggersDao;
         this.githubCfg = githubCfg;
         this.triggerDefinitionEnricher = triggerDefinitionEnricher;
+
+        this.projectCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(10, TimeUnit.SECONDS)
+                .build(new CacheLoader<UUID, ProjectEntry>() {
+                    @Override
+                    public ProjectEntry load(UUID key) {
+                        return projectDao.get(key);
+                    }
+                });
+
         this.reposPerEvent = metricRegistry.histogram("repositories-count-per-github-event-v1-processor");
         this.triggersPerEvent = metricRegistry.histogram("triggers-count-per-github-event-v1-processor");
         this.filteredTriggersPerEvent = metricRegistry.histogram("filtered-triggers-count-per-github-event-v1-processor");
@@ -141,7 +154,7 @@ public class GithubTriggerV1Processor implements GithubTriggerProcessor {
                 .filter(r -> GithubUtils.isRepositoryUrl(repoName, r.getUrl(), githubCfg.getGithubDomain()))
                 .filter(r -> isBranchEq(r.getBranch(), branch))
                 .map(r -> {
-                    ProjectEntry project = projectDao.get(r.getProjectId());
+                    ProjectEntry project = projectCache.getUnchecked(r.getProjectId());
                     return new RepositoryItem(r.getId(), project, r.getName());
                 })
                 .filter(r -> r.project != null)
