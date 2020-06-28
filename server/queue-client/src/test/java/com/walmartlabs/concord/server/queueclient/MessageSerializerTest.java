@@ -80,6 +80,13 @@ public class MessageSerializerTest {
     }
 
     @Test
+    public void testUnknownProperties() {
+        String str = "{\"sessionToken\":\"123123\", \"correlationId\":123, \"processId\":\"b26a60c6-b54e-4f4d-bf0a-abafb908bf76\", \"messageType\":\"PROCESS_RESPONSE\"}";
+        ProcessResponse rDeserialized = MessageSerializer.deserialize(str);
+        assertEquals(123, rDeserialized.getCorrelationId());
+    }
+
+    @Test
     public void testProcessResponse() {
         SecretDefinition secret = SecretDefinition.builder()
                 .org("secret-org")
