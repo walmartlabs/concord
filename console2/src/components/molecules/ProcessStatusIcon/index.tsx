@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Icon, Popup, SemanticICONS, SemanticCOLORS } from 'semantic-ui-react';
 
 import { ProcessEntry, ProcessStatus } from '../../../api/process';
-import { formatDistanceToNow, parseISO as parseDate } from 'date-fns';
+import { formatDistanceToNow, isAfter, parseISO as parseDate } from 'date-fns';
 
 enum AdditionalProcessStatus {
     /**
@@ -64,7 +64,9 @@ const getStatus = (process: ProcessEntry): Status => {
 const getLabel = (process: ProcessEntry): string => {
     if (process.startAt && process.status === ProcessStatus.ENQUEUED) {
         const startAt = parseDate(process.startAt);
-        return 'starts in ' + formatDistanceToNow(startAt);
+        if (isAfter(startAt, Date.now())) {
+            return 'starts in ' + formatDistanceToNow(startAt);
+        }
     }
 
     return process.status;

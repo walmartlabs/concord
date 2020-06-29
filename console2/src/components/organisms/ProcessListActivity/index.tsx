@@ -259,10 +259,10 @@ export const filtersToQuery = (
     Object.keys(filters).forEach((key) => {
         if (key === STATUS_COLUMN.source && filters[key] === 'SCHEDULED') {
             query[key] = Status.ENQUEUED;
-            query.startAt = { compareType: 'notEq', value: null };
+            query.startAt = { compareType: 'ge', value: null };
         } else if (key === STATUS_COLUMN.source && filters[key] === 'ENQUEUED') {
             query[key] = Status.ENQUEUED;
-            query.startAt = { compareType: 'eq', value: null };
+            query.startAt = { compareType: 'len', value: null };
         } else {
             query[key] = filters[key];
         }
