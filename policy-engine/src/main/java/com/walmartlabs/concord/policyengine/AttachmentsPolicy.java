@@ -20,8 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import org.apache.commons.lang3.mutable.MutableLong;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -47,20 +45,20 @@ public class AttachmentsPolicy {
 
         List<CheckResult.Item<AttachmentsRule, Long>> deny = new ArrayList<>();
 
-        MutableLong size = new MutableLong();
+        Long[] size = { 0L };
 
         Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                size.add(Files.size(file));
+                size[0] += Files.size(file);
 
                 return FileVisitResult.CONTINUE;
             }
         });
 
-        if (size.toLong() > rule.getMaxSizeInBytes()) {
-            deny.add(new CheckResult.Item<>(rule, size.getValue(), null));
+        if (size[0] > rule.getMaxSizeInBytes()) {
+            deny.add(new CheckResult.Item<>(rule, size[0], null));
         }
 
         return new CheckResult<>(Collections.emptyList(), deny);

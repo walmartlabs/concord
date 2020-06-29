@@ -22,7 +22,6 @@ package com.walmartlabs.concord.policyengine;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -92,13 +91,13 @@ public class TaskRule implements Serializable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
-                .append("msg", msg)
-                .append("taskName", taskName)
-                .append("method", method)
-                .append("params", params)
-                .append("taskResults", taskResults)
-                .toString();
+        return "TaskRule{" +
+                "msg='" + msg + '\'' +
+                ", taskName='" + taskName + '\'' +
+                ", method='" + method + '\'' +
+                ", params=" + params +
+                ", taskResults=" + taskResults +
+                '}';
     }
 
     public static class Param implements Serializable {
@@ -157,12 +156,12 @@ public class TaskRule implements Serializable {
 
         @Override
         public String toString() {
-            return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
-                    .append("index", index)
-                    .append("name", name)
-                    .append("protected", protectedVariable)
-                    .append("values", values)
-                    .toString();
+            return "Param{" +
+                    "index=" + index +
+                    ", name='" + name + '\'' +
+                    ", protectedVariable=" + protectedVariable +
+                    ", values=" + values +
+                    '}';
         }
     }
 
