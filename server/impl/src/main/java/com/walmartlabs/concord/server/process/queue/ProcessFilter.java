@@ -155,6 +155,9 @@ public interface ProcessFilter {
         NOT_ENDS_WITH,
 
         STARTS_WITH,
-        NOT_STARTS_WITH
+        NOT_STARTS_WITH,
+
+        GREATER_OR_EQUALS,
+        LESS_OR_EQUALS_OR_NULL
     }
 }

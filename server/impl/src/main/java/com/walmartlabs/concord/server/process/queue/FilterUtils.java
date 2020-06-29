@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.jsonbTextByPath;
+import static org.jooq.impl.DSL.currentTimestamp;
 
 public final class FilterUtils {
 
@@ -48,7 +49,10 @@ public final class FilterUtils {
             SuffixMapping.of(".notStartsWith", ProcessFilter.FilterType.NOT_STARTS_WITH),
 
             SuffixMapping.of(".endsWith", ProcessFilter.FilterType.ENDS_WITH),
-            SuffixMapping.of(".notEndsWith", ProcessFilter.FilterType.NOT_ENDS_WITH)
+            SuffixMapping.of(".notEndsWith", ProcessFilter.FilterType.NOT_ENDS_WITH),
+
+            SuffixMapping.of(".ge", ProcessFilter.FilterType.GREATER_OR_EQUALS),
+            SuffixMapping.of(".len", ProcessFilter.FilterType.LESS_OR_EQUALS_OR_NULL)
     };
 
     public static List<ProcessFilter.DateFilter> parseDate(String paramName, UriInfo uriInfo) {
@@ -100,19 +104,19 @@ public final class FilterUtils {
 
         for (ProcessFilter.DateFilter filter : filters) {
             switch (filter.type()) {
-                case EQUALS: {
+                case GREATER_OR_EQUALS: {
                     if (filter.value() == null) {
-                        q.addConditions(field.isNull());
+                        q.addConditions(field.greaterOrEqual(currentTimestamp()));
                     } else {
-                        q.addConditions(field.eq(filter.value()));
+                        q.addConditions(field.greaterOrEqual(filter.value()));
                     }
                     break;
                 }
-                case NOT_EQUALS: {
+                case LESS_OR_EQUALS_OR_NULL: {
                     if (filter.value() == null) {
-                        q.addConditions(field.isNotNull());
+                        q.addConditions(field.lessOrEqual(currentTimestamp()).or(field.isNull()));
                     } else {
-                        q.addConditions(field.notEqual(filter.value()));
+                        q.addConditions(field.lessOrEqual(filter.value()).or(field.isNull()));
                     }
                     break;
                 }

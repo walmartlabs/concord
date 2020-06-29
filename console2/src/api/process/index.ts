@@ -265,7 +265,7 @@ export interface PaginatedProcessEntries {
 
 export interface DateParam {
     value: string | null;
-    compareType: 'eq' | 'notEq';
+    compareType: 'ge' | 'len';
 }
 
 export interface ProcessListQuery {
