@@ -23,7 +23,6 @@ package com.walmartlabs.concord.policyengine;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -94,12 +93,13 @@ public class FileRule implements Serializable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
-                .append("msg", msg)
-                .append("maxSize", maxSize)
-                .append("type", type)
-                .append("names", names)
-                .toString();
+        return "FileRule{" +
+                "msg='" + msg + '\'' +
+                ", maxSizeInBytes=" + maxSizeInBytes +
+                ", maxSize='" + maxSize + '\'' +
+                ", type=" + type +
+                ", names=" + names +
+                '}';
     }
 
     public enum Type {

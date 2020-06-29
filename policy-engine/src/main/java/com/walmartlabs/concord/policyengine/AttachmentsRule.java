@@ -22,11 +22,9 @@ package com.walmartlabs.concord.policyengine;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Set;
 
 public class AttachmentsRule implements Serializable {
 

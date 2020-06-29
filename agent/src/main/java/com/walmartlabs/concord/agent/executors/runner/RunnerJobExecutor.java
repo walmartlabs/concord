@@ -294,9 +294,9 @@ public class RunnerJobExecutor implements JobExecutor {
 
         CheckResult<DependencyRule, DependencyEntity> result = policyEngine.getDependencyPolicy().check(resolvedDepEntities);
         result.getWarn().forEach(d ->
-                processLog.warn("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity(), d.getRule()));
+                processLog.warn("Potentially restricted artifact '{}' (dependency policy: {})", d.getEntity(), d.getRule().getMsg()));
         result.getDeny().forEach(d ->
-                processLog.warn("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity(), d.getRule()));
+                processLog.warn("Artifact '{}' is forbidden by the dependency policy {}", d.getEntity(), d.getRule().getMsg()));
 
         if (!result.getDeny().isEmpty()) {
             throw new ExecutionException("Found restricted dependencies");
