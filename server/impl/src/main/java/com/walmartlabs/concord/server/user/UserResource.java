@@ -20,7 +20,6 @@ package com.walmartlabs.concord.server.user;
  * =====
  */
 
-import com.walmartlabs.concord.common.validation.ConcordUsername;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
@@ -99,7 +98,7 @@ public class UserResource implements Resource {
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public UserEntry findByUsername(@PathParam("username") @ConcordUsername @Size(max = UserEntry.MAX_USERNAME_LENGTH) @NotNull String username) {
+    public UserEntry findByUsername(@PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) @NotNull String username) {
         assertAdmin();
 
         // TODO: user type from request
@@ -139,7 +138,7 @@ public class UserResource implements Resource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Validate
-    public GenericOperationResult updateUserRoles(@ApiParam @PathParam("username") @ConcordUsername @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
+    public GenericOperationResult updateUserRoles(@ApiParam @PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) String username,
                                                   @ApiParam @Valid UpdateUserRolesRequest req) {
         assertAdmin();
 
