@@ -171,7 +171,11 @@ public class TriggerProcessExecutor {
                 cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
             }
 
-            cfg.put(Constants.Request.EXCLUSIVE, TriggerUtils.getExclusive(t));
+            Map<String, Object> exclusive = TriggerUtils.getExclusive(t);
+            if (exclusive != null && !exclusive.isEmpty()) {
+                // avoid saving empty objects into the cfg
+                cfg.put(Constants.Request.EXCLUSIVE, exclusive);
+            }
 
             if (cfgEnricher != null) {
                 cfg = cfgEnricher.enrich(t, cfg);
