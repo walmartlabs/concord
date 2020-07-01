@@ -20,6 +20,7 @@ package com.walmartlabs.concord.agentoperator.resources;
  * =====
  */
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.agentoperator.HashUtils;
 import com.walmartlabs.concord.agentoperator.crd.AgentPoolConfiguration;
@@ -56,9 +57,15 @@ public final class AgentConfigMap {
         AgentPoolConfiguration spec = poolInstance.getResource().getSpec();
 
         String configMapYaml = objectMapper.writeValueAsString(spec.getConfigMap())
-                .replaceAll("%%configMapName%%", configMapName);
+                .replaceAll("%%configMapName%%", configMapName)
+                .replace("%%preStopHook%%", escape(Resources.get("/prestop-hook.sh")));
 
         return client.configMaps().load(new ByteArrayInputStream(configMapYaml.getBytes())).get();
+    }
+
+    private static String escape(String str) throws JsonProcessingException {
+        String result = objectMapper.writeValueAsString(str);
+        return result.substring(1, result.length() - 1);
     }
 
     private AgentConfigMap() {
