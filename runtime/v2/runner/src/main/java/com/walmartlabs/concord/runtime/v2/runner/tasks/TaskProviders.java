@@ -28,10 +28,7 @@ import org.eclipse.sisu.Priority;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -66,10 +63,13 @@ public class TaskProviders {
         return null;
     }
 
-    public void register(TaskProvider p) {
-        synchronized (taskProviders) {
-            taskProviders.add(p);
+    public boolean hasTask(String key) {
+        for (TaskProvider p : taskProviders) {
+            if (p.hasTask(key)) {
+                return true;
+            }
         }
+        return false;
     }
 
     private static int getPriority(TaskProvider p) {

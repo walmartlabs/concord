@@ -20,16 +20,20 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.runner.vm.VMUtils;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
-import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class ContextVariables implements Variables {
+
+    private static final Logger log = LoggerFactory.getLogger(ContextVariables.class);
 
     private final Context ctx;
 
@@ -53,10 +57,15 @@ public class ContextVariables implements Variables {
 
     @Override
     public void set(String key, Object value) {
+        TaskProviders providers = ctx.execution().runtime().getService(TaskProviders.class);
+        if (providers.hasTask(key)) {
+            log.warn("Local variable '{}' shadows a task. This may cause issues calling '{}' task in expressions. " +
+                    "Avoid using same names for tasks and variables.", key, key);
+        }
+
         ThreadId threadId = ctx.execution().currentThreadId();
         State state = ctx.execution().state();
-        Frame frame = state.peekFrame(threadId);
-        VMUtils.putLocal(frame, key, value);
+        VMUtils.putLocal(state, threadId, key, value);
     }
 
     @Override

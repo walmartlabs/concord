@@ -49,9 +49,8 @@ public class SetVariablesCommand extends StepCommand<SetVariablesStep> {
 
         // eval the input
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
-        Map<String, Object> v = ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars());
+        Map<String, Object> vars = ee.evalAsMap(EvalContextFactory.scope(ctx), step.getVars());
 
-        Frame root = VMUtils.assertNearestRoot(state, threadId);
-        VMUtils.putLocals(root, v);
+        vars.forEach((k, v) -> ctx.variables().set(k, v));
     }
 }

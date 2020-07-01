@@ -157,7 +157,7 @@ public final class VMUtils {
      * Only {@link Serializable} values are allowed.
      */
     public static void putLocal(Frame frame, String key, Object value) {
-        if (value instanceof Serializable) {
+        if (value instanceof Serializable || value == null) {
             frame.setLocal(key, (Serializable) value);
             return;
         }
