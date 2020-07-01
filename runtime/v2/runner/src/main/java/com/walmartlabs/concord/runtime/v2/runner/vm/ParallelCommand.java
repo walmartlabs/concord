@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
@@ -56,10 +57,12 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         Collection<ThreadId> forkIds = forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
         frame.push(new JoinCommand(forkIds));
 
+        Context ctx = runtime.getService(Context.class);
+
         Collections.reverse(forks);
         forks.forEach(f -> {
             // each new frame executes it's own copy of ProcessOutVariablesCommand after the user's command is completed
-            Command cmd = new ForkCommand(f.getKey(), new ProcessOutVariablesCommand(threadId, outVars), f.getValue());
+            Command cmd = new ForkCommand(f.getKey(), new ProcessOutVariablesCommand(ctx, outVars), f.getValue());
             frame.push(cmd);
         });
     }
@@ -71,11 +74,11 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
 
         private static final long serialVersionUID = 1L;
 
-        private final ThreadId targetThreadId;
+        private final Context ctx;
         private final List<String> outVars;
 
-        public ProcessOutVariablesCommand(ThreadId targetThreadId, List<String> outVars) {
-            this.targetThreadId = targetThreadId;
+        public ProcessOutVariablesCommand(Context ctx, List<String> outVars) {
+            this.ctx = ctx;
             this.outVars = outVars;
         }
 
@@ -92,7 +95,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
                 }
 
                 Serializable v = frame.getLocal(k);
-                VMUtils.putLocal(state, targetThreadId, k, v);
+                ctx.variables().set(k, v);
             }
         }
     }

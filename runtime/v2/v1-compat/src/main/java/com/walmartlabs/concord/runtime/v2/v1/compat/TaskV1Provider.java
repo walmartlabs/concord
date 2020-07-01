@@ -50,11 +50,16 @@ public class TaskV1Provider implements TaskProvider {
     @Override
     public Task createTask(Context ctx, String key) {
         Class<? extends com.walmartlabs.concord.sdk.Task> klassV1 = holder.get(key);
-        if (klassV1 != null) {
-            com.walmartlabs.concord.sdk.Task v1Task = injector.getInstance(klassV1);
-            return new TaskV1Wrapper(ctx, v1Task, workingDirectory.getValue());
+        if (klassV1 == null) {
+            return null;
         }
 
-        return null;
+        com.walmartlabs.concord.sdk.Task v1Task = injector.getInstance(klassV1);
+        return new TaskV1Wrapper(ctx, v1Task, workingDirectory.getValue());
+    }
+
+    @Override
+    public boolean hasTask(String key) {
+        return holder.get(key) != null;
     }
 }
