@@ -1,5 +1,41 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- runtime-v2: warn when a variable name "shadows" a task name;
+- concord-server: lift restrictions on the format of usernames.
+Allow `@` and other special characters;
+- concord-server: a short project cache for GitHub triggers v1 to
+avoid multiple DB queries when filtering out triggers;
+- concord-tasks: runtime v2 compatibility;
+- concord-server, agent-operator: fetch only process requirements,
+configurable fetch depth;
+- concord-server: new policy to control size of process attachments.
+
+### Changed
+
+- agent-operator: new CR template property `%%preStopHook%%` for
+injecting the preStop hook script's content;
+- concord-cli: `run` action now copies all files into the `target`
+directory in the current directory;
+- concord-client: the error message when the requested secret type
+doesn't match the result now includes the name of the secret;
+- policy-engine: no longer dependens on `commons-lang3`;
+- concord-console, concord-server: `ENQUEUED` filter now includes
+processes with `start_at < now`;
+- concord-server: stop all background and scheduled tasks when
+the maintenance mode is enabled;
+- concord-repository: move cache directories before removing to
+reduce the time spent while locked;
+- concord-server: fix process status update in the queue batching
+task;
+- concord-server: optimize the session key validation by reducing
+the amount of data pulled from the DB.
+
+
+
 ## [1.54.0] - 2020-06-24
 
 ### Added
