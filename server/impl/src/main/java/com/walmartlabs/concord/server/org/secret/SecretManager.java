@@ -67,6 +67,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static com.walmartlabs.concord.server.jooq.Tables.SECRETS;
+import static com.walmartlabs.concord.server.org.secret.SecretDao.InsertMode.INSERT;
 
 @Named
 public class SecretManager {
@@ -181,7 +182,7 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create(secretCfg.getKeySize());
-        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
+        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType, INSERT);
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
 
@@ -196,7 +197,7 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         KeyPair k = KeyPairUtils.create(publicKey, privateKey);
-        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType);
+        UUID id = create(name, orgId, projectId, k, storePassword, visibility, secretStoreType, INSERT);
 
         return new DecryptedKeyPair(id, k.getPublicKey());
     }
@@ -211,7 +212,7 @@ public class SecretManager {
         orgManager.assertAccess(orgId, true);
 
         UsernamePassword p = new UsernamePassword(username, password);
-        UUID id = create(name, orgId, projectId, p, storePassword, visibility, secretStoreType);
+        UUID id = create(name, orgId, projectId, p, storePassword, visibility, secretStoreType, INSERT);
         return new DecryptedUsernamePassword(id);
     }
 
@@ -221,6 +222,15 @@ public class SecretManager {
     public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
                                                 InputStream data, SecretVisibility visibility,
                                                 String storeType) throws IOException {
+        return createBinaryData(orgId, projectId, name, storePassword, data, visibility, storeType, INSERT);
+    }
+
+    /**
+     * Stores a new single value secret.
+     */
+    public DecryptedBinaryData createBinaryData(UUID orgId, UUID projectId, String name, String storePassword,
+                                                InputStream data, SecretVisibility visibility,
+                                                String storeType, SecretDao.InsertMode insertMode) throws IOException {
 
         orgManager.assertAccess(orgId, true);
 
@@ -230,7 +240,7 @@ public class SecretManager {
         if (d.getData().length > maxSecretDataSize) {
             throw new IllegalArgumentException("File size exceeds limit of " + maxSecretDataSize + " bytes");
         }
-        UUID id = create(name, orgId, projectId, d, storePassword, visibility, storeType);
+        UUID id = create(name, orgId, projectId, d, storePassword, visibility, storeType, insertMode);
         return new DecryptedBinaryData(id);
     }
 
@@ -467,7 +477,7 @@ public class SecretManager {
         secretDao.upsertAccessLevel(secretId, teamId, level);
     }
 
-    private UUID create(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, String storeType) {
+    private UUID create(String name, UUID orgId, UUID projectId, Secret s, String password, SecretVisibility visibility, String storeType, SecretDao.InsertMode insertMode) {
         byte[] data;
 
         SecretType type;
@@ -496,7 +506,7 @@ public class SecretManager {
         policyManager.checkEntity(orgId, projectId, EntityType.SECRET, EntityAction.CREATE, owner,
                 PolicyUtils.toMap(orgId, name, type, visibility, storeType));
 
-        UUID id = secretDao.insert(orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility);
+        UUID id = secretDao.insert(orgId, projectId, name, owner.getId(), type, encryptedByType, storeType, visibility, insertMode);
         try {
             getSecretStore(storeType).store(id, ab);
         } catch (Exception e) {

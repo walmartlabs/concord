@@ -80,7 +80,7 @@ public class CrudIT extends AbstractServerIT {
         ProjectOperationResponse updateResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
                 .setId(createResp.getId())
                 .setName(updateProjectName));
-        assertEquals(updateResp.getResult(), ProjectOperationResponse.ResultEnum.UPDATED);
+        assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, updateResp.getResult());
         assertEquals(createResp.getId(), updateResp.getId());
 
         // --- get
@@ -97,9 +97,57 @@ public class CrudIT extends AbstractServerIT {
 
         // --- list
 
-        List<ProjectEntry> projectList = projectsApi.list(orgName);
+        List<ProjectEntry> projectList = projectsApi.find(orgName, null, null, null);
         projectEntry = findProject(projectList, projectName);
         assertNotNull(projectEntry);
+
+        // --- update project's organization id
+
+        String newOrgName = "org_" + randomString();
+        OrganizationsApi orgApi = new OrganizationsApi(getApiClient());
+        CreateOrganizationResponse createOrganizationResponse =
+                orgApi.createOrUpdate(new OrganizationEntry().setName(newOrgName));
+        assertTrue(createOrganizationResponse.isOk());
+        assertNotNull(createOrganizationResponse.getId());
+
+        ProjectOperationResponse moveResp = projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                .setId(createResp.getId())
+                .setOrgId(createOrganizationResponse.getId())
+        );
+        assertTrue(moveResp.isOk());
+        assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, moveResp.getResult());
+
+        // --- error - empty name
+
+        try {
+            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                    .setName("")
+            );
+            fail("Project name should not be empty string");
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("must match"));
+        }
+
+        // --- error - null name and id
+
+        try {
+            projectsApi.createOrUpdate(orgName, new ProjectEntry()
+                    .setName(null)
+                    .setId(null)
+            );
+            fail("Project name should not be empty string");
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("'name' is required"));
+        }
+
+        // --- update project's organization name
+
+        moveResp = projectsApi.createOrUpdate(newOrgName, new ProjectEntry()
+                .setName(projectName)
+                .setOrgName(orgName)
+        );
+        assertTrue(moveResp.isOk());
+        assertEquals(ProjectOperationResponse.ResultEnum.UPDATED, moveResp.getResult());
 
         // --- delete
 
@@ -389,8 +437,8 @@ public class CrudIT extends AbstractServerIT {
 
         l = teamsApi.listUsers(orgName, teamName);
         assertEquals(2, l.size());
-        assertEquals(userAName, l.get(0).getUsername());
-        assertEquals(userBName, l.get(1).getUsername());
+        assertEquals(userAName.toLowerCase(), l.get(0).getUsername());
+        assertEquals(userBName.toLowerCase(), l.get(1).getUsername());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -490,7 +538,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- list
 
-        List<OrganizationEntry> organizationEntryList = orgApi.list(true);
+        List<OrganizationEntry> organizationEntryList = orgApi.find(true, null, null, null);
         assertNotNull(organizationEntryList);
         organizationEntry = findOrganization(organizationEntryList, updatedOrgName);
         assertNotNull(organizationEntry);
@@ -512,7 +560,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- private org available for admin
 
-        List<OrganizationEntry> orgs = orgApi.list(false);
+        List<OrganizationEntry> orgs = orgApi.find(false, null, null, null);
         assertTrue(orgs.stream().anyMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
 
         // add the user A
@@ -527,7 +575,7 @@ public class CrudIT extends AbstractServerIT {
 
         setApiKey(apiKeyA.getKey());
 
-        orgs = orgApi.list(true);
+        orgs = orgApi.find(true, null, null, null);
         assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
     }
 

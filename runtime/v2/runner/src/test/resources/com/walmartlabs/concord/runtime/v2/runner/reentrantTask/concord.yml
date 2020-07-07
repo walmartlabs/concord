@@ -1,0 +1,9 @@
+flows:
+  default:
+    - log: "Before"
+    - task: reentrantTask
+      in:
+        action: ${actionName}
+      out:
+        result
+    - log: "After: ${result}"

@@ -35,6 +35,7 @@ public class PolicyEngineRules {
     private final PolicyRules<FileRule> fileRules;
     private final PolicyRules<TaskRule> taskRules;
     private final WorkspaceRule workspaceRule;
+    private final AttachmentsRule attachmentsRule;
     private final ContainerRule containerRules;
     private final QueueRule queueRules;
     private final ProtectedTasksRule protectedTasksRules;
@@ -56,12 +57,14 @@ public class PolicyEngineRules {
                              @JsonProperty("processCfg") Map<String, Object> processCfg,
                              @JsonProperty("jsonStore") JsonStoreRule jsonStoreRule,
                              @JsonProperty("defaultProcessCfg") Map<String, Object> defaultProcessCfg,
-                             @JsonProperty("dependencyVersions")List<DependencyVersionsPolicy.Dependency> dependencyVersions) {
+                             @JsonProperty("dependencyVersions")List<DependencyVersionsPolicy.Dependency> dependencyVersions,
+                             @JsonProperty("attachments") AttachmentsRule attachmentsRule) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
         this.taskRules = taskRules;
         this.workspaceRule = workspaceRule;
+        this.attachmentsRule = attachmentsRule;
         this.containerRules = containerRules;
         this.queueRules = queueRules;
         this.protectedTasksRules = protectedTasksRules;
@@ -132,6 +135,10 @@ public class PolicyEngineRules {
 
     public JsonStoreRule getJsonStoreRule() {
         return jsonStoreRule;
+    }
+
+    public AttachmentsRule getAttachmentsRule() {
+        return attachmentsRule;
     }
 
     @Override

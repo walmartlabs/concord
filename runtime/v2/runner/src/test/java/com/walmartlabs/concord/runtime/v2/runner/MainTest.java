@@ -55,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
 import java.net.URISyntaxException;
@@ -586,7 +587,51 @@ public class MainTest {
         assertLog(log, ".*4: 456.*");
         assertLog(log, ".*c: 456.*");
         assertLog(log, ".*5: 567.*");
+    }
 
+    @Test
+    public void testParallelIn() throws Exception {
+        deploy("parallelIn");
+
+        save(ProcessConfiguration.builder()
+                .putArguments("x", 123)
+                .putArguments("y", 234)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*thread A, x: 123.*");
+        assertLog(log, ".*thread B, y: 234.*");
+        assertLog(log, ".*thread C, x: 999.*");
+        assertLog(log, ".*main, x: 123.*");
+        assertLog(log, ".*main, y: 234.*");
+    }
+
+    @Test
+    public void testParallelOut() throws Exception {
+        deploy("parallelOut");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*x: 123.*");
+        assertLog(log, ".*y: 234.*");
+    }
+
+    @Test
+    public void testReentrant() throws Exception {
+        deploy("reentrantTask");
+        String actionName = "BOO";
+
+        save(ProcessConfiguration.builder()
+                .putArguments("actionName", actionName)
+                .build());
+
+        byte[] log = run();
+        assertLog(log, ".*Before.*");
+
+        log = resume(ReentrantTaskExample.EVENT_NAME, ProcessConfiguration.builder().build());
+        assertLog(log, ".*After: " + Pattern.quote("k=v, a=b") + ".*");
     }
 
     private void deploy(String resource) throws URISyntaxException, IOException {
@@ -815,6 +860,41 @@ public class MainTest {
         @Override
         public Serializable execute(Variables input) {
             throw new RuntimeException("boom!");
+        }
+    }
+
+    @Named("reentrantTask")
+    @SuppressWarnings("unused")
+    static class ReentrantTaskExample implements ReentrantTask {
+
+        private static final Logger log = LoggerFactory.getLogger(ReentrantTaskExample.class);
+
+        public static String EVENT_NAME;
+
+        private final Context context;
+
+        @Inject
+        public ReentrantTaskExample(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        public Serializable execute(Variables input) {
+            log.info("execute {}", input.toMap());
+
+            HashMap<String, Serializable> payload = new HashMap<>();
+            payload.put("k", "v");
+            payload.put("action", input.assertString("action"));
+
+            EVENT_NAME = context.suspendResume(payload);
+
+            return null;
+        }
+
+        @Override
+        public Serializable resume(Map<String, Serializable> payload) {
+            log.info("RESUME: {}", payload);
+            return "k=" + payload.get("k") + ", a=b";
         }
     }
 }

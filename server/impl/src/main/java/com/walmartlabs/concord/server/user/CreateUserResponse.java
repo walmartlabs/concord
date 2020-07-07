@@ -29,24 +29,33 @@ import java.util.UUID;
 
 public class CreateUserResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final boolean ok = true;
     private final UUID id;
+    private final String username;
     private final OperationResult result;
 
     @JsonCreator
     public CreateUserResponse(@JsonProperty("id") UUID id,
+                              @JsonProperty("username") String username,
                               @JsonProperty("result") OperationResult result) {
 
         this.id = id;
+        this.username = username;
         this.result = result;
+    }
+
+    public boolean isOk() {
+        return ok;
     }
 
     public UUID getId() {
         return id;
     }
 
-    public boolean isOk() {
-        return ok;
+    public String getUsername() {
+        return username;
     }
 
     public OperationResult getResult() {
@@ -58,6 +67,7 @@ public class CreateUserResponse implements Serializable {
         return "CreateUserResponse{" +
                 "ok=" + ok +
                 ", id=" + id +
+                ", username='" + username + '\'' +
                 ", result=" + result +
                 '}';
     }

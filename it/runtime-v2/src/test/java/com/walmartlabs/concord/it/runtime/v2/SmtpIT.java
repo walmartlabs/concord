@@ -20,10 +20,10 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ContainerType;
 import ca.ibodrov.concord.testcontainers.Payload;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.walmartlabs.concord.client.ProcessEntry;
@@ -42,7 +42,7 @@ public class SmtpIT {
     public final GreenMailRule mailServer = new GreenMailRule(new ServerSetup(0, "0.0.0.0", ServerSetup.PROTOCOL_SMTP));
 
     @Rule
-    public final Concord concord = ConcordConfiguration.configure()
+    public final ConcordRule concord = ConcordConfiguration.configure()
             .containerListener(name -> {
                 // use container listener to expose the SMTP server's port right before the container starts
                 if (name == ContainerType.AGENT) {

@@ -31,6 +31,7 @@ import com.walmartlabs.concord.server.org.triggers.TriggerEntry;
 import com.walmartlabs.concord.server.org.triggers.TriggerUtils;
 import com.walmartlabs.concord.server.process.*;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.UserEntry;
 import org.apache.shiro.SecurityUtils;
@@ -90,6 +91,7 @@ public class TriggerProcessExecutor {
         return execute(event, triggers, initiatorResolver, null);
     }
 
+    @WithTimer
     public List<PartialProcessKey> execute(Event event,
                                            List<TriggerEntry> triggers,
                                            TriggerEventInitiatorResolver initiatorResolver,
@@ -169,7 +171,11 @@ public class TriggerProcessExecutor {
                 cfg.put(Constants.Request.ACTIVE_PROFILES_KEY, t.getActiveProfiles());
             }
 
-            cfg.put(Constants.Request.EXCLUSIVE, TriggerUtils.getExclusive(t));
+            Map<String, Object> exclusive = TriggerUtils.getExclusive(t);
+            if (exclusive != null && !exclusive.isEmpty()) {
+                // avoid saving empty objects into the cfg
+                cfg.put(Constants.Request.EXCLUSIVE, exclusive);
+            }
 
             if (cfgEnricher != null) {
                 cfg = cfgEnricher.enrich(t, cfg);

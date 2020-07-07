@@ -245,7 +245,7 @@ export default memo(({ filter: initialFilter, forceRefresh, showRefreshButton = 
 
                 <Menu.Item style={{ padding: 0 }} position="right">
                     <PaginationToolBar
-                        filterProps={paginationFilter}
+                        limit={paginationFilter.limit}
                         handleLimitChange={(limit) => handleLimitChange(limit)}
                         handleNext={handleNext}
                         handlePrev={handlePrev}

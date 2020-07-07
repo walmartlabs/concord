@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord.it</groupId>
         <artifactId>parent</artifactId>
-        <version>1.53.2-SNAPSHOT</version>
+        <version>1.55.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -27,7 +27,12 @@
     <dependencies>
         <dependency>
             <groupId>ca.ibodrov.concord</groupId>
-            <artifactId>testcontainers-concord</artifactId>
+            <artifactId>testcontainers-concord-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ca.ibodrov.concord</groupId>
+            <artifactId>testcontainers-concord-junit4</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

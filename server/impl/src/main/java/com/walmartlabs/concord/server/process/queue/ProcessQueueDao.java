@@ -349,11 +349,19 @@ public class ProcessQueueDao extends AbstractDao {
         return txResult(tx -> get(tx, processKey, includes));
     }
 
-    public ProcessStatus getStatus(UUID instanceId) {
+    public String getLastAgentId(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.LAST_AGENT_ID).from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(PROCESS_QUEUE.LAST_AGENT_ID);
+        }
+    }
+
+    public ProcessStatus getStatus(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             String status = tx.select(PROCESS_QUEUE.CURRENT_STATUS)
                     .from(PROCESS_QUEUE)
-                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
                     .fetchOne(PROCESS_QUEUE.CURRENT_STATUS);
             if (status == null) {
                 return null;
@@ -393,6 +401,20 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
+    public ProcessInitiatorEntry getInitiator(PartialProcessKey processKey) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.CURRENT_STATUS, PROCESS_QUEUE.INITIATOR_ID)
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                    .fetchOne(r -> ProcessInitiatorEntry.builder()
+                            .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
+                            .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
+                            .status(ProcessStatus.valueOf(r.get(PROCESS_QUEUE.CURRENT_STATUS)))
+                            .initiatorId(r.get(PROCESS_QUEUE.INITIATOR_ID))
+                            .build());
+        }
+    }
+
     public UUID getOrgId(UUID instanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
             Field<UUID> orgId = select(PROJECTS.ORG_ID)
@@ -425,6 +447,21 @@ public class ProcessQueueDao extends AbstractDao {
             }
 
             return processEntries;
+        }
+    }
+
+    public List<ProcessRequirementsEntry> listRequirements(ProcessStatus processStatus, int limit, int offset) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.select(PROCESS_QUEUE.INSTANCE_ID, PROCESS_QUEUE.CREATED_AT, PROCESS_QUEUE.REQUIREMENTS)
+                    .from(PROCESS_QUEUE)
+                    .where(PROCESS_QUEUE.CURRENT_STATUS.eq(processStatus.name()))
+                    .limit(limit)
+                    .offset(offset)
+                    .fetch(r -> ProcessRequirementsEntry.builder()
+                            .instanceId(r.get(PROCESS_QUEUE.INSTANCE_ID))
+                            .createdAt(r.get(PROCESS_QUEUE.CREATED_AT))
+                            .requirements(objectMapper.fromJSONB(r.get(PROCESS_QUEUE.REQUIREMENTS)))
+                            .build());
         }
     }
 

@@ -93,7 +93,7 @@ public class TaskCallCommand extends StepCommand<TaskCall> {
 
         String out = opts.out();
         if (out != null) {
-            frame.setLocal(out, result); // TODO a custom result structure
+            ctx.variables().set(out, result); // TODO a custom result structure
         }
     }
 

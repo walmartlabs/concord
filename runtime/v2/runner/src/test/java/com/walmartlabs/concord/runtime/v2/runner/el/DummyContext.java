@@ -24,8 +24,11 @@ import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.sdk.ProjectInfo;
 
+import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 public class DummyContext implements Context {
@@ -46,6 +49,11 @@ public class DummyContext implements Context {
     }
 
     @Override
+    public ProjectInfo projectInfo() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
     public Execution execution() {
         throw new IllegalStateException("Not implemented");
     }
@@ -62,6 +70,11 @@ public class DummyContext implements Context {
 
     @Override
     public void suspend(String eventName) {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public String suspendResume(Map<String, Serializable> payload) {
         throw new IllegalStateException("Not implemented");
     }
 }

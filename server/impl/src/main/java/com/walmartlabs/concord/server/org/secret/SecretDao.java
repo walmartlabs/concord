@@ -41,6 +41,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
@@ -54,6 +55,11 @@ import static org.jooq.impl.DSL.*;
 
 @Named
 public class SecretDao extends AbstractDao {
+
+    public enum InsertMode {
+        INSERT,
+        UPSERT
+    }
 
     @Inject
     public SecretDao(@MainDB Configuration cfg) {
@@ -95,16 +101,16 @@ public class SecretDao extends AbstractDao {
 
     public UUID insert(UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
-                       SecretVisibility visibility) {
+                       SecretVisibility visibility, InsertMode insertMode) {
 
-        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility));
+        return txResult(tx -> insert(tx, orgId, projectId, name, ownerId, type, encryptedBy, storeType, visibility, insertMode));
     }
 
     public UUID insert(DSLContext tx, UUID orgId, UUID projectId, String name, UUID ownerId, SecretType type,
                        SecretEncryptedByType encryptedBy, String storeType,
-                       SecretVisibility visibility) {
+                       SecretVisibility visibility, InsertMode insertMode) {
 
-        return tx.insertInto(SECRETS)
+        InsertOnDuplicateStep<SecretsRecord> builder = tx.insertInto(SECRETS)
                 .columns(SECRETS.SECRET_NAME,
                         SECRETS.SECRET_TYPE,
                         SECRETS.ORG_ID,
@@ -113,7 +119,18 @@ public class SecretDao extends AbstractDao {
                         SECRETS.ENCRYPTED_BY,
                         SECRETS.STORE_TYPE,
                         SECRETS.VISIBILITY)
-                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString())
+                .values(name, type.toString(), orgId, projectId, ownerId, encryptedBy.toString(), storeType, visibility.toString());
+        if (insertMode == InsertMode.UPSERT) {
+            Optional<SecretsRecord> secretsRecord = builder.onDuplicateKeyIgnore()
+                    .returning(SECRETS.SECRET_ID)
+                    .fetchOptional();
+            return secretsRecord.map(SecretsRecord::getSecretId).orElseGet(() -> tx.select(SECRETS.SECRET_ID)
+                    .from(SECRETS)
+                    .where(SECRETS.SECRET_NAME.eq(name).and(SECRETS.ORG_ID.eq(orgId)))
+                    .fetchOne()
+                    .value1());
+        }
+        return builder
                 .returning(SECRETS.SECRET_ID)
                 .fetchOne()
                 .getSecretId();

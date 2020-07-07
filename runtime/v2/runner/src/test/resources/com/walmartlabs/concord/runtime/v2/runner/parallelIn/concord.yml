@@ -1,0 +1,13 @@
+flows:
+  default:
+    - parallel:
+        - log: "thread A, x: ${x}"
+        - log: "thread B, y: ${y}"
+
+        - block:
+            - set:
+                x: 999
+            - log: "thread C, x: ${x}"
+
+    - log: "main, x: ${x}"
+    - log: "main, y: ${y}"

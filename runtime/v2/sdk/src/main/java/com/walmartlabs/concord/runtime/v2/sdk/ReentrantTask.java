@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.svm.commands;
+package com.walmartlabs.concord.runtime.v2.sdk;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,10 @@ package com.walmartlabs.concord.svm.commands;
  * =====
  */
 
-import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.State;
-import com.walmartlabs.concord.svm.ThreadId;
+import java.io.Serializable;
+import java.util.Map;
 
-public class PopFrame implements Command {
+public interface ReentrantTask extends Task {
 
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
-        state.popFrame(threadId);
-    }
+    Serializable resume(Map<String, Serializable> payload) throws Exception;
 }

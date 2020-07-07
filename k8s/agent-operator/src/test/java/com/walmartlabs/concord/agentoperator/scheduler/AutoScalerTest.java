@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 public class AutoScalerTest {
 
     @Test
-    public void testStill() throws Exception {
+    public void testStill() {
         AtomicInteger podCount = new AtomicInteger(1);
 
         AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true, i -> true);
@@ -64,7 +64,7 @@ public class AutoScalerTest {
     }
 
     @Test
-    public void testZeroStart() throws Exception {
+    public void testZeroStart() {
         AtomicInteger podCount = new AtomicInteger(0);
 
         AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true, i -> true);
@@ -95,7 +95,7 @@ public class AutoScalerTest {
     }
 
     @Test
-    public void testQueue() throws Exception {
+    public void testQueue() {
         AtomicInteger podCount = new AtomicInteger(1);
 
         AutoScaler as = new AutoScaler(n -> podCount.get(), i -> true, i -> true);

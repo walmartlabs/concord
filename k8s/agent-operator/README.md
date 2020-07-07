@@ -12,7 +12,7 @@ $ cd concord/
 $ ./mvnw clean install -DskipTests
 ```
 
-## Running in Dev Mode
+## Running in Minikube
 
 Below are the steps to deploy the concord agent operator to the `default`
 namespace in any local/dev k8s cluster (in this case minikube).
@@ -25,6 +25,7 @@ Make sure the API token used in the `operator.yml` is valid and working.
 1. Start the cluster:
   ```
   $ minikube start
+  $ minikube 
   ```
 2. Build the operator's image:
   ```
@@ -62,6 +63,15 @@ If everything is correct you should see this line in the operator's pod log:
 [INFO ] c.w.c.a.planner.CreatePodChange - apply -> created a pod example-agentpool/example-agentpool-00000
 ```
 There should be no other errors or warnings.
+
+## Running in an IDE
+
+Repeat all steps from the [Running in Minikube](#running-in-minikube) section
+except for "Start the operator".
+
+Start the operator directly in your IDE by using `com.walmartlabs.concord.agentoperator.Operator`
+as the main class. Specify `CONCORD_BASE_URL` and `CONCORD_API_TOKEN` if you
+wish to test the autoscaling feature.
 
 #### How to Verify
 

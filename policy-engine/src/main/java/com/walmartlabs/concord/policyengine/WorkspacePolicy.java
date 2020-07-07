@@ -20,8 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import org.apache.commons.lang3.mutable.MutableLong;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -53,7 +51,8 @@ public class WorkspacePolicy {
         } else if (!Files.isDirectory(p)) {
             deny.add(new CheckResult.Item<>(rule, p, "Not a directory: " + p));
         } else if (rule.getMaxSizeInBytes() != null) {
-            MutableLong size = new MutableLong();
+            Long[] size = { 0L };
+
             Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
 
                 @Override
@@ -62,14 +61,14 @@ public class WorkspacePolicy {
                         return FileVisitResult.CONTINUE;
                     }
 
-                    size.add(Files.size(file));
+                    size[0] += Files.size(file);
 
                     return FileVisitResult.CONTINUE;
                 }
             });
 
-            if (size.toLong() > rule.getMaxSizeInBytes()) {
-                deny.add(new CheckResult.Item<>(rule, p, "Workspace too big: " + size + " byte(s)"));
+            if (size[0] > rule.getMaxSizeInBytes()) {
+                deny.add(new CheckResult.Item<>(rule, p, "Workspace too big: " + size[0] + " byte(s)"));
             }
         }
 

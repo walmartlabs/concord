@@ -24,11 +24,10 @@ import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
+import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
-import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -43,6 +42,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,28 +88,41 @@ public class Run implements Callable<Integer> {
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     boolean verbose = false;
 
-    @Parameters(arity = "0..1")
-    Path targetDir = Paths.get(System.getProperty("user.dir"));
+    @Parameters(arity = "0..1", description = "Directory with Concord files or a path to a single Concord YAML file.")
+    Path sourceDir = Paths.get(System.getProperty("user.dir"));
 
     @Override
     public Integer call() throws Exception {
-        if (!Files.isDirectory(targetDir)) {
-            throw new IllegalArgumentException("Not a directory: " + targetDir);
+        sourceDir = sourceDir.normalize();
+        Path targetDir;
+
+        if (Files.isRegularFile(sourceDir)) {
+            Path src = sourceDir.toAbsolutePath();
+            System.out.println("Running a single Concord file: " + src);
+
+            targetDir = Files.createTempDirectory("payload");
+
+            Files.copy(src, targetDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
+        } else if (Files.isDirectory(sourceDir)) {
+            targetDir = sourceDir.resolve("target");
+            // copy everything into target except target
+            IOUtils.copy(sourceDir, targetDir, "^target$", StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            throw new IllegalArgumentException("Not a directory or single Concord YAML file: " + sourceDir);
         }
 
-        DependencyManager dependencyManager = new DependencyManager(depsCacheDir);
+        DependencyManager dependencyManager = initDependencyManager();
 
         ProjectLoaderV2.Result loadResult;
         try {
-            Path exportDir = targetDir.resolve("target");
+            ImportManager importManager = new ImportManagerFactory(dependencyManager, new CliRepositoryExporter(repoCacheDir))
+                    .create();
 
-            new ProjectLoaderV2(new ImportManagerFactory(dependencyManager, new CliRepositoryExporter(repoCacheDir)).create())
-                    .export(targetDir, exportDir, new CliImportsNormalizer(importsSource, verbose), StandardCopyOption.REPLACE_EXISTING);
-
-            loadResult = new ProjectLoaderV2(new NoopImportManager())
-                    .load(exportDir, new NoopImportsNormalizer());
+            loadResult = new ProjectLoaderV2(importManager)
+                    .load(targetDir, new CliImportsNormalizer(importsSource, verbose));
         } catch (Exception e) {
-            System.err.println("Project load error: " + e.getMessage());
+            System.err.println("Error while loading " + targetDir);
+            e.printStackTrace();
             return -1;
         }
 
@@ -161,5 +174,13 @@ public class Run implements Callable<Integer> {
         System.out.println("...done!");
 
         return 0;
+    }
+
+    private DependencyManager initDependencyManager() throws IOException {
+        Path cfgFile = Paths.get(System.getProperty("user.home"), ".concord", "mvn.json");
+        if (!Files.exists(cfgFile)) {
+            return new DependencyManager(depsCacheDir);
+        }
+        return new DependencyManager(depsCacheDir, cfgFile);
     }
 }

@@ -19,11 +19,15 @@
  */
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, Dispatch } from 'redux';
-import { ConcordId, queryParams, RequestError } from '../../../api/common';
-import { actions, PaginatedProcesses, Pagination, State } from '../../../state/data/processes';
-import { ProcessEntry, ProcessListQuery } from '../../../api/process';
+import { ConcordId, queryParams } from '../../../api/common';
+import { Pagination } from '../../../state/data/processes';
+import {
+    list as apiProcessList,
+    isFinal,
+    ProcessListQuery,
+    PaginatedProcessEntries,
+    ProcessStatus
+} from '../../../api/process';
 import ProcessListWithSearch from '../../molecules/ProcessListWithSearch';
 import {
     CREATED_AT_COLUMN,
@@ -32,11 +36,14 @@ import {
     REPO_COLUMN,
     STATUS_COLUMN
 } from '../../molecules/ProcessList';
-import { replace as pushHistory } from 'connected-react-router';
-import { RouteComponentProps, withRouter } from 'react-router';
-import { filtersToQuery, parseSearchFilter } from '../ProcessListActivity';
+import { useHistory, useLocation } from 'react-router';
+import { filtersToQuery, parseSearchFilter, ProcessSearchFilter } from '../ProcessListActivity';
 import { ProcessFilters } from '../../../api/process';
 import RequestErrorActivity from '../RequestErrorActivity';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePolling } from '../../../api/usePolling';
+
+const DATA_FETCH_INTERVAL = 5000;
 
 const COLUMNS = [
     STATUS_COLUMN,
@@ -48,90 +55,86 @@ const COLUMNS = [
 
 interface ExternalProps {
     instanceId: ConcordId;
+    loadingHandler: (inc: number) => void;
+    processStatus?: ProcessStatus;
+    forceRefresh: boolean;
 }
 
-interface RouteProps {
-    status?: string;
-}
+const ProcessChildrenActivity = ({
+    instanceId,
+    loadingHandler,
+    processStatus,
+    forceRefresh
+}: ExternalProps) => {
+    const isInitialMount = useRef(true);
+    const location = useLocation();
+    const history = useHistory();
+    const [data, setData] = useState<PaginatedProcessEntries>();
+    const [searchFilter, setSearchFilter] = useState<ProcessSearchFilter>(
+        parseSearchFilter(location.search)
+    );
 
-interface StateProps {
-    loading: boolean;
-    processes: ProcessEntry[];
-    loadError: RequestError;
-    next?: number;
-    prev?: number;
-}
-
-interface DispatchProps {
-    load: (instanceId: ConcordId, filters?: ProcessFilters, pagination?: Pagination) => void;
-}
-
-type Props = StateProps & DispatchProps & ExternalProps & RouteComponentProps<RouteProps>;
-
-class ProcessChildrenActivity extends React.Component<Props> {
-    componentDidMount() {
-        const { instanceId, load, location } = this.props;
-        const f = parseSearchFilter(location.search);
-        load(instanceId, f.filters, f.pagination);
-    }
-
-    render() {
-        const { processes, instanceId, loadError, loading, history, load, next, prev } = this.props;
-
-        if (loadError) {
-            return <RequestErrorActivity error={loadError} />;
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+        } else {
+            setSearchFilter(parseSearchFilter(location.search));
         }
+    }, [location]);
 
-        if (!processes) {
-            return <h3>No processes found.</h3>;
-        }
+    const fetchData = useCallback(async () => {
+        const query = {
+            parentInstanceId: instanceId,
+            ...searchFilter.pagination
+        } as ProcessListQuery;
 
-        const f = parseSearchFilter(history.location.search);
-        return (
-            <>
-                <ProcessListWithSearch
-                    processFilters={f.filters}
-                    paginationFilter={f.pagination}
-                    processes={processes}
-                    columns={COLUMNS}
-                    loading={loading}
-                    loadError={loadError}
-                    refresh={(processFilters, paginationFilters) =>
-                        load(instanceId, processFilters, paginationFilters)
-                    }
-                    next={next}
-                    prev={prev}
-                    usePagination={true}
-                />
-            </>
-        );
-    }
-}
+        const processEntries = await apiProcessList(filtersToQuery(query, searchFilter.filters));
+        setData(processEntries);
 
-const makeProcessList = (data: PaginatedProcesses): ProcessEntry[] => {
-    return Object.keys(data.processes)
-        .map((k) => data.processes[k])
-        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+        return !isFinal(processStatus);
+    }, [instanceId, searchFilter, processStatus]);
+
+    const error = usePolling(fetchData, DATA_FETCH_INTERVAL, loadingHandler, forceRefresh);
+
+    const onRefresh = useCallback(
+        (processFilters?: ProcessFilters, paginationFilters?: Pagination) => {
+            if (processFilters || paginationFilters) {
+                const f = {};
+                if (processFilters !== undefined) {
+                    Object.keys(processFilters)
+                        .filter((k) => k !== undefined)
+                        .forEach((key) => (f[key] = processFilters[key]));
+                }
+                if (paginationFilters !== undefined) {
+                    Object.keys(paginationFilters)
+                        .filter((k) => k !== undefined)
+                        .forEach((key) => (f[key] = paginationFilters[key]));
+                }
+                // will update location
+                history.push({ search: queryParams(f) });
+            }
+        },
+        [history]
+    );
+
+    return (
+        <>
+            {error && <RequestErrorActivity error={error} />}
+
+            <ProcessListWithSearch
+                processFilters={searchFilter.filters}
+                paginationFilter={searchFilter.pagination}
+                processes={data?.items}
+                columns={COLUMNS}
+                loading={false}
+                showRefreshButton={false}
+                refresh={onRefresh}
+                next={data?.next}
+                prev={data?.prev}
+                usePagination={true}
+            />
+        </>
+    );
 };
 
-const mapStateToProps = ({ processes }: { processes: State }): StateProps => ({
-    loading: processes.loading,
-    loadError: processes.error,
-    processes: makeProcessList(processes.paginatedProcessesById),
-    next: processes.paginatedProcessesById.next,
-    prev: processes.paginatedProcessesById.prev
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>): DispatchProps => ({
-    load: (instanceId, filters?, paginationFilters?) => {
-        if (filters) {
-            dispatch(pushHistory({ search: queryParams(filters) }));
-        }
-
-        const query = { parentInstanceId: instanceId, ...paginationFilters } as ProcessListQuery;
-
-        dispatch(actions.listProcesses(filtersToQuery(query, filters)));
-    }
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(ProcessChildrenActivity));
+export default ProcessChildrenActivity;

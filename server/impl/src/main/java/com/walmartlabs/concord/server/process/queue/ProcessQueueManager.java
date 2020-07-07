@@ -90,7 +90,7 @@ public class ProcessQueueManager {
     public void enqueue(Payload payload) {
         ProcessKey processKey = payload.getProcessKey();
 
-        ProcessStatus s = queueDao.getStatus(processKey.getInstanceId());
+        ProcessStatus s = queueDao.getStatus(processKey);
         if (s == null) {
             throw new ProcessException(processKey, "Process not found: " + processKey);
         }
@@ -217,6 +217,15 @@ public class ProcessQueueManager {
             return null;
         }
         return queueDao.get(key);
+    }
+
+    public ProcessInitiatorEntry getInitiator(PartialProcessKey partialProcessKey) {
+        ProcessKey key = keyCache.get(partialProcessKey.getInstanceId());
+        if (key == null) {
+            return null;
+        }
+
+        return queueDao.getInitiator(key);
     }
 
     public ProcessEntry get(PartialProcessKey partialProcessKey, Set<ProcessDataInclude> includes) {

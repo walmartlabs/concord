@@ -1,0 +1,11 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+  - task: project
+    in:
+      action: create
+      org: Default
+      name: ${newProjectName}
+  - log: "Done!"

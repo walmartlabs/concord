@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1560000" author="ibodrov@gmail.com">
+        <sql>
+            update USERS set USERNAME = lower(USERNAME), DOMAIN = lower(DOMAIN)
+            where USER_TYPE = 'LOCAL'
+        </sql>
+    </changeSet>
+
+    <changeSet id="1560010" author="ibodrov@gmail.com">
+        <sql>
+            update USERS set USERNAME = lower(USERNAME), DOMAIN = lower(DOMAIN)
+            where USER_TYPE = 'LDAP'
+            and not exists(select lower(USERNAME) from USERS where USER_TYPE = 'LDAP' group by 1 having count(*) > 1)
+        </sql>
+    </changeSet>
+
+    <changeSet id="1560020" author="ibodrov@gmail.com">
+        <dropUniqueConstraint tableName="USERS" constraintName="USERS_USERNAME_DOMAIN_USER_TYPE_KEY"/>
+    </changeSet>
+
+    <changeSet id="1560030" author="ibodrov@gmail.com">
+        <createIndex tableName="USERS" indexName="IDX_USERS_UNIQ" unique="true">
+            <column name="lower(USERNAME)"/>
+            <column name="lower(DOMAIN)"/>
+            <column name="USER_TYPE"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

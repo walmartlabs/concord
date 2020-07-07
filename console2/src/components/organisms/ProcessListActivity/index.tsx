@@ -128,7 +128,7 @@ export const parseSearchFilter = (s: string): ProcessSearchFilter => {
         .forEach((key) => (filters[key] = v[key]));
 
     return {
-        pagination: { limit: v.limit, offset: v.offset },
+        pagination: { limit: Number(v.limit) || undefined, offset: Number(v.offset) || undefined },
         filters
     };
 };
@@ -199,7 +199,6 @@ class ProcessListActivity extends React.Component<Props> {
                     prev={prev}
                     columns={cols}
                     loading={loading}
-                    loadError={loadError}
                     refresh={(processFilters, paginationFilters) =>
                         load(orgName, projectName, processFilters, paginationFilters)
                     }
@@ -260,10 +259,10 @@ export const filtersToQuery = (
     Object.keys(filters).forEach((key) => {
         if (key === STATUS_COLUMN.source && filters[key] === 'SCHEDULED') {
             query[key] = Status.ENQUEUED;
-            query.startAt = { compareType: 'notEq', value: null };
+            query.startAt = { compareType: 'ge', value: null };
         } else if (key === STATUS_COLUMN.source && filters[key] === 'ENQUEUED') {
             query[key] = Status.ENQUEUED;
-            query.startAt = { compareType: 'eq', value: null };
+            query.startAt = { compareType: 'len', value: null };
         } else {
             query[key] = filters[key];
         }

@@ -20,9 +20,9 @@ package com.walmartlabs.concord.it.runtime.v2;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.ContainerType;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
@@ -60,7 +60,7 @@ public class TemplateIT {
             .dynamicPort());
 
     @ClassRule
-    public static final Concord concord = ConcordConfiguration
+    public static final ConcordRule concord = ConcordConfiguration
             .configure()
             .containerListener(name -> {
                 if (name == ContainerType.SERVER) {

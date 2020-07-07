@@ -21,11 +21,11 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ParallelBlock;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
-import com.walmartlabs.concord.svm.commands.Fork;
-import com.walmartlabs.concord.svm.commands.Join;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,7 +35,7 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
 
     private final List<Command> commands;
 
-    public ParallelCommand(List<Command> commands, ParallelBlock step) {
+    public ParallelCommand(ParallelBlock step, List<Command> commands) {
         super(step);
         this.commands = commands;
     }
@@ -45,16 +45,58 @@ public class ParallelCommand extends StepCommand<ParallelBlock> {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        // parallel execution consist of "forks" for each command and a combined "join"
+        // parallel execution consist of "forks" for each command running in separate threads
+        // and a combined "join" executing in the parent (current) thread
 
         List<Map.Entry<ThreadId, Command>> forks = commands.stream()
                 .map(e -> new AbstractMap.SimpleEntry<>(state.nextThreadId(), e))
                 .collect(Collectors.toList());
 
+        List<String> outVars = new ArrayList<>(getStep().getOptions().out());
+
         Collection<ThreadId> forkIds = forks.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
-        frame.push(new Join(forkIds));
+        frame.push(new JoinCommand(forkIds));
+
+        Context ctx = runtime.getService(Context.class);
 
         Collections.reverse(forks);
-        forks.forEach(f -> frame.push(new Fork(f.getKey(), f.getValue())));
+        forks.forEach(f -> {
+            // each new frame executes it's own copy of ProcessOutVariablesCommand after the user's command is completed
+            Command cmd = new ForkCommand(f.getKey(), new ProcessOutVariablesCommand(ctx, outVars), f.getValue());
+            frame.push(cmd);
+        });
+    }
+
+    /**
+     * Copies specified variables from the current thread into the specified target thread.
+     */
+    public static class ProcessOutVariablesCommand implements Command {
+
+        private static final long serialVersionUID = 1L;
+
+        private final Context ctx;
+        private final List<String> outVars;
+
+        public ProcessOutVariablesCommand(Context ctx, List<String> outVars) {
+            this.ctx = ctx;
+            this.outVars = outVars;
+        }
+
+        @Override
+        public void eval(Runtime runtime, State state, ThreadId threadId) {
+            Frame frame = state.peekFrame(threadId);
+            frame.pop();
+
+            for (String k : outVars) {
+                // we assume that the current frame is the root frame of the thread
+                // if it wasn't the case we'd need to call VMUtils#getCombinedLocal
+                if (!frame.hasLocal(k)) {
+                    continue;
+                }
+
+                Serializable v = frame.getLocal(k);
+                ctx.variables().set(k, v);
+            }
+        }
     }
 }

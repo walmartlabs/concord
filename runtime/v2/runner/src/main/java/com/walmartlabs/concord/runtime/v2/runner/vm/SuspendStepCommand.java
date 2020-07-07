@@ -1,4 +1,4 @@
-package com.walmartlabs.concord.svm.commands;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
@@ -20,23 +20,25 @@ package com.walmartlabs.concord.svm.commands;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.SuspendStep;
+import com.walmartlabs.concord.svm.Frame;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.*;
+import com.walmartlabs.concord.svm.State;
+import com.walmartlabs.concord.svm.ThreadId;
 
-public class Suspend implements Command {
+public class SuspendStepCommand extends StepCommand<SuspendStep> {
 
     private static final long serialVersionUID = 1L;
 
-    private final String eventRef;
-
-    public Suspend(String eventRef) {
-        this.eventRef = eventRef;
+    public SuspendStepCommand(SuspendStep step) {
+        super(step);
     }
 
     @Override
-    public void eval(Runtime runtime, State state, ThreadId threadId) {
-        state.peekFrame(threadId).pop();
-        state.setEventRef(threadId, eventRef);
-        state.setStatus(threadId, ThreadStatus.SUSPENDED);
+    protected void execute(Runtime runtime, State state, ThreadId threadId) {
+        Frame frame = state.peekFrame(threadId);
+        frame.pop();
+
+        frame.push(new SuspendCommand(getStep().getEvent()));
     }
 }

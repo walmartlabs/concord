@@ -22,7 +22,7 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.SuspendStep;
-import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendStepCommand;
 import com.walmartlabs.concord.svm.Command;
 
 import javax.inject.Named;
@@ -37,6 +37,6 @@ public class SuspendCompiler implements StepCompiler<SuspendStep> {
 
     @Override
     public Command compile(CompilerContext context, SuspendStep step) {
-        return new SuspendCommand(step);
+        return new SuspendStepCommand(step);
     }
 }

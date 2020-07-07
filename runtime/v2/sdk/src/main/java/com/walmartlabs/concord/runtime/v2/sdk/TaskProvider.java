@@ -22,6 +22,8 @@ package com.walmartlabs.concord.runtime.v2.sdk;
 
 import org.eclipse.sisu.Priority;
 
+import java.util.Collection;
+
 /**
  * Provider for tasks. Responsible for creating task instances using
  * the supplied {@link Context} and the key.
@@ -34,4 +36,6 @@ import org.eclipse.sisu.Priority;
 public interface TaskProvider {
 
     Task createTask(Context ctx, String key);
+
+    boolean hasTask(String key);
 }

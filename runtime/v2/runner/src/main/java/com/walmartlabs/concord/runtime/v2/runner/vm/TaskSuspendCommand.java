@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.svm.commands;
+package com.walmartlabs.concord.runtime.v2.runner.vm;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,28 @@ package com.walmartlabs.concord.svm.commands;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.io.Serializable;
+import java.util.Map;
+import java.util.UUID;
 
-/**
- * Adds specified {@link #commands} to the stack.
- */
-public class Block implements Command {
+public class TaskSuspendCommand implements Command {
 
     private static final long serialVersionUID = 1L;
 
-    private final List<Command> commands;
+    private final UUID correlationId;
+    private final String eventName;
+    private final TaskCall step;
+    private final Map<String, Serializable> payload;
 
-    public Block(Command... commands) {
-        this(Arrays.asList(commands));
-    }
-
-    public Block(List<Command> commands) {
-        this.commands = commands;
+    public TaskSuspendCommand(UUID correlationId, String eventName, TaskCall step, Map<String, Serializable> payload) {
+        this.correlationId = correlationId;
+        this.eventName = eventName;
+        this.step = step;
+        this.payload = payload;
     }
 
     @Override
@@ -50,14 +49,7 @@ public class Block implements Command {
         Frame frame = state.peekFrame(threadId);
         frame.pop();
 
-        // sequential execution is very simple: we just need to add
-        // each command of the block onto the stack
-
-        List<Command> l = new ArrayList<>(commands);
-
-        // to preserve the original order the commands must be added onto
-        // the stack in the reversed order
-        Collections.reverse(l);
-        l.forEach(frame::push);
+        frame.push(new TaskResumeCommand(correlationId, step, payload));
+        frame.push(new SuspendCommand(eventName));
     }
 }

@@ -20,10 +20,10 @@ package com.walmartlabs.concord.it.runtime.v1;
  * =====
  */
 
-import ca.ibodrov.concord.testcontainers.Concord;
 import ca.ibodrov.concord.testcontainers.ConcordProcess;
 import ca.ibodrov.concord.testcontainers.Payload;
 import ca.ibodrov.concord.testcontainers.ProcessListQuery;
+import ca.ibodrov.concord.testcontainers.junit4.ConcordRule;
 import com.walmartlabs.concord.client.FormListEntry;
 import com.walmartlabs.concord.client.FormSubmitResponse;
 import com.walmartlabs.concord.client.ProcessEntry;
@@ -46,7 +46,7 @@ import static org.junit.Assert.*;
 public class ProcessIT {
 
     @ClassRule
-    public static final Concord concord = ConcordConfiguration.configure();
+    public static final ConcordRule concord = ConcordConfiguration.configure();
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testUploadAndRun() throws Exception {
@@ -461,7 +461,7 @@ public class ProcessIT {
                 .archive(resource("onFailureVars2")));
 
         proc.expectStatus(StatusEnum.FAILED);
-        
+
         // wait for the onFailure process
         ConcordProcess onFailureProc;
         while (true) {

@@ -23,7 +23,6 @@ package com.walmartlabs.concord.policyengine;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -73,10 +72,10 @@ public class ConcurrentProcessRule implements Serializable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, Utils.NotNullToStringStyle.NOT_NULL_STYLE)
-                .append("msg", msg)
-                .append("maxPerOrg", maxPerOrg)
-                .append("maxPerProject", maxPerProject)
-                .toString();
+        return "ConcurrentProcessRule{" +
+                "msg='" + msg + '\'' +
+                ", maxPerOrg=" + maxPerOrg +
+                ", maxPerProject=" + maxPerProject +
+                '}';
     }
 }

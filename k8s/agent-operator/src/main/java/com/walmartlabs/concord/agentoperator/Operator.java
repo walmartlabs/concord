@@ -30,8 +30,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 public class Operator {
 
     private static final Logger log = LoggerFactory.getLogger(Operator.class);

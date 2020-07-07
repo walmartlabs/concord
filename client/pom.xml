@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.walmartlabs.concord</groupId>
         <artifactId>parent</artifactId>
-        <version>1.53.2-SNAPSHOT</version>
+        <version>1.55.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -82,9 +82,20 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- JDK9+ compatibility -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -173,21 +184,9 @@
                                 <code>java.method.addedToInterface</code>
                             </item>
                             <item>
-                                <code>java.class.removed</code>
-                                <old>class com.walmartlabs.concord.client.EventsApi</old>
+                                <code>java.method.removed</code>
                             </item>
                         </revapi.ignore>
-                        <revapi.filter>
-                            <elements>
-                                <exclude>
-                                    <item>.*com\.walmartlabs\.concord\.client\.ProcessApi.*</item>
-                                    <item>.*com\.walmartlabs\.concord\.client\.ProcessV2Api.*</item>
-                                    <item>.*com\.walmartlabs\.concord\.client\.JsonStoreQueryApi.*</item>
-                                    <item>.*com\.walmartlabs\.concord\.client\.UserSearchResult.*</item>
-                                    <item>.*com\.walmartlabs\.concord\.client\.DefaultApi.*</item>
-                                </exclude>
-                            </elements>
-                        </revapi.filter>
                     </analysisConfiguration>
                 </configuration>
             </plugin>

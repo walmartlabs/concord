@@ -24,10 +24,10 @@ import com.walmartlabs.concord.runtime.v2.model.GroupOfSteps;
 import com.walmartlabs.concord.runtime.v2.model.GroupOptions;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.WithItems;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.ErrorWrapper;
 import com.walmartlabs.concord.runtime.v2.runner.vm.WithItemsWrapper;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.commands.Block;
 
 import javax.inject.Named;
 import java.util.List;
@@ -63,12 +63,12 @@ public final class GroupOfStepsCompiler implements StepCompiler<GroupOfSteps> {
         return cmd;
     }
 
-    private static Block compile(CompilerContext context, List<Step> steps) {
+    private static BlockCommand compile(CompilerContext context, List<Step> steps) {
         if (steps == null) {
             return null;
         }
 
-        return new Block(steps.stream()
+        return new BlockCommand(steps.stream()
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList()));
     }

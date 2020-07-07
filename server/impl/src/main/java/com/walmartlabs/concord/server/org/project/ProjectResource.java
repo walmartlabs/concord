@@ -92,16 +92,17 @@ public class ProjectResource implements Resource {
 
         UUID projectId = entry.getId();
         if (projectId == null) {
+            assertName(entry);
             projectId = projectDao.getId(org.getId(), entry.getName());
         }
 
-        if (projectId != null) {
+        if (projectId == null) {
+            projectId = projectManager.insert(org.getId(), org.getName(), entry);
+            return new ProjectOperationResponse(projectId, OperationResult.CREATED);
+        } else {
             projectManager.update(projectId, entry);
             return new ProjectOperationResponse(projectId, OperationResult.UPDATED);
         }
-
-        projectId = projectManager.insert(org.getId(), org.getName(), entry);
-        return new ProjectOperationResponse(projectId, OperationResult.CREATED);
     }
 
     @GET
@@ -120,16 +121,6 @@ public class ProjectResource implements Resource {
         }
 
         return projectManager.get(projectId);
-    }
-
-    @GET
-    @ApiOperation(value = "List existing projects", responseContainer = "list", response = ProjectEntry.class)
-    @Path("/{orgName}/project")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Validate
-    public List<ProjectEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName) {
-        // keep the original method for backward compatibility
-        return find(orgName, 0, -1, null);
     }
 
     @GET
@@ -404,5 +395,14 @@ public class ProjectResource implements Resource {
         }
 
         return e;
+    }
+
+    private String assertName(ProjectEntry p) {
+        String s = p.getName();
+        if (s == null || s.trim().isEmpty()) {
+            throw new ValidationErrorsException("'name' is required");
+        }
+
+        return s;
     }
 }

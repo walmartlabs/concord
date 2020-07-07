@@ -79,7 +79,8 @@ public class RunAsIT extends AbstractServerIT {
         ProcessEntry pe = waitForStatus(processApi, p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pe.getLogFileName());
-        assertLog(".*username=" + userAName + ".*==.*username=" + userAName + ".*", ab);
+        // assume Concord forces all user/domain names to lower case
+        assertLog(".*username=" + userAName.toLowerCase() + ".*==.*username=" + userAName.toLowerCase() + ".*", ab);
 
         String formName = findForm(p.getInstanceId());
 
@@ -107,7 +108,7 @@ public class RunAsIT extends AbstractServerIT {
         assertEquals(ProcessEntry.StatusEnum.FINISHED, pe.getStatus());
 
         ab = getLog(pe.getLogFileName());
-        assertLog(".*Now we are running as admin. Initiator: " + userAName + ".*", ab);
+        assertLog(".*Now we are running as admin. Initiator: " + userAName.toLowerCase() + ".*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -155,14 +156,15 @@ public class RunAsIT extends AbstractServerIT {
         input.put("archive", payload);
         input.put("org", orgName);
         input.put("project", projectName);
-        input.put("arguments.testUser", userBName);
+        input.put("arguments.testUser", userBName.toLowerCase());
 
         StartProcessResponse p = start(input);
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pe = waitForStatus(processApi, p.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pe.getLogFileName());
-        assertLog(".*username=" + userAName + ".*==.*username=" + userAName + ".*", ab);
+        // assume Concord forces all user/domain names to lower case
+        assertLog(".*username=" + userAName.toLowerCase() + ".*==.*username=" + userAName.toLowerCase() + ".*", ab);
 
         String formName = findForm(p.getInstanceId());
 
@@ -202,7 +204,7 @@ public class RunAsIT extends AbstractServerIT {
         setApiKey(apiKeyA.getKey());
         ab = getLog(pe.getLogFileName());
 
-        assertLog(".*Now we are running as " + userBName + ".*", ab);
+        assertLog(".*Now we are running as " + userBName.toLowerCase() + ".*", ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -227,14 +229,15 @@ public class RunAsIT extends AbstractServerIT {
         byte[] payload = archive(RunAsIT.class.getResource("runAsPayload").toURI());
         Map<String, Object> input = new HashMap<>();
         input.put("archive", payload);
-        input.put("arguments.sudoUser", userBName);
+        input.put("arguments.sudoUser", userBName.toLowerCase());
         StartProcessResponse spr = start(input);
 
         ProcessApi processApi = new ProcessApi(getApiClient());
         ProcessEntry pe = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.SUSPENDED);
 
         byte[] ab = getLog(pe.getLogFileName());
-        assertLog(".*AAA: " + userAName + ".*", ab);
+        // assume Concord forces all user/domain names to lower case
+        assertLog(".*AAA: " + userAName.toLowerCase() + ".*", ab);
 
         // submit the form
 
@@ -256,7 +259,8 @@ public class RunAsIT extends AbstractServerIT {
 
         ab = getLog(pe.getLogFileName());
         assertLog(".*BBB: Hello!.*", ab);
-        assertLog(".*CCC: " + userAName + ".*", ab);
+        // assume Concord forces all user/domain names to lower case
+        assertLog(".*CCC: " + userAName.toLowerCase() + ".*", ab);
     }
 
     private void createOrg(String orgName) throws Exception {

@@ -90,7 +90,16 @@ public class TaskScheduler extends PeriodicTask {
     @Override
     public void stop() {
         super.stop();
+
         executor.shutdown();
+
+        try {
+            if (executor.awaitTermination(5, TimeUnit.MINUTES)) {
+                log.info("stop -> yo");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void startTask(String id) {

@@ -1,5 +1,71 @@
 # Change log
 
+## [1.55.0] - 2020-07-01
+
+### Added
+
+- runtime-v2: warn when a variable name "shadows" a task name;
+- concord-server: lift restrictions on the format of usernames.
+Allow `@` and other special characters;
+- concord-server: a short project cache for GitHub triggers v1 to
+avoid multiple DB queries when filtering out triggers;
+- concord-tasks: runtime v2 compatibility;
+- concord-server, agent-operator: fetch only process requirements,
+configurable fetch depth;
+- concord-server: new policy to control size of process attachments.
+
+### Changed
+
+- agent-operator: new CR template property `%%preStopHook%%` for
+injecting the preStop hook script's content;
+- concord-cli: `run` action now copies all files into the `target`
+directory in the current directory;
+- concord-client: the error message when the requested secret type
+doesn't match the result now includes the name of the secret;
+- policy-engine: no longer dependens on `commons-lang3`;
+- concord-console, concord-server: `ENQUEUED` filter now includes
+processes with `start_at < now`;
+- concord-server: stop all background and scheduled tasks when
+the maintenance mode is enabled;
+- concord-repository: move cache directories before removing to
+reduce the time spent while locked;
+- concord-server: fix process status update in the queue batching
+task;
+- concord-server: optimize the session key validation by reducing
+the amount of data pulled from the DB.
+
+
+
+## [1.54.0] - 2020-06-24
+
+### Added
+
+- concord-console: an indicator for partially loaded log segments;
+- runtime-v2: initial support for parallel block's in/out;
+- runtime-v2: initial support for in/out variables in `parallel`
+blocks;
+- runtime-v2: initial support for "reentrant tasks" (tasks that can
+be suspended and resumed);
+- agent-operator: add the preStop script to the `dind` container;
+- concord-server: additional metrics for github events - the number
+of processes started/triggers fetched/etc per event;
+- concord-console: new loading indicator for log segments;
+- runtime-v2: add `projectInfo` to `context`;
+- concord-cli: option to run individual Concord YAML files.
+
+### Changed
+
+- concord-server: when updating/moving a project assert name when no
+ID given;
+- concord-server: fixed the calculation of
+the `enqueued-workers-available` metric;
+- concord-console: updated Json Store capacity indicator;
+- concord-console: auto refresh the child process list;
+- concord-console: show open segments correctly when the system
+segment's visibility changes.
+
+
+
 ## [1.53.1] - 2020-06-16
 
 ### Changed

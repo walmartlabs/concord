@@ -20,7 +20,6 @@ package com.walmartlabs.concord.svm;
  * =====
  */
 
-import com.walmartlabs.concord.svm.commands.PopFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,7 +200,7 @@ public class VM {
                 frame.setLocal(Frame.LAST_EXCEPTION_KEY, cause);
 
                 // remove the current frame after the error handling code is done
-                frame.push(new PopFrame());
+                frame.push(new PopFrameCommand());
 
                 // and run the error handler next
                 frame.push(handler);

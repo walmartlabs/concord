@@ -37,7 +37,7 @@ import {
     Sticky
 } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
-import { formatDistanceToNow, parseISO as parseDate } from 'date-fns';
+import { formatDistanceToNow, isAfter, parseISO as parseDate } from 'date-fns';
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 
 import { ProcessLastErrorModal, WithCopyToClipboard } from '../../molecules';
@@ -162,7 +162,11 @@ const renderStartAt = (process?: ProcessEntry) => {
     }
 
     let startAt = parseDate(process.startAt);
-    return <span className="startAt">starts in {formatDistanceToNow(startAt)}</span>;
+    if (isAfter(startAt, Date.now())) {
+        return <span className="startAt">starts in {formatDistanceToNow(startAt)}</span>;
+    }
+
+    return;
 };
 
 const renderProcessMainActions = (refresh: () => void, process?: ProcessEntry) => {

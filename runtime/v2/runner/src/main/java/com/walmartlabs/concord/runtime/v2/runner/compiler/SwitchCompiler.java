@@ -22,9 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.model.SwitchStep;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SwitchCommand;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.commands.Block;
 
 import javax.inject.Named;
 import java.util.AbstractMap;
@@ -56,7 +56,7 @@ public class SwitchCompiler implements StepCompiler<SwitchStep> {
             return null;
         }
 
-        return new Block(steps.stream()
+        return new BlockCommand(steps.stream()
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList()));
     }

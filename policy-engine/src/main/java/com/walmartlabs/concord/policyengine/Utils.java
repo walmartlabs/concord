@@ -20,9 +20,6 @@ package com.walmartlabs.concord.policyengine;
  * =====
  */
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +55,7 @@ public final class Utils {
         return compareNodes(data, conditions);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static boolean compareNodes(Object data, Object conditions) {
         if (data == null && conditions == null) {
             return true;
@@ -123,14 +120,14 @@ public final class Utils {
             return null;
         }
 
-        v = StringUtils.upperCase(StringUtils.deleteWhitespace(v));
+        v = deleteAllWhitespace(v);
 
-        Matcher m = FILE_SIZE_PATTERN.matcher(v.trim());
+        Matcher m = FILE_SIZE_PATTERN.matcher(v.toUpperCase());
         if (!m.matches()) {
             throw new NumberFormatException("invalid file size format: '" + v + "'");
         }
 
-        long number = Long.valueOf(m.group(1));
+        long number = Long.parseLong(m.group(1));
         String unit = m.group(2);
 
         String identifier = unit.substring(0, 1);
@@ -144,46 +141,22 @@ public final class Utils {
         return number;
     }
 
-    public static final class NotNullToStringStyle extends ToStringStyle {
-
-        public static final ToStringStyle NOT_NULL_STYLE = new NotNullToStringStyle();
-
-        private static final long serialVersionUID = 1L;
-
-        NotNullToStringStyle() {
-            super();
-            this.setUseClassName(false);
-            this.setUseIdentityHashCode(false);
-            this.setContentStart("{");
-            this.setFieldSeparator(", ");
-            this.setContentEnd("}");
+    private static String deleteAllWhitespace(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return str;
         }
 
-        private Object readResolve() {
-            return NOT_NULL_STYLE;
-        }
-
-        @Override
-        public void append(StringBuffer buffer, String fieldName, Object value, Boolean fullDetail) {
-            if (nullOrEmpty(value)) {
-                return;
+        char[] ch = new char[str.length()];
+        int count = 0;
+        for (int i = 0; i < str.length(); i++) {
+            if (!Character.isWhitespace(str.charAt(i))) {
+                ch[count++] = str.charAt(i);
             }
-
-            appendFieldStart(buffer, fieldName);
-            appendInternal(buffer, fieldName, value, isFullDetail(fullDetail));
-            appendFieldEnd(buffer, fieldName);
         }
-
-        private static boolean nullOrEmpty(Object value) {
-            if (value == null) {
-                return true;
-            }
-
-            if (value instanceof Collection) {
-                return ((Collection) value).isEmpty();
-            }
-            return false;
+        if (count == str.length()) {
+            return str;
         }
+        return new String(ch, 0, count);
     }
 
     private Utils() {

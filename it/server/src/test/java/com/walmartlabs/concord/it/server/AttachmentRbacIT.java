@@ -170,7 +170,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
             fail("Should fail when listing attachments for non-admin");
         } catch (Exception e) {
             Assert.assertNotNull("Exception shall not be null", e);
-            Assert.assertEquals("Exception doesn't match", "Forbidden", e.getMessage());
+            Assert.assertTrue("Exception doesn't match", e.getMessage().contains("doesn't have the necessary access level"));
         }
 
         // Non-admin who is only a member shall not able to download the attachments
@@ -179,7 +179,7 @@ public class AttachmentRbacIT extends AbstractServerIT {
             fail("Should fail when downloading attachments for non-admin");
         } catch (Exception e) {
             Assert.assertNotNull("Exception shall not be null", e);
-            Assert.assertEquals("Exception doesn't match", "Forbidden", e.getMessage());
+            Assert.assertTrue("Exception doesn't match", e.getMessage().contains("doesn't have the necessary access level"));
         }
 
         // Switch to userC who should be able to list and download the attachments since its

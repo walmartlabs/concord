@@ -21,19 +21,26 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  */
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.model.TaskCall;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.TaskSuspendCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Execution;
 import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.sdk.ImmutableProjectInfo;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
-import com.walmartlabs.concord.svm.commands.Suspend;
 
+import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class ContextImpl implements Context {
@@ -49,6 +56,7 @@ public class ContextImpl implements Context {
     private final Path workingDir;
     private final UUID processInstanceId;
     private final Variables variables;
+    private final ProjectInfo projectInfo;
 
     public ContextImpl(Compiler compiler,
                        ExpressionEvaluator expressionEvaluator,
@@ -59,7 +67,8 @@ public class ContextImpl implements Context {
                        Step currentStep,
                        UUID correlationId,
                        Path workingDir,
-                       UUID processInstanceId) {
+                       UUID processInstanceId,
+                       ProjectInfo projectInfo) {
 
         this.compiler = compiler;
         this.expressionEvaluator = expressionEvaluator;
@@ -71,6 +80,7 @@ public class ContextImpl implements Context {
         this.correlationId = correlationId;
         this.workingDir = workingDir;
         this.processInstanceId = processInstanceId;
+        this.projectInfo = projectInfo;
         this.variables = new ContextVariables(this);
     }
 
@@ -87,6 +97,20 @@ public class ContextImpl implements Context {
     @Override
     public Variables variables() {
         return variables;
+    }
+
+    @Override
+    public com.walmartlabs.concord.sdk.ProjectInfo projectInfo() {
+        if (projectInfo.projectId() == null) {
+            return null;
+        }
+
+        return ImmutableProjectInfo.builder()
+                .orgId(Objects.requireNonNull(projectInfo.orgId()))
+                .orgName(Objects.requireNonNull(projectInfo.orgName()))
+                .id(Objects.requireNonNull(projectInfo.projectId()))
+                .name(Objects.requireNonNull(projectInfo.projectName()))
+                .build();
     }
 
     @Override
@@ -136,6 +160,18 @@ public class ContextImpl implements Context {
 
     @Override
     public void suspend(String eventName) {
-        state.peekFrame(currentThreadId).push(new Suspend(eventName));
+        state.peekFrame(currentThreadId).push(new SuspendCommand(eventName));
+    }
+
+    @Override
+    public String suspendResume(Map<String, Serializable> payload) {
+        Step step = execution().currentStep();
+        if (!(step instanceof TaskCall)) {
+            throw new IllegalStateException("Calling 'suspendResume' is allowed only in task calls. Current step: " + (step != null ? step.getClass() : "n/a"));
+        }
+
+        String eventName = UUID.randomUUID().toString();
+        state.peekFrame(currentThreadId).push(new TaskSuspendCommand(correlationId, eventName, (TaskCall) step, payload));
+        return eventName;
     }
 }

@@ -30,6 +30,7 @@ import java.util.Properties;
 import static com.walmartlabs.concord.it.common.ITUtils.archive;
 import static com.walmartlabs.concord.it.common.ServerClient.assertLog;
 import static com.walmartlabs.concord.it.common.ServerClient.waitForCompletion;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeNotNull;
 
@@ -92,6 +93,21 @@ public class LdapIT extends AbstractServerIT {
 
     }
 
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCaseInsensitive() throws Exception {
+        String username = "testUser_" + randomString();
+        createLdapUser(username);
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(username)
+                .setType(CreateUserRequest.TypeEnum.LDAP));
+
+        UserEntry ue = usersApi.findByUsername(username.toLowerCase());
+        assertNotNull(ue);
+        assertEquals(ue.getName(), username.toLowerCase());
+    }
+
     public static DirContext createContext() throws Exception {
         String url = System.getenv("IT_LDAP_URL");
         String connectionType = "simple";
@@ -152,7 +168,7 @@ public class LdapIT extends AbstractServerIT {
         }
     }
 
-    private void createLdapGroupWithUser(String groupName, String username) throws Exception {
+    private static void createLdapGroupWithUser(String groupName, String username) throws Exception {
         String groupDn = "cn=" + groupName + "," + GROUP_OU;
         String userDn = "uid=" + username + "," + USER_OU;
         Attributes attributes = new BasicAttributes();

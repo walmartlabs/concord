@@ -3,6 +3,8 @@ executorType: machine
 jobs:
   build:
     steps:
+      - run: java -version
+
       - checkout
 
       - restore_cache:

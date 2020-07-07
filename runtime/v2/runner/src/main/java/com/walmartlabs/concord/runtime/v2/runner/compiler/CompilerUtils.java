@@ -22,9 +22,9 @@ package com.walmartlabs.concord.runtime.v2.runner.compiler;
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
+import com.walmartlabs.concord.runtime.v2.runner.vm.BlockCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
 import com.walmartlabs.concord.svm.Command;
-import com.walmartlabs.concord.svm.commands.Block;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,11 +38,11 @@ public final class CompilerUtils {
         }
 
         List<Command> commands = steps.stream().map(s -> compiler.compile(pd, s)).collect(Collectors.toList());
-        return new Block(commands);
+        return new BlockCommand(commands);
     }
 
     public static Command compile(CompilerContext context, List<Step> steps) {
-        return new Block(steps.stream()
+        return new BlockCommand(steps.stream()
                 .map(s -> context.compiler().compile(context.processDefinition(), s))
                 .collect(Collectors.toList()));
     }

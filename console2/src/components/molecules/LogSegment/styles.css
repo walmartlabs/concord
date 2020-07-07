@@ -32,10 +32,22 @@
     border-radius: 0 !important;
 }
 
+.LogSegment .Loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: #2a2929;
+    animation: progress-active 3s ease infinite;
+    animation-delay: 100ms;
+}
+
 .LogSegment .Segment .Caption {
     padding-left: 10px;
     font-family: monospace;
     font-weight: normal;
+    color: black;
 }
 
 .LogSegment .Segment .State {

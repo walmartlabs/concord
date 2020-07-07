@@ -47,11 +47,16 @@ public class TaskV2Provider implements TaskProvider {
     @Override
     public Task createTask(Context ctx, String key) {
         Class<? extends Task> klass = holder.get(key);
-        if (klass != null) {
-            return defaultVariableInjector.inject(key,
-                    ContextProvider.withContext(ctx, () -> injector.getInstance(klass)));
+        if (klass == null) {
+            return null;
         }
 
-        return null;
+        return defaultVariableInjector.inject(key,
+                ContextProvider.withContext(ctx, () -> injector.getInstance(klass)));
+    }
+
+    @Override
+    public boolean hasTask(String key) {
+        return holder.get(key) != null;
     }
 }

@@ -155,6 +155,30 @@ public class ProcessResourceV2 implements Resource {
         return queueDao.list(filter);
     }
 
+    @GET
+    @ApiOperation(value = "List process requirements")
+    @Path("/requirements")
+    @Produces(MediaType.APPLICATION_JSON)
+    @WithTimer
+    public List<ProcessRequirementsEntry> listRequirements(@ApiParam @QueryParam("status") ProcessStatus processStatus,
+                                                           @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
+                                                           @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
+
+        if (limit <= 0) {
+            throw new ValidationErrorsException("'limit' must be a positive number");
+        }
+
+        if (offset < 0) {
+            throw new ValidationErrorsException("'offset' must be a positive number or zero");
+        }
+
+        if (processStatus == null) {
+            throw new ValidationErrorsException("'status' is required");
+        }
+
+        return queueDao.listRequirements(processStatus, limit, offset);
+    }
+
     /**
      * Counts processes applying the specified filters.
      */

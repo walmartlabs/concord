@@ -1,0 +1,16 @@
+configuration:
+  runtime: "concord-v2"
+
+flows:
+  default:
+    - task: concord
+      out: jobOut
+      in:
+        action: start
+        payload: myPayload
+        sync: true
+        outVars:
+          - xyz
+
+    - log: "jobOut: ${jobOut}"
+    - log: "Done!"

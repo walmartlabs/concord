@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server;
 
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.task.TaskScheduler;
 import com.walmartlabs.concord.server.websocket.WebSocketChannelManager;
 import org.jooq.Configuration;
@@ -43,16 +44,19 @@ import javax.ws.rs.core.MediaType;
 @Path("/api/v1/server")
 public class ServerResource implements Resource {
 
-    private final TaskScheduler scheduler;
+    private final TaskScheduler taskScheduler;
+    private final BackgroundTasks backgroundTasks;
     private final WebSocketChannelManager webSocketChannelManager;
     private final PingDao pingDao;
 
     @Inject
-    public ServerResource(TaskScheduler scheduler,
+    public ServerResource(TaskScheduler taskScheduler,
+                          BackgroundTasks backgroundTasks,
                           WebSocketChannelManager webSocketChannelManager,
                           PingDao pingDao) {
 
-        this.scheduler = scheduler;
+        this.taskScheduler = taskScheduler;
+        this.backgroundTasks = backgroundTasks;
         this.webSocketChannelManager = webSocketChannelManager;
         this.pingDao = pingDao;
     }
@@ -66,7 +70,7 @@ public class ServerResource implements Resource {
     }
 
     @GET
-    @Path("version")
+    @Path("/version")
     @Produces(MediaType.APPLICATION_JSON)
     public VersionResponse version() {
         Version v = Version.getCurrent();
@@ -74,10 +78,12 @@ public class ServerResource implements Resource {
     }
 
     @POST
-    @Path("maintenance-mode")
+    @Path("/maintenance-mode")
     public void maintenanceMode() {
-        scheduler.stop();
+        backgroundTasks.stop();
+
         webSocketChannelManager.shutdown();
+        taskScheduler.stop();
     }
 
     @Named

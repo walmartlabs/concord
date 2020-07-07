@@ -80,9 +80,10 @@ public class SecretClient {
             SecretEntry.TypeEnum actualSecretType = SecretEntry.TypeEnum.valueOf(ClientUtils.getHeader(Constants.Headers.SECRET_TYPE, r));
 
             if (type != null && type != actualSecretType) {
-                throw new IllegalArgumentException("Expected " + type + " got " + actualSecretType + ". " +
+                String msg = "Unexpected type of %s/%s. Expected %s, got %s. " +
                         "Check the secret's type and its usage - some secrets can only be used for specific purposes " +
-                        "(e.g. " + SecretEntry.TypeEnum.KEY_PAIR + " is typically used for key-based authentication).");
+                        "(e.g. %s is typically used for key-based authentication).";
+                throw new IllegalArgumentException(String.format(msg, orgName, secretName, type, actualSecretType, SecretEntry.TypeEnum.KEY_PAIR));
             }
 
             return readSecret(actualSecretType, Files.readAllBytes(r.getData().toPath()));

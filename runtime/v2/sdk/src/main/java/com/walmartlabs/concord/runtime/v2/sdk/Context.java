@@ -20,7 +20,12 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.sdk.ProjectInfo;
+
+import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 public interface Context {
@@ -35,22 +40,26 @@ public interface Context {
      */
     UUID processInstanceId();
 
+    // TODO parentInstanceId?
+
     Variables variables();
 
-    // TODO parentInstanceId?
-    // TODO move processInfo/projectInfo here?
+    @Nullable
+    ProjectInfo projectInfo();
+
+    // TODO move processInfo?
 
     /**
      * Provides access to the low-level details of the current process.
      *
-     * @apiNote Beta API, subject to change.
+     * @apiNote unstable API, subject to change.
      */
     Execution execution();
 
     /**
      * Provides low-level access to the DSL compiler.
      *
-     * @apiNote Beta API, subject to change.
+     * @apiNote unstable API, subject to change.
      */
     Compiler compiler();
 
@@ -71,6 +80,17 @@ public interface Context {
      * the next planned step.
      */
     void suspend(String eventName);
+
+    /**
+     * Suspends the current task execution and resumes a {@link ReentrantTask}
+     * with the provided payload.
+     *
+     * @param payload passed to the {@link ReentrantTask#resume(Map)} method
+     *                once the process is resumed.
+     * @return the name of the event on which the process is suspended on.
+     * @apiNote unstable API, subject to change
+     */
+    String suspendResume(Map<String, Serializable> payload);
 
     // TODO FormService
 }

@@ -126,4 +126,18 @@ public class UserManagementIT extends AbstractServerIT {
         GenericOperationResult delete = rolesApi.delete(roleName);
         assertEquals(GenericOperationResult.ResultEnum.DELETED, delete.getResult());
     }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSpecialCharactersInUsernames() throws Exception {
+        String userName = "usEr_" + randomString() + "@domain.local";
+
+        UsersApi usersApi = new UsersApi(getApiClient());
+        CreateUserResponse cur = usersApi.createOrUpdate(new CreateUserRequest()
+                .setUsername(userName)
+                .setType(CreateUserRequest.TypeEnum.LOCAL));
+        assertNotNull(cur.getId());
+
+        UserEntry e = usersApi.findByUsername(userName);
+        assertEquals(userName.toLowerCase(), e.getName());
+    }
 }

@@ -20,12 +20,17 @@ package com.walmartlabs.concord.agent.postprocessing;
  * =====
  */
 
-import com.walmartlabs.concord.agent.ExecutionException;
-
 import java.nio.file.Path;
 import java.util.UUID;
 
 public interface JobPostProcessor {
 
-    void process(UUID instanceId, Path payloadDir) throws ExecutionException;
+    class JobPostProcessorException extends Exception {
+
+        public JobPostProcessorException(String message) {
+            super(message);
+        }
+    }
+
+    void process(UUID instanceId, Path payloadDir) throws JobPostProcessorException;
 }

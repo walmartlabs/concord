@@ -24,6 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Imports;
+import com.walmartlabs.concord.policyengine.AttachmentsRule;
+import com.walmartlabs.concord.policyengine.CheckResult;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.HttpUtils;
 import com.walmartlabs.concord.server.IsoDateParam;
@@ -34,6 +37,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessWaitHistoryEntry;
@@ -75,6 +79,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -103,6 +108,8 @@ public class ProcessResource implements Resource {
     private final ProcessLogManager logManager;
     private final ProcessLogAccessManager logAccessManager;
     private final ProcessEventDao processEventDao;
+    private final ProcessLogManager processLogManager;
+    private final PolicyManager policyManager;
 
     private final ProcessResourceV2 v2;
 
@@ -120,6 +127,8 @@ public class ProcessResource implements Resource {
                            ProcessConfiguration processCfg,
                            ProcessLogManager logManager,
                            ProcessLogAccessManager logAccessManager, ProcessEventDao processEventDao,
+                           ProcessLogManager processLogManager,
+                           PolicyManager policyManager,
                            ProcessResourceV2 v2) {
 
         this.processManager = processManager;
@@ -136,6 +145,8 @@ public class ProcessResource implements Resource {
         this.logManager = logManager;
         this.logAccessManager = logAccessManager;
         this.processEventDao = processEventDao;
+        this.processLogManager = processLogManager;
+        this.policyManager = policyManager;
 
         this.v2 = v2;
     }
@@ -919,6 +930,8 @@ public class ProcessResource implements Resource {
             tmpDir = IOUtils.createTempDir("attachments");
             IOUtils.unzip(tmpIn, tmpDir);
 
+            assertAttachmentsPolicy(tmpDir, entry);
+
             stateManager.deleteDirectory(processKey, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
             stateManager.importPath(processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
 
@@ -1121,5 +1134,35 @@ public class ProcessResource implements Resource {
     private static RuntimeException syncIsForbidden() {
         return new ConcordApplicationException("The 'sync' mode is no longer available. " +
                 "Please use sync=false and poll for the status updates.", Status.BAD_REQUEST);
+    }
+
+    private void assertAttachmentsPolicy(Path tmpDir, ProcessEntry entry) throws IOException {
+        PolicyEngine policy = policyManager.get(entry.orgId(), entry.projectId(), UserPrincipal.assertCurrent().getUser().getId());
+        if (policy == null) {
+            return;
+        }
+
+        CheckResult<AttachmentsRule, Long> checkResult = policy.getAttachmentsPolicy().check(tmpDir);
+        if (!checkResult.getDeny().isEmpty()) {
+            String errorMessage = buildErrorMessage(checkResult.getDeny());
+            processLogManager.error(ProcessKey.from(entry), errorMessage);
+            throw new ConcordApplicationException("Found forbidden policy: " + errorMessage, Status.FORBIDDEN);
+        }
+    }
+
+    private String buildErrorMessage(List<CheckResult.Item<AttachmentsRule, Long>> errors) {
+        String defaultMessage = "Attachments too big: current {0} bytes, limit {1} bytes";
+
+        StringBuilder sb = new StringBuilder();
+        for (CheckResult.Item<AttachmentsRule, Long> e : errors) {
+            AttachmentsRule r = e.getRule();
+
+            String msg = r.getMsg() != null ? r.getMsg() : defaultMessage;
+            long actualSize = e.getEntity();
+            long limit = r.getMaxSizeInBytes();
+
+            sb.append(MessageFormat.format(msg, actualSize, limit)).append(';');
+        }
+        return sb.toString();
     }
 }

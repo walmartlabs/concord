@@ -24,6 +24,8 @@ import io.fabric8.kubernetes.client.CustomResource;
 
 public class AgentPool extends CustomResource {
 
+    private static final long serialVersionUID = 1L;
+
     private AgentPoolConfiguration spec;
 
     public AgentPoolConfiguration getSpec() {

@@ -34,6 +34,7 @@ interface Props {
     name: string;
     createdAt: string;
     status?: SegmentStatus;
+    lowRange?: number;
     warnings?: number;
     errors?: number;
     data: string[];
@@ -50,6 +51,7 @@ const LogSegment = ({
     name,
     createdAt,
     status,
+    lowRange,
     warnings,
     errors,
     data,
@@ -119,7 +121,7 @@ const LogSegment = ({
                 onClick={() => setOpen((prevState) => !prevState)}>
                 <Icon name={isOpen ? 'caret down' : 'caret right'} className="State" />
 
-                <StatusIcon status={status} loading={loading} warnings={warnings} errors={errors} />
+                <StatusIcon status={status} warnings={warnings} errors={errors} />
 
                 <span className="Caption">{name}</span>
 
@@ -165,12 +167,23 @@ const LogSegment = ({
                         </div>
                     </>
                 )}
+                {loading && <div className="Loader" />}
             </Button>
 
             {isOpen && (
                 <div className="ContentContainer">
                     <div className="InnerContentContainer">
                         <div className="Content">
+                            {lowRange !== undefined && lowRange !== 0 && (
+                                <>
+                                    <span>...showing only the last few lines. </span>
+                                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                                    <a href="#" onClick={loadAllClickHandler}>
+                                        Full log
+                                    </a>{' '}
+                                </>
+                            )}
+
                             {data.map((value, index) => (
                                 <pre key={index} dangerouslySetInnerHTML={{ __html: value }} />
                             ))}
@@ -190,7 +203,7 @@ interface StatusIconProps {
     errors?: number;
 }
 
-const StatusIcon = ({ status, loading, warnings = 0, errors = 0 }: StatusIconProps) => {
+const StatusIcon = ({ status, warnings = 0, errors = 0 }: StatusIconProps) => {
     if (!status) {
         return <span className="EmptyStatus" />;
     }
@@ -199,7 +212,7 @@ const StatusIcon = ({ status, loading, warnings = 0, errors = 0 }: StatusIconPro
     let icon: SemanticICONS = 'circle';
     let spinning = false;
 
-    if (status === SegmentStatus.RUNNING || loading) {
+    if (status === SegmentStatus.RUNNING) {
         icon = 'spinner';
         spinning = true;
     } else if (status === SegmentStatus.FAILED) {
