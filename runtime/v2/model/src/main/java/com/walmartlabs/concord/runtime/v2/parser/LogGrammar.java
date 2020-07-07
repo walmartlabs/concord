@@ -35,6 +35,7 @@ public final class LogGrammar {
                     simpleOptions.map(options ->
                             new TaskCall(a.location, "log", TaskCallOptions.builder()
                                     .putInput("msg", msg)
+                                    .meta(options.meta())
                                     .build()))));
 
 
