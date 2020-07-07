@@ -33,11 +33,11 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import static com.walmartlabs.concord.server.jooq.Tables.TEAM_LDAP_GROUPS;
-import static com.walmartlabs.concord.server.jooq.Tables.V_USER_TEAMS;
+import static com.walmartlabs.concord.server.jooq.Tables.*;
 import static com.walmartlabs.concord.server.jooq.tables.Organizations.ORGANIZATIONS;
 import static com.walmartlabs.concord.server.jooq.tables.Teams.TEAMS;
 import static com.walmartlabs.concord.server.jooq.tables.UserTeams.USER_TEAMS;
@@ -172,12 +172,15 @@ public class TeamDao extends AbstractDao {
 
     public List<TeamUserEntry> listUsers(UUID teamId) {
         try (DSLContext tx = DSL.using(cfg)) {
-            return listUsers(tx, teamId);
+            List<TeamUserEntry> l = new LinkedList<>();
+            l.addAll(listMembers(tx, teamId));
+            l.addAll(listLdapGroupMembers(tx, teamId));
+            return l;
         }
     }
 
-    public List<TeamUserEntry> listUsers(DSLContext tx, UUID teamId) {
-        return tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_TYPE, USER_TEAMS.TEAM_ROLE)
+    public List<TeamUserEntry> listMembers(DSLContext tx, UUID teamId) {
+        return tx.selectDistinct(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_TYPE, USER_TEAMS.TEAM_ROLE)
                 .from(USER_TEAMS)
                 .innerJoin(USERS).on(USERS.USER_ID.eq(USER_TEAMS.USER_ID))
                 .where(USER_TEAMS.TEAM_ID.eq(teamId))
@@ -188,7 +191,28 @@ public class TeamDao extends AbstractDao {
                                 r.value3(),
                                 r.value4(),
                                 UserType.valueOf(r.value5()),
-                                TeamRole.valueOf(r.value6())));
+                                TeamRole.valueOf(r.value6()),
+                                TeamMemberType.SINGLE,
+                                null));
+    }
+
+    public List<TeamUserEntry> listLdapGroupMembers(DSLContext tx, UUID teamId) {
+        return tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.DISPLAY_NAME, USERS.USER_TYPE, TEAM_LDAP_GROUPS.TEAM_ROLE, USER_LDAP_GROUPS.LDAP_GROUP)
+                .from(USERS)
+                .innerJoin(USER_LDAP_GROUPS).on(USER_LDAP_GROUPS.USER_ID.eq(USERS.USER_ID))
+                .innerJoin(TEAM_LDAP_GROUPS).on(TEAM_LDAP_GROUPS.LDAP_GROUP.eq(USER_LDAP_GROUPS.LDAP_GROUP))
+                .innerJoin(TEAMS).on(TEAMS.TEAM_ID.eq(TEAM_LDAP_GROUPS.TEAM_ID))
+                .where(TEAMS.TEAM_ID.eq(teamId))
+                .orderBy(USERS.USERNAME)
+                .fetch((Record7<UUID, String, String, String, String, String, String> r) ->
+                        new TeamUserEntry(r.value1(),
+                                r.value2(),
+                                r.value3(),
+                                r.value4(),
+                                UserType.valueOf(r.value5()),
+                                TeamRole.valueOf(r.value6()),
+                                TeamMemberType.LDAP_GROUP,
+                                r.value7()));
     }
 
     public List<TeamLdapGroupEntry> listLdapGroups(UUID teamId) {

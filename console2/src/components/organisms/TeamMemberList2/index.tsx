@@ -19,23 +19,34 @@
  */
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { ConcordKey, RequestError } from '../../../api/common';
-import { Button, Container, Form, Loader, Menu, Table } from 'semantic-ui-react';
+import { ConcordId, ConcordKey, RequestError } from '../../../api/common';
+import { Button, Container, Divider, Form, Loader, Menu, Table } from 'semantic-ui-react';
 
 import { FindUserField2, RequestErrorActivity } from '../../organisms';
 import { UserEntry } from '../../../api/user';
 import { TeamRoleDropdown } from '../../molecules';
 import {
-    listUsers as apiListUsers,
     addUsers as apiAddUsers,
+    listUsers as apiListUsers,
+    MemberType,
     NewTeamUserEntry,
-    TeamRole
+    TeamRole,
+    TeamUserEntry
 } from '../../../api/org/team';
 
 interface Entry extends NewTeamUserEntry {
     added?: boolean;
     deleted?: boolean;
     updated?: boolean;
+}
+
+interface LdapGroupRole {
+    ldapGroup: string;
+    role: TeamRole;
+}
+
+interface LdapEntry extends TeamUserEntry {
+    rolesFromLdapGroup: LdapGroupRole[];
 }
 
 interface Props {
@@ -53,11 +64,24 @@ const renderUser = (e: NewTeamUserEntry) => {
         : `${e.username}@${e.userDomain}`;
 };
 
+const renderUserLdapGroups = (e: LdapEntry, rowId: number) => {
+    return e.rolesFromLdapGroup.map((r, rIdx) => (
+        <Table.Row key={rIdx}>
+            {(e.rolesFromLdapGroup.length <= 1 || rIdx === 0) && (
+                <Table.Cell rowSpan={e.rolesFromLdapGroup.length}>{e.username}</Table.Cell>
+            )}
+            <Table.Cell>{r.ldapGroup}</Table.Cell>
+            <Table.Cell>{r.role}</Table.Cell>
+        </Table.Row>
+    ));
+};
+
 export default ({ orgName, teamName }: Props) => {
     const [loading, setLoading] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [data, setData] = useState<Entry[]>([]);
+    const [singleUsers, setSingleUsers] = useState<Entry[]>([]);
+    const [ldapUsers, setLdapUsers] = useState<LdapEntry[]>([]);
     const [error, setError] = useState<RequestError>();
     const [dirty, setDirty] = useState(false);
 
@@ -67,7 +91,31 @@ export default ({ orgName, teamName }: Props) => {
             setError(undefined);
 
             let result = (await apiListUsers(orgName, teamName)).map((r) => ({ ...r }));
-            setData(result.map((r) => ({ ...r })));
+            setSingleUsers(
+                result.filter((r) => r.memberType === MemberType.SINGLE).map((r) => ({ ...r }))
+            );
+            let aggregatedUsers = new Map<ConcordId, LdapEntry>();
+            result
+                .filter((r) => r.memberType === MemberType.LDAP_GROUP)
+                .forEach((r) => {
+                    if (aggregatedUsers.has(r.userId)) {
+                        let u = aggregatedUsers.get(r.userId);
+                        if (u !== undefined) {
+                            u.rolesFromLdapGroup.push({
+                                ldapGroup: r.ldapGroupSource || 'not found',
+                                role: r.role
+                            });
+                        }
+                    } else {
+                        aggregatedUsers.set(r.userId, {
+                            ...r,
+                            rolesFromLdapGroup: [
+                                { ldapGroup: r.ldapGroupSource || 'not found', role: r.role }
+                            ]
+                        });
+                    }
+                });
+            setLdapUsers(Array.from(aggregatedUsers, ([k, v]) => v));
         } catch (e) {
             setError(e);
         } finally {
@@ -83,8 +131,8 @@ export default ({ orgName, teamName }: Props) => {
 
     // set dirty to true on any changes
     useEffect(() => {
-        setDirty(!!data.find((e) => e.added || e.deleted || e.updated));
-    }, [data]);
+        setDirty(!!singleUsers.find((e) => e.added || e.deleted || e.updated));
+    }, [singleUsers]);
 
     const cancel = () => {
         setEditMode(false);
@@ -92,7 +140,7 @@ export default ({ orgName, teamName }: Props) => {
     };
 
     const addMember = (u: UserEntry) => {
-        setData((prev) => {
+        setSingleUsers((prev) => {
             const e: Entry = {
                 added: true,
                 userId: u.id,
@@ -106,7 +154,7 @@ export default ({ orgName, teamName }: Props) => {
     };
 
     const deleteMember = (idx: number) => {
-        setData((prev) => {
+        setSingleUsers((prev) => {
             let e = prev[idx];
 
             if (e.added) {
@@ -122,14 +170,14 @@ export default ({ orgName, teamName }: Props) => {
     };
 
     const undoMember = (idx: number) => {
-        setData((prev) => {
+        setSingleUsers((prev) => {
             prev[idx].deleted = false;
             return [...prev];
         });
     };
 
     const updateRole = (idx: number, role: TeamRole) => {
-        setData((prev) => {
+        setSingleUsers((prev) => {
             let e = prev[idx];
             e.role = role;
             if (!e.deleted && !e.added) {
@@ -140,9 +188,9 @@ export default ({ orgName, teamName }: Props) => {
     };
 
     const save = useCallback(async () => {
-        const sanitizedData = data
+        const sanitizedData = singleUsers
             .filter((e) => !e.deleted)
-            .map((e) => ({ userId: e.userId, role: e.role }));
+            .map((e) => ({ userId: e.userId, role: e.role, memberType: MemberType.SINGLE }));
 
         try {
             setSubmitting(true);
@@ -155,7 +203,7 @@ export default ({ orgName, teamName }: Props) => {
         }
 
         load();
-    }, [orgName, teamName, data, load]);
+    }, [orgName, teamName, singleUsers, load]);
 
     if (loading) {
         return <Loader active={true} />;
@@ -208,9 +256,9 @@ export default ({ orgName, teamName }: Props) => {
                 </Menu.Item>
             </Menu>
 
-            {data.length === 0 && <h3>No team members.</h3>}
+            {singleUsers.length === 0 && <h3>No team members.</h3>}
 
-            {data.length > 0 && (
+            {singleUsers.length > 0 && (
                 <Table>
                     <Table.Header>
                         <Table.Row>
@@ -221,7 +269,7 @@ export default ({ orgName, teamName }: Props) => {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {data.map((e, idx) => (
+                        {singleUsers.map((e, idx) => (
                             <Table.Row
                                 key={idx}
                                 negative={e.deleted}
@@ -257,6 +305,25 @@ export default ({ orgName, teamName }: Props) => {
                         ))}
                     </Table.Body>
                 </Table>
+            )}
+
+            {ldapUsers.length > 0 && (
+                <>
+                    <Divider horizontal>LDAP Group Members</Divider>
+
+                    <Table selectable>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell collapsing={true}>Username</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Source</Table.HeaderCell>
+                                <Table.HeaderCell collapsing={true}>Role</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {ldapUsers.map((e, idx) => renderUserLdapGroups(e, idx))}
+                        </Table.Body>
+                    </Table>
+                </>
             )}
         </>
     );

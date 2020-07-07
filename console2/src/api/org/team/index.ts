@@ -107,11 +107,18 @@ export interface TeamUserEntry {
     displayName?: string;
     userType?: UserType;
     role: TeamRole;
+    memberType: MemberType;
+    ldapGroupSource?: string;
 }
 
 export interface TeamLdapGroupEntry {
     group: string;
     role: TeamRole;
+}
+
+export enum MemberType {
+    SINGLE = 'SINGLE',
+    LDAP_GROUP = 'LDAP_GROUP'
 }
 
 export interface NewTeamUserEntry {

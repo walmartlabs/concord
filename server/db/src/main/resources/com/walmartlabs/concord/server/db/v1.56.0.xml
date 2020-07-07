@@ -30,4 +30,10 @@
             <column name="USER_TYPE"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="1560040" author="benjamin.broadaway@walmart.com" runInTransaction="false">
+        <sql>
+            create index concurrently IDX_USER_LDAP_GROUPS_GROUPS on USER_LDAP_GROUPS(LDAP_GROUP)
+        </sql>
+    </changeSet>
 </databaseChangeLog>
