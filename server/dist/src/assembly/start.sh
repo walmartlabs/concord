@@ -17,7 +17,7 @@ mkdir -p ${GC_LOG_DIR}
 echo "GC logs: ${GC_LOG_DIR}"
 
 if [[ -z "${CONCORD_JAVA_OPTS}" ]]; then
-    CONCORD_JAVA_OPTS="-Xms2g -Xmx2g -server"
+    CONCORD_JAVA_OPTS="-Xms2g -Xmx2g"
 fi
 echo "CONCORD_JAVA_OPTS: ${CONCORD_JAVA_OPTS}"
 
@@ -27,17 +27,6 @@ fi
 
 exec java \
 ${CONCORD_JAVA_OPTS} \
--XX:+PrintGC \
--XX:+PrintGCTimeStamps \
--XX:+PrintGCDateStamps \
--XX:+PrintGCDetails \
--XX:+PrintGCApplicationStoppedTime \
--XX:+PrintGCApplicationConcurrentTime \
--Xloggc:${GC_LOG_DIR}/gc.log \
--XX:+UseGCLogFileRotation \
--XX:NumberOfGCLogFiles=10 \
--XX:GCLogFileSize=10M \
--server \
 -Dfile.encoding=UTF-8 \
 -Djava.net.preferIPv4Stack=true \
 -Djava.security.egd=file:/dev/./urandom \

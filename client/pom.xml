@@ -82,6 +82,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- JDK9+ compatibility -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

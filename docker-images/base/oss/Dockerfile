@@ -2,12 +2,14 @@ FROM library/centos:8
 MAINTAINER "Ivan Bodrov" <ibodrov@walmartlabs.com>
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-ENV JAVA_HOME /usr/lib/jvm/java-1.8.0
+
+ARG jdk_version=1.8.0
+ENV JAVA_HOME /usr/lib/jvm/java-$jdk_version
 
 # requires Git >= 2.3
 RUN yum -y --enablerepo=extras install epel-release && \
     yum -y update && \
-    yum -y install yum-utils java-1.8.0-openjdk-devel which libtool-ltdl strace python2 python2-pip git coreutils-single && \
+    yum -y install yum-utils java-$jdk_version-openjdk-devel which libtool-ltdl strace python2 python2-pip git coreutils-single && \
     yum clean all
 
 RUN alternatives --set python /usr/bin/python2

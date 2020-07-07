@@ -44,6 +44,11 @@
             <artifactId>gson-fire</artifactId>
         </dependency>
 
+        <!-- JDK9+ compatibility -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

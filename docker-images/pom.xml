@@ -25,6 +25,9 @@
         <docker.maintainer>ibodrov@gmail.com</docker.maintainer>
         <docker.namespace>walmartlabs</docker.namespace>
         <concord.baseDir>/opt/concord</concord.baseDir>
+
+        <!-- JDK version to use in the base image and all its descendants -->
+        <jdk.version>1.8.0</jdk.version>
     </properties>
 
     <build>
@@ -56,6 +59,8 @@
 
                                     <argument>--build-arg=docker_namespace=${docker.namespace}</argument>
                                     <argument>--build-arg=concord_version=${project.version}</argument>
+
+                                    <argument>--build-arg=jdk_version=${jdk.version}</argument>
 
                                     <argument>--network</argument>
                                     <argument>host</argument>

@@ -741,7 +741,7 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setName(orgName)
                 .setVisibility(OrganizationEntry.VisibilityEnum.PUBLIC));
 
-        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+        assertTrue(organizationsApi.find(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
         // ---
 
@@ -758,7 +758,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(cakr.getKey());
 
-        assertTrue(organizationsApi.list(false).stream().anyMatch(o -> o.getName().equals(orgName)));
+        assertTrue(organizationsApi.find(false, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
         // ---
 
@@ -768,13 +768,13 @@ public class TeamRbacIT extends AbstractServerIT {
                 .setName(orgName)
                 .setVisibility(OrganizationEntry.VisibilityEnum.PRIVATE));
 
-        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+        assertTrue(organizationsApi.find(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
         // ---
 
         setApiKey(cakr.getKey());
 
-        assertFalse(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+        assertFalse(organizationsApi.find(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
     }
 
     /**
@@ -804,7 +804,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(cakr.getKey());
 
-        assertFalse(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+        assertFalse(organizationsApi.find(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
         // ---
 
@@ -820,7 +820,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(cakr.getKey());
 
-        assertTrue(organizationsApi.list(true).stream().anyMatch(o -> o.getName().equals(orgName)));
+        assertTrue(organizationsApi.find(true, null, null, null).stream().anyMatch(o -> o.getName().equals(orgName)));
 
         // ---
 
@@ -845,7 +845,7 @@ public class TeamRbacIT extends AbstractServerIT {
 
         setApiKey(cakr.getKey());
 
-        assertTrue(projectsApi.list(orgName).stream().anyMatch(p -> p.getName().equals(projectName)));
+        assertTrue(projectsApi.find(orgName, null, null, null).stream().anyMatch(p -> p.getName().equals(projectName)));
 
         SecretsApi secretsApi = new SecretsApi(getApiClient());
         assertTrue(secretsApi.list(orgName, null, null, null).stream().anyMatch(s -> s.getName().equals(secretName)));

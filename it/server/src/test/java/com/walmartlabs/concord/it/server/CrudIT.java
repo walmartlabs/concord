@@ -97,7 +97,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- list
 
-        List<ProjectEntry> projectList = projectsApi.list(orgName);
+        List<ProjectEntry> projectList = projectsApi.find(orgName, null, null, null);
         projectEntry = findProject(projectList, projectName);
         assertNotNull(projectEntry);
 
@@ -538,7 +538,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- list
 
-        List<OrganizationEntry> organizationEntryList = orgApi.list(true);
+        List<OrganizationEntry> organizationEntryList = orgApi.find(true, null, null, null);
         assertNotNull(organizationEntryList);
         organizationEntry = findOrganization(organizationEntryList, updatedOrgName);
         assertNotNull(organizationEntry);
@@ -560,7 +560,7 @@ public class CrudIT extends AbstractServerIT {
 
         // --- private org available for admin
 
-        List<OrganizationEntry> orgs = orgApi.list(false);
+        List<OrganizationEntry> orgs = orgApi.find(false, null, null, null);
         assertTrue(orgs.stream().anyMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
 
         // add the user A
@@ -575,7 +575,7 @@ public class CrudIT extends AbstractServerIT {
 
         setApiKey(apiKeyA.getKey());
 
-        orgs = orgApi.list(true);
+        orgs = orgApi.find(true, null, null, null);
         assertTrue(orgs.stream().noneMatch(e -> e.getId().equals(createOrganizationResponse.getId())));
     }
 
