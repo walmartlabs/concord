@@ -24,6 +24,7 @@ import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.jooq.tables.records.UsersRecord;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
+import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 
@@ -263,6 +264,20 @@ public class UserDao extends AbstractDao {
                             r.get(USERS.USER_EMAIL),
                             null,
                             r.get(USERS.IS_DISABLED)));
+        }
+    }
+
+    public List<LdapGroupSearchResult> searchLdapGroups(String filter) {
+        try (DSLContext tx = DSL.using(cfg)) {
+            return tx.selectDistinct(USER_LDAP_GROUPS.LDAP_GROUP)
+                    .from(USER_LDAP_GROUPS)
+                    .where(USER_LDAP_GROUPS.LDAP_GROUP.likeIgnoreCase(String.format("%%%s%%", filter)))
+                    .orderBy(USER_LDAP_GROUPS.LDAP_GROUP)
+                    .limit(10)
+                    .fetch(r -> LdapGroupSearchResult.builder()
+                            .displayName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
+                            .groupName(r.get(USER_LDAP_GROUPS.LDAP_GROUP))
+                            .build());
         }
     }
 

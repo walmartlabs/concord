@@ -29,6 +29,7 @@ import com.walmartlabs.concord.server.org.team.TeamManager;
 import com.walmartlabs.concord.server.org.team.TeamRole;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.UserPrincipal;
+import com.walmartlabs.concord.server.security.ldap.LdapGroupSearchResult;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -159,6 +160,10 @@ public class UserManager {
 
         UserInfoProvider p = assertProvider(u.getType());
         return p.getInfo(u.getId(), u.getUsername(), u.getDomain());
+    }
+
+    public List<LdapGroupSearchResult> searchLdapGroups(String filter) {
+        return userDao.searchLdapGroups(filter);
     }
 
     public UserInfo getInfo(String username, String domain, UserType type) {

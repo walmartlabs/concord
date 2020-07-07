@@ -316,11 +316,7 @@ public class ConsoleService implements Resource {
             return Collections.emptyList();
         }
 
-        try {
-            return ldapManager.searchGroups(filter);
-        } catch (NamingException e) {
-            throw new ConcordApplicationException("LDAP search error: " + e.getMessage(), e);
-        }
+        return userManager.searchLdapGroups(filter);
     }
 
     @POST

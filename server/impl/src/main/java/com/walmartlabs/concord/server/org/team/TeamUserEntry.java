@@ -50,13 +50,19 @@ public class TeamUserEntry implements Serializable {
 
     private final TeamRole role;
 
+    private final TeamMemberType memberType;
+
+    private final String ldapGroupSource;
+
     @JsonCreator
     public TeamUserEntry(@JsonProperty("userId") UUID userId,
                          @JsonProperty("username") String username,
                          @JsonProperty("userDomain") String userDomain,
                          @JsonProperty("displayName") String displayName,
                          @JsonProperty("userType") UserType userType,
-                         @JsonProperty("role") TeamRole role) {
+                         @JsonProperty("role") TeamRole role,
+                         @JsonProperty("memberType") TeamMemberType memberType,
+                         @JsonProperty("ldapGroupSource") String ldapGroupSource) {
 
         this.userId = userId;
         this.username = username;
@@ -64,6 +70,8 @@ public class TeamUserEntry implements Serializable {
         this.displayName = displayName;
         this.userType = userType;
         this.role = role;
+        this.memberType = memberType;
+        this.ldapGroupSource = ldapGroupSource;
     }
 
     public UUID getUserId() {
@@ -90,6 +98,14 @@ public class TeamUserEntry implements Serializable {
         return role;
     }
 
+    public TeamMemberType getMemberType() {
+        return memberType;
+    }
+
+    public String getLdapGroupSource() {
+        return ldapGroupSource;
+    }
+
     @Override
     public String toString() {
         return "TeamUserEntry{" +
@@ -99,6 +115,8 @@ public class TeamUserEntry implements Serializable {
                 ", displayName='" + displayName + '\'' +
                 ", userType=" + userType +
                 ", role=" + role +
+                ", memberType=" + memberType +
+                ", ldapGroupSource='" + ldapGroupSource + '\'' +
                 '}';
     }
 }
