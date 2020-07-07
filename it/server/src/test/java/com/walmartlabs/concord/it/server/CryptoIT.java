@@ -22,6 +22,7 @@ package com.walmartlabs.concord.it.server;
 
 import com.google.common.collect.ImmutableMap;
 import com.walmartlabs.concord.client.*;
+import org.intellij.lang.annotations.Language;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
@@ -278,7 +279,7 @@ public class CryptoIT extends AbstractServerIT {
         ProcessEntry pir = waitForStatus(processApi, spr.getInstanceId(), ProcessEntry.StatusEnum.FAILED);
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(".*too big.*", ab);
+        assertLogAtLeast(".*too big.*", 1, ab);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -368,7 +369,7 @@ public class CryptoIT extends AbstractServerIT {
 
         // ---
 
-        test("cryptoPwd", secretName, storePassword, ".*Forbidden:.*" + secretName + ".*");
+        test("cryptoPwd", secretName, storePassword, ".*secrets can only be accessed within the project they belong to.*" + secretName + ".*");
     }
 
     /**
@@ -433,7 +434,7 @@ public class CryptoIT extends AbstractServerIT {
         assertLog(".*After form: " + orgSecretValue + ".*", ab);
     }
 
-    private void test(String project, String secretName, String storePassword, String log) throws Exception {
+    private void test(String project, String secretName, String storePassword, @Language("RegExp") String log) throws Exception {
         byte[] payload = archive(ProcessIT.class.getResource(project).toURI());
 
         StartProcessResponse spr = start(ImmutableMap.of(
@@ -447,6 +448,6 @@ public class CryptoIT extends AbstractServerIT {
         ProcessEntry pir = waitForCompletion(processApi, spr.getInstanceId());
 
         byte[] ab = getLog(pir.getLogFileName());
-        assertLog(log, ab);
+        assertLogAtLeast(log, 1, ab);
     }
 }

@@ -961,6 +961,8 @@ public class ApiClient {
                         }
                     } else if ("application/json".equals(type)) {
                         vErrs = (Map<String,Object>) json.deserialize(respBody, Map.class);
+                    } else {
+                        msg = "Server response: " + respBody;
                     }
 
                     if (vErrs != null) {

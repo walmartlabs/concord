@@ -181,6 +181,12 @@
             <artifactId>okhttp</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>18.0.0</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- download large dependencies beforehand -->
         <dependency>

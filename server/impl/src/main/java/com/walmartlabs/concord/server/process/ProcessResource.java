@@ -26,7 +26,6 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.Imports;
 import com.walmartlabs.concord.policyengine.AttachmentsRule;
 import com.walmartlabs.concord.policyengine.CheckResult;
-import com.walmartlabs.concord.policyengine.ForkDepthRule;
 import com.walmartlabs.concord.policyengine.PolicyEngine;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.HttpUtils;

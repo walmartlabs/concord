@@ -138,6 +138,6 @@ public class UserManagementIT extends AbstractServerIT {
         assertNotNull(cur.getId());
 
         UserEntry e = usersApi.findByUsername(userName);
-        assertEquals(userName, e.getName());
+        assertEquals(userName.toLowerCase(), e.getName());
     }
 }
