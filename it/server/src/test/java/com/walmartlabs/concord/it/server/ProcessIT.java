@@ -285,7 +285,7 @@ public class ProcessIT extends AbstractServerIT {
         }
         {
             byte[] ab = getLog(child.getLogFileName());
-            assertLog(".*initiator: .*" + userAName + ".*", ab);
+            assertLog(".*initiator: .*" + userAName.toLowerCase() + ".*", ab);
         }
     }
 }

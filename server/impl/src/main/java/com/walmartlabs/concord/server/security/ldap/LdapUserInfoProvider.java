@@ -83,7 +83,7 @@ public class LdapUserInfoProvider implements UserInfoProvider {
             throw new ConcordApplicationException("User '" + username + "' with domain '" + userDomain + "' not found in LDAP");
         }
 
-        return userDao.insert(info.username(), info.userDomain(), info.displayName(), info.email(), UserType.LDAP, roles);
+        return userDao.insertOrUpdate(info.username(), info.userDomain(), info.displayName(), info.email(), UserType.LDAP, roles);
     }
 
     private static UserInfo buildInfo(UUID id, LdapPrincipal p) {

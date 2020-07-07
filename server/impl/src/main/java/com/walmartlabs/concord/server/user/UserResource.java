@@ -43,6 +43,7 @@ import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
+import java.util.Optional;
 import java.util.UUID;
 
 @Named
@@ -75,15 +76,19 @@ public class UserResource implements Resource {
         assertAdmin();
 
         String username = req.getUsername();
-
         UserType type = assertUserType(req.getType());
+
         UUID id = userManager.getId(username, req.getUserDomain(), type).orElse(null);
         if (id == null) {
             UserEntry e = userManager.create(username, req.getUserDomain(), req.getDisplayName(), req.getEmail(), req.getType(), req.getRoles());
-            return new CreateUserResponse(e.getId(), OperationResult.CREATED);
+            return new CreateUserResponse(e.getId(), e.getName(), OperationResult.CREATED);
         } else {
-            userManager.update(id, req.getDisplayName(), req.getEmail(), req.getType(), req.isDisabled(), req.getRoles());
-            return new CreateUserResponse(id, OperationResult.UPDATED);
+            UserEntry e = userManager.update(id, req.getDisplayName(), req.getEmail(), req.getType(), req.isDisabled(), req.getRoles()).orElse(null);
+            if (e == null) {
+                throw new ConcordApplicationException("User not found: " + id, Status.BAD_REQUEST);
+            }
+
+            return new CreateUserResponse(id, e.getName(), OperationResult.UPDATED);
         }
     }
 
@@ -101,12 +106,9 @@ public class UserResource implements Resource {
     public UserEntry findByUsername(@PathParam("username") @Size(max = UserEntry.MAX_USERNAME_LENGTH) @NotNull String username) {
         assertAdmin();
 
-        // TODO: user type from request
-        UserType type = UserPrincipal.assertCurrent().getType();
-        // TODO: user domain from request
-        String userDomain = null;
-        UUID id = userManager.getId(username, userDomain, type)
+        UUID id = userManager.getId(username, null, null)
                 .orElseThrow(() -> new ConcordApplicationException("User not found: " + username, Status.NOT_FOUND));
+
         return userDao.get(id);
     }
 
@@ -163,6 +165,7 @@ public class UserResource implements Resource {
         if (type != null) {
             return type;
         }
+
         return UserPrincipal.assertCurrent().getType();
     }
 }

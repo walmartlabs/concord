@@ -437,8 +437,8 @@ public class CrudIT extends AbstractServerIT {
 
         l = teamsApi.listUsers(orgName, teamName);
         assertEquals(2, l.size());
-        assertEquals(userAName, l.get(0).getUsername());
-        assertEquals(userBName, l.get(1).getUsername());
+        assertEquals(userAName.toLowerCase(), l.get(0).getUsername());
+        assertEquals(userBName.toLowerCase(), l.get(1).getUsername());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

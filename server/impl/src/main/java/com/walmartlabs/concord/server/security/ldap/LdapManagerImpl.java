@@ -87,7 +87,7 @@ public class LdapManagerImpl implements LdapManager {
         ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         ctls.setReturningAttributes(new String[]{MEMBER_OF_ATTR});
 
-        Object[] args = new Object[]{normalizeUsername(username, domain), username, domain};
+        Object[] args = new Object[]{normalizeDomain(username, domain), username, domain};
         NamingEnumeration<SearchResult> answer = ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
         if (!answer.hasMoreElements()) {
             return null;
@@ -122,7 +122,7 @@ public class LdapManagerImpl implements LdapManager {
 
                 @Override
                 public NamingEnumeration<SearchResult> lookup(SearchControls ctls) throws NamingException {
-                    Object[] args = new Object[]{normalizeUsername(username, domain), username, domain};
+                    Object[] args = new Object[]{normalizeDomain(username, domain), username, domain};
                     return ctx.search(cfg.getSearchBase(), cfg.getPrincipalSearchFilter(), args, ctls);
                 }
 
@@ -307,7 +307,7 @@ public class LdapManagerImpl implements LdapManager {
         }
     }
 
-    private static String normalizeUsername(String username, String domain) {
+    private static String normalizeDomain(String username, String domain) {
         if (domain == null) {
             return username;
         }
@@ -410,7 +410,15 @@ public class LdapManagerImpl implements LdapManager {
                 attributes = Collections.emptyMap();
             }
 
-            return new LdapPrincipal(username, domain, nameInNamespace, userPrincipalName, displayName, email, groups, attributes);
+            return new LdapPrincipal(normalize(username), normalize(domain), nameInNamespace, userPrincipalName, displayName, email, groups, attributes);
+        }
+
+        private static String normalize(String s) {
+            if (s == null) {
+                return null;
+            }
+
+            return s.trim().toLowerCase();
         }
     }
 }

@@ -54,12 +54,12 @@ public class UserManager {
         providers.forEach(p -> this.userInfoProviders.put(p.getUserType(), p));
     }
 
-    public Optional<UserEntry> get(String username, String userDomain, UserType type) {
+    public Optional<UserEntry> get(String username, String domain, UserType type) {
         if (type == null) {
             type = UserPrincipal.assertCurrent().getType();
         }
 
-        UUID id = userDao.getId(username, userDomain, type);
+        UUID id = userDao.getId(username, domain, type);
         if (id == null) {
             return Optional.empty();
         }

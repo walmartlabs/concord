@@ -37,7 +37,7 @@ public final class LdapUtils {
 
     public static Collection<String> getAllAttributeValues(Attribute attr) throws NamingException {
         Set<String> values = new HashSet<>();
-        NamingEnumeration ne = null;
+        NamingEnumeration<?> ne = null;
         try {
             ne = attr.getAll();
             while (ne.hasMore()) {
@@ -63,13 +63,13 @@ public final class LdapUtils {
         }
     }
 
-    public static void closeEnumeration(NamingEnumeration ne) {
+    public static void closeEnumeration(NamingEnumeration<?> ne) {
         try {
             if (ne != null) {
                 ne.close();
             }
         } catch (NamingException e) {
-            log.error("closeEnumeration -> error", ne, e);
+            log.error("closeEnumeration -> {}, error", ne, e);
         }
     }
 
