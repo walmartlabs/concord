@@ -31,6 +31,7 @@ import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.*;
@@ -406,6 +407,11 @@ public class DependencyManager {
             AuthenticationBuilder ab = new AuthenticationBuilder();
             auth.forEach(ab::addString);
             b.setAuthentication(ab.build());
+        }
+
+        MavenProxy proxy = r.proxy();
+        if (proxy != null) {
+            b.setProxy(new Proxy(proxy.type(), proxy.host(), proxy.port()));
         }
 
         return b.build();

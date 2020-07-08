@@ -4,7 +4,7 @@ package com.walmartlabs.concord.dependencymanager;
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2018 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,50 +20,29 @@ package com.walmartlabs.concord.dependencymanager;
  * =====
  */
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.eclipse.aether.repository.Proxy;
 import org.immutables.value.Value;
-
-import javax.annotation.Nullable;
-import java.util.Map;
 
 @Value.Immutable
 @Value.Style(jdkOnly = true)
-@JsonSerialize(as = ImmutableMavenRepository.class)
-@JsonDeserialize(as = ImmutableMavenRepository.class)
+@JsonSerialize(as = ImmutableMavenProxy.class)
+@JsonDeserialize(as = ImmutableMavenProxy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public interface MavenRepository {
-
-    String id();
+public interface MavenProxy {
 
     @Value.Default
-    @JsonAlias("layout")
-    default String contentType() {
-        return "default";
+    default String type() {
+        return Proxy.TYPE_HTTP;
     }
 
-    String url();
+    String host();
 
-    @Nullable
-    @Value.Redacted
-    Map<String, String> auth();
+    int port();
 
-    @Value.Default
-    default MavenRepositoryPolicy snapshotPolicy() {
-        return MavenRepositoryPolicy.builder().build();
-    }
-
-    @Value.Default
-    default MavenRepositoryPolicy releasePolicy() {
-        return MavenRepositoryPolicy.builder().build();
-    }
-
-    @Nullable
-    MavenProxy proxy();
-
-    static ImmutableMavenRepository.Builder builder() {
-        return ImmutableMavenRepository.builder();
+    static ImmutableMavenProxy.Builder builder() {
+        return ImmutableMavenProxy.builder();
     }
 }
