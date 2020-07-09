@@ -36,4 +36,12 @@
             create index concurrently IDX_USER_LDAP_GROUPS_GROUPS on USER_LDAP_GROUPS(LDAP_GROUP)
         </sql>
     </changeSet>
+
+    <changeSet id="1560050" author="ybrigo@gmail.com">
+        <addColumn tableName="PROCESS_QUEUE">
+            <column name="ID_SEQ" type="bigserial">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
