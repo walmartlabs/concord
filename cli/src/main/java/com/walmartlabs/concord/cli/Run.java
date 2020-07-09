@@ -85,6 +85,9 @@ public class Run implements Callable<Integer> {
     @Option(names = {"--entry-point"}, description = "entry point")
     String entryPoint = Constants.Request.DEFAULT_ENTRY_POINT_NAME;
 
+    @Option(names = {"-c", "--clean"}, description = "remove the target directory before starting the process")
+    boolean cleanup = false;
+
     @Option(names = {"-v", "--verbose"}, description = "verbose output")
     boolean verbose = false;
 
@@ -105,6 +108,13 @@ public class Run implements Callable<Integer> {
             Files.copy(src, targetDir.resolve("concord.yml"), StandardCopyOption.REPLACE_EXISTING);
         } else if (Files.isDirectory(sourceDir)) {
             targetDir = sourceDir.resolve("target");
+            if (cleanup && Files.exists(targetDir)) {
+                if (verbose) {
+                    System.out.println("Cleaning target directory");
+                }
+                IOUtils.deleteRecursively(targetDir);
+            }
+
             // copy everything into target except target
             IOUtils.copy(sourceDir, targetDir, "^target$", StandardCopyOption.REPLACE_EXISTING);
         } else {
