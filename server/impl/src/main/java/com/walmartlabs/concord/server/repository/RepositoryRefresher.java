@@ -21,6 +21,7 @@ package com.walmartlabs.concord.server.repository;
  */
 
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.repository.Repository;
@@ -37,8 +38,6 @@ import org.sonatype.siesta.ValidationErrorsException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -120,24 +119,21 @@ public class RepositoryRefresher extends AbstractDao {
             return;
         }
 
-        Path repoPath = repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
-            Repository repo = repositoryManager.fetch(projectId, repositoryEntry);
-            Path refreshRepoPath = IOUtils.createTempDir("refreshRepo_");
-            IOUtils.copy(repo.path(), refreshRepoPath);
-            return refreshRepoPath;
-        });
+        try (TemporaryPath tmpRepoPath = IOUtils.tempDir("refreshRepo_")) {
+            repositoryManager.withLock(repositoryEntry.getUrl(), () -> {
+                Repository repo = repositoryManager.fetch(projectId, repositoryEntry);
+                repo.export(tmpRepoPath.path());
+                return null;
+            });
 
-        try {
             tx(tx -> {
                 for (RepositoryRefreshListener l : listeners) {
-                    l.onRefresh(tx, repositoryEntry, repoPath);
+                    l.onRefresh(tx, repositoryEntry, tmpRepoPath.path());
                 }
             });
         } catch (Exception e) {
             String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
             throw new ConcordApplicationException("Error while refreshing repository: \n" + errorMessage, e);
-        } finally {
-            cleanUp(repoPath);
         }
     }
 
@@ -147,13 +143,5 @@ public class RepositoryRefresher extends AbstractDao {
         }
 
         return projectAccessManager.assertAccess(orgId, null, projectName, accessLevel, orgMembersOnly);
-    }
-
-    private static void cleanUp(Path repoPath) {
-        try {
-            IOUtils.deleteRecursively(repoPath);
-        } catch (IOException e) {
-            log.warn("cleanUp ['{}'] -> error: {}", repoPath, e.getMessage());
-        }
     }
 }
