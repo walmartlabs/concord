@@ -117,7 +117,11 @@ public class RepositoryCache {
             Path repoPath = withLock(lockTimeout, i.repoUrl(), () -> {
                 try {
                     Path tmpDir = i.repoPath().getParent().resolve(i.repoPath().getFileName() + ".tmp");
-                    Files.move(i.repoPath(), tmpDir);
+
+                    if (Files.exists(i.repoPath())) {
+                        Files.move(i.repoPath(), tmpDir);
+                    }
+                    
                     accessJournal.removeRecord(i.repoUrl());
                     return tmpDir;
                 } catch (IOException e) {
@@ -126,10 +130,12 @@ public class RepositoryCache {
                 return null;
             });
 
-            try {
-                IOUtils.deleteRecursively(repoPath);
-            } catch (IOException e) {
-                log.warn("cleanup ['{}'] -> delete error", i.repoPath(), e);
+            if (repoPath != null) {
+                try {
+                    IOUtils.deleteRecursively(repoPath);
+                } catch (IOException e) {
+                    log.warn("cleanup ['{}'] -> delete error", i.repoPath(), e);
+                }
             }
         }
 
