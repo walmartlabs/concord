@@ -112,11 +112,11 @@ public class Run implements Callable<Integer> {
         }
 
         DependencyManager dependencyManager = initDependencyManager();
+        ImportManager importManager = new ImportManagerFactory(dependencyManager, new CliRepositoryExporter(repoCacheDir), verbose ? new CliImportsListener() : null)
+                .create();
 
         ProjectLoaderV2.Result loadResult;
         try {
-            ImportManager importManager = new ImportManagerFactory(dependencyManager, new CliRepositoryExporter(repoCacheDir))
-                    .create();
 
             loadResult = new ProjectLoaderV2(importManager)
                     .load(targetDir, new CliImportsNormalizer(importsSource, verbose));

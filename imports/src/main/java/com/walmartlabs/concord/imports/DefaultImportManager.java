@@ -31,10 +31,13 @@ import java.util.stream.Collectors;
 public class DefaultImportManager implements ImportManager {
 
     private final Map<String, ImportProcessor<Import>> processors;
+    private final ImportsListener listener;
 
-    @SuppressWarnings("unchecked")
-    public DefaultImportManager(List<ImportProcessor> processors) {
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DefaultImportManager(List<ImportProcessor> processors, ImportsListener listener) {
         this.processors = processors.stream().collect(Collectors.toMap(ImportProcessor::type, o -> o));
+        this.listener = listener != null ? listener : new ImportsListener() {};
     }
 
     @Override
@@ -46,10 +49,16 @@ public class DefaultImportManager implements ImportManager {
             return result;
         }
 
+        listener.onStart(items);
+
         for (Import i : items) {
+            listener.beforeImport(i);
             Snapshot s = assertProcessor(i.type()).process(i, dest);
+            listener.afterImport(i);
             result.add(s);
         }
+
+        listener.onEnd(items);
 
         return result;
     }
