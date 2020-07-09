@@ -22,10 +22,13 @@ package com.walmartlabs.concord.cli;
 
 import com.google.inject.Injector;
 import com.walmartlabs.concord.cli.runner.*;
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.imports.ImportManager;
 import com.walmartlabs.concord.imports.ImportManagerFactory;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
+import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.StateManager;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
@@ -36,6 +39,7 @@ import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.sdk.MapUtils;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -47,9 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 @Command(name = "run", description = "Run the current directory as a Concord process")
@@ -62,7 +64,7 @@ public class Run implements Callable<Integer> {
     boolean helpRequested = false;
 
     @Option(names = {"-e", "--extra-vars"}, description = "additional process variables")
-    Map<String, String> extraVars = new LinkedHashMap<>();
+    Map<String, Object> extraVars = new LinkedHashMap<>();
 
     @Option(names = {"--deps-cache-dir"}, description = "process dependencies cache dir")
     Path depsCacheDir = Paths.get(System.getProperty("user.home")).resolve(".concord").resolve("depsCache");
@@ -84,6 +86,9 @@ public class Run implements Callable<Integer> {
 
     @Option(names = {"--entry-point"}, description = "entry point")
     String entryPoint = Constants.Request.DEFAULT_ENTRY_POINT_NAME;
+
+    @Option(names = {"-p", "--profile"}, description = "active profile")
+    List<String> profiles = new ArrayList<>();
 
     @Option(names = {"-c", "--clean"}, description = "remove the target directory before starting the process")
     boolean cleanup = false;
@@ -144,6 +149,10 @@ public class Run implements Callable<Integer> {
             System.out.println("Additional variables: " + extraVars);
         }
 
+        if (verbose && !profiles.isEmpty()) {
+            System.out.println("Active profiles: " + profiles);
+        }
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(processDefinition))
                 .build();
@@ -162,8 +171,11 @@ public class Run implements Callable<Integer> {
 
         Runner runner = injector.getInstance(Runner.class);
 
-        Map<String, Object> args = new LinkedHashMap<>(cfg.arguments());
-        args.putAll(extraVars);
+        Map<String, Object> profileArgs = getProfilesArguments(processDefinition, profiles);
+        Map<String, Object> args = ConfigurationUtils.deepMerge(cfg.arguments(), profileArgs, extraVars);
+        if (verbose) {
+            System.out.println("Process arguments: " + args);
+        }
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
@@ -184,6 +196,11 @@ public class Run implements Callable<Integer> {
         System.out.println("...done!");
 
         return 0;
+    }
+
+    private static Map<String, Object> getProfilesArguments(ProcessDefinition processDefinition, List<String> profiles) {
+        Map<String, Object> result = ProcessDefinitionUtils.getVariables(new ProcessDefinitionV2(processDefinition), profiles);
+        return MapUtils.getMap(result, Constants.Request.ARGUMENTS_KEY, Collections.emptyMap());
     }
 
     private DependencyManager initDependencyManager() throws IOException {
