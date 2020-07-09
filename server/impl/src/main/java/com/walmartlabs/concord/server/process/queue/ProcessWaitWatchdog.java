@@ -87,9 +87,9 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Timestamp lastUpdatedAt = null;
+        Long lastId = null;
         while (true) {
-            List<WaitingProcess> processes = dao.nextWaitItems(lastUpdatedAt, cfg.getPollLimit());
+            List<WaitingProcess> processes = dao.nextWaitItems(lastId, cfg.getPollLimit());
             if (processes.isEmpty()) {
                 return;
             }
@@ -97,7 +97,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             for (WaitingProcess p : processes) {
                 WaitType type = p.waits().type();
                 processHandler(type, p);
-                lastUpdatedAt = p.lastUpdatedAt();
+                lastId = p.id();
             }
         }
     }
@@ -137,7 +137,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         Timestamp instanceCreatedAt();
 
-        Timestamp lastUpdatedAt();
+        long id();
 
         AbstractWaitCondition waits();
 
@@ -158,29 +158,29 @@ public class ProcessWaitWatchdog implements ScheduledTask {
             this.objectMapper = objectMapper;
         }
 
-        public List<WaitingProcess> nextWaitItems(Timestamp lastUpdatedAt, int pollLimit) {
+        public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
-                SelectConditionStep<Record5<UUID, String, Timestamp, Timestamp, JSONB>> s = tx.select(
+                SelectConditionStep<Record5<UUID, String, Timestamp, Long, JSONB>> s = tx.select(
                         q.INSTANCE_ID,
                         q.CURRENT_STATUS,
                         q.CREATED_AT,
-                        q.LAST_UPDATED_AT,
+                        q.ID_SEQ,
                         q.WAIT_CONDITIONS)
                         .from(q)
                         .where(q.WAIT_CONDITIONS.isNotNull());
 
-                if (lastUpdatedAt != null) {
-                    s.and(q.LAST_UPDATED_AT.greaterThan(lastUpdatedAt));
+                if (lastId != null) {
+                    s.and(q.ID_SEQ.greaterThan(lastId));
                 }
 
-                return s.orderBy(q.LAST_UPDATED_AT)
+                return s.orderBy(q.ID_SEQ)
                         .limit(pollLimit)
                         .fetch(r -> WaitingProcess.builder()
                                 .instanceId(r.value1())
                                 .status(ProcessStatus.valueOf(r.value2()))
                                 .instanceCreatedAt(r.value3())
-                                .lastUpdatedAt(r.value4())
+                                .id(r.value4())
                                 .waits(objectMapper.fromJSONB(r.value5(), AbstractWaitCondition.class))
                                 .build());
             });
