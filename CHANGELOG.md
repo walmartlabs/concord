@@ -1,5 +1,30 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-cli: initial support for `profiles`;
+- concord-cli: option to remove the target directory before
+the process starts;
+- concord-cli: provide feedback while processing `imports`;
+- concord-cli: the `run` command now supports profiles;
+- dependency-manager: support for proxy servers (http/https);
+- runtime-v2: support for `meta` attributes in `log` steps.
+
+### Changed
+
+- concord-server: fixed an issue with process wait conditions not
+being cleared in time;
+- concord-server: fixed a potential NPE in the repository cache
+cleanup code;
+- project: JDK11+ compatibility;
+- concord-server: force all usernames to lower case to avoid issues
+with AD/LDAP authentication and environments with multiple auth/z
+providers.
+
+
+
 ## [1.55.0] - 2020-07-01
 
 ### Added
