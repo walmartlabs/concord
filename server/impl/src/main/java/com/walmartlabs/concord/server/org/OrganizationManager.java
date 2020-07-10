@@ -33,6 +33,7 @@ import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.policy.PolicyUtils;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
+import com.walmartlabs.concord.server.security.Permission;
 import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.security.UserPrincipal;
 import com.walmartlabs.concord.server.user.UserEntry;
@@ -75,7 +76,7 @@ public class OrganizationManager {
     }
 
     public UUID create(OrganizationEntry entry) {
-        assertAdmin();
+        assertPermission(Permission.CREATE_ORG);
 
         UserEntry owner = getOwner(entry.getOwner(), UserPrincipal.assertCurrent().getUser());
 
@@ -213,6 +214,16 @@ public class OrganizationManager {
         if (!Roles.isAdmin()) {
             throw new AuthorizationException("Only admins are allowed to update organizations");
         }
+    }
+
+    private static void assertPermission(Permission p) {
+        if (Permission.isPermitted(p)) {
+            return;
+        }
+
+        throw new AuthorizationException(
+                String.format("Only roles with '%s' permission are allowed to update organizations", p.getKey())
+        );
     }
 
     private UserEntry getOwner(EntityOwner owner, UserEntry defaultOwner) {

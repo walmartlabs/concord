@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="createOrgPermissionId" value="7833764b-eb62-4017-84aa-cd57d594836f"/>
+
+    <changeSet id="1570000" author="benjamin.broadaway@walmart.com">
+        <insert tableName="PERMISSIONS">
+            <column name="PERMISSION_ID" value="${createOrgPermissionId}"/>
+            <column name="PERMISSION_NAME" value="createOrg"/>
+            <column name="DESCRIPTION" value="Permission to create organizations"/>
+        </insert>
+
+        <sql>
+            insert into ROLE_PERMISSIONS values (
+                (select ROLE_ID from ROLES where ROLE_NAME = 'concordAdmin'),
+                '${createOrgPermissionId}'
+            )
+        </sql>
+    </changeSet>
+</databaseChangeLog>
