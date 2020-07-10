@@ -30,12 +30,22 @@ public enum Permission {
      * <p>
      * As in {@code com/walmartlabs/concord/server/db/v1.18.0.xml}
      */
-    GET_PROCESS_QUEUE_ALL_ORGS("getProcessQueueAllOrgs");
+    GET_PROCESS_QUEUE_ALL_ORGS("getProcessQueueAllOrgs"),
+    /**
+     * Permission to create organizations
+     * <p>
+     * As in {@code com/walmartlabs/concord/server/db/v1.57.0.xml}
+     */
+    CREATE_ORG("createOrg");
 
     private final String key;
 
     private Permission(String key) {
         this.key = key;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public static boolean isPermitted(Permission p) {
