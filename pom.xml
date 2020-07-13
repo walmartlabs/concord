@@ -240,9 +240,8 @@
                     <executions>
                         <execution>
                             <id>index</id>
-                            <phase>process-classes</phase>
                             <goals>
-                                <goal>index</goal>
+                                <goal>main-index</goal>
                             </goals>
                         </execution>
                     </executions>

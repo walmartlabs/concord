@@ -21,6 +21,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
  */
 
 import com.google.inject.AbstractModule;
+import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 
@@ -29,6 +30,6 @@ public class CurrentClasspathModule extends AbstractModule {
     @Override
     protected void configure() {
         ClassLoader cl = this.getClass().getClassLoader();
-        install(new SpaceModule(new URLClassSpace(cl)));
+        install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
     }
 }

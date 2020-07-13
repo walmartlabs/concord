@@ -691,7 +691,6 @@ public class MainTest {
                     runtimeModule,
                     new V1CompatModule()) // allow runtime v1 tasks
                     .create();
-
             injector.getInstance(Main.class).execute();
         } finally {
             out.flush();

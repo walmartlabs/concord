@@ -617,8 +617,8 @@ public class Main {
                 cfg,
                 tasks,
                 taskCallModule,
-                new SpaceModule(new URLClassSpace(cl), BeanScanning.CACHE),
-                new SpaceModule(new URLClassSpace(depsClassLoader), BeanScanning.CACHE));
+                new SpaceModule(new URLClassSpace(cl), runnerCfg.enableSisuIndex() ? BeanScanning.GLOBAL_INDEX : BeanScanning.CACHE),
+                new SpaceModule(new URLClassSpace(depsClassLoader), runnerCfg.enableSisuIndex() ? BeanScanning.GLOBAL_INDEX : BeanScanning.CACHE));
 
         return Guice.createInjector(m);
     }

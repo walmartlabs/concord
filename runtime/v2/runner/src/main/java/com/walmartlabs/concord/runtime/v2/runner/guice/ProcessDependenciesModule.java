@@ -23,6 +23,7 @@ package com.walmartlabs.concord.runtime.v2.runner.guice;
 import com.google.inject.AbstractModule;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.sdk.Constants;
+import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 
@@ -55,7 +56,7 @@ public class ProcessDependenciesModule extends AbstractModule {
         try {
             ClassLoader cl = loadDependencies(workDir, dependencies);
             Thread.currentThread().setContextClassLoader(cl);
-            install(new SpaceModule(new URLClassSpace(cl)));
+            install(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX));
         } catch (IOException e) {
             addError(e);
         }
