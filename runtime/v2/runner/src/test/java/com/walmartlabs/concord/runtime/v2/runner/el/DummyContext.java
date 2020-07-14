@@ -20,10 +20,10 @@ package com.walmartlabs.concord.runtime.v2.runner.el;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Execution;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.ProjectInfo;
 
 import java.io.Serializable;
@@ -50,6 +50,31 @@ public class DummyContext implements Context {
 
     @Override
     public ProjectInfo projectInfo() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public FileService fileService() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public DockerService dockerService() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public SecretService secretService() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public ApiConfiguration apiConfiguration() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public ProcessConfiguration processConfiguration() {
         throw new IllegalStateException("Not implemented");
     }
 

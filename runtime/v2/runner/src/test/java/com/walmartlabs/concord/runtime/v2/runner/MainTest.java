@@ -110,6 +110,9 @@ public class MainTest {
                 bind(CheckpointService.class).toInstance(checkpointService);
                 bind(PersistenceService.class).toInstance(mock(PersistenceService.class));
                 bind(ProcessStatusCallback.class).toInstance(processStatusCallback);
+                bind(DockerService.class).to(DefaultDockerService.class);
+                bind(FileService.class).to(DefaultFileService.class);
+                bind(SecretService.class).to(DefaultSecretService.class);
 
                 Multibinder<TaskProvider> taskProviders = Multibinder.newSetBinder(binder(), TaskProvider.class);
                 taskProviders.addBinding().to(TaskV2Provider.class);

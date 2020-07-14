@@ -20,18 +20,14 @@ package com.walmartlabs.concord.runtime.v2.runner.context;
  * =====
  */
 
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
-import com.walmartlabs.concord.runtime.v2.model.Step;
-import com.walmartlabs.concord.runtime.v2.model.TaskCall;
+import com.walmartlabs.concord.runtime.v2.model.*;
 import com.walmartlabs.concord.runtime.v2.runner.el.EvalContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.vm.SuspendCommand;
 import com.walmartlabs.concord.runtime.v2.runner.vm.TaskSuspendCommand;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.Execution;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
+import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.ImmutableProjectInfo;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
@@ -57,6 +53,11 @@ public class ContextImpl implements Context {
     private final UUID processInstanceId;
     private final Variables variables;
     private final ProjectInfo projectInfo;
+    private final FileService fileService;
+    private final DockerService dockerService;
+    private final SecretService secretService;
+    private final ApiConfiguration apiConfiguration;
+    private final ProcessConfiguration processConfiguration;
 
     public ContextImpl(Compiler compiler,
                        ExpressionEvaluator expressionEvaluator,
@@ -68,7 +69,11 @@ public class ContextImpl implements Context {
                        UUID correlationId,
                        Path workingDir,
                        UUID processInstanceId,
-                       ProjectInfo projectInfo) {
+                       FileService fileService,
+                       DockerService dockerService,
+                       SecretService secretService,
+                       ApiConfiguration apiConfiguration,
+                       ProcessConfiguration processConfiguration) {
 
         this.compiler = compiler;
         this.expressionEvaluator = expressionEvaluator;
@@ -80,8 +85,13 @@ public class ContextImpl implements Context {
         this.correlationId = correlationId;
         this.workingDir = workingDir;
         this.processInstanceId = processInstanceId;
-        this.projectInfo = projectInfo;
+        this.projectInfo = processConfiguration.projectInfo();
         this.variables = new ContextVariables(this);
+        this.fileService = fileService;
+        this.dockerService = dockerService;
+        this.secretService = secretService;
+        this.apiConfiguration = apiConfiguration;
+        this.processConfiguration = processConfiguration;
     }
 
     @Override
@@ -111,6 +121,31 @@ public class ContextImpl implements Context {
                 .id(Objects.requireNonNull(projectInfo.projectId()))
                 .name(Objects.requireNonNull(projectInfo.projectName()))
                 .build();
+    }
+
+    @Override
+    public FileService fileService() {
+        return fileService;
+    }
+
+    @Override
+    public DockerService dockerService() {
+        return dockerService;
+    }
+
+    @Override
+    public SecretService secretService() {
+        return secretService;
+    }
+
+    @Override
+    public ApiConfiguration apiConfiguration() {
+        return apiConfiguration;
+    }
+
+    @Override
+    public ProcessConfiguration processConfiguration() {
+        return processConfiguration;
     }
 
     @Override

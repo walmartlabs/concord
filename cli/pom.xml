@@ -23,34 +23,6 @@
             <artifactId>concord-runtime-common</artifactId>
         </dependency>
 
-        <!-- v1 dependencies -->
-        <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v1</groupId>
-            <artifactId>concord-project-model-v1</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.inject</groupId>
-                    <artifactId>guice</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.code.findbugs</groupId>
-                    <artifactId>jsr305</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.j2objc</groupId>
-                    <artifactId>j2objc-annotations</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.checkerframework</groupId>
-                    <artifactId>checker-qual</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.takari.bpm</groupId>
-                    <artifactId>bpm-engine-impl</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- v2 dependencies -->
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
@@ -95,20 +67,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.takari.bpm</groupId>
-            <artifactId>bpm-engine-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish</groupId>
@@ -122,11 +82,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
         </dependency>
     </dependencies>
 

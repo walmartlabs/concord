@@ -22,9 +22,10 @@ package com.walmartlabs.concord.plugins.ansible.v2;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.plugins.ansible.*;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
-import com.walmartlabs.concord.sdk.ApiConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.runtime.v2.sdk.DefaultVariables;
+import com.walmartlabs.concord.runtime.v2.sdk.Task;
+import com.walmartlabs.concord.runtime.v2.sdk.Variables;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,32 +40,19 @@ import java.util.UUID;
 public class AnsibleTaskV2 implements Task {
 
     private final Context context;
-    private final ApiConfiguration apiConfiguration;
     private final ApiClient apiClient;
-    private final FileService fileService;
     private final AnsibleDockerService dockerService;
     private final AnsibleSecretService secretService;
-    private final ProcessConfiguration processConfiguration;
 
     @DefaultVariables
     Map<String, Object> defaults;
 
     @Inject
-    public AnsibleTaskV2(Context context,
-                         ApiConfiguration apiConfiguration,
-                         ApiClient apiClient,
-                         FileService fileService,
-                         DockerService dockerService,
-                         SecretService secretService,
-                         ProcessConfiguration processConfiguration) {
-
+    public AnsibleTaskV2(ApiClient apiClient, Context context) {
         this.context = context;
-        this.apiConfiguration = apiConfiguration;
         this.apiClient = apiClient;
-        this.fileService = fileService;
-        this.dockerService = new DockerServiceV2(dockerService);
-        this.secretService = new SecretServiceV2(secretService);
-        this.processConfiguration = processConfiguration;
+        this.dockerService = new DockerServiceV2(context.dockerService());
+        this.secretService = new SecretServiceV2(context.secretService());
     }
 
     @Override
@@ -77,10 +65,10 @@ public class AnsibleTaskV2 implements Task {
 
         AnsibleTask task = new AnsibleTask(apiClient,
                 new AnsibleAuthFactory(secretService),
-                secretService, apiConfiguration);
+                secretService, context.apiConfiguration());
 
-        UUID instanceId = Objects.requireNonNull(processConfiguration.instanceId());
-        Path tmpDir = fileService.createTempDirectory("ansible");
+        UUID instanceId = Objects.requireNonNull(context.processInstanceId());
+        Path tmpDir = context.fileService().createTempDirectory("ansible");
 
         AnsibleContext ctx = AnsibleContext.builder()
                 .instanceId(instanceId)
@@ -88,9 +76,9 @@ public class AnsibleTaskV2 implements Task {
                 .tmpDir(tmpDir)
                 .defaults(defaults)
                 .args(in)
-                .sessionToken(processConfiguration.processInfo().sessionToken())
+                .sessionToken(context.processConfiguration().processInfo().sessionToken())
                 .eventCorrelationId(context.execution().correlationId())
-                .orgName(processConfiguration.projectInfo().orgName())
+                .orgName(context.projectInfo() != null ? context.projectInfo().orgName() : null)
                 .retryCount((Integer) context.execution().state().peekFrame(context.execution().currentThreadId()).getLocal("__retry_attempNo")) // TODO provide a SDK method for this
                 .build();
 

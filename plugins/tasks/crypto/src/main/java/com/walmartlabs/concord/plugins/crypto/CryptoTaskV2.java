@@ -22,12 +22,9 @@ package com.walmartlabs.concord.plugins.crypto;
 
 import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProjectInfo;
-import com.walmartlabs.concord.runtime.v2.sdk.SecretService;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.KeyPair;
 import com.walmartlabs.concord.runtime.v2.sdk.SecretService.UsernamePassword;
-import com.walmartlabs.concord.runtime.v2.sdk.Task;
-import com.walmartlabs.concord.runtime.v2.sdk.Variables;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -41,17 +38,15 @@ import java.util.Map;
 public class CryptoTaskV2 implements Task {
 
     private final SecretService secretService;
-    private final WorkingDirectory workDir;
+    private final Path workDir;
     private final ProcessConfiguration processCfg;
 
     @Inject
-    public CryptoTaskV2(SecretService secretService,
-                        WorkingDirectory workDir,
-                        ProcessConfiguration processCfg) {
+    public CryptoTaskV2(Context context) {
 
-        this.secretService = secretService;
-        this.workDir = workDir;
-        this.processCfg = processCfg;
+        this.secretService = context.secretService();
+        this.workDir = context.workingDirectory();
+        this.processCfg = context.processConfiguration();
     }
 
     public String exportAsString(String orgName, String name, String password) throws Exception {
@@ -61,7 +56,7 @@ public class CryptoTaskV2 implements Task {
     public Map<String, String> exportKeyAsFile(String orgName, String name, String password) throws Exception {
         KeyPair keyPair = secretService.exportKeyAsFile(orgName, name, password);
 
-        Path baseDir = workDir.getValue();
+        Path baseDir = workDir;
 
         Map<String, String> m = new HashMap<>();
         m.put("private", baseDir.relativize(keyPair.privateKey()).toString());
@@ -80,8 +75,7 @@ public class CryptoTaskV2 implements Task {
 
     public String exportAsFile(String orgName, String name, String password) throws Exception {
         Path path = secretService.exportAsFile(orgName, name, password);
-        Path baseDir = workDir.getValue();
-        return baseDir.relativize(path).toString();
+        return workDir.relativize(path).toString();
     }
 
     public String encryptString(String value) throws Exception {
