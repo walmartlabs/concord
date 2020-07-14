@@ -88,14 +88,14 @@ public class Agent {
         this.executor = Executors.newCachedThreadPool();
     }
 
-    public void start() throws Exception {
+    public void start() {
         executor.submit(() -> {
             run();
             return null;
         });
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         queueClient.stop();
         executor.shutdownNow();
     }
