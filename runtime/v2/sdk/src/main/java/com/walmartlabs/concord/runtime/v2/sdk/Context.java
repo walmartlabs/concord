@@ -20,6 +20,8 @@ package com.walmartlabs.concord.runtime.v2.sdk;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
+import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.sdk.ProjectInfo;
 
 import javax.annotation.Nullable;
@@ -47,7 +49,15 @@ public interface Context {
     @Nullable
     ProjectInfo projectInfo();
 
-    // TODO move processInfo?
+    FileService fileService();
+
+    DockerService dockerService();
+
+    SecretService secretService();
+
+    ApiConfiguration apiConfiguration();
+
+    ProcessConfiguration processConfiguration();
 
     /**
      * Provides access to the low-level details of the current process.

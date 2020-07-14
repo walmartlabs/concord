@@ -40,12 +40,10 @@ public class DockerTaskV2 implements Task {
     private final DockerTaskCommon delegate;
 
     @Inject
-    public DockerTaskV2(com.walmartlabs.concord.runtime.v2.sdk.DockerService dockerService,
-                        com.walmartlabs.concord.runtime.v2.sdk.FileService fileService,
-                        Context context) {
-        this.delegate = new DockerTaskCommon(context.workingDirectory(), fileService::createTempFile,
+    public DockerTaskV2(Context context) {
+        this.delegate = new DockerTaskCommon(context.workingDirectory(), context.fileService()::createTempFile,
                 (spec, outCallback, errCallback) ->
-                        dockerService.start(spec,
+                        context.dockerService().start(spec,
                                 outCallback != null ? outCallback::onLog : null,
                                 errCallback != null ? errCallback::onLog : null));
     }

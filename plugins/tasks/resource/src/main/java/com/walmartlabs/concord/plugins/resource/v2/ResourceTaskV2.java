@@ -35,13 +35,12 @@ public class ResourceTaskV2 implements Task {
     private final ResourceTaskCommon delegate;
 
     @Inject
-    public ResourceTaskV2(com.walmartlabs.concord.runtime.v2.sdk.FileService fileService,
-                          Context ctx) {
-        this.delegate = new ResourceTaskCommon(ctx.workingDirectory(), fileService::createTempFile, v -> ctx.eval(v, Object.class));
+    public ResourceTaskV2(Context ctx) {
+        this.delegate = new ResourceTaskCommon(ctx.workingDirectory(), ctx.fileService()::createTempFile, v -> ctx.eval(v, Object.class));
     }
 
     public String asString(String path) throws IOException {
-        return delegate.asString(path);
+        return ResourceTaskCommon.asString(path);
     }
 
     public Object asJson(String path) throws IOException {
@@ -73,6 +72,6 @@ public class ResourceTaskV2 implements Task {
     }
 
     public String prettyPrintJson(Object json) throws IOException {
-        return delegate.prettyPrintJson(json);
+        return ResourceTaskCommon.prettyPrintJson(json);
     }
 }

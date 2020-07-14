@@ -22,7 +22,7 @@ package com.walmartlabs.concord.plugins.kv;
 
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.client.ProcessKvStoreApi;
-import com.walmartlabs.concord.runtime.common.injector.InstanceId;
+import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.runtime.v2.sdk.Task;
 
 import javax.inject.Inject;
@@ -33,42 +33,37 @@ import java.util.UUID;
 @SuppressWarnings("unused")
 public class KvTaskV2 implements Task {
     private final ApiClient apiClient;
-    private final InstanceId processInstanceId;
+    private final UUID processInstanceId;
 
     @Inject
-    public KvTaskV2(ApiClient apiClient, InstanceId processInstanceId) {
+    public KvTaskV2(ApiClient apiClient, Context context) {
         this.apiClient = apiClient;
-        this.processInstanceId = processInstanceId;
+        this.processInstanceId = context.processInstanceId();
     }
 
     public void remove(String key) throws Exception {
-        UUID txId = processInstanceId.getValue();
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
-        KvTaskUtils.remove(api, txId, key);
+        KvTaskUtils.remove(api, processInstanceId, key);
     }
 
     public void putString(String key, String value) throws Exception {
-        UUID txId = processInstanceId.getValue();
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
-        KvTaskUtils.putString(api, txId, key, value);
+        KvTaskUtils.putString(api, processInstanceId, key, value);
     }
 
     public String getString(String key) throws Exception {
-        UUID txId = processInstanceId.getValue();
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
-        return KvTaskUtils.getString(api, txId, key);
+        return KvTaskUtils.getString(api, processInstanceId, key);
     }
 
     public void putLong(String key, Long value) throws Exception {
-        UUID txId = processInstanceId.getValue();
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
-        KvTaskUtils.putLong(api, txId, key, value);
+        KvTaskUtils.putLong(api, processInstanceId, key, value);
     }
 
     public Long getLong(String key) throws Exception {
-        UUID txId = processInstanceId.getValue();
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
-        return KvTaskUtils.getLong(api, txId, key);
+        return KvTaskUtils.getLong(api, processInstanceId, key);
     }
 
     public long inc(String key) throws Exception {
@@ -76,8 +71,7 @@ public class KvTaskV2 implements Task {
     }
 
     public long incLong(String key) throws Exception {
-        UUID txId = processInstanceId.getValue();
         ProcessKvStoreApi api = new ProcessKvStoreApi(apiClient);
-        return KvTaskUtils.incLong(api, txId, key);
+        return KvTaskUtils.incLong(api, processInstanceId, key);
     }
 }

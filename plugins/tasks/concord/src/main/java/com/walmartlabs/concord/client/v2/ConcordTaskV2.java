@@ -21,7 +21,6 @@ package com.walmartlabs.concord.client.v2;
  */
 
 import com.walmartlabs.concord.client.*;
-import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.ProjectInfo;
 
@@ -35,7 +34,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.client.ConcordTaskParams.*;
+import static com.walmartlabs.concord.client.ConcordTaskParams.KillParams;
+import static com.walmartlabs.concord.client.ConcordTaskParams.ListSubProcesses;
 
 @Named("concord")
 @SuppressWarnings("unused")
@@ -52,8 +52,8 @@ public class ConcordTaskV2 implements ReentrantTask {
     private final ConcordTaskSuspender suspender;
 
     @Inject
-    public ConcordTaskV2(ProcessConfiguration processCfg, ApiClientFactory apiClientFactory, Context context) {
-        this.sessionToken = processCfg.processInfo().sessionToken();
+    public ConcordTaskV2(ApiClientFactory apiClientFactory, Context context) {
+        this.sessionToken = context.processConfiguration().processInfo().sessionToken();
         this.instanceId = context.processInstanceId();
         this.apiClientFactory = apiClientFactory;
         this.projectInfo = context.projectInfo();

@@ -25,6 +25,7 @@ import com.icegreen.greenmail.smtp.SmtpServer;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.walmartlabs.concord.sdk.Context;
 import com.walmartlabs.concord.sdk.MockContext;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 

@@ -25,9 +25,9 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.el.ExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.runtime.v2.sdk.Compiler;
-import com.walmartlabs.concord.runtime.v2.sdk.Context;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.sdk.ApiConfiguration;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.State;
 import com.walmartlabs.concord.svm.ThreadId;
@@ -40,12 +40,26 @@ public class DefaultContextFactory implements ContextFactory {
     private final WorkingDirectory workingDirectory;
     private final InstanceId processInstanceId;
     private final ProcessConfiguration processConfiguration;
+    private final FileService fileService;
+    private final DockerService dockerService;
+    private final SecretService secretService;
+    private final ApiConfiguration apiConfiguration;
 
     @Inject
-    public DefaultContextFactory(WorkingDirectory workingDirectory, InstanceId processInstanceId, ProcessConfiguration processConfiguration) {
+    public DefaultContextFactory(WorkingDirectory workingDirectory,
+                                 InstanceId processInstanceId,
+                                 ProcessConfiguration processConfiguration,
+                                 FileService fileService,
+                                 DockerService dockerService,
+                                 SecretService secretService,
+                                 ApiConfiguration apiConfiguration) {
         this.workingDirectory = workingDirectory;
         this.processInstanceId = processInstanceId;
         this.processConfiguration = processConfiguration;
+        this.fileService = fileService;
+        this.dockerService = dockerService;
+        this.secretService = secretService;
+        this.apiConfiguration = apiConfiguration;
     }
 
     @Override
@@ -60,6 +74,7 @@ public class DefaultContextFactory implements ContextFactory {
         Compiler compiler = runtime.getService(Compiler.class);
         ExpressionEvaluator ee = runtime.getService(ExpressionEvaluator.class);
 
-        return new ContextImpl(compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(), processInstanceId.getValue(), processConfiguration.projectInfo());
+        return new ContextImpl(compiler, ee, currentThreadId, runtime, state, pd, currentStep, correlationId, workingDirectory.getValue(),
+                processInstanceId.getValue(), fileService, dockerService, secretService, apiConfiguration, processConfiguration);
     }
 }
