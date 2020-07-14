@@ -24,6 +24,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.walmartlabs.concord.server.boot.BackgroundTasks;
 import com.walmartlabs.concord.server.boot.HttpServer;
+import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
@@ -43,7 +44,7 @@ public final class ConcordServer {
 
     public static ConcordServer start() throws Exception {
         ClassLoader cl = ConcordServer.class.getClassLoader();
-        Injector injector = Guice.createInjector(new WireModule(new SpaceModule(new URLClassSpace(cl))));
+        Injector injector = Guice.createInjector(new WireModule(new SpaceModule(new URLClassSpace(cl), BeanScanning.GLOBAL_INDEX)));
 
         ConcordServer instance = new ConcordServer();
         injector.injectMembers(instance);
