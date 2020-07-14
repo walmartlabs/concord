@@ -92,7 +92,7 @@ public class ConfigurationProcessorTest {
         defaultProcessCfgPolicy.put("a", "default");
         defaultProcessCfgPolicy.put("process-cfg-policy", "default-2");
 
-        PolicyEngineRules policy = new PolicyEngineRules(null, null, null, null, null, null, null, null, processCfgPolicy, null, defaultProcessCfgPolicy, null, null);
+        PolicyEngineRules policy = new PolicyEngineRules(null, null, null, null, null, null, null, null, processCfgPolicy, null, defaultProcessCfgPolicy, null, null, null);
 
         // ---
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);

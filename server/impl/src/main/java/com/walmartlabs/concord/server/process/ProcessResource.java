@@ -932,8 +932,11 @@ public class ProcessResource implements Resource {
 
             assertAttachmentsPolicy(tmpDir, entry);
 
-            stateManager.deleteDirectory(processKey, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
-            stateManager.importPath(processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, tmpDir);
+            Path finalTmpDir = tmpDir;
+            stateManager.tx(tx -> {
+                stateManager.deleteDirectory(tx, processKey, path(Constants.Files.JOB_ATTACHMENTS_DIR_NAME, Constants.Files.JOB_STATE_DIR_NAME));
+                stateManager.importPath(tx, processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME, finalTmpDir, (p, attrs) -> true);
+            });
 
             Map<String, Object> out = OutVariablesUtils.read(tmpDir);
             if (out.isEmpty()) {

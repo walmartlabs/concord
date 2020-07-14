@@ -38,6 +38,8 @@ public class RunAsCurrentProcessUserProcessor implements PayloadProcessor {
     public Payload process(Chain chain, Payload payload) {
         try {
             return securityContext.runAsCurrentUser(payload.getProcessKey(), () -> chain.process(payload));
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

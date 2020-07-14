@@ -25,7 +25,9 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.AbstractDaoTest;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -58,8 +60,8 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         //
         ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
-        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
-        stateManager.importPath(processKey, null, baseDir);
+        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class));
+        stateManager.importPath(processKey, null, baseDir, (p, attrs) -> true);
 
         Path tmpDir = Files.createTempDirectory("testExport");
 
@@ -72,7 +74,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         writeTempFile(baseDir.resolve("file-1"), "123-up".getBytes());
 
-        stateManager.importPath(processKey, null, baseDir);
+        stateManager.importPath(processKey, null, baseDir,(p, attrs) -> true);
 
         result = stateManager.export(processKey, copyTo(tmpDir));
         assertTrue(result);
@@ -103,8 +105,8 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
         }
 
         ProcessConfiguration stateCfg = new ProcessConfiguration(24 * 60 * 60 * 1000, Collections.singletonList(Constants.Files.CONFIGURATION_FILE_NAME));
-        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg);
-        stateManager.importPath(processKey, "/", baseDir);
+        ProcessStateManager stateManager = new ProcessStateManager(getConfiguration(), mock(SecretStoreConfiguration.class), stateCfg, mock(PolicyManager.class), mock(ProcessLogManager.class));
+        stateManager.importPath(processKey, "/", baseDir, (p, attrs) -> true);
     }
 
     private static void assertFileContent(String expected, Path f) throws IOException {
