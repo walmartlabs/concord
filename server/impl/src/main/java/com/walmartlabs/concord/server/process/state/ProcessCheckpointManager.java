@@ -101,9 +101,11 @@ public class ProcessCheckpointManager {
                 // TODO: only for v1 runtime
                 String eventName = readCheckpointEventName(extractedDir.path());
 
-                stateManager.deleteDirectory(processKey, Constants.Files.CONCORD_SYSTEM_DIR_NAME);
-                stateManager.deleteDirectory(processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
-                stateManager.importPath(processKey, null, extractedDir.path());
+                stateManager.tx(tx -> {
+                    stateManager.deleteDirectory(tx, processKey, Constants.Files.CONCORD_SYSTEM_DIR_NAME);
+                    stateManager.deleteDirectory(tx, processKey, Constants.Files.JOB_ATTACHMENTS_DIR_NAME);
+                    stateManager.importPath(tx, processKey, null, extractedDir.path(), (p, attrs) -> true);
+                });
 
                 Map<String, Object> out = OutVariablesUtils.read(extractedDir.path().resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
                 if (out.isEmpty()) {

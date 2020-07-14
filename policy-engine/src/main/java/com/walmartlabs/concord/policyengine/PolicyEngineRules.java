@@ -45,6 +45,7 @@ public class PolicyEngineRules {
     private final JsonStoreRule jsonStoreRule;
     private final Map<String, Object> defaultProcessCfg;
     private final List<DependencyVersionsPolicy.Dependency> dependencyVersions;
+    private final PolicyRules<StateRule> stateRules;
 
     public PolicyEngineRules(@JsonProperty("dependency") PolicyRules<DependencyRule> dependencyRules,
                              @JsonProperty("file") PolicyRules<FileRule> fileRules,
@@ -58,7 +59,8 @@ public class PolicyEngineRules {
                              @JsonProperty("jsonStore") JsonStoreRule jsonStoreRule,
                              @JsonProperty("defaultProcessCfg") Map<String, Object> defaultProcessCfg,
                              @JsonProperty("dependencyVersions")List<DependencyVersionsPolicy.Dependency> dependencyVersions,
-                             @JsonProperty("attachments") AttachmentsRule attachmentsRule) {
+                             @JsonProperty("attachments") AttachmentsRule attachmentsRule,
+                             @JsonProperty("state") PolicyRules<StateRule> stateRules) {
 
         this.dependencyRules = dependencyRules;
         this.fileRules = fileRules;
@@ -74,6 +76,7 @@ public class PolicyEngineRules {
         this.jsonStoreRule = jsonStoreRule;
         this.defaultProcessCfg = defaultProcessCfg;
         this.dependencyVersions = dependencyVersions;
+        this.stateRules = stateRules;
     }
 
     public PolicyRules<DependencyRule> getDependencyRules() {
@@ -141,6 +144,10 @@ public class PolicyEngineRules {
         return attachmentsRule;
     }
 
+    public PolicyRules<StateRule> getStateRules() {
+        return stateRules;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -150,18 +157,22 @@ public class PolicyEngineRules {
                 Objects.equals(fileRules, that.fileRules) &&
                 Objects.equals(taskRules, that.taskRules) &&
                 Objects.equals(workspaceRule, that.workspaceRule) &&
+                Objects.equals(attachmentsRule, that.attachmentsRule) &&
                 Objects.equals(containerRules, that.containerRules) &&
                 Objects.equals(queueRules, that.queueRules) &&
                 Objects.equals(protectedTasksRules, that.protectedTasksRules) &&
                 Objects.equals(entityRules, that.entityRules) &&
                 Objects.equals(processCfg, that.processCfg) &&
                 Objects.equals(customRule, that.customRule) &&
-                Objects.equals(jsonStoreRule, that.jsonStoreRule);
+                Objects.equals(jsonStoreRule, that.jsonStoreRule) &&
+                Objects.equals(defaultProcessCfg, that.defaultProcessCfg) &&
+                Objects.equals(dependencyVersions, that.dependencyVersions) &&
+                Objects.equals(stateRules, that.stateRules);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dependencyRules, fileRules, taskRules, workspaceRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule);
+        return Objects.hash(dependencyRules, fileRules, taskRules, workspaceRule, attachmentsRule, containerRules, queueRules, protectedTasksRules, entityRules, processCfg, customRule, jsonStoreRule, defaultProcessCfg, dependencyVersions, stateRules);
     }
 
     @Override
@@ -171,13 +182,17 @@ public class PolicyEngineRules {
                 ", fileRules=" + fileRules +
                 ", taskRules=" + taskRules +
                 ", workspaceRule=" + workspaceRule +
+                ", attachmentsRule=" + attachmentsRule +
                 ", containerRules=" + containerRules +
                 ", queueRules=" + queueRules +
                 ", protectedTasksRules=" + protectedTasksRules +
                 ", entityRules=" + entityRules +
                 ", processCfg=" + processCfg +
                 ", customRule=" + customRule +
-                ", jsonStorageRule=" + jsonStoreRule +
+                ", jsonStoreRule=" + jsonStoreRule +
+                ", defaultProcessCfg=" + defaultProcessCfg +
+                ", dependencyVersions=" + dependencyVersions +
+                ", stateRules=" + stateRules +
                 '}';
     }
 }

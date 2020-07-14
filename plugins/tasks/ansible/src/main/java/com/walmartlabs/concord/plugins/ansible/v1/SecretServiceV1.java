@@ -38,7 +38,7 @@ public class SecretServiceV1 implements AnsibleSecretService {
     public SecretServiceV1(com.walmartlabs.concord.sdk.SecretService delegate, Context context, String instanceId, String workDir) {
         this.delegate = delegate;
         this.context = context;
-        this.instanceId = instanceId.toString();
+        this.instanceId = instanceId;
         this.workDir = workDir;
     }
 

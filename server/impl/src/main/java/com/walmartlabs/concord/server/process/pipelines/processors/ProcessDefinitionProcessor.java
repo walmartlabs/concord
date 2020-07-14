@@ -88,12 +88,11 @@ public class ProcessDefinitionProcessor implements PayloadProcessor {
             cfg = new HashMap<>(cfg); // make mutable
             cfg.put(Constants.Request.RUNTIME_KEY, runtime);
             payload = payload.putHeader(Payload.CONFIGURATION, cfg);
-
-            return chain.process(payload);
         } catch (Exception e) {
             log.warn("process -> ({}) project loading error: {}", workDir, e.getMessage());
             throw new ProcessException(processKey, "Error while loading the project, check the syntax. " + e.getMessage(), e);
         }
+        return chain.process(payload);
     }
 
     private static Payload addSnapshot(Payload payload, Snapshot s) {

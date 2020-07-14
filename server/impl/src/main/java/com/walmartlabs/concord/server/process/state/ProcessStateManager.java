@@ -24,16 +24,25 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.common.Posix;
 import com.walmartlabs.concord.db.AbstractDao;
 import com.walmartlabs.concord.db.MainDB;
+import com.walmartlabs.concord.db.PgUtils;
+import com.walmartlabs.concord.policyengine.CheckResult;
+import com.walmartlabs.concord.policyengine.PolicyEngine;
+import com.walmartlabs.concord.policyengine.StatePolicy;
+import com.walmartlabs.concord.policyengine.StateRule;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.secret.SecretUtils;
+import com.walmartlabs.concord.server.policy.PolicyException;
+import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
 import com.walmartlabs.concord.server.process.ProcessKey;
+import com.walmartlabs.concord.server.process.logs.ProcessLogManager;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +67,9 @@ import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
+import static com.walmartlabs.concord.server.jooq.tables.Projects.PROJECTS;
+import static org.jooq.impl.DSL.count;
+import static org.jooq.impl.DSL.select;
 
 @Named
 @Singleton
@@ -70,15 +82,26 @@ public class ProcessStateManager extends AbstractDao {
 
     private final SecretStoreConfiguration secretCfg;
     private final Set<String> secureFiles = new HashSet<>();
+    private final PolicyManager policyManager;
+    private final ProcessLogManager logManager;
 
     @Inject
     protected ProcessStateManager(@MainDB Configuration cfg,
                                   SecretStoreConfiguration secretCfg,
-                                  ProcessConfiguration stateCfg) {
+                                  ProcessConfiguration stateCfg,
+                                  PolicyManager policyManager,
+                                  ProcessLogManager logManager) {
         super(cfg);
         this.secretCfg = secretCfg;
+        this.policyManager = policyManager;
+        this.logManager = logManager;
 
         this.secureFiles.addAll(stateCfg.getSecureFiles());
+    }
+
+    @Override
+    public void tx(Tx t) {
+        super.tx(t);
     }
 
     public <T> Optional<T> get(PartialProcessKey partialProcessKey, String path, Function<InputStream, Optional<T>> converter) {
@@ -211,13 +234,6 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-    private void delete(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt) {
-        tx.deleteFrom(PROCESS_STATE)
-                .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
-                .execute();
-    }
-
     /**
      * Removes a single value.
      */
@@ -229,22 +245,18 @@ public class ProcessStateManager extends AbstractDao {
                 .execute());
     }
 
-    /**
-     * Remove a directory and all content from it.
-     */
-    @WithTimer
-    public void deleteDirectory(ProcessKey processKey, String path) {
-        tx(tx -> deleteDirectory(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path));
-    }
-
     public void delete(ProcessKey processKey) {
         tx(tx -> delete(tx, processKey.getInstanceId(), processKey.getCreatedAt()));
     }
 
-    private void deleteDirectory(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path) {
+    /**
+     * Remove a directory and all content from it.
+     */
+    @WithTimer
+    public void deleteDirectory(DSLContext tx, ProcessKey processKey, String path) {
         tx.deleteFrom(PROCESS_STATE)
-                .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
+                .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
                 .and(PROCESS_STATE.ITEM_PATH.eq(path)
                         .or(PROCESS_STATE.ITEM_PATH.startsWith(fixPath(path))))
                 .execute();
@@ -254,23 +266,18 @@ public class ProcessStateManager extends AbstractDao {
      * Replaces a single value.
      */
     public void replace(ProcessKey processKey, String path, byte[] data) {
-        UUID instanceId = processKey.getInstanceId();
-        Timestamp instanceCreatedAt = processKey.getCreatedAt();
-
         tx(tx -> {
-            deleteDirectory(tx, instanceId, instanceCreatedAt, path);
-            insert(tx, instanceId, instanceCreatedAt, path, data);
+            deleteDirectory(tx, processKey, path);
+            insert(tx, processKey, path, data);
         });
     }
 
     /**
      * Inserts a single value.
      */
-    public void insert(UUID instanceId, Timestamp instanceCreatedAt, String path, byte[] data) {
-        tx(tx -> insert(tx, instanceId, instanceCreatedAt, path, data));
-    }
+    public void insert(DSLContext tx, ProcessKey processKey, String path, byte[] in) {
+//        assertPolicy(tx, processKey, path, in);
 
-    private void insert(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path, byte[] in) {
         boolean needEncrypt = secureFiles.contains(path);
         byte[] data = in;
         if (needEncrypt) {
@@ -278,24 +285,8 @@ public class ProcessStateManager extends AbstractDao {
         }
         tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
-                .values(instanceId, instanceCreatedAt, path, data, needEncrypt)
+                .values(processKey.getInstanceId(), processKey.getCreatedAt(), path, data, needEncrypt)
                 .execute();
-    }
-
-    /**
-     * Imports data from the specified directory or a file.
-     */
-    @WithTimer
-    public void importPath(ProcessKey processKey, String path, Path src) {
-        importPath(processKey, path, src, (p, attrs) -> true);
-    }
-
-    /**
-     * Imports data from the specified directory or a file.
-     */
-    @WithTimer
-    public void importPath(ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
-        tx(tx -> importPath(tx, processKey.getInstanceId(), processKey.getCreatedAt(), path, src, filter));
     }
 
     /**
@@ -308,11 +299,22 @@ public class ProcessStateManager extends AbstractDao {
 
         tx(tx -> {
             delete(tx, instanceId, instanceCreatedAt);
-            importPath(tx, instanceId, instanceCreatedAt, null, src, filter);
+            importPath(tx, processKey, null, src, filter);
         });
     }
 
-    private void importPath(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
+    /**
+     * Imports data from the specified directory or a file.
+     */
+    @WithTimer
+    public void importPath(ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
+        tx(tx -> importPath(tx, processKey, path, src, filter));
+    }
+
+    @WithTimer
+    public void importPath(DSLContext tx, ProcessKey processKey, String path, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
+        PolicyEngine policyEngine = assertPolicy(tx, processKey, src, filter);
+
         String prefix = fixPath(path);
 
         List<BatchItem> batch = new ArrayList<>();
@@ -342,14 +344,14 @@ public class ProcessStateManager extends AbstractDao {
                     int unixMode = Posix.unixMode(permissions);
                     boolean needsEncryption = secureFiles.contains(n);
 
-                    tx.deleteFrom(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt))
+                    tx.deleteFrom(PROCESS_STATE).where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))
                             .and(PROCESS_STATE.ITEM_PATH.eq(n)))
                             .execute();
 
                     batch.add(new BatchItem(n, file, unixMode, needsEncryption));
                     if (batch.size() >= INSERT_BATCH_SIZE) {
-                        insert(tx, instanceId, instanceCreatedAt, batch);
+                        insert(tx, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
                         batch.clear();
                     }
 
@@ -358,60 +360,13 @@ public class ProcessStateManager extends AbstractDao {
             });
 
             if (!batch.isEmpty()) {
-                insert(tx, instanceId, instanceCreatedAt, batch);
+                insert(tx, processKey.getInstanceId(), processKey.getCreatedAt(), batch);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
 
-    private void insert(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, Collection<BatchItem> batch) {
-        String sql = tx.insertInto(PROCESS_STATE)
-                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
-                .values((UUID) null, null, null, null, null, null)
-                .getSQL();
-
-        List<InputStream> streams = new LinkedList<>();
-        try {
-            tx.connection(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    for (BatchItem item : batch) {
-                        // INSTANCE_ID
-                        ps.setObject(1, instanceId);
-
-                        // INSTANCE_CREATED_AT
-                        ps.setTimestamp(2, instanceCreatedAt);
-
-                        // ITEM_PATH
-                        ps.setString(3, item.itemPath);
-
-                        // UNIX_MODE
-                        ps.setInt(4, item.unixMode);
-
-                        InputStream in = Files.newInputStream(item.path);
-                        streams.add(in); // keep the streams open until the batch is committed
-
-                        if (item.needsEncryption) {
-                            in = encrypt(in);
-                        }
-
-                        // ITEM_DATA
-                        ps.setBinaryStream(5, in);
-
-                        // IS_ENCRYPTED
-                        ps.setBoolean(6, item.needsEncryption);
-
-                        ps.addBatch();
-                    }
-
-                    ps.executeBatch();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        } finally {
-            streams.forEach(ProcessStateManager::closeSilently);
-        }
+        assertPolicy(tx, processKey, policyEngine);
     }
 
     /**
@@ -493,38 +448,6 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-    private InputStream decrypt(InputStream in) {
-        return SecretUtils.decrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
-    }
-
-    private InputStream encrypt(InputStream in) {
-        return SecretUtils.encrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
-    }
-
-    private byte[] encrypt(byte[] in) {
-        return SecretUtils.encrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
-    }
-
-    private static String fixPath(String p) {
-        if (p == null) {
-            return null;
-        }
-
-        if (!p.endsWith(PATH_SEPARATOR)) {
-            p = p + PATH_SEPARATOR;
-        }
-
-        return p;
-    }
-
-    private static String relativize(String parent, String child) {
-        int i = child.indexOf(parent);
-        if (i < 0) {
-            throw new IllegalArgumentException("Can't relativize '" + child + "' from '" + parent + "'");
-        }
-        return child.substring(parent.length());
-    }
-
     /**
      * Copies the data to the specified target directory.
      *
@@ -566,6 +489,17 @@ public class ProcessStateManager extends AbstractDao {
         return String.join(PATH_SEPARATOR, elements);
     }
 
+    public Timestamp assertCreatedAt(PartialProcessKey processKey) {
+        return assertCreatedAt(processKey.getInstanceId());
+    }
+
+    private void delete(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt) {
+        tx.deleteFrom(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
+                .execute();
+    }
+
     private ProcessKey assertKey(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
             Timestamp createdAt = assertCreatedAt(tx, processKey.getInstanceId());
@@ -573,8 +507,85 @@ public class ProcessStateManager extends AbstractDao {
         }
     }
 
-    public Timestamp assertCreatedAt(PartialProcessKey processKey) {
-        return assertCreatedAt(processKey.getInstanceId());
+    private void insert(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, Collection<BatchItem> batch) {
+        String sql = tx.insertInto(PROCESS_STATE)
+                .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
+                .values((UUID) null, null, null, null, null, null)
+                .getSQL();
+
+        List<InputStream> streams = new LinkedList<>();
+        try {
+            tx.connection(conn -> {
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for (BatchItem item : batch) {
+                        // INSTANCE_ID
+                        ps.setObject(1, instanceId);
+
+                        // INSTANCE_CREATED_AT
+                        ps.setTimestamp(2, instanceCreatedAt);
+
+                        // ITEM_PATH
+                        ps.setString(3, item.itemPath);
+
+                        // UNIX_MODE
+                        ps.setInt(4, item.unixMode);
+
+                        InputStream in = Files.newInputStream(item.path);
+                        streams.add(in); // keep the streams open until the batch is committed
+
+                        if (item.needsEncryption) {
+                            in = encrypt(in);
+                        }
+
+                        // ITEM_DATA
+                        ps.setBinaryStream(5, in);
+
+                        // IS_ENCRYPTED
+                        ps.setBoolean(6, item.needsEncryption);
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } finally {
+            streams.forEach(ProcessStateManager::closeSilently);
+        }
+    }
+
+    private InputStream decrypt(InputStream in) {
+        return SecretUtils.decrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
+    }
+
+    private InputStream encrypt(InputStream in) {
+        return SecretUtils.encrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
+    }
+
+    private byte[] encrypt(byte[] in) {
+        return SecretUtils.encrypt(in, secretCfg.getServerPwd(), secretCfg.getSecretStoreSalt());
+    }
+
+    private static String fixPath(String p) {
+        if (p == null) {
+            return null;
+        }
+
+        if (!p.endsWith(PATH_SEPARATOR)) {
+            p = p + PATH_SEPARATOR;
+        }
+
+        return p;
+    }
+
+    private static String relativize(String parent, String child) {
+        int i = child.indexOf(parent);
+        if (i < 0) {
+            throw new IllegalArgumentException("Can't relativize '" + child + "' from '" + parent + "'");
+        }
+        return child.substring(parent.length());
     }
 
     private Timestamp assertCreatedAt(UUID instanceId) {
@@ -593,6 +604,75 @@ public class ProcessStateManager extends AbstractDao {
         }
 
         return t;
+    }
+
+    private PolicyEngine assertPolicy(DSLContext tx, ProcessKey processKey, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
+        PolicyEngine pe = getPolicyEngine(tx, processKey);
+        if (pe == null) {
+            return null;
+        }
+
+        CheckResult<StateRule, Path> result;
+        try {
+            result = pe.getStatePolicy().check(src, filter);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        result.getWarn().forEach(w -> logManager.warn(processKey, "Potentially restricted state file '{}' (state policy: {})", src.relativize(w.getEntity()), w.getRule().getMsg()));
+        result.getDeny().forEach(e -> logManager.error(processKey, "State file '{}' is forbidden by the state policy {}", src.relativize(e.getEntity()), e.getRule().getMsg()));
+
+        if (!result.getDeny().isEmpty()) {
+            throw new PolicyException("Found forbidden state files");
+        }
+
+        return pe;
+    }
+
+    private void assertPolicy(DSLContext tx, ProcessKey processKey, PolicyEngine policyEngine) {
+        if (policyEngine == null) {
+            return;
+        }
+
+        CheckResult<StateRule, StatePolicy.StateStats> result = policyEngine.getStatePolicy().check(() -> getStateStats(tx, processKey));
+
+        result.getWarn().forEach(w -> logManager.warn(processKey, "Potentially restricted state: '{}' (state policy: {})", w.getMsg(), w.getRule().getMsg()));
+        result.getDeny().forEach(e -> logManager.error(processKey, "State is forbidden: '{}' (state policy {})", e.getMsg(), e.getRule().getMsg()));
+
+        if (!result.getDeny().isEmpty()) {
+            throw new PolicyException("Found forbidden state files");
+        }
+    }
+
+    private static StatePolicy.StateStats getStateStats(DSLContext tx, ProcessKey processKey) {
+        return tx.select(DSL.sum(PgUtils.length(PROCESS_STATE.ITEM_DATA)), count(PROCESS_STATE.ITEM_DATA))
+                .from(PROCESS_STATE)
+                .where(PROCESS_STATE.INSTANCE_ID.eq(processKey.getInstanceId())
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt())))
+                .fetchOne(r -> new StatePolicy.StateStats(r.value1().longValue(), r.value2()));
+    }
+
+    private PolicyEngine getPolicyEngine(DSLContext tx, ProcessKey processKey) {
+        Field<UUID> orgId = select(PROJECTS.ORG_ID)
+                .from(PROJECTS)
+                .where(PROJECTS.PROJECT_ID.eq(PROCESS_QUEUE.PROJECT_ID))
+                .asField();
+
+        Map<String, UUID> info = tx.select(orgId, PROCESS_QUEUE.PROJECT_ID, PROCESS_QUEUE.INITIATOR_ID)
+                .from(PROCESS_QUEUE)
+                .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
+                .fetchOne(r -> {
+                    Map<String, UUID> result = new HashMap<>();
+                    result.put("orgId", r.value1());
+                    result.put("prjId", r.value2());
+                    result.put("userId", r.value3());
+                    return result;
+                });
+        if (info == null) {
+            return null;
+        }
+
+        return policyManager.get(info.get("orgId"), info.get("prjId"), info.get("userId"));
     }
 
     private static void closeSilently(AutoCloseable c) {

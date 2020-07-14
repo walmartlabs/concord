@@ -67,6 +67,10 @@ public final class PgUtils {
         return DSL.field("upper({0})", Integer.class, field);
     }
 
+    public static Field<Long> length(Field<byte[]> field) {
+        return DSL.field("length({0})", Long.class, field);
+    }
+
     public static boolean isUniqueViolationError(DataAccessException e) {
         Throwable cause = e.getCause();
         // see https://www.postgresql.org/docs/10/errcodes-appendix.html

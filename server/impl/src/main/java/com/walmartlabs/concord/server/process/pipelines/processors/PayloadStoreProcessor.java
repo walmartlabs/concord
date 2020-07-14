@@ -71,9 +71,10 @@ public class PayloadStoreProcessor implements PayloadProcessor {
 
         String serializedHeaders = serialize(headers);
 
-        // TODO use a single transaction?
-        stateManager.insert(processKey.getInstanceId(), processKey.getCreatedAt(), "_initial/payload.json", serializedHeaders.getBytes());
-        stateManager.importPath(processKey, "_initial/attachments/", payload.getHeader(Payload.BASE_DIR), (path, basicFileAttributes) -> payload.getAttachments().containsValue(path));
+        stateManager.tx(tx -> {
+            stateManager.insert(tx, processKey, "_initial/payload.json", serializedHeaders.getBytes());
+            stateManager.importPath(tx, processKey, "_initial/attachments/", payload.getHeader(Payload.BASE_DIR), (path, basicFileAttributes) -> payload.getAttachments().containsValue(path));
+        });
 
         return chain.process(payload);
     }
