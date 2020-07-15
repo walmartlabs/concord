@@ -1,5 +1,16 @@
 flows:
   default:
+    - try:
+      - call: startChild
+        in:
+          enterHere: default
+      error:
+        - call: startChild
+          in:
+            enterHere: setHello
+    - log: "${jobOut.xyz}"
+
+  startChild:
     - task: concord
       in:
         apiKey: "${myApiKey}"
@@ -7,9 +18,8 @@ flows:
         payload: payload
         sync: true
         suspend: true
+        entryPoint: ${enterHere}
         arguments:
           name: "Concord"
         outVars:
           - xyz
-
-    - log: "${jobOut.xyz}"

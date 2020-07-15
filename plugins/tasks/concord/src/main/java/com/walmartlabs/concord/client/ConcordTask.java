@@ -375,6 +375,8 @@ public class ConcordTask extends AbstractConcordTask {
 
     @SuppressWarnings("unchecked")
     private void continueAfterSuspend(Context ctx) throws Exception {
+        ctx.removeVariable(SUSPEND_MARKER);
+
         Map<String, Object> cfg = createJobCfg(ctx, defaults);
 
         List<String> jobs = (List<String>) ctx.getVariable(JOBS_KEY);
@@ -412,7 +414,6 @@ public class ConcordTask extends AbstractConcordTask {
             }
             ctx.setVariable(JOB_OUT_KEY, vars);
         }
-        ctx.removeVariable(SUSPEND_MARKER);
     }
 
     private Result continueAfterSuspend(Context ctx, Map<String, Object> cfg, UUID processId) throws Exception {
