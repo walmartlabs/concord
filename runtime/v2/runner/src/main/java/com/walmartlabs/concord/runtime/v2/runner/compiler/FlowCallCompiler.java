@@ -40,9 +40,7 @@ public class FlowCallCompiler implements StepCompiler<FlowCall> {
 
     @Override
     public Command compile(CompilerContext context, FlowCall step) {
-        ProcessDefinition pd = context.processDefinition();
-
-        Command cmd = new FlowCallCommand(step, pd);
+        Command cmd = new FlowCallCommand(step);
 
         FlowCallOptions options = step.getOptions();
 
