@@ -20,6 +20,7 @@ package com.walmartlabs.concord.runtime.v2.runner.vm;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.model.Location;
 import com.walmartlabs.concord.runtime.v2.model.Step;
@@ -73,7 +74,9 @@ public abstract class StepCommand<T extends Step> implements Command {
         if (segmentName == null) {
             executeWithContext(ctx, runtime, state, threadId);
         } else {
-            SegmentedLogger.withLogSegment(segmentName, correlationId.toString(),
+            RunnerConfiguration runnerCfg = runtime.getService(RunnerConfiguration.class);
+            boolean redirectSystemOutAndErr = runnerCfg.logging().sendSystemOutAndErrToSLF4J();
+            SegmentedLogger.withLogSegment(segmentName, correlationId.toString(), redirectSystemOutAndErr,
                     () -> executeWithContext(ctx, runtime, state, threadId));
         }
     }

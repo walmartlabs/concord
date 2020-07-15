@@ -181,6 +181,7 @@ public class RunnerJob {
                         .cacheDir(execCfg.dependencyCacheDir().toAbsolutePath().toString())
                         .build())
                 .logging(LoggingConfiguration.builder()
+                        .sendSystemOutAndErrToSLF4J(true)
                         .segmentedLogDir(execCfg.logDir().toString())
                         .build())
                 .build();

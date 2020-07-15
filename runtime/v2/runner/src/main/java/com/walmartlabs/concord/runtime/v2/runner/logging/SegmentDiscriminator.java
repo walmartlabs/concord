@@ -23,7 +23,10 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.sift.AbstractDiscriminator;
 
-public class TaskDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
+/**
+ * Returns a Logback's discriminator value based on the current log "segment".
+ */
+public class SegmentDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
 
     public static final String UNSEGMENTED_LOG = "system";
 
@@ -38,8 +41,8 @@ public class TaskDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
 
         ThreadGroup g = Thread.currentThread().getThreadGroup();
         while (true) {
-            if (g instanceof TaskThreadGroup) {
-                TaskThreadGroup ttg = (TaskThreadGroup)g;
+            if (g instanceof SegmentThreadGroup) {
+                SegmentThreadGroup ttg = (SegmentThreadGroup) g;
                 return ttg.getSegmentId() + "-" + ttg.getName();
             }
 

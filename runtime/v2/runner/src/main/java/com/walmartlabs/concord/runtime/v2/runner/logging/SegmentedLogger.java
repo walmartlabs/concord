@@ -24,6 +24,8 @@ import com.walmartlabs.concord.runtime.v2.model.AbstractStep;
 import com.walmartlabs.concord.runtime.v2.parser.StepOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.org.lidalia.sysoutslf4j.context.LogLevel;
+import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -35,13 +37,13 @@ public class SegmentedLogger {
 
     private static final Logger log = LoggerFactory.getLogger(SegmentedLogger.class);
 
-    private static boolean ENABLED = false;
+    private static volatile boolean ENABLED = false;
 
     public static void enable() {
         ENABLED = true;
     }
 
-    public static void withLogSegment(String name, String segmentId, Runnable runnable) {
+    public static void withLogSegment(String name, String segmentId, boolean redirectSystemOutAndErr, Runnable runnable) {
         if (!ENABLED) {
             try {
                 runnable.run();
@@ -53,12 +55,17 @@ public class SegmentedLogger {
             return;
         }
 
-        ThreadGroup threadGroup = new TaskThreadGroup(name, segmentId);
+        ThreadGroup threadGroup = new SegmentThreadGroup(name, segmentId);
         executeInThreadGroup(threadGroup, "thread-" + name, () -> {
+            // make sure the redirection is enabled in the current thread
+            if (redirectSystemOutAndErr && !SysOutOverSLF4J.systemOutputsAreSLF4JPrintStreams()) {
+                SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.WARN);
+            }
+
             try {
                 runnable.run();
             } finally {
-                log.info(FINALIZE_SESSION_MARKER, "The End!");
+                log.info(FINALIZE_SESSION_MARKER, "<<finalize>>");
             }
         });
     }
