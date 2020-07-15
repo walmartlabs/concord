@@ -20,11 +20,11 @@ package com.walmartlabs.concord.runtime.v2.runner.logging;
  * =====
  */
 
-public class TaskThreadGroup extends ThreadGroup {
+public class SegmentThreadGroup extends ThreadGroup {
 
     private final String segmentId;
 
-    public TaskThreadGroup(String name, String segmentId) {
+    public SegmentThreadGroup(String name, String segmentId) {
         super(name);
         this.segmentId = segmentId;
     }

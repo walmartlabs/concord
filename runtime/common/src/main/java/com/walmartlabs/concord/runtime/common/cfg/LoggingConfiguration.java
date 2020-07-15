@@ -38,6 +38,7 @@ public interface LoggingConfiguration {
      * Absolute path to the directory with segmented logs.
      * If {@code null} then the runtime is not going to use segmented
      * log files and logs will be redirected to stdout.
+     *
      * @apiNote only for the runtime v2.
      */
     @Nullable
@@ -50,8 +51,9 @@ public interface LoggingConfiguration {
      * Default is {@code true}.
      * <p/>
      * Requires {@link #segmentedLogDir()}.
-     * @apiNote only for the runtime v2. Not applicable when using the CLI
-     * version of the runner.
+     *
+     * @apiNote only for the runtime v2. Not applicable for the CLI version
+     * of the runner.
      */
     @Value.Default
     default boolean sendSystemOutAndErrToSLF4J() {

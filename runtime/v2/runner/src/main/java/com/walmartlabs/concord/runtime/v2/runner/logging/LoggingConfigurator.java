@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.walmartlabs.concord.runtime.v2.runner.logging.TaskDiscriminator.UNSEGMENTED_LOG;
+import static com.walmartlabs.concord.runtime.v2.runner.logging.SegmentDiscriminator.UNSEGMENTED_LOG;
 
 public class LoggingConfigurator {
 
@@ -76,7 +76,7 @@ public class LoggingConfigurator {
 
         String pattern = gerProperty(loggerContext, PATTERN_PROPERTY_KEY, DEFAULT_PATTERN);
 
-        TaskDiscriminator discriminator = new TaskDiscriminator();
+        SegmentDiscriminator discriminator = new SegmentDiscriminator();
         discriminator.start();
 
         SiftingAppender sa = new SiftingAppender();

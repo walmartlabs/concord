@@ -421,6 +421,7 @@ public class MainTest {
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
                 .logging(LoggingConfiguration.builder()
+                        .sendSystemOutAndErrToSLF4J(false)
                         .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
                         .build())
                 .build();
@@ -433,6 +434,32 @@ public class MainTest {
                 .filter(p -> p.getFileName().toString().endsWith(".log"))
                 .collect(Collectors.toList());
         assertEquals(2, paths.size());
+    }
+
+    @Test
+    public void testSystemOutRedirectInScripts() throws Exception {
+        deploy("systemOutRedirect");
+
+        save(ProcessConfiguration.builder()
+                .build());
+
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .logging(LoggingConfiguration.builder()
+                        .sendSystemOutAndErrToSLF4J(true)
+                        .segmentedLogDir(segmentedLogDir.toAbsolutePath().toString())
+                        .build())
+                .build();
+
+        byte[] log = run(runnerCfg);
+        assertNoLog(log, ".*System.out in a script.*");
+
+        List<Path> paths = Files.walk(segmentedLogDir)
+                .filter(p -> p.getFileName().toString().endsWith(".log"))
+                .collect(Collectors.toList());
+
+        assertEquals(1, paths.size());
+        log = Files.readAllBytes(paths.get(0));
+        assertLog(log, ".*System.out in a script.*");
     }
 
     @Test
