@@ -39,11 +39,8 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
     private static final long serialVersionUID = 1L;
 
-    private final ProcessDefinition pd;
-
-    public FlowCallCommand(FlowCall step, ProcessDefinition pd) {
+    public FlowCallCommand(FlowCall step) {
         super(step);
-        this.pd = pd;
     }
 
     @Override
@@ -63,6 +60,8 @@ public class FlowCallCommand extends StepCommand<FlowCall> {
 
         // the called flow's steps
         Compiler compiler = runtime.getService(Compiler.class);
+        ProcessDefinition pd = runtime.getService(ProcessDefinition.class);
+
         Command steps = CompilerUtils.compile(compiler, pd, flowName);
 
         Map<String, Object> input = VMUtils.prepareInput(ee, ctx, opts.input());
