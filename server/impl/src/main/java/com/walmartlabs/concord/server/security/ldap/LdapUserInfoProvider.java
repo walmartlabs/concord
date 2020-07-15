@@ -22,6 +22,7 @@ package com.walmartlabs.concord.server.security.ldap;
 
 import com.walmartlabs.concord.server.cfg.LdapConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
+import com.walmartlabs.concord.server.security.Roles;
 import com.walmartlabs.concord.server.user.UserDao;
 import com.walmartlabs.concord.server.user.UserInfoProvider;
 import com.walmartlabs.concord.server.user.UserType;
@@ -72,7 +73,7 @@ public class LdapUserInfoProvider implements UserInfoProvider {
 
     @Override
     public UUID create(String username, String userDomain, String displayName, String email, Set<String> roles) {
-        if (!cfg.isAutoCreateUsers()) {
+        if (!Roles.isAdmin() && !cfg.isAutoCreateUsers()) {
             // unfortunately there's no easy way to throw a custom authentication error and keep the original message
             // this will result in a 401 response with an empty body anyway
             throw new ConcordApplicationException("Automatic creation of users is disabled.");
