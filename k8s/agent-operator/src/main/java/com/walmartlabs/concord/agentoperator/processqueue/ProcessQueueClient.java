@@ -29,7 +29,9 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ProcessQueueClient {
 
@@ -52,6 +54,7 @@ public class ProcessQueueClient {
         Request req = new Request.Builder()
                 .url(baseUrl + "/api/v2/process/requirements?status=" + processStatus + "&limit=" + limit)
                 .header("Authorization", apiToken)
+                .addHeader("User-Agent", "k8s-agent-operator")
                 .build();
 
         Call call = client.newCall(req);
@@ -97,9 +100,60 @@ public class ProcessQueueClient {
             builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
             builder.hostnameVerifier((hostname, session) -> true);
 
+            Map<String, String> cookieJar = new HashMap<>();
+            builder.addInterceptor(new AddCookiesInterceptor(cookieJar));
+            builder.addInterceptor(new ReceivedCookiesInterceptor(cookieJar));
+
             return builder.build();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static class AddCookiesInterceptor implements Interceptor {
+
+        private final Map<String, String> cookieJar;
+
+        private AddCookiesInterceptor(Map<String, String> cookieJar) {
+            this.cookieJar = cookieJar;
+        }
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request.Builder builder = chain.request().newBuilder();
+            for (Map.Entry<String, String> cookie : cookieJar.entrySet()) {
+                builder.addHeader("Cookie", cookie.getValue());
+            }
+            return chain.proceed(builder.build());
+        }
+    }
+
+    private static class ReceivedCookiesInterceptor implements Interceptor {
+
+        private static final String SESSION_COOKIE_NAME = "JSESSIONID";
+
+        private final Map<String, String> cookieJar;
+
+        private ReceivedCookiesInterceptor(Map<String, String> cookieJar) {
+            this.cookieJar = cookieJar;
+        }
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Response resp = chain.proceed(chain.request());
+
+            List<String> cookies = resp.headers("Set-Cookie");
+            if (cookies.isEmpty()) {
+                return resp;
+            }
+
+            for (String cookie : cookies) {
+                if (cookie.startsWith(SESSION_COOKIE_NAME)) {
+                    cookieJar.put(SESSION_COOKIE_NAME, cookie);
+                }
+            }
+
+            return resp;
         }
     }
 }
