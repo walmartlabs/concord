@@ -21,7 +21,6 @@ package com.walmartlabs.concord.runtime.v2.runner;
  */
 
 import com.google.inject.*;
-import com.google.inject.Module;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
 import com.walmartlabs.concord.runtime.common.injector.InjectorUtils;
 import com.walmartlabs.concord.runtime.common.injector.InstanceId;
@@ -65,13 +64,13 @@ public class InjectorFactory {
 
     private final WorkingDirectory workDir;
     private final RunnerConfiguration runnerCfg;
-    private final Module[] modules;
+    private final com.google.inject.Module[] modules;
     private final Provider<ProcessConfiguration> processConfigurationProvider;
 
     public InjectorFactory(WorkingDirectory workDir,
                            RunnerConfiguration runnerCfg,
                            Provider<ProcessConfiguration> processConfigurationProvider,
-                           Module... modules) {
+                           com.google.inject.Module... modules) {
 
         this.workDir = workDir;
         this.runnerCfg = runnerCfg;
@@ -84,7 +83,7 @@ public class InjectorFactory {
         l.add(new ConfigurationModule(workDir, runnerCfg, processConfigurationProvider));
         l.add(new CurrentClasspathModule());
 
-        Module tasks = new AbstractModule() {
+        com.google.inject.Module tasks = new AbstractModule() {
             @Override
             protected void configure() {
                 TaskHolder<Task> holder = new TaskHolder<>();
@@ -100,7 +99,7 @@ public class InjectorFactory {
             l.addAll(Arrays.asList(modules));
         }
 
-        Module m = new WireModule(l);
+        com.google.inject.Module m = new WireModule(l);
         return Guice.createInjector(m);
     }
 
