@@ -95,7 +95,9 @@ public class TaskScheduler extends PeriodicTask {
 
         try {
             if (executor.awaitTermination(5, TimeUnit.MINUTES)) {
-                log.info("stop -> yo");
+                log.info("stop -> done");
+            } else {
+                log.info("stop -> timeout");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
