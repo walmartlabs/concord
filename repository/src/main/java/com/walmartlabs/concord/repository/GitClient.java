@@ -85,15 +85,20 @@ public class GitClient {
     public String fetch(String uri, String branch, String commitId, boolean detached, Secret secret, Path dest) {
         // can use shallow clone only with branch/tag
         boolean shallow = commitId == null && cfg.shallowClone();
+        boolean hasRepo = hasGitRepo(dest);
 
-        if (!hasGitRepo(dest)) {
+        if (!hasRepo) {
             cloneCommand(uri, secret, shallow, dest);
         }
 
         launchCommand(dest, defaultTimeout, "config", "remote.origin.url", uri);
 
-        List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
-        fetchCommand(uri, refspecs, secret, shallow, dest);
+        boolean alreadyFetched = hasRepo && commitId != null && commitId.equalsIgnoreCase(getCurrentCommitId(dest));
+
+        if (!alreadyFetched) {
+            List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+            fetchCommand(uri, refspecs, secret, shallow, dest);
+        }
 
         String rev;
         if (commitId != null) {
@@ -114,6 +119,16 @@ public class GitClient {
             launchCommand(dest, defaultTimeout, "submodule", "foreach", "git", "reset", "--hard");
         }
         return rev;
+    }
+
+    private String getCurrentCommitId(Path dest) {
+        try {
+            return launchCommand(dest, defaultTimeout, "log", "-1", "--format=%H")
+                    .replace("\n", "");
+        } catch (Exception e) {
+            // ignore
+        }
+        return null;
     }
 
     private void fetchCommand(String url,
