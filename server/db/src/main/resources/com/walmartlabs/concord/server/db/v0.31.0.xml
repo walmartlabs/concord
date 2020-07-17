@@ -101,6 +101,8 @@
 
     <!-- PROCESS_LOGS.INSTANCE_ID -->
 
+    <!-- deprecated in 1.57.0+ -->
+    <!--
     <changeSet id="31160" author="ibodrov@gmail.com">
         <dropView viewName="V_PROCESS_LOGS_UPPER_BOUNDS"/>
     </changeSet>
@@ -178,4 +180,5 @@
             $$ language plpgsql;
         </createProcedure>
     </changeSet>
+    -->
 </databaseChangeLog>

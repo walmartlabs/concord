@@ -25,6 +25,8 @@
 
     <!-- PROCESS_LOGS -->
 
+    <!-- deprecated in 1.57.0+ -->
+    <!--
     <changeSet id="22100" author="ibodrov@gmail.com">
         <createTable tableName="PROCESS_LOGS">
             <column name="INSTANCE_ID" type="varchar(36)">
@@ -94,4 +96,5 @@
             $$ language plpgsql;
         </createProcedure>
     </changeSet>
+    -->
 </databaseChangeLog>

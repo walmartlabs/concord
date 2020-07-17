@@ -25,7 +25,6 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogDataRecord;
 import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogSegmentsRecord;
-import com.walmartlabs.concord.server.jooq.tables.records.ProcessLogsRecord;
 import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import org.jooq.*;
@@ -41,7 +40,8 @@ import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.upperRange;
 import static com.walmartlabs.concord.server.jooq.Routines.*;
-import static com.walmartlabs.concord.server.jooq.Tables.*;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
+import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
 import static org.jooq.impl.DSL.*;
 
 @Named
@@ -54,29 +54,9 @@ public class ProcessLogsDao extends AbstractDao {
 
     /**
      * Appends a chunk to the process log. Automatically calculates the chunk's range.
+     *
      * @return the new chunk range.
-     * @deprecated remove after process_logs is no longer in use
      */
-    @Deprecated
-    public PgIntRange append(ProcessKey processKey, byte[] data) {
-        UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
-
-        ProcessLogsRecord r = txResult(tx -> tx.insertInto(PROCESS_LOGS)
-                .columns(PROCESS_LOGS.INSTANCE_ID,
-                        PROCESS_LOGS.INSTANCE_CREATED_AT,
-                        PROCESS_LOGS.CHUNK_RANGE,
-                        PROCESS_LOGS.CHUNK_DATA)
-                .values(value(instanceId),
-                        value(createdAt),
-                        processLogNextRange2(instanceId, createdAt, data.length),
-                        value(data))
-                .returning(PROCESS_LOGS.CHUNK_RANGE)
-                .fetchOne());
-
-        return PgIntRange.parse(r.getChunkRange().toString());
-    }
-
     public PgIntRange append(ProcessKey processKey, long segmentId, byte[] data) {
         UUID instanceId = processKey.getInstanceId();
         Timestamp createdAt = processKey.getCreatedAt();
@@ -98,28 +78,6 @@ public class ProcessLogsDao extends AbstractDao {
                 .fetchOne());
 
         return PgIntRange.parse(r.getLogRange().toString());
-    }
-
-    /**
-     * @deprecated remove after process_logs is no longer in use
-     */
-    @Deprecated
-    public ProcessLog get(ProcessKey processKey, Integer start, Integer end) {
-        UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
-
-        try (DSLContext tx = DSL.using(cfg)) {
-            List<ProcessLogChunk> chunks = getChunks(tx, processKey, start, end);
-
-            int size = tx.select(V_PROCESS_LOGS_SIZE.SIZE)
-                    .from(V_PROCESS_LOGS_SIZE)
-                    .where(V_PROCESS_LOGS_SIZE.INSTANCE_ID.eq(instanceId)
-                            .and(V_PROCESS_LOGS_SIZE.INSTANCE_CREATED_AT.eq(createdAt)))
-                    .fetchOptional(V_PROCESS_LOGS_SIZE.SIZE)
-                    .orElse(0);
-
-            return new ProcessLog(size, chunks);
-        }
     }
 
     public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt, String status) {
@@ -221,46 +179,6 @@ public class ProcessLogsDao extends AbstractDao {
                     .orElse(0);
 
             return new ProcessLog(size, chunks);
-        }
-    }
-
-    private List<ProcessLogChunk> getChunks(DSLContext tx, ProcessKey processKey, Integer start, Integer end) {
-        UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
-
-        String lowerBoundExpr = "lower(" + PROCESS_LOGS.CHUNK_RANGE + ")";
-
-        if (start == null && end == null) {
-            // entire file
-            return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
-                    .from(PROCESS_LOGS)
-                    .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_LOGS.INSTANCE_CREATED_AT.eq(createdAt)))
-                    .orderBy(PROCESS_LOGS.CHUNK_RANGE)
-                    .fetch(ProcessLogsDao::toChunk);
-
-        } else if (start != null) {
-            // ranges && [start, end)
-            String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && int4range(?, ?)";
-            return tx.select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
-                    .from(PROCESS_LOGS)
-                    .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_LOGS.INSTANCE_CREATED_AT.eq(createdAt))
-                            .and(rangeExpr, start, end))
-                    .orderBy(PROCESS_LOGS.CHUNK_RANGE)
-                    .fetch(ProcessLogsDao::toChunk);
-
-        } else {
-            // ranges && [upper_bound - end, upper_bound)
-            String rangeExpr = PROCESS_LOGS.CHUNK_RANGE.getName() + " && (select range from x)";
-            return tx.with("x").as(select(processLogLastNBytes2(instanceId, createdAt, end).as("range")))
-                    .select(field(lowerBoundExpr), PROCESS_LOGS.CHUNK_DATA)
-                    .from(PROCESS_LOGS)
-                    .where(PROCESS_LOGS.INSTANCE_ID.eq(instanceId)
-                            .and(PROCESS_LOGS.INSTANCE_CREATED_AT.eq(createdAt))
-                            .and(rangeExpr, instanceId, end))
-                    .orderBy(PROCESS_LOGS.CHUNK_RANGE)
-                    .fetch(ProcessLogsDao::toChunk);
         }
     }
 
