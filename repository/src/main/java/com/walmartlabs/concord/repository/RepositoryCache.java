@@ -89,16 +89,21 @@ public class RepositoryCache {
     private <T> T withLock(long lockTimeout, String repoUrl, Callable<T> f) {
         Lock l = locks.get(repoUrl);
         try {
-            if (!l.tryLock(lockTimeout, TimeUnit.MILLISECONDS)) {
-                throw new IllegalStateException("Timeout waiting for the repository lock. Repository url: " + repoUrl);
+            if (l.tryLock(lockTimeout, TimeUnit.MILLISECONDS)) {
+                try {
+                    return f.call();
+                } catch (IllegalArgumentException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    l.unlock();
+                }
             }
-            return f.call();
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
+            throw new IllegalStateException("Timeout waiting for the repository lock. Repository url: " + repoUrl);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
-        } finally {
-            l.unlock();
         }
     }
 
