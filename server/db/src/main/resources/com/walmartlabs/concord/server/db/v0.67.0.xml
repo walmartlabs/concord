@@ -4,6 +4,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- deprecated in 1.57.0+ -->
+    <!--
     <changeSet id="67000" author="matthew.kunkel@walmartlabs.com">
         <addColumn tableName="PROCESS_LOGS">
             <column name="LOG_SEQ" type="bigserial"
@@ -12,6 +14,7 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 
     <changeSet id="67100" author="matthew.kunkel@walmartlabs.com">
         <addColumn tableName="PROCESS_EVENTS">

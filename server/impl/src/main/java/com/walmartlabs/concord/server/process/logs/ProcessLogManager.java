@@ -24,7 +24,6 @@ import com.codahale.metrics.Counter;
 import com.walmartlabs.concord.common.LogUtils;
 import com.walmartlabs.concord.db.PgIntRange;
 import com.walmartlabs.concord.server.Listeners;
-import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.process.LogSegment;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.sdk.metrics.InjectCounter;
@@ -46,8 +45,6 @@ public class ProcessLogManager {
 
     private static final long SYSTEM_SEGMENT_ID = 0;
     private static final String SYSTEM_SEGMENT_NAME = "system";
-
-    private final ProcessConfiguration processConfiguration;
     private final ProcessLogsDao logsDao;
     private final Listeners listeners;
 
@@ -55,12 +52,10 @@ public class ProcessLogManager {
     private final Counter logBytesAppended;
 
     @Inject
-    public ProcessLogManager(ProcessConfiguration processConfiguration,
-                             ProcessLogsDao logsDao,
+    public ProcessLogManager(ProcessLogsDao logsDao,
                              Listeners listeners,
                              Counter logBytesAppended) {
 
-        this.processConfiguration = processConfiguration;
         this.logsDao = logsDao;
         this.listeners = listeners;
         this.logBytesAppended = logBytesAppended;
@@ -110,22 +105,11 @@ public class ProcessLogManager {
     }
 
     public ProcessLog get(ProcessKey processKey, Integer start, Integer end) {
-        ProcessLog logs;
-        if (isNewLog(processKey)) {
-            logs = logsDao.data(processKey, start, end);
-        } else {
-            logs = logsDao.get(processKey, start, end);
-        }
-        return logs;
+        return logsDao.data(processKey, start, end);
     }
 
     public int log(ProcessKey processKey, long segmentId, byte[] msg) {
-        PgIntRange range;
-        if (isNewLog(processKey)) {
-            range = logsDao.append(processKey, segmentId, msg);
-        } else {
-            range = logsDao.append(processKey, msg);
-        }
+        PgIntRange range = logsDao.append(processKey, segmentId, msg);
         logBytesAppended.inc(msg.length);
         listeners.onProcessLogAppend(processKey, msg);
         return range.getUpper();
@@ -133,10 +117,5 @@ public class ProcessLogManager {
 
     private void log(ProcessKey processKey, LogLevel level, String msg, Object... args) {
         log(processKey, LogUtils.formatMessage(level, msg, args));
-    }
-
-    private boolean isNewLog(ProcessKey processKey) {
-        return processConfiguration.getNewLogsActivationDate() == null
-                || processConfiguration.getNewLogsActivationDate().isBefore(processKey.getCreatedAt().toInstant());
     }
 }

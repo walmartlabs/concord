@@ -4,6 +4,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- deprecated in 1.57.0+ -->
+    <!--
     <changeSet id="95000" author="ibodrov@gmail.com">
         <addColumn tableName="PROCESS_LOGS">
             <column name="INSTANCE_CREATED_AT" type="timestamp" remarks="Same as PROCESS_QUEUE.CREATED_AT">
@@ -91,4 +93,5 @@
             $$ language plpgsql;
         </createProcedure>
     </changeSet>
+    -->
 </databaseChangeLog>

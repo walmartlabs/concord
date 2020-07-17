@@ -4,6 +4,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
+    <!-- deprecated in 1.57.0+ -->
+    <!--
     <changeSet id="24000" author="ibodrov@gmail.com">
         <createView viewName="V_PROCESS_LOGS_SIZE">
             select
@@ -13,4 +15,5 @@
             group by INSTANCE_ID
         </createView>
     </changeSet>
+    -->
 </databaseChangeLog>
