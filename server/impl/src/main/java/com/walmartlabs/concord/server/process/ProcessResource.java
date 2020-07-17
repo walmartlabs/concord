@@ -37,6 +37,7 @@ import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.EncryptedProjectValueManager;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
+import com.walmartlabs.concord.server.policy.PolicyException;
 import com.walmartlabs.concord.server.policy.PolicyManager;
 import com.walmartlabs.concord.server.process.PayloadManager.EntryPoint;
 import com.walmartlabs.concord.server.process.ProcessEntry.ProcessStatusHistoryEntry;
@@ -944,6 +945,8 @@ public class ProcessResource implements Resource {
             } else {
                 queueDao.updateMeta(processKey, Collections.singletonMap("out", out));
             }
+        } catch (PolicyException e) {
+            throw new ConcordApplicationException(e.getMessage(), Status.FORBIDDEN);
         } catch (IOException e) {
             log.error("uploadAttachments ['{}'] -> error", processKey, e);
             throw new ConcordApplicationException("upload error: " + e.getMessage());
@@ -1149,7 +1152,7 @@ public class ProcessResource implements Resource {
         if (!checkResult.getDeny().isEmpty()) {
             String errorMessage = buildErrorMessage(checkResult.getDeny());
             processLogManager.error(ProcessKey.from(entry), errorMessage);
-            throw new ConcordApplicationException("Found forbidden policy: " + errorMessage, Status.FORBIDDEN);
+            throw new PolicyException("Found forbidden policy: " + errorMessage);
         }
     }
 
