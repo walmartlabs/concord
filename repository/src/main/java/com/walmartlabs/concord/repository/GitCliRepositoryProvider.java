@@ -55,7 +55,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
     }
 
     @Override
-    public String fetch(String uri, String branchOrNull, String commitId, Secret secret, Path dst) {
+    public String fetch(String uri, String branchOrNull, String commitId, Secret secret, boolean checkRemoteCommitId, Path dst) {
         String branch = getBranchOrDefault(branchOrNull);
         RepositoryException lastException = null;
 
@@ -66,7 +66,7 @@ public class GitCliRepositoryProvider implements RepositoryProvider {
             }
 
             try {
-                return client.fetch(uri, branch, commitId, secret, dst);
+                return client.fetch(uri, branch, commitId, true, secret, checkRemoteCommitId, dst);
             } catch (RepositoryException e) {
                 lastException = e;
                 try {

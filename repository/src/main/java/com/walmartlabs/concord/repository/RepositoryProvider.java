@@ -32,7 +32,7 @@ public interface RepositoryProvider {
 
     boolean canHandle(String url);
 
-    String fetch(String uri, String branch, String commitId, Secret secret, Path dst);
+    String fetch(String uri, String branch, String commitId, Secret secret, boolean checkRemoteCommitId, Path dst);
 
     Snapshot export(Path src, Path dst, List<String> ignorePatterns) throws IOException;
 

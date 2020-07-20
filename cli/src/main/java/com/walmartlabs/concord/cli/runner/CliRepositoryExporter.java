@@ -73,7 +73,7 @@ public class CliRepositoryExporter implements RepositoryExporter {
         Path cacheDir = repoCacheDir.resolve(encodedUrl);
         Secret secret = null;
 
-        Repository repo = providers.fetch(entry.url(), entry.version(), null, entry.path(), secret, cacheDir);
+        Repository repo = providers.fetch(entry.url(), entry.version(), null, entry.path(), secret, true, cacheDir);
         return repo.export(dest, entry.exclude());
     }
 

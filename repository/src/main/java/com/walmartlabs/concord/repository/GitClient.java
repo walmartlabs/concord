@@ -40,6 +40,7 @@ import java.util.concurrent.*;
 
 import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
+import static org.eclipse.jgit.lib.Constants.OBJECT_ID_STRING_LENGTH;
 
 /**
  * A GIT CLI wrapper. Most of the code was lifted from Jenkins' git-plugin.
@@ -79,10 +80,10 @@ public class GitClient {
     }
 
     public String fetch(String uri, String branch, String commitId, Secret secret, Path dest) {
-        return fetch(uri, branch, commitId, true, secret, dest);
+        return fetch(uri, branch, commitId, true, secret, false, dest);
     }
 
-    public String fetch(String uri, String branch, String commitId, boolean detached, Secret secret, Path dest) {
+    public String fetch(String uri, String branch, String commitId, boolean detached, Secret secret, boolean checkRemoteCommitId, Path dest) {
         // can use shallow clone only with branch/tag
         boolean shallow = commitId == null && cfg.shallowClone();
         boolean hasRepo = hasGitRepo(dest);
@@ -93,7 +94,16 @@ public class GitClient {
 
         launchCommand(dest, defaultTimeout, "config", "remote.origin.url", uri);
 
-        boolean alreadyFetched = hasRepo && commitId != null && commitId.equalsIgnoreCase(getCurrentCommitId(dest));
+        boolean alreadyFetched = false;
+        if (hasRepo && (checkRemoteCommitId || commitId != null)) {
+            String currentCommitId = getCurrentCommitId(dest);
+            if (commitId != null) {
+                alreadyFetched = commitId.equalsIgnoreCase(currentCommitId);
+            } else {
+                String remoteCommitId = getRemoteCommitId(uri, branch, dest, secret);
+                alreadyFetched = currentCommitId != null && currentCommitId.equalsIgnoreCase(remoteCommitId);
+            }
+        }
 
         if (!alreadyFetched) {
             List<RefSpec> refspecs = Collections.singletonList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
@@ -127,6 +137,25 @@ public class GitClient {
                     .replace("\n", "");
         } catch (Exception e) {
             // ignore
+        }
+        return null;
+    }
+
+    private String getRemoteCommitId(String uri, String branch, Path dest, Secret secret) {
+        List<String> args = new ArrayList<>();
+        args.add("ls-remote");
+        args.add("--refs");
+        args.add(uri);
+        args.add(branch);
+
+        try {
+            String result = launchCommandWithCredentials(dest, defaultTimeout, args, secret);
+            if (result.length() < OBJECT_ID_STRING_LENGTH) {
+                return null;
+            }
+            return ObjectId.fromString(result.substring(0, OBJECT_ID_STRING_LENGTH)).name();
+        } catch (Exception e) {
+            log.error("getRemoteCommitId ['{}'] -> error", branch, e);
         }
         return null;
     }
@@ -356,10 +385,10 @@ public class GitClient {
         launchCommand(dest, defaultTimeout, "checkout", "-f", ref);
     }
 
-    private void launchCommandWithCredentials(Path workDir,
-                                              long timeout,
-                                              List<String> args,
-                                              Secret secret) {
+    private String launchCommandWithCredentials(Path workDir,
+                                                long timeout,
+                                                List<String> args,
+                                                Secret secret) {
 
         Path key = null;
         Path ssh = null;
@@ -399,7 +428,7 @@ public class GitClient {
             env.put("GIT_HTTP_LOW_SPEED_LIMIT", String.valueOf(cfg.httpLowSpeedLimit()));
             env.put("GIT_HTTP_LOW_SPEED_TIME", String.valueOf(cfg.httpLowSpeedTime()));
 
-            launchCommand(workDir, env, timeout, args);
+            return launchCommand(workDir, env, timeout, args);
         } catch (IOException e) {
             throw new RepositoryException("Failed to setup credentials", e);
         } finally {

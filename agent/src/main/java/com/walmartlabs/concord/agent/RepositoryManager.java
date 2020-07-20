@@ -84,7 +84,8 @@ public class RepositoryManager {
         Path cacheDir = repositoryCache.getPath(repoUrl);
 
         repositoryCache.withLock(repoUrl, () -> {
-            Repository repo = providers.fetch(repoUrl, branch, commitId, repoPath, secret, cacheDir);
+            // TODO: checkRemoteCommitId read from configuration
+            Repository repo = providers.fetch(repoUrl, branch, commitId, repoPath, secret, false, cacheDir);
             repo.export(dest, ignorePatterns);
             return null;
         });

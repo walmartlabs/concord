@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.process.loader.ProjectLoader;
 import com.walmartlabs.concord.repository.*;
+import com.walmartlabs.concord.sdk.MapUtils;
 import com.walmartlabs.concord.sdk.Secret;
 import com.walmartlabs.concord.server.cfg.GitConfiguration;
 import com.walmartlabs.concord.server.cfg.RepositoryConfiguration;
@@ -97,7 +98,7 @@ public class RepositoryManager {
 
             Secret secret = getSecret(orgId, projectId, secretName);
 
-            Repository repo = providers.fetch(uri, branch, commitId, path, secret, tmpDir);
+            Repository repo = providers.fetch(uri, branch, commitId, path, secret, false, tmpDir);
 
             if (repoCfg.isConcordFileValidationEnabled()) {
                 if (!ProjectLoader.isConcordFileExists(repo.path())) {
@@ -119,12 +120,16 @@ public class RepositoryManager {
     }
 
     public Repository fetch(String url, String branch, String commitId, String path, Secret secret) {
+        return fetch(url, branch, commitId, path, secret, false);
+    }
+
+    public Repository fetch(String url, String branch, String commitId, String path, Secret secret, boolean checkRemoteCommitId) {
         String fetchedCommitId = commitId;
         long start = System.currentTimeMillis();
 
         Path dest = repositoryCache.getPath(url);
         try {
-            Repository result = providers.fetch(url, branch, commitId, path, secret, dest);
+            Repository result = providers.fetch(url, branch, commitId, path, secret, checkRemoteCommitId, dest);
             fetchedCommitId = result.fetchedCommitId();
             return result;
         } finally {
@@ -136,8 +141,9 @@ public class RepositoryManager {
     public Repository fetch(UUID projectId, RepositoryEntry repository) {
         UUID orgId = getOrgId(projectId);
         Secret secret = getSecret(orgId, projectId, repository.getSecretName());
+        boolean checkRemoteCommitId = MapUtils.getBoolean(repository.getMeta(), "checkRemoteCommitId", false);
 
-        return fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret);
+        return fetch(repository.getUrl(), repository.getBranch(), repository.getCommitId(), repository.getPath(), secret, checkRemoteCommitId);
     }
 
     public <T> T withLock(String repoUrl, Callable<T> f) {
