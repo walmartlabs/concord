@@ -141,11 +141,11 @@ public class GitClient {
         return null;
     }
 
-    private String getRemoteCommitId(String uri, String branch, Path dest, Secret secret) {
+    private String getRemoteCommitId(String url, String branch, Path dest, Secret secret) {
         List<String> args = new ArrayList<>();
         args.add("ls-remote");
         args.add("--refs");
-        args.add(uri);
+        args.add(processUrl(url, secret));
         args.add(branch);
 
         try {
