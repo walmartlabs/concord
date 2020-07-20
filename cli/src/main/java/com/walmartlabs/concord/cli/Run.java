@@ -184,7 +184,6 @@ public class Run implements Callable<Integer> {
         try {
             runner.start(processDefinition, cfg.entryPoint(), args);
         } catch (Exception e) {
-            e.printStackTrace();
             System.err.println("Error: " + e.getMessage());
             return 1;
         } finally {
