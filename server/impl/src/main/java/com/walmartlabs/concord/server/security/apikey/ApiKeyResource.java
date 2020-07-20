@@ -23,6 +23,9 @@ package com.walmartlabs.concord.server.security.apikey;
 import com.walmartlabs.concord.db.PgUtils;
 import com.walmartlabs.concord.server.GenericOperationResult;
 import com.walmartlabs.concord.server.OperationResult;
+import com.walmartlabs.concord.server.audit.AuditAction;
+import com.walmartlabs.concord.server.audit.AuditLog;
+import com.walmartlabs.concord.server.audit.AuditObject;
 import com.walmartlabs.concord.server.cfg.ApiKeyConfiguration;
 import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.security.Roles;
@@ -63,12 +66,14 @@ public class ApiKeyResource implements Resource {
     private final ApiKeyConfiguration cfg;
     private final ApiKeyDao apiKeyDao;
     private final UserManager userManager;
+    private final AuditLog auditLog;
 
     @Inject
-    public ApiKeyResource(ApiKeyConfiguration cfg, ApiKeyDao apiKeyDao, UserManager userManager) {
+    public ApiKeyResource(ApiKeyConfiguration cfg, ApiKeyDao apiKeyDao, UserManager userManager, AuditLog auditLog) {
         this.cfg = cfg;
         this.apiKeyDao = apiKeyDao;
         this.userManager = userManager;
+        this.auditLog = auditLog;
     }
 
     @GET
@@ -120,9 +125,9 @@ public class ApiKeyResource implements Resource {
             expiredAt = Instant.now().plus(cfg.getExpirationPeriodDays(), ChronoUnit.DAYS);
         }
 
+        UUID id;
         try {
-            UUID id = apiKeyDao.insert(userId, key, name, expiredAt);
-            return new CreateApiKeyResponse(id, key);
+            id = apiKeyDao.insert(userId, key, name, expiredAt);
         } catch (DataAccessException e) {
             if (PgUtils.isUniqueViolationError(e)) {
                 log.warn("create ['{}'] -> duplicate name error: {}", name, e.getMessage());
@@ -131,6 +136,15 @@ public class ApiKeyResource implements Resource {
 
             throw e;
         }
+
+        auditLog.add(AuditObject.API_KEY, AuditAction.CREATE)
+                .field("id", id)
+                .field("name", name)
+                .field("expiredAt", expiredAt)
+                .field("userId", userId)
+                .log();
+
+        return new CreateApiKeyResponse(id, key);
     }
 
     @DELETE
@@ -147,6 +161,11 @@ public class ApiKeyResource implements Resource {
         assertOwner(userId);
 
         apiKeyDao.delete(id);
+
+        auditLog.add(AuditObject.API_KEY, AuditAction.DELETE)
+                .field("id", id)
+                .log();
+
         return new GenericOperationResult(OperationResult.DELETED);
     }
 

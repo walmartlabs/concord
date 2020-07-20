@@ -23,6 +23,7 @@ package com.walmartlabs.concord.server.audit;
 
 public enum AuditObject {
 
+    API_KEY,
     EXTERNAL_EVENT,
     JSON_STORE,
     JSON_STORE_DATA,
