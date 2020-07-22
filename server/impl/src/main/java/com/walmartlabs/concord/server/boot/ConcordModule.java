@@ -22,9 +22,9 @@ package com.walmartlabs.concord.server.boot;
 
 import com.google.inject.AbstractModule;
 import com.walmartlabs.concord.db.DatabaseModule;
+import com.walmartlabs.concord.server.boot.validation.ValidationModule;
 import com.walmartlabs.concord.server.metrics.MetricModule;
 import org.sonatype.siesta.server.resteasy.ResteasyModule;
-import org.sonatype.siesta.server.validation.ValidationModule;
 
 import javax.inject.Named;
 
