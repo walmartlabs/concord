@@ -186,10 +186,6 @@ public class Run implements Callable<Integer> {
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
             return 1;
-        } finally {
-            StateManager.cleanupState(targetDir);
-            IOUtils.deleteRecursively(targetDir.resolve(Constants.Files.JOB_ATTACHMENTS_DIR_NAME));
-            IOUtils.deleteRecursively(targetDir.resolve(Constants.Files.CONCORD_TMP_DIR_NAME));
         }
 
         System.out.println("...done!");
