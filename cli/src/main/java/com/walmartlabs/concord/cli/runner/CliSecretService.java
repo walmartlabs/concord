@@ -71,7 +71,7 @@ public class CliSecretService {
         if (Files.notExists(secretPath)) {
             throw new RuntimeException("Secret '" + secretPath + "' not found");
         }
-        return new String(Files.readAllBytes(secretPath));
+        return new String(Files.readAllBytes(secretPath)).trim();
     }
 
     public Path exportAsFile(Path workDir, String orgName, String name) throws IOException {
