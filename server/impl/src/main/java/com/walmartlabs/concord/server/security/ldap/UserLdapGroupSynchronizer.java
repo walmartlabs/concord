@@ -37,14 +37,14 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 /**
  * Responsible for AD/LDAP group synchronization and enabling/disabling users
@@ -82,7 +82,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<Timestamp> cutoff = currentTimestamp().minus(PgUtils.interval(cfg.getMinAgeSync()));
+        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(PgUtils.interval(cfg.getMinAgeSync()));
         long usersCount = 0;
         List<UserItem> users;
         do {
@@ -133,7 +133,7 @@ public class UserLdapGroupSynchronizer implements ScheduledTask {
             super(cfg);
         }
 
-        public List<UserItem> list(int limit, Field<Timestamp> cutoff) {
+        public List<UserItem> list(int limit, Field<OffsetDateTime> cutoff) {
             return txResult(tx -> tx.select(USERS.USER_ID, USERS.USERNAME, USERS.DOMAIN, USERS.IS_DISABLED)
                     .from(USERS)
                     .where(USERS.USER_TYPE.eq(UserType.LDAP.name()))

@@ -218,12 +218,102 @@
         <addPrimaryKey tableName="ANSIBLE_HOSTS" columnNames="INSTANCE_ID, INSTANCE_CREATED_AT, HOST, HOST_GROUP, PLAYBOOK_ID"/>
     </changeSet>
 
-
     <changeSet id="ansible-10008" author="ybrigo@gmail.com">
         <addColumn tableName="ANSIBLE_PLAYBOOK_STATS">
             <column name="RETRY_NUM" type="int">
                 <constraints nullable="true"/>
             </column>
         </addColumn>
+    </changeSet>
+
+    <!-- see server/db/src/main/resources/com/walmartlabs/concord/server/db/v1.58.0.xml -->
+    <changeSet id="ansible-1580000" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function ts_to_tstz(t text)
+                returns bool as $$
+            declare
+                v_cnt numeric;
+            begin
+                v_cnt := 0;
+
+                update pg_attribute
+                    set atttypid = 'timestamp with time zone'::regtype
+                from pg_class
+                where attrelid = pg_class.oid
+                    and relnamespace = current_schema()::regnamespace
+                    and atttypid = 'timestamp'::regtype
+                    and relname ilike t;
+
+                get diagnostics v_cnt = row_count;
+                if v_cnt = 0 then
+                    raise warning 'Relation not found (or is already converted): %', t;
+                end if;
+
+                update pg_index
+                    set indclass = array_to_string(array_replace(indclass::oid[], 3128::oid, 3127::oid), ' ')::oidvector
+                from pg_class
+                where indrelid = pg_class.oid
+                    and relnamespace = current_schema()::regnamespace
+                    and indclass::oid[] @> ARRAY[3128::oid]
+                    and relname ilike t;
+
+                return v_cnt > 0;
+            end;
+            $$ language plpgsql
+        </createProcedure>
+    </changeSet>
+
+    <!-- tables that might be partitioned -->
+
+    <!-- ANSIBLE_HOSTS -->
+    <changeSet id="ansible-1580100" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('ansible_hosts%')
+        </sql>
+    </changeSet>
+
+    <!-- ANSIBLE_PLAY_STATS -->
+    <changeSet id="ansible-1580110" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('ansible_play_stats%')
+        </sql>
+    </changeSet>
+
+    <!-- ANSIBLE_PLAYBOOK_RESULT -->
+    <changeSet id="ansible-1580120" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('ansible_playbook_result%')
+        </sql>
+    </changeSet>
+
+    <!-- ANSIBLE_PLAYBOOK_STATS -->
+    <changeSet id="ansible-1580130" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('ansible_playbook_stats%')
+        </sql>
+    </changeSet>
+
+    <!-- ANSIBLE_TASK_STATS -->
+    <changeSet id="ansible-1580140" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('ansible_task_stats%')
+        </sql>
+    </changeSet>
+
+    <!-- indices -->
+
+    <changeSet id="ansible-1580200" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('idx_a_playbook_stats')
+        </sql>
+        <sql>
+            select ts_to_tstz('idx_a_playbook_result')
+        </sql>
+        <sql>
+            select ts_to_tstz('idx_a_play_stats')
+        </sql>
+        <sql>
+            select ts_to_tstz('idx_a_task_stats')
+        </sql>
     </changeSet>
 </databaseChangeLog>

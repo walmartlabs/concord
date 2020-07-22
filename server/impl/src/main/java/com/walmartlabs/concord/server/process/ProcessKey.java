@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -32,16 +32,16 @@ public class ProcessKey extends PartialProcessKey implements com.walmartlabs.con
     private static final long serialVersionUID = 1L;
 
     public static ProcessKey from(ProcessEntry e) {
-        return new ProcessKey(e.instanceId(), new Timestamp(e.createdAt().getTime()));
+        return new ProcessKey(e.instanceId(), e.createdAt());
     }
 
-    private final Timestamp createdAt;
+    private final OffsetDateTime createdAt;
 
-    public ProcessKey(PartialProcessKey part, Timestamp createdAt) {
+    public ProcessKey(PartialProcessKey part, OffsetDateTime createdAt) {
         this(part.getInstanceId(), createdAt);
     }
 
-    public ProcessKey(UUID instanceId, Timestamp createdAt) {
+    public ProcessKey(UUID instanceId, OffsetDateTime createdAt) {
         super(instanceId);
         this.createdAt = createdAt;
     }
@@ -60,7 +60,7 @@ public class ProcessKey extends PartialProcessKey implements com.walmartlabs.con
         return Objects.hash(super.hashCode(), createdAt);
     }
 
-    public Timestamp getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 

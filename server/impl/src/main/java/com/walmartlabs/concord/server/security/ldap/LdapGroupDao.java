@@ -27,13 +27,13 @@ import org.jooq.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.Tables.USERS;
 import static com.walmartlabs.concord.server.jooq.Tables.USER_LDAP_GROUPS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
 @Singleton
@@ -45,7 +45,7 @@ public class LdapGroupDao extends AbstractDao {
         super(cfg);
     }
 
-    public void updateIfNeeded(UUID userId, Set<String> groups, Field<Timestamp> cutOff) {
+    public void updateIfNeeded(UUID userId, Set<String> groups, Field<OffsetDateTime> cutOff) {
         tx(tx -> {
             Record1<Integer> r = tx.select(value(1)).from(USERS).where(USERS.USER_ID.eq(userId)
                     .and(USERS.LAST_GROUP_SYNC_DT.isNull()
@@ -92,7 +92,7 @@ public class LdapGroupDao extends AbstractDao {
     }
 
     private void updateLastSyncTimestamp(DSLContext tx, UUID userId) {
-        tx.update(USERS).set(USERS.LAST_GROUP_SYNC_DT, currentTimestamp())
+        tx.update(USERS).set(USERS.LAST_GROUP_SYNC_DT, currentOffsetDateTime())
                 .where(USERS.USER_ID.eq(userId))
                 .execute();
     }

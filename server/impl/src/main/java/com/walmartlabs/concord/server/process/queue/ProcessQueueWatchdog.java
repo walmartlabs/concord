@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,7 +152,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
 
         @Override
         public void run() {
-            Field<Timestamp> maxAge = currentTimestamp().minus(interval(cfg.getMaxFailureHandlingAge()));
+            Field<OffsetDateTime> maxAge = currentOffsetDateTime().minus(interval(cfg.getMaxFailureHandlingAge()));
 
             for (PollEntry e : POLL_ENTRIES) {
                 List<ProcessEntry> parents = watchdogDao.poll(e, maxAge, 1);
@@ -195,7 +195,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             String maxAge = cfg.getMaxStalledAge();
 
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(interval(maxAge));
+                Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(maxAge));
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, POTENTIAL_STALLED_STATUSES, cutOff, 1);
                 for (ProcessKey pk : pks) {
@@ -213,7 +213,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             String maxAge = cfg.getMaxStartFailureAge();
 
             watchdogDao.transaction(tx -> {
-                Field<Timestamp> cutOff = currentTimestamp().minus(interval(maxAge));
+                Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(maxAge));
 
                 List<ProcessKey> pks = watchdogDao.pollStalled(tx, FAILED_TO_START_STATUSES, cutOff, 1);
                 for (ProcessKey pk : pks) {
@@ -274,7 +274,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             tx(t);
         }
 
-        public List<ProcessEntry> poll(PollEntry entry, Field<Timestamp> maxAge, int maxEntries) {
+        public List<ProcessEntry> poll(PollEntry entry, Field<OffsetDateTime> maxAge, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
 
             return txResult(tx -> tx.select(q.INSTANCE_ID, q.CREATED_AT, q.PROJECT_ID, q.INITIATOR_ID, q.IMPORTS)
@@ -290,7 +290,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     .fetch(this::toEntry));
         }
 
-        public List<ProcessKey> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<Timestamp> cutOff, int maxEntries) {
+        public List<ProcessKey> pollStalled(DSLContext tx, ProcessStatus[] statuses, Field<OffsetDateTime> cutOff, int maxEntries) {
             ProcessQueue q = PROCESS_QUEUE.as("q");
             return tx.select(q.INSTANCE_ID, q.CREATED_AT)
                     .from(q)
@@ -311,7 +311,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
             return tx.select(q.INSTANCE_ID, q.CREATED_AT, q.LAST_AGENT_ID, q.TIMEOUT)
                     .from(q)
                     .where(q.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString())
-                            .and(q.LAST_RUN_AT.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentTimestamp())))
+                            .and(q.LAST_RUN_AT.plus(q.TIMEOUT.mul(i)).lessOrEqual(currentOffsetDateTime())))
                     .limit(maxEntries)
                     .forUpdate()
                     .skipLocked()
@@ -340,7 +340,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                             .and(PROCESS_QUEUE.PROCESS_KIND.in(Utils.toString(SPECIAL_HANDLERS)))));
         }
 
-        private ProcessEntry toEntry(Record5<UUID, Timestamp, UUID, UUID, JSONB> r) {
+        private ProcessEntry toEntry(Record5<UUID, OffsetDateTime, UUID, UUID, JSONB> r) {
             ProcessKey processKey = new ProcessKey(r.get(PROCESS_QUEUE.INSTANCE_ID), r.get(PROCESS_QUEUE.CREATED_AT));
             return new ProcessEntry(processKey,
                     r.get(PROCESS_QUEUE.PROJECT_ID),
@@ -348,7 +348,7 @@ public class ProcessQueueWatchdog implements ScheduledTask {
                     objectMapper.fromJSONB(r.get(PROCESS_QUEUE.IMPORTS), Imports.class));
         }
 
-        private static TimedOutEntry toExpiredEntry(Record4<UUID, Timestamp, String, Long> r) {
+        private static TimedOutEntry toExpiredEntry(Record4<UUID, OffsetDateTime, String, Long> r) {
             ProcessKey processKey = new ProcessKey(r.value1(), r.value2());
             return new TimedOutEntry(processKey, r.value3(), r.value4());
         }

@@ -35,7 +35,7 @@ import org.jooq.SelectOnConditionStep;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,7 +74,7 @@ public class AuditDao extends AbstractDao {
             AuditLog l = AUDIT_LOG.as("l");
             Users u = USERS.as("u");
 
-            SelectOnConditionStep<Record9<Timestamp, String, String, JSONB, UUID, String, String, String, String>> q = tx.select(l.ENTRY_DATE,
+            SelectOnConditionStep<Record9<OffsetDateTime, String, String, JSONB, UUID, String, String, String, String>> q = tx.select(l.ENTRY_DATE,
                     l.ENTRY_ACTION,
                     l.ENTRY_OBJECT,
                     l.ENTRY_DETAILS,
@@ -106,12 +106,12 @@ public class AuditDao extends AbstractDao {
                 q.where(PgUtils.jsonbContains(l.ENTRY_DETAILS, objectMapper.toJSONB(details)));
             }
 
-            Timestamp after = filter.after();
+            OffsetDateTime after = filter.after();
             if (after != null) {
                 q.where(l.ENTRY_DATE.greaterThan(after));
             }
 
-            Timestamp before = filter.before();
+            OffsetDateTime before = filter.before();
             if (before != null) {
                 q.where(l.ENTRY_DATE.lessThan(before));
             }
@@ -132,9 +132,9 @@ public class AuditDao extends AbstractDao {
         });
     }
 
-    private AuditLogEntry toEntry(Record9<Timestamp, String, String, JSONB, UUID, String, String, String, String> r) {
+    private AuditLogEntry toEntry(Record9<OffsetDateTime, String, String, JSONB, UUID, String, String, String, String> r) {
         ImmutableAuditLogEntry.Builder b = AuditLogEntry.builder()
-                .entryDate(r.get(0, Timestamp.class))
+                .entryDate(r.get(0, OffsetDateTime.class))
                 .action(AuditAction.valueOf(r.get(1, String.class)))
                 .object(AuditObject.valueOf(r.get(2, String.class)))
                 .details(objectMapper.fromJSONB(r.get(3, JSONB.class)));

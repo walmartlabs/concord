@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
 @Named
@@ -56,7 +56,7 @@ public class AgentCommandsDao extends AbstractDao {
                         AGENT_COMMANDS.COMMAND_STATUS, AGENT_COMMANDS.CREATED_AT,
                         AGENT_COMMANDS.COMMAND_DATA)
                 .values(value(commandId), value(agentId),
-                        value(Status.CREATED.toString()), currentTimestamp(),
+                        value(Status.CREATED.toString()), currentOffsetDateTime(),
                         value(convert(data)))
                 .execute());
     }

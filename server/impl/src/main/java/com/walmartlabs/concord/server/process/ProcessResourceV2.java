@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
-import com.walmartlabs.concord.server.IsoDateParam;
+import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -54,8 +54,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import java.sql.Timestamp;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static com.walmartlabs.concord.server.Utils.unwrap;
 
 @Named
 @Singleton
@@ -130,8 +134,8 @@ public class ProcessResourceV2 implements Resource {
                                    @ApiParam @QueryParam("projectName") String projectName,
                                    @ApiParam @QueryParam("repoId") UUID repoId,
                                    @ApiParam @QueryParam("repoName") String repoName,
-                                   @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
                                    @ApiParam @QueryParam("initiator") String initiator,
@@ -193,8 +197,8 @@ public class ProcessResourceV2 implements Resource {
                      @ApiParam @QueryParam("projectName") String projectName,
                      @ApiParam @QueryParam("repoId") UUID repoId,
                      @ApiParam @QueryParam("repoName") String repoName,
-                     @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
-                     @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                     @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                     @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
                      @ApiParam @QueryParam("tags") Set<String> tags,
                      @ApiParam @QueryParam("status") ProcessStatus processStatus,
                      @ApiParam @QueryParam("initiator") String initiator,
@@ -218,8 +222,8 @@ public class ProcessResourceV2 implements Resource {
                                               String projectName,
                                               UUID repoId,
                                               String repoName,
-                                              IsoDateParam afterCreatedAt,
-                                              IsoDateParam beforeCreatedAt,
+                                              OffsetDateTimeParam afterCreatedAt,
+                                              OffsetDateTimeParam beforeCreatedAt,
                                               Set<String> tags,
                                               ProcessStatus processStatus,
                                               String initiator,
@@ -290,8 +294,8 @@ public class ProcessResourceV2 implements Resource {
                 .projectId(effectiveProjectId)
                 .orgIds(orgIds)
                 .includeWithoutProject(effectiveOrgId == null && effectiveProjectId == null)
-                .afterCreatedAt(toTimestamp(afterCreatedAt))
-                .beforeCreatedAt(toTimestamp(beforeCreatedAt))
+                .afterCreatedAt(unwrap(afterCreatedAt))
+                .beforeCreatedAt(unwrap(beforeCreatedAt))
                 .repoId(effectiveRepoId)
                 .repoName(repoName)
                 .tags(tags)
@@ -309,14 +313,5 @@ public class ProcessResourceV2 implements Resource {
     private Set<UUID> getCurrentUserOrgIds() {
         UserPrincipal p = UserPrincipal.assertCurrent();
         return userDao.getOrgIds(p.getId());
-    }
-
-    private static Timestamp toTimestamp(IsoDateParam p) {
-        if (p == null) {
-            return null;
-        }
-
-        Calendar c = p.getValue();
-        return new Timestamp(c.getTimeInMillis());
     }
 }

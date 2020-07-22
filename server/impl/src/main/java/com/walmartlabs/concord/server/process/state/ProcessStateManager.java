@@ -59,7 +59,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -122,14 +122,14 @@ public class ProcessStateManager extends AbstractDao {
         String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                 .from(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((Timestamp) null))
+                        .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
                         .and(PROCESS_STATE.ITEM_PATH.eq((String) null)))
                 .getSQL();
 
         return tx.connectionResult(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setObject(1, processKey.getInstanceId());
-                ps.setTimestamp(2, processKey.getCreatedAt());
+                ps.setObject(2, processKey.getCreatedAt());
                 ps.setString(3, path);
 
                 try (ResultSet rs = ps.executeQuery()) {
@@ -155,14 +155,14 @@ public class ProcessStateManager extends AbstractDao {
             String sql = tx.select(PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((Timestamp) null))
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
                             .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setObject(1, processKey.getInstanceId());
-                    ps.setTimestamp(2, processKey.getCreatedAt());
+                    ps.setObject(2, processKey.getCreatedAt());
                     ps.setString(3, path);
 
                     List<T> result = new ArrayList<>();
@@ -188,7 +188,7 @@ public class ProcessStateManager extends AbstractDao {
      * Retrieves a list of resources whose path begins with the specified value.
      */
     public List<String> list(PartialProcessKey processKey, String path) {
-        Timestamp createdAt = assertCreatedAt(processKey);
+        OffsetDateTime createdAt = assertCreatedAt(processKey);
 
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_STATE.ITEM_PATH)
@@ -218,7 +218,7 @@ public class ProcessStateManager extends AbstractDao {
     }
 
     public boolean exists(PartialProcessKey processKey, String path) {
-        Timestamp instanceCreatedAt = assertCreatedAt(processKey);
+        OffsetDateTime instanceCreatedAt = assertCreatedAt(processKey);
         return exists(new ProcessKey(processKey, instanceCreatedAt), path);
     }
 
@@ -276,8 +276,6 @@ public class ProcessStateManager extends AbstractDao {
      * Inserts a single value.
      */
     public void insert(DSLContext tx, ProcessKey processKey, String path, byte[] in) {
-//        assertPolicy(tx, processKey, path, in);
-
         boolean needEncrypt = secureFiles.contains(path);
         byte[] data = in;
         if (needEncrypt) {
@@ -295,7 +293,7 @@ public class ProcessStateManager extends AbstractDao {
      */
     public void replacePath(ProcessKey processKey, Path src, BiFunction<Path, BasicFileAttributes, Boolean> filter) {
         UUID instanceId = processKey.getInstanceId();
-        Timestamp instanceCreatedAt = processKey.getCreatedAt();
+        OffsetDateTime instanceCreatedAt = processKey.getCreatedAt();
 
         tx(tx -> {
             delete(tx, instanceId, instanceCreatedAt);
@@ -377,13 +375,13 @@ public class ProcessStateManager extends AbstractDao {
             String sql = tx
                     .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
-                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null).and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((Timestamp) null)))
+                    .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null).and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null)))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setObject(1, processKey.getInstanceId());
-                    ps.setTimestamp(2, processKey.getCreatedAt());
+                    ps.setObject(2, processKey.getCreatedAt());
 
                     boolean found = false;
                     try (ResultSet rs = ps.executeQuery()) {
@@ -417,14 +415,14 @@ public class ProcessStateManager extends AbstractDao {
                     .select(PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.IS_ENCRYPTED, PROCESS_STATE.ITEM_DATA)
                     .from(PROCESS_STATE)
                     .where(PROCESS_STATE.INSTANCE_ID.eq((UUID) null)
-                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((Timestamp) null))
+                            .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq((OffsetDateTime) null))
                             .and(PROCESS_STATE.ITEM_PATH.startsWith((String) null)))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setObject(1, processKey.getInstanceId());
-                    ps.setTimestamp(2, processKey.getCreatedAt());
+                    ps.setObject(2, processKey.getCreatedAt());
                     ps.setString(3, dir);
 
                     boolean found = false;
@@ -489,11 +487,11 @@ public class ProcessStateManager extends AbstractDao {
         return String.join(PATH_SEPARATOR, elements);
     }
 
-    public Timestamp assertCreatedAt(PartialProcessKey processKey) {
+    public OffsetDateTime assertCreatedAt(PartialProcessKey processKey) {
         return assertCreatedAt(processKey.getInstanceId());
     }
 
-    private void delete(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt) {
+    private void delete(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt) {
         tx.deleteFrom(PROCESS_STATE)
                 .where(PROCESS_STATE.INSTANCE_ID.eq(instanceId)
                         .and(PROCESS_STATE.INSTANCE_CREATED_AT.eq(instanceCreatedAt)))
@@ -502,12 +500,12 @@ public class ProcessStateManager extends AbstractDao {
 
     private ProcessKey assertKey(PartialProcessKey processKey) {
         try (DSLContext tx = DSL.using(cfg)) {
-            Timestamp createdAt = assertCreatedAt(tx, processKey.getInstanceId());
+            OffsetDateTime createdAt = assertCreatedAt(tx, processKey.getInstanceId());
             return new ProcessKey(processKey, createdAt);
         }
     }
 
-    private void insert(DSLContext tx, UUID instanceId, Timestamp instanceCreatedAt, Collection<BatchItem> batch) {
+    private void insert(DSLContext tx, UUID instanceId, OffsetDateTime instanceCreatedAt, Collection<BatchItem> batch) {
         String sql = tx.insertInto(PROCESS_STATE)
                 .columns(PROCESS_STATE.INSTANCE_ID, PROCESS_STATE.INSTANCE_CREATED_AT, PROCESS_STATE.ITEM_PATH, PROCESS_STATE.UNIX_MODE, PROCESS_STATE.ITEM_DATA, PROCESS_STATE.IS_ENCRYPTED)
                 .values((UUID) null, null, null, null, null, null)
@@ -522,7 +520,7 @@ public class ProcessStateManager extends AbstractDao {
                         ps.setObject(1, instanceId);
 
                         // INSTANCE_CREATED_AT
-                        ps.setTimestamp(2, instanceCreatedAt);
+                        ps.setObject(2, instanceCreatedAt);
 
                         // ITEM_PATH
                         ps.setString(3, item.itemPath);
@@ -588,14 +586,14 @@ public class ProcessStateManager extends AbstractDao {
         return child.substring(parent.length());
     }
 
-    private Timestamp assertCreatedAt(UUID instanceId) {
+    private OffsetDateTime assertCreatedAt(UUID instanceId) {
         try (DSLContext tx = DSL.using(cfg)) {
             return assertCreatedAt(tx, instanceId);
         }
     }
 
-    private Timestamp assertCreatedAt(DSLContext tx, UUID instanceId) {
-        Timestamp t = tx.select(PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
+    private OffsetDateTime assertCreatedAt(DSLContext tx, UUID instanceId) {
+        OffsetDateTime t = tx.select(PROCESS_QUEUE.CREATED_AT).from(PROCESS_QUEUE)
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .fetchOne(PROCESS_QUEUE.CREATED_AT);
 

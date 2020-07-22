@@ -24,7 +24,7 @@ import com.walmartlabs.concord.server.sdk.ProcessKey;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Value.Immutable
@@ -36,7 +36,7 @@ public interface ProcessEventFilter {
     Long fromId();
 
     @Nullable
-    Timestamp after();
+    OffsetDateTime after();
 
     @Nullable
     String eventType();

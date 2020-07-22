@@ -20,11 +20,12 @@ package com.walmartlabs.concord.server.process;
  * =====
  */
 
+import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
 
 import javax.xml.bind.DatatypeConverter;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.Collections;
@@ -43,7 +44,7 @@ public final class PayloadUtils {
         return (Map<String, Object>) cfg.get(Constants.Request.REQUIREMENTS);
     }
 
-    public static Instant getStartAt(Payload p) {
+    public static OffsetDateTime getStartAt(Payload p) {
         Map<String, Object> cfg = p.getHeader(Payload.CONFIGURATION);
         if (cfg == null) {
             return null;
@@ -56,19 +57,19 @@ public final class PayloadUtils {
         }
 
         if (v instanceof String) {
-            Calendar c;
+            OffsetDateTime t;
             try {
-                c = DatatypeConverter.parseDateTime((String) v);
+                t = DateTimeUtils.fromIsoString((String) v);
             } catch (DateTimeParseException e) {
                 throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' format, expected an ISO-8601 value, got: " + v);
             }
 
-            if (c.before(Calendar.getInstance())) {
+            if (t.isBefore(OffsetDateTime.now())) {
                 throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, can't be in the past: " + v +
                         " Current server time: " + DatatypeConverter.printDateTime(Calendar.getInstance()));
             }
 
-            return c.toInstant();
+            return t;
         }
 
         throw new ProcessException(p.getProcessKey(), "Invalid '" + k + "' value, expected an ISO-8601 value, got: " + v);

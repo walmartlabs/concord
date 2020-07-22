@@ -25,31 +25,23 @@ import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.chrono.ChronoZonedDateTime;
 
 public final class CronUtils {
 
-    public static Instant nextExecution(Instant now, String expression, ZoneId zone) {
+    public static OffsetDateTime nextExecution(OffsetDateTime now, String expression, ZoneId zone) {
         if (zone == null) {
             zone = ZoneId.systemDefault();
         }
-        return nextExecution(ZonedDateTime.ofInstant(now, zone), expression);
+        return nextExecution(now.atZoneSameInstant(zone), expression);
     }
 
-    public static Instant nextExecution(String expression, ZoneId zone) {
-        if (zone == null) {
-            zone = ZoneId.systemDefault();
-        }
-        return nextExecution(ZonedDateTime.now(zone), expression);
-    }
-
-    private static Instant nextExecution(ZonedDateTime now, String expression) {
+    private static OffsetDateTime nextExecution(ZonedDateTime now, String expression) {
         CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
         ExecutionTime executionTime = ExecutionTime.forCron(parser.parse(expression));
-        return executionTime.nextExecution(now).map(ChronoZonedDateTime::toInstant).orElse(null);
+        return executionTime.nextExecution(now).map(ZonedDateTime::toOffsetDateTime).orElse(null);
     }
 
     private CronUtils() {

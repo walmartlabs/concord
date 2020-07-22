@@ -55,7 +55,6 @@ import org.sonatype.siesta.Validate;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.naming.NamingException;
 import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;

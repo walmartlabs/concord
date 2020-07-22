@@ -35,7 +35,7 @@ import javax.inject.Singleton;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,11 +176,11 @@ public class TaskInfoProcessor implements EventProcessor {
                     .set(a.UNREACHABLE_COUNT, a.UNREACHABLE_COUNT.plus(value((Long) null)))
                     .set(a.SKIPPED_COUNT, a.SKIPPED_COUNT.plus(value((Long) null)))
                     .set(a.RUNNING_COUNT, a.RUNNING_COUNT.plus(value((Long) null)))
-                    .set(a.TASK_ORDER, when(value((Boolean)null).eq(inline(true)), value((Long)null)).otherwise(a.TASK_ORDER))
+                    .set(a.TASK_ORDER, when(value((Boolean) null).eq(inline(true)), value((Long) null)).otherwise(a.TASK_ORDER))
                     .where(a.INSTANCE_ID.eq(value((UUID) null))
-                            .and(a.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
+                            .and(a.INSTANCE_CREATED_AT.eq(value((OffsetDateTime) null))
                                     .and(a.PLAY_ID.eq(value((UUID) null))
-                                            .and(a.TASK_ID.eq(value((UUID)null))))))
+                                            .and(a.TASK_ID.eq(value((UUID) null))))))
                     .getSQL();
 
             try (PreparedStatement ps = conn.prepareStatement(update)) {
@@ -194,7 +194,7 @@ public class TaskInfoProcessor implements EventProcessor {
                     ps.setLong(7, i.details().order());
 
                     ps.setObject(8, i.key().instanceId());
-                    ps.setTimestamp(9, i.key().instanceCreatedAt());
+                    ps.setObject(9, i.key().instanceCreatedAt());
                     ps.setObject(10, i.key().playId());
                     ps.setObject(11, i.key().taskId());
 
@@ -227,7 +227,7 @@ public class TaskInfoProcessor implements EventProcessor {
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
                 for (TaskInfoItem i : items) {
                     ps.setObject(1, i.key().instanceId());
-                    ps.setTimestamp(2, i.key().instanceCreatedAt());
+                    ps.setObject(2, i.key().instanceCreatedAt());
                     ps.setObject(3, i.key().playbookId());
                     ps.setObject(4, i.key().playId());
                     ps.setObject(5, i.key().taskId());
@@ -252,7 +252,7 @@ public class TaskInfoProcessor implements EventProcessor {
 
         UUID instanceId();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
         UUID playbookId();
 

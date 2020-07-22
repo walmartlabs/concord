@@ -35,7 +35,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
+import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Named
@@ -102,7 +106,7 @@ public class AgentManager {
         List<AgentCommand> commands = l.stream()
                 .filter(p -> p.lastAgentId() != null)
                 .map(p -> new AgentCommand(UUID.randomUUID(), p.lastAgentId(), AgentCommand.Status.CREATED,
-                        new Date(), Commands.cancel(p.instanceId().toString())))
+                        OffsetDateTime.now(), Commands.cancel(p.instanceId().toString())))
                 .collect(Collectors.toList());
 
         commandQueue.insertBatch(commands);

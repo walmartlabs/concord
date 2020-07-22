@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -256,7 +256,7 @@ public class HostArtifactsProcessor implements Processor {
 
         UUID instanceId();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
         String artifactUrl();
 

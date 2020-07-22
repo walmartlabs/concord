@@ -39,15 +39,14 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.trunc;
 
 @Named("api-key-expiration-notifier")
@@ -94,7 +93,7 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
                 UUID userId = e.getKey();
                 if (sendNotification(userId, days, e.getValue())) {
                     List<UUID> keyIds = e.getValue().stream().map(k -> k.id).collect(Collectors.toList());
-                    dao.markNotified(keyIds, Instant.now());
+                    dao.markNotified(keyIds, OffsetDateTime.now());
                 }
             }
 
@@ -151,31 +150,32 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
                             API_KEYS.USER_ID)
                             .from(API_KEYS)
                             .where(API_KEYS.EXPIRED_AT.isNotNull()
-                                    .and(currentTimestamp().greaterOrEqual(trunc(API_KEYS.EXPIRED_AT).minus(days))
+                                    .and(currentOffsetDateTime().greaterOrEqual(trunc(API_KEYS.EXPIRED_AT).minus(days))
                                             .and(API_KEYS.LAST_NOTIFIED_AT.isNull()
                                                     .or(API_KEYS.LAST_NOTIFIED_AT.lessOrEqual(API_KEYS.EXPIRED_AT.minus(days))))))
                             .fetch(this::toEntry));
         }
 
-        public void markNotified(List<UUID> keyIds, Instant date) {
+        public void markNotified(List<UUID> keyIds, OffsetDateTime date) {
             tx(tx -> tx.update(API_KEYS)
-                    .set(API_KEYS.LAST_NOTIFIED_AT, Timestamp.from(date))
+                    .set(API_KEYS.LAST_NOTIFIED_AT, date)
                     .where(API_KEYS.KEY_ID.in(keyIds))
                     .execute());
         }
 
-        private ApiKeyEntry toEntry(Record4<UUID, String, Timestamp, UUID> r) {
+        private ApiKeyEntry toEntry(Record4<UUID, String, OffsetDateTime, UUID> r) {
             return new ApiKeyEntry(r.value1(), r.value2(), r.value3(), r.value4());
         }
     }
 
     private static class ApiKeyEntry {
+
         private final UUID id;
         private final String name;
-        private final Date expiredAt;
+        private final OffsetDateTime expiredAt;
         private final UUID userId;
 
-        public ApiKeyEntry(UUID id, String name, Date expiredAt, UUID userId) {
+        public ApiKeyEntry(UUID id, String name, OffsetDateTime expiredAt, UUID userId) {
             this.id = id;
             this.name = name;
             this.expiredAt = expiredAt;
@@ -190,7 +190,7 @@ public class ApiKeyExpirationNotifier implements ScheduledTask {
             return name;
         }
 
-        public Date getExpiredAt() {
+        public OffsetDateTime getExpiredAt() {
             return expiredAt;
         }
 

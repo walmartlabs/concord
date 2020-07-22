@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet id="1580000" author="ibodrov@gmail.com">
+        <!--
+            A hacky way to convert timestamp to timestamptz without rewriting the data.
+
+            Assuming the current data is in UTC, we can change all "timestamp" columns
+            and indices to "timestamp with time zone" just by updating the column's "atttypid".
+        -->
+        <createProcedure dbms="postgresql">
+            create or replace function ts_to_tstz(t text)
+                returns bool as $$
+            declare
+                v_cnt numeric;
+            begin
+                v_cnt := 0;
+
+                update pg_attribute
+                    set atttypid = 'timestamp with time zone'::regtype
+                from pg_class
+                where attrelid = pg_class.oid
+                    and relnamespace = current_schema()::regnamespace
+                    and atttypid = 'timestamp'::regtype
+                    and relname ilike t;
+
+                get diagnostics v_cnt = row_count;
+                if v_cnt = 0 then
+                    raise warning 'Relation not found (or is already converted): %', t;
+                end if;
+
+                update pg_index
+                    set indclass = array_to_string(array_replace(indclass::oid[], 3128::oid, 3127::oid), ' ')::oidvector
+                from pg_class
+                where indrelid = pg_class.oid
+                    and relnamespace = current_schema()::regnamespace
+                    and indclass::oid[] @> ARRAY[3128::oid]
+                    and relname ilike t;
+
+                return v_cnt > 0;
+            end;
+            $$ language plpgsql
+        </createProcedure>
+    </changeSet>
+
+    <!-- non-partitioned tables -->
+
+    <!-- AGENT_COMMANDS -->
+    <changeSet id="1580100" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('agent_commands')
+        </sql>
+    </changeSet>
+
+    <!-- API_KEYS -->
+    <changeSet id="1580110" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('api_keys')
+        </sql>
+    </changeSet>
+
+    <!-- PROCESS_QUEUE -->
+    <changeSet id="1580120" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('process_queue')
+        </sql>
+    </changeSet>
+
+    <!-- TASKS -->
+    <changeSet id="1580130" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('tasks')
+        </sql>
+    </changeSet>
+
+    <!-- TASK_LOCKS -->
+    <changeSet id="1580140" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('task_locks')
+        </sql>
+    </changeSet>
+
+    <!-- TRIGGER_SCHEDULE -->
+    <changeSet id="1580150" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('trigger_schedule')
+        </sql>
+    </changeSet>
+
+    <!-- USERS -->
+    <changeSet id="1580160" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('users')
+        </sql>
+    </changeSet>
+
+    <!-- tables that might be partitioned -->
+
+    <!-- AUDIT_LOG -->
+    <changeSet id="1580200" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('audit_log%')
+        </sql>
+    </changeSet>
+
+    <!-- V_AUDIT_LOG -->
+    <changeSet id="1580201" author="ibodrov@gmail.com">
+        <createView viewName="V_AUDIT_LOG" replaceIfExists="true">
+            select
+                ENTRY_SEQ,
+                ENTRY_DATE,
+                USER_ID,
+                (select USERNAME from USERS u where u.USER_ID = a.USER_ID) as USERNAME,
+                ENTRY_OBJECT,
+                ENTRY_ACTION,
+                ENTRY_DETAILS
+            from AUDIT_LOG a
+        </createView>
+    </changeSet>
+
+    <!-- PROCESS_CHECKPOINTS -->
+    <changeSet id="1580210" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('process_checkpoints%')
+        </sql>
+    </changeSet>
+
+    <!-- PROCESS_EVENTS -->
+    <changeSet id="1580220" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('process_events%')
+        </sql>
+    </changeSet>
+
+    <!-- PROCESS_LOG_DATA -->
+    <changeSet id="1580230" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('process_log_data%')
+        </sql>
+    </changeSet>
+
+    <!-- PROCESS_LOG_SEGMENTS -->
+    <changeSet id="1580240" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('process_log_segments%')
+        </sql>
+    </changeSet>
+
+    <!-- PROCESS_STATE -->
+    <changeSet id="1580250" author="ibodrov@gmail.com">
+        <sql>
+            select ts_to_tstz('process_state%')
+        </sql>
+    </changeSet>
+
+    <!-- the rest of it -->
+    <changeSet id="1580300" author="ibodrov@gmail.com">
+        <sql>
+            update pg_attribute
+                set atttypid = 'timestamp with time zone'::regtype
+            from pg_class
+            where attrelid = pg_class.oid
+                and relnamespace = current_schema()::regnamespace
+                and atttypid = 'timestamp'::regtype
+                and relname not in (
+                    'server_db_lock',
+                    'server_db_log'
+                );
+        </sql>
+    </changeSet>
+
+    <!-- functions and procedures -->
+
+    <changeSet id="1580500" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_DATA_SEGMENT_NEXT_RANGE(P_INSTANCE_ID uuid, P_CREATED_AT timestamptz, P_SEGMENT_ID bigint, P_DATA_LEN int)
+                returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(max(upper(SEGMENT_RANGE)), 0) into R_START
+                from PROCESS_LOG_DATA
+                where
+                INSTANCE_ID = P_INSTANCE_ID and INSTANCE_CREATED_AT = P_CREATED_AT and SEGMENT_ID = P_SEGMENT_ID;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START, R_START + P_DATA_LEN);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_DATA_NEXT_RANGE(P_INSTANCE_ID uuid, P_CREATED_AT timestamptz, P_DATA_LEN int)
+                returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(max(upper(LOG_RANGE)), 0) into R_START
+                from PROCESS_LOG_DATA
+                where
+                INSTANCE_ID = P_INSTANCE_ID and INSTANCE_CREATED_AT = P_CREATED_AT;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START, R_START + P_DATA_LEN);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+
+    <changeSet id="1580510" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_DATA_SEGMENT_LAST_N_BYTES(P_INSTANCE_ID uuid, P_CREATED_AT timestamptz, P_SEGMENT_ID bigint, P_DATA_LEN int)
+                returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(max(upper(SEGMENT_RANGE)), 0) into R_START
+                from PROCESS_LOG_DATA
+                where
+                INSTANCE_ID = P_INSTANCE_ID and INSTANCE_CREATED_AT = P_CREATED_AT and SEGMENT_ID = P_SEGMENT_ID;
+
+                if R_START is null then
+                R_START := 0;
+                end if;
+
+                return int4range(R_START - P_DATA_LEN, R_START);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+
+    <changeSet id="1580520" author="ibodrov@gmail.com">
+        <createProcedure dbms="postgresql">
+            create or replace function PROCESS_LOG_DATA_LAST_N_BYTES(P_INSTANCE_ID uuid, P_CREATED_AT timestamptz, P_DATA_LEN int)
+                returns int4range as $$
+            declare
+                R_START int;
+            begin
+                select coalesce(max(upper(LOG_RANGE)), 0) into R_START
+                from PROCESS_LOG_DATA
+                where
+                INSTANCE_ID = P_INSTANCE_ID and INSTANCE_CREATED_AT = P_CREATED_AT;
+
+                if R_START is null then
+                    R_START := 0;
+                end if;
+
+                return int4range(R_START - P_DATA_LEN, R_START);
+            end;
+            $$ language plpgsql;
+        </createProcedure>
+    </changeSet>
+</databaseChangeLog>

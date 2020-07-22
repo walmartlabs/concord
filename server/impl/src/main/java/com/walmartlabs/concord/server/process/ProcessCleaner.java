@@ -25,25 +25,24 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
-import org.jooq.Configuration;
-import org.jooq.Record1;
-import org.jooq.SelectConditionStep;
-import org.jooq.SelectJoinStep;
+import org.jooq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_DATA;
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_LOG_SEGMENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessCheckpoints.PROCESS_CHECKPOINTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessEvents.PROCESS_EVENTS;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
 import static com.walmartlabs.concord.server.jooq.tables.ProcessState.PROCESS_STATE;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 @Named("process-cleaner")
 @Singleton
@@ -73,7 +72,8 @@ public class ProcessCleaner implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cfg.getMaxStateAge());
+        // TODO use PG's intervals
+        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxStateAge() + " ms"));
         cleanerDao.deleteOldState(cutoff, cfg);
         cleanerDao.deleteOrphans(cfg);
     }
@@ -86,7 +86,7 @@ public class ProcessCleaner implements ScheduledTask {
             super(cfg);
         }
 
-        void deleteOldState(Timestamp cutoff, ProcessConfiguration jobCfg) {
+        void deleteOldState(Field<OffsetDateTime> cutoff, ProcessConfiguration jobCfg) {
             long t1 = System.currentTimeMillis();
 
             tx(tx -> {

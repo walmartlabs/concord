@@ -9,9 +9,9 @@ package com.walmartlabs.concord.server.process;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,11 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.*;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Value.Immutable
 @JsonInclude(Include.NON_EMPTY)
@@ -76,7 +80,7 @@ public interface ProcessEntry extends Serializable {
     String commitMsg();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date createdAt();
+    OffsetDateTime createdAt();
 
     @Nullable
     String initiator();
@@ -88,18 +92,18 @@ public interface ProcessEntry extends Serializable {
 
     @Nullable
     String lastAgentId();
-    
-    @Nullable
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date startAt();
-    
-    @Nullable
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date lastUpdatedAt();
 
     @Nullable
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date lastRunAt();
+    OffsetDateTime startAt();
+
+    @Nullable
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    OffsetDateTime lastUpdatedAt();
+
+    @Nullable
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    OffsetDateTime lastRunAt();
 
     @Nullable
     String logFileName();
@@ -137,7 +141,8 @@ public interface ProcessEntry extends Serializable {
     Long timeout();
 
     @Nullable
-    @JsonIgnore // TODO swagger-codegen has some issues generating the client classes for this field
+    @JsonIgnore
+        // TODO swagger-codegen has some issues generating the client classes for this field
     Imports imports();
 
     @Nullable
@@ -154,7 +159,7 @@ public interface ProcessEntry extends Serializable {
         String name();
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-        Date createdAt();
+        OffsetDateTime createdAt();
     }
 
     @Value.Immutable
@@ -182,7 +187,7 @@ public interface ProcessEntry extends Serializable {
         ProcessStatusHistoryPayload payload();
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-        Date changeDate();
+        OffsetDateTime changeDate();
     }
 
     @Value.Immutable
@@ -194,7 +199,7 @@ public interface ProcessEntry extends Serializable {
         UUID id();
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-        Date eventDate();
+        OffsetDateTime eventDate();
 
         String type();
 

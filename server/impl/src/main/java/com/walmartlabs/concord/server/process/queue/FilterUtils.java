@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.process.queue;
  * =====
  */
 
+import com.walmartlabs.concord.common.DateTimeUtils;
 import org.immutables.value.Value;
 import org.jooq.Field;
 import org.jooq.JSONB;
@@ -27,14 +28,16 @@ import org.jooq.Record;
 import org.jooq.SelectQuery;
 
 import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.DatatypeConverter;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.walmartlabs.concord.db.PgUtils.jsonbTextByPath;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 public final class FilterUtils {
 
@@ -97,7 +100,7 @@ public final class FilterUtils {
                 .collect(Collectors.toList());
     }
 
-    public static void applyDate(SelectQuery<Record> q, Field<Timestamp> field, List<ProcessFilter.DateFilter> filters) {
+    public static void applyDate(SelectQuery<Record> q, Field<OffsetDateTime> field, List<ProcessFilter.DateFilter> filters) {
         if (filters == null || filters.isEmpty()) {
             return;
         }
@@ -106,7 +109,7 @@ public final class FilterUtils {
             switch (filter.type()) {
                 case GREATER_OR_EQUALS: {
                     if (filter.value() == null) {
-                        q.addConditions(field.greaterOrEqual(currentTimestamp()));
+                        q.addConditions(field.greaterOrEqual(currentOffsetDateTime()));
                     } else {
                         q.addConditions(field.greaterOrEqual(filter.value()));
                     }
@@ -114,7 +117,7 @@ public final class FilterUtils {
                 }
                 case LESS_OR_EQUALS_OR_NULL: {
                     if (filter.value() == null) {
-                        q.addConditions(field.lessOrEqual(currentTimestamp()).or(field.isNull()));
+                        q.addConditions(field.lessOrEqual(currentOffsetDateTime()).or(field.isNull()));
                     } else {
                         q.addConditions(field.lessOrEqual(filter.value()).or(field.isNull()));
                     }
@@ -197,14 +200,13 @@ public final class FilterUtils {
         return null;
     }
 
-    private static Timestamp parseDateValue(String value) {
+    private static OffsetDateTime parseDateValue(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
         }
 
         try {
-            Calendar c = DatatypeConverter.parseDateTime(value);
-            return new Timestamp(c.getTimeInMillis());
+            return DateTimeUtils.fromIsoString(value);
         } catch (DateTimeParseException e) {
             throw new RuntimeException("Invalid date format, expected an ISO-8601 value, got: " + value);
         }

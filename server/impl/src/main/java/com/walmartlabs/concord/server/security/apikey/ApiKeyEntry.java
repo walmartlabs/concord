@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.walmartlabs.concord.common.validation.ConcordKey;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -43,13 +43,13 @@ public class ApiKeyEntry implements Serializable {
     @ConcordKey
     private final String name;
 
-    private final Date expiredAt;
+    private final OffsetDateTime expiredAt;
 
     @JsonCreator
     public ApiKeyEntry(@JsonProperty("id") UUID id,
                        @JsonProperty("userId") UUID userId,
                        @JsonProperty("name") String name,
-                       @JsonProperty("expiredAt") Date expiredAt) {
+                       @JsonProperty("expiredAt") OffsetDateTime expiredAt) {
 
         this.id = id;
         this.userId = userId;
@@ -69,7 +69,7 @@ public class ApiKeyEntry implements Serializable {
         return name;
     }
 
-    public Date getExpiredAt() {
+    public OffsetDateTime getExpiredAt() {
         return expiredAt;
     }
 

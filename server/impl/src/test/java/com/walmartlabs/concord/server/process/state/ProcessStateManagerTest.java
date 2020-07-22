@@ -36,7 +36,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
@@ -51,7 +51,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
     @Test
     public void testUpdateState() throws Exception {
-        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
+        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), OffsetDateTime.now());
 
         Path baseDir = Files.createTempDirectory("testImport");
 
@@ -74,7 +74,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
 
         writeTempFile(baseDir.resolve("file-1"), "123-up".getBytes());
 
-        stateManager.importPath(processKey, null, baseDir,(p, attrs) -> true);
+        stateManager.importPath(processKey, null, baseDir, (p, attrs) -> true);
 
         result = stateManager.export(processKey, copyTo(tmpDir));
         assertTrue(result);
@@ -85,7 +85,7 @@ public class ProcessStateManagerTest extends AbstractDaoTest {
     @Ignore
     @Test
     public void testLargeImport() throws Exception {
-        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), new Timestamp(System.currentTimeMillis()));
+        ProcessKey processKey = new ProcessKey(UUID.randomUUID(), OffsetDateTime.now());
 
         int files = 100;
         int chunkSize = 1024 * 1024;

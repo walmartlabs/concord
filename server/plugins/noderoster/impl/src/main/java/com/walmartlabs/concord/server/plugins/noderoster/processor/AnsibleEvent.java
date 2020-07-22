@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.plugins.noderoster.processor;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Value.Immutable
@@ -36,9 +36,9 @@ public interface AnsibleEvent extends AbstractEventProcessor.Event {
 
     UUID instanceId();
 
-    Timestamp instanceCreatedAt();
+    OffsetDateTime instanceCreatedAt();
 
-    Timestamp eventDate();
+    OffsetDateTime eventDate();
 
     EventData data();
 

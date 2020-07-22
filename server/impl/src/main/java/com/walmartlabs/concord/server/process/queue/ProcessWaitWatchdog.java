@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.tables.ProcessQueue.PROCESS_QUEUE;
@@ -66,7 +66,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
     private final Map<WaitType, ProcessWaitHandler<AbstractWaitCondition>> processWaitHandlers;
 
     @Inject
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public ProcessWaitWatchdog(ProcessWaitWatchdogConfiguration cfg,
                                WatchdogDao dao,
                                ProcessQueueManager queueManager,
@@ -135,7 +135,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
 
         ProcessStatus status();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
         long id();
 
@@ -161,7 +161,7 @@ public class ProcessWaitWatchdog implements ScheduledTask {
         public List<WaitingProcess> nextWaitItems(Long lastId, int pollLimit) {
             return txResult(tx -> {
                 ProcessQueue q = PROCESS_QUEUE.as("q");
-                SelectConditionStep<Record5<UUID, String, Timestamp, Long, JSONB>> s = tx.select(
+                SelectConditionStep<Record5<UUID, String, OffsetDateTime, Long, JSONB>> s = tx.select(
                         q.INSTANCE_ID,
                         q.CURRENT_STATUS,
                         q.CREATED_AT,

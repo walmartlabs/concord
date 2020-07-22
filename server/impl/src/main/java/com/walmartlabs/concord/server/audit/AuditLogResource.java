@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.audit;
  * =====
  */
 
-import com.walmartlabs.concord.server.IsoDateParam;
+import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.org.OrganizationEntry;
 import com.walmartlabs.concord.server.org.OrganizationManager;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
@@ -56,7 +56,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.walmartlabs.concord.server.Utils.toTimestamp;
+import static com.walmartlabs.concord.server.Utils.unwrap;
 
 @Named
 @Singleton
@@ -128,8 +128,8 @@ public class AuditLogResource implements Resource {
                                     @ApiParam @QueryParam("action") AuditAction action,
                                     @ApiParam @QueryParam("userId") UUID userId,
                                     @ApiParam @QueryParam("username") String username,
-                                    @ApiParam @QueryParam("after") IsoDateParam afterTimestamp,
-                                    @ApiParam @QueryParam("before") IsoDateParam beforeTimestamp,
+                                    @ApiParam @QueryParam("after") OffsetDateTimeParam afterTimestamp,
+                                    @ApiParam @QueryParam("before") OffsetDateTimeParam beforeTimestamp,
                                     @ApiParam @QueryParam("offset") @DefaultValue("0") int offset,
                                     @ApiParam @QueryParam("limit") @DefaultValue("30") int limit,
                                     @Context UriInfo uriInfo) {
@@ -209,8 +209,8 @@ public class AuditLogResource implements Resource {
                 .userId(effectiveUserId)
                 .object(object)
                 .action(action)
-                .after(toTimestamp(afterTimestamp))
-                .before(toTimestamp(beforeTimestamp))
+                .after(unwrap(afterTimestamp))
+                .before(unwrap(beforeTimestamp))
                 .limit(limit)
                 .offset(offset)
                 .build());

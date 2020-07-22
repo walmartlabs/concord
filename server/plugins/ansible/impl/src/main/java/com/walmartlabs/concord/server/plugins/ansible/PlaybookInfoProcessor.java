@@ -32,7 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.PreparedStatement;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -93,20 +93,20 @@ public class PlaybookInfoProcessor implements EventProcessor {
 
             SelectConditionStep<Record1<Integer>> exists = tx.selectOne()
                     .from(a)
-                    .where(a.INSTANCE_ID.eq(value((UUID)null))
-                            .and(a.INSTANCE_CREATED_AT.eq(value((Timestamp)null))
-                                    .and(a.PLAYBOOK_ID.eq(value((UUID)null)))));
+                    .where(a.INSTANCE_ID.eq(value((UUID) null))
+                            .and(a.INSTANCE_CREATED_AT.eq(value((OffsetDateTime) null))
+                                    .and(a.PLAYBOOK_ID.eq(value((UUID) null)))));
 
-            SelectConditionStep<Record9<UUID, Timestamp, UUID, String, Timestamp, Integer, Integer, Integer, Integer>> values =
+            SelectConditionStep<Record9<UUID, OffsetDateTime, UUID, String, OffsetDateTime, Integer, Integer, Integer, Integer>> values =
                     tx.select(value((UUID) null),
-                            value((Timestamp)null),
+                            value((OffsetDateTime) null),
                             value((UUID) null),
                             value((String) null),
-                            value((Timestamp)null),
-                            value((Integer)null),
-                            value((Integer)null),
-                            value((Integer)null),
-                            value((Integer)null))
+                            value((OffsetDateTime) null),
+                            value((Integer) null),
+                            value((Integer) null),
+                            value((Integer) null),
+                            value((Integer) null))
                             .whereNotExists(exists);
 
             String insert = tx.insertInto(a)
@@ -126,10 +126,10 @@ public class PlaybookInfoProcessor implements EventProcessor {
                 try (PreparedStatement ps = conn.prepareStatement(insert)) {
                     for (PlaybookInfo p : items) {
                         ps.setObject(1, p.instanceId());
-                        ps.setTimestamp(2, p.instanceCreatedAt());
+                        ps.setObject(2, p.instanceCreatedAt());
                         ps.setObject(3, p.playbookId());
                         ps.setString(4, StringUtils.abbreviate(p.name(), ANSIBLE_PLAYBOOK_STATS.NAME.getDataType().length()));
-                        ps.setTimestamp(5, p.startedAt());
+                        ps.setObject(5, p.startedAt());
                         ps.setLong(6, p.hostCount());
                         ps.setInt(7, p.playCount());
                         ps.setLong(8, p.totalWork());
@@ -152,13 +152,13 @@ public class PlaybookInfoProcessor implements EventProcessor {
 
         UUID instanceId();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
         UUID playbookId();
 
         String name();
 
-        Timestamp startedAt();
+        OffsetDateTime startedAt();
 
         long hostCount();
 

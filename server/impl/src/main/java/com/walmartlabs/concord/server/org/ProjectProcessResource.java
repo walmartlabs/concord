@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org;
 
 import com.walmartlabs.concord.common.validation.ConcordKey;
 import com.walmartlabs.concord.sdk.Constants;
-import com.walmartlabs.concord.server.IsoDateParam;
+import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.console.ResponseTemplates;
 import com.walmartlabs.concord.server.org.project.ProjectDao;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -58,7 +58,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 
-import static com.walmartlabs.concord.server.Utils.toTimestamp;
+import static com.walmartlabs.concord.server.Utils.unwrap;
 import static javax.ws.rs.core.Response.Status;
 
 @Named
@@ -112,8 +112,8 @@ public class ProjectProcessResource implements Resource {
     // TODO replace with /api/v1/process?orgName=...&status=...
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
                                    @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
 
@@ -121,8 +121,8 @@ public class ProjectProcessResource implements Resource {
         ProcessFilter filter = ProcessFilter.builder()
                 .orgIds(Collections.singleton(org.getId()))
                 .status(processStatus)
-                .afterCreatedAt(toTimestamp(afterCreatedAt))
-                .beforeCreatedAt(toTimestamp(beforeCreatedAt))
+                .afterCreatedAt(unwrap(afterCreatedAt))
+                .beforeCreatedAt(unwrap(beforeCreatedAt))
                 .limit(limit)
                 .offset(offset)
                 .build();
@@ -139,8 +139,8 @@ public class ProjectProcessResource implements Resource {
     public List<ProcessEntry> list(@ApiParam @PathParam("orgName") @ConcordKey String orgName,
                                    @ApiParam @PathParam("projectName") @ConcordKey String projectName,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
-                                   @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
                                    @ApiParam @QueryParam("limit") @DefaultValue(DEFAULT_LIST_LIMIT) int limit,
                                    @ApiParam @QueryParam("offset") @DefaultValue("0") int offset) {
 
@@ -154,8 +154,8 @@ public class ProjectProcessResource implements Resource {
         ProcessFilter filter = ProcessFilter.builder()
                 .projectId(projectId)
                 .status(processStatus)
-                .afterCreatedAt(toTimestamp(afterCreatedAt))
-                .beforeCreatedAt(toTimestamp(beforeCreatedAt))
+                .afterCreatedAt(unwrap(afterCreatedAt))
+                .beforeCreatedAt(unwrap(beforeCreatedAt))
                 .limit(limit)
                 .offset(offset)
                 .build();
@@ -356,7 +356,7 @@ public class ProjectProcessResource implements Resource {
         args.put("message", message);
 
         if (t != null) {
-            t = unwrap(t);
+            t = unwrapCause(t);
             args.put("stacktrace", stacktraceToString(t));
         }
 
@@ -364,10 +364,11 @@ public class ProjectProcessResource implements Resource {
                 .build();
     }
 
-    private static Throwable unwrap(Throwable t) {
+    private static Throwable unwrapCause(Throwable t) {
         if (t instanceof ProcessException && t.getCause() != null) {
             return t.getCause();
         }
+
         return t;
     }
 

@@ -31,6 +31,7 @@ import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.HttpUtils;
 import com.walmartlabs.concord.server.IsoDateParam;
 import com.walmartlabs.concord.server.MultipartUtils;
+import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.cfg.ProcessConfiguration;
 import com.walmartlabs.concord.server.cfg.SecretStoreConfiguration;
 import com.walmartlabs.concord.server.org.OrganizationManager;
@@ -739,8 +740,8 @@ public class ProcessResource implements Resource {
     public List<ProcessEntry> list(@ApiParam @QueryParam("org") String orgName,
                                    @ApiParam @QueryParam("project") String projectName,
                                    @ApiParam @QueryParam("projectId") UUID projectId,
-                                   @ApiParam @QueryParam("afterCreatedAt") IsoDateParam afterCreatedAt,
-                                   @ApiParam @QueryParam("beforeCreatedAt") IsoDateParam beforeCreatedAt,
+                                   @ApiParam @QueryParam("afterCreatedAt") OffsetDateTimeParam afterCreatedAt,
+                                   @ApiParam @QueryParam("beforeCreatedAt") OffsetDateTimeParam beforeCreatedAt,
                                    @ApiParam @QueryParam("tags") Set<String> tags,
                                    @ApiParam @QueryParam("status") ProcessStatus processStatus,
                                    @ApiParam @QueryParam("initiator") String initiator,
@@ -801,8 +802,8 @@ public class ProcessResource implements Resource {
      * @param instanceId
      * @param range
      * @return
-     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
      * @see ProcessLogResourceV2
+     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
      */
     @GET
     @ApiOperation(value = "Retrieve the log")
@@ -827,8 +828,8 @@ public class ProcessResource implements Resource {
      *
      * @param instanceId
      * @param data
-     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
      * @see ProcessLogResourceV2
+     * @deprecated in favor of the /api/v2/process/{id}/log* endpoints
      */
     @POST
     @javax.ws.rs.Path("{id}/log")

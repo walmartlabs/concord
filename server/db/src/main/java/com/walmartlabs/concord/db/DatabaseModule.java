@@ -32,6 +32,16 @@ import java.util.Set;
 
 public class DatabaseModule extends AbstractModule {
 
+    private final boolean migrateDb;
+
+    public DatabaseModule() {
+        this(true);
+    }
+
+    public DatabaseModule(boolean migrateDb) {
+        this.migrateDb = migrateDb;
+    }
+
     @Override
     protected void configure() {
     }
@@ -45,11 +55,13 @@ public class DatabaseModule extends AbstractModule {
 
         DataSource ds = DataSourceUtils.createDataSource(cfg, "app", cfg.username(), cfg.password(), metricRegistry);
 
-        changeLogProviders.stream()
-                // can't inject a set of objects with the same qualifier, filter manually
-                .filter(p -> p.getClass().getAnnotation(MainDB.class) != null)
-                .sorted(Comparator.comparingInt(DatabaseChangeLogProvider::order))
-                .forEach(p -> DataSourceUtils.migrateDb(ds, p, cfg.changeLogParameters()));
+        if (migrateDb) {
+            changeLogProviders.stream()
+                    // can't inject a set of objects with the same qualifier, filter manually
+                    .filter(p -> p.getClass().getAnnotation(MainDB.class) != null)
+                    .sorted(Comparator.comparingInt(DatabaseChangeLogProvider::order))
+                    .forEach(p -> DataSourceUtils.migrateDb(ds, p, cfg.changeLogParameters()));
+        }
 
         return ds;
     }

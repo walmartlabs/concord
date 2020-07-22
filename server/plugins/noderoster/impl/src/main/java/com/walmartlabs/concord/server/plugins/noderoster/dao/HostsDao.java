@@ -35,7 +35,7 @@ import org.jooq.*;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -125,7 +125,7 @@ public class HostsDao extends AbstractDao {
                     .from(PROJECTS)
                     .where(PROJECTS.PROJECT_ID.eq(h.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record6<UUID, Timestamp, UUID, String, UUID, String>> q = tx.select(
+            SelectJoinStep<Record6<UUID, OffsetDateTime, UUID, String, UUID, String>> q = tx.select(
                     h.INSTANCE_ID, h.INSTANCE_CREATED_AT,
                     h.INITIATOR_ID, h.INITIATOR,
                     h.PROJECT_ID, projectNameField)
@@ -181,7 +181,7 @@ public class HostsDao extends AbstractDao {
                 .build();
     }
 
-    private static ProcessEntry toProcessEntry(Record6<UUID, Timestamp, UUID, String, UUID, String> r) {
+    private static ProcessEntry toProcessEntry(Record6<UUID, OffsetDateTime, UUID, String, UUID, String> r) {
         return ProcessEntry.builder()
                 .instanceId(r.value1())
                 .createdAt(r.value2())

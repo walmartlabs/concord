@@ -43,8 +43,7 @@ import org.jooq.util.postgres.PostgresDSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -114,7 +113,7 @@ public class ProcessQueueDao extends AbstractDao {
                 .set(PROCESS_QUEUE.CREATED_AT, processKey.getCreatedAt())
                 .set(PROCESS_QUEUE.INITIATOR_ID, initiatorId)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .set(PROCESS_QUEUE.META, objectMapper.toJSONB(meta))
                 .set(PROCESS_QUEUE.TRIGGERED_BY, objectMapper.toJSONB(triggeredBy))
                 .execute();
@@ -126,7 +125,7 @@ public class ProcessQueueDao extends AbstractDao {
         int i = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_AGENT_ID, agentId)
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .execute();
@@ -136,27 +135,27 @@ public class ProcessQueueDao extends AbstractDao {
         }
     }
 
-    private static Field<Timestamp> createRunningAtValue(ProcessStatus status) {
+    private static Field<OffsetDateTime> createRunningAtValue(ProcessStatus status) {
         return when(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.RUNNING.toString()), PROCESS_QUEUE.LAST_RUN_AT)
-                .otherwise(when(value(status.toString()).eq(ProcessStatus.RUNNING.toString()), currentTimestamp())
+                .otherwise(when(value(status.toString()).eq(ProcessStatus.RUNNING.toString()), currentOffsetDateTime())
                         .otherwise(PROCESS_QUEUE.LAST_RUN_AT));
     }
 
-    public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, Instant startAt,
+    public void enqueue(DSLContext tx, ProcessKey processKey, Set<String> tags, OffsetDateTime startAt,
                         Map<String, Object> requirements, Long processTimeout, Set<String> handlers,
                         Map<String, Object> meta, Imports imports, Map<String, Object> exclusive,
                         String runtime) {
 
         UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, ProcessStatus.ENQUEUED.toString())
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime());
 
         if (tags != null) {
             q.set(PROCESS_QUEUE.PROCESS_TAGS, toArray(tags));
         }
 
         if (startAt != null) {
-            q.set(PROCESS_QUEUE.START_AT, Timestamp.from(startAt));
+            q.set(PROCESS_QUEUE.START_AT, startAt);
         }
 
         if (requirements != null) {
@@ -199,7 +198,7 @@ public class ProcessQueueDao extends AbstractDao {
     public void updateRepositoryDetails(PartialProcessKey processKey, UUID repoId, String repoUrl, String repoPath, String commitId, String commitMsg) {
         tx(tx -> {
             UpdateSetMoreStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp());
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime());
 
             if (repoId != null) {
                 q.set(PROCESS_QUEUE.REPO_ID, repoId);
@@ -237,7 +236,7 @@ public class ProcessQueueDao extends AbstractDao {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
                 .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .execute();
     }
@@ -247,7 +246,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         int i = tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId)
                         .and(PROCESS_QUEUE.CURRENT_STATUS.eq(expected.toString())))
@@ -291,7 +290,7 @@ public class ProcessQueueDao extends AbstractDao {
 
             UpdateConditionStep<ProcessQueueRecord> q = tx.update(PROCESS_QUEUE)
                     .set(PROCESS_QUEUE.CURRENT_STATUS, status.toString())
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                     .set(PROCESS_QUEUE.LAST_RUN_AT, createRunningAtValue(status))
                     .where(PROCESS_QUEUE.INSTANCE_ID.in(instanceIds));
 
@@ -317,7 +316,7 @@ public class ProcessQueueDao extends AbstractDao {
 
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.IS_DISABLED, disabled)
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                 .execute();
 
@@ -333,7 +332,7 @@ public class ProcessQueueDao extends AbstractDao {
     public boolean touch(UUID instanceId) {
         return txResult(tx -> {
             int i = tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                    .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(instanceId))
                     .execute();
 
@@ -397,7 +396,9 @@ public class ProcessQueueDao extends AbstractDao {
                                                     field(name("children", "INSTANCE_ID"), UUID.class)))))
                     .select()
                     .from(name("children"))
-                    .fetch(r -> new IdAndStatus(new ProcessKey(r.get(0, UUID.class), r.get(1, Timestamp.class)), ProcessStatus.valueOf(r.get(2, String.class))));
+                    .fetch(r -> new IdAndStatus(new ProcessKey(r.get(0, UUID.class),
+                            r.get(1, OffsetDateTime.class)),
+                            ProcessStatus.valueOf(r.get(2, String.class))));
         }
     }
 
@@ -479,7 +480,7 @@ public class ProcessQueueDao extends AbstractDao {
                     .groupBy(PROCESS_QUEUE.CURRENT_STATUS)
                     .union(select(value(ENQUEUED_NOW_METRIC), DSL.count(asterisk())).from(PROCESS_QUEUE)
                             .where(PROCESS_QUEUE.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.name()))
-                            .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentTimestamp()))))
+                            .and(or(PROCESS_QUEUE.START_AT.isNull(), PROCESS_QUEUE.START_AT.lessOrEqual(currentOffsetDateTime()))))
                     .fetchMap(Record2::value1, Record2::value2);
         }
     }
@@ -509,7 +510,7 @@ public class ProcessQueueDao extends AbstractDao {
     public void clearStartAt(PartialProcessKey processKey) {
         tx(tx -> {
             tx.update(PROCESS_QUEUE)
-                    .set(PROCESS_QUEUE.START_AT, val((Timestamp) null))
+                    .set(PROCESS_QUEUE.START_AT, val((OffsetDateTime) null))
                     .where(PROCESS_QUEUE.INSTANCE_ID.eq(processKey.getInstanceId()))
                     .execute();
         });
@@ -544,7 +545,7 @@ public class ProcessQueueDao extends AbstractDao {
     public void updateWait(DSLContext tx, ProcessKey key, AbstractWaitCondition waits) {
         tx.update(PROCESS_QUEUE)
                 .set(PROCESS_QUEUE.WAIT_CONDITIONS, field("?::jsonb", JSONB.class, objectMapper.toJSONB(waits)))
-                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentTimestamp())
+                .set(PROCESS_QUEUE.LAST_UPDATED_AT, currentOffsetDateTime())
                 .where(PROCESS_QUEUE.INSTANCE_ID.eq(key.getInstanceId()))
                 .execute();
     }
@@ -729,7 +730,7 @@ public class ProcessQueueDao extends AbstractDao {
         return query.fetchOne(this::toEntry);
     }
 
-    private static Field<String> toJsonDate(Field<Timestamp> date) {
+    private static Field<String> toJsonDate(Field<OffsetDateTime> date) {
         return toChar(date, "YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"");
     }
 

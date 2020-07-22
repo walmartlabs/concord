@@ -35,7 +35,7 @@ import org.mockito.stubbing.Answer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,7 +98,7 @@ public class ConfigurationProcessorTest {
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
         when(projectDao.get(eq(prjId))).thenReturn(projectEntry);
 
-        Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
+        Payload payload = new Payload(new ProcessKey(instanceId, OffsetDateTime.now()));
         payload = payload
                 .putHeader(Payload.CONFIGURATION, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)
@@ -150,7 +150,7 @@ public class ConfigurationProcessorTest {
         when(orgDao.getConfiguration(eq(orgId))).thenReturn(orgCfg);
         when(projectDao.get(eq(prjId))).thenReturn(projectEntry);
 
-        Payload payload = new Payload(new ProcessKey(instanceId, new Timestamp(System.currentTimeMillis())));
+        Payload payload = new Payload(new ProcessKey(instanceId, OffsetDateTime.now()));
         payload = payload
                 .putHeader(Payload.CONFIGURATION, req)
                 .putHeader(Payload.ORGANIZATION_ID, orgId)

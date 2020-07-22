@@ -23,10 +23,11 @@ package com.walmartlabs.concord.server.process;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.junit.Test;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class ImmutablesTest {
@@ -36,14 +37,15 @@ public class ImmutablesTest {
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new GuavaModule());
         om.registerModule(new Jdk8Module());
+        om.registerModule(new JavaTimeModule());
 
         ProcessEntry e = ImmutableProcessEntry.
                 builder()
                 .instanceId(UUID.randomUUID())
                 .kind(ProcessKind.DEFAULT)
                 .status(ProcessStatus.FINISHED)
-                .createdAt(new Date())
-                .lastUpdatedAt(new Date())
+                .createdAt(OffsetDateTime.now())
+                .lastUpdatedAt(OffsetDateTime.now())
                 .disabled(false)
                 .build();
 

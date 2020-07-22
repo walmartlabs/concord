@@ -32,8 +32,7 @@ import org.jooq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -60,7 +59,7 @@ public class TriggerScheduleDao extends AbstractDao {
             // TODO fetch everything in a single request?
             Map<String, Object> e = tx.select(TRIGGER_SCHEDULE.TRIGGER_ID, TRIGGER_SCHEDULE.FIRE_AT)
                     .from(TRIGGER_SCHEDULE)
-                    .where(TRIGGER_SCHEDULE.FIRE_AT.le(currentTimestamp()))
+                    .where(TRIGGER_SCHEDULE.FIRE_AT.le(currentOffsetDateTime()))
                     .limit(1)
                     .forUpdate()
                     .skipLocked()
@@ -71,7 +70,7 @@ public class TriggerScheduleDao extends AbstractDao {
             }
 
             UUID id = (UUID) e.get(TRIGGER_SCHEDULE.TRIGGER_ID.getName());
-            Date fireAt = (Date) e.get(TRIGGER_SCHEDULE.FIRE_AT.getName());
+            OffsetDateTime fireAt = (OffsetDateTime) e.get(TRIGGER_SCHEDULE.FIRE_AT.getName());
 
             Triggers t = TRIGGERS.as("t");
             Projects p = PROJECTS.as("p");
@@ -80,7 +79,7 @@ public class TriggerScheduleDao extends AbstractDao {
 
             Field<UUID> orgIdField = select(p.ORG_ID).from(p).where(p.PROJECT_ID.eq(t.PROJECT_ID)).asField();
 
-            Record13<UUID, UUID, String, UUID, String, UUID, String, String[], JSONB, JSONB, JSONB, Timestamp, String> record = tx.select(
+            Record13<UUID, UUID, String, UUID, String, UUID, String, String[], JSONB, JSONB, JSONB, OffsetDateTime, String> record = tx.select(
                     t.TRIGGER_ID,
                     orgIdField,
                     o.ORG_NAME,
@@ -92,7 +91,7 @@ public class TriggerScheduleDao extends AbstractDao {
                     t.ARGUMENTS,
                     t.TRIGGER_CFG,
                     t.CONDITIONS,
-                    currentTimestamp(),
+                    currentOffsetDateTime(),
                     t.EVENT_SOURCE)
                     .from(t, p, r, o)
                     .where(t.TRIGGER_ID.eq(id).
@@ -117,7 +116,7 @@ public class TriggerScheduleDao extends AbstractDao {
             Map<String, Object> arguments = objectMapper.fromJSONB(record.value9());
             Map<String, Object> cfg = objectMapper.fromJSONB(record.value10());
             Map<String, Object> conditions = objectMapper.fromJSONB(record.value11());
-            Instant now = record.value12().toInstant();
+            OffsetDateTime now = record.value12();
             String eventSource = record.value13();
 
             TriggerSchedulerEntry result = new TriggerSchedulerEntry(
@@ -146,22 +145,21 @@ public class TriggerScheduleDao extends AbstractDao {
         });
     }
 
-    public Instant now() {
-        return txResult(tx -> tx.select(currentTimestamp().as("now"))
-                .fetchOne(field("now", Timestamp.class))
-                .toInstant());
+    public OffsetDateTime now() {
+        return txResult(tx -> tx.select(currentOffsetDateTime().as("now"))
+                .fetchOne(field("now", OffsetDateTime.class)));
     }
 
-    public void insert(DSLContext tx, UUID triggerId, Instant fireAt) {
+    public void insert(DSLContext tx, UUID triggerId, OffsetDateTime fireAt) {
         tx.insertInto(TRIGGER_SCHEDULE)
                 .columns(TRIGGER_SCHEDULE.TRIGGER_ID, TRIGGER_SCHEDULE.FIRE_AT)
-                .values(value(triggerId), value(Timestamp.from(fireAt)))
+                .values(triggerId, fireAt)
                 .execute();
     }
 
-    private void updateFireAt(DSLContext tx, UUID triggerId, Instant fireAt) {
+    private void updateFireAt(DSLContext tx, UUID triggerId, OffsetDateTime fireAt) {
         tx.update(TRIGGER_SCHEDULE)
-                .set(TRIGGER_SCHEDULE.FIRE_AT, Timestamp.from(fireAt))
+                .set(TRIGGER_SCHEDULE.FIRE_AT, fireAt)
                 .where(TRIGGER_SCHEDULE.TRIGGER_ID.eq(triggerId))
                 .execute();
     }

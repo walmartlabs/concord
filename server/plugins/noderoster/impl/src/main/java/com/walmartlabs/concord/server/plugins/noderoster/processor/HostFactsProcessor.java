@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -152,7 +152,7 @@ public class HostFactsProcessor implements Processor {
             String update = tx.update(f)
                     .set(f.FACTS, (JSONB) null)
                     .where(f.INSTANCE_ID.eq(value((UUID) null))
-                            .and(f.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
+                            .and(f.INSTANCE_CREATED_AT.eq(value((OffsetDateTime) null))
                                     .and(f.HOST_ID.eq(value((UUID) null)))))
                     .getSQL();
 
@@ -160,7 +160,7 @@ public class HostFactsProcessor implements Processor {
                 for (HostFactsItem i : items) {
                     ps.setString(1, serialize(i.facts()));
                     ps.setObject(2, i.instanceId());
-                    ps.setTimestamp(3, i.instanceCreatedAt());
+                    ps.setObject(3, i.instanceCreatedAt());
                     ps.setObject(4, i.host());
 
                     ps.addBatch();
@@ -185,7 +185,7 @@ public class HostFactsProcessor implements Processor {
                 for (HostFactsItem i : items) {
                     ps.setObject(1, i.host());
                     ps.setObject(2, i.instanceId());
-                    ps.setTimestamp(3, i.instanceCreatedAt());
+                    ps.setObject(3, i.instanceCreatedAt());
                     ps.setString(4, serialize(i.facts()));
 
                     ps.addBatch();
@@ -214,7 +214,7 @@ public class HostFactsProcessor implements Processor {
 
         UUID instanceId();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
         Map<String, Object> facts();
 

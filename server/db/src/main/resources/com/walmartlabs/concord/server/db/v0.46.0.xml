@@ -96,6 +96,8 @@
     </changeSet>
     -->
 
+    <!-- deprecated in 1.58.0+ -->
+    <!--
     <changeSet id="46300" author="ybrigo@gmail.com">
         <addColumn tableName="REPOSITORIES">
             <column name="PUSH_EVENT_DATE" type="timestamp" defaultValueComputed="current_timestamp">
@@ -103,5 +105,6 @@
             </column>
         </addColumn>
     </changeSet>
+    -->
 
 </databaseChangeLog>

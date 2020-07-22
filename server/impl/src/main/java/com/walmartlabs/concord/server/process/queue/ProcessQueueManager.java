@@ -36,7 +36,7 @@ import org.jooq.DSLContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.time.Duration;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -100,7 +100,7 @@ public class ProcessQueueManager {
         }
 
         Set<String> tags = payload.getHeader(Payload.PROCESS_TAGS);
-        Instant startAt = PayloadUtils.getStartAt(payload);
+        OffsetDateTime startAt = PayloadUtils.getStartAt(payload);
         Map<String, Object> requirements = PayloadUtils.getRequirements(payload);
         Long processTimeout = getProcessTimeout(payload);
         Set<String> handlers = payload.getHeader(Payload.PROCESS_HANDLERS);

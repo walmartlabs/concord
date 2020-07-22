@@ -85,7 +85,7 @@ public class ProcessCheckpointDao extends AbstractDao {
             tx.connection(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setObject(1, processKey.getInstanceId());
-                    ps.setTimestamp(2, processKey.getCreatedAt());
+                    ps.setObject(2, processKey.getCreatedAt());
                     ps.setObject(3, checkpointId);
                     ps.setString(4, checkpointName);
                     ps.setTimestamp(5, new Timestamp(new Date().getTime()));
@@ -105,14 +105,14 @@ public class ProcessCheckpointDao extends AbstractDao {
                     .from(PROCESS_CHECKPOINTS)
                     .where(PROCESS_CHECKPOINTS.CHECKPOINT_ID.eq(checkpointId)
                             .and(PROCESS_CHECKPOINTS.INSTANCE_ID.eq(processKey.getInstanceId())
-                            .and(PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))))
+                                    .and(PROCESS_CHECKPOINTS.INSTANCE_CREATED_AT.eq(processKey.getCreatedAt()))))
                     .getSQL();
 
             return tx.connectionResult(conn -> {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setObject(1, checkpointId);
                     ps.setObject(2, processKey.getInstanceId());
-                    ps.setTimestamp(3, processKey.getCreatedAt());
+                    ps.setObject(3, processKey.getCreatedAt());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) {

@@ -37,7 +37,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -48,7 +48,7 @@ public final class PayloadBuilder {
     }
 
     public static PayloadBuilder start(PartialProcessKey processKey) {
-        ProcessKey pk = new ProcessKey(processKey.getInstanceId(), new Timestamp(System.currentTimeMillis()));
+        ProcessKey pk = new ProcessKey(processKey.getInstanceId(), OffsetDateTime.now());
         return new PayloadBuilder(pk);
     }
 

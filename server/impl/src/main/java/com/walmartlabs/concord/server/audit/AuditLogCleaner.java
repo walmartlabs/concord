@@ -25,15 +25,18 @@ import com.walmartlabs.concord.db.MainDB;
 import com.walmartlabs.concord.server.cfg.AuditConfiguration;
 import com.walmartlabs.concord.server.sdk.ScheduledTask;
 import org.jooq.Configuration;
+import org.jooq.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
+import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.tables.AuditLog.AUDIT_LOG;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 @Named("audit-log-cleaner")
 @Singleton
@@ -57,7 +60,8 @@ public class AuditLogCleaner implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cfg.getMaxLogAge());
+        // TODO use PG's intervals
+        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(interval(cfg.getMaxLogAge() + " ms"));
         cleanerDao.deleteOldLogs(cutoff);
     }
 
@@ -69,7 +73,7 @@ public class AuditLogCleaner implements ScheduledTask {
             super(cfg);
         }
 
-        void deleteOldLogs(Timestamp cutoff) {
+        void deleteOldLogs(Field<OffsetDateTime> cutoff) {
             long t1 = System.currentTimeMillis();
 
             tx(tx -> tx.deleteFrom(AUDIT_LOG).where(AUDIT_LOG.ENTRY_DATE.lessThan(cutoff)).execute());

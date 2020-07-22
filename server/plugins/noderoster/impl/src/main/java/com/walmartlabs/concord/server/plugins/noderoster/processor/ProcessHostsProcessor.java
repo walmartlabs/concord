@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.plugins.noderoster.jooq.tables.NodeRosterProcessHosts.NODE_ROSTER_PROCESS_HOSTS;
@@ -145,7 +145,7 @@ public class ProcessHostsProcessor implements Processor {
 
         public abstract UUID instanceId();
 
-        public abstract Timestamp instanceCreatedAt();
+        public abstract OffsetDateTime instanceCreatedAt();
 
         public abstract UUID host();
 
