@@ -1,5 +1,44 @@
 # Change log
 
+## [Unreleased]
+
+### Added
+
+- concord-server, concord-repository: an option to ignore
+remote fetch if the local commit ID is the same as the remote
+commit ID;
+- concord-server: audit logs for API key creation and removal;
+- policy-engine, concord-server: new policy `state`. Allows
+control of various aspects of process state (size, filenames,
+etc);
+- runtime-v1: new option configuration option
+`runner.enableSisuIndex`. Enables usage of the Sisu bindings
+index;
+- concord-server: creation of organizations now requires a
+role with the `createOrg` permission.
+
+### Changed
+
+- concord-server: fixed an issue preventing the validation of
+the request data from working correctly in JSON Store
+endpoints;
+- concord-repository: skip fetch if the local copy points to
+the same commit;
+- concord-repository: correctly release the repository's lock;
+- concord-server: fixed a bug in the "process portal" page
+template which was preventing the page from reloading;
+- agent-operator: the API client now saves session cookies to
+avoid the need to authenticate on every request;
+- concord-server: allow users with the admin role to create
+new LDAP-based accounts even if the user creation is disabled
+for the realm;
+- concord-task: fixed an issue preventing subsequent calls to
+the task to fail when the suspend/resume feature is used;
+- runtime-v2: now requires `sisu-maven-plugin` to be used in
+all plugins.
+
+
+
 ## [1.56.0] - 2020-07-09
 
 ### Added
