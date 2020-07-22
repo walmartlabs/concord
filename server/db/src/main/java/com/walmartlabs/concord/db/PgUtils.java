@@ -9,9 +9,9 @@ package com.walmartlabs.concord.db;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,10 @@ import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.postgresql.util.PSQLException;
 
-import java.sql.Timestamp;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.jooq.impl.DSL.field;
@@ -43,7 +46,7 @@ public final class PgUtils {
         return field("interval '" + s + "'");
     }
 
-    public static Field<String> toChar(Field<Timestamp> date, String format) {
+    public static Field<String> toChar(Field<OffsetDateTime> date, String format) {
         return field("to_char({0}, {1})", String.class, date, inline(format));
     }
 

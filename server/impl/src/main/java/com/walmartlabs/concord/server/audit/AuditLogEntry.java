@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.org.EntityOwner;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Value.Immutable
@@ -40,7 +40,7 @@ import java.util.Map;
 public interface AuditLogEntry {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date entryDate();
+    OffsetDateTime entryDate();
 
     AuditAction action();
 

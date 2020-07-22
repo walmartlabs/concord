@@ -20,7 +20,7 @@ package com.walmartlabs.concord.server.process.event;
  * =====
  */
 
-import com.walmartlabs.concord.server.IsoDateParam;
+import com.walmartlabs.concord.server.OffsetDateTimeParam;
 import com.walmartlabs.concord.server.org.ResourceAccessLevel;
 import com.walmartlabs.concord.server.org.project.ProjectAccessManager;
 import com.walmartlabs.concord.server.process.PartialProcessKey;
@@ -46,9 +46,10 @@ import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.walmartlabs.concord.server.Utils.unwrap;
 
 @Named
 @Singleton
@@ -125,7 +126,7 @@ public class ProcessEventResource implements Resource {
     @WithTimer
     public List<ProcessEventEntry> list(@ApiParam @PathParam("processInstanceId") UUID processInstanceId,
                                         @ApiParam @QueryParam("type") String eventType,
-                                        @ApiParam @QueryParam("after") IsoDateParam geTimestamp,
+                                        @ApiParam @QueryParam("after") OffsetDateTimeParam after,
                                         @ApiParam @QueryParam("fromId") Long fromId,
                                         @ApiParam @QueryParam("eventCorrelationId") UUID eventCorrelationId,
                                         @ApiParam @QueryParam("eventPhase") EventPhase eventPhase,
@@ -139,14 +140,9 @@ public class ProcessEventResource implements Resource {
             assertAccessRights(processKey);
         }
 
-        Timestamp ts = null;
-        if (geTimestamp != null) {
-            ts = Timestamp.from(geTimestamp.getValue().toInstant());
-        }
-
         ProcessEventFilter f = ProcessEventFilter.builder()
                 .processKey(processKey)
-                .after(ts)
+                .after(unwrap(after))
                 .eventType(eventType)
                 .eventCorrelationId(eventCorrelationId)
                 .eventPhase(eventPhase)

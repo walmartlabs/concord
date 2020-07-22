@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.audit;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,10 +43,10 @@ public interface AuditLogFilter {
     Map<String, Object> details();
 
     @Nullable
-    Timestamp after();
+    OffsetDateTime after();
 
     @Nullable
-    Timestamp before();
+    OffsetDateTime before();
 
     @Nullable
     Integer limit();

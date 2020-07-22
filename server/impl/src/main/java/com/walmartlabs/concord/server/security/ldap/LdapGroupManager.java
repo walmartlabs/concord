@@ -25,12 +25,12 @@ import org.jooq.Field;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 @Named
 public class LdapGroupManager {
@@ -45,7 +45,7 @@ public class LdapGroupManager {
     }
 
     public void cacheLdapGroupsIfNeeded(UUID userId, Set<String> groups) {
-        Field<Timestamp> cutOff = currentTimestamp().minus(interval(syncCfg.getMinAgeLogin()));
+        Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(syncCfg.getMinAgeLogin()));
         groupDao.updateIfNeeded(userId, groups, cutOff);
     }
 }

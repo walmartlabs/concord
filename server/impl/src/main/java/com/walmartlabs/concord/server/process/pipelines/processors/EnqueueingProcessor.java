@@ -29,7 +29,7 @@ import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
@@ -55,7 +55,7 @@ public class EnqueueingProcessor implements PayloadProcessor {
         ProcessKey processKey = payload.getProcessKey();
 
         Map<String, Object> requirements = PayloadUtils.getRequirements(payload);
-        Instant startAt = PayloadUtils.getStartAt(payload);
+        OffsetDateTime startAt = PayloadUtils.getStartAt(payload);
 
         if (startAt == null) {
             logManager.info(processKey, "Enqueued. Waiting for an agent (requirements={})...", requirements);

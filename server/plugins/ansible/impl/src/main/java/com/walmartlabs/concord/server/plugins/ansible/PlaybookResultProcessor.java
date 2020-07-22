@@ -30,7 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.sql.PreparedStatement;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -86,13 +86,13 @@ public class PlaybookResultProcessor implements EventProcessor {
 
             SelectConditionStep<Record1<Integer>> exists = tx.selectOne()
                     .from(a)
-                    .where(a.INSTANCE_ID.eq(value((UUID)null))
-                            .and(a.INSTANCE_CREATED_AT.eq(value((Timestamp)null))
-                                    .and(a.PLAYBOOK_ID.eq(value((UUID)null)))));
+                    .where(a.INSTANCE_ID.eq(value((UUID) null))
+                            .and(a.INSTANCE_CREATED_AT.eq(value((OffsetDateTime) null))
+                                    .and(a.PLAYBOOK_ID.eq(value((UUID) null)))));
 
-            SelectConditionStep<Record4<UUID, Timestamp, UUID, String>> values =
+            SelectConditionStep<Record4<UUID, OffsetDateTime, UUID, String>> values =
                     tx.select(value((UUID) null),
-                            value((Timestamp)null),
+                            value((OffsetDateTime) null),
                             value((UUID) null),
                             value((String) null))
                             .whereNotExists(exists);
@@ -109,12 +109,12 @@ public class PlaybookResultProcessor implements EventProcessor {
                 try (PreparedStatement ps = conn.prepareStatement(insert)) {
                     for (PlaybookResult p : items) {
                         ps.setObject(1, p.instanceId());
-                        ps.setTimestamp(2, p.instanceCreatedAt());
+                        ps.setObject(2, p.instanceCreatedAt());
                         ps.setObject(3, p.playbookId());
                         ps.setString(4, p.status());
 
                         ps.setObject(5, p.instanceId());
-                        ps.setTimestamp(6, p.instanceCreatedAt());
+                        ps.setObject(6, p.instanceCreatedAt());
                         ps.setObject(7, p.playbookId());
 
                         ps.addBatch();
@@ -130,7 +130,7 @@ public class PlaybookResultProcessor implements EventProcessor {
 
         UUID instanceId();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
         UUID playbookId();
 

@@ -50,7 +50,7 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -120,9 +120,9 @@ public class ApiKeyResource implements Resource {
 
         String key = apiKeyDao.newApiKey();
 
-        Instant expiredAt = null;
+        OffsetDateTime expiredAt = null;
         if (cfg.isExpirationEnabled()) {
-            expiredAt = Instant.now().plus(cfg.getExpirationPeriodDays(), ChronoUnit.DAYS);
+            expiredAt = OffsetDateTime.now().plus(cfg.getExpirationPeriodDays(), ChronoUnit.DAYS);
         }
 
         UUID id;

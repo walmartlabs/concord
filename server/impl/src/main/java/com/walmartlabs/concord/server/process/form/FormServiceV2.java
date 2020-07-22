@@ -34,7 +34,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Named
@@ -68,7 +68,8 @@ public class FormServiceV2 {
     }
 
     public Form get(PartialProcessKey processKey, String formName) {
-        Timestamp createdAt = stateManager.assertCreatedAt(processKey);
+        // TODO use ProcessKeyCache
+        OffsetDateTime createdAt = stateManager.assertCreatedAt(processKey);
         return get(new ProcessKey(processKey, createdAt), formName);
     }
 
@@ -84,7 +85,7 @@ public class FormServiceV2 {
     }
 
     public List<FormListEntry> list(PartialProcessKey processKey) {
-        Timestamp createdAt = stateManager.assertCreatedAt(processKey);
+        OffsetDateTime createdAt = stateManager.assertCreatedAt(processKey);
         return list(new ProcessKey(processKey, createdAt));
     }
 
@@ -104,7 +105,7 @@ public class FormServiceV2 {
     }
 
     public FormSubmitResult submit(PartialProcessKey processKey, String formName, Map<String, Object> data) throws FormUtils.ValidationException {
-        Timestamp createdAt = stateManager.assertCreatedAt(processKey);
+        OffsetDateTime createdAt = stateManager.assertCreatedAt(processKey);
         return submit(new ProcessKey(processKey, createdAt), formName, data);
     }
 

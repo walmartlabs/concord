@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -54,7 +54,7 @@ public class UserDaoTest extends AbstractDaoTest {
         String s = "key#" + System.currentTimeMillis();
         String name = "name#" + System.currentTimeMillis();
         String apiKey = Base64.getEncoder().encodeToString(s.getBytes());
-        apiKeyDao.insert(userId, apiKey, name, Instant.now());
+        apiKeyDao.insert(userId, apiKey, name, OffsetDateTime.now());
 
         // ---
 

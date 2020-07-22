@@ -39,9 +39,9 @@ import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -80,7 +80,7 @@ public class UserActivityResource implements Resource {
 
         UserPrincipal user = UserPrincipal.assertCurrent();
         Set<UUID> orgIds = userDao.getOrgIds(user.getId());
-        Timestamp t = new Timestamp(startOfDay(new Date()).getTime());
+        OffsetDateTime t = startOfDay();
 
         Map<String, List<ProjectProcesses>> orgProcesses = processStatsDao.processByOrgs(maxProjectsPerOrg, orgIds, ORG_VISIBLE_STATUSES, t);
 
@@ -97,10 +97,9 @@ public class UserActivityResource implements Resource {
         return new UserActivityResponse(stats, orgProcesses, lastProcesses);
     }
 
-    private static Date startOfDay(Date date) {
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-        LocalDateTime startOfDay = localDateTime.with(LocalTime.MIN);
-        return Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
+    private static OffsetDateTime startOfDay() {
+        LocalDateTime startOfDay = LocalDateTime.now().with(LocalTime.MIN);
+        return startOfDay.atZone(ZoneId.systemDefault()).toOffsetDateTime();
     }
 
     @Named
@@ -111,7 +110,7 @@ public class UserActivityResource implements Resource {
             super(cfg);
         }
 
-        public Map<String, Integer> getCountByStatuses(Set<UUID> orgIds, Timestamp fromUpdatedAt, UUID initiatorId) {
+        public Map<String, Integer> getCountByStatuses(Set<UUID> orgIds, OffsetDateTime fromUpdatedAt, UUID initiatorId) {
             try (DSLContext tx = DSL.using(cfg)) {
                 SelectConditionStep<Record1<UUID>> projectIds = select(PROJECTS.PROJECT_ID)
                         .from(PROJECTS)
@@ -150,7 +149,7 @@ public class UserActivityResource implements Resource {
         public Map<String, List<ProjectProcesses>> processByOrgs(int maxProjectRows,
                                                                  Set<UUID> orgIds,
                                                                  Set<ProcessStatus> processStatuses,
-                                                                 Timestamp fromUpdatedAt) {
+                                                                 OffsetDateTime fromUpdatedAt) {
 
             Set<String> statuses = processStatuses.stream().map(Enum::name).collect(Collectors.toSet());
 

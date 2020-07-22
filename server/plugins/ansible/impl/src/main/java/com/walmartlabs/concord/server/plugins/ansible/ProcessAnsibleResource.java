@@ -49,7 +49,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -216,7 +216,7 @@ public class ProcessAnsibleResource implements Resource {
             super(cfg);
         }
 
-        public List<PlayInfo> listPlays(UUID instanceId, Timestamp instanceCreatedAt, UUID playbookId) {
+        public List<PlayInfo> listPlays(UUID instanceId, OffsetDateTime instanceCreatedAt, UUID playbookId) {
             return txResult(tx -> {
                 AnsiblePlayStats a = ANSIBLE_PLAY_STATS.as("a");
                 AnsibleTaskStats s = ANSIBLE_TASK_STATS.as("s");
@@ -277,7 +277,7 @@ public class ProcessAnsibleResource implements Resource {
             return result;
         }
 
-        public List<TaskInfo> listTasks(UUID instanceId, Timestamp instanceCreatedAt, UUID playId) {
+        public List<TaskInfo> listTasks(UUID instanceId, OffsetDateTime instanceCreatedAt, UUID playId) {
             return txResult(tx -> {
                 AnsibleTaskStats a = ANSIBLE_TASK_STATS.as("a");
                 return tx.select(a.TASK_NAME, a.TASK_ORDER, a.TASK_TYPE, a.OK_COUNT, a.FAILED_COUNT, a.UNREACHABLE_COUNT, a.SKIPPED_COUNT, a.RUNNING_COUNT)
@@ -299,7 +299,7 @@ public class ProcessAnsibleResource implements Resource {
         }
 
         @Deprecated
-        public AnsibleStatsEntry getStats(UUID instanceId, Timestamp instanceCreatedAt) {
+        public AnsibleStatsEntry getStats(UUID instanceId, OffsetDateTime instanceCreatedAt) {
             return txResult(tx -> {
                 AnsibleHosts a = ANSIBLE_HOSTS.as("a");
 
@@ -337,7 +337,7 @@ public class ProcessAnsibleResource implements Resource {
             });
         }
 
-        public List<String> listHostGroups(UUID instanceId, Timestamp instanceCreatedAt) {
+        public List<String> listHostGroups(UUID instanceId, OffsetDateTime instanceCreatedAt) {
             return txResult(tx -> {
                 AnsibleHosts a = ANSIBLE_HOSTS.as("a");
                 return tx.selectDistinct(a.HOST_GROUP)
@@ -347,7 +347,7 @@ public class ProcessAnsibleResource implements Resource {
             });
         }
 
-        public List<AnsibleHostEntry> list(UUID instanceId, Timestamp instanceCreatedAt,
+        public List<AnsibleHostEntry> list(UUID instanceId, OffsetDateTime instanceCreatedAt,
                                            String host, String hostGroup,
                                            List<AnsibleHostStatus> statuses,
                                            UUID playbookId,
@@ -387,7 +387,7 @@ public class ProcessAnsibleResource implements Resource {
             });
         }
 
-        public List<PlaybookEntry> listPlaybooks(UUID instanceId, Timestamp createdAt) {
+        public List<PlaybookEntry> listPlaybooks(UUID instanceId, OffsetDateTime createdAt) {
             return txResult(tx -> {
                 AnsiblePlaybookStats p = ANSIBLE_PLAYBOOK_STATS.as("p");
 
@@ -440,7 +440,7 @@ public class ProcessAnsibleResource implements Resource {
             });
         }
 
-        private static PlaybookEntry toPlaybookEntry(Record11<UUID, String, Timestamp, Integer, Integer, Integer, BigDecimal, BigDecimal, String, Integer, Integer> r) {
+        private static PlaybookEntry toPlaybookEntry(Record11<UUID, String, OffsetDateTime, Integer, Integer, Integer, BigDecimal, BigDecimal, String, Integer, Integer> r) {
             long totalWork = r.value10().longValue();
             long finishedCount = r.value8().longValue();
             PlaybookStatus status = r.value9() == null ? PlaybookStatus.RUNNING : PlaybookStatus.valueOf(r.value9());
@@ -526,7 +526,7 @@ public class ProcessAnsibleResource implements Resource {
         String name();
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-        Date startedAt();
+        OffsetDateTime startedAt();
 
         long hostsCount();
 

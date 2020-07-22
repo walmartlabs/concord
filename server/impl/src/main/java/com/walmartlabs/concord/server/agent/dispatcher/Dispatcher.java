@@ -46,6 +46,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -213,7 +214,7 @@ public class Dispatcher extends PeriodicTask {
         private AgentCommand convert(AgentCommandsRecord r) {
             UUID commandId = r.getCommandId();
             String agentId = r.getAgentId();
-            Date createdAt = r.getCreatedAt();
+            OffsetDateTime createdAt = r.getCreatedAt();
             AgentCommand.Status status = AgentCommand.Status.valueOf(r.getCommandStatus());
 
             Map<String, Object> data;

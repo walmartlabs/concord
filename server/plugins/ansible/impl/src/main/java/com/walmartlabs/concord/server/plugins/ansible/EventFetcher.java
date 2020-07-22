@@ -30,7 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.PROCESS_EVENTS;
@@ -92,7 +92,7 @@ public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
             return super.txResult(t);
         }
 
-        private static SelectConditionStep<Record1<JSONB>> payloadField(DSLContext tx, String ... keys) {
+        private static SelectConditionStep<Record1<JSONB>> payloadField(DSLContext tx, String... keys) {
             return tx.select(function("jsonb_object_agg", JSONB.class, field("key"), field("value")))
                     .from(table("jsonb_each(pe.EVENT_DATA)"))
                     .where(field("key").in(Arrays.asList(keys)));
@@ -101,7 +101,7 @@ public class EventFetcher extends AbstractEventProcessor<EventProcessor.Event> {
         public List<EventProcessor.Event> list(DSLContext tx, EventMarkerDao.EventMarker marker, int count) {
             ProcessEvents pe = PROCESS_EVENTS.as("pe");
 
-            SelectConditionStep<Record6<UUID, Timestamp, Long, Timestamp, String, JSONB>> q = tx.select(
+            SelectConditionStep<Record6<UUID, OffsetDateTime, Long, OffsetDateTime, String, JSONB>> q = tx.select(
                     pe.INSTANCE_ID,
                     pe.INSTANCE_CREATED_AT,
                     pe.EVENT_SEQ,

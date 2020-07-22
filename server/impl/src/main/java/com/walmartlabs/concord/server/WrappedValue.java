@@ -1,10 +1,10 @@
-package com.walmartlabs.concord.server.sdk;
+package com.walmartlabs.concord.server;
 
 /*-
  * *****
  * Concord
  * -----
- * Copyright (C) 2017 - 2019 Walmart Inc.
+ * Copyright (C) 2017 - 2020 Walmart Inc.
  * -----
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,7 @@ package com.walmartlabs.concord.server.sdk;
  * =====
  */
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
+public interface WrappedValue<T> {
 
-public interface ProcessKey {
-
-    UUID getInstanceId();
-
-    OffsetDateTime getCreatedAt();
+    T getValue();
 }

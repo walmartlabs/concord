@@ -28,10 +28,12 @@ import com.walmartlabs.concord.server.ConcordObjectMapper;
 import com.walmartlabs.concord.server.process.Payload;
 import com.walmartlabs.concord.server.process.ProcessKey;
 import com.walmartlabs.concord.server.process.state.ProcessStateManager;
+import com.walmartlabs.concord.server.sdk.ConcordApplicationException;
 import com.walmartlabs.concord.server.sdk.metrics.WithTimer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -63,7 +65,7 @@ public class PayloadRestoreProcessor implements PayloadProcessor {
         Map<String, Object> headers = stateManager.get(processKey, "_initial/payload.json", inputStream -> {
             Map<String, Object> result = deserialize(inputStream);
             return Optional.ofNullable(result);
-        }).orElseThrow(() -> new RuntimeException("Initial state not found"));
+        }).orElseThrow(() -> new ConcordApplicationException("Initial state not found", Response.Status.INTERNAL_SERVER_ERROR));
 
         payload = payload.putHeaders(headers);
 

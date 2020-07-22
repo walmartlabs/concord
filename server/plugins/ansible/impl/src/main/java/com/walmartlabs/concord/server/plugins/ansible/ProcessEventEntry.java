@@ -29,7 +29,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Value.Immutable
@@ -50,7 +50,7 @@ public interface ProcessEventEntry extends Serializable {
      * should match the format in {@link com.walmartlabs.concord.server.IsoDateParam}
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date eventDate();
+    OffsetDateTime eventDate();
 
     static ImmutableProcessEventEntry.Builder builder() {
         return ImmutableProcessEventEntry.builder();

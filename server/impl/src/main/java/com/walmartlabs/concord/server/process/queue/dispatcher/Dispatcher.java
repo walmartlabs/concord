@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -310,7 +310,7 @@ public class Dispatcher extends PeriodicTask {
 
             Field<UUID> orgIdField = select(PROJECTS.ORG_ID).from(PROJECTS).where(PROJECTS.PROJECT_ID.eq(q.PROJECT_ID)).asField();
 
-            SelectJoinStep<Record13<UUID, Timestamp, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB>> s =
+            SelectJoinStep<Record13<UUID, OffsetDateTime, UUID, UUID, UUID, UUID, String, String, String, UUID, JSONB, JSONB, JSONB>> s =
                     tx.select(
                             q.INSTANCE_ID,
                             q.CREATED_AT,
@@ -329,7 +329,7 @@ public class Dispatcher extends PeriodicTask {
 
             s.where(q.CURRENT_STATUS.eq(ProcessStatus.ENQUEUED.toString())
                     .and(or(q.START_AT.isNull(),
-                            q.START_AT.le(currentTimestamp())))
+                            q.START_AT.le(currentOffsetDateTime())))
                     .and(q.WAIT_CONDITIONS.isNull()));
 
             return s.orderBy(q.LAST_UPDATED_AT)

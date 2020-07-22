@@ -35,7 +35,7 @@ import javax.inject.Singleton;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.plugins.ansible.jooq.tables.AnsibleHosts.ANSIBLE_HOSTS;
@@ -121,7 +121,7 @@ public class AnsibleHostProcessor implements EventProcessor {
                     .set(ANSIBLE_HOSTS.STATUS, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.STATUS).otherwise(value((String) null)))
                     .set(ANSIBLE_HOSTS.EVENT_SEQ, when(currentStatusWeight.greaterThan(newStatusWeight), ANSIBLE_HOSTS.EVENT_SEQ).otherwise(value((Long) null)))
                     .where(ANSIBLE_HOSTS.INSTANCE_ID.eq(value((UUID) null))
-                            .and(ANSIBLE_HOSTS.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
+                            .and(ANSIBLE_HOSTS.INSTANCE_CREATED_AT.eq(value((OffsetDateTime) null))
                                     .and(ANSIBLE_HOSTS.HOST.eq(value((String) null))
                                             .and(ANSIBLE_HOSTS.HOST_GROUP.eq(value((String) null))
                                                     .and(ANSIBLE_HOSTS.PLAYBOOK_ID.eq((UUID)null))))))
@@ -141,7 +141,7 @@ public class AnsibleHostProcessor implements EventProcessor {
                     ps.setLong(5, h.eventSeq());
 
                     ps.setObject(6, h.key().instanceId());
-                    ps.setTimestamp(7, h.key().instanceCreatedAt());
+                    ps.setObject(7, h.key().instanceCreatedAt());
                     ps.setString(8, StringUtils.abbreviate(h.key().host(), ANSIBLE_HOSTS.HOST.getDataType().length()));
                     ps.setString(9, StringUtils.abbreviate(h.key().hostGroup(), ANSIBLE_HOSTS.HOST_GROUP.getDataType().length()));
                     ps.setObject(10, h.key().playbookId());
@@ -168,7 +168,7 @@ public class AnsibleHostProcessor implements EventProcessor {
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
                 for (HostItem h : hosts) {
                     ps.setObject(1, h.key().instanceId());
-                    ps.setTimestamp(2, h.key().instanceCreatedAt());
+                    ps.setObject(2, h.key().instanceCreatedAt());
                     ps.setObject(3, h.key().playbookId());
                     ps.setString(4, StringUtils.abbreviate(h.key().host(), ANSIBLE_HOSTS.HOST.getDataType().length()));
                     ps.setString(5, StringUtils.abbreviate(h.key().hostGroup(), ANSIBLE_HOSTS.HOST_GROUP.getDataType().length()));
@@ -236,7 +236,7 @@ public class AnsibleHostProcessor implements EventProcessor {
             UUID instanceId();
 
             @Value.Parameter
-            Timestamp instanceCreatedAt();
+            OffsetDateTime instanceCreatedAt();
 
             @Value.Parameter
             UUID playbookId();

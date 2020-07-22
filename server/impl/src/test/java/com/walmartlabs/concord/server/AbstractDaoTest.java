@@ -37,6 +37,16 @@ import java.util.Collections;
 
 public abstract class AbstractDaoTest {
 
+    private final boolean migrateDb;
+
+    public AbstractDaoTest() {
+        this(true);
+    }
+
+    public AbstractDaoTest(boolean migrateDb) {
+        this.migrateDb = migrateDb;
+    }
+
     private DataSource dataSource;
     private Configuration cfg;
 
@@ -44,7 +54,7 @@ public abstract class AbstractDaoTest {
     public void initDataSource() {
         DatabaseConfiguration cfg = new DatabaseConfigurationImpl("jdbc:postgresql://localhost:5432/postgres", "postgres", "q1", 3);
 
-        DatabaseModule db = new DatabaseModule();
+        DatabaseModule db = new DatabaseModule(migrateDb);
         this.dataSource = db.appDataSource(cfg, new MetricRegistry(), Collections.singleton(new MainDBChangeLogProvider()));
 
         this.cfg = db.appJooqConfiguration(this.dataSource);

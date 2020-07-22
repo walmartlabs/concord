@@ -33,7 +33,7 @@ import javax.inject.Singleton;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -177,7 +177,7 @@ public class PlayInfoProcessor implements EventProcessor {
             String update = tx.update(a)
                     .set(a.FINISHED_TASK_COUNT, a.FINISHED_TASK_COUNT.plus(value((Long) null)))
                     .where(a.INSTANCE_ID.eq(value((UUID) null))
-                            .and(a.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
+                            .and(a.INSTANCE_CREATED_AT.eq(value((OffsetDateTime) null))
                                     .and(a.PLAY_ID.eq(value((UUID) null)))))
                     .getSQL();
 
@@ -185,7 +185,7 @@ public class PlayInfoProcessor implements EventProcessor {
                 for (PlayInfoFinishedItem p : items) {
                     ps.setLong(1, p.finishedCount());
                     ps.setObject(2, p.key().instanceId());
-                    ps.setTimestamp(3, p.key().instanceCreatedAt());
+                    ps.setObject(3, p.key().instanceCreatedAt());
                     ps.setObject(4, p.key().playId());
 
                     ps.addBatch();
@@ -210,7 +210,7 @@ public class PlayInfoProcessor implements EventProcessor {
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
                 for (PlayInfoFinishedItem p : items) {
                     ps.setObject(1, p.key().instanceId());
-                    ps.setTimestamp(2, p.key().instanceCreatedAt());
+                    ps.setObject(2, p.key().instanceCreatedAt());
                     ps.setObject(3, p.key().playbookId());
                     ps.setObject(4, p.key().playId());
                     ps.setLong(5, p.finishedCount());
@@ -230,7 +230,7 @@ public class PlayInfoProcessor implements EventProcessor {
                     .set(a.HOST_COUNT, value((Long) null))
                     .set(a.FINISHED_TASK_COUNT, a.FINISHED_TASK_COUNT.plus(value((Long) null)))
                     .where(a.INSTANCE_ID.eq(value((UUID) null))
-                            .and(a.INSTANCE_CREATED_AT.eq(value((Timestamp) null))
+                            .and(a.INSTANCE_CREATED_AT.eq(value((OffsetDateTime) null))
                                     .and(a.PLAY_ID.eq(value((UUID) null)))))
                     .getSQL();
 
@@ -242,7 +242,7 @@ public class PlayInfoProcessor implements EventProcessor {
                     ps.setLong(4, p.hostCount());
                     ps.setLong(5, p.finishedCount());
                     ps.setObject(6, p.key().instanceId());
-                    ps.setTimestamp(7, p.key().instanceCreatedAt());
+                    ps.setObject(7, p.key().instanceCreatedAt());
                     ps.setObject(8, p.key().playId());
 
                     ps.addBatch();
@@ -268,7 +268,7 @@ public class PlayInfoProcessor implements EventProcessor {
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
                 for (PlayInfoItem p : plays) {
                     ps.setObject(1, p.key().instanceId());
-                    ps.setTimestamp(2, p.key().instanceCreatedAt());
+                    ps.setObject(2, p.key().instanceCreatedAt());
                     ps.setObject(3, p.key().playbookId());
                     ps.setObject(4, p.key().playId());
                     ps.setString(5, p.playName());
@@ -289,7 +289,7 @@ public class PlayInfoProcessor implements EventProcessor {
 
         UUID instanceId();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
         UUID playbookId();
 

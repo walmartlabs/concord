@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -186,7 +186,8 @@ public class PayloadManager {
     }
 
     public Payload createResumePayload(PartialProcessKey partialKey, String eventName, Map<String, Object> req) throws IOException {
-        Timestamp createdAt = stateManager.assertCreatedAt(partialKey);
+        // TODO use ProcessKeyCache
+        OffsetDateTime createdAt = stateManager.assertCreatedAt(partialKey);
         ProcessKey pk = new ProcessKey(partialKey, createdAt);
         return createResumePayload(pk, eventName, req);
     }

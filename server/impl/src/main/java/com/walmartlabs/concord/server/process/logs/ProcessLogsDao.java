@@ -33,8 +33,7 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
-import java.sql.Timestamp;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,7 +58,7 @@ public class ProcessLogsDao extends AbstractDao {
      */
     public PgIntRange append(ProcessKey processKey, long segmentId, byte[] data) {
         UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
+        OffsetDateTime createdAt = processKey.getCreatedAt();
 
         ProcessLogDataRecord r = txResult(tx -> tx.insertInto(PROCESS_LOG_DATA)
                 .columns(PROCESS_LOG_DATA.INSTANCE_ID,
@@ -71,8 +70,8 @@ public class ProcessLogsDao extends AbstractDao {
                 .values(value(instanceId),
                         value(createdAt),
                         value(segmentId),
-                        processLogDataSegmentNextRange(instanceId, createdAt, segmentId, data.length),
-                        processLogDataNextRange(instanceId, createdAt, data.length),
+                        processLogDataSegmentNextRange2(instanceId, createdAt, segmentId, data.length),
+                        processLogDataNextRange2(instanceId, createdAt, data.length),
                         value(data))
                 .returning(PROCESS_LOG_DATA.LOG_RANGE)
                 .fetchOne());
@@ -80,10 +79,19 @@ public class ProcessLogsDao extends AbstractDao {
         return PgIntRange.parse(r.getLogRange().toString());
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt, String status) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt, String status) {
         return txResult(tx -> tx.insertInto(PROCESS_LOG_SEGMENTS)
-                .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
-                .values(value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), createdAt != null ? value(new Timestamp(createdAt.getTime())) : currentTimestamp(), value(status))
+                .columns(PROCESS_LOG_SEGMENTS.INSTANCE_ID,
+                        PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT,
+                        PROCESS_LOG_SEGMENTS.CORRELATION_ID,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_NAME,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_TS,
+                        PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
+                .values(value(processKey.getInstanceId()),
+                        value(processKey.getCreatedAt()),
+                        value(correlationId), value(name),
+                        createdAt != null ? value(createdAt) : currentOffsetDateTime(),
+                        value(status))
                 .returning(PROCESS_LOG_SEGMENTS.SEGMENT_ID)
                 .fetchOne()
                 .getSegmentId());
@@ -92,7 +100,7 @@ public class ProcessLogsDao extends AbstractDao {
     public void createSegment(DSLContext tx, long segmentId, ProcessKey processKey, UUID correlationId, String name, String status) {
         tx.insertInto(PROCESS_LOG_SEGMENTS)
                 .columns(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.INSTANCE_ID, PROCESS_LOG_SEGMENTS.INSTANCE_CREATED_AT, PROCESS_LOG_SEGMENTS.CORRELATION_ID, PROCESS_LOG_SEGMENTS.SEGMENT_NAME, PROCESS_LOG_SEGMENTS.SEGMENT_TS, PROCESS_LOG_SEGMENTS.SEGMENT_STATUS)
-                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentTimestamp(), value(status))
+                .values(value(segmentId), value(processKey.getInstanceId()), value(processKey.getCreatedAt()), value(correlationId), value(name), currentOffsetDateTime(), value(status))
                 .execute();
     }
 
@@ -124,7 +132,7 @@ public class ProcessLogsDao extends AbstractDao {
 
     public List<LogSegment> listSegments(ProcessKey processKey, int limit, int offset) {
         UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
+        OffsetDateTime createdAt = processKey.getCreatedAt();
 
         try (DSLContext tx = DSL.using(cfg)) {
             return tx.select(PROCESS_LOG_SEGMENTS.SEGMENT_ID, PROCESS_LOG_SEGMENTS.CORRELATION_ID,
@@ -145,7 +153,7 @@ public class ProcessLogsDao extends AbstractDao {
 
     public ProcessLog segmentData(ProcessKey processKey, long segmentId, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
+        OffsetDateTime createdAt = processKey.getCreatedAt();
 
         try (DSLContext tx = DSL.using(cfg)) {
             List<ProcessLogChunk> chunks = getSegmentChunks(tx, processKey, segmentId, start, end);
@@ -165,7 +173,7 @@ public class ProcessLogsDao extends AbstractDao {
 
     public ProcessLog data(ProcessKey processKey, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
+        OffsetDateTime createdAt = processKey.getCreatedAt();
 
         try (DSLContext tx = DSL.using(cfg)) {
             List<ProcessLogChunk> chunks = getDataChunks(tx, processKey, start, end);
@@ -184,7 +192,7 @@ public class ProcessLogsDao extends AbstractDao {
 
     private List<ProcessLogChunk> getSegmentChunks(DSLContext tx, ProcessKey processKey, long segmentId, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
+        OffsetDateTime createdAt = processKey.getCreatedAt();
 
         String lowerBoundExpr = "lower(" + PROCESS_LOG_DATA.SEGMENT_RANGE + ")";
 
@@ -213,7 +221,7 @@ public class ProcessLogsDao extends AbstractDao {
         } else {
             // ranges && [upper_bound - end, upper_bound)
             String rangeExpr = PROCESS_LOG_DATA.SEGMENT_RANGE.getName() + " && (select range from x)";
-            return tx.with("x").as(select(processLogDataSegmentLastNBytes(instanceId, createdAt, segmentId, end).as("range")))
+            return tx.with("x").as(select(processLogDataSegmentLastNBytes2(instanceId, createdAt, segmentId, end).as("range")))
                     .select(field(lowerBoundExpr), PROCESS_LOG_DATA.CHUNK_DATA)
                     .from(PROCESS_LOG_DATA)
                     .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
@@ -227,7 +235,7 @@ public class ProcessLogsDao extends AbstractDao {
 
     private List<ProcessLogChunk> getDataChunks(DSLContext tx, ProcessKey processKey, Integer start, Integer end) {
         UUID instanceId = processKey.getInstanceId();
-        Timestamp createdAt = processKey.getCreatedAt();
+        OffsetDateTime createdAt = processKey.getCreatedAt();
 
         String lowerBoundExpr = "lower(" + PROCESS_LOG_DATA.LOG_RANGE + ")";
 
@@ -254,7 +262,7 @@ public class ProcessLogsDao extends AbstractDao {
         } else {
             // ranges && [upper_bound - end, upper_bound)
             String rangeExpr = PROCESS_LOG_DATA.LOG_RANGE.getName() + " && (select range from x)";
-            return tx.with("x").as(select(processLogDataLastNBytes(instanceId, createdAt, end).as("range")))
+            return tx.with("x").as(select(processLogDataLastNBytes2(instanceId, createdAt, end).as("range")))
                     .select(field(lowerBoundExpr), PROCESS_LOG_DATA.CHUNK_DATA)
                     .from(PROCESS_LOG_DATA)
                     .where(PROCESS_LOG_DATA.INSTANCE_ID.eq(instanceId)
@@ -269,7 +277,7 @@ public class ProcessLogsDao extends AbstractDao {
         return new ProcessLogChunk((Integer) r.value1(), r.value2());
     }
 
-    private static LogSegment toSegment(Record7<Long, UUID, String, Timestamp, String, Integer, Integer> r) {
+    private static LogSegment toSegment(Record7<Long, UUID, String, OffsetDateTime, String, Integer, Integer> r) {
         String status = r.get(PROCESS_LOG_SEGMENTS.SEGMENT_STATUS);
         return LogSegment.builder()
                 .id(r.get(PROCESS_LOG_SEGMENTS.SEGMENT_ID))

@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.org.triggers;
 
 import com.walmartlabs.concord.sdk.Constants;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,10 +31,10 @@ public class TriggerSchedulerEntry extends TriggerEntry {
 
     private static final long serialVersionUID = 1L;
 
-    private final Date fireAt;
+    private final OffsetDateTime fireAt;
     private final UUID triggerId;
 
-    public TriggerSchedulerEntry(Date fireAt, UUID triggerId, UUID orgId, String orgName, UUID projectId,
+    public TriggerSchedulerEntry(OffsetDateTime fireAt, UUID triggerId, UUID orgId, String orgName, UUID projectId,
                                  String projectName, UUID repositoryId, String repositoryName,
                                  Map<String, Object> conditions, Map<String, Object> cfg, List<String> activeProfiles,
                                  Map<String, Object> arguments, String eventSource) {
@@ -46,7 +46,7 @@ public class TriggerSchedulerEntry extends TriggerEntry {
         this.triggerId = triggerId;
     }
 
-    public Date getFireAt() {
+    public OffsetDateTime getFireAt() {
         return fireAt;
     }
 

@@ -32,8 +32,9 @@ import org.jooq.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 import static com.walmartlabs.concord.server.jooq.Tables.*;
@@ -53,7 +54,7 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
     private final List<Processor> processors;
 
     private final long interval;
-    private final Timestamp startTimestamp;
+    private final OffsetDateTime startTimestamp;
 
     @Inject
     public AnsibleEventsProcessor(NodeRosterEventsConfiguration eventsCfg,
@@ -69,7 +70,7 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
         this.interval = eventsCfg.getPeriod();
 
         Instant startTimestamp = eventsCfg.getStartTimestamp();
-        this.startTimestamp = startTimestamp != null ? Timestamp.from(startTimestamp) : null;
+        this.startTimestamp = startTimestamp != null ? OffsetDateTime.ofInstant(startTimestamp, ZoneId.systemDefault()) : null;
     }
 
     @Override
@@ -103,14 +104,14 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
         }
 
         @WithTimer
-        public List<AnsibleEvent> list(EventMarker marker, Timestamp startTimestamp, int count) {
+        public List<AnsibleEvent> list(EventMarker marker, OffsetDateTime startTimestamp, int count) {
             return txResult(tx -> {
                 ProcessQueue pq = PROCESS_QUEUE.as("pq");
                 ProcessEvents pe = PROCESS_EVENTS.as("pe");
                 Field<String> username = tx.select(USERS.USERNAME).from(USERS).where(USERS.USER_ID.eq(pq.INITIATOR_ID)).asField();
 
                 Field<Object> eventData = function("jsonb_strip_nulls", Object.class, pe.EVENT_DATA);
-                SelectConditionStep<Record9<UUID, Long, UUID, Timestamp, Timestamp, Object, String, UUID, UUID>> s = tx.select(
+                SelectConditionStep<Record9<UUID, Long, UUID, OffsetDateTime, OffsetDateTime, Object, String, UUID, UUID>> s = tx.select(
                         pe.EVENT_ID,
                         pe.EVENT_SEQ,
                         pe.INSTANCE_ID,
@@ -135,7 +136,7 @@ public class AnsibleEventsProcessor extends AbstractEventProcessor<AnsibleEvent>
             });
         }
 
-        private AnsibleEvent toEntity(Record9<UUID, Long, UUID, Timestamp, Timestamp, Object, String, UUID, UUID> r) {
+        private AnsibleEvent toEntity(Record9<UUID, Long, UUID, OffsetDateTime, OffsetDateTime, Object, String, UUID, UUID> r) {
             return AnsibleEvent.builder()
                     .id(r.value1())
                     .eventSeq(r.value2())

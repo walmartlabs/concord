@@ -32,7 +32,7 @@ import org.jooq.DSLContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -89,7 +89,7 @@ public class ProcessLogManager {
         logsDao.createSegment(tx, SYSTEM_SEGMENT_ID, processKey, null, SYSTEM_SEGMENT_NAME, null);
     }
 
-    public long createSegment(ProcessKey processKey, UUID correlationId, String name, Date createdAt) {
+    public long createSegment(ProcessKey processKey, UUID correlationId, String name, OffsetDateTime createdAt) {
         if (SYSTEM_SEGMENT_NAME.equals(name)) {
             return SYSTEM_SEGMENT_ID;
         }

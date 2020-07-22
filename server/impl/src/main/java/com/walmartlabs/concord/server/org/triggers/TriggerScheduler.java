@@ -20,6 +20,7 @@ package com.walmartlabs.concord.server.org.triggers;
  * =====
  */
 
+import com.walmartlabs.concord.common.DateTimeUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.server.cfg.TriggersConfiguration;
 import com.walmartlabs.concord.server.org.project.RepositoryDao;
@@ -31,8 +32,11 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.xml.bind.DatatypeConverter;
-import java.util.*;
+import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Named("trigger-scheduler")
@@ -46,7 +50,7 @@ public class TriggerScheduler implements ScheduledTask {
 
     private static final String EVENT_SOURCE = "cron";
 
-    private final Date startedAt;
+    private final OffsetDateTime startedAt;
     private final TriggerScheduleDao scheduleDao;
     private final RepositoryDao repositoryDao;
     private final ProcessManager processManager;
@@ -60,7 +64,7 @@ public class TriggerScheduler implements ScheduledTask {
                             ProcessSecurityContext processSecurityContext,
                             TriggersConfiguration triggerCfg) {
 
-        this.startedAt = new Date();
+        this.startedAt = OffsetDateTime.now();
         this.scheduleDao = scheduleDao;
         this.repositoryDao = repositoryDao;
         this.processManager = processManager;
@@ -80,7 +84,7 @@ public class TriggerScheduler implements ScheduledTask {
             if (e == null) {
                 break;
             }
-            if (e.getFireAt().after(startedAt)) {
+            if (e.getFireAt().isAfter(startedAt)) {
                 startProcess(e);
             }
         }
@@ -159,9 +163,7 @@ public class TriggerScheduler implements ScheduledTask {
         Map<String, Object> m = new HashMap<>();
         m.put(Constants.Trigger.CRON_SPEC, t.getConditions().get(Constants.Trigger.CRON_SPEC));
         m.put(Constants.Trigger.CRON_TIMEZONE, t.getConditions().get(Constants.Trigger.CRON_TIMEZONE));
-        Calendar c = Calendar.getInstance();
-        c.setTime(t.getFireAt());
-        m.put(Constants.Trigger.CRON_EVENT_FIREAT, DatatypeConverter.printDateTime(c));
+        m.put(Constants.Trigger.CRON_EVENT_FIREAT, DateTimeUtils.toIsoString(t.getFireAt()));
         return m;
     }
 }

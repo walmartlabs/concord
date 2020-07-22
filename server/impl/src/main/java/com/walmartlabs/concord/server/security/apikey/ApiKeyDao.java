@@ -32,15 +32,14 @@ import javax.inject.Named;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.List;
 import java.util.UUID;
 
 import static com.walmartlabs.concord.server.jooq.tables.ApiKeys.API_KEYS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.selectFrom;
 
 @Named
@@ -86,10 +85,10 @@ public class ApiKeyDao extends AbstractDao {
         }
     }
 
-    public UUID insert(UUID userId, String key, String name, Instant expiredAt) {
+    public UUID insert(UUID userId, String key, String name, OffsetDateTime expiredAt) {
         return txResult(tx -> tx.insertInto(API_KEYS)
                 .columns(API_KEYS.USER_ID, API_KEYS.API_KEY, API_KEYS.KEY_NAME, API_KEYS.EXPIRED_AT)
-                .values(userId, hash(key), name, expiredAt != null ? Timestamp.from(expiredAt) : null)
+                .values(userId, hash(key), name, expiredAt)
                 .returning(API_KEYS.KEY_ID)
                 .fetchOne()
                 .getKeyId());
@@ -116,7 +115,7 @@ public class ApiKeyDao extends AbstractDao {
                     .from(API_KEYS)
                     .where(API_KEYS.API_KEY.eq(hash(key))
                             .and(API_KEYS.EXPIRED_AT.isNull()
-                                    .or(API_KEYS.EXPIRED_AT.greaterThan(currentTimestamp()))))
+                                    .or(API_KEYS.EXPIRED_AT.greaterThan(currentOffsetDateTime()))))
                     .fetchOne(ApiKeyDao::toEntry);
         }
     }
@@ -141,7 +140,7 @@ public class ApiKeyDao extends AbstractDao {
         return Base64.getEncoder().withoutPadding().encodeToString(ab);
     }
 
-    private static ApiKeyEntry toEntry(Record4<UUID, UUID, String, Timestamp> r) {
+    private static ApiKeyEntry toEntry(Record4<UUID, UUID, String, OffsetDateTime> r) {
         return new ApiKeyEntry(r.value1(), r.value2(), r.value3(), r.value4());
     }
 }

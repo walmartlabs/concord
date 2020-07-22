@@ -22,7 +22,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
 
 import com.walmartlabs.concord.sdk.MapUtils;
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public abstract class AbstractAnsibleEvent {
@@ -37,7 +37,7 @@ public abstract class AbstractAnsibleEvent {
         return e.instanceId();
     }
 
-    public Timestamp instanceCreatedAt() {
+    public OffsetDateTime instanceCreatedAt() {
         return e.instanceCreatedAt();
     }
 

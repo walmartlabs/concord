@@ -25,7 +25,7 @@ import com.walmartlabs.concord.server.sdk.ProcessStatus;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -35,10 +35,10 @@ import java.util.UUID;
 public interface ProcessFilter {
 
     @Nullable
-    Timestamp afterCreatedAt();
+    OffsetDateTime afterCreatedAt();
 
     @Nullable
-    Timestamp beforeCreatedAt();
+    OffsetDateTime beforeCreatedAt();
 
     @Nullable
     String initiator();
@@ -124,7 +124,7 @@ public interface ProcessFilter {
         }
 
         @Nullable
-        Timestamp value();
+        OffsetDateTime value();
     }
 
     @Value.Immutable

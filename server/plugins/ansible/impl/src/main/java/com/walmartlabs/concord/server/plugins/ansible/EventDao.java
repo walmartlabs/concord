@@ -31,7 +31,7 @@ import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -51,7 +51,7 @@ public class EventDao extends AbstractDao {
     public List<ProcessEventEntry> list(ProcessKey processKey, Map<String, String> dataFilter) {
         try (DSLContext tx = DSL.using(cfg)) {
 
-            SelectConditionStep<Record4<UUID, String, Timestamp, String>> q = tx
+            SelectConditionStep<Record4<UUID, String, OffsetDateTime, String>> q = tx
                     .select(PROCESS_EVENTS.EVENT_ID,
                             PROCESS_EVENTS.EVENT_TYPE,
                             PROCESS_EVENTS.EVENT_DATE,
@@ -73,7 +73,7 @@ public class EventDao extends AbstractDao {
         }
     }
 
-    private static ProcessEventEntry toEntry(Record4<UUID, String, Timestamp, String> r) {
+    private static ProcessEventEntry toEntry(Record4<UUID, String, OffsetDateTime, String> r) {
         return ProcessEventEntry.builder()
                 .id(r.value1())
                 .eventType(r.value2())

@@ -23,7 +23,7 @@ package com.walmartlabs.concord.server.plugins.ansible;
 import org.immutables.value.Value;
 import org.jooq.DSLContext;
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,9 +35,9 @@ public interface EventProcessor {
 
         UUID instanceId();
 
-        Timestamp instanceCreatedAt();
+        OffsetDateTime instanceCreatedAt();
 
-        Timestamp eventDate();
+        OffsetDateTime eventDate();
 
         String eventType();
 

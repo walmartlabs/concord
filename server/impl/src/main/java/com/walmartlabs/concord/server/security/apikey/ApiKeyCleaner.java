@@ -34,7 +34,7 @@ import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.Tables.API_KEYS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 @Named("api-key-cleanup")
 @Singleton
@@ -74,7 +74,7 @@ public class ApiKeyCleaner implements ScheduledTask {
         void deleteExpiredKeys() {
             tx(tx -> {
                 int keys = tx.deleteFrom(API_KEYS)
-                        .where(API_KEYS.EXPIRED_AT.lessOrEqual(currentTimestamp()))
+                        .where(API_KEYS.EXPIRED_AT.lessOrEqual(currentOffsetDateTime()))
                         .execute();
 
                 log.info("deleteExpiredKeys -> removed {} key(s)", keys);

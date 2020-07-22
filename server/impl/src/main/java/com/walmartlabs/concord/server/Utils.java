@@ -58,6 +58,14 @@ public final class Utils {
         return new Timestamp(c.getTimeInMillis());
     }
 
+    public static <T> T unwrap(WrappedValue<T> v) {
+        if (v == null) {
+            return null;
+        }
+
+        return v.getValue();
+    }
+
     private Utils() {
     }
 }

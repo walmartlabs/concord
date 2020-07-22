@@ -32,11 +32,11 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.server.jooq.tables.AgentCommands.AGENT_COMMANDS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.field;
 
 @Named("agent-command-watchdog")
@@ -59,7 +59,7 @@ public class AgentCommandWatchdog implements ScheduledTask {
 
     @Override
     public void performTask() {
-        Field<Timestamp> cutoff = currentTimestamp().minus(field("interval '10 minutes'"));
+        Field<OffsetDateTime> cutoff = currentOffsetDateTime().minus(field("interval '10 minutes'"));
         int n = watchdogDao.failStalled(cutoff);
         log.info("run -> {} command(s) are timed out", n);
     }
@@ -72,7 +72,7 @@ public class AgentCommandWatchdog implements ScheduledTask {
             super(cfg);
         }
 
-        public int failStalled(Field<Timestamp> cutoff) {
+        public int failStalled(Field<OffsetDateTime> cutoff) {
             return txResult(tx -> tx.update(AGENT_COMMANDS)
                     .set(AGENT_COMMANDS.COMMAND_STATUS, Status.FAILED.toString())
                     .where(AGENT_COMMANDS.COMMAND_STATUS.in(Status.CREATED.toString())

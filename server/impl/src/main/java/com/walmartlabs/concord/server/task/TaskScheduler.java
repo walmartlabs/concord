@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.walmartlabs.concord.db.PgUtils.interval;
 import static com.walmartlabs.concord.server.jooq.Tables.TASKS;
-import static org.jooq.impl.DSL.currentTimestamp;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.value;
 
 @Named
@@ -137,7 +137,7 @@ public class TaskScheduler extends PeriodicTask {
     }
 
     private void failStalled() {
-        Field<Timestamp> cutOff = currentTimestamp().minus(interval(MAX_STALLED_AGE));
+        Field<OffsetDateTime> cutOff = currentOffsetDateTime().minus(interval(MAX_STALLED_AGE));
 
         dao.transaction(tx -> {
             List<String> ids = dao.pollStalled(tx, cutOff);
@@ -165,7 +165,7 @@ public class TaskScheduler extends PeriodicTask {
                         .from(TASKS)
                         .where(TASKS.TASK_INTERVAL.greaterThan(0L).and(TASKS.STARTED_AT.isNull()
                                 .or(TASKS.FINISHED_AT.isNotNull()
-                                        .and(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentTimestamp())))))
+                                        .and(TASKS.FINISHED_AT.plus(TASKS.TASK_INTERVAL.mul(i)).lessOrEqual(currentOffsetDateTime())))))
                         .forUpdate()
                         .skipLocked()
                         .fetch(TASKS.TASK_ID);
@@ -175,10 +175,10 @@ public class TaskScheduler extends PeriodicTask {
                 }
 
                 tx.update(TASKS)
-                        .set(TASKS.STARTED_AT, currentTimestamp())
+                        .set(TASKS.STARTED_AT, currentOffsetDateTime())
                         .set(TASKS.TASK_STATUS, value("RUNNING"))
-                        .set(TASKS.FINISHED_AT, (Timestamp) null)
-                        .set(TASKS.LAST_UPDATED_AT, currentTimestamp())
+                        .set(TASKS.FINISHED_AT, (OffsetDateTime) null)
+                        .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
                         .where(TASKS.TASK_ID.in(ids))
                         .execute();
 
@@ -186,7 +186,7 @@ public class TaskScheduler extends PeriodicTask {
             });
         }
 
-        public List<String> pollStalled(DSLContext tx, Field<Timestamp> cutOff) {
+        public List<String> pollStalled(DSLContext tx, Field<OffsetDateTime> cutOff) {
             return tx.select(TASKS.TASK_ID)
                     .from(TASKS)
                     .where(TASKS.LAST_UPDATED_AT.lessThan(cutOff)
@@ -229,7 +229,7 @@ public class TaskScheduler extends PeriodicTask {
         public void updateRunning(Set<String> runningTasks) {
             tx(tx -> {
                 tx.update(TASKS)
-                        .set(TASKS.LAST_UPDATED_AT, currentTimestamp())
+                        .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
                         .where(TASKS.TASK_ID.in(runningTasks))
                         .execute();
             });
@@ -241,8 +241,8 @@ public class TaskScheduler extends PeriodicTask {
 
         private void taskFinished(DSLContext tx, String taskId, String status) {
             tx.update(TASKS)
-                    .set(TASKS.FINISHED_AT, currentTimestamp())
-                    .set(TASKS.LAST_UPDATED_AT, currentTimestamp())
+                    .set(TASKS.FINISHED_AT, currentOffsetDateTime())
+                    .set(TASKS.LAST_UPDATED_AT, currentOffsetDateTime())
                     .set(TASKS.TASK_STATUS, value(status))
                     .where(TASKS.TASK_ID.eq(taskId))
                     .execute();

@@ -29,7 +29,7 @@ import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Value.Immutable
@@ -41,7 +41,7 @@ public interface ProcessEntry extends Serializable {
     UUID instanceId();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    Date createdAt();
+    OffsetDateTime createdAt();
 
     @Nullable
     UUID projectId();
