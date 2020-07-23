@@ -35,6 +35,8 @@ public class DateTimeUtilsTest {
     @Test
     public void test() throws Exception {
         Calendar now1 = Calendar.getInstance();
+        now1.set(Calendar.MILLISECOND, 123);
+
         String a = DatatypeConverter.printDateTime(now1);
 
         OffsetDateTime now2 = OffsetDateTime.ofInstant(now1.toInstant(), ZoneId.of(now1.getTimeZone().getID()));
