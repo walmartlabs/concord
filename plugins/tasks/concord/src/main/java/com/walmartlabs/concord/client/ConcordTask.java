@@ -189,7 +189,7 @@ public class ConcordTask extends AbstractConcordTask {
         Map<String, T> result = new HashMap<>();
 
         ids.parallelStream().map(UUID::fromString).forEach(id -> {
-            log.info("Waiting for {}...", id);
+            log.info("Waiting for {}, URL: {}", id, getProcessUrl(ctx, id));
 
             long t1 = System.currentTimeMillis();
             while (true) {
@@ -674,8 +674,8 @@ public class ConcordTask extends AbstractConcordTask {
     }
 
     private String getProcessUrl(Context ctx, UUID processId) {
-        Action action = getAction(ctx);
-        if (action == Action.STARTEXTERNAL || uiLinks == null) {
+        String action = ContextUtils.getString(ctx, ACTION_KEY);
+        if (Action.STARTEXTERNAL.name().equalsIgnoreCase(action)  || uiLinks == null) {
             return "n/a";
         }
 
@@ -683,6 +683,12 @@ public class ConcordTask extends AbstractConcordTask {
         if (processLinkTemplate == null) {
             return "n/a";
         }
+
+        String baseUrl = getBaseUrl(ctx);
+        if (action == null && baseUrl != null && !processLinkTemplate.startsWith(baseUrl)) {
+            return "n/a";
+        }
+
         return String.format(processLinkTemplate, processId);
     }
 

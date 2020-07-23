@@ -128,7 +128,7 @@ public class ConcordTaskCommon {
         Map<String, T> result = new HashMap<>();
 
         ids.parallelStream().forEach(id -> {
-            log.info("Waiting for {}...", id);
+            log.info("Waiting for {}, URL: {}", id, getProcessUrl(id));
 
             long t1 = System.currentTimeMillis();
             while (true) {
@@ -486,6 +486,14 @@ public class ConcordTaskCommon {
     private String getProcessUrl(ConcordTaskParams in, UUID processId) {
         Action action = in.action();
         if (action == Action.STARTEXTERNAL || processLinkTemplate == null) {
+            return "n/a";
+        }
+
+        return String.format(processLinkTemplate, processId);
+    }
+
+    private String getProcessUrl(UUID processId) {
+        if (processLinkTemplate == null) {
             return "n/a";
         }
 
