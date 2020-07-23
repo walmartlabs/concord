@@ -173,7 +173,7 @@ public abstract class AbstractConcordTask implements Task {
         return contentType.contains("json");
     }
 
-    private static String getBaseUrl(Context ctx) {
+    protected static String getBaseUrl(Context ctx) {
         Object v = ctx.getVariable(Keys.BASE_URL_KEY);
         if (v == null) {
             return null;
