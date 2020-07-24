@@ -1,4 +1,5 @@
 configuration:
+  debug: true
   entryPoint: "main-test"
   dependencies:
     - "d1"

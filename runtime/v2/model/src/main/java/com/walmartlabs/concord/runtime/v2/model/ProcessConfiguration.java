@@ -54,6 +54,11 @@ public interface ProcessConfiguration extends Serializable {
         return "concord-v2";
     }
 
+    @Value.Default
+    default boolean debug() {
+        return false;
+    }
+
     // TODO activeProfiles
 
     @Value.Default

@@ -37,6 +37,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.sdk.MapUtils;
@@ -153,13 +154,14 @@ public class Run implements Callable<Integer> {
             System.out.println("Active profiles: " + profiles);
         }
 
-        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(processDefinition))
-                .build();
-
         ProcessConfiguration cfg = ProcessConfiguration.builder().from(processDefinition.configuration())
                 .entryPoint(entryPoint)
                 .instanceId(instanceId)
+                .build();
+
+        RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .dependencies(new DependencyResolver(dependencyManager, verbose).resolveDeps(processDefinition))
+                .debug(cfg.debug())
                 .build();
 
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
@@ -180,6 +182,10 @@ public class Run implements Callable<Integer> {
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
         System.out.println("Starting...");
+
+        if (cfg.debug()) {
+            System.out.println("Available tasks: " + injector.getInstance(TaskProviders.class).names());
+        }
 
         try {
             runner.start(processDefinition, cfg.entryPoint(), args);
