@@ -104,6 +104,7 @@ class EncryptValueActivity extends React.PureComponent<ExternalProps, State> {
                         <Form.Input
                             name="encrypt"
                             value={data}
+                            autoComplete="off"
                             onChange={(e, { value }) => this.handleEncryptValue(value)}
                         />
 
