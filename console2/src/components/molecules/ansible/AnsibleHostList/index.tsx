@@ -30,6 +30,7 @@ interface State {
     hostFilter?: string;
     prevHostFilter?: string;
     hostGroupFilter?: string;
+    hostStatusFilter?: AnsibleStatus;
 }
 
 interface Props {
@@ -37,11 +38,21 @@ interface Props {
     playbookId?: ConcordId;
     hosts?: AnsibleHost[];
     hostGroups: string[];
+    showStatusFilter?: boolean;
 
     next?: number;
     prev?: number;
     refresh: (filter: SearchFilter) => void;
 }
+
+const hostStatusesOptions = [
+    { text: AnsibleStatus.RUNNING, value: AnsibleStatus.RUNNING },
+    { text: AnsibleStatus.CHANGED, value: AnsibleStatus.CHANGED },
+    { text: AnsibleStatus.FAILED, value: AnsibleStatus.FAILED },
+    { text: AnsibleStatus.OK, value: AnsibleStatus.OK },
+    { text: AnsibleStatus.SKIPPED, value: AnsibleStatus.SKIPPED },
+    { text: AnsibleStatus.UNREACHABLE, value: AnsibleStatus.UNREACHABLE }
+];
 
 const makeHostGroupOptions = (data: string[]): DropdownItemProps[] => {
     if (!data) {
@@ -129,6 +140,7 @@ class AnsibleHostList extends React.Component<Props, State> {
         this.handleHostOnBlur = this.handleHostOnBlur.bind(this);
         this.handleHostChange = this.handleHostChange.bind(this);
         this.handleHostGroupChange = this.handleHostGroupChange.bind(this);
+        this.handleHostStatusChange = this.handleHostStatusChange.bind(this);
     }
 
     handleNext() {
@@ -155,10 +167,14 @@ class AnsibleHostList extends React.Component<Props, State> {
     }
 
     handleHostOnBlur() {
-        const { hostFilter, prevHostFilter, hostGroupFilter } = this.state;
+        const { hostFilter, prevHostFilter, hostGroupFilter, hostStatusFilter } = this.state;
         if (hostFilter !== prevHostFilter) {
             this.setState({ prevHostFilter: hostFilter });
-            this.props.refresh({ host: hostFilter, hostGroup: hostGroupFilter });
+            this.props.refresh({
+                host: hostFilter,
+                hostGroup: hostGroupFilter,
+                status: hostStatusFilter
+            });
         }
     }
 
@@ -172,21 +188,39 @@ class AnsibleHostList extends React.Component<Props, State> {
     }
 
     handleHostGroupChange(s?: string) {
-        const { hostFilter, hostGroupFilter } = this.state;
+        const { hostFilter, hostGroupFilter, hostStatusFilter } = this.state;
         const hostGroup = s && s.length > 0 ? s : undefined;
 
         if (hostGroupFilter !== hostGroup) {
             this.setState({ hostGroupFilter: hostGroup });
-            this.props.refresh({ host: hostFilter, hostGroup });
+            this.props.refresh({ host: hostFilter, hostGroup, status: hostStatusFilter });
+        }
+    }
+
+    handleHostStatusChange(s?: AnsibleStatus) {
+        const { hostFilter, hostGroupFilter, hostStatusFilter } = this.state;
+        const status = s && s.length > 0 ? s : undefined;
+
+        if (status !== hostStatusFilter) {
+            this.setState({ hostStatusFilter: status });
+            this.props.refresh({ host: hostFilter, hostGroup: hostGroupFilter, status });
         }
     }
 
     render() {
-        const { instanceId, playbookId, hosts, hostGroups, prev, next } = this.props;
+        const {
+            instanceId,
+            playbookId,
+            hosts,
+            hostGroups,
+            prev,
+            next,
+            showStatusFilter
+        } = this.props;
 
         return (
             <>
-                <Grid columns={3} style={{ marginBottom: '5px' }}>
+                <Grid columns={showStatusFilter ? 4 : 3} style={{ marginBottom: '5px' }}>
                     <Grid.Column>
                         <Input
                             disabled={hosts === undefined}
@@ -212,6 +246,22 @@ class AnsibleHostList extends React.Component<Props, State> {
                             }
                         />
                     </Grid.Column>
+                    {showStatusFilter && (
+                        <Grid.Column>
+                            <Dropdown
+                                disabled={hosts === undefined}
+                                clearable={true}
+                                fluid={true}
+                                placeholder="Host status"
+                                search={true}
+                                selection={true}
+                                options={hostStatusesOptions}
+                                onChange={(ev, data) =>
+                                    this.handleHostStatusChange(data.value as AnsibleStatus)
+                                }
+                            />
+                        </Grid.Column>
+                    )}
                     <Grid.Column textAlign={'right'}>
                         <PaginationToolBar
                             handleNext={this.handleNext}

@@ -275,6 +275,7 @@ const ProcessAnsibleActivity = (props: ExternalProps) => {
                     <AnsibleHostList
                         instanceId={instanceId}
                         playbookId={selectedPlaybook?.id}
+                        showStatusFilter={true}
                         hosts={ansibleHosts}
                         hostGroups={ansibleHostGroups}
                         prev={ansibleHostsPrev}
